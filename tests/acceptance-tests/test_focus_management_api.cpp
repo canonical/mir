@@ -120,10 +120,10 @@ struct ClientConfigCommon : TestingClientConfiguration
     }
 };
 
-class MockSessionStore : public frontend::Shell
+class MockShell : public frontend::Shell
 {
 public:
-    MockSessionStore(std::shared_ptr<Shell> const& impl) :
+    MockShell(std::shared_ptr<Shell> const& impl) :
         impl(impl)
     {
         using namespace testing;
@@ -155,32 +155,32 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<frontend::Shell>
-        the_session_store()
+        the_frontend_shell() override
         {
             return session_manager(
                 [this]() -> std::shared_ptr<frontend::Shell>
                 {
                     using namespace ::testing;
 
-                    auto const& mock_session_store = std::make_shared<MockSessionStore>(
+                    auto const& mock_shell = std::make_shared<MockShell>(
                         DefaultServerConfiguration::the_frontend_shell());
 
                     {
                         using namespace testing;
                         InSequence setup;
-                        EXPECT_CALL(*mock_session_store, open_session(_)).Times(2);
-                        EXPECT_CALL(*mock_session_store, close_session(_)).Times(2);
-                        EXPECT_CALL(*mock_session_store, shutdown());
+                        EXPECT_CALL(*mock_shell, open_session(_)).Times(2);
+                        EXPECT_CALL(*mock_shell, close_session(_)).Times(2);
+                        EXPECT_CALL(*mock_shell, shutdown());
                     }
                     {
                         using namespace testing;
                         InSequence test;
 
-                        EXPECT_CALL(*mock_session_store, tag_session_with_lightdm_id(_, _));
-                        EXPECT_CALL(*mock_session_store, focus_session_with_lightdm_id(_));
+                        EXPECT_CALL(*mock_shell, tag_session_with_lightdm_id(_, _));
+                        EXPECT_CALL(*mock_shell, focus_session_with_lightdm_id(_));
                     }
 
-                    return mock_session_store;
+                    return mock_shell;
                 });
         }
     } server_config;

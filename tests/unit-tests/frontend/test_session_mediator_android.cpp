@@ -29,7 +29,7 @@
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session.h"
-#include "mir_test_doubles/stub_session_store.h"
+#include "mir_test_doubles/stub_shell.h"
 
 #include <gtest/gtest.h>
 
@@ -85,19 +85,19 @@ class StubPlatform : public mg::Platform
 struct SessionMediatorAndroidTest : public ::testing::Test
 {
     SessionMediatorAndroidTest()
-        : session_store{std::make_shared<mtd::StubSessionStore>()},
+        : shell{std::make_shared<mtd::StubShell>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{session_store, graphics_platform, graphics_display,
+          mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
 
-    std::shared_ptr<mtd::StubSessionStore> const session_store;
+    std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<StubPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;

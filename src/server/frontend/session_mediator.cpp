@@ -36,13 +36,13 @@
 #include <boost/throw_exception.hpp>
 
 mir::frontend::SessionMediator::SessionMediator(
-    std::shared_ptr<frontend::Shell> const& session_store,
+    std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::ViewableArea> const& viewable_area,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<ResourceCache> const& resource_cache) :
-    shell(session_store),
+    shell(shell),
     graphics_platform(graphics_platform),
     viewable_area(viewable_area),
     buffer_allocator(buffer_allocator),
