@@ -51,15 +51,13 @@ private:
 class AndroidDisplaySelector : public DisplaySelector
 {
 public:
-    AndroidDisplaySelector(std::shared_ptr<FBFactory> const& factory);
- 
+    AndroidDisplaySelector(std::shared_ptr<FBFactory> const& factory); 
     std::shared_ptr<Display> primary_display();
 
 private:
     std::shared_ptr<FBFactory> fb_factory;
-
     std::shared_ptr<Display> primary_hwc_display;
-    DisplayType display_type;
+    DisplayType  display_type;
 };
 
 }
