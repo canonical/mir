@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "proxy_surface.h"
+#include "surface.h"
 
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/input/input_channel.h"
@@ -25,18 +25,35 @@
 
 #include <stdexcept>
 
-namespace ms = mir::surfaces;
+namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 
-ms::BasicProxySurface::BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface,
-                                         std::shared_ptr<input::InputChannel> const& input_channel)
+msh::Surface::Surface(std::weak_ptr<mir::surfaces::Surface> const& surface,
+		      std::shared_ptr<input::InputChannel> const& input_channel)
   : surface(surface),
-    input_channel(input_channel)
+    input_channel(input_channel),
+    deleter([](std::weak_ptr<mir::surfaces::Surface> const&){})
 {
 }
 
-void ms::BasicProxySurface::hide()
+msh::Surface::Surface(
+    std::weak_ptr<mir::surfaces::Surface> const& surface,
+    std::shared_ptr<input::InputChannel> const& input_channel,
+    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter)
+:
+    surface(surface),
+    input_channel(input_channel),
+    deleter(deleter)
+{
+}
+
+msh::Surface::~Surface()
+{
+    destroy();
+}
+
+void msh::Surface::hide()
 {
     if (auto const& s = surface.lock())
     {
@@ -44,7 +61,7 @@ void ms::BasicProxySurface::hide()
     }
 }
 
-void ms::BasicProxySurface::show()
+void msh::Surface::show()
 {
     if (auto const& s = surface.lock())
     {
@@ -52,11 +69,12 @@ void ms::BasicProxySurface::show()
     }
 }
 
-void ms::BasicProxySurface::destroy()
+void msh::Surface::destroy()
 {
+    deleter(surface);
 }
 
-void ms::BasicProxySurface::shutdown()
+void msh::Surface::shutdown()
 {
     if (auto const& s = surface.lock())
     {
@@ -64,7 +82,7 @@ void ms::BasicProxySurface::shutdown()
     }
 }
 
-mir::geometry::Size ms::BasicProxySurface::size() const
+mir::geometry::Size msh::Surface::size() const
 {
     if (auto const& s = surface.lock())
     {
@@ -76,7 +94,7 @@ mir::geometry::Size ms::BasicProxySurface::size() const
     }
 }
 
-mir::geometry::PixelFormat ms::BasicProxySurface::pixel_format() const
+mir::geometry::PixelFormat msh::Surface::pixel_format() const
 {
     if (auto const& s = surface.lock())
     {
@@ -88,7 +106,7 @@ mir::geometry::PixelFormat ms::BasicProxySurface::pixel_format() const
     }
 }
 
-void ms::BasicProxySurface::advance_client_buffer()
+void msh::Surface::advance_client_buffer()
 {
     if (auto const& s = surface.lock())
     {
@@ -96,7 +114,7 @@ void ms::BasicProxySurface::advance_client_buffer()
     }
 }
 
-std::shared_ptr<mc::Buffer> ms::BasicProxySurface::client_buffer() const
+std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
 {
     if (auto const& s = surface.lock())
     {
@@ -108,40 +126,16 @@ std::shared_ptr<mc::Buffer> ms::BasicProxySurface::client_buffer() const
     }
 }
 
-void ms::BasicProxySurface::destroy_surface(SurfaceStackModel* const surface_stack) const
-{
-    surface_stack->destroy_surface(surface);
-}
-
-bool ms::BasicProxySurface::supports_input() const
+bool msh::Surface::supports_input() const
 {
     if (input_channel)
         return true;
     return false;
 }
 
-int ms::BasicProxySurface::client_input_fd() const
+int msh::Surface::client_input_fd() const
 {
     if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return input_channel->client_fd();
-}
-
-ms::ProxySurface::ProxySurface(
-        SurfaceStackModel* const surface_stack_,
-        std::shared_ptr<input::InputChannel> const& input_channel,
-        shell::SurfaceCreationParameters const& params) :
-    BasicProxySurface(surface_stack_->create_surface(params), input_channel),
-    surface_stack(surface_stack_)
-{
-}
-
-void ms::ProxySurface::destroy()
-{
-    destroy_surface(surface_stack);
-}
-
-ms::ProxySurface::~ProxySurface()
-{
-    destroy();
 }

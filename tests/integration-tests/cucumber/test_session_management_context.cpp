@@ -18,14 +18,14 @@
 
 #include "mir_test_cucumber/session_management_context.h"
 #include "mir/server_configuration.h"
-#include "mir/shell/session_store.h"
-#include "mir/shell/session.h"
-#include "mir/shell/surface.h"
+#include "mir/frontend/shell.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 #include "mir_test_doubles/mock_session.h"
-#include "mir_test_doubles/mock_session_store.h"
+#include "mir_test_doubles/mock_shell.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -35,7 +35,6 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
-namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -47,13 +46,13 @@ namespace
 struct MockServerConfiguration : public mir::ServerConfiguration
 {
     MOCK_METHOD0(the_communicator, std::shared_ptr<mf::Communicator>());
-    MOCK_METHOD0(the_session_store, std::shared_ptr<msh::SessionStore>());
+    MOCK_METHOD0(the_frontend_shell, std::shared_ptr<mf::Shell>());
     MOCK_METHOD0(the_input_manager, std::shared_ptr<mi::InputManager>());
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
     MOCK_METHOD0(the_drawer, std::shared_ptr<mc::Drawer>());
 };
 
-struct MockSurface : public msh::Surface
+struct MockSurface : public mf::Surface
 {
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
@@ -97,15 +96,15 @@ struct SessionManagementContextSetup : public testing::Test
     {
         using namespace ::testing;
 
-        EXPECT_CALL(server_configuration, the_session_store()).Times(1)
-            .WillOnce(Return(mt::fake_shared<msh::SessionStore>(session_store)));
+        EXPECT_CALL(server_configuration, the_frontend_shell()).Times(1)
+            .WillOnce(Return(mt::fake_shared<mf::Shell>(shell)));
         ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
     }
     MockServerConfiguration server_configuration;
-    mtd::MockSessionStore session_store;
+    mtd::MockShell shell;
     std::shared_ptr<mtc::SessionManagementContext> ctx;
 
-    static msh::SurfaceId const test_surface_id;
+    static mf::SurfaceId const test_surface_id;
     static std::string const test_window_name;
     static geom::Size const test_window_size;
 };
@@ -116,8 +115,8 @@ struct SessionManagementContextViewAreaSetup : public SessionManagementContextSe
     {
         using namespace ::testing;
 
-        EXPECT_CALL(server_configuration, the_session_store()).Times(1)
-            .WillOnce(Return(mt::fake_shared<msh::SessionStore>(session_store)));
+        EXPECT_CALL(server_configuration, the_frontend_shell()).Times(1)
+            .WillOnce(Return(mt::fake_shared<mf::Shell>(shell)));
         ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
         viewable_area = ctx->get_view_area();
     }
@@ -125,21 +124,21 @@ struct SessionManagementContextViewAreaSetup : public SessionManagementContextSe
     std::shared_ptr<mg::ViewableArea> viewable_area;
 };
 
-msh::SurfaceId const SessionManagementContextSetup::test_surface_id{1};
+mf::SurfaceId const SessionManagementContextSetup::test_surface_id{1};
 std::string const SessionManagementContextSetup::test_window_name{"John"};
 geom::Size const SessionManagementContextSetup::test_window_size{geom::Width{100},
                                                                  geom::Height{100}};
 } // namespace
 
-TEST(SessionManagementContext, constructs_session_store_from_server_configuration)
+TEST(SessionManagementContext, constructs_shell_from_server_configuration)
 {
     using namespace ::testing;
 
     MockServerConfiguration server_configuration;
-    mtd::MockSessionStore session_store;
+    mtd::MockShell shell;
     
-    EXPECT_CALL(server_configuration, the_session_store()).Times(1)
-        .WillOnce(Return(mt::fake_shared<msh::SessionStore>(session_store)));
+    EXPECT_CALL(server_configuration, the_frontend_shell()).Times(1)
+        .WillOnce(Return(mt::fake_shared<mf::Shell>(shell)));
 
     mtc::SessionManagementContext ctx(server_configuration);
 }
@@ -150,8 +149,8 @@ TEST_F(SessionManagementContextSetup, open_window_consuming_creates_surface_with
 
     mtd::MockSession session;
 
-    EXPECT_CALL(session_store, open_session(test_window_name)).Times(1)
-        .WillOnce(Return(mt::fake_shared<msh::Session>(session)));
+    EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
+        .WillOnce(Return(mt::fake_shared<mf::Session>(session)));
 
     // As consuming mode is the default, omiting geometry is sufficient to request it.
     EXPECT_CALL(session, create_surface(NamedWindowWithNoGeometry(test_window_name))).Times(1)
@@ -166,8 +165,8 @@ TEST_F(SessionManagementContextSetup, open_window_with_size_creates_surface_with
     
     mtd::MockSession session;
 
-    EXPECT_CALL(session_store, open_session(test_window_name)).Times(1)
-        .WillOnce(Return(mt::fake_shared<msh::Session>(session)));
+    EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
+        .WillOnce(Return(mt::fake_shared<mf::Session>(session)));
 
     EXPECT_CALL(session, create_surface(NamedWindowWithGeometry(test_window_name, test_window_size))).Times(1)
         .WillOnce(Return(test_surface_id));
@@ -182,8 +181,8 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
     mtd::MockSession session;
     MockSurface surface;
 
-    EXPECT_CALL(session_store, open_session(test_window_name)).Times(1)
-        .WillOnce(Return(mt::fake_shared<msh::Session>(session)));
+    EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
+        .WillOnce(Return(mt::fake_shared<mf::Session>(session)));
 
     EXPECT_CALL(session, create_surface(NamedWindowWithGeometry(test_window_name, test_window_size))).Times(1)
         .WillOnce(Return(test_surface_id));
@@ -191,7 +190,7 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
     EXPECT_TRUE(ctx->open_window_with_size(test_window_name, test_window_size));
     
     EXPECT_CALL(session, get_surface(test_surface_id)).Times(1)
-        .WillOnce(Return(mt::fake_shared<msh::Surface>(surface)));
+        .WillOnce(Return(mt::fake_shared<mf::Surface>(surface)));
     EXPECT_CALL(surface, size()).Times(1).WillOnce(Return(test_window_size));
     
     EXPECT_EQ(test_window_size, ctx->get_window_size(test_window_name));

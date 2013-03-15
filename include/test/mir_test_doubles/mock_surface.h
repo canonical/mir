@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 
 #include <memory>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSurface : public shell::Surface
+struct MockSurface : public frontend::Surface
 {
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());

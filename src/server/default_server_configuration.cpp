@@ -25,13 +25,13 @@
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/application_mediator_report.h"
-#include "mir/frontend/application_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
-#include "mir/shell/session_container.h"
+#include "mir/frontend/session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
@@ -43,9 +43,9 @@
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir/logging/application_mediator_report.h"
+#include "mir/logging/session_mediator_report.h"
 #include "mir/logging/display_report.h"
-#include "mir/surfaces/surface_controller.h"
+#include "mir/shell/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
 
 namespace mc = mir::compositor;
@@ -68,12 +68,12 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<msh::SessionStore> const& session_store,
-        std::shared_ptr<mf::ApplicationMediatorReport> const& report,
+        std::shared_ptr<mf::Shell> const& shell,
+        std::shared_ptr<mf::SessionMediatorReport> const& report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::ViewableArea> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
-        session_store(session_store),
+        shell(shell),
         report(report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
@@ -83,8 +83,8 @@ public:
     }
 
 private:
-    std::shared_ptr<msh::SessionStore> session_store;
-    std::shared_ptr<mf::ApplicationMediatorReport> const report;
+    std::shared_ptr<mf::Shell> shell;
+    std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::ViewableArea> const graphics_display;
@@ -92,8 +92,8 @@ private:
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationMediator>(
-            session_store,
+        return std::make_shared<mf::SessionMediator>(
+            shell,
             graphics_platform,
             graphics_display,
             buffer_allocator,
@@ -245,11 +245,11 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
         });
 }
 
-std::shared_ptr<msh::SessionStore>
-mir::DefaultServerConfiguration::the_session_store()
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
 {
-    return session_store(
-        [this]() -> std::shared_ptr<msh::SessionStore>
+    return session_manager(
+        [this]() -> std::shared_ptr<msh::SessionManager>
         {
             auto session_container = std::make_shared<msh::SessionContainer>();
             auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container);
@@ -329,7 +329,7 @@ mir::DefaultServerConfiguration::the_surface_factory()
     return surface_controller(
         [this]()
         {
-            return std::make_shared<ms::SurfaceController>(the_surface_stack_model(), the_input_channel_factory());
+            return std::make_shared<msh::SurfaceController>(the_surface_stack_model(), the_input_channel_factory());
         });
 }
 
@@ -356,7 +356,7 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
-    std::shared_ptr<msh::SessionStore> const& session_store,
+    std::shared_ptr<mf::Shell> const& shell,
     std::shared_ptr<mg::ViewableArea> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
@@ -364,26 +364,26 @@ mir::DefaultServerConfiguration::the_ipc_factory(
         [&]()
         {
             return std::make_shared<DefaultIpcFactory>(
-                session_store,
-                the_application_mediator_report(),
+                shell,
+                the_session_mediator_report(),
                 the_graphics_platform(),
                 display, allocator);
         });
 }
 
-std::shared_ptr<mf::ApplicationMediatorReport>
-mir::DefaultServerConfiguration::the_application_mediator_report()
+std::shared_ptr<mf::SessionMediatorReport>
+mir::DefaultServerConfiguration::the_session_mediator_report()
 {
-    return application_mediator_report(
-        [this]() -> std::shared_ptr<mf::ApplicationMediatorReport>
+    return session_mediator_report(
+        [this]() -> std::shared_ptr<mf::SessionMediatorReport>
         {
             if (the_options()->get(log_app_mediator, false))
             {
-                return std::make_shared<ml::ApplicationMediatorReport>(the_logger());
+                return std::make_shared<ml::SessionMediatorReport>(the_logger());
             }
             else
             {
-                return std::make_shared<mf::NullApplicationMediatorReport>();
+                return std::make_shared<mf::NullSessionMediatorReport>();
             }
         });
 }

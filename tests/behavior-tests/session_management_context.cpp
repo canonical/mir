@@ -18,17 +18,18 @@
 
 #include "mir_test_cucumber/session_management_context.h"
 
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/session.h"
+#include "mir/frontend/session.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
-#include "mir/shell/session_container.h"
-#include "mir/shell/session_store.h"
+#include "mir/frontend/session_container.h"
+#include "mir/frontend/shell.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/default_server_configuration.h"
 
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -51,7 +52,7 @@ static const geom::Size default_view_size = geom::Size{default_view_width,
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  default_view_size};
 
-struct DummySurface : public msh::Surface
+struct DummySurface : public mf::Surface
 {
     explicit DummySurface() {}
     virtual ~DummySurface() {}
@@ -109,7 +110,7 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
     {
     }
 
-    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& params)
+    std::shared_ptr<mf::Surface> create_surface(const mf::SurfaceCreationParameters& params)
     {
         auto name = params.name;
         return std::make_shared<SizedDummySurface>(params.size);
@@ -167,21 +168,21 @@ namespace
 
 mtc::SessionManagementContext::SessionManagementContext() :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    session_store(server_configuration.the_session_store())
+    shell(server_configuration.the_frontend_shell())
 {
 }
 
 mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& server_configuration) :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    session_store(server_configuration.the_session_store())
+    shell(server_configuration.the_frontend_shell())
 {
 }
 
 // TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
-    auto const params = msh::a_surface().of_name(window_name);
-    auto session = session_store->open_session(window_name);
+    auto const params = mf::a_surface().of_name(window_name);
+    auto session = shell->open_session(window_name);
     auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);
@@ -192,8 +193,8 @@ bool mtc::SessionManagementContext::open_window_consuming(std::string const& win
 bool mtc::SessionManagementContext::open_window_with_size(std::string const& window_name,
                                                           geom::Size const& size)
 {
-    auto const params = msh::a_surface().of_name(window_name).of_size(size);
-    auto session = session_store->open_session(window_name);
+    auto const params = mf::a_surface().of_name(window_name).of_size(size);
+    auto session = shell->open_session(window_name);
     auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);

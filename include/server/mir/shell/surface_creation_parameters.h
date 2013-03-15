@@ -27,7 +27,7 @@
 
 namespace mir
 {
-namespace shell
+namespace frontend
 {
 
 struct SurfaceCreationParameters
