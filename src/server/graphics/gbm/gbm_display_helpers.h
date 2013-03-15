@@ -25,7 +25,7 @@
 #include <memory>
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-pedantic"  // Ignore bad syntax in gbm.h
+//#pragma GCC diagnostic ignored "-pedantic"  // Ignore bad syntax in gbm.h
 #include <gbm.h>
 #pragma GCC diagnostic pop
 

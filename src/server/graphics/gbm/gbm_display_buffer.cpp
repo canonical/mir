@@ -71,6 +71,7 @@ void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
     delete bufobj;
 }
 
+#if 0
 void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
                        unsigned int /*sec*/, unsigned int /*usec*/,
                        void* data)
@@ -78,6 +79,7 @@ void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
     auto page_flip_pending = static_cast<int*>(data);
     --(*page_flip_pending);
 }
+#endif
 
 void ensure_egl_image_extensions()
 {

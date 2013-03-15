@@ -22,7 +22,12 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include <memory>
+
+// Unfortunately we have to ignore warnings/errors in 3rd party code.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshift-op-parentheses"
 #include <glm/glm.hpp>
+#pragma GCC diagnostic pop
 
 namespace mir
 {

@@ -26,7 +26,7 @@ namespace mir
 
 namespace shell
 {
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 class Surface;
 
 class SurfaceFactory

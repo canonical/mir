@@ -33,7 +33,7 @@ namespace mir
 namespace shell
 {
 class Surface;
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 
 class Session
 {

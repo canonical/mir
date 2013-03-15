@@ -18,7 +18,11 @@
 
 #include "image_renderer.h"
 
+// Unfortunately we have to ignore warnings/errors in 3rd party code.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshift-op-parentheses"
 #include <glm/glm.hpp>
+#pragma GCC diagnostic pop
 #include <glm/gtc/type_ptr.hpp>
 
 #include <memory>

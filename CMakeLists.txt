@@ -24,8 +24,17 @@ set(
 )
 cmake_policy(SET CMP0015 NEW)
 
-set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
-set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
+#
+# To use a custom compiler (such as clang), you should use:
+#   cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+#
+if (NOT DEFINED CMAKE_C_COMPILER)
+  set (CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
+endif ()
+if (NOT DEFINED CMAKE_CXX_COMPILER)
+  set (CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
+endif ()
+
 set(CMAKE_GCOV gcov-${MIR_GCC_VERSION})
 
 project(Mir)

@@ -47,7 +47,7 @@ public:
 private:
     void add_output(DRMModeResources const& resources, drmModeConnector const& connector);
 
-    int const drm_fd;
+//    int const drm_fd;
     std::vector<DisplayConfigurationOutput> outputs;
 };
 

@@ -31,7 +31,7 @@ namespace compositor
 {
 class GraphicBufferAllocator;
 class BufferSwapper;
-class BufferProperties;
+struct BufferProperties;
 
 class BufferAllocationStrategy
 {

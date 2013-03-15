@@ -52,10 +52,12 @@ int get_output_width()
     return width;
 }
 
+#if 0
 std::string& ltrim(std::string &s) {
         s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
         return s;
 }
+#endif
 
 string ordinary_cmd_line_pattern()
 {
@@ -89,6 +91,7 @@ string memcheck_cmd_line_pattern()
     return ss.str();
 }
 
+#if 0
 std::string elide_string_right(const std::string& in, std::size_t max_size)
 {
     assert(max_size >= 3);
@@ -104,6 +107,7 @@ std::string elide_string_right(const std::string& in, std::size_t max_size)
 
     return result;
 }
+#endif
 
 std::string elide_string_left(const std::string& in, std::size_t max_size)
 {

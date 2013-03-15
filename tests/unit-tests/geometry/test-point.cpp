@@ -36,7 +36,7 @@ TEST(geometry, point)
     EXPECT_EQ(Y(4), copy.y);
     EXPECT_EQ(pointx2y4, copy);
 
-    Point const defaultValue;
+    Point defaultValue;
     EXPECT_EQ(X(0), defaultValue.x);
     EXPECT_EQ(Y(0), defaultValue.y);
     EXPECT_NE(pointx2y4, defaultValue);

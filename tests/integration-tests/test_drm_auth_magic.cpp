@@ -147,7 +147,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
 TEST_F(BespokeDisplayServerTestFixture, drm_auth_magic_platform_error_reaches_client)
 {
     unsigned int const magic{0x10111213};
-    int const auth_magic_error{667};
+    static int const auth_magic_error{667};
 
     struct ServerConfig : TestingServerConfiguration
     {

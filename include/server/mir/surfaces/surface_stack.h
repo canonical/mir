@@ -37,7 +37,7 @@ class OperatorForRenderables;
 
 namespace shell
 {
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 }
 
 namespace surfaces
