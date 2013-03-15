@@ -19,8 +19,8 @@
 #include <boost/throw_exception.hpp>
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
-#include "src/graphics/gbm/gbm_platform.h"
-#include "src/graphics/gbm/kms_display_configuration.h"
+#include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/server/graphics/gbm/kms_display_configuration.h"
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"

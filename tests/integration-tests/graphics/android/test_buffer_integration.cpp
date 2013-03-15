@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/graphics/android/android_platform.h"
-#include "src/graphics/android/android_buffer_allocator.h"
-#include "src/graphics/android/android_display.h"
+#include "src/server/graphics/android/android_platform.h"
+#include "src/server/graphics/android/android_buffer_allocator.h"
+#include "src/server/graphics/android/android_display.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/compositor/swapper_factory.h"

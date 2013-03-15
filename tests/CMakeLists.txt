@@ -20,8 +20,12 @@ if(MIR_ENABLE_DEATH_TESTS)
   add_definitions(-DMIR_DEATH_TESTS_ENABLED)
 endif(MIR_ENABLE_DEATH_TESTS)
 
+include_directories(${PROJECT_SOURCE_DIR}/include/server)
+include_directories(${PROJECT_SOURCE_DIR}/include/client)
+include_directories(${PROJECT_SOURCE_DIR}/include/test)
+
 if (MIR_PLATFORM STREQUAL "android")
-  include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
+  include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
 endif()
 
 add_subdirectory(acceptance-tests/)

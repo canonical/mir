@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/input/android/android_pointer_controller.h"
+#include "src/server/input/android/android_pointer_controller.h"
 
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/event_factory.h"

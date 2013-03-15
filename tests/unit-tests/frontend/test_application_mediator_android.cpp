@@ -22,12 +22,14 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/session_store.h"
-#include "mir/shell/surface_factory.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_session.h"
+#include "mir_test_doubles/stub_session_store.h"
 
 #include <gtest/gtest.h>
 
@@ -43,45 +45,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-/*
- * TODO: Fix design so that it's possible to unit-test ApplicationMediator
- * without having to create doubles for classes so deep in its dependency
- * hierarchy.
- *
- * In particular, it would be nice if mf::Session was stubable/mockable.
- */
-
-class StubSurfaceFactory : public msh::SurfaceFactory
-{
- public:
-    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& /*params*/)
-    {
-        return std::shared_ptr<msh::Surface>();
-    }
-};
-
-class StubSessionStore : public msh::SessionStore
-{
-public:
-    StubSessionStore()
-        : factory{std::make_shared<StubSurfaceFactory>()}
-    {
-    }
-
-    std::shared_ptr<msh::Session> open_session(std::string const& /*name*/)
-    {
-        return std::make_shared<msh::ApplicationSession>(factory, "stub");
-    }
-
-    void close_session(std::shared_ptr<msh::Session> const& /*session*/) {}
-    void tag_session_with_lightdm_id(std::shared_ptr<msh::Session> const& /*session*/, int /*id*/) {}
-    void focus_session_with_lightdm_id(int /*id*/) {}
-
-    void shutdown() {}
-
-    std::shared_ptr<msh::SurfaceFactory> factory;
-};
 
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -122,7 +85,7 @@ class StubPlatform : public mg::Platform
 struct ApplicationMediatorAndroidTest : public ::testing::Test
 {
     ApplicationMediatorAndroidTest()
-        : session_store{std::make_shared<StubSessionStore>()},
+        : session_store{std::make_shared<mtd::StubSessionStore>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
@@ -134,7 +97,7 @@ struct ApplicationMediatorAndroidTest : public ::testing::Test
     {
     }
 
-    std::shared_ptr<msh::SessionStore> const session_store;
+    std::shared_ptr<mtd::StubSessionStore> const session_store;
     std::shared_ptr<StubPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;

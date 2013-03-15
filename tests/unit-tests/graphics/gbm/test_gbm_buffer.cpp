@@ -21,9 +21,9 @@
 #include "mock_drm.h"
 #include "mock_gbm.h"
 
-#include "src/graphics/gbm/gbm_platform.h"
-#include "src/graphics/gbm/gbm_buffer.h"
-#include "src/graphics/gbm/gbm_buffer_allocator.h"
+#include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/server/graphics/gbm/gbm_buffer.h"
+#include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"

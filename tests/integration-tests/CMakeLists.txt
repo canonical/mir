@@ -1,5 +1,4 @@
 include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/include/mir_test_cucumber)
 
 set(
   INTEGRATION_TESTS_SRCS
@@ -18,6 +17,8 @@ add_subdirectory(input/)
 endif()
 
 if (MIR_PLATFORM STREQUAL "android")
+  include_directories(${PROJECT_SOURCE_DIR}/include/accessory)
+
   add_subdirectory(graphics/android)
 endif()
 

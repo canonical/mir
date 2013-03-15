@@ -41,13 +41,16 @@ set(MIR_VERSION_PATCH 2)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include (cmake/Debian.cmake)
+option(use_debflags "Use build flags from dpkg-buildflags." OFF)
+if(use_debflags)
+  include (cmake/Debian.cmake)
+endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 
 #####################################################################
@@ -67,7 +70,7 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
 
 enable_testing()
 
-include_directories(include/)
+include_directories(include/shared)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex REQUIRED)
@@ -121,6 +124,9 @@ find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
 
+include_directories (${GLESv2_INCLUDE_DIRS})                                    
+include_directories (${EGL_INCLUDE_DIRS})
+
 if (NOT MIR_INPUT_USE_ANDROID_TYPES)
 add_definitions(
   -DANDROID_USE_STD
@@ -137,7 +143,6 @@ if (MIR_PLATFORM STREQUAL "android")
   add_definitions( -DANDROID )
  
   find_package( LibHardware REQUIRED )
-  find_package( AndroidUI REQUIRED )
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
@@ -153,7 +158,6 @@ endif()
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
-set(MIR_3RD_PARTY_SOURCES)
 add_subdirectory(3rd_party/)
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 

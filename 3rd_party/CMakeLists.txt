@@ -1,3 +1,7 @@
+
+# Warnings in 3rd party code are not to be considered errors. :(
+string (REPLACE " -Werror " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+
 list(
   APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_SOURCE_DIR}/libancillary
@@ -17,9 +21,12 @@ add_library(
 )
 
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES} PARENT_SCOPE)
-SET(MIR_3RD_PARTY_SOURCES ${MIR_3RD_PARTY_SOURCES} PARENT_SCOPE)
 set(MIR_INPUT_ANDROID_COMPILE_FLAGS ${MIR_INPUT_ANDROID_COMPILE_FLAGS}
   PARENT_SCOPE)
+
+if (MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android-fbtype)
+endif()
 
 if (NOT MIR_DISABLE_INPUT)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/android-deps)

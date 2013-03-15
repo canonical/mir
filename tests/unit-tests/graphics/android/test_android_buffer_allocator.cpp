@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/graphics/android/android_buffer_allocator.h"
+#include "src/server/graphics/android/android_buffer_allocator.h"
 
 #include <gtest/gtest.h>
 
