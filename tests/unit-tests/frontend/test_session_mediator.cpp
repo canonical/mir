@@ -120,22 +120,22 @@ class StubPlatform : public mg::Platform
 struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
-        : session_store{std::make_shared<testing::NiceMock<mtd::MockSessionStore>>()},
+        : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
           graphics_platform{std::make_shared<StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{session_store, graphics_platform, graphics_display,
+          mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
         using namespace ::testing;
 
-        ON_CALL(*session_store, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
+        ON_CALL(*shell, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
     }
 
-    std::shared_ptr<testing::NiceMock<mtd::MockSessionStore>> const session_store;
+    std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
@@ -154,7 +154,7 @@ TEST_F(SessionMediatorTest, disconnect_releases_session)
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
     
-    EXPECT_CALL(*session_store, close_session(_)).Times(1);
+    EXPECT_CALL(*shell, close_session(_)).Times(1);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());

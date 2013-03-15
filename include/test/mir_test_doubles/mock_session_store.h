@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
-#define MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
+#ifndef MIR_TEST_DOUBLES_SHELL_H_
+#define MIR_TEST_DOUBLES_SHELL_H_
 
 #include "mir/frontend/shell.h"
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSessionStore : public frontend::Shell
+struct MockShell : public frontend::Shell
 {
     MOCK_METHOD1(open_session, std::shared_ptr<frontend::Session>(std::string const&));
     MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::Session> const&));
@@ -45,4 +45,4 @@ struct MockSessionStore : public frontend::Shell
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_SESSION_STORE_H_
+#endif // MIR_TEST_DOUBLES_SHELL_H_

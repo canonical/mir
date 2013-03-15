@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
-#define MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SHELL_H_
+#define MIR_TEST_DOUBLES_STUB_SHELL_H_
 
 #include "mir/frontend/shell.h"
 #include "mir_test_doubles/stub_session.h"
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class StubSessionStore : public frontend::Shell
+class StubShell : public frontend::Shell
 {
     std::shared_ptr<frontend::Session> open_session(std::string const& /* name */)
     {
@@ -53,4 +53,4 @@ class StubSessionStore : public frontend::Shell
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
+#endif // MIR_TEST_DOUBLES_STUB_SHELL_H_

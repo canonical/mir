@@ -134,7 +134,7 @@ private:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<frontend::Shell> const& session_store,
+        std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::ViewableArea> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
