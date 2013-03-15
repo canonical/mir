@@ -25,7 +25,7 @@
 
 // Unfortunately we have to ignore warnings/errors in 3rd party code.
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshift-op-parentheses"
+#pragma GCC diagnostic warning "-Wall"
 #include <glm/glm.hpp>
 #pragma GCC diagnostic pop
 

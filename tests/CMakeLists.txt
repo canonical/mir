@@ -16,15 +16,11 @@ option(
   ON
 )
 
-# Avoid clang saying: gmock-internal-utils.h:355:10: error: 
-#      indirection of non-volatile null pointer will be deleted, not trap
-#      [-Werror,-Wnull-dereference]
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
-
-# Avoid clang saying: error: 
-#      'cuke::internal::AroundStepHook::invokeHook' hides overloaded virtual
-#      function [-Werror,-Woverloaded-virtual]
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
+if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+  # Avoid clang complaints about poor quality gmock/gtest/cucumber headers
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
+endif ()
 
 if(MIR_ENABLE_DEATH_TESTS)
   add_definitions(-DMIR_DEATH_TESTS_ENABLED)
