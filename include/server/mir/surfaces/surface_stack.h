@@ -35,7 +35,7 @@ class FilterForRenderables;
 class OperatorForRenderables;
 }
 
-namespace shell
+namespace frontend
 {
 class SurfaceCreationParameters;
 }
@@ -55,7 +55,7 @@ public:
     virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
 
     // From SurfaceStackModel
-    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);
+    virtual std::weak_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 

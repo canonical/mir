@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
@@ -47,7 +48,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo");
 
-    msh::SurfaceCreationParameters params;
+    mf::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
 
     session.destroy_surface(surf);
@@ -73,7 +74,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
         EXPECT_CALL(*mock_surface, destroy()).Times(1);
     }
 
-    msh::SurfaceCreationParameters params;
+    mf::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
 
     app_session.hide();
@@ -88,7 +89,7 @@ TEST(Session, get_invalid_surface_throw_behavior)
 
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
-    msh::SurfaceId invalid_surface_id = msh::SurfaceId{1};
+    mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
             app_session.get_surface(invalid_surface_id);
@@ -101,7 +102,7 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
 
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
-    msh::SurfaceId invalid_surface_id = msh::SurfaceId{1};
+    mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
             app_session.destroy_surface(invalid_surface_id);
