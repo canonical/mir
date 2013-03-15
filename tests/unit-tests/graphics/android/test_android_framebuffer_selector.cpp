@@ -16,13 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/android_fb_factory.h"
-#include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/fb_factory.h"
 #include "src/server/graphics/android/android_display_selector.h"
 
-#include "mir/graphics/display_configuration.h"
 #include "mir_test/hw_mock.h"
 #include "mir_test_doubles/null_display.h"
+
 #include <hardware/hwcomposer.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -33,7 +32,7 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-struct MockFbFactory : public mga::AndroidFBFactory
+struct MockFbFactory : public mga::FBFactory
 {
     MockFbFactory()
     {

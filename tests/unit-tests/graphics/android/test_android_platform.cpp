@@ -17,7 +17,7 @@
  *
  */
 
-#include "src/server/graphics/android/android_display_selector.h"
+#include "src/server/graphics/android/display_selector.h"
 #include "src/server/graphics/android/android_platform.h"
 #include <gmock/gmock.h>
 
