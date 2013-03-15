@@ -31,20 +31,6 @@
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 
-#if 0
-namespace
-{
-::testing::AssertionResult WasStarted(
-    std::shared_ptr<mtf::Process> const& server_process)
-{
-    if (server_process)
-        return ::testing::AssertionSuccess() << "server started";
-    else
-        return ::testing::AssertionFailure() << "server NOT started";
-}
-}
-#endif
-
 namespace mir_test_framework
 {
 void startup_pause()
@@ -98,27 +84,11 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         signal_display_server = &server;
 
         {
-#if 0
-            // FIXME (?)
-            struct ScopedFuture
-            {
-                std::future<void> future;
-                //                ^
-                // clang: default constructor of 'ScopedFuture' is implicitly
-                // deleted because field 'future' has no default constructor
-                //
-                ~ScopedFuture() { future.wait(); }
-            } scoped;
-            //^
-            // clang: call to implicitly-deleted default constructor of
-            //        'struct ScopedFuture'
-            //
-
-            scoped.future =
-#endif
-            std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
+            std::future<void> future = std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
 
             config.exec(&server);
+
+            future.wait();
         }
 
         config.on_exit(&server);
