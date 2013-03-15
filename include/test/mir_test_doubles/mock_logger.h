@@ -22,10 +22,7 @@
 
 #include "src/client/mir_logger.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnull-dereference"
 #include <gmock/gmock.h>
-#pragma GCC diagnostic pop
 
 namespace mir
 {
