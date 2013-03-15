@@ -19,8 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_
 
-#include <memory>
-#include <iostream>
+#include "display_selector.h"
 
 namespace mir
 {
@@ -33,19 +32,10 @@ namespace android
 {
 
 class FBFactory;
-
 enum class DisplayType
 {
     GPU,
     HWC_1_1
-};
-
-class DisplaySelector
-{
-public:
-    virtual std::shared_ptr<Display> primary_display() = 0; 
-
-private:
 };
 
 class AndroidDisplaySelector : public DisplaySelector
