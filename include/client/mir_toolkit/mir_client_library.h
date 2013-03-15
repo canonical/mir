@@ -18,7 +18,7 @@
 #ifndef MIR_CLIENT_LIBRARY_H
 #define MIR_CLIENT_LIBRARY_H
 
-#include <mir/common.h>
+#include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
 /** The C client API

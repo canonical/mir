@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_SESSION_H_
 #define MIR_SHELL_SESSION_H_
 
-#include "mir/common.h"
+#include "mir_toolkit/common.h"
 #include "mir/shell/surface_id.h"
 
 #include <mutex>

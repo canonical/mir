@@ -23,7 +23,7 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
-#include "mir/common.h"
+#include "mir_toolkit/common.h"
 
 #include <memory>
 
