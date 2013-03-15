@@ -28,7 +28,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/mock_session_store.h"
+#include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_session.h"

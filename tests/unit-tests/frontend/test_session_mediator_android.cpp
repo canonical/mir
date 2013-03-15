@@ -29,7 +29,7 @@
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session.h"
-#include "mir_test_doubles/stub_session_store.h"
+#include "mir_test_doubles/stub_shell.h"
 
 #include <gtest/gtest.h>
 
