@@ -34,8 +34,8 @@ TEST(ClientPlatformTest, platform_creates )
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
-    auto depository = platform->create_platform_depository();
-    EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
+    auto buffer_factory = platform->create_buffer_factory();
+    EXPECT_NE( buffer_factory.get(), (mcl::ClientBufferFactory*) NULL);
 }
 
 TEST(ClientPlatformTest, platform_creates_native_window )

@@ -1,8 +1,8 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Lesser General Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,29 +10,31 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
- *   Kevin DuBois <kevin.dubois@canonical.com>
+ *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "gbm_client_buffer_depository.h"
-#include "gbm_client_buffer.h"
+#include "client_buffer.h"
+#include "client_buffer_factory.h"
+#include "client_buffer_depository.h"
 
 #include <stdexcept>
+#include <memory>
 #include <map>
 
 namespace mcl=mir::client;
-namespace mclg=mir::client::gbm;
 
-mclg::GBMClientBufferDepository::GBMClientBufferDepository(
-        std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
-    : current_buffer(buffers.end()), drm_fd_handler{drm_fd_handler}
+mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const &factory, int max_buffers)
+    : factory(factory),
+      current_buffer(buffers.end()),
+      max_buffers(max_buffers)
 {
 }
 
-void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage>&& package, int id, geometry::Size size, geometry::PixelFormat pf)
+void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage>&& package, int id, geometry::Size size, geometry::PixelFormat pf)
 {
     for (auto next = buffers.begin(); next != buffers.end();)
     {
@@ -63,13 +65,13 @@ void mclg::GBMClientBufferDepository::deposit_package(std::shared_ptr<mir_toolki
 
     if (current_buffer == buffers.end())
     {
-        auto new_buffer = std::make_shared<mclg::GBMClientBuffer>(drm_fd_handler, std::move(package), size, pf);
+        auto new_buffer = factory->create_buffer(std::move(package), size, pf);
 
         current_buffer = buffers.insert(current_buffer, std::make_pair(id, new_buffer));
     }
 }
 
-std::shared_ptr<mcl::ClientBuffer> mclg::GBMClientBufferDepository::access_current_buffer()
+std::shared_ptr<mcl::ClientBuffer> mcl::ClientBufferDepository::access_current_buffer()
 {
     return current_buffer->second;
 }

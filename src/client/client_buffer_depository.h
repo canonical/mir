@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU Lesser General Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -20,7 +20,9 @@
 #ifndef MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
 #define MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
 
+#include <map>
 #include <memory>
+
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 
@@ -28,12 +30,14 @@ namespace mir_toolkit
 {
 class MirBufferPackage;
 }
+
 namespace mir
 {
 
 namespace client
 {
 class ClientBuffer;
+class ClientBufferFactory;
 
 /// Responsible for taking the buffer data sent from the server and wrapping it in a ClientBuffer
 
@@ -43,13 +47,22 @@ class ClientBuffer;
 class ClientBufferDepository
 {
 public:
-	/// Construct a ClientBuffer from the IPC data, and use it as the current buffer.
+    ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const &factory, int max_buffers);
 
-	/// This also marks the previous current buffer (if any) as being submitted to the server.
-	/// \post access_current_buffer() will return a ClientBuffer constructed from this IPC data.
-    virtual void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> &&, int id,
-                                geometry::Size, geometry::PixelFormat) = 0;
-    virtual std::shared_ptr<ClientBuffer> access_current_buffer() = 0;
+    /// Construct a ClientBuffer from the IPC data, and use it as the current buffer.
+
+    /// This also marks the previous current buffer (if any) as being submitted to the server.
+    /// \post access_current_buffer() will return a ClientBuffer constructed from this IPC data.
+    void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> &&, int id,
+                                geometry::Size, geometry::PixelFormat);
+    std::shared_ptr<ClientBuffer> access_current_buffer();
+
+private:
+    std::shared_ptr<ClientBufferFactory> factory;
+    typedef std::map<int, std::shared_ptr<ClientBuffer>> BufferMap;
+    BufferMap buffers;
+    BufferMap::iterator current_buffer;
+    const int max_buffers;
 };
 }
 }

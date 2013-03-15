@@ -18,9 +18,10 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "gbm_client_platform.h"
-#include "gbm_client_buffer_depository.h"
+#include "gbm_client_buffer_factory.h"
 #include "drm_fd_handler.h"
 #include "../mir_connection.h"
+#include "../client_buffer_factory.h"
 #include "../native_client_platform_factory.h"
 
 #include <xf86drm.h>
@@ -86,9 +87,9 @@ mclg::GBMClientPlatform::GBMClientPlatform(
 {
 }
 
-std::shared_ptr<mcl::ClientBufferDepository> mclg::GBMClientPlatform::create_platform_depository()
+std::shared_ptr<mcl::ClientBufferFactory> mclg::GBMClientPlatform::create_buffer_factory()
 {
-    return std::make_shared<mclg::GBMClientBufferDepository>(drm_fd_handler);
+    return std::make_shared<mclg::GBMClientBufferFactory>(drm_fd_handler);
 }
 
 std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_window(ClientSurface* client_surface)

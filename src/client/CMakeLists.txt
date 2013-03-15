@@ -43,6 +43,7 @@ include_directories(
 set(
   CLIENT_SOURCES
 
+  client_buffer_depository.cpp
   mir_client_library.cpp
   mir_connection.cpp
   mir_wait_handle.cpp
@@ -70,7 +71,7 @@ set(
   CLIENT_SOURCES
 
   android/android_client_buffer.cpp
-  android/android_client_buffer_depository.cpp
+  android/android_client_buffer_factory.cpp
   android/android_registrar.cpp
   android/android_client_platform.cpp
   android/mir_native_window.cpp
@@ -83,7 +84,7 @@ set(
   CLIENT_SOURCES
 
   gbm/gbm_client_platform.cpp
-  gbm/gbm_client_buffer_depository.cpp
+  gbm/gbm_client_buffer_factory.cpp
   gbm/gbm_client_buffer.cpp
   ${CLIENT_SOURCES}
 )
