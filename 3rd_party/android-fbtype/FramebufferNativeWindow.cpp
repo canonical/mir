@@ -87,6 +87,7 @@ FramebufferNativeWindow::FramebufferNativeWindow()
     if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
         int err;
         int i;
+        printf("FB!\n");
         err = framebuffer_open(module, &fbDev);
         
         err = gralloc_open(module, &grDev);

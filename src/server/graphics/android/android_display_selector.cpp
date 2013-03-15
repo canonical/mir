@@ -30,12 +30,13 @@ mga::AndroidDisplaySelector::AndroidDisplaySelector(std::shared_ptr<mga::FBFacto
  : fb_factory(factory) 
 {
     const hw_module_t *hw_module;
+        printf("HWC!\n");
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
 
     if (rc != 0)
     {
         /* could not find hw module. use GL fallback */
-        primary_hwc_display = fb_factory->create_gpu_display();
+        display_type = mga::DisplayType::GPU;
     } else
     {
         hw_device_t* hwc_device;
@@ -43,14 +44,19 @@ mga::AndroidDisplaySelector::AndroidDisplaySelector(std::shared_ptr<mga::FBFacto
 
         if (hwc_device->version == HWC_DEVICE_API_VERSION_1_1)
         {
-            primary_hwc_display = fb_factory->create_hwc1_1_gpu_display();
+            display_type = mga::DisplayType::HWC_1_1;
         } else {
-            primary_hwc_display = fb_factory->create_gpu_display();
+            display_type = mga::DisplayType::GPU;
         }
     } 
 }
  
 std::shared_ptr<mg::Display> mga::AndroidDisplaySelector::primary_display()
-{
-    return primary_hwc_display;
+{ 
+    if (display_type == mga::DisplayType::HWC_1_1)
+    {
+        return fb_factory->create_hwc1_1_gpu_display();
+    } else {
+        return primary_hwc_display = fb_factory->create_gpu_display();
+    }
 }

@@ -34,6 +34,11 @@ namespace android
 
 class FBFactory;
 
+enum class DisplayType
+{
+    GPU,
+    HWC_1_1
+};
 
 class DisplaySelector
 {
@@ -54,6 +59,7 @@ private:
     std::shared_ptr<FBFactory> fb_factory;
 
     std::shared_ptr<Display> primary_hwc_display;
+    DisplayType display_type;
 };
 
 }

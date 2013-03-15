@@ -111,19 +111,3 @@ TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_hwc_versio
     mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
-
-TEST_F(DisplayMethodSelectorTest, double_primary_display_call_returns_same_object)
-{
-    using namespace testing;
-
-    EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display())
-        .Times(1); 
-
-    mga::AndroidDisplaySelector selector(mock_fb_factory);
-    auto display = selector.primary_display();
-    auto display2 = selector.primary_display();
-
-    EXPECT_EQ(display, display2);
-}
