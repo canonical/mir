@@ -29,7 +29,7 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 
-#include "src/server/surfaces/proxy_surface.h"
+#include "src/server/shell/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -111,7 +111,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
             mf::a_surface().name,
             buffer_bundle));
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-        Return(std::make_shared<ms::BasicProxySurface>(dummy_surface)));
+        Return(std::make_shared<msh::Surface>(dummy_surface)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
