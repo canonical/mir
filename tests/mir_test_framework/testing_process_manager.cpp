@@ -98,14 +98,25 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         signal_display_server = &server;
 
         {
-            /*
+#if 0
+            // FIXME (?)
             struct ScopedFuture
             {
                 std::future<void> future;
+                //                ^
+                // clang: default constructor of 'ScopedFuture' is implicitly
+                // deleted because field 'future' has no default constructor
+                //
                 ~ScopedFuture() { future.wait(); }
             } scoped;
+            //^
+            // clang: call to implicitly-deleted default constructor of
+            //        'struct ScopedFuture'
+            //
 
-            scoped.future = */std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
+            scoped.future =
+#endif
+            std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
 
             config.exec(&server);
         }
