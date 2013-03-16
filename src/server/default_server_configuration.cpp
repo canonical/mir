@@ -329,7 +329,7 @@ mir::DefaultServerConfiguration::the_surface_factory()
     return surface_controller(
         [this]()
         {
-            return std::make_shared<msh::SurfaceController>(the_surface_stack_model());
+            return std::make_shared<msh::SurfaceController>(the_surface_stack_model(), the_input_channel_factory());
         });
 }
 
@@ -396,4 +396,9 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
             // TODO use the_options() to configure logging
             return std::make_shared<ml::DumbConsoleLogger>();
         });
+}
+
+std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
+{
+    return the_input_manager();
 }

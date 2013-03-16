@@ -19,6 +19,7 @@
 #include "surface.h"
 
 #include "mir/surfaces/surface_stack_model.h"
+#include "mir/input/input_channel.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -26,18 +27,23 @@
 
 namespace msh = mir::shell;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 
-msh::Surface::Surface(std::weak_ptr<mir::surfaces::Surface> const& surface) :
-    surface(surface),
+msh::Surface::Surface(std::weak_ptr<mir::surfaces::Surface> const& surface,
+		      std::shared_ptr<input::InputChannel> const& input_channel)
+  : surface(surface),
+    input_channel(input_channel),
     deleter([](std::weak_ptr<mir::surfaces::Surface> const&){})
 {
 }
 
 msh::Surface::Surface(
     std::weak_ptr<mir::surfaces::Surface> const& surface,
+    std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter)
 :
     surface(surface),
+    input_channel(input_channel),
     deleter(deleter)
 {
 }
@@ -118,4 +124,18 @@ std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
+}
+
+bool msh::Surface::supports_input() const
+{
+    if (input_channel)
+        return true;
+    return false;
+}
+
+int msh::Surface::client_input_fd() const
+{
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
+    return input_channel->client_fd();
 }
