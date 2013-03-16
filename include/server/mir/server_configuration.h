@@ -24,7 +24,7 @@ namespace mir
 {
 namespace compositor
 {
-class CompositingStrategy;
+class Compositor;
 }
 namespace frontend
 {
@@ -47,7 +47,7 @@ public:
     virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
-    virtual std::shared_ptr<compositor::CompositingStrategy> the_compositing_strategy() = 0;
+    virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
 
 protected:

@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/default_compositing_strategy.h"
+#include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
@@ -353,6 +354,16 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
         });
 }
 
+std::shared_ptr<mc::Compositor>
+mir::DefaultServerConfiguration::the_compositor()
+{
+    return compositor(
+        [this]()
+        {
+            return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
+                                                                 the_compositing_strategy());
+        });
+}
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
