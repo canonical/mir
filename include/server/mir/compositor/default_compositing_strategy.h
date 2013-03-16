@@ -16,10 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
+#ifndef MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
+#define MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
 
-#include "mir/compositor/drawer.h"
+#include "mir/compositor/compositing_strategy.h"
 #include "mir/compositor/render_view.h"
 
 #include <memory>
@@ -28,21 +28,19 @@ namespace mir
 {
 namespace graphics
 {
-
 class Renderer;
-
 }
 
 ///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
 
-class Compositor : public Drawer
+class DefaultCompositingStrategy : public CompositingStrategy
 {
 public:
-    explicit Compositor(
+    explicit DefaultCompositingStrategy(
         std::shared_ptr<RenderView> const& render_view,
-        const std::shared_ptr<graphics::Renderer>& renderer);
+        std::shared_ptr<graphics::Renderer> const& renderer);
 
     virtual void render(graphics::Display* display);
 
@@ -51,8 +49,7 @@ private:
     std::shared_ptr<graphics::Renderer> const renderer;
 };
 
-
 }
 }
 
-#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */
+#endif /* MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_ */

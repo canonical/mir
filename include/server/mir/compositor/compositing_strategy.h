@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,11 +13,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alan Griffiths <Alan Griffiths <alan@octopull.co.uk>
+ *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_DRAWER_H_
-#define MIR_COMPOSITOR_DRAWER_H_
+#ifndef MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_
+#define MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_
 
 namespace mir
 {
@@ -29,21 +30,20 @@ class Display;
 namespace compositor
 {
 
-// drawer is the interface by which "graphics/libgl" knows
-// the compositor.
-class Drawer
+class CompositingStrategy
 {
 public:
+    virtual ~CompositingStrategy() {}
+
     virtual void render(graphics::Display* display) = 0;
+
 protected:
-    Drawer() = default;
-    ~Drawer() = default;
-private:
-    Drawer& operator=(Drawer const&) = delete;
-    Drawer(Drawer const&) = delete;
+    CompositingStrategy() = default;
+    CompositingStrategy& operator=(CompositingStrategy const&) = delete;
+    CompositingStrategy(CompositingStrategy const&) = delete;
 };
 }
 }
 
 
-#endif /* MIR_COMPOSITOR_DRAWER_H_ */
+#endif /* MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_ */

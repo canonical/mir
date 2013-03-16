@@ -34,7 +34,7 @@ class GraphicBufferAllocator;
 class BufferBundleManager;
 class RenderView;
 class Drawer;
-class Compositor;
+class CompositingStrategy;
 }
 namespace frontend
 {
@@ -89,7 +89,7 @@ public:
     virtual std::shared_ptr<graphics::Renderer> the_renderer();
     virtual std::shared_ptr<graphics::ViewableArea> the_viewable_area();
 
-    virtual std::shared_ptr<compositor::Drawer> the_drawer();
+    virtual std::shared_ptr<compositor::CompositingStrategy> the_compositing_strategy();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
     virtual std::shared_ptr<compositor::RenderView> the_render_view();
@@ -127,7 +127,7 @@ protected:
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<shell::SurfaceController> surface_controller;
-    CachedPtr<compositor::Compositor> compositor;
+    CachedPtr<compositor::CompositingStrategy> compositing_strategy;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
 

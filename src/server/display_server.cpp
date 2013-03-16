@@ -21,7 +21,7 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 
-#include "mir/compositor/drawer.h"
+#include "mir/compositor/compositing_strategy.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
@@ -39,7 +39,7 @@ struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
-          compositor{config.the_drawer()},
+          compositing_strategy{config.the_compositing_strategy()},
           shell{config.the_frontend_shell()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
@@ -48,7 +48,7 @@ struct mir::DisplayServer::Private
     }
 
     std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mc::Drawer> compositor;
+    std::shared_ptr<mc::CompositingStrategy> compositing_strategy;
     std::shared_ptr<frontend::Shell> shell;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
@@ -96,5 +96,5 @@ void mir::DisplayServer::stop()
 
 void mir::DisplayServer::render(mg::Display* display)
 {
-    p->compositor->render(display);
+    p->compositing_strategy->render(display);
 }

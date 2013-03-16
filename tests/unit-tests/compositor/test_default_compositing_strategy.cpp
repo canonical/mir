@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/default_compositing_strategy.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/display.h"
@@ -72,7 +72,7 @@ ACTION_P(InvokeArgWithParam, param)
 
 }
 
-TEST(Compositor, render)
+TEST(DefaultCompositingStrategy, render)
 {
     using namespace testing;
 
@@ -81,7 +81,8 @@ TEST(Compositor, render)
     mtd::MockDisplay display;
     mtd::MockDisplayBuffer display_buffer;
 
-    mc::Compositor comp(mt::fake_shared(render_view), mt::fake_shared(mock_renderer));
+    mc::DefaultCompositingStrategy comp(mt::fake_shared(render_view),
+                                        mt::fake_shared(mock_renderer));
 
     EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
 
@@ -107,7 +108,7 @@ TEST(Compositor, render)
     comp.render(&display);
 }
 
-TEST(Compositor, skips_invisible_renderables)
+TEST(DefaultCompositingStrategy, skips_invisible_renderables)
 {
     using namespace testing;
 
@@ -135,7 +136,8 @@ TEST(Compositor, skips_invisible_renderables)
 
     FakeRenderView render_view(renderables);
 
-    mc::Compositor comp(mt::fake_shared(render_view), mt::fake_shared(mock_renderer));
+    mc::DefaultCompositingStrategy comp(mt::fake_shared(render_view),
+                                        mt::fake_shared(mock_renderer));
 
     comp.render(&display);
 }

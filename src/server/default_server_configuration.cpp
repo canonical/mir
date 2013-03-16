@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
@@ -333,13 +333,13 @@ mir::DefaultServerConfiguration::the_surface_factory()
         });
 }
 
-std::shared_ptr<mc::Drawer>
-mir::DefaultServerConfiguration::the_drawer()
+std::shared_ptr<mc::CompositingStrategy>
+mir::DefaultServerConfiguration::the_compositing_strategy()
 {
-    return compositor(
+    return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::Compositor>(the_render_view(), the_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_render_view(), the_renderer());
         });
 }
 

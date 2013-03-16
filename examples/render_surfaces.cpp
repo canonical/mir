@@ -19,7 +19,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/default_compositing_strategy.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
     auto manager = std::make_shared<mc::BufferBundleManager>(strategy);
     auto surface_stack = std::make_shared<ms::SurfaceStack>(manager);
     auto gl_renderer = std::make_shared<mg::GLRenderer>(display_size);
-    mc::Compositor compositor{surface_stack,gl_renderer};
+    mc::DefaultCompositingStrategy compositing_strategy{surface_stack,gl_renderer};
 
     /* Set up graceful exit on SIGINT */
     struct sigaction sa;
@@ -274,7 +274,7 @@ int main(int argc, char **argv)
             m[i].step();
 
         glClearColor(0.0, 1.0, 0.0, 1.0);
-        compositor.render(display.get());
+        compositing_strategy.render(display.get());
 
         frames++;
     }

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/default_compositing_strategy.h"
 
 #include "mir/compositor/rendering_operator.h"
 #include "mir/geometry/rectangle.h"
@@ -31,9 +31,9 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-mc::Compositor::Compositor(
+mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
     std::shared_ptr<RenderView> const& view,
-    const std::shared_ptr<mg::Renderer>& renderer)
+    std::shared_ptr<mg::Renderer> const& renderer)
     : render_view(view),
       renderer(renderer)
 {
@@ -61,7 +61,7 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 }
 
-void mc::Compositor::render(graphics::Display* display)
+void mc::DefaultCompositingStrategy::render(graphics::Display* display)
 {
     display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
     {
