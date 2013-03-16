@@ -42,7 +42,7 @@ public:
         std::shared_ptr<RenderView> const& render_view,
         std::shared_ptr<graphics::Renderer> const& renderer);
 
-    virtual void render(graphics::Display* display);
+    virtual void render(graphics::DisplayBuffer& display_buffer);
 
 private:
     std::shared_ptr<RenderView> const render_view;

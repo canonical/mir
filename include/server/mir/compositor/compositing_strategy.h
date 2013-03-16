@@ -24,7 +24,7 @@ namespace mir
 {
 namespace graphics
 {
-class Display;
+class DisplayBuffer;
 }
 
 namespace compositor
@@ -35,7 +35,7 @@ class CompositingStrategy
 public:
     virtual ~CompositingStrategy() {}
 
-    virtual void render(graphics::Display* display) = 0;
+    virtual void render(graphics::DisplayBuffer& display_buffer) = 0;
 
 protected:
     CompositingStrategy() = default;

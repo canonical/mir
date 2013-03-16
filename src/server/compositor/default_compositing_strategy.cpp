@@ -61,18 +61,15 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 }
 
-void mc::DefaultCompositingStrategy::render(graphics::Display* display)
+void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
 {
-    display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
-    {
-        RenderingOperator applicator(*renderer);
-        FilterForVisibleRenderablesInRegion selector(buffer.view_area());
+    RenderingOperator applicator(*renderer);
+    FilterForVisibleRenderablesInRegion selector(display_buffer.view_area());
 
-        buffer.make_current();
-        buffer.clear();
+    display_buffer.make_current();
+    display_buffer.clear();
 
-        render_view->for_each_if(selector, applicator);
+    render_view->for_each_if(selector, applicator);
 
-        buffer.post_update();
-    });
+    display_buffer.post_update();
 }

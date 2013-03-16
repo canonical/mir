@@ -274,7 +274,10 @@ int main(int argc, char **argv)
             m[i].step();
 
         glClearColor(0.0, 1.0, 0.0, 1.0);
-        compositing_strategy.render(display.get());
+        display->for_each_display_buffer([&compositing_strategy](mg::DisplayBuffer& buffer)
+        {
+            compositing_strategy.render(buffer);
+        });
 
         frames++;
     }

@@ -96,5 +96,8 @@ void mir::DisplayServer::stop()
 
 void mir::DisplayServer::render(mg::Display* display)
 {
-    p->compositing_strategy->render(display);
+    display->for_each_display_buffer([&](mg::DisplayBuffer& display_buffer)
+    {
+        p->compositing_strategy->render(display_buffer);
+    });
 }
