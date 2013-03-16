@@ -9,6 +9,7 @@ set(
   buffer_swapper_multi.cpp
   swapper_factory.cpp
   rendering_operator.cpp
+  multi_threaded_compositor.cpp
 )
 
 ADD_LIBRARY(
