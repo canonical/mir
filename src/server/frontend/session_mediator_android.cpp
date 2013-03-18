@@ -16,23 +16,23 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/frontend/application_mediator.h"
-#include "mir/frontend/application_mediator_report.h"
-#include "mir/shell/session.h"
+#include "mir/frontend/session_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session.h"
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
 
-void mir::frontend::ApplicationMediator::drm_auth_magic(
+void mir::frontend::SessionMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* /*request*/,
     mir::protobuf::DRMAuthMagicStatus* /*response*/,
     google::protobuf::Closure* /*done*/)
 {
-    if (application_session.get() == nullptr)
+    if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_drm_auth_magic_called(application_session->name());
+    report->session_drm_auth_magic_called(session->name());
 
     BOOST_THROW_EXCEPTION(std::logic_error("drm_auth_magic request not supported by the Android platform"));
 }

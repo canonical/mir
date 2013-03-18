@@ -19,23 +19,23 @@
 #include "mir/shell/surface_creation_parameters.h"
 
 namespace mc = mir::compositor;
-namespace msh = mir::shell;
+namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-msh::SurfaceCreationParameters::SurfaceCreationParameters()
+mf::SurfaceCreationParameters::SurfaceCreationParameters()
     : name(), size(), buffer_usage(mc::BufferUsage::undefined),
       pixel_format(geom::PixelFormat::invalid)
 {
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_name(std::string const& new_name)
+mf::SurfaceCreationParameters& mf::SurfaceCreationParameters::of_name(std::string const& new_name)
 {
     name = new_name;
     return *this;
 }
 
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
+mf::SurfaceCreationParameters& mf::SurfaceCreationParameters::of_size(
         geometry::Size new_size)
 {
     size = new_size;
@@ -43,14 +43,14 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
     return *this;
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
+mf::SurfaceCreationParameters& mf::SurfaceCreationParameters::of_size(
     geometry::Width::ValueType width,
     geometry::Height::ValueType height)
 {
     return of_size(geometry::Size(geometry::Width(width), geometry::Height(height)));
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
+mf::SurfaceCreationParameters& mf::SurfaceCreationParameters::of_buffer_usage(
         mc::BufferUsage new_buffer_usage)
 {
     buffer_usage = new_buffer_usage;
@@ -58,7 +58,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
     return *this;
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
+mf::SurfaceCreationParameters& mf::SurfaceCreationParameters::of_pixel_format(
     geom::PixelFormat new_pixel_format)
 {
     pixel_format = new_pixel_format;
@@ -66,23 +66,23 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
     return *this;
 }
 
-bool msh::operator==(
+bool mf::operator==(
     const SurfaceCreationParameters& lhs,
-    const msh::SurfaceCreationParameters& rhs)
+    const mf::SurfaceCreationParameters& rhs)
 {
     return lhs.size == rhs.size &&
            lhs.buffer_usage == rhs.buffer_usage &&
            lhs.pixel_format == rhs.pixel_format;
 }
 
-bool msh::operator!=(
+bool mf::operator!=(
     const SurfaceCreationParameters& lhs,
-    const msh::SurfaceCreationParameters& rhs)
+    const mf::SurfaceCreationParameters& rhs)
 {
     return !(lhs == rhs);
 }
 
-msh::SurfaceCreationParameters msh::a_surface()
+mf::SurfaceCreationParameters mf::a_surface()
 {
     return SurfaceCreationParameters();
 }

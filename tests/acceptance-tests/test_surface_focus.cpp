@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/shell/session_container.h"
+#include "mir/frontend/session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
@@ -31,6 +31,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
@@ -92,7 +93,7 @@ namespace
 {
 MATCHER(NonNullSession, "")
 {
-    return arg != std::shared_ptr<msh::Session>();
+    return arg != std::shared_ptr<mf::Session>();
 }
 }
 
@@ -100,11 +101,11 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<msh::SessionStore>
-        the_session_store()
+        std::shared_ptr<mf::Shell>
+        the_frontend_shell()
         {
-            return session_store(
-                [this]() -> std::shared_ptr<msh::SessionStore>
+            return session_manager(
+            [this]() -> std::shared_ptr<msh::SessionManager>
             {
                 using namespace ::testing;
 

@@ -17,9 +17,9 @@
  */
 
 #include "mir/shell/application_session.h"
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 
-#include "mir/surfaces/surface_controller.h"
+#include "mir/shell/surface_controller.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -28,6 +28,7 @@
 #include <cassert>
 #include <algorithm>
 
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 
@@ -50,12 +51,12 @@ msh::ApplicationSession::~ApplicationSession()
     }
 }
 
-msh::SurfaceId msh::ApplicationSession::next_id()
+mf::SurfaceId msh::ApplicationSession::next_id()
 {
-    return SurfaceId(next_surface_id.fetch_add(1));
+    return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-msh::SurfaceId msh::ApplicationSession::create_surface(const SurfaceCreationParameters& params)
+mf::SurfaceId msh::ApplicationSession::create_surface(const mf::SurfaceCreationParameters& params)
 {
     auto surf = surface_factory->create_surface(params);
     auto const id = next_id();
@@ -65,7 +66,7 @@ msh::SurfaceId msh::ApplicationSession::create_surface(const SurfaceCreationPara
     return id;
 }
 
-msh::ApplicationSession::Surfaces::const_iterator msh::ApplicationSession::checked_find(SurfaceId id) const
+msh::ApplicationSession::Surfaces::const_iterator msh::ApplicationSession::checked_find(mf::SurfaceId id) const
 {
     auto p = surfaces.find(id);
     if (p == surfaces.end())
@@ -75,14 +76,14 @@ msh::ApplicationSession::Surfaces::const_iterator msh::ApplicationSession::check
     return p;
 }
 
-std::shared_ptr<msh::Surface> msh::ApplicationSession::get_surface(msh::SurfaceId id) const
+std::shared_ptr<mf::Surface> msh::ApplicationSession::get_surface(mf::SurfaceId id) const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
     return checked_find(id)->second;
 }
 
-void msh::ApplicationSession::destroy_surface(msh::SurfaceId id)
+void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);

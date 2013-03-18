@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/server/surfaces/proxy_surface.h"
+#include "src/server/shell/surface.h"
 #include "mir/surfaces/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack_model.h"
@@ -31,6 +31,7 @@
 
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
+namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -53,12 +54,12 @@ public:
             WillByDefault(Invoke(this, &MockSurfaceStackModel::do_destroy_surface));
     }
 
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const msh::SurfaceCreationParameters&));
+    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const mf::SurfaceCreationParameters&));
 
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
 
 private:
-    std::weak_ptr<ms::Surface> do_create_surface(const msh::SurfaceCreationParameters& params)
+    std::weak_ptr<ms::Surface> do_create_surface(const mf::SurfaceCreationParameters& params)
     {
         surface = std::make_shared<ms::Surface>(
             params.name,
@@ -73,44 +74,12 @@ private:
 
     std::shared_ptr<ms::Surface> surface;
 };
-}
 
-TEST(SurfaceProxy, creation_and_destruction)
-{
-    MockSurfaceStackModel surface_stack;
-    msh::SurfaceCreationParameters params;
-
-    using namespace testing;
-    InSequence sequence;
-    EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
-    EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
-
-    ms::ProxySurface test(&surface_stack, params);
-}
-
-TEST(SurfaceProxy, destroy)
-{
-    using namespace testing;
-
-    NiceMock<MockSurfaceStackModel> surface_stack;
-    msh::SurfaceCreationParameters params;
-
-    ms::ProxySurface test(&surface_stack, params);
-
-    EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
-
-    test.destroy();
-
-    Mock::VerifyAndClearExpectations(&surface_stack);
-}
-
-namespace
-{
-struct BasicSurfaceProxy : testing::Test
+struct ShellSurface : testing::Test
 {
     std::shared_ptr<StubBufferBundle> buffer_bundle;
 
-    BasicSurfaceProxy() :
+    ShellSurface() :
         buffer_bundle(std::make_shared<StubBufferBundle>())
     {
         using namespace testing;
@@ -122,11 +91,44 @@ struct BasicSurfaceProxy : testing::Test
 };
 }
 
-TEST_F(BasicSurfaceProxy, client_buffer_throw_behavior)
+TEST_F(ShellSurface, creation_and_destruction)
+{
+    MockSurfaceStackModel surface_stack;
+    mf::SurfaceCreationParameters params;
+
+    using namespace testing;
+    InSequence sequence;
+    EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
+    EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
+
+    msh::Surface test(
+        surface_stack.create_surface(params),
+        [&](std::weak_ptr<mir::surfaces::Surface> const& s) {surface_stack.destroy_surface(s);});
+}
+
+TEST_F(ShellSurface, destroy)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceStackModel> surface_stack;
+    mf::SurfaceCreationParameters params;
+
+    msh::Surface test(
+        surface_stack.create_surface(params),
+        [&](std::weak_ptr<mir::surfaces::Surface> const& s) {surface_stack.destroy_surface(s);});
+
+    EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
+
+    test.destroy();
+
+    Mock::VerifyAndClearExpectations(&surface_stack);
+}
+
+TEST_F(ShellSurface, client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    msh::Surface proxy_surface(surface);
 
     EXPECT_NO_THROW({
         proxy_surface.client_buffer();
@@ -139,11 +141,11 @@ TEST_F(BasicSurfaceProxy, client_buffer_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST_F(BasicSurfaceProxy, size_throw_behavior)
+TEST_F(ShellSurface, size_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    msh::Surface proxy_surface(surface);
 
     EXPECT_NO_THROW({
         proxy_surface.size();
@@ -156,11 +158,11 @@ TEST_F(BasicSurfaceProxy, size_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST_F(BasicSurfaceProxy, pixel_format_throw_behavior)
+TEST_F(ShellSurface, pixel_format_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    msh::Surface proxy_surface(surface);
 
     EXPECT_NO_THROW({
         proxy_surface.pixel_format();
@@ -173,11 +175,11 @@ TEST_F(BasicSurfaceProxy, pixel_format_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST_F(BasicSurfaceProxy, hide_throw_behavior)
+TEST_F(ShellSurface, hide_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    msh::Surface proxy_surface(surface);
 
     EXPECT_NO_THROW({
         proxy_surface.hide();
@@ -190,11 +192,11 @@ TEST_F(BasicSurfaceProxy, hide_throw_behavior)
     });
 }
 
-TEST_F(BasicSurfaceProxy, show_throw_behavior)
+TEST_F(ShellSurface, show_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    msh::Surface proxy_surface(surface);
 
     EXPECT_NO_THROW({
         proxy_surface.show();
@@ -207,11 +209,11 @@ TEST_F(BasicSurfaceProxy, show_throw_behavior)
     });
 }
 
-TEST_F(BasicSurfaceProxy, destroy_throw_behavior)
+TEST_F(ShellSurface, destroy_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    msh::Surface proxy_surface(surface);
 
     EXPECT_NO_THROW({
         proxy_surface.destroy();
@@ -224,11 +226,11 @@ TEST_F(BasicSurfaceProxy, destroy_throw_behavior)
     });
 }
 
-TEST_F(BasicSurfaceProxy, shutdown_throw_behavior)
+TEST_F(ShellSurface, shutdown_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    msh::Surface proxy_surface(surface);
 
     EXPECT_NO_THROW({
         proxy_surface.shutdown();
@@ -241,11 +243,11 @@ TEST_F(BasicSurfaceProxy, shutdown_throw_behavior)
     });
 }
 
-TEST_F(BasicSurfaceProxy, advance_client_buffer_throw_behavior)
+TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    ms::BasicProxySurface proxy_surface(surface);
+    msh::Surface proxy_surface(surface);
 
     EXPECT_NO_THROW({
         proxy_surface.advance_client_buffer();
