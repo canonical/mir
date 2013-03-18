@@ -21,6 +21,7 @@
 #define MIR_INPUT_INPUT_MANAGER_H_
 
 #include "mir/input/input_channel_factory.h"
+#include "mir/input/focus_selector.h"
 
 #include <memory>
 
@@ -41,7 +42,7 @@ namespace input
 class EventFilter;
 class InputChannel;
 
-class InputManager : public InputChannelFactory
+class InputManager : public InputChannelFactory, public FocusSelector
 {
 public:
     virtual void start() = 0;
