@@ -51,7 +51,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
 }
 
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::SurfaceCreationParameters& params)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params)
 {
     std::lock_guard<std::mutex> lg(guard);
 

@@ -38,20 +38,21 @@ class Compositor;
 }
 namespace frontend
 {
+class Shell;
 class Communicator;
 class ProtobufIpcFactory;
-class ApplicationMediatorReport;
+class SessionMediatorReport;
 }
 
 namespace shell
 {
-class SessionStore;
+class SessionManager;
 class SurfaceFactory;
+class SurfaceController;
 }
 namespace surfaces
 {
 class BufferBundleFactory;
-class SurfaceController;
 class SurfaceStackModel;
 class SurfaceStack;
 }
@@ -68,6 +69,7 @@ namespace input
 {
 class InputManager;
 class EventFilter;
+class InputChannelFactory;
 }
 
 namespace logging
@@ -93,9 +95,9 @@ public:
     virtual std::shared_ptr<compositor::RenderView> the_render_view();
 
     virtual std::shared_ptr<frontend::Communicator> the_communicator();
-    virtual std::shared_ptr<frontend::ApplicationMediatorReport> the_application_mediator_report();
+    virtual std::shared_ptr<frontend::SessionMediatorReport> the_session_mediator_report();
 
-    virtual std::shared_ptr<shell::SessionStore> the_session_store();
+    virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
     virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
 
     virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
@@ -108,9 +110,10 @@ public:
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
+    virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
 
     CachedPtr<frontend::Communicator> communicator;
-    CachedPtr<shell::SessionStore> session_store;
+    CachedPtr<frontend::Shell> session_manager;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
@@ -118,12 +121,12 @@ protected:
     CachedPtr<graphics::Display>      display;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
-    CachedPtr<frontend::ApplicationMediatorReport> application_mediator_report;
+    CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
-    CachedPtr<surfaces::SurfaceController> surface_controller;
+    CachedPtr<shell::SurfaceController> surface_controller;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
@@ -133,7 +136,7 @@ private:
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<shell::SessionStore> const& session_store,
+        std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::ViewableArea> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 

@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
-#define MIR_SURFACES_SURFACE_CONTROLLER_H_
+#ifndef MIR_SHELL_SURFACE_CONTROLLER_H_
+#define MIR_SHELL_SURFACE_CONTROLLER_H_
 
 #include "mir/shell/surface_factory.h"
 
@@ -25,32 +25,38 @@
 
 namespace mir
 {
+namespace input
+{
+class InputChannelFactory;
+}
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
-
-class Surface;
 class SurfaceStackModel;
+}
 
-class SurfaceController : public shell::SurfaceFactory
+namespace shell
+{
+class SurfaceController : public SurfaceFactory
 {
 public:
-    explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
+  explicit SurfaceController(std::shared_ptr<surfaces::SurfaceStackModel> const& surface_stack, std::shared_ptr<input::InputChannelFactory> const& input_factory);
     virtual ~SurfaceController() {}
 
-    std::shared_ptr<shell::Surface> create_surface(const shell::SurfaceCreationParameters& params);
+    std::shared_ptr<frontend::Surface> create_surface(const frontend::SurfaceCreationParameters& params);
 
 protected:
     SurfaceController(const SurfaceController&) = delete;
     SurfaceController& operator=(const SurfaceController&) = delete;
 
 private:
-    std::shared_ptr<SurfaceStackModel> const surface_stack;
+    std::shared_ptr<surfaces::SurfaceStackModel> const surface_stack;
+    std::shared_ptr<input::InputChannelFactory> const input_factory;
 };
 
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_CONTROLLER_H_
+#endif // MIR_SHELL_SURFACE_CONTROLLER_H_
