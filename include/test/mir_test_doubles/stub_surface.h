@@ -56,7 +56,7 @@ public:
     
     virtual bool supports_input() const
     {
-        return 0;
+        return false;
     }
     
     virtual int client_input_fd() const
