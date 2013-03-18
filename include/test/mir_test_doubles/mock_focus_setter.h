@@ -16,12 +16,12 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#define MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
 
-#include "mir/frontend/surface.h"
+#include "mir/shell/focus_setter.h"
 
-#include <memory>
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -30,24 +30,13 @@ namespace test
 namespace doubles
 {
 
-struct MockSurface : public frontend::Surface
+struct MockFocusSetter : public shell::FocusSetter
 {
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
-    MOCK_METHOD0(destroy, void());
-    MOCK_METHOD0(shutdown, void());
-    MOCK_METHOD0(advance_client_buffer, void());
-
-    MOCK_CONST_METHOD0(size, geometry::Size ());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
-    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());
-    
-    MOCK_CONST_METHOD0(supports_input, bool());
-    MOCK_CONST_METHOD0(client_input_fd, int());
+    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<frontend::Session> const&));
 };
 
 }
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_H_
+#endif // MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_

@@ -26,19 +26,27 @@
 namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
 
+#include <stdio.h>
+
 TEST_F(BespokeDisplayServerTestFixture, starting_display_server_starts_input_manager)
 {
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mi::InputManager> the_input_manager()
         {
-            input_manager = std::make_shared<mtd::MockInputManager>();
-            EXPECT_CALL(*input_manager, start()).Times(1);
-            EXPECT_CALL(*input_manager, stop()).Times(1);
 
-            return input_manager;
+            if (!mock_input_manager.get())
+            {
+                mock_input_manager = std::make_shared<mtd::MockInputManager>();
+
+                EXPECT_CALL(*mock_input_manager, start()).Times(1);
+                EXPECT_CALL(*mock_input_manager, stop()).Times(1);
+            }
+
+            return mock_input_manager;
         }
-        std::shared_ptr<mtd::MockInputManager> input_manager;
+
+        std::shared_ptr<mtd::MockInputManager> mock_input_manager;
     } server_config;
 
     launch_server_process(server_config);

@@ -63,6 +63,9 @@ struct MockSurface : public mf::Surface
     MOCK_CONST_METHOD0(size, mir::geometry::Size ());
     MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer> ());
+
+    MOCK_CONST_METHOD0(supports_input, bool());
+    MOCK_CONST_METHOD0(client_input_fd, int());
 };
 
 MATCHER_P(NamedWindowWithNoGeometry, name, "")

@@ -31,9 +31,9 @@
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
-
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mtc = mir::test::cucumber;
 
@@ -76,7 +76,18 @@ struct DummySurface : public mf::Surface
     {
         return std::shared_ptr<mc::Buffer>();
     }
+    virtual bool supports_input() const
+    {
+        return true;
+    }
+    virtual int client_input_fd() const
+    {
+        return testing_client_input_fd;
+    }
+    static int testing_client_input_fd;
 };
+
+int DummySurface::testing_client_input_fd = 0;
 
 struct SizedDummySurface : public DummySurface
 {

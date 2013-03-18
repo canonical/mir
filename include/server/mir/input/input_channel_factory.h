@@ -16,38 +16,31 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
-
-#include "mir/frontend/surface.h"
+#ifndef MIR_INPUT_INPUT_CHANNEL_FACTORY_H_
+#define MIR_INPUT_INPUT_CHANNEL_FACTORY_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace test
+namespace input
 {
-namespace doubles
-{
+class InputChannel;
 
-struct MockSurface : public frontend::Surface
+class InputChannelFactory
 {
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
-    MOCK_METHOD0(destroy, void());
-    MOCK_METHOD0(shutdown, void());
-    MOCK_METHOD0(advance_client_buffer, void());
-
-    MOCK_CONST_METHOD0(size, geometry::Size ());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
-    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());
+public:
+    virtual ~InputChannelFactory() {}
     
-    MOCK_CONST_METHOD0(supports_input, bool());
-    MOCK_CONST_METHOD0(client_input_fd, int());
+    virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
+
+protected:
+    InputChannelFactory() = default;
+    InputChannelFactory(InputChannelFactory const&) = delete;
+    InputChannelFactory& operator=(InputChannelFactory const&) = delete;
 };
 
 }
-}
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_H_
+#endif // MIR_INPUT_INPUT_CHANNEL_FACTORY_H_

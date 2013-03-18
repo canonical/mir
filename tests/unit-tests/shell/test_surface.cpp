@@ -20,10 +20,12 @@
 #include "mir/surfaces/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack_model.h"
+#include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test/fake_shared.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -33,8 +35,10 @@ namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 
 namespace
 {
@@ -75,12 +79,21 @@ private:
     std::shared_ptr<ms::Surface> surface;
 };
 
+
+struct MockInputChannel : public mi::InputChannel
+{
+    MOCK_CONST_METHOD0(client_fd, int());
+    MOCK_CONST_METHOD0(server_fd, int());
+};
+
 struct ShellSurface : testing::Test
 {
     std::shared_ptr<StubBufferBundle> buffer_bundle;
+    std::shared_ptr<mi::InputChannel> null_input_channel;
 
     ShellSurface() :
-        buffer_bundle(std::make_shared<StubBufferBundle>())
+        buffer_bundle(std::make_shared<StubBufferBundle>()),
+	null_input_channel(0)
     {
         using namespace testing;
 
@@ -93,16 +106,18 @@ struct ShellSurface : testing::Test
 
 TEST_F(ShellSurface, creation_and_destruction)
 {
+    using namespace testing;
+
     MockSurfaceStackModel surface_stack;
     mf::SurfaceCreationParameters params;
 
-    using namespace testing;
     InSequence sequence;
     EXPECT_CALL(surface_stack, create_surface(_)).Times(1);
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
 
     msh::Surface test(
         surface_stack.create_surface(params),
+	null_input_channel,
         [&](std::weak_ptr<mir::surfaces::Surface> const& s) {surface_stack.destroy_surface(s);});
 }
 
@@ -115,6 +130,7 @@ TEST_F(ShellSurface, destroy)
 
     msh::Surface test(
         surface_stack.create_surface(params),
+	null_input_channel,
         [&](std::weak_ptr<mir::surfaces::Surface> const& s) {surface_stack.destroy_surface(s);});
 
     EXPECT_CALL(surface_stack, destroy_surface(_)).Times(1);
@@ -128,7 +144,7 @@ TEST_F(ShellSurface, client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    msh::Surface proxy_surface(surface);
+    msh::Surface proxy_surface(surface, null_input_channel);
 
     EXPECT_NO_THROW({
         proxy_surface.client_buffer();
@@ -145,7 +161,7 @@ TEST_F(ShellSurface, size_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    msh::Surface proxy_surface(surface);
+    msh::Surface proxy_surface(surface, null_input_channel);
 
     EXPECT_NO_THROW({
         proxy_surface.size();
@@ -162,7 +178,7 @@ TEST_F(ShellSurface, pixel_format_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    msh::Surface proxy_surface(surface);
+    msh::Surface proxy_surface(surface, null_input_channel);
 
     EXPECT_NO_THROW({
         proxy_surface.pixel_format();
@@ -179,7 +195,7 @@ TEST_F(ShellSurface, hide_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    msh::Surface proxy_surface(surface);
+    msh::Surface proxy_surface(surface, null_input_channel);
 
     EXPECT_NO_THROW({
         proxy_surface.hide();
@@ -196,7 +212,7 @@ TEST_F(ShellSurface, show_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    msh::Surface proxy_surface(surface);
+    msh::Surface proxy_surface(surface, null_input_channel);
 
     EXPECT_NO_THROW({
         proxy_surface.show();
@@ -213,7 +229,7 @@ TEST_F(ShellSurface, destroy_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    msh::Surface proxy_surface(surface);
+    msh::Surface proxy_surface(surface, null_input_channel);
 
     EXPECT_NO_THROW({
         proxy_surface.destroy();
@@ -230,7 +246,7 @@ TEST_F(ShellSurface, shutdown_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    msh::Surface proxy_surface(surface);
+    msh::Surface proxy_surface(surface, null_input_channel);
 
     EXPECT_NO_THROW({
         proxy_surface.shutdown();
@@ -247,7 +263,7 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
 
-    msh::Surface proxy_surface(surface);
+    msh::Surface proxy_surface(surface, null_input_channel);
 
     EXPECT_NO_THROW({
         proxy_surface.advance_client_buffer();
@@ -259,3 +275,27 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
         proxy_surface.advance_client_buffer();
     });
 }
+
+TEST_F(ShellSurface, surfaces_with_input_channel_supports_input)
+{
+    using namespace testing;
+    const int testing_client_fd = 17;
+
+    MockInputChannel mock_package;
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+    auto input_surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+    msh::Surface proxy_surface(surface, null_input_channel);
+    msh::Surface input_proxy_surface(surface, mt::fake_shared(mock_package));
+
+    EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
+    
+    EXPECT_TRUE(input_proxy_surface.supports_input());
+    EXPECT_FALSE(proxy_surface.supports_input());
+
+    EXPECT_EQ(testing_client_fd, input_proxy_surface.client_input_fd());
+
+    EXPECT_THROW({
+            proxy_surface.client_input_fd();
+    }, std::logic_error);
+}
+

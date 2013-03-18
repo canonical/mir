@@ -16,38 +16,29 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
-
-#include "mir/frontend/surface.h"
-
-#include <memory>
+#ifndef MIR_INPUT_INPUT_CHANNEL_H_
+#define MIR_INPUT_INPUT_CHANNEL_H_
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct MockSurface : public frontend::Surface
+class InputChannel
 {
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
-    MOCK_METHOD0(destroy, void());
-    MOCK_METHOD0(shutdown, void());
-    MOCK_METHOD0(advance_client_buffer, void());
-
-    MOCK_CONST_METHOD0(size, geometry::Size ());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
-    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());
+public:
+    virtual ~InputChannel() {}
     
-    MOCK_CONST_METHOD0(supports_input, bool());
-    MOCK_CONST_METHOD0(client_input_fd, int());
+    virtual int client_fd() const = 0;
+    virtual int server_fd() const = 0;
+
+protected:
+    InputChannel() = default;
+    InputChannel(InputChannel const&) = delete;
+    InputChannel& operator=(InputChannel const&) = delete;
 };
 
 }
-}
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_H_
+#endif // MIR_INPUT_INPUT_CHANNEL_H_

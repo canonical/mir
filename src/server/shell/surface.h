@@ -31,6 +31,10 @@ namespace frontend
 {
 struct SurfaceCreationParameters;
 }
+namespace input
+{
+class InputChannel;
+}
 
 namespace surfaces
 {
@@ -43,9 +47,10 @@ namespace shell
 class Surface : public frontend::Surface
 {
 public:
-
-    explicit Surface(std::weak_ptr<mir::surfaces::Surface> const& surface);
-    Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
+    explicit Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::shared_ptr<input::InputChannel> const& input_channel);
+    Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, 
+	    std::shared_ptr<input::InputChannel> const& input_channel,
+	    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
     ~Surface();
 
     void hide();
@@ -64,8 +69,12 @@ public:
 
     std::shared_ptr<compositor::Buffer> client_buffer() const;
 
+    bool supports_input() const;
+    int client_input_fd() const;
+
 private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
+    std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const deleter;
 };
 

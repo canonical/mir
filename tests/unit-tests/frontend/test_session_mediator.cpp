@@ -67,6 +67,9 @@ public:
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
         EXPECT_CALL(*mock_surface, client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mt::fake_shared(stub_buffer)));
         EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber());
+        
+        EXPECT_CALL(*mock_surface, supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
+        EXPECT_CALL(*mock_surface, client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
     }
 
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId /* surface */) const
@@ -76,7 +79,10 @@ public:
 
     std::shared_ptr<mtd::MockSurface> mock_surface;
     mtd::StubBuffer stub_buffer;
+    static int const testing_client_input_fd;
 };
+
+int const StubbedSession::testing_client_input_fd{11};
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -133,6 +139,7 @@ struct SessionMediatorTest : public ::testing::Test
         using namespace ::testing;
 
         ON_CALL(*shell, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
+        ON_CALL(*shell, create_surface_for(_, _)).WillByDefault(Return(mf::SurfaceId{1}));
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
@@ -302,4 +309,22 @@ TEST_F(SessionMediatorTest, connect_queries_supported_pixel_formats)
         EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(info.supported_pixel_format(i)))
             << "i = " << i;
     }
+}
+
+TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)
+{
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+    
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    
+    {
+        mp::SurfaceParameters request;
+        mp::Surface response;
+        
+        mediator.create_surface(nullptr, &request, &response, null_callback.get());
+        EXPECT_EQ(StubbedSession::testing_client_input_fd, response.fd(0));
+    }
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
