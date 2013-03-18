@@ -24,6 +24,7 @@
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
 #include "mir/graphics/display.h"
+#include "mir/input/focus_selector.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_focus_setter.h"
@@ -33,6 +34,7 @@
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -110,6 +112,11 @@ struct SurfaceCreatingClient : ClientConfigCommon
     }
 };
 
+struct MockFocusSelector : public mi::FocusSelector
+{
+    MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<mf::Session> const&, std::shared_ptr<mf::Surface> const&));
+};
+
 }
 
 namespace
@@ -117,6 +124,10 @@ namespace
 MATCHER(NonNullSession, "")
 {
     return arg != std::shared_ptr<mf::Session>();
+}
+MATCHER(NonNullSurface, "")
+{
+    return arg != std::shared_ptr<mf::Surface>();
 }
 }
 
@@ -153,6 +164,37 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
         }
     } server_config;
 
+    launch_server_process(server_config);
+
+    SurfaceCreatingClient client;
+    
+    launch_client_process(client);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_created)
+{
+    struct ServerConfig : public TestingServerConfiguration
+    {
+        std::shared_ptr<MockFocusSelector> focus_selector;
+
+        std::shared_ptr<mi::FocusSelector>
+        the_input_focus_selector()
+        {
+            using namespace ::testing;
+            
+            if (focus_selector)
+                return focus_selector;
+            
+            focus_selector = std::make_shared<MockFocusSelector>();
+                
+            EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSession(), NonNullSurface())).Times(1);
+            EXPECT_CALL(*focus_selector, set_input_focus_to(_, _)).Times(1); // When Surface is released
+                
+            return focus_selector;
+        }
+    } server_config;
+
+        
     launch_server_process(server_config);
 
     SurfaceCreatingClient client;
