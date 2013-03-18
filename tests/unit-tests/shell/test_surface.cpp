@@ -286,26 +286,24 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
     });
 }
 
-//TEST_F(ShellSurface, surfaces_with_input_channel_supports_input)
-//{
-//    using namespace testing;
-//    const int testing_client_fd = 17;
-//
-//    MockInputChannel mock_package;
-//    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
-//    auto input_surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
-//    msh::Surface proxy_surface(surface, null_input_channel);
-//    msh::Surface input_proxy_surface(surface, mt::fake_shared(mock_package));
-//
-//    EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
-//
-//    EXPECT_TRUE(input_proxy_surface.supports_input());
-//    EXPECT_FALSE(proxy_surface.supports_input());
-//
-//    EXPECT_EQ(testing_client_fd, input_proxy_surface.client_input_fd());
-//
-//    EXPECT_THROW({
-//            proxy_surface.client_input_fd();
-//    }, std::logic_error);
-//}
+TEST_F(ShellSurface, surfaces_with_input_channel_supports_input)
+{
+    using namespace testing;
+    const int testing_client_fd = 17;
+
+    MockInputChannel mock_package;
+    msh::Surface proxy_surface(mt::fake_shared(surface_builder), mf::a_surface(), null_input_channel);
+    msh::Surface input_proxy_surface(mt::fake_shared(surface_builder), mf::a_surface(), mt::fake_shared(mock_package));
+
+    EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
+
+    EXPECT_TRUE(input_proxy_surface.supports_input());
+    EXPECT_FALSE(proxy_surface.supports_input());
+
+    EXPECT_EQ(testing_client_fd, input_proxy_surface.client_input_fd());
+
+    EXPECT_THROW({
+            proxy_surface.client_input_fd();
+    }, std::logic_error);
+}
 
