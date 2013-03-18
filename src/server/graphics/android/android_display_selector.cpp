@@ -21,8 +21,6 @@
 
 #include <hardware/hwcomposer.h>
 
-#include <stdio.h>
-
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 

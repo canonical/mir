@@ -35,7 +35,7 @@ class ClientPlatformTest : public ::testing::Test
     testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
 };
 
-TEST_F(ClientPlatformTest, platform_creates )
+TEST_F(ClientPlatformTest, platform_creates)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
@@ -44,7 +44,7 @@ TEST_F(ClientPlatformTest, platform_creates )
     EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
 }
 
-TEST_F(ClientPlatformTest, platform_creates_native_window )
+TEST_F(ClientPlatformTest, platform_creates_native_window)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;

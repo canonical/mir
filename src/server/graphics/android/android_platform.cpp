@@ -20,14 +20,10 @@
 #include "android_platform.h"
 #include "android_buffer_allocator.h"
 #include "android_display.h"
-#include "mir/graphics/platform_ipc_package.h"
 #include "android_display_selector.h"
 #include "android_fb_factory.h"
+#include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
-
-
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;

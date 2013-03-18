@@ -47,7 +47,7 @@ public:
 private:
     std::shared_ptr<FBFactory> fb_factory;
     std::shared_ptr<Display> primary_hwc_display;
-    DisplayType  display_type;
+    DisplayType display_type;
 };
 
 }
