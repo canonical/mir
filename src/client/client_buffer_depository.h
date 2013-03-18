@@ -62,7 +62,7 @@ private:
     typedef std::map<int, std::shared_ptr<ClientBuffer>> BufferMap;
     BufferMap buffers;
     BufferMap::iterator current_buffer_iter;
-    const unsigned max_buffers;
+    const unsigned max_age;
 };
 }
 }

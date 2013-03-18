@@ -30,7 +30,7 @@ namespace mcl=mir::client;
 mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const &factory, int max_buffers)
     : factory(factory),
       current_buffer_iter(buffers.end()),
-      max_buffers(max_buffers)
+      max_age(max_buffers - 1)
 {
 }
 
@@ -45,7 +45,7 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::M
 
         if (current != current_buffer_iter &&
             current->first != id &&
-            current->second->age() >= (max_buffers - 1))
+            current->second->age() >= max_age)
         {
             buffers.erase(current);
         }
