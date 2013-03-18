@@ -33,6 +33,7 @@
 #include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
 
+#include <iostream>
 #include <boost/throw_exception.hpp>
 
 mir::frontend::SessionMediator::SessionMediator(
@@ -114,7 +115,13 @@ void mir::frontend::SessionMediator::create_surface(
         response->set_pixel_format((int)surface->pixel_format());
         response->set_buffer_usage(request->buffer_usage());
 
-        response->add_fd(surface->client_input_fd());
+        try
+        {
+            response->add_fd(surface->client_input_fd());
+        } catch ( std::logic_error& e)
+        {
+            std::cout << e.what() << std::endl;
+        }
 
         surface->advance_client_buffer();
         auto const& buffer_resource = surface->client_buffer();

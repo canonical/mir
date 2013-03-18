@@ -80,8 +80,8 @@ int main(int argc, char* argv[])
     puts("Connected");
 
     assert(connection != NULL);
-    assert(mir_connection_is_valid(connection));
-    assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
+//    assert(mir_connection_is_valid(connection));
+//    assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
 
     MirDisplayInfo display_info;
     mir_connection_get_display_info(connection, &display_info);
