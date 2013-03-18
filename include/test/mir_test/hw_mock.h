@@ -18,63 +18,30 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_HWC_DEVICE_H_
 #define MIR_TEST_DOUBLES_MOCK_ANDROID_HWC_DEVICE_H_
 
-#include <memory>
-#include <hardware/hardware.h>
-#include <hardware/hwcomposer.h> 
-#include <gmock/gmock.h>
 #include "mir_test_doubles/mock_android_alloc_device.h"
+#include "mir_test_doubles/mock_hwc_composer_device_1.h"
+
+#include <hardware/hardware.h>
+#include <gmock/gmock.h>
+#include <memory>
 
 namespace mir
 {
 namespace test
 {
 
-class HWCComposer1Interface
-{
-
-};
-
-class MockHWCComposerDevice1 : public HWCComposer1Interface,
-                               public hwc_composer_device_1
-{
-public:
-    MockHWCComposerDevice1()
-    {
-        common.version = HWC_DEVICE_API_VERSION_1_1;
-    } 
-};
-
 typedef struct hw_module_t hw_module;
-class hardware_module_mock : public hw_module
+class HardwareModuleStub : public hw_module
 {
 public:
-    hardware_module_mock(hw_device_t* const& device)
-        : mock_ad(device)
-    { 
-        gr_methods.open = hw_open;
-        methods = &gr_methods; 
-    }
-    ~hardware_module_mock()
-    {
-    } 
+    HardwareModuleStub(hw_device_t* const& device);
 
-    static int hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device)
-    {
-        hardware_module_mock* self = (hardware_module_mock*) module;
-        self->mock_ad->close = hw_close;
-        *device = (hw_device_t*) self->mock_ad;
-        return 0;
-    }
-
-    static int hw_close(struct hw_device_t*)
-    {
-        return 0;
-    }
+    static int hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device);
+    static int hw_close(struct hw_device_t*);
 
     hw_module_methods_t gr_methods;
-    hw_device_t* mock_ad;
+    hw_device_t* mock_hw_device;
 };
-
 
 class HardwareAccessMock
 {
@@ -84,11 +51,11 @@ public:
 
     MOCK_METHOD2(hw_get_module, int(const char *id, const struct hw_module_t**));
 
-    std::shared_ptr<alloc_device_t> ad; 
-    std::shared_ptr<hwc_composer_device_1> hd;
+    std::shared_ptr<alloc_device_t> mock_alloc_device; 
+    std::shared_ptr<hwc_composer_device_1> mock_hwc_device;
  
-    std::shared_ptr<hardware_module_mock> grmock;
-    std::shared_ptr<hardware_module_mock> hwmock;
+    std::shared_ptr<HardwareModuleStub> mock_gralloc_module;
+    std::shared_ptr<HardwareModuleStub> mock_hwc_module;
 };
 
 }

@@ -101,7 +101,7 @@ TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_hwc_versio
 {
     using namespace testing;
 
-    hw_access_mock.hd->common.version = HWC_DEVICE_API_VERSION_1_0;
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
     EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
         .Times(1);
     EXPECT_CALL(*mock_fb_factory, create_gpu_display())
