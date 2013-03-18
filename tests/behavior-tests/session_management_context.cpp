@@ -29,13 +29,17 @@
 #include "mir/graphics/display.h"
 #include "mir/default_server_configuration.h"
 
+#include "mir_test_doubles/stub_surface.h"
+
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
-namespace mtc = mir::test::cucumber;
+namespace mt = mir::test;
+namespace mtc = mt::cucumber;
+namespace mtd = mt::doubles;
 
 namespace mir
 {
@@ -52,46 +56,9 @@ static const geom::Size default_view_size = geom::Size{default_view_width,
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  default_view_size};
 
-struct DummySurface : public mf::Surface
+struct SizedStubSurface : public mtd::StubSurface
 {
-    explicit DummySurface() {}
-    virtual ~DummySurface() {}
-    
-    virtual void hide() {}
-    virtual void show() {}
-    virtual void destroy() {}
-    virtual void shutdown() {}
-    
-    virtual geom::Size size() const
-    {
-        return geom::Size();
-    }
-    virtual geom::PixelFormat pixel_format() const
-    {
-        return geom::PixelFormat();
-    }
-
-    virtual void advance_client_buffer() {}
-    virtual std::shared_ptr<mc::Buffer> client_buffer() const
-    {
-        return std::shared_ptr<mc::Buffer>();
-    }
-    virtual bool supports_input() const
-    {
-        return true;
-    }
-    virtual int client_input_fd() const
-    {
-        return testing_client_input_fd;
-    }
-    static int testing_client_input_fd;
-};
-
-int DummySurface::testing_client_input_fd = 0;
-
-struct SizedDummySurface : public DummySurface
-{
-    explicit SizedDummySurface(geom::Size const& size)
+    explicit SizedStubSurface(geom::Size const& size)
         : surface_size(size)
     {
     }
@@ -113,7 +80,7 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
     std::shared_ptr<mf::Surface> create_surface(const mf::SurfaceCreationParameters& params)
     {
         auto name = params.name;
-        return std::make_shared<SizedDummySurface>(params.size);
+        return std::make_shared<SizedStubSurface>(params.size);
     }
 };
 

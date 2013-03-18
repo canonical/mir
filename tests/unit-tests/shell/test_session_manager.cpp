@@ -24,12 +24,9 @@
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/focus_setter.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
-#include "mir_test_doubles/null_buffer_bundle.h"
-
-#include "src/server/shell/surface.h"
+#include "mir_test_doubles/stub_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -38,7 +35,6 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
-namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -106,14 +102,8 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     using namespace ::testing;
 
     EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
-    std::shared_ptr<ms::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
-    std::shared_ptr<ms::Surface> dummy_surface(
-        std::make_shared<ms::Surface>(
-            mf::a_surface().name,
-            buffer_bundle));
-    std::shared_ptr<mi::InputChannel> null_input_channel;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-       Return(std::make_shared<msh::Surface>(dummy_surface, null_input_channel)));
+       Return(std::make_shared<mtd::StubSurface>()));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
@@ -124,7 +114,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
-    session->create_surface(mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    session->create_surface(mf::a_surface());
 
     session_manager.close_session(session);
 }

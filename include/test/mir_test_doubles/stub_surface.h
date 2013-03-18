@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SURFACE_H_
 #define MIR_TEST_DOUBLES_STUB_SURFACE_H_
 
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 
 namespace mir
 {
@@ -28,10 +28,9 @@ namespace test
 namespace doubles
 {
 
-class StubSurface
+class StubSurface : public frontend::Surface
 {
 public:
-
     virtual ~StubSurface() = default;
     
     void hide() {}
@@ -53,6 +52,16 @@ public:
     std::shared_ptr<compositor::Buffer> client_buffer() const
     {
         return std::shared_ptr<compositor::Buffer>();
+    }
+    
+    virtual bool supports_input() const
+    {
+        return 0;
+    }
+    
+    virtual int client_input_fd() const
+    {
+        return 0;
     }
 };
 
