@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/graphics/android/android_display.h"
-#include "src/graphics/android/android_framebuffer_window_query.h"
+#include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/android_framebuffer_window_query.h"
 #include "mir_test/egl_mock.h"
 
 #include <gtest/gtest.h>

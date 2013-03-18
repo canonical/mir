@@ -1,19 +1,3 @@
-# Copyright © 2012 Canonical Ltd.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Authored by: Thomas Voss <thomas.voss@canonical.com>,
-#              Alan Griffiths <alan@octopull.co.uk>
 add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 
@@ -23,7 +7,7 @@ add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
-add_subdirectory(sessions/)
+add_subdirectory(shell/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 #TODO stubbed out to run tests on emulator 
@@ -34,7 +18,9 @@ endif()
 add_subdirectory(surfaces/)
 add_subdirectory(draw/)
 
+
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
+uses_android_input(unit-tests)
 
 target_link_libraries(
   unit-tests
@@ -56,7 +42,6 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
-  ${EVEMU_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 
   ${ANDROID_STDLIB}

@@ -1,19 +1,3 @@
-# Copyright © 2012 Canonical Ltd.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Authored by: Thomas Voss <thomas.voss@canonical.com>
-
 if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_GRAPHICS})
   message(STATUS "Tests are NOT run with real graphics support.")
 else()
@@ -36,8 +20,12 @@ if(MIR_ENABLE_DEATH_TESTS)
   add_definitions(-DMIR_DEATH_TESTS_ENABLED)
 endif(MIR_ENABLE_DEATH_TESTS)
 
+include_directories(${PROJECT_SOURCE_DIR}/include/server)
+include_directories(${PROJECT_SOURCE_DIR}/include/client)
+include_directories(${PROJECT_SOURCE_DIR}/include/test)
+
 if (MIR_PLATFORM STREQUAL "android")
-  include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
+  include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
 endif()
 
 add_subdirectory(acceptance-tests/)
@@ -54,3 +42,5 @@ if(MIR_ENABLE_DEATH_TESTS)
 else()
   message(STATUS "Death tests are disabled and are not run.")
 endif(MIR_ENABLE_DEATH_TESTS)
+
+mir_add_memcheck_test()

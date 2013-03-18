@@ -78,7 +78,8 @@ enum {
      * - a vertical stride equal to the height
      *
      *   y_size = stride * height
-     *   c_size = ALIGN(stride/2, 16) * height/2
+     *   c_stride = ALIGN(stride/2, 16)
+     *   c_size = c_stride * height/2
      *   size = y_size + c_size * 2
      *   cr_offset = y_size
      *   cb_offset = y_size + c_size
@@ -86,7 +87,58 @@ enum {
      */
     HAL_PIXEL_FORMAT_YV12   = 0x32315659, // YCrCb 4:2:0 Planar
 
+    /*
+     * Android RAW sensor format:
+     *
+     * This format is exposed outside of the HAL to applications.
+     *
+     * RAW_SENSOR is a single-channel 16-bit format, typically representing raw
+     * Bayer-pattern images from an image sensor, with minimal processing.
+     *
+     * The exact pixel layout of the data in the buffer is sensor-dependent, and
+     * needs to be queried from the camera device.
+     *
+     * Generally, not all 16 bits are used; more common values are 10 or 12
+     * bits. All parameters to interpret the raw data (black and white points,
+     * color space, etc) must be queried from the camera device.
+     *
+     * This format assumes
+     * - an even width
+     * - an even height
+     * - a horizontal stride multiple of 16 pixels (32 bytes).
+     */
+    HAL_PIXEL_FORMAT_RAW_SENSOR = 0x20,
 
+    /*
+     * Android binary blob graphics buffer format:
+     *
+     * This format is used to carry task-specific data which does not have a
+     * standard image structure. The details of the format are left to the two
+     * endpoints.
+     *
+     * A typical use case is for transporting JPEG-compressed images from the
+     * Camera HAL to the framework or to applications.
+     *
+     * Buffers of this format must have a height of 1, and width equal to their
+     * size in bytes.
+     */
+    HAL_PIXEL_FORMAT_BLOB = 0x21,
+
+    /*
+     * Android format indicating that the choice of format is entirely up to the
+     * device-specific Gralloc implementation.
+     *
+     * The Gralloc implementation should examine the usage bits passed in when
+     * allocating a buffer with this format, and it should derive the pixel
+     * format from those usage flags.  This format will never be used with any
+     * of the GRALLOC_USAGE_SW_* usage flags.
+     *
+     * If a buffer of this format is to be used as an OpenGL ES texture, the
+     * framework will assume that sampling the texture will always return an
+     * alpha value of 1.0 (i.e. the buffer contains only opaque pixel values).
+     *
+     */
+    HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED = 0x22,
 
     /* Legacy formats (deprecated), used by ImageFormat.java */
     HAL_PIXEL_FORMAT_YCbCr_422_SP       = 0x10, // NV16

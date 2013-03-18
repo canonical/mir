@@ -121,8 +121,7 @@ TEST_F(ClientAndroidBufferTest, client_sets_correct_version)
 
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    int total = 3 + buffer_handle->numFds + buffer_handle->numInts;
-    EXPECT_EQ(buffer_handle->version, total);
+    EXPECT_EQ(buffer_handle->version, static_cast<int>(sizeof(native_handle_t)));
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)

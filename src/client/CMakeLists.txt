@@ -1,19 +1,3 @@
-# Copyright © 2012 Canonical Ltd.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Authored by: Alan Griffiths <alan@octopull.co.uk>
-
 set(MIR_CLIENT_INCLUDE_DIR_SUFFIX "mir/client/")
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -36,7 +20,7 @@ include_directories(
 endif()
 
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/include/client
   ${DRM_INCLUDE_DIRS}
 )
 
@@ -66,7 +50,7 @@ list(APPEND CLIENT_SOURCES
 endif()
 
 if( MIR_PLATFORM STREQUAL "android")
-include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
+include_directories(${LIBHARDWARE_INCLUDE_DIRS})
 set(
   CLIENT_SOURCES
 
@@ -75,6 +59,8 @@ set(
   android/android_registrar.cpp
   android/android_client_platform.cpp
   android/mir_native_window.cpp
+  android/client_surface_interpreter.cpp
+  android/syncfence.cpp
   ${CLIENT_SOURCES}
 )
 endif()
@@ -94,7 +80,6 @@ add_library(
   mirclient SHARED
 
   ${CLIENT_SOURCES}
-  ${MIR_3RD_PARTY_SOURCES}
 )
 
 set_target_properties(
@@ -123,9 +108,9 @@ target_link_libraries(
 set(
   CLIENT_PUBLIC_HEADERS
 
-  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/mir_client_library.h
-  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/mir_client_library_lightdm.h
-  ${CMAKE_SOURCE_DIR}/include/mir_toolkit/mir_client_library_drm.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library_lightdm.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library_drm.h
 )
 
 set_target_properties(

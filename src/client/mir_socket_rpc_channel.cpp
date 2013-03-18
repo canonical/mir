@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -63,16 +63,37 @@ mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
     }
 }
 
-
+// TODO: This function needs some work.
 void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
 
+    auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
+    if (surface)
+    {
+        surface->clear_fd();
+
+        if (surface->fds_on_side_channel() > 0)
+        {
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << surface->fds_on_side_channel() << " file descriptors" << std::endl;
+
+            std::vector<int32_t> buf(surface->fds_on_side_channel());
+
+            int received = 0;
+            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
+                /* TODO avoid spinning forever */;
+
+            log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
+
+            for (int i = 0; i != received; ++i)
+                surface->add_fd(buf[i]);
+        }
+    }
+
     auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
     if (!buffer)
     {
-        auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
         if (surface && surface->has_buffer())
             buffer = surface->mutable_buffer();
     }

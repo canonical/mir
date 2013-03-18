@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
@@ -62,11 +62,11 @@ mcla::AndroidClientBuffer::~AndroidClientBuffer()
 
 const native_handle_t* mcla::AndroidClientBuffer::convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package)
 {
-    int native_handle_header_size = 3;
+    int native_handle_header_size = sizeof(native_handle_t);
     int total = package->fd_items + package->data_items + native_handle_header_size;
     native_handle_t* handle = (native_handle_t*) malloc(sizeof(int) * total );
 
-    handle->version = total;
+    handle->version = native_handle_header_size;
     handle->numFds  = package->fd_items;
     handle->numInts = package->data_items;
 

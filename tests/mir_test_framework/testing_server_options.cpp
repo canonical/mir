@@ -27,6 +27,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
@@ -40,10 +41,11 @@ namespace mi = mir::input;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
-namespace mir
-{
 namespace
 {
+char const* dummy[] = {0};
+int argc = 0;
+char const** argv = dummy;
 
 geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
                                                                  geom::Size{geom::Width(1600),
@@ -111,20 +113,43 @@ public:
     }
 };
 
+struct StubInputChannel : public mi::InputChannel
+{
+    int client_fd() const
+    {
+        return 0;
+    }
+    
+    int server_fd() const
+    {
+        return 0;
+    }
+};
+
 class StubInputManager : public mi::InputManager
 {
   public:
     void start() {}
     void stop() {}
+    
+    std::shared_ptr<mi::InputChannel> make_input_channel()
+    {
+        return std::make_shared<StubInputChannel>();
+    }
 };
 }
+
+mtf::TestingServerConfiguration::TestingServerConfiguration() :
+    DefaultServerConfiguration(argc, argv)
+{
 }
 
-std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager(const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters)
+
+std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager()
 {
     auto options = the_options();
     if (options->get("tests-use-real-input", false))
-        return mi::create_input_manager(event_filters, the_display());
+        return mi::create_input_manager(the_event_filters(), the_display());
     else
         return std::make_shared<StubInputManager>();
 }
@@ -171,4 +196,18 @@ std::string const& mtf::test_socket_file()
 {
     static const std::string socket_file{"./mir_socket_test"};
     return socket_file;
+}
+
+
+int main(int argc, char** argv)
+{
+    ::argc = std::remove_if(
+        argv,
+        argv+argc,
+        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
+    ::argv = const_cast<char const**>(argv);
+
+  ::testing::InitGoogleTest(&argc, argv);
+
+  return RUN_ALL_TESTS();
 }

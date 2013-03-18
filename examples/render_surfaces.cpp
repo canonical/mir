@@ -26,8 +26,9 @@
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/logger.h"
+#include "mir/logging/display_report.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir/sessions/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"
@@ -47,7 +48,7 @@ namespace mg=mir::graphics;
 namespace mc=mir::compositor;
 namespace ml=mir::logging;
 namespace ms=mir::surfaces;
-namespace msess = mir::sessions;
+namespace mf = mir::frontend;
 namespace geom=mir::geometry;
 namespace mt=mir::tools;
 
@@ -189,7 +190,8 @@ struct Moveable
 int main(int argc, char **argv)
 {
     /* Create and set up all the components we need */
-    auto platform = mg::create_platform();
+    auto logger = std::make_shared<ml::DumbConsoleLogger>();
+    auto platform = mg::create_platform(std::make_shared<ml::DisplayReport>(logger));
     auto display = platform->create_display();
     const geom::Size display_size = display->view_area().size;
     auto buffer_initializer = std::make_shared<mir::RenderResourcesBufferInitializer>();
@@ -231,7 +233,7 @@ int main(int argc, char **argv)
         const float angular_step = 2.0 * M_PI / num_moveables;
 
         std::shared_ptr<ms::Surface> s = surface_stack->create_surface(
-            msess::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
+            mf::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
                            .of_pixel_format(buffer_allocator->supported_pixel_formats()[0])
                            .of_buffer_usage(mc::BufferUsage::hardware)
             ).lock();

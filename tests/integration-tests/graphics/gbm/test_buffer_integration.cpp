@@ -16,14 +16,15 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/graphics/gbm/gbm_platform.h"
-#include "src/graphics/gbm/gbm_display.h"
-#include "src/graphics/gbm/gbm_buffer_allocator.h"
+#include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/server/graphics/gbm/gbm_display.h"
+#include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir/graphics/null_display_report.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 
@@ -108,7 +109,7 @@ protected:
         auto options = mtf::TestingServerConfiguration().the_options();
 
         if (options->get("tests-use-real-graphics", false))
-            platform = mg::create_platform();
+            platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
         else
             platform = std::make_shared<StubGraphicPlatform>();
 

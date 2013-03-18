@@ -1,16 +1,16 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
@@ -20,6 +20,7 @@
 #include "android_client_platform.h"
 #include "android_registrar_gralloc.h"
 #include "android_client_buffer_depository.h"
+#include "client_surface_interpreter.h"
 #include "../mir_connection.h"
 #include "../native_client_platform_factory.h"
 
@@ -85,7 +86,8 @@ private:
 
 std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(ClientSurface *surface)
 {
-    auto mir_native_window = new mcla::MirNativeWindow(surface);
+    auto anativewindow_interpreter = std::make_shared<mcla::ClientSurfaceInterpreter>(*surface);
+    auto mir_native_window = new mcla::MirNativeWindow(anativewindow_interpreter);
     auto egl_native_window = new EGLNativeWindowType;
     *egl_native_window = mir_native_window;
     MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window);

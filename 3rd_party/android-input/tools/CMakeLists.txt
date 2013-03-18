@@ -25,15 +25,15 @@ set_target_properties(
 if(MIR_PLATFORM STREQUAL "gbm")
   target_link_libraries(
     raw-event-printer
+
     android-input
-    -lrt
-    -lpthread
     )
 endif()
 
 if(MIR_PLATFORM STREQUAL "android")
   target_link_libraries(
     raw-event-printer
+
     android-input
     )
 endif()
@@ -55,8 +55,6 @@ if(MIR_PLATFORM STREQUAL "gbm")
   target_link_libraries(
     cooked-event-printer
     android-input
-    -lrt
-    -lpthread
     )
 endif()
 
