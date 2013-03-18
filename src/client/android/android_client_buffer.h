@@ -47,6 +47,8 @@ public:
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
     uint32_t age() const;
+    void increment_age();
+    void mark_as_submitted();
     MirNativeBuffer get_native_handle();
     std::shared_ptr<MirBufferPackage> get_buffer_package() const;
 

@@ -114,7 +114,17 @@ geom::PixelFormat mcla::AndroidClientBuffer::pixel_format() const
 
 uint32_t mcla::AndroidClientBuffer::age() const
 {
-    return 0;
+    return buffer_age;
+}
+
+void mlca::AndroidClientBuffer::mark_as_submitted()
+{
+    buffer_age = 1;
+}
+
+void mlca::AndroidClientBuffer::increment_age()
+{
+    ++buffer_age;
 }
 
 MirNativeBuffer mcla::AndroidClientBuffer::get_native_handle()
