@@ -37,6 +37,7 @@
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
+namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -48,6 +49,10 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 
     mtd::MockSession app1, app2, app3;
     msh::SessionContainer model;
+    
+    ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<mf::Surface>()));
+    ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<mf::Surface>()));
+    ON_CALL(app3, default_surface()).WillByDefault(Return(std::shared_ptr<mf::Surface>()));
 
     msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model), mt::fake_shared(input_focus_selector));
 

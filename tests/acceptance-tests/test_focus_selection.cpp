@@ -125,6 +125,10 @@ MATCHER(NonNullSurface, "")
 {
     return arg != std::shared_ptr<mf::Surface>();
 }
+MATCHER(NullSurface, "")
+{
+    return arg == std::shared_ptr<mf::Surface>();
+}
 }
 
 TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
@@ -187,8 +191,10 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
             if (!expected)
             {
+                InSequence seq;
+
+                EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSession(), NullSurface())).Times(1);                    
                 EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSession(), NonNullSurface())).Times(1);
-                EXPECT_CALL(*focus_selector, set_input_focus_to(_, _)).Times(1); // When Surface is released
                 expected = true;
             }
                 
