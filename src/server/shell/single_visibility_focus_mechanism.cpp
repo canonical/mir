@@ -22,9 +22,12 @@
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 
-msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container) :
-  app_container(app_container)
+msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container,
+                                                                    std::shared_ptr<mi::FocusSelector> const& input_selector)
+  : app_container(app_container),
+    input_selector(input_selector)
 {
 }
 

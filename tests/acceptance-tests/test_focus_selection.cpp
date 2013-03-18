@@ -28,6 +28,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_focus_setter.h"
+#include "mir_test_doubles/mock_input_focus_selector.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -112,11 +113,6 @@ struct SurfaceCreatingClient : ClientConfigCommon
     }
 };
 
-struct MockFocusSelector : public mi::FocusSelector
-{
-    MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<mf::Session> const&, std::shared_ptr<mf::Surface> const&));
-};
-
 }
 
 namespace
@@ -175,7 +171,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 {
     struct ServerConfig : public TestingServerConfiguration
     {
-        std::shared_ptr<MockFocusSelector> focus_selector;
+        std::shared_ptr<mtd::MockInputFocusSelector> focus_selector;
 
         std::shared_ptr<mi::FocusSelector>
         the_input_focus_selector()
@@ -185,7 +181,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
             if (focus_selector)
                 return focus_selector;
             
-            focus_selector = std::make_shared<MockFocusSelector>();
+            focus_selector = std::make_shared<mtd::MockInputFocusSelector>();
                 
             EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSession(), NonNullSurface())).Times(1);
             EXPECT_CALL(*focus_selector, set_input_focus_to(_, _)).Times(1); // When Surface is released

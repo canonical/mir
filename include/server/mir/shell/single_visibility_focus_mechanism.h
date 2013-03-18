@@ -28,6 +28,10 @@ namespace frontend
 {
 class Session;
 }
+namespace input
+{
+class FocusSelector;
+}
 
 namespace shell
 {
@@ -36,7 +40,8 @@ class SessionContainer;
 class SingleVisibilityFocusMechanism : public FocusSetter
 {
 public:
-    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);
+    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container,
+                                            std::shared_ptr<input::FocusSelector> const& input_selector);
     virtual ~SingleVisibilityFocusMechanism() {}
 
     void set_focus_to(std::shared_ptr<frontend::Session> const& new_focus);
@@ -45,7 +50,8 @@ protected:
     SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;
     SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
 private:
-    std::shared_ptr<SessionContainer> app_container;
+    std::shared_ptr<SessionContainer> const app_container;
+    std::shared_ptr<input::FocusSelector> const input_selector;
 };
 
 }

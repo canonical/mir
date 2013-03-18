@@ -27,6 +27,8 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_session.h"
+#include "mir_test_doubles/mock_input_focus_selector.h"
+#include "mir_test_doubles/stub_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -42,12 +44,12 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
 
-    mtd::MockSession app1;
-    mtd::MockSession app2;
-    mtd::MockSession app3;
+    NiceMock<mtd::MockInputFocusSelector> input_focus_selector;
 
+    mtd::MockSession app1, app2, app3;
     msh::SessionContainer model;
-    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model));
+
+    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model), mt::fake_shared(input_focus_selector));
 
     EXPECT_CALL(app1, show()).Times(1);
     EXPECT_CALL(app2, hide()).Times(1);
@@ -58,5 +60,24 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     model.insert_session(mt::fake_shared(app3));
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
+}
+
+TEST(SingleVisibilityFocusMechanism, mechanism_sets_input_focus_from_default_surface)
+{
+    using namespace ::testing;
+
+    mtd::MockInputFocusSelector input_focus_selector;
+    msh::SessionContainer model;
+    auto session = std::make_shared<mtd::MockSession>();
+    auto surface = std::make_shared<mtd::StubSurface>();
+
+    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model), mt::fake_shared(input_focus_selector));
+    
+    EXPECT_CALL(*session, default_surface()).Times(1).WillOnce(Return(surface));
+    
+    EXPECT_CALL(input_focus_selector, set_input_focus_to(Eq(session), Eq(surface))).Times(1);
+
+    model.insert_session(session);
+    focus_mechanism.set_focus_to(session);
 }
 
