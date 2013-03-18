@@ -49,12 +49,14 @@ namespace shell
 class SessionManager;
 class SurfaceFactory;
 class SurfaceSource;
+class SurfaceBuilder;
 }
 namespace surfaces
 {
 class BufferBundleFactory;
 class SurfaceStackModel;
 class SurfaceStack;
+class SurfaceController;
 }
 namespace graphics
 {
@@ -108,6 +110,8 @@ public:
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<input::InputManager> the_input_manager();
 
+    virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
+
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
@@ -130,6 +134,7 @@ protected:
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
+    CachedPtr<surfaces::SurfaceController> surface_controller;
 
 private:
     std::shared_ptr<options::Option> options;
