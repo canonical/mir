@@ -21,7 +21,10 @@
 #include "src/client/mir_client_surface.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
+
+#ifdef ANDROID
 #include "mir_test/hw_mock.h"
+#endif
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,7 +35,9 @@ namespace mtd = mt::doubles;
 
 class ClientPlatformTest : public ::testing::Test
 {
+#ifdef ANDROID
     testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
+#endif
 };
 
 TEST_F(ClientPlatformTest, platform_creates)

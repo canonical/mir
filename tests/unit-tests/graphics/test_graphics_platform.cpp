@@ -25,10 +25,11 @@
 #ifndef ANDROID
 #include "gbm/mock_drm.h"
 #include "gbm/mock_gbm.h"
+#else
+#include "mir_test/hw_mock.h"
 #endif
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir_test/hw_mock.h"
 
 #include "mir/graphics/null_display_report.h"
 
@@ -38,7 +39,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
-namespace mt = mir::test;
 
 class GraphicsPlatform : public ::testing::Test
 {
@@ -75,7 +75,7 @@ public:
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
 #ifdef ANDROID
-    mt::HardwareAccessMock hw_access_mock;
+    mir::test::HardwareAccessMock hw_access_mock;
 #else
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
