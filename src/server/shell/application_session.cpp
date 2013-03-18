@@ -83,6 +83,12 @@ std::shared_ptr<mf::Surface> msh::ApplicationSession::get_surface(mf::SurfaceId 
     return checked_find(id)->second;
 }
 
+std::shared_ptr<mf::Surface> msh::ApplicationSession::default_surface() const
+{
+    // TODO: Implement ~racarr
+    return std::shared_ptr<mf::Surface>();
+}
+
 void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
