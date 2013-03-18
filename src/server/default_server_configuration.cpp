@@ -329,7 +329,14 @@ mir::DefaultServerConfiguration::the_surface_factory()
     return surface_controller(
         [this]()
         {
-            return std::make_shared<msh::SurfaceController>(the_surface_stack_model(), the_input_channel_factory());
+            // TODO remove refactoring frig
+            auto the_surface_builder = surface_stack(
+                [this]()
+                {
+                    return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+                });
+
+            return std::make_shared<msh::SurfaceController>(the_surface_builder, the_input_channel_factory());
         });
 }
 

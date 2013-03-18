@@ -30,19 +30,14 @@ namespace input
 class InputChannelFactory;
 }
 
-/// Management of Surface objects. Includes the model (SurfaceStack and Surface
-/// classes) and controller (SurfaceController) elements of an MVC design.
-namespace surfaces
-{
-class SurfaceStackModel;
-}
-
 namespace shell
 {
+class SurfaceBuilder;
+
 class SurfaceController : public SurfaceFactory
 {
 public:
-  explicit SurfaceController(std::shared_ptr<surfaces::SurfaceStackModel> const& surface_stack, std::shared_ptr<input::InputChannelFactory> const& input_factory);
+  explicit SurfaceController(std::shared_ptr<SurfaceBuilder> const& surface_builder, std::shared_ptr<input::InputChannelFactory> const& input_factory);
     virtual ~SurfaceController() {}
 
     std::shared_ptr<frontend::Surface> create_surface(const frontend::SurfaceCreationParameters& params);
@@ -52,7 +47,7 @@ protected:
     SurfaceController& operator=(const SurfaceController&) = delete;
 
 private:
-    std::shared_ptr<surfaces::SurfaceStackModel> const surface_stack;
+    std::shared_ptr<SurfaceBuilder> const surface_builder;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
 };
 

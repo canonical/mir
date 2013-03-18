@@ -21,6 +21,7 @@
 
 #include "surface_stack_model.h"
 #include "mir/compositor/render_view.h"
+#include "mir/shell/surface_builder.h" // TODO - should go to the "Controller
 
 #include <memory>
 #include <vector>
@@ -40,16 +41,18 @@ namespace frontend
 class SurfaceCreationParameters;
 }
 
+/// Management of Surface objects. Includes the model (SurfaceStack and Surface
+/// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
 class BufferBundleFactory;
 class Surface;
 
-class SurfaceStack : public compositor::RenderView, public SurfaceStackModel
+class SurfaceStack : public compositor::RenderView, public SurfaceStackModel, public shell::SurfaceBuilder
 {
 public:
     explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory);
-    virtual ~SurfaceStack() {}
+    virtual ~SurfaceStack() = default;
 
     // From RenderView
     virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
