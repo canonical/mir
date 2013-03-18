@@ -37,9 +37,8 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
-namespace mt = mir::test;
-namespace mtc = mt::cucumber;
-namespace mtd = mt::doubles;
+namespace mtc = mir::test::cucumber;
+namespace mtd = mir::test::doubles;
 
 namespace mir
 {
