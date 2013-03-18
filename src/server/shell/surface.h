@@ -71,6 +71,7 @@ public:
 
     bool supports_input() const;
     int client_input_fd() const;
+    int server_input_fd() const;
 
 private:
     std::weak_ptr<mir::surfaces::Surface> const surface;

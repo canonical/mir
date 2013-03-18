@@ -61,6 +61,7 @@ public:
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;
+    virtual int server_input_fd() const = 0;
 
 protected:
     Surface() = default;

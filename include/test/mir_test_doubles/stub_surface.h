@@ -63,6 +63,11 @@ public:
     {
         return 0;
     }
+
+    virtual int server_input_fd() const
+    {
+        return 0;
+    }
 };
 
 }

@@ -21,6 +21,9 @@
 
 #include "mir/frontend/surface.h"
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 #include <memory>
 
 namespace mir
