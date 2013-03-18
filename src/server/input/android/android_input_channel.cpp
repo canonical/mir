@@ -13,20 +13,32 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Robert Carr <racarr@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SURFACE_ID_H_
-#define MIR_SHELL_SURFACE_ID_H_
+#include "android_input_channel.h"
 
-#include "mir/int_wrapper.h"
+#include <androidfw/InputTransport.h>
 
-namespace mir
+namespace mia = mir::input::android;
+namespace droidinput = android;
+
+mia::AndroidInputChannel::AndroidInputChannel()
 {
-namespace shell
-{
-typedef IntWrapper<IntWrapperTypeTag::SessionsSurfaceId> SurfaceId;
+    droidinput::InputChannel::openInputChannelPair(droidinput::String8(),
+                                                   server_channel, client_channel);
 }
-} // namespace mir
 
-#endif // MIR_SHELL_SURFACE_ID_H
+mia::AndroidInputChannel::~AndroidInputChannel()
+{
+}
+
+int mia::AndroidInputChannel::client_fd() const
+{
+    return client_channel->getFd();
+}
+
+int mia::AndroidInputChannel::server_fd() const
+{
+    return server_channel->getFd();
+}

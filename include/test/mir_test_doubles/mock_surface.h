@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 
 #include <memory>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSurface : public shell::Surface
+struct MockSurface : public frontend::Surface
 {
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
@@ -41,6 +41,9 @@ struct MockSurface : public shell::Surface
     MOCK_CONST_METHOD0(size, geometry::Size ());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());
+    
+    MOCK_CONST_METHOD0(supports_input, bool());
+    MOCK_CONST_METHOD0(client_input_fd, int());
 };
 
 }

@@ -1,6 +1,5 @@
 include_directories(
     ${LIBHARDWARE_INCLUDE_DIRS}
-    ${ANDROID_UI_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
 )
@@ -21,8 +20,9 @@ target_link_libraries(
   mirplatformgraphics
   mircompositor
 
+  3rd_party_fbtype
+
   ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_UI_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )

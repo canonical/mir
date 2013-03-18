@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,37 +13,20 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SURFACE_FACTORY_H_
-#define MIR_SHELL_SURFACE_FACTORY_H_
+#ifndef MIR_FRONTEND_SURFACE_ID_H_
+#define MIR_FRONTEND_SURFACE_ID_H_
 
-#include <memory>
+#include "mir/int_wrapper.h"
 
 namespace mir
 {
 namespace frontend
 {
-struct SurfaceCreationParameters;
-class Surface;
+typedef IntWrapper<IntWrapperTypeTag::SessionsSurfaceId> SurfaceId;
 }
+} // namespace mir
 
-namespace shell
-{
-class SurfaceFactory
-{
-public:
-    virtual ~SurfaceFactory() {}
-
-    virtual std::shared_ptr<frontend::Surface> create_surface(const frontend::SurfaceCreationParameters& params) = 0;
-
-protected:
-    SurfaceFactory() = default;
-    SurfaceFactory(const SurfaceFactory&) = delete;
-    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
-};
-}
-}
-
-#endif // MIR_SHELL_SURFACE_FACTORY_H_
+#endif // MIR_FRONTEND_SURFACE_ID_H_

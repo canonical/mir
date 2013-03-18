@@ -16,36 +16,31 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SESSION_H_
-#define MIR_TEST_DOUBLES_MOCK_SESSION_H_
+#ifndef MIR_INPUT_INPUT_CHANNEL_FACTORY_H_
+#define MIR_INPUT_INPUT_CHANNEL_FACTORY_H_
 
-#include "mir/frontend/session.h"
-
-#include <gmock/gmock.h>
+#include <memory>
 
 namespace mir
 {
-namespace test
+namespace input
 {
-namespace doubles
-{
+class InputChannel;
 
-struct MockSession : public frontend::Session
+class InputChannelFactory
 {
-    MOCK_METHOD1(create_surface, frontend::SurfaceId(frontend::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
+public:
+    virtual ~InputChannelFactory() {}
     
-    MOCK_METHOD0(name, std::string());
-    MOCK_METHOD0(shutdown, void());
-    
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
+    virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
+
+protected:
+    InputChannelFactory() = default;
+    InputChannelFactory(InputChannelFactory const&) = delete;
+    InputChannelFactory& operator=(InputChannelFactory const&) = delete;
 };
 
 }
-}
 } // namespace mir
 
-
-#endif // MIR_TEST_DOUBLES_MOCK_SESSION_H_
+#endif // MIR_INPUT_INPUT_CHANNEL_FACTORY_H_
