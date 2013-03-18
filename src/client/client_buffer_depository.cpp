@@ -45,7 +45,7 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::M
 
         if (current != current_buffer_iter &&
             current->first != id &&
-            current->second->age() >= 2)
+            current->second->age() >= (max_buffers - 1))
         {
             buffers.erase(current);
         }

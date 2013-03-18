@@ -309,3 +309,38 @@ TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_b
     EXPECT_CALL(*reinterpret_cast<MockBuffer *>(depository.current_buffer().get()), mark_as_submitted());
     depository.deposit_package(std::move(package2), 2, size, pf);
 }
+
+TEST_F(MirBufferDepositoryTest, depository_respects_max_buffer_parameter)
+{
+    using namespace testing;
+    std::shared_ptr<mcl::ClientBufferDepository> depository;
+    std::shared_ptr<MirBufferPackage> packages[10];
+    MockBuffer *buffers[10];
+
+    for (int num_buffers = 2; num_buffers < 10; ++num_buffers)
+    {
+        depository = std::make_shared<mcl::ClientBufferDepository>(mock_factory, num_buffers);
+        
+        depository->deposit_package(std::move(packages[0]), 1, size, pf);
+        // Raw pointer so we don't influence the buffer's life-cycle
+        MockBuffer* first_buffer = reinterpret_cast<MockBuffer *>(depository->current_buffer().get());
+
+        int i;
+        for (i = 1; i < num_buffers ; ++i)
+        {
+            depository->deposit_package(std::move(packages[i]), i + 1, size, pf);
+            buffers[i] = reinterpret_cast<MockBuffer *>(depository->current_buffer().get());
+            // None of these buffers should be destroyed
+            EXPECT_CALL(*buffers[i], Destroy()).Times(0);
+        }
+
+        // Next deposit should destroy first buffer
+        EXPECT_CALL(*first_buffer, Destroy()).Times(1);
+        depository->deposit_package(std::move(packages[i]), i+1, size, pf);
+        EXPECT_TRUE(Mock::VerifyAndClearExpectations(first_buffer));
+
+        // Verify none of the other buffers have been destroyed
+        for (i = 1; i < num_buffers; ++i)
+            EXPECT_TRUE(Mock::VerifyAndClearExpectations(buffers[i]));
+    }
+}
