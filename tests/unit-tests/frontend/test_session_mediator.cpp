@@ -134,11 +134,12 @@ struct SessionMediatorTest : public ::testing::Test
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, resource_cache},
+          stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
         using namespace ::testing;
 
-        ON_CALL(*shell, open_session(_)).WillByDefault(Return(std::make_shared<StubbedSession>()));
+        ON_CALL(*shell, open_session(_)).WillByDefault(Return(stubbed_session));
         ON_CALL(*shell, create_surface_for(_, _)).WillByDefault(Return(mf::SurfaceId{1}));
     }
 
@@ -149,6 +150,7 @@ struct SessionMediatorTest : public ::testing::Test
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;
+    std::shared_ptr<StubbedSession> const stubbed_session;
 
     std::unique_ptr<google::protobuf::Closure> null_callback;
 };
@@ -324,6 +326,28 @@ TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)
         
         mediator.create_surface(nullptr, &request, &response, null_callback.get());
         EXPECT_EQ(StubbedSession::testing_client_input_fd, response.fd(0));
+    }
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediatorTest, no_input_channel_is_nonfatal)
+{
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+    EXPECT_CALL(*stubbed_session->mock_surface, supports_input())
+        .Times(1)
+        .WillOnce(testing::Return(false));
+    EXPECT_CALL(*stubbed_session->mock_surface, client_input_fd())
+        .Times(0);
+    
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    
+    {
+        mp::SurfaceParameters request;
+        mp::Surface response;
+        
+        mediator.create_surface(nullptr, &request, &response, null_callback.get());
     }
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
