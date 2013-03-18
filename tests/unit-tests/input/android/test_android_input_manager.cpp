@@ -23,8 +23,10 @@
 
 #include "mir/input/input_channel.h"
 
-#include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_viewable_area.h"
+#include "mir_test_doubles/stub_session.h"
+#include "mir_test_doubles/stub_surface.h"
 
 #include <InputDispatcher.h>
 #include <InputListener.h>
@@ -40,6 +42,7 @@ namespace droidinput = android;
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -206,4 +209,78 @@ TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
     auto package = manager.make_input_channel();
     EXPECT_GT(package->client_fd(), 0);
     EXPECT_GT(package->server_fd(), 0);
+}
+
+namespace
+{
+
+class StubSession : public mtd::StubSession
+{
+    std::string name() override
+    {
+        return "Test";
+    }
+};
+class StubSurface : public mtd::StubSurface
+{
+    int server_input_fd() const override
+    {
+        return 1;
+    }
+};
+
+static bool
+window_handle_matches_session_and_surface(droidinput::sp<droidinput::InputWindowHandle> const& handle,
+                                          std::shared_ptr<mf::Session> const& session,
+                                          std::shared_ptr<mf::Surface> const& surface)
+{
+    if (handle->inputApplicationHandle->getName() != session->name())
+        return false;
+    if (handle->getInputChannel()->getFd() != surface->server_input_fd())
+        return false;
+    return true;
+}
+
+MATCHER_P2(WindowHandleFor, session, surface, "")
+{
+    return window_handle_matches_session_and_surface(arg, session, surface);
+}
+
+MATCHER_P2(VectorContainingWindowHandleFor, session, surface, "")
+{
+    auto i = arg.size();
+    for (i = 0; i < arg.size(); i++)
+    {
+        if (window_handle_matches_session_and_surface(arg[i], session, surface))
+            return true;
+    }
+    return false;
+}
+
+MATCHER(EmptyVector, "")
+{
+    return arg.size() == 0;
+}
+
+}
+
+TEST_F(AndroidInputManagerSetup, set_input_focus)
+{
+    using namespace ::testing;
+    
+    auto session = std::make_shared<StubSession>();
+    auto surface = std::make_shared<StubSurface>();
+    
+    droidinput::sp<droidinput::InputChannel> registered_input_channel;
+    
+    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
+        .WillOnce(DoAll(SaveArg<0>(&registered_input_channel), Return(droidinput::OK)));
+    EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
+    EXPECT_CALL(*dispatcher, unregisterInputChannel(Eq(registered_input_channel))).Times(1);
+    EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
+
+    mia::InputManager manager(mt::fake_shared(config));
+    
+    manager.set_input_focus_to(session, surface);
+    manager.set_input_focus_to(session, std::shared_ptr<mf::Surface>());
 }
