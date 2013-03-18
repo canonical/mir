@@ -47,11 +47,11 @@ struct MockFbFactory : public mga::FBFactory
  
 };
 
-class DisplayMethodSelectorTest : public ::testing::Test
+class AndroidFramebufferSelectorTest : public ::testing::Test
 {
 public:
-    DisplayMethodSelectorTest()
-     : mock_fb_factory(std::make_shared<MockFbFactory>())
+    AndroidFramebufferSelectorTest()
+     : mock_fb_factory(std::make_shared<testing::NiceMock<MockFbFactory>>())
     {
     }
 
@@ -59,7 +59,7 @@ public:
     mt::HardwareAccessMock hw_access_mock;
 };
 
-TEST_F(DisplayMethodSelectorTest, hwc_selection_gets_hwc_device)
+TEST_F(AndroidFramebufferSelectorTest, hwc_selection_gets_hwc_device)
 {
     using namespace testing;
 
@@ -70,7 +70,7 @@ TEST_F(DisplayMethodSelectorTest, hwc_selection_gets_hwc_device)
     selector.primary_display();
 }
 
-TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_success)
+TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_success)
 {
     using namespace testing;
 
@@ -83,7 +83,7 @@ TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_success)
     selector.primary_display();
 }
 
-TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_module_not_found)
+TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_module_not_found)
 {
     using namespace testing;
 
@@ -97,7 +97,7 @@ TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_module_not
     selector.primary_display();
 }
 
-TEST_F(DisplayMethodSelectorTest, hwc_with_hwc_device_failure_because_hwc_version_not_supported)
+TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_version_not_supported)
 {
     using namespace testing;
 

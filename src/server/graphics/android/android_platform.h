@@ -27,12 +27,10 @@ namespace graphics
 {
 namespace android
 {
-class DisplaySelector;
 
 class AndroidPlatform : public Platform
 {
 public:
-    AndroidPlatform();
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<BufferInitializer>& buffer_initializer);

@@ -26,7 +26,7 @@
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-mt::HardwareModuleStub::HardwareModuleStub(hw_device_t* const& device)
+mt::HardwareModuleStub::HardwareModuleStub(hw_device_t& device)
         : mock_hw_device(device)
 { 
     gr_methods.open = hw_open;
@@ -35,9 +35,9 @@ mt::HardwareModuleStub::HardwareModuleStub(hw_device_t* const& device)
 
 int mt::HardwareModuleStub::hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device)
 {
-    HardwareModuleStub* self = (HardwareModuleStub*)module;
-    self->mock_hw_device->close = hw_close;
-    *device = (hw_device_t*) self->mock_hw_device;
+    auto self = static_cast<HardwareModuleStub const*>(module);
+    self->mock_hw_device.close = hw_close;
+    *device = static_cast<hw_device_t*>(&self->mock_hw_device);
     return 0;
 }
 
@@ -58,10 +58,10 @@ mt::HardwareAccessMock::HardwareAccessMock()
     global_hw_mock = this;
 
     mock_alloc_device = std::make_shared<mtd::MockAllocDevice>();
-    mock_gralloc_module = std::make_shared<mt::HardwareModuleStub>(&mock_alloc_device->common);
+    mock_gralloc_module = std::make_shared<mt::HardwareModuleStub>(mock_alloc_device->common);
 
     mock_hwc_device = std::make_shared<mtd::MockHWCComposerDevice1>();
-    mock_hwc_module = std::make_shared<mt::HardwareModuleStub>(&mock_hwc_device->common);
+    mock_hwc_module = std::make_shared<mt::HardwareModuleStub>(mock_hwc_device->common);
 
     ON_CALL(*this, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID),_))
         .WillByDefault(DoAll(SetArgPointee<1>(mock_gralloc_module.get()), Return(0)));

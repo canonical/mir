@@ -32,7 +32,7 @@ namespace mtd = mt::doubles;
 
 class ClientPlatformTest : public ::testing::Test
 {
-    mt::HardwareAccessMock hw_access_mock;
+    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
 };
 
 TEST_F(ClientPlatformTest, platform_creates )

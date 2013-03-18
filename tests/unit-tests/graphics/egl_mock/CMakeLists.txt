@@ -4,17 +4,16 @@ list(APPEND UNIT_TEST_SOURCES
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
 
-
-set(CMOCK_SOURCES 
-            gl_mock.cpp
-            egl_mock.cpp )
+set(C_MOCKS_SOURCES 
+    gl_mock.cpp
+    egl_mock.cpp )
 
 if (MIR_PLATFORM STREQUAL "android")
-  list( APPEND CMOCK_SOURCES hw_mock.cpp )
+  list( APPEND C_MOCKS_SOURCES hw_mock.cpp )
 endif()
 
 add_library(
   mirtest_eglmock STATIC
 
-  ${CMOCK_SOURCES}
+  ${C_MOCKS_SOURCES}
 )

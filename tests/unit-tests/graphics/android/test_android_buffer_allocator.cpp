@@ -18,20 +18,18 @@
 
 #include "src/server/graphics/android/android_buffer_allocator.h"
 #include "mir_test/hw_mock.h"
+
 #include <hardware/gralloc.h>
-
 #include <gtest/gtest.h>
-
 #include <algorithm>
 
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
-namespace mc = mir::compositor;
 namespace mt = mir::test;
 
 struct AndroidBufferAllocatorTest : public ::testing::Test
 {
-    mt::HardwareAccessMock hw_access_mock;
+    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
 };
 
 TEST_F(AndroidBufferAllocatorTest, allocator_accesses_gralloc_module)

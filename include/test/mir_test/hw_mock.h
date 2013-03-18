@@ -34,13 +34,13 @@ typedef struct hw_module_t hw_module;
 class HardwareModuleStub : public hw_module
 {
 public:
-    HardwareModuleStub(hw_device_t* const& device);
+    HardwareModuleStub(hw_device_t& device);
 
     static int hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device);
     static int hw_close(struct hw_device_t*);
 
     hw_module_methods_t gr_methods;
-    hw_device_t* mock_hw_device;
+    hw_device_t& mock_hw_device;
 };
 
 class HardwareAccessMock
