@@ -19,6 +19,7 @@
 #ifndef MIR_SHELL_APPLICATION_MANAGER_H_
 #define MIR_SHELL_APPLICATION_MANAGER_H_
 
+#include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
 
 #include <mutex>
@@ -27,6 +28,10 @@
 
 namespace mir
 {
+namespace frontend
+{
+class SurfaceCreationParameters;
+}
 
 /// Management of sessions and surfaces
 namespace shell
@@ -51,6 +56,9 @@ public:
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& session, int id);
     virtual void focus_session_with_lightdm_id(int id);
+    
+    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
+                                 frontend::SurfaceCreationParameters const& params);
 
     void focus_next();
 

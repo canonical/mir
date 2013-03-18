@@ -135,3 +135,13 @@ void msh::SessionManager::focus_session_with_lightdm_id(int id)
         set_focus_to(match->second);
     }
 }
+
+mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
+    mf::SurfaceCreationParameters const& params)
+{
+    auto id = session->create_surface(params);
+    set_focus_to(session);
+
+    return id;
+}
+
