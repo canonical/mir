@@ -44,6 +44,11 @@ class StubShell : public frontend::Shell
     void focus_session_with_lightdm_id(int /* id */)
     {
     }
+    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& /* session */,
+                                        frontend::SurfaceCreationParameters const& /* params */)
+    {
+        return frontend::SurfaceId{0};
+    }
     void shutdown()
     {
     }

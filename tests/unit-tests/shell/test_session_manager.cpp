@@ -22,11 +22,12 @@
 #include "mir/frontend/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
-#include "mir/shell/focus_setter.h"
 #include "mir/surfaces/surface.h"
+
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/stub_surface.h"
+#include "mir_test_doubles/mock_focus_setter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -57,11 +58,6 @@ struct MockFocusSequence: public msh::FocusSequence
     MOCK_CONST_METHOD0(default_focus, std::shared_ptr<mf::Session>());
 };
 
-struct MockFocusSetter: public msh::FocusSetter
-{
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::Session> const&));
-};
-
 struct SessionManagerSetup : public testing::Test
 {
     SessionManagerSetup()
@@ -75,7 +71,7 @@ struct SessionManagerSetup : public testing::Test
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
-    MockFocusSetter focus_setter;
+    mtd::MockFocusSetter focus_setter;
 
     msh::SessionManager session_manager;
 };
@@ -159,3 +155,25 @@ TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
 
     session_manager.close_session(session1);
 }
+
+TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
+{
+    using namespace ::testing;    
+    
+    ON_CALL(surface_factory, create_surface(_)).WillByDefault(
+        Return(std::make_shared<mtd::StubSurface>()));
+
+    
+    // Once for session creation and once for surface creation
+    {
+        InSequence seq;
+
+        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
+        EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
+        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
+    }
+    
+    auto session1 = session_manager.open_session("Weather Report");
+    session_manager.create_surface_for(session1, mf::a_surface());
+}
+
