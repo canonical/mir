@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <hardware/hardware.h>
+#include <hardware/hwcomposer.h> 
 #include <gmock/gmock.h>
 #include "mir_test_doubles/mock_android_alloc_device.h"
 
@@ -28,24 +29,38 @@ namespace mir
 namespace test
 {
 
+class HWCComposer1Interface
+{
 
-typedef struct hw_module_t hw_module;
-class gralloc_module_mock : public hw_module
+};
+
+class MockHWCComposerDevice1 : public HWCComposer1Interface,
+                               public hwc_composer_device_1
 {
 public:
-    gralloc_module_mock(hw_device_t* const& device)
+    MockHWCComposerDevice1()
+    {
+        common.version = HWC_DEVICE_API_VERSION_1_1;
+    } 
+};
+
+typedef struct hw_module_t hw_module;
+class hardware_module_mock : public hw_module
+{
+public:
+    hardware_module_mock(hw_device_t* const& device)
         : mock_ad(device)
     { 
         gr_methods.open = hw_open;
         methods = &gr_methods; 
     }
-    ~gralloc_module_mock()
+    ~hardware_module_mock()
     {
     } 
 
     static int hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device)
     {
-        gralloc_module_mock* self = (gralloc_module_mock*) module;
+        hardware_module_mock* self = (hardware_module_mock*) module;
         self->mock_ad->close = hw_close;
         *device = (hw_device_t*) self->mock_ad;
         return 0;
@@ -70,11 +85,10 @@ public:
     MOCK_METHOD2(hw_get_module, int(const char *id, const struct hw_module_t**));
 
     std::shared_ptr<alloc_device_t> ad; 
-    std::shared_ptr<gralloc_module_mock> grmock;
-
-    struct hw_device_t *fake_hwc_device;
-    hw_module_t fake_hw_hwc_module;
-    hw_module_methods_t hwc_methods; 
+    std::shared_ptr<hwc_composer_device_1> hd;
+ 
+    std::shared_ptr<hardware_module_mock> grmock;
+    std::shared_ptr<hardware_module_mock> hwmock;
 };
 
 }
