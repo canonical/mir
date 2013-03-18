@@ -40,11 +40,6 @@ namespace graphics
 {
 class ViewableArea;
 }
-namespace frontend
-{
-class Session;
-class Surface;
-}
 
 namespace input
 {
@@ -67,9 +62,7 @@ public:
     
     std::shared_ptr<InputChannel> make_input_channel();
     
-    // TODO: Promote to mi::InputManager ~racarr
     void set_input_focus_to(std::shared_ptr<frontend::Session> const& session, std::shared_ptr<frontend::Surface> const& surface);
-    
 
 protected:
     InputManager(const InputManager&) = delete;

@@ -30,6 +30,12 @@ namespace graphics
 {
 class ViewableArea;
 }
+namespace frontend
+{
+class Session;
+class Surface;
+}
+
 namespace input
 {
 class EventFilter;
@@ -42,6 +48,8 @@ public:
     virtual void stop() = 0;
     
     virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
+
+    virtual void set_input_focus_to(std::shared_ptr<frontend::Session> const& session, std::shared_ptr<frontend::Surface> const& surface) = 0;
 
 protected:
     InputManager() {};

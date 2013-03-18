@@ -20,6 +20,7 @@
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mf = mir::frontend;
 
 namespace
 {
@@ -28,6 +29,7 @@ class DummyInputManager : public mi::InputManager
     void stop() {}
     void start() {}
     virtual std::shared_ptr<mi::InputChannel> make_input_channel() { return std::shared_ptr<mi::InputChannel>(); }
+    void set_input_focus_to(std::shared_ptr<mf::Session> const& /* session */, std::shared_ptr<mf::Surface> const& /* surface */) {}
 }; 
 }
 
