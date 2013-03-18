@@ -42,6 +42,7 @@ public:
     virtual SurfaceId create_surface(SurfaceCreationParameters const& params) = 0;
     virtual void destroy_surface(SurfaceId surface) = 0;
     virtual std::shared_ptr<Surface> get_surface(SurfaceId surface) const = 0;
+    virtual std::shared_ptr<Surface> default_surface() const = 0;
 
     virtual std::string name() = 0;
     virtual void shutdown() = 0;
