@@ -115,13 +115,8 @@ void mir::frontend::SessionMediator::create_surface(
         response->set_pixel_format((int)surface->pixel_format());
         response->set_buffer_usage(request->buffer_usage());
 
-        try
-        {
+        if (surface->supports_input())
             response->add_fd(surface->client_input_fd());
-        } catch ( std::logic_error& e)
-        {
-            std::cout << e.what() << std::endl;
-        }
 
         surface->advance_client_buffer();
         auto const& buffer_resource = surface->client_buffer();
