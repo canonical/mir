@@ -85,8 +85,10 @@ std::shared_ptr<mf::Surface> msh::ApplicationSession::get_surface(mf::SurfaceId 
 
 std::shared_ptr<mf::Surface> msh::ApplicationSession::default_surface() const
 {
-    // TODO: Implement ~racarr
-    return std::shared_ptr<mf::Surface>();
+    if (surfaces.size())
+        return surfaces.begin()->second;
+    else
+        return std::shared_ptr<mf::Surface>();
 }
 
 void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
