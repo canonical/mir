@@ -125,7 +125,7 @@ install(
   ARCHIVE DESTINATION lib)
 
 install(
-   DIRECTORY ${CMAKE_SOURCE_DIR}/include/mir_toolkit DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}"
+   DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}"
    FILES_MATCHING PATTERN "*.h")
 
 
