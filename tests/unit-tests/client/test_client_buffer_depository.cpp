@@ -270,7 +270,7 @@ TEST_F(MirBufferDepositoryTest, triple_buffering_reaches_steady_state_age)
 TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
 {
     using namespace testing;
-    int num_buffers = 3;
+    const int num_buffers = 3;
 
     mcl::ClientBufferDepository depository{mock_factory, num_buffers};
 
@@ -287,4 +287,19 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
     // of the first buffer.
     EXPECT_CALL(*first_buffer, Destroy()).Times(1);
     depository.deposit_package(std::move(packages[3]), 4, size, pf);
+}
+
+TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_buffer)
+{
+    using namespace testing;
+    const int num_buffers = 3;
+
+    mcl::ClientBufferDepository depository{mock_factory, num_buffers};
+
+    auto package1 = std::make_shared<MirBufferPackage>();
+    auto package2 = std::make_shared<MirBufferPackage>();
+
+    depository.deposit_package(std::move(package1), 1, size, pf);
+    EXPECT_CALL(*reinterpret_cast<MockBuffer *>(depository.access_current_buffer().get()), mark_as_submitted());
+    depository.deposit_package(std::move(package2), 2, size, pf);
 }
