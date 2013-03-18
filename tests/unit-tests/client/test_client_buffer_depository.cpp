@@ -344,3 +344,36 @@ TEST_F(MirBufferDepositoryTest, depository_respects_max_buffer_parameter)
             EXPECT_TRUE(Mock::VerifyAndClearExpectations(buffers[i]));
     }
 }
+
+TEST_F(MirBufferDepositoryTest, depository_caches_recently_seen_buffer)
+{
+    using namespace testing;
+
+    mcl::ClientBufferDepository depository{mock_factory, 3};
+
+    auto package1 = std::make_shared<MirBufferPackage>();
+    auto package2 = std::make_shared<MirBufferPackage>();
+
+    EXPECT_CALL(*mock_factory, create_buffer_rv(_,_,_))
+        .Times(1);
+
+    depository.deposit_package(package1, 8, size, pf);
+    depository.deposit_package(package1, 8, size, pf);
+    depository.deposit_package(package1, 8, size, pf);
+}
+
+TEST_F(MirBufferDepositoryTest, depository_creates_new_buffer_for_different_id)
+{
+    using namespace testing;
+
+    mcl::ClientBufferDepository depository{mock_factory, 3};
+
+    auto package1 = std::make_shared<MirBufferPackage>();
+    auto package2 = std::make_shared<MirBufferPackage>();
+
+    EXPECT_CALL(*mock_factory, create_buffer_rv(_,_,_))
+        .Times(2);
+
+    depository.deposit_package(package1, 8, size, pf);
+    depository.deposit_package(package2, 9, size, pf);
+}
