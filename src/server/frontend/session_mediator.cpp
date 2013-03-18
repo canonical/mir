@@ -33,7 +33,6 @@
 #include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
 
-#include <iostream>
 #include <boost/throw_exception.hpp>
 
 mir::frontend::SessionMediator::SessionMediator(
