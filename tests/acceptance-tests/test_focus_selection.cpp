@@ -87,6 +87,29 @@ struct ClientConfigCommon : TestingClientConfiguration
     MirConnection* connection;
     MirSurface* surface;
 };
+
+struct SurfaceCreatingClient : ClientConfigCommon
+{
+    void exec()
+    {
+        mir_wait_for(mir_connect(
+            mir_test_socket,
+            __PRETTY_FUNCTION__,
+            connection_callback,
+            this));
+         ASSERT_TRUE(connection != NULL);
+         MirSurfaceParameters const request_params =
+        {
+            __PRETTY_FUNCTION__,
+            640, 480,
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware
+        };
+         mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+         mir_connection_release(connection);
+    }
+};
+
 }
 
 namespace
@@ -132,31 +155,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 
     launch_server_process(server_config);
 
-    struct ClientConfig : ClientConfigCommon
-    {
-        void exec()
-        {
-            mir_wait_for(mir_connect(
-                mir_test_socket,
-                __PRETTY_FUNCTION__,
-                connection_callback,
-                this));
-
-            ASSERT_TRUE(connection != NULL);
-
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
-            };
-
-            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
-
-            mir_connection_release(connection);
-        }
-    } focus_config;
+    SurfaceCreatingClient client;
     
-    launch_client_process(focus_config);
+    launch_client_process(client);
 }
