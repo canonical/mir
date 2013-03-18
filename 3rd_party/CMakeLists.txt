@@ -24,6 +24,10 @@ set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES} PAREN
 set(MIR_INPUT_ANDROID_COMPILE_FLAGS ${MIR_INPUT_ANDROID_COMPILE_FLAGS}
   PARENT_SCOPE)
 
+if (MIR_PLATFORM STREQUAL "android")
+  add_subdirectory(android-fbtype)
+endif()
+
 if (NOT MIR_DISABLE_INPUT)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/android-deps)
   add_subdirectory(android-input)

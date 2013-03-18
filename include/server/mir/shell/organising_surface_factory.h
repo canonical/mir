@@ -35,8 +35,8 @@ public:
     OrganisingSurfaceFactory(std::shared_ptr<SurfaceFactory> const& underlying_factory,
                              std::shared_ptr<PlacementStrategy> const& placement_strategy);
     virtual ~OrganisingSurfaceFactory();
-    
-    std::shared_ptr<Surface> create_surface(SurfaceCreationParameters const& params);
+
+    std::shared_ptr<frontend::Surface> create_surface(frontend::SurfaceCreationParameters const& params);
 
 protected:
     OrganisingSurfaceFactory(OrganisingSurfaceFactory const&) = delete;

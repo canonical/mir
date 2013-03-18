@@ -17,28 +17,41 @@
  */
 
 
-#ifndef PROXY_SURFACE_H_
-#define PROXY_SURFACE_H_
+#ifndef MIR_SHELL_SURFACE_H_
+#define MIR_SHELL_SURFACE_H_
 
-#include "mir/shell/surface.h"
+#include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
+
+#include <functional>
 
 namespace mir
 {
-namespace shell
+namespace frontend
 {
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
+}
+namespace input
+{
+class InputChannel;
 }
 
 namespace surfaces
 {
 class SurfaceStackModel;
+}
 
-class BasicProxySurface : public shell::Surface
+namespace shell
+{
+
+class Surface : public frontend::Surface
 {
 public:
-
-    explicit BasicProxySurface(std::weak_ptr<mir::surfaces::Surface> const& surface);
+    explicit Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::shared_ptr<input::InputChannel> const& input_channel);
+    Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, 
+	    std::shared_ptr<input::InputChannel> const& input_channel,
+	    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
+    ~Surface();
 
     void hide();
 
@@ -56,29 +69,16 @@ public:
 
     std::shared_ptr<compositor::Buffer> client_buffer() const;
 
-protected:
-    void destroy_surface(SurfaceStackModel* const surface_stack) const;
+    bool supports_input() const;
+    int client_input_fd() const;
 
 private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
-};
-
-class ProxySurface : public BasicProxySurface
-{
-public:
-    ProxySurface(
-        SurfaceStackModel* const surface_stack_,
-        shell::SurfaceCreationParameters const& params);
-
-    void destroy();
-
-    ~ProxySurface();
-
-private:
-    SurfaceStackModel* const surface_stack;
+    std::shared_ptr<mir::input::InputChannel> const input_channel;
+    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const deleter;
 };
 
 }
 }
 
-#endif /* PROXY_SURFACE_H_ */
+#endif /* MIR_SHELL_SURFACE_H_ */
