@@ -133,10 +133,10 @@ TEST_F(MirBufferDepositoryTest, depository_new_deposit_changes_current_buffer)
     mcl::ClientBufferDepository depository{mock_factory, 3};
 
     depository.deposit_package(std::move(package), 8, size, pf);
-    auto buffer1 = depository.access_current_buffer();
+    auto buffer1 = depository.current_buffer();
 
     depository.deposit_package(std::move(package2), 9, size, pf);
-    auto buffer2 = depository.access_current_buffer();
+    auto buffer2 = depository.current_buffer();
 
     EXPECT_NE(buffer1, buffer2);
 }
@@ -148,7 +148,7 @@ TEST_F(MirBufferDepositoryTest, depository_sets_buffer_age_to_zero_for_new_buffe
     mcl::ClientBufferDepository depository{mock_factory, 3};
 
     depository.deposit_package(std::move(package), 1, size, pf);
-    auto buffer1 = depository.access_current_buffer();
+    auto buffer1 = depository.current_buffer();
 
     EXPECT_EQ(0u, buffer1->age());
 }
@@ -161,7 +161,7 @@ TEST_F(MirBufferDepositoryTest, just_sumbitted_buffer_has_age_1)
     auto package2 = std::make_shared<MirBufferPackage>();
 
     depository.deposit_package(std::move(package), 1, size, pf);
-    auto buffer1 = depository.access_current_buffer();
+    auto buffer1 = depository.current_buffer();
 
     ASSERT_EQ(0u, buffer1->age());
 
@@ -178,20 +178,20 @@ TEST_F(MirBufferDepositoryTest, submitting_buffer_ages_other_buffers)
     mcl::ClientBufferDepository depository{mock_factory, 3};
 
     depository.deposit_package(std::move(package), 1, size, pf);
-    auto buffer1 = depository.access_current_buffer();
+    auto buffer1 = depository.current_buffer();
 
     EXPECT_EQ(0u, buffer1->age());
 
     auto package2 = std::make_shared<MirBufferPackage>();
     depository.deposit_package(std::move(package2), 2, size, pf);
-    auto buffer2 = depository.access_current_buffer();
+    auto buffer2 = depository.current_buffer();
 
     EXPECT_EQ(1u, buffer1->age());
     EXPECT_EQ(0u, buffer2->age());
 
     auto package3 = std::make_shared<MirBufferPackage>();
     depository.deposit_package(std::move(package3), 3, size, pf);
-    auto buffer3 = depository.access_current_buffer();
+    auto buffer3 = depository.current_buffer();
 
     EXPECT_EQ(2u, buffer1->age());
     EXPECT_EQ(1u, buffer2->age());
@@ -205,13 +205,13 @@ TEST_F(MirBufferDepositoryTest, double_buffering_reaches_steady_state_age)
     mcl::ClientBufferDepository depository{mock_factory, 3};
 
     depository.deposit_package(std::move(package), 1, size, pf);
-    auto buffer1 = depository.access_current_buffer();
+    auto buffer1 = depository.current_buffer();
 
     EXPECT_EQ(0u, buffer1->age());
 
     auto package2 = std::make_shared<MirBufferPackage>();
     depository.deposit_package(std::move(package2), 2, size, pf);
-    auto buffer2 = depository.access_current_buffer();
+    auto buffer2 = depository.current_buffer();
 
     EXPECT_EQ(1u, buffer1->age());
     EXPECT_EQ(0u, buffer2->age());
@@ -234,15 +234,15 @@ TEST_F(MirBufferDepositoryTest, triple_buffering_reaches_steady_state_age)
     mcl::ClientBufferDepository depository{mock_factory, 3};
 
     depository.deposit_package(std::move(package), 1, size, pf);
-    auto buffer1 = depository.access_current_buffer();
+    auto buffer1 = depository.current_buffer();
 
     auto package2 = std::make_shared<MirBufferPackage>();
     depository.deposit_package(std::move(package2), 2, size, pf);
-    auto buffer2 = depository.access_current_buffer();
+    auto buffer2 = depository.current_buffer();
 
     auto package3 = std::make_shared<MirBufferPackage>();
     depository.deposit_package(std::move(package3), 3, size, pf);
-    auto buffer3 = depository.access_current_buffer();
+    auto buffer3 = depository.current_buffer();
 
     EXPECT_EQ(2u, buffer1->age());
     EXPECT_EQ(1u, buffer2->age());
@@ -278,7 +278,7 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
     std::shared_ptr<MirBufferPackage> packages[num_packages];
 
     depository.deposit_package(std::move(packages[0]), 1, size, pf);
-    MockBuffer* first_buffer = reinterpret_cast<MockBuffer *>(depository.access_current_buffer().get());
+    MockBuffer* first_buffer = reinterpret_cast<MockBuffer *>(depository.current_buffer().get());
 
     depository.deposit_package(std::move(packages[1]), 2, size, pf);
     depository.deposit_package(std::move(packages[2]), 3, size, pf);
@@ -300,6 +300,6 @@ TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_b
     auto package2 = std::make_shared<MirBufferPackage>();
 
     depository.deposit_package(std::move(package1), 1, size, pf);
-    EXPECT_CALL(*reinterpret_cast<MockBuffer *>(depository.access_current_buffer().get()), mark_as_submitted());
+    EXPECT_CALL(*reinterpret_cast<MockBuffer *>(depository.current_buffer().get()), mark_as_submitted());
     depository.deposit_package(std::move(package2), 2, size, pf);
 }

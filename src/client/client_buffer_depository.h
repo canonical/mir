@@ -52,16 +52,16 @@ public:
     /// Construct a ClientBuffer from the IPC data, and use it as the current buffer.
 
     /// This also marks the previous current buffer (if any) as being submitted to the server.
-    /// \post access_current_buffer() will return a ClientBuffer constructed from this IPC data.
+    /// \post current_buffer() will return a ClientBuffer constructed from this IPC data.
     void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> &&, int id,
                                 geometry::Size, geometry::PixelFormat);
-    std::shared_ptr<ClientBuffer> access_current_buffer();
+    std::shared_ptr<ClientBuffer> current_buffer();
 
 private:
     std::shared_ptr<ClientBufferFactory> factory;
     typedef std::map<int, std::shared_ptr<ClientBuffer>> BufferMap;
     BufferMap buffers;
-    BufferMap::iterator current_buffer;
+    BufferMap::iterator current_buffer_iter;
     const int max_buffers;
 };
 }

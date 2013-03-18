@@ -29,7 +29,7 @@ namespace mcl=mir::client;
 
 mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const &factory, int max_buffers)
     : factory(factory),
-      current_buffer(buffers.end()),
+      current_buffer_iter(buffers.end()),
       max_buffers(max_buffers)
 {
 }
@@ -43,7 +43,7 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::M
         auto current = next;
         next++;
 
-        if (current != current_buffer &&
+        if (current != current_buffer_iter &&
             current->first != id &&
             current->second->age() >= 2)
         {
@@ -56,22 +56,22 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::M
         current.second->increment_age();
     }
 
-    if (current_buffer != buffers.end())
+    if (current_buffer_iter != buffers.end())
     {
-        current_buffer->second->mark_as_submitted();
+        current_buffer_iter->second->mark_as_submitted();
     }
 
-    current_buffer = buffers.find(id);
+    current_buffer_iter = buffers.find(id);
 
-    if (current_buffer == buffers.end())
+    if (current_buffer_iter == buffers.end())
     {
         auto new_buffer = factory->create_buffer(std::move(package), size, pf);
 
-        current_buffer = buffers.insert(current_buffer, std::make_pair(id, new_buffer));
+        current_buffer_iter = buffers.insert(current_buffer_iter, std::make_pair(id, new_buffer));
     }
 }
 
-std::shared_ptr<mcl::ClientBuffer> mcl::ClientBufferDepository::access_current_buffer()
+std::shared_ptr<mcl::ClientBuffer> mcl::ClientBufferDepository::current_buffer()
 {
-    return current_buffer->second;
+    return current_buffer_iter->second;
 }
