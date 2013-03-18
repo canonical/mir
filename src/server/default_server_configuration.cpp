@@ -47,6 +47,7 @@
 #include "mir/logging/display_report.h"
 #include "mir/shell/surface_controller.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_controller.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -330,11 +331,7 @@ mir::DefaultServerConfiguration::the_surface_factory()
         [this]()
         {
             // TODO remove refactoring frig
-            auto the_surface_builder = surface_stack(
-                [this]()
-                {
-                    return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
-                });
+            auto the_surface_builder = std::make_shared<ms::SurfaceController>(the_surface_stack_model());
 
             return std::make_shared<msh::SurfaceController>(the_surface_builder, the_input_channel_factory());
         });

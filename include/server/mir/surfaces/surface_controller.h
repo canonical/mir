@@ -17,32 +17,32 @@
  */
 
 
-#ifndef MIR_SHELL_SURFACE_BUILDER_H_
-#define MIR_SHELL_SURFACE_BUILDER_H_
+#ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
+#define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include <memory>
+#include "mir/shell/surface_builder.h"
 
 namespace mir
 {
-namespace frontend { class SurfaceCreationParameters; }
-namespace surfaces { class Surface; }
-
-namespace shell
+namespace surfaces
 {
-class SurfaceBuilder
+class SurfaceStackModel;
+
+/// Will grow up to provide synchronization of model updates
+class SurfaceController : public shell::SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<surfaces::Surface> create_surface(frontend::SurfaceCreationParameters const& params) = 0;
+    explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    virtual void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
+    virtual std::weak_ptr<Surface> create_surface(frontend::SurfaceCreationParameters const& params);
+
+    virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 protected:
-    SurfaceBuilder() = default;
-    virtual ~SurfaceBuilder() {} // should be "= default;" but that causes "noexcept" spread
-    SurfaceBuilder(SurfaceBuilder const&) = delete;
-    SurfaceBuilder& operator=(SurfaceBuilder const&) = delete;
+    std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
+
 }
 }
 
 
-#endif /* MIR_SHELL_SURFACE_BUILDER_H_ */
+#endif /* MIR_SURFACES_SURFACE_CONTROLLER_H_ */

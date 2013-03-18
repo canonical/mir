@@ -21,7 +21,6 @@
 
 #include "surface_stack_model.h"
 #include "mir/compositor/render_view.h"
-#include "mir/shell/surface_builder.h" // TODO - should go to the "Controller
 
 #include <memory>
 #include <vector>
@@ -48,7 +47,7 @@ namespace surfaces
 class BufferBundleFactory;
 class Surface;
 
-class SurfaceStack : public compositor::RenderView, public SurfaceStackModel, public shell::SurfaceBuilder
+class SurfaceStack : public compositor::RenderView, public SurfaceStackModel
 {
 public:
     explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory);

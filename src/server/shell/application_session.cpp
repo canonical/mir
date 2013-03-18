@@ -32,7 +32,7 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 msh::ApplicationSession::ApplicationSession(
-    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name) :
     surface_factory(surface_factory),
     session_name(session_name),
