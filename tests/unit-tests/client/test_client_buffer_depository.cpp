@@ -45,6 +45,12 @@ struct MockBuffer : public mcl::ClientBuffer
             .WillByDefault(ReturnPointee(&internal_age));
     }
 
+    MOCK_METHOD0(Destroy, void());
+    virtual ~MockBuffer()
+    {
+        Destroy();
+    }
+
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
@@ -261,20 +267,24 @@ TEST_F(MirBufferDepositoryTest, triple_buffering_reaches_steady_state_age)
     EXPECT_EQ(3u, buffer3->age());
 }
 
-TEST_F(MirBufferDepositoryTest, depository_forgets_old_buffers)
+TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
 {
     using namespace testing;
+    int num_buffers = 3;
 
-    mcl::ClientBufferDepository depository{mock_factory, 3};
+    mcl::ClientBufferDepository depository{mock_factory, num_buffers};
 
     const int num_packages = 4;
     std::shared_ptr<MirBufferPackage> packages[num_packages];
+
     depository.deposit_package(std::move(packages[0]), 1, size, pf);
-    std::weak_ptr<mir::client::ClientBuffer> first_buffer = depository.access_current_buffer();
+    MockBuffer* first_buffer = reinterpret_cast<MockBuffer *>(depository.access_current_buffer().get());
+
     depository.deposit_package(std::move(packages[1]), 2, size, pf);
     depository.deposit_package(std::move(packages[2]), 3, size, pf);
-    depository.deposit_package(std::move(packages[3]), 4, size, pf);
 
-    // We've submitted 3 buffers after the first one now; we should have forgotten the first one.
-    EXPECT_TRUE(first_buffer.expired());
+    // We've deposited three different buffers now; the fourth should trigger the destruction
+    // of the first buffer.
+    EXPECT_CALL(*first_buffer, Destroy()).Times(1);
+    depository.deposit_package(std::move(packages[3]), 4, size, pf);
 }
