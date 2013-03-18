@@ -23,6 +23,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
@@ -174,8 +175,9 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         std::make_shared<ms::Surface>(
             mf::a_surface().name,
             buffer_bundle));
+    std::shared_ptr<mi::InputChannel> null_input_channel;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-        Return(std::make_shared<msh::Surface>(dummy_surface)));
+        Return(std::make_shared<msh::Surface>(dummy_surface, null_input_channel)));
 
     
     // Once for session creation and once for surface creation
