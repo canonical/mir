@@ -49,7 +49,7 @@ mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* /*c
     return std::make_shared<mcla::AndroidClientPlatform>();
 }
 
-std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create_platform_depository()
+std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create_buffer_factory()
 {
     const hw_module_t *hw_module;
     int error = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
@@ -63,7 +63,7 @@ std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create
     EmptyDeleter empty_del;
     auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, empty_del);
     auto registrar = std::make_shared<mcla::AndroidRegistrarGralloc>(gralloc_dev);
-    return std::make_shared<mcla::AndroidClientBufferDepository>(registrar);
+    return std::make_shared<mcla::AndroidClientBufferFactory>(registrar);
 }
 
 namespace
