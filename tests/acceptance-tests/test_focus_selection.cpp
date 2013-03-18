@@ -169,22 +169,28 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 
 TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_created)
 {
-    struct ServerConfig : public TestingServerConfiguration
+    struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mtd::MockInputFocusSelector> focus_selector;
-
+        bool expected;
+        
+        ServerConfig()
+          : focus_selector(std::make_shared<mtd::MockInputFocusSelector>()),
+            expected(false)
+        {
+        }
+            
         std::shared_ptr<mi::FocusSelector>
-        the_input_focus_selector()
+        the_input_focus_selector() override
         {
             using namespace ::testing;
-            
-            if (focus_selector)
-                return focus_selector;
-            
-            focus_selector = std::make_shared<mtd::MockInputFocusSelector>();
-                
-            EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSession(), NonNullSurface())).Times(1);
-            EXPECT_CALL(*focus_selector, set_input_focus_to(_, _)).Times(1); // When Surface is released
+
+            if (!expected)
+            {
+                EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSession(), NonNullSurface())).Times(1);
+                EXPECT_CALL(*focus_selector, set_input_focus_to(_, _)).Times(1); // When Surface is released
+                expected = true;
+            }
                 
             return focus_selector;
         }

@@ -252,7 +252,7 @@ mir::DefaultServerConfiguration::the_frontend_shell()
         [this]() -> std::shared_ptr<msh::SessionManager>
         {
             auto session_container = std::make_shared<msh::SessionContainer>();
-            auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container, the_input_manager());
+            auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container, the_input_focus_selector());
             auto focus_selection_strategy = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
 
             auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());

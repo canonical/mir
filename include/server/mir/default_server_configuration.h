@@ -108,11 +108,11 @@ public:
 
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<input::InputManager> the_input_manager();
+    virtual std::shared_ptr<input::FocusSelector> the_input_focus_selector();
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
-    virtual std::shared_ptr<input::FocusSelector> the_input_focus_selector();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<frontend::Shell> session_manager;
