@@ -44,6 +44,7 @@ struct MockSurface : public frontend::Surface
     
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
+    MOCK_CONST_METHOD0(server_input_fd, int());
 };
 
 }
