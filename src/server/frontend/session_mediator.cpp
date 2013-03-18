@@ -23,7 +23,6 @@
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
-
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer.h"
@@ -33,6 +32,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
+
 #include <boost/throw_exception.hpp>
 
 mir::frontend::SessionMediator::SessionMediator(
@@ -114,6 +114,7 @@ void mir::frontend::SessionMediator::create_surface(
         response->set_pixel_format((int)surface->pixel_format());
         response->set_buffer_usage(request->buffer_usage());
 
+        response->add_fd(surface->client_input_fd());
 
         surface->advance_client_buffer();
         auto const& buffer_resource = surface->client_buffer();

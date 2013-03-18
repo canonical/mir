@@ -69,6 +69,7 @@ namespace input
 {
 class InputManager;
 class EventFilter;
+class InputChannelFactory;
 }
 
 namespace logging
@@ -109,6 +110,7 @@ public:
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
+    virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<frontend::Shell> session_manager;

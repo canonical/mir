@@ -25,6 +25,10 @@
 
 namespace mir
 {
+namespace input
+{
+class InputChannelFactory;
+}
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
@@ -38,7 +42,7 @@ namespace shell
 class SurfaceController : public SurfaceFactory
 {
 public:
-    explicit SurfaceController(std::shared_ptr<surfaces::SurfaceStackModel> const& surface_stack);
+  explicit SurfaceController(std::shared_ptr<surfaces::SurfaceStackModel> const& surface_stack, std::shared_ptr<input::InputChannelFactory> const& input_factory);
     virtual ~SurfaceController() {}
 
     std::shared_ptr<frontend::Surface> create_surface(const frontend::SurfaceCreationParameters& params);
@@ -49,6 +53,7 @@ protected:
 
 private:
     std::shared_ptr<surfaces::SurfaceStackModel> const surface_stack;
+    std::shared_ptr<input::InputChannelFactory> const input_factory;
 };
 
 }
