@@ -39,7 +39,7 @@ class GBMClientBuffer : public ClientBuffer
 {
 public:
     GBMClientBuffer(std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
-                    std::shared_ptr<mir_toolkit::MirBufferPackage>&& buffer_package,
+                    std::shared_ptr<mir_toolkit::MirBufferPackage> const& buffer_package,
                     geometry::Size size,
                     geometry::PixelFormat pf);
 

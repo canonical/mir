@@ -128,7 +128,7 @@ struct GBMMemoryRegion : mcl::MemoryRegion
 
 mclg::GBMClientBuffer::GBMClientBuffer(
         std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
-        std::shared_ptr<mir_toolkit::MirBufferPackage> && package,
+        std::shared_ptr<mir_toolkit::MirBufferPackage> const& package,
         geom::Size size, geom::PixelFormat pf)
     : drm_fd_handler{drm_fd_handler},
       creation_package(std::move(package)),

@@ -34,7 +34,7 @@ mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBuffer
 {
 }
 
-void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage>&& package, int id, geometry::Size size, geometry::PixelFormat pf)
+void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> const & package, int id, geometry::Size size, geometry::PixelFormat pf)
 {
     for (auto next = buffers.begin(); next != buffers.end();)
     {
@@ -65,7 +65,7 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::M
 
     if (current_buffer_iter == buffers.end())
     {
-        auto new_buffer = factory->create_buffer(std::move(package), size, pf);
+        auto new_buffer = factory->create_buffer(package, size, pf);
 
         current_buffer_iter = buffers.insert(current_buffer_iter, std::make_pair(id, new_buffer));
     }

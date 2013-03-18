@@ -53,8 +53,8 @@ public:
 
     /// This also marks the previous current buffer (if any) as being submitted to the server.
     /// \post current_buffer() will return a ClientBuffer constructed from this IPC data.
-    void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> &&, int id,
-                                geometry::Size, geometry::PixelFormat);
+    void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> const &, int id,
+                         geometry::Size, geometry::PixelFormat);
     std::shared_ptr<ClientBuffer> current_buffer();
 
 private:

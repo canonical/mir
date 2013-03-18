@@ -161,7 +161,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
             .WillByDefault(Return(emptybuffer));
     }
 
-    std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> && p,
+    std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& p,
                                                      geometry::Size size, geometry::PixelFormat pf)
     {
         return create_buffer_rv( p, size, pf);
