@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/shell/surface_controller.h"
+#include "mir/shell/surface_source.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/frontend/surface.h"
 #include "mir/input/input_channel_factory.h"
@@ -31,7 +31,7 @@ namespace mi = mir::input;
 namespace mf = mir::frontend;
 
 
-msh::SurfaceController::SurfaceController(
+msh::SurfaceSource::SurfaceSource(
     std::shared_ptr<SurfaceBuilder> const& surface_builder,
     std::shared_ptr<mi::InputChannelFactory> const& input_factory) :
     surface_builder(surface_builder),
@@ -40,7 +40,7 @@ msh::SurfaceController::SurfaceController(
     assert(surface_builder);
 }
 
-std::shared_ptr<mf::Surface> msh::SurfaceController::create_surface(const mf::SurfaceCreationParameters& params)
+std::shared_ptr<mf::Surface> msh::SurfaceSource::create_surface(const mf::SurfaceCreationParameters& params)
 {
     return std::make_shared<Surface>(
         surface_builder,

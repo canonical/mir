@@ -19,7 +19,7 @@
 #include "mir/shell/application_session.h"
 #include "mir/frontend/surface.h"
 
-#include "mir/shell/surface_controller.h"
+#include "mir/shell/surface_factory.h"
 
 #include <boost/throw_exception.hpp>
 

@@ -48,7 +48,7 @@ namespace shell
 {
 class SessionManager;
 class SurfaceFactory;
-class SurfaceController;
+class SurfaceSource;
 }
 namespace surfaces
 {
@@ -126,7 +126,7 @@ protected:
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
-    CachedPtr<shell::SurfaceController> surface_controller;
+    CachedPtr<shell::SurfaceSource> surface_source;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;

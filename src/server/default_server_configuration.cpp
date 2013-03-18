@@ -45,7 +45,7 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/session_mediator_report.h"
 #include "mir/logging/display_report.h"
-#include "mir/shell/surface_controller.h"
+#include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 
@@ -327,13 +327,13 @@ mir::DefaultServerConfiguration::the_render_view()
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
-    return surface_controller(
+    return surface_source(
         [this]()
         {
             // TODO remove refactoring frig
             auto the_surface_builder = std::make_shared<ms::SurfaceController>(the_surface_stack_model());
 
-            return std::make_shared<msh::SurfaceController>(the_surface_builder, the_input_channel_factory());
+            return std::make_shared<msh::SurfaceSource>(the_surface_builder, the_input_channel_factory());
         });
 }
 
