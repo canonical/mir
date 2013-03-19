@@ -22,7 +22,8 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/default_compositing_strategy.h"
+#include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
@@ -45,8 +46,9 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/session_mediator_report.h"
 #include "mir/logging/display_report.h"
-#include "mir/shell/surface_controller.h"
+#include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_controller.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -326,20 +328,30 @@ mir::DefaultServerConfiguration::the_render_view()
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
-    return surface_controller(
+    return surface_source(
         [this]()
         {
-            return std::make_shared<msh::SurfaceController>(the_surface_stack_model(), the_input_channel_factory());
+            return std::make_shared<msh::SurfaceSource>(the_surface_builder(), the_input_channel_factory());
         });
 }
 
-std::shared_ptr<mc::Drawer>
-mir::DefaultServerConfiguration::the_drawer()
+std::shared_ptr<msh::SurfaceBuilder>
+mir::DefaultServerConfiguration::the_surface_builder()
 {
-    return compositor(
+    return surface_controller(
         [this]()
         {
-            return std::make_shared<mc::Compositor>(the_render_view(), the_renderer());
+            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
+        });
+}
+
+std::shared_ptr<mc::CompositingStrategy>
+mir::DefaultServerConfiguration::the_compositing_strategy()
+{
+    return compositing_strategy(
+        [this]()
+        {
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_render_view(), the_renderer());
         });
 }
 
@@ -353,6 +365,16 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
         });
 }
 
+std::shared_ptr<mc::Compositor>
+mir::DefaultServerConfiguration::the_compositor()
+{
+    return compositor(
+        [this]()
+        {
+            return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
+                                                                 the_compositing_strategy());
+        });
+}
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(

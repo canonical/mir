@@ -57,6 +57,8 @@ private:
     EGLConfig egl_config;
     EGLContext egl_context;
     EGLSurface egl_surface;
+    EGLContext egl_context_shared;
+    EGLSurface egl_surface_dummy;
 };
 
 }

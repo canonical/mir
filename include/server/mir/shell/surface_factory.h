@@ -34,11 +34,10 @@ namespace shell
 class SurfaceFactory
 {
 public:
-    virtual ~SurfaceFactory() {}
-
     virtual std::shared_ptr<frontend::Surface> create_surface(const frontend::SurfaceCreationParameters& params) = 0;
 
 protected:
+    virtual ~SurfaceFactory() {}
     SurfaceFactory() = default;
     SurfaceFactory(const SurfaceFactory&) = delete;
     SurfaceFactory& operator=(const SurfaceFactory&) = delete;

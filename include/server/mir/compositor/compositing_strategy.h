@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -14,26 +14,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/input/input_manager.h"
+#ifndef MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_
+#define MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_
 
-namespace mg = mir::graphics;
-namespace mi = mir::input;
-
-namespace
+namespace mir
 {
-class DummyInputManager : public mi::InputManager
+namespace graphics
 {
-    void stop() {}
-    void start() {}
-    virtual std::shared_ptr<mi::InputChannel> make_input_channel() { return std::shared_ptr<mi::InputChannel>(); }
-}; 
+class DisplayBuffer;
 }
 
-std::shared_ptr<mi::InputManager> mi::create_input_manager(
-    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& ,
-    std::shared_ptr<mg::ViewableArea> const& )
+namespace compositor
 {
-    return std::make_shared<DummyInputManager>();
+
+class CompositingStrategy
+{
+public:
+    virtual ~CompositingStrategy() {}
+
+    virtual void render(graphics::DisplayBuffer& display_buffer) = 0;
+
+protected:
+    CompositingStrategy() = default;
+    CompositingStrategy& operator=(CompositingStrategy const&) = delete;
+    CompositingStrategy(CompositingStrategy const&) = delete;
+};
 }
+}
+
+
+#endif /* MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_ */
