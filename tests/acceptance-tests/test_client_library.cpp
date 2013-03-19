@@ -306,11 +306,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
             ASSERT_TRUE(surface != NULL);
 
-            buffers = 0;
-            mir_wait_for(mir_surface_next_buffer(surface,
-                                                 next_buffer_callback,
-                                                 this));
-            EXPECT_EQ(buffers, 1);
+            mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
 
             mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
@@ -346,10 +342,17 @@ TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
 
             surface = mir_surface_create_sync(connection, &request_params);
             ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
             mir_surface_next_buffer_sync(surface);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
             mir_surface_release_sync(surface);
+
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
             mir_connection_release(connection);
         }
     } client_config;
