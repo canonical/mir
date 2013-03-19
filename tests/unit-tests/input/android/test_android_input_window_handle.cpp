@@ -57,17 +57,17 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     mtd::MockSurface surface;
 
-    EXPECT_CALL(surface, server_input_fd()).Times(1)
-        .WillOnce(Return(testing_server_fd));
+    EXPECT_CALL(surface, server_input_fd()).Times(AtLeast(1))
+        .WillRepeatedly(Return(testing_server_fd));
+
+    EXPECT_CALL(surface, size()).Times(AtLeast(1))
+        .WillRepeatedly(Return(default_window_size));
     
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
                                   mt::fake_shared(surface));
     
     // For now since we are just doing keyboard input we only need surface size, eventually will need
     // a position
-    EXPECT_CALL(surface, size()).Times(1)
-        .WillOnce(Return(default_window_size));
-    
     EXPECT_TRUE(handle.updateInfo());
     
     // TODO Name
