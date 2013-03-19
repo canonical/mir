@@ -65,7 +65,7 @@ class NullSessionMediatorReport : public SessionMediatorReport
 
     virtual void session_drm_auth_magic_called(std::string const& app_name);
 
-    virtual void session_configure_surface_called(std::string const& app_name) = 0;
+    virtual void session_configure_surface_called(std::string const& app_name);
 
     virtual void session_error(
         std::string const& app_name,
