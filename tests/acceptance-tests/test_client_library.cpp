@@ -323,7 +323,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buffers_sync)
+TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -341,14 +341,13 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_software
             };
 
             surface = mir_surface_create_sync(connection, &request_params);
             ASSERT_TRUE(surface != NULL);
 
             mir_surface_next_buffer_sync(surface);
-            // XXX ^ Nothing to test against. There is no output.
 
             mir_surface_release_sync(surface);
             mir_connection_release(connection);
