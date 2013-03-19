@@ -237,6 +237,7 @@ window_handle_matches_session_and_surface(droidinput::sp<droidinput::InputWindow
                                           std::shared_ptr<mf::Surface> const& surface)
 {
     handle->inputApplicationHandle->updateInfo();
+    handle->updateInfo();
     if (handle->inputApplicationHandle->getInfo()->name != droidinput::String8(session->name().c_str()))
         return false;
     if (handle->getInputChannel()->getFd() != surface->server_input_fd())
