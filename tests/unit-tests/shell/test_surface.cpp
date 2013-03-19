@@ -174,6 +174,23 @@ TEST_F(ShellSurface, size_throw_behavior)
     }, std::runtime_error);
 }
 
+TEST_F(ShellSurface, name_throw_behavior)
+{
+    auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);
+
+    msh::Surface proxy_surface(surface, null_input_channel);
+
+    EXPECT_NO_THROW({
+        proxy_surface.name();
+    });
+
+    surface.reset();
+
+    EXPECT_THROW({
+        proxy_surface.name();
+    }, std::runtime_error);
+}
+
 TEST_F(ShellSurface, pixel_format_throw_behavior)
 {
     auto surface = std::make_shared<ms::Surface>(__PRETTY_FUNCTION__, buffer_bundle);

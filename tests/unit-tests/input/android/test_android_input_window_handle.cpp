@@ -38,44 +38,42 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-
-static geom::Size const default_window_size = geom::Size{geom::Width{256},
-                                                         geom::Height{256}};
-
 struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
 {
     bool updateInfo() { return true; }
 };
-
-const int testing_server_fd = 2;
-
 }
 
 TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surface)
 {
     using namespace ::testing;
 
+    geom::Size const default_surface_size = geom::Size{geom::Width{256},
+                                                      geom::Height{256}};
+    std::string const testing_surface_name = "Test";
+    int const testing_server_fd = 2;
+
     mtd::MockSurface surface;
 
-    EXPECT_CALL(surface, server_input_fd()).Times(AtLeast(1))
-        .WillRepeatedly(Return(testing_server_fd));
+    EXPECT_CALL(surface, server_input_fd()).Times(1)
+        .WillOnce(Return(testing_server_fd));
+    // For now since we are just doing keyboard input we only need surface size, eventually will need
+    // a position
+    EXPECT_CALL(surface, size()).Times(1)
+        .WillOnce(Return(default_surface_size));
+    EXPECT_CALL(surface, name()).Times(1)
+        .WillOnce(Return(testing_surface_name));
 
-    EXPECT_CALL(surface, size()).Times(AtLeast(1))
-        .WillRepeatedly(Return(default_window_size));
-    
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
                                   mt::fake_shared(surface));
     
-    // For now since we are just doing keyboard input we only need surface size, eventually will need
-    // a position
-    EXPECT_TRUE(handle.updateInfo());
-    
-    // TODO Name
-    
     // TODO: How do we avoid recreating a bunch of input hcannels when we move between communication channel and back
     auto info = handle.getInfo();
+
+    EXPECT_EQ(testing_surface_name, info->name);
+
     EXPECT_EQ(testing_server_fd, info->inputChannel->getFd());
     
-    EXPECT_EQ(default_window_size.height.as_uint32_t(), (uint32_t)(info->frameRight - info->frameLeft));
-    EXPECT_EQ(default_window_size.height.as_uint32_t(), (uint32_t)(info->frameBottom - info->frameTop));
+    EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameRight - info->frameLeft));
+    EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameBottom - info->frameTop));
 }

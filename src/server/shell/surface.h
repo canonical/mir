@@ -24,6 +24,7 @@
 #include "mir/surfaces/surface.h"
 
 #include <functional>
+#include <string>
 
 namespace mir
 {
@@ -60,6 +61,8 @@ public:
     void destroy();
 
     void shutdown();
+    
+    std::string name() const;
 
     geometry::Size size() const;
 

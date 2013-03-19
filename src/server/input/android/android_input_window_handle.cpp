@@ -51,8 +51,7 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->frameRight = mInfo->frameLeft + surface_size.width.as_uint32_t();
     mInfo->frameBottom = mInfo->frameTop + surface_size.height.as_uint32_t();
 
-    // TODO: Expose surface name
-    mInfo->name = droidinput::String8("Todo: Name (~racarr)");
+    mInfo->name = droidinput::String8(surface->name().c_str());
     mInfo->layoutParamsFlags = droidinput::InputWindowInfo::FLAG_NOT_TOUCH_MODAL;
     mInfo->layoutParamsType = droidinput::InputWindowInfo::TYPE_APPLICATION;
 //    mInfo->touchableRegion = touchable_region;

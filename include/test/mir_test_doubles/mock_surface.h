@@ -41,6 +41,7 @@ struct MockSurface : public frontend::Surface
     MOCK_METHOD0(shutdown, void());
     MOCK_METHOD0(advance_client_buffer, void());
 
+    MOCK_CONST_METHOD0(name, std::string ());
     MOCK_CONST_METHOD0(size, geometry::Size ());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());

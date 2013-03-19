@@ -94,6 +94,18 @@ mir::geometry::Size msh::Surface::size() const
     }
 }
 
+std::string msh::Surface::name() const
+{
+    if (auto const& s = surface.lock())
+    {
+        return s->name();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
 mir::geometry::PixelFormat msh::Surface::pixel_format() const
 {
     if (auto const& s = surface.lock())
