@@ -27,13 +27,6 @@
 #include <stdint.h>
 
 static char const *socket_file = "/tmp/mir_socket";
-static MirSurface *surface = 0;
-
-static void surface_next_callback(MirSurface * new_surface, void *context)
-{
-    (void)new_surface;
-    (void)context;
-}
 
 static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
 {
@@ -94,6 +87,7 @@ static void fill_pattern(uint32_t pattern[2], MirPixelFormat pf)
 int main(int argc, char* argv[])
 {
     MirConnection *connection = 0;
+    MirSurface *surface = 0;
 
     int arg;
     opterr = 0;
@@ -146,7 +140,7 @@ int main(int argc, char* argv[])
     int i=0; 
     while (1)
     {
-        mir_wait_for(mir_surface_next_buffer(surface, surface_next_callback, 0 ));
+        mir_surface_next_buffer_sync(surface);
         mir_surface_get_graphics_region( surface, &graphics_region);
         if ((i++ % 2) == 0)
             render_pattern(&graphics_region, pattern[0]);
