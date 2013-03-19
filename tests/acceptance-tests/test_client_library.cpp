@@ -196,11 +196,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
             EXPECT_EQ(request_params.buffer_usage,
                       response_params.buffer_usage);
 
-            mir_wait_for(mir_surface_release(surface,
-                                             release_surface_callback,
-                                             this));
-
-            ASSERT_TRUE(surface == NULL);
+            mir_surface_release_sync(surface);
 
             mir_connection_release(connection);
         }

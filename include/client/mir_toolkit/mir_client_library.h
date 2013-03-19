@@ -335,6 +335,13 @@ MirWaitHandle *mir_surface_release(
     void *client_context);
 
 /**
+ * Release the specified surface like in mir_surface_release(), but also
+ * wait for the operation to complete.
+ *   \param [in] surface  The surface to be released
+ */
+void mir_surface_release_sync(MirSurface *surface);
+
+/**
  * Wait on the supplied handle until the associated request has completed.
  *   \param [in] wait_handle  handle returned by an asynchronous request
  */

@@ -150,6 +150,13 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_release(
     return surface->release_surface(callback, context);
 }
 
+void mir_toolkit::mir_surface_release_sync(MirSurface *surface)
+{
+    mir_wait_for(mir_surface_release(surface,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        nullptr));
+}
+
 int mir_toolkit::mir_debug_surface_id(MirSurface * surface)
 {
     return surface->id();
