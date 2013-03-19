@@ -28,7 +28,6 @@ namespace mf = mir::frontend;
 mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mf::Session> const& session)
   : session(session)
 {
-    mInfo = new droidinput::InputApplicationInfo;
 }
 
 bool mia::InputApplicationHandle::updateInfo()
