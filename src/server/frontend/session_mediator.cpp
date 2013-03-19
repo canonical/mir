@@ -98,7 +98,7 @@ void mir::frontend::SessionMediator::create_surface(
 
     report->session_create_surface_called(session->name());
 
-    auto const id = session->create_surface(
+    auto const id = shell->create_surface_for(session,
         SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
@@ -114,7 +114,8 @@ void mir::frontend::SessionMediator::create_surface(
         response->set_pixel_format((int)surface->pixel_format());
         response->set_buffer_usage(request->buffer_usage());
 
-        response->add_fd(surface->client_input_fd());
+        if (surface->supports_input())
+            response->add_fd(surface->client_input_fd());
 
         surface->advance_client_buffer();
         auto const& buffer_resource = surface->client_buffer();

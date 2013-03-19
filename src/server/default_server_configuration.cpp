@@ -46,8 +46,9 @@
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/session_mediator_report.h"
 #include "mir/logging/display_report.h"
-#include "mir/shell/surface_controller.h"
+#include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_controller.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -327,10 +328,20 @@ mir::DefaultServerConfiguration::the_render_view()
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
+    return surface_source(
+        [this]()
+        {
+            return std::make_shared<msh::SurfaceSource>(the_surface_builder(), the_input_channel_factory());
+        });
+}
+
+std::shared_ptr<msh::SurfaceBuilder>
+mir::DefaultServerConfiguration::the_surface_builder()
+{
     return surface_controller(
         [this]()
         {
-            return std::make_shared<msh::SurfaceController>(the_surface_stack_model(), the_input_channel_factory());
+            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
         });
 }
 

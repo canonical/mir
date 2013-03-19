@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,24 +16,22 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/input/input_manager.h"
+#include "mir/surfaces/surface_controller.h"
+#include "mir/surfaces/surface_stack_model.h"
 
-namespace mg = mir::graphics;
-namespace mi = mir::input;
+namespace ms = mir::surfaces;
 
-namespace
+ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) :
+    surface_stack(surface_stack)
 {
-class DummyInputManager : public mi::InputManager
-{
-    void stop() {}
-    void start() {}
-    virtual std::shared_ptr<mi::InputChannel> make_input_channel() { return std::shared_ptr<mi::InputChannel>(); }
-}; 
 }
 
-std::shared_ptr<mi::InputManager> mi::create_input_manager(
-    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& ,
-    std::shared_ptr<mg::ViewableArea> const& )
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(frontend::SurfaceCreationParameters const& params)
 {
-    return std::make_shared<DummyInputManager>();
+    return surface_stack->create_surface(params);
+}
+
+void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
+{
+    surface_stack->destroy_surface(surface);
 }

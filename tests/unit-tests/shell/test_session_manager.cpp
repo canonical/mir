@@ -22,12 +22,14 @@
 #include "mir/frontend/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
-#include "mir/shell/focus_setter.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
+#include "mir/shell/surface_builder.h"
 
 #include "src/server/shell/surface.h"
 
@@ -45,6 +47,27 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
+class StubSurfaceBuilder : public msh::SurfaceBuilder
+{
+public:
+    StubSurfaceBuilder() :
+        buffer_bundle(new mtd::NullBufferBundle()),
+        dummy_surface(std::make_shared<ms::Surface>(mf::a_surface().name, buffer_bundle))
+    {
+    }
+
+    std::weak_ptr<ms::Surface> create_surface(mf::SurfaceCreationParameters const& )
+    {
+        return dummy_surface;
+    }
+
+    void destroy_surface(std::weak_ptr<ms::Surface> const& )
+    {
+    }
+private:
+    std::shared_ptr<ms::BufferBundle> const buffer_bundle;
+    std::shared_ptr<ms::Surface>  dummy_surface;
+};
 
 struct MockSessionContainer : public msh::SessionContainer
 {
@@ -61,11 +84,6 @@ struct MockFocusSequence: public msh::FocusSequence
     MOCK_CONST_METHOD0(default_focus, std::shared_ptr<mf::Session>());
 };
 
-struct MockFocusSetter: public msh::FocusSetter
-{
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<mf::Session> const&));
-};
-
 struct SessionManagerSetup : public testing::Test
 {
     SessionManagerSetup()
@@ -76,10 +94,11 @@ struct SessionManagerSetup : public testing::Test
     {
     }
 
+    StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
-    MockFocusSetter focus_setter;
+    mtd::MockFocusSetter focus_setter;
 
     msh::SessionManager session_manager;
 };
@@ -106,14 +125,13 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     using namespace ::testing;
 
     EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
-    std::shared_ptr<ms::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
-    std::shared_ptr<ms::Surface> dummy_surface(
-        std::make_shared<ms::Surface>(
-            mf::a_surface().name,
-            buffer_bundle));
+
     std::shared_ptr<mi::InputChannel> null_input_channel;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-       Return(std::make_shared<msh::Surface>(dummy_surface, null_input_channel)));
+       Return(std::make_shared<msh::Surface>(
+           mt::fake_shared(surface_builder),
+           mf::a_surface(),
+           null_input_channel)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
@@ -169,3 +187,27 @@ TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
 
     session_manager.close_session(session1);
 }
+
+TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
+{
+    using namespace ::testing;
+    std::shared_ptr<mi::InputChannel> null_input_channel;
+    ON_CALL(surface_factory, create_surface(_)).WillByDefault(
+        Return(std::make_shared<msh::Surface>(
+            mt::fake_shared(surface_builder),
+            mf::a_surface(),
+            null_input_channel)));
+
+    // Once for session creation and once for surface creation
+    {
+        InSequence seq;
+
+        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
+        EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
+        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
+    }
+    
+    auto session1 = session_manager.open_session("Weather Report");
+    session_manager.create_surface_for(session1, mf::a_surface());
+}
+
