@@ -56,11 +56,7 @@ public:
     void run();
     void stop();
 
-    void render(graphics::Display* display);
-
 private:
-    void do_stuff();
-
     struct Private;
     std::unique_ptr<Private> p;
 

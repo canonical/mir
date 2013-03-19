@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/default_compositing_strategy.h"
 
 #include "mir/compositor/rendering_operator.h"
 #include "mir/geometry/rectangle.h"
@@ -31,9 +31,9 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-mc::Compositor::Compositor(
+mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
     std::shared_ptr<RenderView> const& view,
-    const std::shared_ptr<mg::Renderer>& renderer)
+    std::shared_ptr<mg::Renderer> const& renderer)
     : render_view(view),
       renderer(renderer)
 {
@@ -61,18 +61,15 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 }
 
-void mc::Compositor::render(graphics::Display* display)
+void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
 {
-    display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
-    {
-        RenderingOperator applicator(*renderer);
-        FilterForVisibleRenderablesInRegion selector(buffer.view_area());
+    RenderingOperator applicator(*renderer);
+    FilterForVisibleRenderablesInRegion selector(display_buffer.view_area());
 
-        buffer.make_current();
-        buffer.clear();
+    display_buffer.make_current();
+    display_buffer.clear();
 
-        render_view->for_each_if(selector, applicator);
+    render_view->for_each_if(selector, applicator);
 
-        buffer.post_update();
-    });
+    display_buffer.post_update();
 }

@@ -2,7 +2,6 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 set(
   INTEGRATION_TESTS_SRCS
-  test_renderloop.cpp
   test_surfaceloop.cpp
   test_error_reporting.cpp
   test_display_info.cpp

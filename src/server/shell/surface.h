@@ -23,8 +23,6 @@
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
 
-#include <functional>
-
 namespace mir
 {
 namespace frontend
@@ -36,21 +34,17 @@ namespace input
 class InputChannel;
 }
 
-namespace surfaces
-{
-class SurfaceStackModel;
-}
-
 namespace shell
 {
+class SurfaceBuilder;
 
 class Surface : public frontend::Surface
 {
 public:
-    explicit Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::shared_ptr<input::InputChannel> const& input_channel);
-    Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, 
-	    std::shared_ptr<input::InputChannel> const& input_channel,
-	    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
+    Surface(
+        std::shared_ptr<SurfaceBuilder> const& builder,
+        frontend::SurfaceCreationParameters const& params,
+        std::shared_ptr<input::InputChannel> const& input_channel);
     ~Surface();
 
     void hide();
@@ -73,11 +67,10 @@ public:
     int client_input_fd() const;
 
 private:
-    std::weak_ptr<mir::surfaces::Surface> const surface;
+    std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
-    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const deleter;
+    std::weak_ptr<mir::surfaces::Surface> const surface;
 };
-
 }
 }
 

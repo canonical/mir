@@ -42,7 +42,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-
 struct MockSessionContainer : public msh::SessionContainer
 {
     MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::Session> const&));
@@ -98,6 +97,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     using namespace ::testing;
 
     EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
+
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
        Return(std::make_shared<mtd::StubSurface>()));
 
@@ -163,7 +163,6 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
         Return(std::make_shared<mtd::StubSurface>()));
 
-    
     // Once for session creation and once for surface creation
     {
         InSequence seq;

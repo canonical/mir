@@ -290,7 +290,9 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
             ASSERT_TRUE(surface != NULL);
 
+            buffers = 0;
             mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+            EXPECT_EQ(buffers, 1);
 
             mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
