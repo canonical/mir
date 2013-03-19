@@ -23,6 +23,7 @@
 #include "src/server/input/android/default_android_input_configuration.h"
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/dummy_input_dispatcher_policy.h"
+#include "src/server/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
@@ -58,6 +59,9 @@ using namespace ::testing;
 static const geom::Rectangle default_view_area =
         geom::Rectangle{geom::Point(),
                         geom::Size{geom::Width(1600), geom::Height(1400)}};
+
+static const geom::Size testing_surface_size =
+    geom::Size{geom::Width{0}, geom::Height{0}};
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
@@ -163,19 +167,23 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 namespace
 {
 
-struct MockDispatcherPolicy : public mia::DummyInputDispatcherPolicy
+struct MockDispatcherPolicy : public mia::EventFilterDispatcherPolicy
 {
+    MockDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& filter)
+      : EventFilterDispatcherPolicy(filter)
+    {
+    }
     MOCK_METHOD3(interceptKeyBeforeDispatching, nsecs_t(droidinput::sp<droidinput::InputWindowHandle> const&,
                                                         droidinput::KeyEvent const*, uint32_t));
 };
 
 struct TestingInputConfiguration : public mtd::FakeEventHubInputConfiguration
 {
-    TestingInputConfiguration(std::initializer_list<std::shared_ptr<mir::input::EventFilter> const> const& filters,
+    TestingInputConfiguration(std::shared_ptr<mi::EventFilter> const& filter,
                               std::shared_ptr<mg::ViewableArea> const& view_area,
                               std::shared_ptr<mi::CursorListener> const& cursor_listener)
-        : FakeEventHubInputConfiguration(filters, view_area, cursor_listener),
-          dispatcher_policy(new MockDispatcherPolicy())
+        : FakeEventHubInputConfiguration({}, view_area, cursor_listener),
+          dispatcher_policy(new MockDispatcherPolicy(filter))
     {
     }
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy()
@@ -195,7 +203,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     AndroidInputManagerDispatcherInterceptSetup()
     {
         configuration = std::make_shared<TestingInputConfiguration>(
-            std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)}, 
+            mt::fake_shared(event_filter),
             mt::fake_shared(viewable_area), null_cursor_listener);
         fake_event_hub = configuration->the_fake_event_hub();
 
@@ -204,7 +212,18 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         input_manager = std::make_shared<mia::InputManager>(configuration);
         
         dispatcher_policy = configuration->the_mock_dispatcher_policy();
+
     }
+    
+    void SetUp()
+    {
+        input_manager->start();
+    }
+    void TearDown()
+    {
+        input_manager->stop();
+    }
+    
 
     MockEventFilter event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
@@ -230,16 +249,20 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
 
     WaitCondition wait_condition;
 
-    int const testing_server_fd{13};
+    int fds[2]; // TODO: This is bad ~racarr (Fixture?)x
 
     mtd::MockSession mock_session;
-    mtd::MockSurface mock_surface;
+    mtd::MockSurface mock_surface; // TODO: Looks like this should be a stub ~racarr
     
-    EXPECT_CALL(mock_surface, server_input_fd()).Times(1).WillOnce(Return(testing_server_fd));
-    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(testing_server_fd), _, _)).Times(1).WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+    EXPECT_CALL(mock_session, name()).Times(1).WillRepeatedly(Return("Test")); // TODO: Stubbb
+    
+    EXPECT_EQ(0, socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds));    
+    EXPECT_CALL(mock_surface, server_input_fd()).Times(1).WillOnce(Return(fds[0]));
+    EXPECT_CALL(mock_surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(testing_surface_size));
+    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(fds[0]), _, _)).Times(1).WillOnce(DoAll(WakeUp(&wait_condition), Return(-1))); // Return -1 to skip actual publishing of the event
 
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));
-
+    
     input_manager->set_input_focus_to(mt::fake_shared(mock_session), mt::fake_shared(mock_surface));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
@@ -249,4 +272,6 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
                                 .of_scancode(KEY_ENTER));
 
     wait_condition.wait_for_at_most_seconds(1);
+    close(fds[0]);
+    close(fds[1]);
 }

@@ -40,9 +40,11 @@ mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplic
 bool mia::InputWindowHandle::updateInfo()
 {
     if (!mInfo)
+    {
         mInfo = new droidinput::InputWindowInfo();
+        mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"), surface->server_input_fd());
+    }
     
-    mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"), surface->server_input_fd());
     mInfo->frameLeft = 0;
     mInfo->frameTop = 0;
     auto surface_size = surface->size();

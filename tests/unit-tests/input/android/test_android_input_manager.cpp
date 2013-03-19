@@ -129,7 +129,7 @@ namespace
 
 struct AndroidInputManagerSetup : public testing::Test
 {
-    void SetUp()
+    AndroidInputManagerSetup()
     {
         using namespace ::testing;
 
@@ -224,11 +224,17 @@ struct StubSession : public mtd::StubSession
 };
 struct StubSurface : public mtd::StubSurface
 {
+    StubSurface(int fd)
+      : input_fd(fd)
+    {
+    }
+    
     int server_input_fd() const override
     {
-        int const server_input_fd = 1;
-        return server_input_fd;
+        return input_fd;
     }
+    
+    int input_fd;
 };
 
 static bool
@@ -237,7 +243,6 @@ window_handle_matches_session_and_surface(droidinput::sp<droidinput::InputWindow
                                           std::shared_ptr<mf::Surface> const& surface)
 {
     handle->inputApplicationHandle->updateInfo();
-    handle->updateInfo();
     if (handle->inputApplicationHandle->getInfo()->name != droidinput::String8(session->name().c_str()))
         return false;
     if (handle->getInputChannel()->getFd() != surface->server_input_fd())
@@ -248,6 +253,14 @@ window_handle_matches_session_and_surface(droidinput::sp<droidinput::InputWindow
 MATCHER_P2(WindowHandleFor, session, surface, "")
 {
     return window_handle_matches_session_and_surface(arg, session, surface);
+}
+
+MATCHER_P(SessionHandleFor, session, "")
+{
+    arg->inputApplicationHandle->updateInfo();
+    if (arg->inputApplicationHandle->getInfo()->name != droidinput::String8(session->name().c_str()))
+        return false;
+    return true;
 }
 
 MATCHER_P(ApplicationHandleFor, session, "")
@@ -272,20 +285,34 @@ MATCHER(EmptyVector, "")
     return arg.size() == 0;
 }
 
+struct AndroidInputManagerFdSetup : public AndroidInputManagerSetup
+{
+    void SetUp() override
+    {
+        int res = socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds);
+        EXPECT_EQ(0, res);
+    }
+    void TearDown() override
+    {
+        close(fds[0]); 
+        close(fds[1]);
+    }
+    int fds[2];
+};
+
 }
 
-TEST_F(AndroidInputManagerSetup, set_input_focus)
+TEST_F(AndroidInputManagerFdSetup, set_input_focus)
 {
     using namespace ::testing;
     
     auto session = std::make_shared<StubSession>();
-    auto surface = std::make_shared<StubSurface>();
+    auto surface = std::make_shared<StubSurface>(fds[0]);
     
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
         .WillOnce(Return(droidinput::OK));
     // TODO: Matcher ~racarr
-    // TODO: Clarify ~racarr
-    EXPECT_CALL(*dispatcher, setFocusedApplication(_)).Times(2);
+    EXPECT_CALL(*dispatcher, setFocusedApplication(_)).Times(1);
     EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
     // TODO: Matcher ~racarr
     EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
