@@ -48,7 +48,7 @@ namespace mg=mir::graphics;
 namespace mc=mir::compositor;
 namespace ml=mir::logging;
 namespace ms=mir::surfaces;
-namespace msh = mir::shell;
+namespace mf = mir::frontend;
 namespace geom=mir::geometry;
 namespace mt=mir::tools;
 
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
         const float angular_step = 2.0 * M_PI / num_moveables;
 
         std::shared_ptr<ms::Surface> s = surface_stack->create_surface(
-            msh::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
+            mf::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
                            .of_pixel_format(buffer_allocator->supported_pixel_formats()[0])
                            .of_buffer_usage(mc::BufferUsage::hardware)
             ).lock();

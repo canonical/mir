@@ -16,9 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/frontend/application_mediator.h"
-#include "mir/frontend/application_mediator_report.h"
-#include "mir/shell/session.h"
+#include "mir/frontend/session_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 
@@ -30,16 +30,16 @@
 
 namespace mg = mir::graphics;
 
-void mir::frontend::ApplicationMediator::drm_auth_magic(
+void mir::frontend::SessionMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* request,
     mir::protobuf::DRMAuthMagicStatus* response,
     google::protobuf::Closure* done)
 {
-    if (application_session.get() == nullptr)
+    if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->application_drm_auth_magic_called(application_session->name());
+    report->session_drm_auth_magic_called(session->name());
 
     auto const magic = static_cast<drm_magic_t>(request->magic());
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);

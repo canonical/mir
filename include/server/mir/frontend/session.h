@@ -16,10 +16,10 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_H_
-#define MIR_SHELL_SESSION_H_
+#ifndef MIR_FRONTEND_SESSION_H_
+#define MIR_FRONTEND_SESSION_H_
 
-#include "mir/shell/surface_id.h"
+#include "mir/frontend/surface_id.h"
 
 #include <mutex>
 #include <atomic>
@@ -29,8 +29,7 @@
 namespace mir
 {
 
-/// Management of client application shell
-namespace shell
+namespace frontend
 {
 class Surface;
 struct SurfaceCreationParameters;
@@ -59,4 +58,4 @@ protected:
 }
 }
 
-#endif // MIR_SHELL_SESSION_H_
+#endif // MIR_FRONTEND_SESSION_H_

@@ -16,10 +16,11 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/shell/session_container.h"
-#include "mir/shell/session.h"
+#include "mir/frontend/session_container.h"
+#include "mir/frontend/session.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container) :
@@ -27,10 +28,10 @@ msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_
 {
 }
 
-void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msh::Session> const& focus_session)
+void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Session> const& focus_session)
 {
     app_container->for_each(
-        [&](std::shared_ptr<msh::Session> const& session) {
+        [&](std::shared_ptr<mf::Session> const& session) {
         if (session == focus_session)
         {
             session->show();

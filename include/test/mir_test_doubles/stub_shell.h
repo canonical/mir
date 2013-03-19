@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
-#define MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SHELL_H_
+#define MIR_TEST_DOUBLES_STUB_SHELL_H_
 
-#include "mir/shell/session_store.h"
+#include "mir/frontend/shell.h"
 #include "mir_test_doubles/stub_session.h"
 
 namespace mir
@@ -29,20 +29,25 @@ namespace test
 namespace doubles
 {
 
-class StubSessionStore : public shell::SessionStore
+class StubShell : public frontend::Shell
 {
-    std::shared_ptr<shell::Session> open_session(std::string const& /* name */)
+    std::shared_ptr<frontend::Session> open_session(std::string const& /* name */)
     {
         return std::make_shared<StubSession>();
     }
-    void close_session(std::shared_ptr<shell::Session> const& /* session */)
+    void close_session(std::shared_ptr<frontend::Session> const& /* session */)
     {
     }
-    void tag_session_with_lightdm_id(std::shared_ptr<shell::Session> const& /* session */, int /* id */)
+    void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& /* session */, int /* id */)
     {
     }
     void focus_session_with_lightdm_id(int /* id */)
     {
+    }
+    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& /* session */,
+                                        frontend::SurfaceCreationParameters const& /* params */)
+    {
+        return frontend::SurfaceId{0};
     }
     void shutdown()
     {
@@ -53,4 +58,4 @@ class StubSessionStore : public shell::SessionStore
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_SESSION_STORE_H_
+#endif // MIR_TEST_DOUBLES_STUB_SHELL_H_

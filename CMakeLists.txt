@@ -147,7 +147,6 @@ if (MIR_PLATFORM STREQUAL "android")
   add_definitions( -DANDROID )
  
   find_package( LibHardware REQUIRED )
-  find_package( AndroidUI REQUIRED )
 
   #ctest does not work for android, so turn test discovery off
   set(DISABLE_GTEST_TEST_DISCOVERY ON)
