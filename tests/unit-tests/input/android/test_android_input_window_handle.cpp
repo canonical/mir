@@ -57,8 +57,8 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     EXPECT_CALL(surface, server_input_fd()).Times(1)
         .WillOnce(Return(testing_server_fd));
-    // For now since we are just doing keyboard input we only need surface size, eventually will need
-    // a position
+    // For now since we are just doing keyboard input we only need surface size, 
+    // for touch/pointer events we will need a position
     EXPECT_CALL(surface, size()).Times(1)
         .WillOnce(Return(default_surface_size));
     EXPECT_CALL(surface, name()).Times(1)
@@ -67,7 +67,6 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
                                   mt::fake_shared(surface));
     
-    // TODO: How do we avoid recreating a bunch of input hcannels when we move between communication channel and back
     auto info = handle.getInfo();
 
     EXPECT_EQ(testing_surface_name, info->name);
