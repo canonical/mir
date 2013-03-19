@@ -314,7 +314,6 @@ TEST_F(AndroidInputManagerFdSetup, set_input_focus)
         .WillOnce(Return(droidinput::OK));
     EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);
     EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
-    // TODO: Matcher ~racarr
     EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
     EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
 
