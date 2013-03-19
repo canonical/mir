@@ -34,7 +34,7 @@ msh::OrganisingSurfaceFactory::~OrganisingSurfaceFactory()
 {
 }
 
-std::shared_ptr<mf::Surface> msh::OrganisingSurfaceFactory::create_surface(const mf::SurfaceCreationParameters& params)
+std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(const mf::SurfaceCreationParameters& params)
 {
     auto placed_params = placement_strategy->place(params);
 

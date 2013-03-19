@@ -49,7 +49,7 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
 
         placement_strategy = std::make_shared<MockPlacementStrategy>();
     }
-    std::shared_ptr<mf::Surface> null_surface;
+    std::shared_ptr<msh::Surface> null_surface;
     std::shared_ptr<mtd::MockSurfaceFactory> underlying_surface_factory;
     std::shared_ptr<MockPlacementStrategy> placement_strategy;
 };
