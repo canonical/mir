@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SHELL_SURFACE_CREATION_PARAMETERS_H_
-#define MIR_SHELL_SURFACE_CREATION_PARAMETERS_H_
+#ifndef MIR_FRONTEND_SURFACE_CREATION_PARAMETERS_H_
+#define MIR_FRONTEND_SURFACE_CREATION_PARAMETERS_H_
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/compositor/buffer_properties.h"
@@ -57,4 +57,4 @@ SurfaceCreationParameters a_surface();
 }
 }
 
-#endif /* MIR_SHELL_SURFACE_CREATION_PARAMETERS_H_ */
+#endif /* MIR_FRONTEND_SURFACE_CREATION_PARAMETERS_H_ */
