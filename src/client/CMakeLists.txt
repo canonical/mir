@@ -60,6 +60,7 @@ set(
   android/mir_native_window.cpp
   android/client_surface_interpreter.cpp
   android/syncfence.cpp
+  android/android_native_display_container.cpp
   ${CLIENT_SOURCES}
 )
 endif()
