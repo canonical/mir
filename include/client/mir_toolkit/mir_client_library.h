@@ -312,6 +312,13 @@ MirWaitHandle *mir_surface_next_buffer(
     void *client_context);
 
 /**
+ * Advance a surface's buffer as in mir_surface_next_buffer(), but also
+ * wait for the operation to complete.
+ *   \param [in] surface  The surface whose buffer to advance
+ */
+void mir_surface_next_buffer_sync(MirSurface *surface);
+
+/**
  * Release the supplied surface and any associated buffer. The
  * returned wait handle remains valid until the connection to the
  * server is released.

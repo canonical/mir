@@ -46,7 +46,8 @@ mir_toolkit::MirConnection error_connection;
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void *result, void **context)
 {
-    *context = result;
+    if (context)
+        *context = result;
 }
 
 }
@@ -202,6 +203,13 @@ void mir_toolkit::mir_surface_get_graphics_region(MirSurface * surface, MirGraph
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     return surface->next_buffer(callback, context);
+}
+
+void mir_toolkit::mir_surface_next_buffer_sync(MirSurface *surface)
+{
+    mir_wait_for(mir_surface_next_buffer(surface,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        nullptr));
 }
 
 void mir_toolkit::mir_wait_for(MirWaitHandle* wait_handle)
