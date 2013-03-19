@@ -57,15 +57,20 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
 
 static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
 {
-    uint32_t *pixel = (uint32_t*) region->vaddr;
-
-    int i,j;
-    for(i=0; i< region->width; i++)
+    char *row = region->vaddr;
+    int j;
+    
+    for (j = 0; j < region->height; j++)
     {
-        for(j=0; j<region->height; j++)
+        int i;
+        uint32_t *pixel = (uint32_t*)row;
+
+        for (i = 0; i < region->width; i++)
         {
-            pixel[j*region->width + i] = pf;
+            pixel[i] = pf;
         }
+
+        row += region->stride;
     }
 }
 
