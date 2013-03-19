@@ -130,6 +130,18 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
 
 }
 
+MirSurface *mir_toolkit::mir_surface_create_sync(
+    MirConnection *connection, MirSurfaceParameters const *params)
+{
+    MirSurface *surface = nullptr;
+
+    mir_wait_for(mir_surface_create(connection, params,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        &surface));
+
+    return surface;
+}
+
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_release(
     MirSurface * surface,
     mir_surface_lifecycle_callback callback, void * context)

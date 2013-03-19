@@ -233,6 +233,16 @@ MirWaitHandle *mir_surface_create(
     void *client_context);
 
 /**
+ * Create a surface like in mir_surface_create(), but also wait for creation
+ * to complete and return the resulting surface.
+ *   \param [in] connection  The connection
+ *   \param [in] params      Parameters describing the desired surface
+ *   \return                 The resulting surface
+ */
+MirSurface *mir_surface_create_sync(MirConnection *connection,
+                                    MirSurfaceParameters const *params);
+
+/**
  * Get a window type that can be used for OpenGL ES 2.0 acceleration
  *   \param [in] surface  the surface
  *   \return              an EGLNativeWindowType that the client can use
