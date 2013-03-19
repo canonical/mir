@@ -311,13 +311,46 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
                                                  next_buffer_callback,
                                                  this));
             EXPECT_EQ(buffers, 1);
-            // HANG. FIXME in a different branch before proposing this one.
-            //mir_surface_next_buffer_sync(surface);
 
             mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
             ASSERT_TRUE(surface == NULL);
 
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buffers_sync)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket,
+                                          __PRETTY_FUNCTION__);
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
+
+            surface = mir_surface_create_sync(connection, &request_params);
+            ASSERT_TRUE(surface != NULL);
+
+            mir_surface_next_buffer_sync(surface);
+            // XXX ^ Nothing to test against. There is no output.
+
+            mir_surface_release_sync(surface);
             mir_connection_release(connection);
         }
     } client_config;
