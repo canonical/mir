@@ -30,8 +30,8 @@
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/mock_viewable_area.h"
-#include "mir_test_doubles/mock_session.h"
-#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/stub_session.h"
+#include "mir_test_doubles/stub_surface.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 
@@ -220,13 +220,13 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     
     void SetUp()
     {
-        input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+        test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
         input_manager->start();
     }
     void TearDown()
     {
         input_manager->stop();
-        close(input_fd);
+        close(test_input_fd);
     }
     
 
@@ -238,7 +238,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
     std::shared_ptr<mia::InputManager> input_manager;
     
-    int input_fd;
+    int test_input_fd;
 };
 
 MATCHER_P(WindowHandleWithInputFd, input_fd, "")
@@ -248,6 +248,21 @@ MATCHER_P(WindowHandleWithInputFd, input_fd, "")
     return false;
 }
 
+struct StubInputSurface : public mtd::StubSurface
+{
+    StubInputSurface(int fd)
+      : fd(fd)
+    {
+    }
+    // TODO: Remove size?
+    int server_input_fd() const override
+    {
+        return fd;
+    }
+    
+    int fd;
+};
+
 }
 
 TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_surface_is_sent_unfiltered_key_events)
@@ -256,22 +271,18 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
 
     WaitCondition wait_condition;
 
-    mtd::MockSession mock_session;
-    mtd::MockSurface mock_surface; // TODO: Looks like this should be a stub ~racarr
-    
-    EXPECT_CALL(mock_session, name()).Times(1).WillRepeatedly(Return("Test")); // TODO: Stubbb
-    
-    EXPECT_CALL(mock_surface, server_input_fd()).Times(1).WillOnce(Return(input_fd));
-    EXPECT_CALL(mock_surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(testing_surface_size));
-    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _)).Times(1).WillOnce(DoAll(WakeUp(&wait_condition), Return(-1))); // Return -1 to skip actual publishing of the event
+    mtd::StubSession session;
+    StubInputSurface surface(test_input_fd);
 
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));
+    // We return -1 here to skip publishing of the event (to an unconnected test socket!).
+    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(test_input_fd), _, _))
+        .Times(1).WillOnce(DoAll(WakeUp(&wait_condition), Return(-1)));
     
-    input_manager->set_input_focus_to(mt::fake_shared(mock_session), mt::fake_shared(mock_surface));
+    input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
-
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
 
