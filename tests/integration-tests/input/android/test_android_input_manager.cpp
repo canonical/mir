@@ -63,9 +63,6 @@ static const geom::Rectangle default_view_area =
         geom::Rectangle{geom::Point(),
                         geom::Size{geom::Width(1600), geom::Height(1400)}};
 
-static const geom::Size testing_surface_size =
-    geom::Size{geom::Width{0}, geom::Height{0}};
-
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
@@ -254,7 +251,7 @@ struct StubInputSurface : public mtd::StubSurface
       : fd(fd)
     {
     }
-    // TODO: Remove size?
+
     int server_input_fd() const override
     {
         return fd;
