@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SESSION_H_
 #define MIR_TEST_DOUBLES_MOCK_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/frontend/session.h"
 
 #include <gmock/gmock.h>
 
@@ -30,11 +30,11 @@ namespace test
 namespace doubles
 {
 
-struct MockSession : public shell::Session
+struct MockSession : public frontend::Session
 {
-    MOCK_METHOD1(create_surface, shell::SurfaceId(shell::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(shell::SurfaceId));
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<shell::Surface>(shell::SurfaceId));
+    MOCK_METHOD1(create_surface, frontend::SurfaceId(frontend::SurfaceCreationParameters const&));
+    MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
+    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
     
     MOCK_METHOD0(name, std::string());
     MOCK_METHOD0(shutdown, void());

@@ -163,6 +163,14 @@ MirWaitHandle *mir_connect(
     void *client_context);
 
 /**
+ * Perform a mir_connect() but also wait for and return the result.
+ *   \param [in] server    A name identifying the server
+ *   \param [in] app_name  A name referring to the application
+ *   \return               The resulting MirConnection.
+ */
+MirConnection *mir_connect_sync(char const *server, char const *app_name);
+
+/**
  * Test for a valid connection
  * \param [in] connection  the connection
  * \return                 a non-zero value if the supplied connection is

@@ -35,11 +35,13 @@ class FilterForRenderables;
 class OperatorForRenderables;
 }
 
-namespace shell
+namespace frontend
 {
 class SurfaceCreationParameters;
 }
 
+/// Management of Surface objects. Includes the model (SurfaceStack and Surface
+/// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
 class BufferBundleFactory;
@@ -49,13 +51,13 @@ class SurfaceStack : public compositor::RenderView, public SurfaceStackModel
 {
 public:
     explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory);
-    virtual ~SurfaceStack() {}
+    virtual ~SurfaceStack() = default;
 
     // From RenderView
     virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
 
     // From SurfaceStackModel
-    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);
+    virtual std::weak_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 

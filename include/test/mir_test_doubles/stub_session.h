@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SESSION_H_
 #define MIR_TEST_DOUBLES_STUB_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/frontend/session.h"
 
 namespace mir
 {
@@ -28,18 +28,18 @@ namespace test
 namespace doubles
 {
 
-struct StubSession : public shell::Session
+struct StubSession : public frontend::Session
 {
-    shell::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */)
+    frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& /* params */)
     {
-        return shell::SurfaceId{0};
+        return frontend::SurfaceId{0};
     }
-    void destroy_surface(shell::SurfaceId /* surface */)
+    void destroy_surface(frontend::SurfaceId /* surface */)
     {
     }
-    std::shared_ptr<shell::Surface> get_surface(shell::SurfaceId /* surface */) const
+    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId /* surface */) const
     {
-        return std::shared_ptr<shell::Surface>();
+        return std::shared_ptr<frontend::Surface>();
     }
     std::string name()
     {

@@ -42,6 +42,13 @@ std::unordered_set<mir_toolkit::MirConnection*> mir_toolkit::MirConnection::vali
 namespace
 {
 mir_toolkit::MirConnection error_connection;
+
+// assign_result is compatible with all 2-parameter callbacks
+void assign_result(void *result, void **context)
+{
+    *context = result;
+}
+
 }
 
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
@@ -65,6 +72,17 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_connect(char const* socket_file, ch
         callback(&error_connection, context);
         return 0;
     }
+}
+
+MirConnection *mir_toolkit::mir_connect_sync(char const *server,
+                                             char const *app_name)
+{
+    MirConnection *conn = nullptr;
+    mir_wait_for(mir_connect(server, app_name,
+                             reinterpret_cast<mir_connected_callback>
+                                             (assign_result),
+                             &conn));
+    return conn;
 }
 
 int mir_toolkit::mir_connection_is_valid(MirConnection * connection)
