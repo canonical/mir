@@ -23,15 +23,11 @@
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/surfaces/surface.h"
-#include "mir/input/input_channel.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/null_buffer_bundle.h"
-#include "mir/shell/surface_builder.h"
-
-#include "src/server/shell/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -40,35 +36,12 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
-namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
-class StubSurfaceBuilder : public msh::SurfaceBuilder
-{
-public:
-    StubSurfaceBuilder() :
-        buffer_bundle(new mtd::NullBufferBundle()),
-        dummy_surface(std::make_shared<ms::Surface>(mf::a_surface().name, buffer_bundle))
-    {
-    }
-
-    std::weak_ptr<ms::Surface> create_surface(mf::SurfaceCreationParameters const& )
-    {
-        return dummy_surface;
-    }
-
-    void destroy_surface(std::weak_ptr<ms::Surface> const& )
-    {
-    }
-private:
-    std::shared_ptr<ms::BufferBundle> const buffer_bundle;
-    std::shared_ptr<ms::Surface>  dummy_surface;
-};
-
 struct MockSessionContainer : public msh::SessionContainer
 {
     MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::Session> const&));
@@ -94,7 +67,6 @@ struct SessionManagerSetup : public testing::Test
     {
     }
 
-    StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
@@ -126,12 +98,8 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 
     EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
 
-    std::shared_ptr<mi::InputChannel> null_input_channel;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-       Return(std::make_shared<msh::Surface>(
-           mt::fake_shared(surface_builder),
-           mf::a_surface(),
-           null_input_channel)));
+       Return(std::make_shared<mtd::StubSurface>()));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
@@ -142,7 +110,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
-    session->create_surface(mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    session->create_surface(mf::a_surface());
 
     session_manager.close_session(session);
 }
@@ -190,13 +158,10 @@ TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
 
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
-    using namespace ::testing;
-    std::shared_ptr<mi::InputChannel> null_input_channel;
+    using namespace ::testing;    
+    
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-        Return(std::make_shared<msh::Surface>(
-            mt::fake_shared(surface_builder),
-            mf::a_surface(),
-            null_input_channel)));
+        Return(std::make_shared<mtd::StubSurface>()));
 
     // Once for session creation and once for surface creation
     {
