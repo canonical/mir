@@ -285,19 +285,20 @@ MATCHER(EmptyVector, "")
     return arg.size() == 0;
 }
 
+// TODO: It would be nice if it were possible to mock the interface between 
+// droidinput::InputChannel and droidinput::InputDispatcher rather than use
+// valid fds to allow non-throwing construction of a real input channel.
 struct AndroidInputManagerFdSetup : public AndroidInputManagerSetup
 {
     void SetUp() override
     {
-        int res = socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds);
-        EXPECT_EQ(0, res);
+        test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
     }
     void TearDown() override
     {
-        close(fds[0]); 
-        close(fds[1]);
+        close(test_input_fd);
     }
-    int fds[2];
+    int test_input_fd;
 };
 
 }
@@ -307,7 +308,7 @@ TEST_F(AndroidInputManagerFdSetup, set_input_focus)
     using namespace ::testing;
     
     auto session = std::make_shared<StubSession>();
-    auto surface = std::make_shared<StubSurface>(fds[0]);
+    auto surface = std::make_shared<StubSurface>(test_input_fd);
     
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
         .WillOnce(Return(droidinput::OK));

@@ -214,7 +214,10 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         dispatcher_policy = configuration->the_mock_dispatcher_policy();
 
     }
-    
+
+    // TODO: It would be nice if it were possible to mock the interface between 
+    // droidinput::InputChannel and droidinput::InputDispatcher rather than use
+    // valid fds to allow non-throwing construction of a real input channel.    
     void SetUp()
     {
         test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
@@ -225,7 +228,6 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         input_manager->stop();
         close(test_input_fd);
     }
-    
 
     MockEventFilter event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
