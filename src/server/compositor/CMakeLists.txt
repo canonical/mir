@@ -1,7 +1,7 @@
 set(
   MIR_COMPOSITOR_SRCS
 
-  compositor.cpp
+  default_compositing_strategy.cpp
   buffer_basic.cpp
   temporary_buffers.cpp
   buffer_bundle_manager.cpp
@@ -9,6 +9,7 @@ set(
   buffer_swapper_multi.cpp
   swapper_factory.cpp
   rendering_operator.cpp
+  multi_threaded_compositor.cpp
 )
 
 ADD_LIBRARY(
