@@ -18,8 +18,8 @@
 
 #include "mir_test_framework/signal_dispatcher.h"
 
-#include <boost/thread.hpp>
-
+#include <thread>
+#include <mutex>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -84,7 +84,7 @@ struct mtf::SignalDispatcher::Constructor
 namespace
 {
 std::shared_ptr<mtf::SignalDispatcher> instance;
-boost::once_flag init_flag;
+std::once_flag init_flag;
 
 void init()
 {
@@ -123,13 +123,13 @@ struct mtf::SignalDispatcher::Private
         }
     }
 
-    boost::thread worker_thread;
+    std::thread worker_thread;
     mtf::SignalDispatcher::SignalType signal_channel;
 };
 
 std::shared_ptr<mtf::SignalDispatcher> mtf::SignalDispatcher::instance()
 {
-    boost::call_once(::init_flag, ::init);
+    std::call_once(::init_flag, ::init);
 
     return ::instance;
 }
