@@ -18,7 +18,7 @@
 
 #include "surface.h"
 
-#include "mir/surfaces/surface_stack_model.h"
+#include "mir/shell/surface_builder.h"
 #include "mir/input/input_channel.h"
 
 #include <boost/throw_exception.hpp>
@@ -29,28 +29,22 @@ namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 
-msh::Surface::Surface(std::weak_ptr<mir::surfaces::Surface> const& surface,
-		      std::shared_ptr<input::InputChannel> const& input_channel)
-  : surface(surface),
-    input_channel(input_channel),
-    deleter([](std::weak_ptr<mir::surfaces::Surface> const&){})
-{
-}
-
 msh::Surface::Surface(
-    std::weak_ptr<mir::surfaces::Surface> const& surface,
-    std::shared_ptr<input::InputChannel> const& input_channel,
-    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter)
-:
-    surface(surface),
+    std::shared_ptr<SurfaceBuilder> const& builder,
+    frontend::SurfaceCreationParameters const& params,
+    std::shared_ptr<input::InputChannel> const& input_channel)
+  : builder(builder),
     input_channel(input_channel),
-    deleter(deleter)
+    surface(builder->create_surface(params))
 {
 }
 
 msh::Surface::~Surface()
 {
-    destroy();
+    if (surface.lock())
+    {
+        destroy();
+    }
 }
 
 void msh::Surface::hide()
@@ -71,7 +65,7 @@ void msh::Surface::show()
 
 void msh::Surface::destroy()
 {
-    deleter(surface);
+    builder->destroy_surface(surface);
 }
 
 void msh::Surface::shutdown()

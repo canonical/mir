@@ -19,7 +19,7 @@
 #include "mir_toolkit/mir_client_library_lightdm.h"
 
 #include "mir/frontend/surface_id.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
 
 #include "mir_test_doubles/mock_display.h"

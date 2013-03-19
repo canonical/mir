@@ -18,7 +18,7 @@
 
 #include "src/server/input/android/android_input_application_handle.h"
 
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
 
 #include "mir_test/fake_shared.h"

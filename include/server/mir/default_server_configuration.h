@@ -34,6 +34,7 @@ class GraphicBufferAllocator;
 class BufferBundleManager;
 class RenderView;
 class Drawer;
+class CompositingStrategy;
 class Compositor;
 }
 namespace frontend
@@ -48,13 +49,15 @@ namespace shell
 {
 class SessionManager;
 class SurfaceFactory;
-class SurfaceController;
+class SurfaceSource;
+class SurfaceBuilder;
 }
 namespace surfaces
 {
 class BufferBundleFactory;
 class SurfaceStackModel;
 class SurfaceStack;
+class SurfaceController;
 }
 namespace graphics
 {
@@ -90,7 +93,8 @@ public:
     virtual std::shared_ptr<graphics::Renderer> the_renderer();
     virtual std::shared_ptr<graphics::ViewableArea> the_viewable_area();
 
-    virtual std::shared_ptr<compositor::Drawer> the_drawer();
+    virtual std::shared_ptr<compositor::Compositor> the_compositor();
+    virtual std::shared_ptr<compositor::CompositingStrategy> the_compositing_strategy();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
     virtual std::shared_ptr<compositor::RenderView> the_render_view();
@@ -110,6 +114,8 @@ public:
     virtual std::shared_ptr<input::InputManager> the_input_manager();
     virtual std::shared_ptr<input::FocusSelector> the_input_focus_selector();
 
+    virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
+
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
@@ -128,10 +134,12 @@ protected:
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
-    CachedPtr<shell::SurfaceController> surface_controller;
+    CachedPtr<shell::SurfaceSource> surface_source;
+    CachedPtr<compositor::CompositingStrategy> compositing_strategy;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
+    CachedPtr<surfaces::SurfaceController> surface_controller;
 
 private:
     std::shared_ptr<options::Option> options;
