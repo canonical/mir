@@ -28,6 +28,7 @@ namespace mf = mir::frontend;
 mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mf::Session> const& session)
   : session(session)
 {
+    updateInfo();
 }
 
 bool mia::InputApplicationHandle::updateInfo()

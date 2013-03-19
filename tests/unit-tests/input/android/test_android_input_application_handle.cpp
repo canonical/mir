@@ -34,13 +34,6 @@ namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-TEST(AndroidInputApplicationHandle, initially_contains_no_info)
-{
-    mtd::MockSession session;
-    mia::InputApplicationHandle application_handle(mt::fake_shared(session));
-    
-    EXPECT_EQ(NULL, application_handle.getInfo());
-} 
 
 TEST(AndroidInputApplicationHandle, takes_name_from_session_and_specifies_max_timeout)
 {   
@@ -48,8 +41,8 @@ TEST(AndroidInputApplicationHandle, takes_name_from_session_and_specifies_max_ti
     std::string const testing_session_name = "Cats";
     mtd::MockSession session;
 
-    EXPECT_CALL(session, name()).Times(1)
-        .WillOnce(Return(testing_session_name));
+    EXPECT_CALL(session, name()).Times(AtLeast(1))
+        .WillRepeatedly(Return(testing_session_name));
     mia::InputApplicationHandle application_handle(mt::fake_shared(session));
     EXPECT_TRUE(application_handle.updateInfo());
     auto info = application_handle.getInfo();

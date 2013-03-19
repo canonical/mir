@@ -222,6 +222,7 @@ struct StubSession : public mtd::StubSession
         return session_name;
     }
 };
+
 struct StubSurface : public mtd::StubSurface
 {
     StubSurface(int fd)
@@ -238,12 +239,20 @@ struct StubSurface : public mtd::StubSurface
 };
 
 static bool
+application_handle_matches_session(droidinput::sp<droidinput::InputApplicationHandle> const& handle,
+                                   std::shared_ptr<mf::Session> const& session)
+{
+   if (handle->getName() != droidinput::String8(session->name().c_str()))
+        return false;
+   return true;
+}
+
+static bool
 window_handle_matches_session_and_surface(droidinput::sp<droidinput::InputWindowHandle> const& handle,
                                           std::shared_ptr<mf::Session> const& session,
                                           std::shared_ptr<mf::Surface> const& surface)
 {
-    handle->inputApplicationHandle->updateInfo();
-    if (handle->inputApplicationHandle->getInfo()->name != droidinput::String8(session->name().c_str()))
+    if (!application_handle_matches_session(handle->inputApplicationHandle, session))
         return false;
     if (handle->getInputChannel()->getFd() != surface->server_input_fd())
         return false;
@@ -255,18 +264,9 @@ MATCHER_P2(WindowHandleFor, session, surface, "")
     return window_handle_matches_session_and_surface(arg, session, surface);
 }
 
-MATCHER_P(SessionHandleFor, session, "")
-{
-    arg->inputApplicationHandle->updateInfo();
-    if (arg->inputApplicationHandle->getInfo()->name != droidinput::String8(session->name().c_str()))
-        return false;
-    return true;
-}
-
 MATCHER_P(ApplicationHandleFor, session, "")
 {
-    arg->updateInfo();
-    return (arg->getName() == session->name());
+    return application_handle_matches_session(arg, session);
 }
 
 MATCHER_P2(VectorContainingWindowHandleFor, session, surface, "")
@@ -312,8 +312,7 @@ TEST_F(AndroidInputManagerFdSetup, set_input_focus)
     
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
         .WillOnce(Return(droidinput::OK));
-    // TODO: Matcher ~racarr
-    EXPECT_CALL(*dispatcher, setFocusedApplication(_)).Times(1);
+    EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);
     EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
     // TODO: Matcher ~racarr
     EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
