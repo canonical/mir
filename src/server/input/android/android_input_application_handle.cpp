@@ -28,6 +28,7 @@ namespace mf = mir::frontend;
 mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mf::Session> const& session)
   : session(session)
 {
+    mInfo = new droidinput::InputApplicationInfo;
 }
 
 bool mia::InputApplicationHandle::updateInfo()
@@ -35,7 +36,7 @@ bool mia::InputApplicationHandle::updateInfo()
     if (mInfo == NULL)
         mInfo = new droidinput::InputApplicationInfo;
     mInfo->dispatchingTimeout = INT_MAX;
-    mInfo->name = droidinput::String8(session->name());
+    mInfo->name = droidinput::String8(session->name().c_str());
 
     return true;
 }

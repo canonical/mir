@@ -236,7 +236,8 @@ window_handle_matches_session_and_surface(droidinput::sp<droidinput::InputWindow
                                           std::shared_ptr<mf::Session> const& session,
                                           std::shared_ptr<mf::Surface> const& surface)
 {
-    if (handle->inputApplicationHandle->getName() != session->name())
+    handle->inputApplicationHandle->updateInfo();
+    if (handle->inputApplicationHandle->getInfo()->name != droidinput::String8(session->name().c_str()))
         return false;
     if (handle->getInputChannel()->getFd() != surface->server_input_fd())
         return false;
@@ -250,6 +251,7 @@ MATCHER_P2(WindowHandleFor, session, surface, "")
 
 MATCHER_P(ApplicationHandleFor, session, "")
 {
+    arg->updateInfo();
     return (arg->getName() == session->name());
 }
 
@@ -282,14 +284,14 @@ TEST_F(AndroidInputManagerSetup, set_input_focus)
         .WillOnce(Return(droidinput::OK));
     // TODO: Matcher ~racarr
     // TODO: Clarify ~racarr
-//    EXPECT_CALL(*dispatcher, setFocusedApplication(_)).Times(2);
+    EXPECT_CALL(*dispatcher, setFocusedApplication(_)).Times(2);
     EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
     // TODO: Matcher ~racarr
     EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
     EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
 
     mia::InputManager manager(mt::fake_shared(config));
-    
+
     manager.set_input_focus_to(session, surface);
     manager.set_input_focus_to(session, std::shared_ptr<mf::Surface>());
 }

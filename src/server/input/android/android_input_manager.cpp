@@ -83,19 +83,18 @@ void mia::InputManager::set_input_focus_to(std::shared_ptr<mf::Session> const& s
     {
         dispatcher->unregisterInputChannel(focused_window_handle->getInfo()->inputChannel);
         focused_window_handle.clear();
+        focused_application_handle.clear();
     }
 
     droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> windows;
     if (surface)
     {
-        auto session_handle = new mia::InputApplicationHandle(session);
-        auto window_handle = new mia::InputWindowHandle(session_handle, surface);
-        dispatcher->setFocusedApplication(session_handle);
+        focused_application_handle = new mia::InputApplicationHandle(session);
+        focused_window_handle = new mia::InputWindowHandle(focused_application_handle, surface);
+        dispatcher->setFocusedApplication(focused_application_handle);
 
-        dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
-        windows.push_back(window_handle);
-        
-        focused_window_handle = window_handle;
+        dispatcher->registerInputChannel(focused_window_handle->getInfo()->inputChannel, focused_window_handle, false);
+        windows.push_back(focused_window_handle);
     }
     dispatcher->setInputWindows(windows);
 }

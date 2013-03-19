@@ -31,6 +31,7 @@ namespace android
 class EventHubInterface;
 class InputDispatcherInterface;
 class InputWindowHandle;
+class InputApplicationHandle;
 }
 
 namespace droidinput = android;
@@ -77,6 +78,7 @@ private:
     std::shared_ptr<InputThread> dispatcher_thread;
     
     droidinput::sp<droidinput::InputWindowHandle> focused_window_handle;
+    droidinput::sp<droidinput::InputApplicationHandle> focused_application_handle;
 };
 
 }

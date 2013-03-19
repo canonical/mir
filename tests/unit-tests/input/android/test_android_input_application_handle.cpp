@@ -54,7 +54,7 @@ TEST(AndroidInputApplicationHandle, takes_name_from_session_and_specifies_max_ti
     EXPECT_TRUE(application_handle.updateInfo());
     auto info = application_handle.getInfo();
     EXPECT_EQ(INT_MAX, info->dispatchingTimeout);
-    EXPECT_EQ(droidinput::String8(testing_session_name), info->name);
+    EXPECT_EQ(droidinput::String8(testing_session_name.c_str()), info->name);
 }
 
 
