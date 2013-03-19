@@ -41,6 +41,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
@@ -217,11 +220,13 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     
     void SetUp()
     {
+        input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
         input_manager->start();
     }
     void TearDown()
     {
         input_manager->stop();
+        close(input_fd);
     }
     
 
@@ -232,6 +237,8 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
     std::shared_ptr<mia::InputManager> input_manager;
+    
+    int input_fd;
 };
 
 MATCHER_P(WindowHandleWithInputFd, input_fd, "")
@@ -249,17 +256,14 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
 
     WaitCondition wait_condition;
 
-    int fds[2]; // TODO: This is bad ~racarr (Fixture?)x
-
     mtd::MockSession mock_session;
     mtd::MockSurface mock_surface; // TODO: Looks like this should be a stub ~racarr
     
     EXPECT_CALL(mock_session, name()).Times(1).WillRepeatedly(Return("Test")); // TODO: Stubbb
     
-    EXPECT_EQ(0, socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds));    
-    EXPECT_CALL(mock_surface, server_input_fd()).Times(1).WillOnce(Return(fds[0]));
+    EXPECT_CALL(mock_surface, server_input_fd()).Times(1).WillOnce(Return(input_fd));
     EXPECT_CALL(mock_surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(testing_surface_size));
-    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(fds[0]), _, _)).Times(1).WillOnce(DoAll(WakeUp(&wait_condition), Return(-1))); // Return -1 to skip actual publishing of the event
+    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _)).Times(1).WillOnce(DoAll(WakeUp(&wait_condition), Return(-1))); // Return -1 to skip actual publishing of the event
 
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));
     
@@ -272,6 +276,4 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
                                 .of_scancode(KEY_ENTER));
 
     wait_condition.wait_for_at_most_seconds(1);
-    close(fds[0]);
-    close(fds[1]);
 }
