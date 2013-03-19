@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -7,50 +7,42 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
+
 
 #ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include "mir/shell/surface_factory.h"
-
-#include <memory>
+#include "mir/shell/surface_builder.h"
 
 namespace mir
 {
-
-/// Management of Surface objects. Includes the model (SurfaceStack and Surface
-/// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
-
-class Surface;
 class SurfaceStackModel;
 
-class SurfaceController : public shell::SurfaceFactory
+/// Will grow up to provide synchronization of model updates
+class SurfaceController : public shell::SurfaceBuilder
 {
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
-    virtual ~SurfaceController() {}
 
-    std::shared_ptr<shell::Surface> create_surface(const shell::SurfaceCreationParameters& params);
+    virtual std::weak_ptr<Surface> create_surface(frontend::SurfaceCreationParameters const& params);
 
+    virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 protected:
-    SurfaceController(const SurfaceController&) = delete;
-    SurfaceController& operator=(const SurfaceController&) = delete;
-
-private:
     std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 
 }
 }
 
-#endif // MIR_SURFACES_SURFACE_CONTROLLER_H_
+
+#endif /* MIR_SURFACES_SURFACE_CONTROLLER_H_ */

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_SHELL_SURFACE_H_
-#define MIR_SHELL_SURFACE_H_
+#ifndef MIR_FRONTEND_SURFACE_H_
+#define MIR_FRONTEND_SURFACE_H_
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/point.h"
@@ -32,8 +32,12 @@ namespace compositor
 {
 class Buffer;
 }
+namespace input
+{
+class InputChannel;
+}
 
-namespace shell
+namespace frontend
 {
 
 class Surface
@@ -55,6 +59,9 @@ public:
     virtual void advance_client_buffer() = 0;
     virtual std::shared_ptr<compositor::Buffer> client_buffer() const = 0;
 
+    virtual bool supports_input() const = 0;
+    virtual int client_input_fd() const = 0;
+
 protected:
     Surface() = default;
     Surface(Surface const&) = delete;
@@ -65,4 +72,4 @@ protected:
 }
 
 
-#endif /* MIR_SHELL_SURFACE_H_ */
+#endif /* MIR_FRONTEND_SURFACE_H_ */
