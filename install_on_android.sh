@@ -1,5 +1,7 @@
 #!/bin/bash
 # build script for Mir on android arm devices
+# script assumes that the Mir dependencies are already set up on the device.
+# if they are not set up, see the setup-android-dependencies.sh script
 # test run requires package 'android-tools-adb'
 # test also assumes that the device is rooted and accessible over the adb bridge
 #
@@ -32,10 +34,6 @@ pushd ${BUILD_DIR} > /dev/null
     done
 
     echo "ubuntu_chroot shell;
-        apt-get install libprotobuf7
-                        libboost-system1.49.0
-                        libboost-program-options1.49.0
-                        libboost-thread1.49.0;
         cd ${RUN_DIR};
         export GTEST_OUTPUT=xml:./;
         export LD_LIBRARY_PATH=.;
