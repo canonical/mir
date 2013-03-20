@@ -33,17 +33,17 @@ public:
 
     void received_invocation(int id, std::string const& method)
     {
-        std::cout << "PMBR: id=" << id << ", method=\"" << method << std::endl;
+        std::cout << "PMBR: id=" << id << ", method=\"" << method << "\"" << std::endl;
     }
 
-    void completed_invocation(int id)
+    void completed_invocation(int id, bool result)
     {
-        std::cout << "PMBR: id=" << id << " - completed" << std::endl;
+        std::cout << "PMBR: id=" << id << " - completed " <<(result ? "continue" : "disconnect") << std::endl;
     }
 
     void unknown_method(int id, std::string const& method)
     {
-        std::cout << "PMBR: id=" << id << ", UNKNOWN method=\"" << method << std::endl;
+        std::cout << "PMBR: id=" << id << ", UNKNOWN method=\"" << method << "\"" << std::endl;
     }
 
     void exception_handled(std::exception const& error)
@@ -173,6 +173,7 @@ void mfd::ProtobufMessageProcessor::send_response(
 
 bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
 {
+    bool result = true;
     mir::protobuf::wire::Invocation invocation;
 
     try
@@ -214,20 +215,21 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
         else if ("disconnect" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::disconnect, invocation);
-            return false;
+            result = false;
         }
         else
         {
             report->unknown_method(invocation.id(), invocation.method_name());
-            return false;
+            result = false;
         }
 
+        report->completed_invocation(invocation.id(), result);
     }
     catch (std::exception const& error)
     {
         report->exception_handled(error);
-        return false;
+        result = false;
     }
 
-    return true;
+    return result;
 }
