@@ -123,34 +123,27 @@ std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
 
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
 {
-    if (auto const& s = surface.lock())
-    {
-        int result = 0;
+    int result = 0;
 
-        /*
-         * TODO: In future, query the shell implementation for the subset of
-         *       attributes/types it implements.
-         */
-        switch (attrib)
-        {
-        case mir_surface_attrib_type:
-            if (!s->set_type(static_cast<MirSurfaceType>(value)))
-                BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                                       "type."));
-            result = s->type();
-            break;
-        default:
+    /*
+     * TODO: In future, query the shell implementation for the subset of
+     *       attributes/types it implements.
+     */
+    switch (attrib)
+    {
+    case mir_surface_attrib_type:
+        if (!set_type(static_cast<MirSurfaceType>(value)))
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                                   "attribute."));
-            break;
-        }
+                                                   "type."));
+        result = type();
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
+                                               "attribute."));
+        break;
+    }
 
-        return result;
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
+    return result;
 }
 
 MirSurfaceType msh::Surface::type() const

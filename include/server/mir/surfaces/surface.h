@@ -22,7 +22,6 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir_toolkit/common.h"
 
 #include <memory>
 #include <string>
@@ -72,9 +71,6 @@ public:
     std::shared_ptr<compositor::Buffer> client_buffer() const;
     void shutdown();
 
-    MirSurfaceType type() const;
-    bool set_type(MirSurfaceType t);
-
 private:
     std::string surface_name;
     std::shared_ptr<BufferBundle> buffer_bundle;
@@ -85,8 +81,6 @@ private:
     float alpha_value;
 
     bool is_hidden;
-
-    MirSurfaceType type_value;
 };
 
 }

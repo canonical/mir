@@ -307,6 +307,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     EXPECT_EQ(alpha, ret_alpha);
 }
 
+#if 0
 TEST_F(SurfaceCreation, types)
 {
     using namespace testing;
@@ -324,3 +325,4 @@ TEST_F(SurfaceCreation, types)
     EXPECT_TRUE(surf.set_type(mir_surface_type_dialog));
     EXPECT_EQ(surf.type(), mir_surface_type_dialog);
 }
+#endif
