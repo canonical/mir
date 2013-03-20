@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TOOLKIT_API_DRM_H
-#define MIR_TOOLKIT_API_DRM_H
+#ifndef MIR_CLIENT_LIBRARY_DRM_H_
+#define MIR_CLIENT_LIBRARY_DRM_H_
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -37,4 +37,4 @@ MirWaitHandle *mir_connection_drm_auth_magic(MirConnection *connection,
 }
 #endif
 
-#endif /* MIR_TOOLKIT_API_DRM_H */
+#endif /* MIR_CLIENT_LIBRARY_DRM_H_ */

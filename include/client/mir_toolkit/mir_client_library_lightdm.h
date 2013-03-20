@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TOOLKIT_API_LIGHTDM_H
-#define MIR_TOOLKIT_API_LIGHTDM_H
+#ifndef MIR_CLIENT_LIBRARY_LIGHTDM_H
+#define MIR_CLIENT_LIBRARY_LIGHTDM_H
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -58,4 +58,4 @@ void mir_select_focus_by_lightdm_id(MirConnection* connection, int lightdm_id);
 }
 #endif
 
-#endif /* MIR_TOOLKIT_API_LIGHTDM_H */
+#endif /* MIR_CLIENT_LIBRARY_LIGHTDM_H */
