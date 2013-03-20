@@ -30,7 +30,7 @@ namespace mir
 {
 namespace frontend
 {
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 }
 
 /// Management of sessions and surfaces
