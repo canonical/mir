@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_FOCUS_SELECTOR_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_FOCUS_SELECTOR_H_
 
-#include "mir/input/focus_selector.h"
+#include "mir/shell/input_focus_selector.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-struct MockInputFocusSelector : public input::FocusSelector
+struct MockInputFocusSelector : public shell::InputFocusSelector
 {
     MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<frontend::Session> const&, std::shared_ptr<frontend::Surface> const&));
 };

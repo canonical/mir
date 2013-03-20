@@ -24,7 +24,7 @@
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
 #include "mir/graphics/display.h"
-#include "mir/input/focus_selector.h"
+#include "mir/shell/input_focus_selector.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_focus_setter.h"
@@ -184,7 +184,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
         {
         }
             
-        std::shared_ptr<mi::FocusSelector>
+        std::shared_ptr<msh::InputFocusSelector>
         the_input_focus_selector() override
         {
             using namespace ::testing;

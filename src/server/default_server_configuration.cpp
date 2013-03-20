@@ -425,7 +425,7 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_manager();
 }
 
-std::shared_ptr<mi::FocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
+std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
 {
     return the_input_manager();
 }

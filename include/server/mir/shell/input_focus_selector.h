@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_FOCUS_SELECTOR_H_
-#define MIR_INPUT_FOCUS_SELECTOR_H_
+#ifndef MIR_SHELL_INPUT_FOCUS_SELECTOR_H_
+#define MIR_SHELL_INPUT_FOCUS_SELECTOR_H_
 
 #include <memory>
 
@@ -29,24 +29,24 @@ class Session;
 class Surface;
 }
 
-namespace input
+namespace shell
 {
 
-class FocusSelector
+class InputFocusSelector
 {
 public:
-    virtual ~FocusSelector() {}
+    virtual ~InputFocusSelector() {}
     
     virtual void set_input_focus_to(std::shared_ptr<frontend::Session> const& focus_application,
                                     std::shared_ptr<frontend::Surface> const& focus_surface) = 0;
 
 protected:
-    FocusSelector() = default;
-    FocusSelector(FocusSelector const&) = delete;
-    FocusSelector& operator=(FocusSelector const&) = delete;
+    InputFocusSelector() = default;
+    InputFocusSelector(InputFocusSelector const&) = delete;
+    InputFocusSelector& operator=(InputFocusSelector const&) = delete;
 };
 
 }
 } // namespace mir
 
-#endif // MIR_INPUT_FOCUS_SELECTOR_H_
+#endif // MIR_SHELL_INPUT_FOCUS_SELECTOR_H_
