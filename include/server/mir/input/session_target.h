@@ -31,7 +31,6 @@ class SessionTarget
 public:
     virtual ~SessionTarget() {}
   
-// TODO Const: ~racarr  
     virtual std::string name() = 0;
 
 protected:
