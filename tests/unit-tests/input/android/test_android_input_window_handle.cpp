@@ -21,6 +21,7 @@
 #include "mir/frontend/surface.h"
 #include "mir/geometry/size.h"
 #include "mir/input/input_channel.h"
+#include "mir/input/surface_target.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface.h"
@@ -43,6 +44,14 @@ struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
 {
     bool updateInfo() { return true; }
 };
+
+struct MockSurfaceTarget : public mi::SurfaceTarget
+{
+    MOCK_CONST_METHOD0(server_input_fd, int());
+    MOCK_CONST_METHOD0(size, geom::Size());
+    MOCK_CONST_METHOD0(name, std::string());
+};
+
 }
 
 TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surface)
@@ -53,9 +62,8 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
                                                       geom::Height{256}};
     std::string const testing_surface_name = "Test";
     int const testing_server_fd = 2;
-
-    mtd::StubSurfaceBuilder builder;
-    mtd::MockSurface surface(mt::fake_shared(builder));
+    
+    MockSurfaceTarget surface;
 
     EXPECT_CALL(surface, server_input_fd()).Times(1)
         .WillOnce(Return(testing_server_fd));
