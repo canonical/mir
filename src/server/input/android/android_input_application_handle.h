@@ -27,20 +27,18 @@ namespace droidinput = android;
 
 namespace mir
 {
-namespace frontend
-{
-class Session;
-}
 
 namespace input
 {
+class SessionTarget;
+
 namespace android
 {
 
 class InputApplicationHandle : public droidinput::InputApplicationHandle
 {
 public:
-    InputApplicationHandle(std::shared_ptr<frontend::Session> const& surface);
+    InputApplicationHandle(std::shared_ptr<input::SessionTarget> const& surface);
     ~InputApplicationHandle() {}
 
     bool updateInfo();
@@ -50,7 +48,7 @@ protected:
     InputApplicationHandle& operator=(InputApplicationHandle const&) = delete;
 
 private:
-    std::shared_ptr<frontend::Session> session;
+    std::shared_ptr<input::SessionTarget> session;
 };
 
 }

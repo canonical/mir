@@ -18,28 +18,33 @@
 
 #include "src/server/input/android/android_input_application_handle.h"
 
-#include "mir/frontend/surface_creation_parameters.h"
-#include "mir/frontend/session.h"
+#include "mir/input/session_target.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_session.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <limits.h>
 
-namespace mia = mir::input::android;
-namespace mf = mir::frontend;
+namespace mi = mir::input;
+namespace mia = mi::android;
 namespace mt = mir::test;
-namespace mtd = mir::test::doubles;
+
+namespace
+{
+struct MockSessionHandle : public mi::SessionTarget
+{
+    MOCK_METHOD0(name, std::string());
+};
+}
 
 
 TEST(AndroidInputApplicationHandle, takes_name_from_session_and_specifies_max_timeout)
 {   
     using namespace ::testing;
     std::string const testing_session_name = "Cats";
-    mtd::MockSession session;
+    MockSessionHandle session;
 
     EXPECT_CALL(session, name()).Times(AtLeast(1))
         .WillRepeatedly(Return(testing_session_name));

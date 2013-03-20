@@ -17,8 +17,6 @@
  *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
 
-#include "../../shell/surface.h" // TODO: Remove ~racarr
-#include "mir/shell/session.h" // TODO: Remove ~racarr
 #include "mir/graphics/viewable_area.h"
 #include "mir/input/session_target.h"
 #include "mir/input/surface_target.h"
@@ -39,8 +37,6 @@
 #include <vector>
 
 namespace mg = mir::graphics;
-namespace mf = mir::frontend; // TODO: Remove ~racarr
-namespace msh = mir::shell; // TODO: Remove ~racarr
 namespace mi = mir::input;
 namespace mia = mi::android;
 
@@ -82,11 +78,8 @@ std::shared_ptr<mi::InputChannel> mia::InputManager::make_input_channel()
     return std::make_shared<mia::AndroidInputChannel>();
 }
 
-void mia::InputManager::set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& session_, std::shared_ptr<mi::SurfaceTarget> const& surface_)
+void mia::InputManager::set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& session, std::shared_ptr<mi::SurfaceTarget> const& surface)
 {
-    // TODO: Remove and restore names ~racarr
-    auto session = std::dynamic_pointer_cast<msh::Session>(session_);
-    auto surface = std::dynamic_pointer_cast<msh::Surface>(surface_);
     if (focused_window_handle.get())
     {
         dispatcher->unregisterInputChannel(focused_window_handle->getInfo()->inputChannel);

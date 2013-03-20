@@ -18,14 +18,14 @@
 
 #include "android_input_application_handle.h"
 
-#include "mir/frontend/session.h"
+#include "mir/input/session_target.h"
 
 #include <limits.h>
 
-namespace mia = mir::input::android;
-namespace mf = mir::frontend;
+namespace mi = mir::input;
+namespace mia = mi::android;
 
-mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mf::Session> const& session)
+mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::SessionTarget> const& session)
   : session(session)
 {
     updateInfo();
