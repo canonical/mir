@@ -25,13 +25,45 @@
 
 namespace mfd = mir::frontend::detail;
 
+class mfd::ProtobufMessageProcessorReport
+{
+public:
+    ProtobufMessageProcessorReport() {}
+    virtual ~ProtobufMessageProcessorReport() = default;
+
+    void received_invocation(int id, std::string const& method)
+    {
+        std::cout << "PMBR: id=" << id << ", method=\"" << method << std::endl;
+    }
+
+    void completed_invocation(int id)
+    {
+        std::cout << "PMBR: id=" << id << " - completed" << std::endl;
+    }
+
+    void unknown_method(int id, std::string const& method)
+    {
+        std::cout << "PMBR: id=" << id << ", UNKNOWN method=\"" << method << std::endl;
+    }
+
+    void exception_handled(std::exception const& error)
+    {
+        std::cout << "PMBR: ERROR: " << boost::diagnostic_information(error) << std::endl;
+    }
+
+private:
+    ProtobufMessageProcessorReport(ProtobufMessageProcessorReport const&) = delete;
+    ProtobufMessageProcessorReport operator=(ProtobufMessageProcessorReport const&) = delete;
+};
+
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     MessageSender* sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     sender(sender),
     display_server(display_server),
-    resource_cache(resource_cache)
+    resource_cache(resource_cache),
+    report(std::make_shared<ProtobufMessageProcessorReport>())
 {
 }
 
@@ -146,6 +178,9 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
     try
     {
         invocation.ParseFromIstream(&msg);
+
+        report->received_invocation(invocation.id(), invocation.method_name());
+
         // TODO comparing strings in an if-else chain isn't efficient.
         // It is probably possible to generate a Trie at compile time.
         if ("connect" == invocation.method_name())
@@ -183,15 +218,14 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
         }
         else
         {
-            /*log->error()*/
-            std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
+            report->unknown_method(invocation.id(), invocation.method_name());
             return false;
         }
 
     }
     catch (std::exception const& error)
     {
-        std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
+        report->exception_handled(error);
         return false;
     }
 

@@ -40,6 +40,8 @@ class ResourceCache;
 
 namespace detail
 {
+class ProtobufMessageProcessorReport;
+
 struct ProtobufMessageProcessor : MessageProcessor
 {
     ProtobufMessageProcessor(
@@ -86,6 +88,7 @@ private:
     MessageSender* const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<ResourceCache> const resource_cache;
+    std::shared_ptr<ProtobufMessageProcessorReport> const report;
 };
 }
 }
