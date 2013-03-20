@@ -27,8 +27,8 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_viewable_area.h"
-#include "mir_test_doubles/stub_session.h"
-#include "mir_test_doubles/stub_surface.h"
+#include "mir_test_doubles/stub_session_target.h"
+#include "mir_test_doubles/stub_surface_target.h"
 
 #include <InputDispatcher.h>
 #include <InputListener.h>
@@ -44,7 +44,6 @@ namespace droidinput = android;
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
-namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -216,37 +215,6 @@ TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
 namespace
 {
 
-struct StubSessionTarget : public mi::SessionTarget
-{
-    std::string name() override
-    {
-        return std::string();
-    }
-};
-
-struct StubSurfaceTarget : public mi::SurfaceTarget
-{
-    StubSurfaceTarget(int fd)
-      : input_fd(fd)
-    {
-    }
-    
-    int server_input_fd() const override
-    {
-        return input_fd;
-    }
-    geom::Size size() const override
-    {
-        return geom::Size();
-    }
-    std::string name() const override
-    {
-        return std::string();
-    }
-    
-    int input_fd;
-};
-
 static bool
 application_handle_matches_session(droidinput::sp<droidinput::InputApplicationHandle> const& handle,
                                    std::shared_ptr<mi::SessionTarget> const& session)
@@ -316,8 +284,8 @@ TEST_F(AndroidInputManagerFdSetup, set_input_focus)
 {
     using namespace ::testing;
     
-    auto session = std::make_shared<StubSessionTarget>();
-    auto surface = std::make_shared<StubSurfaceTarget>(test_input_fd);
+    auto session = std::make_shared<mtd::StubSessionTarget>();
+    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
     
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
         .WillOnce(Return(droidinput::OK));
