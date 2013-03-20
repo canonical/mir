@@ -35,7 +35,8 @@ msh::Surface::Surface(
     std::shared_ptr<input::InputChannel> const& input_channel)
   : builder(builder),
     input_channel(input_channel),
-    surface(builder->create_surface(params))
+    surface(builder->create_surface(params)),
+    type_value(mir_surface_type_normal)
 {
 }
 
@@ -150,6 +151,24 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
+}
+
+MirSurfaceType msh::Surface::type() const
+{
+    return type_value;
+}
+
+bool msh::Surface::set_type(MirSurfaceType t)
+{
+    bool valid = false;
+
+    if (t >= 0 && t < mir_surface_type_arraysize_)
+    {
+        type_value = t;
+        valid = true;
+    }
+
+    return valid;
 }
 
 bool msh::Surface::supports_input() const

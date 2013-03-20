@@ -22,6 +22,7 @@
 
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
+#include "mir_toolkit/common.h"
 
 namespace mir
 {
@@ -64,6 +65,8 @@ public:
     std::shared_ptr<compositor::Buffer> client_buffer() const;
 
     int configure(MirSurfaceAttrib attrib, int value);
+    MirSurfaceType type() const;
+    bool set_type(MirSurfaceType t);
 
     bool supports_input() const;
     int client_input_fd() const;
@@ -72,6 +75,8 @@ private:
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
+
+    MirSurfaceType type_value;
 };
 }
 }
