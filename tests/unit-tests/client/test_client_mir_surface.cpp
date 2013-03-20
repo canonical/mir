@@ -157,18 +157,12 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
         using namespace testing;
 
         emptybuffer=std::make_shared<NiceMock<MockBuffer>>();
-        ON_CALL(*this, create_buffer_rv(_,_,_))
+        ON_CALL(*this, create_buffer(_,_,_))
             .WillByDefault(Return(emptybuffer));
     }
 
-    std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& p,
-                                                     geometry::Size size, geometry::PixelFormat pf)
-    {
-        return create_buffer_rv(p, size, pf);
-    }
-
-    MOCK_METHOD3(create_buffer_rv,
-                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage>,
+    MOCK_METHOD3(create_buffer,
+                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const &,
                                                     geom::Size, geom::PixelFormat));
 
     std::shared_ptr<mcl::ClientBuffer> emptybuffer;
@@ -275,7 +269,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_buffer_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
 
     auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, depository, params, &empty_callback, (void*) NULL);
@@ -293,7 +287,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_buffer_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
 
     auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, depository, params, &empty_callback, (void*) NULL);
@@ -301,7 +295,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer)
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 
-    EXPECT_CALL(*mock_buffer_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, (void*) NULL);
     buffer_wait_handle->wait_for_result();
@@ -312,7 +306,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     using namespace testing;
 
     std::shared_ptr<MirBufferPackage> submitted_package;
-    EXPECT_CALL(*mock_buffer_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1)
         .WillOnce(DoAll(SaveArg<0>(&submitted_package),
                         Return(mock_buffer_factory->emptybuffer)));
@@ -336,7 +330,7 @@ TEST_F(MirClientSurfaceTest, message_width_used_in_buffer_creation )
     geom::Size sz;
     std::shared_ptr<MirBufferPackage> submitted_package;
 
-    EXPECT_CALL(*mock_buffer_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1)
         .WillOnce(DoAll(SaveArg<1>(&sz),
                         Return(mock_buffer_factory->emptybuffer)));
@@ -355,7 +349,7 @@ TEST_F(MirClientSurfaceTest, message_height_used_in_buffer_creation )
     geom::Size sz;
     std::shared_ptr<MirBufferPackage> submitted_package;
 
-    EXPECT_CALL(*mock_buffer_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1)
         .WillOnce(DoAll(SaveArg<1>(&sz),
                         Return(mock_buffer_factory->emptybuffer)));
@@ -374,7 +368,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     geom::PixelFormat pf;
     std::shared_ptr<MirBufferPackage> submitted_package;
 
-    EXPECT_CALL(*mock_buffer_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1)
         .WillOnce(DoAll(SaveArg<2>(&pf),
                         Return(mock_buffer_factory->emptybuffer)));

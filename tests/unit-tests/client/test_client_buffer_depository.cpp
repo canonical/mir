@@ -70,19 +70,15 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     {
         using namespace testing;
 
-        ON_CALL(*this, create_buffer_rv(_,_,_))
-            .WillByDefault(ReturnPointee(&buffer));
+        // Some tests, quite reasonably, rely on create_buffer returning a different buffer each time
+        // Handle this by first updating our "buffer" temporary, then returning-by-pointee.
+        ON_CALL(*this, create_buffer(_,_,_))
+            .WillByDefault(DoAll(InvokeWithoutArgs([this]() {this->buffer = std::make_shared<NiceMock<MockBuffer>>();}),
+                                 ReturnPointee(&buffer)));
     }
 
-    std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const & p,
-                                                     geom::Size size, geom::PixelFormat pf)
-    {
-        buffer = std::make_shared<testing::NiceMock<MockBuffer>>();
-        return create_buffer_rv(p, size, pf);
-    }
-
-    MOCK_METHOD3(create_buffer_rv,
-                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage>,
+    MOCK_METHOD3(create_buffer,
+                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const &,
                                                     geom::Size, geom::PixelFormat));
 
     std::shared_ptr<mcl::ClientBuffer> buffer;
@@ -120,7 +116,7 @@ TEST_F(MirBufferDepositoryTest, depository_sets_width_and_height)
 
     mcl::ClientBufferDepository depository{mock_factory, 3};
 
-    EXPECT_CALL(*mock_factory, create_buffer_rv(_,size,pf))
+    EXPECT_CALL(*mock_factory, create_buffer(_,size,pf))
         .Times(1);
     depository.deposit_package(package, 8, size, pf);
 }
@@ -354,7 +350,7 @@ TEST_F(MirBufferDepositoryTest, depository_caches_recently_seen_buffer)
     auto package1 = std::make_shared<MirBufferPackage>();
     auto package2 = std::make_shared<MirBufferPackage>();
 
-    EXPECT_CALL(*mock_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_factory, create_buffer(_,_,_))
         .Times(1);
 
     depository.deposit_package(package1, 8, size, pf);
@@ -371,7 +367,7 @@ TEST_F(MirBufferDepositoryTest, depository_creates_new_buffer_for_different_id)
     auto package1 = std::make_shared<MirBufferPackage>();
     auto package2 = std::make_shared<MirBufferPackage>();
 
-    EXPECT_CALL(*mock_factory, create_buffer_rv(_,_,_))
+    EXPECT_CALL(*mock_factory, create_buffer(_,_,_))
         .Times(2);
 
     depository.deposit_package(package1, 8, size, pf);
