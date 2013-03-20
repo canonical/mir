@@ -40,13 +40,13 @@ mcla::AndroidNativeDisplayContainer::~AndroidNativeDisplayContainer()
 bool
 mcla::AndroidNativeDisplayContainer::validate(mir_toolkit::MirEGLNativeDisplayType display) const
 {
-    return mir_connection_is_valid(reinterpret_cast<mir_toolkit::MirConnection*>(display));
+    return mir_connection_is_valid(static_cast<mir_toolkit::MirConnection*>(display));
 }
 
 mir_toolkit::MirEGLNativeDisplayType
 mcla::AndroidNativeDisplayContainer::create(mir_toolkit::MirConnection* connection)
 {
-    return reinterpret_cast<mir_toolkit::MirEGLNativeDisplayType>(connection);
+    return static_cast<mir_toolkit::MirEGLNativeDisplayType>(connection);
 }
 
 void

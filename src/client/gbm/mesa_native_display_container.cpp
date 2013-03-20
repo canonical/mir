@@ -42,7 +42,7 @@ static void gbm_egl_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* displ
                                                MirEGLNativeWindowType surface,
                                                MirBufferPackage* buffer_package)
 {
-    MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
+    MirSurface* ms = static_cast<MirSurface*>(surface);
     mir_toolkit::mir_surface_get_current_buffer(ms, buffer_package);
 }
 
@@ -54,7 +54,7 @@ static void buffer_advanced_callback(MirSurface*  /* surface */,
 static void gbm_egl_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display */,
                                            MirEGLNativeWindowType surface)
 {
-    MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
+    MirSurface* ms = static_cast<MirSurface*>(surface);
     mir_toolkit::mir_wait_for(mir_toolkit::mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
 }
 
@@ -62,7 +62,7 @@ static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display *
                                            MirEGLNativeWindowType surface,
                                            MirSurfaceParameters* surface_parameters)
 {
-    MirSurface* ms = reinterpret_cast<MirSurface*>(surface);
+    MirSurface* ms = static_cast<MirSurface*>(surface);
     mir_toolkit::mir_surface_get_parameters(ms,  surface_parameters);
 }
 
@@ -85,7 +85,7 @@ mclg::MesaNativeDisplayContainer::~MesaNativeDisplayContainer()
 
     for (auto display : valid_displays)
     {
-        delete reinterpret_cast<MirMesaEGLNativeDisplay*>(display);
+        delete static_cast<MirMesaEGLNativeDisplay*>(display);
     }
 }
 
@@ -107,7 +107,7 @@ mclg::MesaNativeDisplayContainer::create(mir_toolkit::MirConnection* connection)
     display->context = connection;
     
     std::lock_guard<std::mutex> lg(guard);
-    auto egl_display = reinterpret_cast<mir_toolkit::MirEGLNativeDisplayType>(display);
+    auto egl_display = static_cast<mir_toolkit::MirEGLNativeDisplayType>(display);
     valid_displays.insert(egl_display);
     
     return egl_display;
@@ -122,6 +122,6 @@ mclg::MesaNativeDisplayContainer::release(mir_toolkit::MirEGLNativeDisplayType d
     if (it == valid_displays.end())
         return;
 
-    delete reinterpret_cast<MirMesaEGLNativeDisplay*>(*it);
+    delete static_cast<MirMesaEGLNativeDisplay*>(*it);
     valid_displays.erase(it);
 }    
