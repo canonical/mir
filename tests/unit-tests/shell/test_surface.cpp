@@ -307,3 +307,23 @@ TEST_F(ShellSurface, surfaces_with_input_channel_supports_input)
     }, std::logic_error);
 }
 
+TEST_F(ShellSurface, types)
+{
+    using namespace testing;
+
+    msh::Surface surf(
+            mt::fake_shared(surface_builder),
+            mf::a_surface(),
+            null_input_channel);
+
+    EXPECT_EQ(mir_surface_type_normal, surf.type());
+
+    EXPECT_TRUE(surf.set_type(mir_surface_type_utility));
+    EXPECT_EQ(surf.type(), mir_surface_type_utility);
+
+    EXPECT_FALSE(surf.set_type(static_cast<MirSurfaceType>(999)));
+    EXPECT_EQ(surf.type(), mir_surface_type_utility);
+
+    EXPECT_TRUE(surf.set_type(mir_surface_type_dialog));
+    EXPECT_EQ(surf.type(), mir_surface_type_dialog);
+}
