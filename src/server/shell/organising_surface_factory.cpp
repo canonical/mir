@@ -18,7 +18,7 @@
 
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/placement_strategy.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;

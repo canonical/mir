@@ -26,7 +26,7 @@ namespace geom = mir::geometry;
 TEST(geometry, displacement)
 {
     using namespace geom;
-    Displacement const disp;
+    Displacement disp;
     Displacement const dx2dy4{DeltaX{2}, DeltaY{4}};
 
     EXPECT_EQ(DeltaX{0}, disp.dx);

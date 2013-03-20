@@ -28,7 +28,7 @@
 #include "mir/logging/logger.h"
 #include "mir/logging/display_report.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"

@@ -22,7 +22,7 @@
 
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 
 #include "mir_test_doubles/null_buffer_bundle.h"
 
@@ -37,7 +37,7 @@ class StubSurfaceBuilder : public shell::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_bundle(new NullBufferBundle()),
+        buffer_bundle(std::make_shared<NullBufferBundle>()),
         dummy_surface()
     {
     }

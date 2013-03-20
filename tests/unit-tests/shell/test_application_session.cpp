@@ -18,7 +18,7 @@
 
 #include "mir/shell/application_session.h"
 #include "mir/compositor/buffer.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_surface.h"
