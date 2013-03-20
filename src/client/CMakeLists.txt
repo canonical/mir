@@ -107,17 +107,10 @@ target_link_libraries(
 )
 
 set(
-  CLIENT_PUBLIC_HEADERS
+  CLIENT_HEADER_DIRS
 
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library.h
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library_lightdm.h
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library_drm.h
-)
-
-set_target_properties(
-  mirclient
-  PROPERTIES
-  PUBLIC_HEADER "${CLIENT_PUBLIC_HEADERS}"
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit  
+  ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit
 )
 
 install(
@@ -126,7 +119,7 @@ install(
   ARCHIVE DESTINATION lib)
 
 install(
-   DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}"
+   DIRECTORY ${CLIENT_HEADER_DIRS} DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}"
    FILES_MATCHING PATTERN "*.h")
 
 
