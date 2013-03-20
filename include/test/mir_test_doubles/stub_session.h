@@ -41,10 +41,6 @@ struct StubSession : public frontend::Session
     {
         return std::shared_ptr<frontend::Surface>();
     }
-    std::shared_ptr<frontend::Surface> default_surface() const
-    {
-        return std::shared_ptr<frontend::Surface>();
-    }
     std::string name()
     {
         return std::string();

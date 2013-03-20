@@ -42,8 +42,7 @@ void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msh::Sess
         {
             session->show();
 
-            auto shell_surface = std::dynamic_pointer_cast<msh::Surface>(focus_session->default_surface());
-            input_selector->set_input_focus_to(focus_session, shell_surface);
+            input_selector->set_input_focus_to(focus_session, focus_session->default_surface());
         }
         else
         {

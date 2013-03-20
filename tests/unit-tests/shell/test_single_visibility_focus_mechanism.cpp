@@ -29,6 +29,8 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_input_focus_selector.h"
 #include "mir_test_doubles/stub_surface.h"
+#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -47,7 +49,7 @@ struct MockShellSession : public msh::Session
     MOCK_METHOD1(destroy_surface, void(mf::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<mf::Surface>(mf::SurfaceId));
     
-    MOCK_CONST_METHOD0(default_surface, std::shared_ptr<mf::Surface>());
+    MOCK_CONST_METHOD0(default_surface, std::shared_ptr<msh::Surface>());
     
     MOCK_METHOD0(name, std::string());
     MOCK_METHOD0(shutdown, void());
@@ -65,9 +67,9 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     MockShellSession app1, app2, app3;
     msh::SessionContainer model;
     
-    ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<mf::Surface>()));
-    ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<mf::Surface>()));
-    ON_CALL(app3, default_surface()).WillByDefault(Return(std::shared_ptr<mf::Surface>()));
+    ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
+    ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
+    ON_CALL(app3, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
 
     msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model), mt::fake_shared(input_focus_selector));
 
@@ -89,7 +91,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_input_focus_from_default_sur
     mtd::MockInputFocusSelector input_focus_selector;
     msh::SessionContainer model;
     auto session = std::make_shared<MockShellSession>();
-    auto surface = std::make_shared<mtd::StubSurface>();
+    auto surface = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
 
     msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model), mt::fake_shared(input_focus_selector));
     

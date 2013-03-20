@@ -32,6 +32,7 @@ namespace mir
 
 namespace shell
 {
+class Surface;
 
 class Session : public frontend::Session, public input::SessionTarget
 {
@@ -48,7 +49,7 @@ public:
     virtual void hide() = 0;
     virtual void show() = 0;
 
-    virtual std::shared_ptr<frontend::Surface> default_surface() const = 0;
+    virtual std::shared_ptr<Surface> default_surface() const = 0;
 
 protected:
     Session() = default;
