@@ -63,16 +63,37 @@ mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
     }
 }
 
-
+// TODO: This function needs some work.
 void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
     log->debug() << __PRETTY_FUNCTION__ << std::endl;
 
+    auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
+    if (surface)
+    {
+        surface->clear_fd();
+
+        if (surface->fds_on_side_channel() > 0)
+        {
+            log->debug() << __PRETTY_FUNCTION__ << " expect " << surface->fds_on_side_channel() << " file descriptors" << std::endl;
+
+            std::vector<int32_t> buf(surface->fds_on_side_channel());
+
+            int received = 0;
+            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
+                /* TODO avoid spinning forever */;
+
+            log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
+
+            for (int i = 0; i != received; ++i)
+                surface->add_fd(buf[i]);
+        }
+    }
+
     auto buffer = dynamic_cast<mir::protobuf::Buffer*>(response);
     if (!buffer)
     {
-        auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
         if (surface && surface->has_buffer())
             buffer = surface->mutable_buffer();
     }

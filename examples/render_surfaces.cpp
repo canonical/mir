@@ -19,7 +19,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/default_compositing_strategy.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
@@ -28,7 +28,7 @@
 #include "mir/logging/logger.h"
 #include "mir/logging/display_report.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/geometry/rectangle.h"
@@ -48,7 +48,7 @@ namespace mg=mir::graphics;
 namespace mc=mir::compositor;
 namespace ml=mir::logging;
 namespace ms=mir::surfaces;
-namespace msh = mir::shell;
+namespace mf = mir::frontend;
 namespace geom=mir::geometry;
 namespace mt=mir::tools;
 
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
     auto manager = std::make_shared<mc::BufferBundleManager>(strategy);
     auto surface_stack = std::make_shared<ms::SurfaceStack>(manager);
     auto gl_renderer = std::make_shared<mg::GLRenderer>(display_size);
-    mc::Compositor compositor{surface_stack,gl_renderer};
+    mc::DefaultCompositingStrategy compositing_strategy{surface_stack,gl_renderer};
 
     /* Set up graceful exit on SIGINT */
     struct sigaction sa;
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
         const float angular_step = 2.0 * M_PI / num_moveables;
 
         std::shared_ptr<ms::Surface> s = surface_stack->create_surface(
-            msh::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
+            mf::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
                            .of_pixel_format(buffer_allocator->supported_pixel_formats()[0])
                            .of_buffer_usage(mc::BufferUsage::hardware)
             ).lock();
@@ -274,7 +274,10 @@ int main(int argc, char **argv)
             m[i].step();
 
         glClearColor(0.0, 1.0, 0.0, 1.0);
-        compositor.render(display.get());
+        display->for_each_display_buffer([&compositing_strategy](mg::DisplayBuffer& buffer)
+        {
+            compositing_strategy.render(buffer);
+        });
 
         frames++;
     }

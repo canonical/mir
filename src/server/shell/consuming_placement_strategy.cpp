@@ -17,11 +17,12 @@
  */
 
 #include "mir/shell/consuming_placement_strategy.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 #include <algorithm>
 
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -31,7 +32,7 @@ msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::
 {
 }
 
-msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::SurfaceCreationParameters const& request_parameters)
+mf::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(mf::SurfaceCreationParameters const& request_parameters)
 {
     // We would like to try to fill placement requests
     auto placed_parameters = request_parameters;

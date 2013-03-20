@@ -21,7 +21,7 @@
 #include "mir/surfaces/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/renderer.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 
@@ -51,7 +51,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
 }
 
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::SurfaceCreationParameters& params)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params)
 {
     std::lock_guard<std::mutex> lg(guard);
 

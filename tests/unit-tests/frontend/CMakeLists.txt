@@ -3,7 +3,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_surface_apis.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_reports_errors.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_resource_cache.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_application_mediator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_session_mediator.cpp
 )
 
 # TODO this test is a mess - something better is needed.
@@ -22,11 +22,11 @@ endif()
 
 if (MIR_PLATFORM STREQUAL "android")
   list(APPEND UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_application_mediator_android.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_session_mediator_android.cpp
   )
 elseif (MIR_PLATFORM STREQUAL "gbm")
   list(APPEND UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_application_mediator_gbm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_session_mediator_gbm.cpp
   )
 endif()
 

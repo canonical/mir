@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,46 +13,32 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_COMPOSITOR_COMPOSITOR_H_
 #define MIR_COMPOSITOR_COMPOSITOR_H_
 
-#include "mir/compositor/drawer.h"
-#include "mir/compositor/render_view.h"
-
-#include <memory>
-
 namespace mir
 {
-namespace graphics
-{
-
-class Renderer;
-
-}
-
-///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
 
-class Compositor : public Drawer
+class Compositor
 {
 public:
-    explicit Compositor(
-        std::shared_ptr<RenderView> const& render_view,
-        const std::shared_ptr<graphics::Renderer>& renderer);
+    virtual ~Compositor() {}
 
-    virtual void render(graphics::Display* display);
+    virtual void start() = 0;
+    virtual void stop() = 0;
 
-private:
-    std::shared_ptr<RenderView> const render_view;
-    std::shared_ptr<graphics::Renderer> const renderer;
+protected:
+    Compositor() = default;
+    Compositor(Compositor const&) = delete;
+    Compositor& operator=(Compositor const&) = delete;
 };
 
-
 }
 }
 
-#endif /* MIR_COMPOSITOR_COMPOSITOR_H_ */
+#endif // MIR_COMPOSITOR_COMPOSITOR_H_

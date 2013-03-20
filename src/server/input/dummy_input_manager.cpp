@@ -25,8 +25,9 @@ namespace
 {
 class DummyInputManager : public mi::InputManager
 {
-    void stop() {};
-    void start() {};
+    void stop() {}
+    void start() {}
+    virtual std::shared_ptr<mi::InputChannel> make_input_channel() { return std::shared_ptr<mi::InputChannel>(); }
 }; 
 }
 

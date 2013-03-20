@@ -49,7 +49,7 @@ list(APPEND CLIENT_SOURCES
 endif()
 
 if( MIR_PLATFORM STREQUAL "android")
-include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
+include_directories(${LIBHARDWARE_INCLUDE_DIRS})
 set(
   CLIENT_SOURCES
 
@@ -59,6 +59,7 @@ set(
   android/android_client_platform.cpp
   android/mir_native_window.cpp
   android/client_surface_interpreter.cpp
+  android/syncfence.cpp
   ${CLIENT_SOURCES}
 )
 endif()

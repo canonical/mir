@@ -21,6 +21,8 @@
 #include "src/server/input/android/android_input_thread.h"
 #include "src/server/input/android/android_input_constants.h"
 
+#include "mir/input/input_channel.h"
+
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/fake_shared.h"
 
@@ -195,4 +197,13 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
 
     manager.start();
     manager.stop();
+}
+
+TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
+{
+    mia::InputManager manager(mt::fake_shared(config));
+    
+    auto package = manager.make_input_channel();
+    EXPECT_GT(package->client_fd(), 0);
+    EXPECT_GT(package->server_fd(), 0);
 }
