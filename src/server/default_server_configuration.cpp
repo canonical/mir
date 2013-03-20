@@ -32,7 +32,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
-#include "mir/frontend/session_container.h"
+#include "mir/shell/session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"

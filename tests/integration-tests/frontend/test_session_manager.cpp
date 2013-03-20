@@ -23,7 +23,7 @@
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/focus_setter.h"
 #include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/frontend/session_container.h"
+#include "mir/shell/session_container.h"
 #include "mir/frontend/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>

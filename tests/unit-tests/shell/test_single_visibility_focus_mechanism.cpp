@@ -18,7 +18,7 @@
 
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/application_session.h"
-#include "mir/frontend/session_container.h"
+#include "mir/shell/session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/frontend/surface_creation_parameters.h"

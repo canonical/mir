@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/session_container.h"
+#include "mir/shell/session_container.h"
 #include "mir/frontend/session.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/shell/input_focus_selector.h"
