@@ -55,11 +55,6 @@ list(APPEND MIRSERVER_LINKS
   ${Boost_LIBRARIES}
 )
 
-set_target_properties(mirserver PROPERTIES
-  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
-  SOVERSION ${MIR_VERSION_MAJOR}
-)
-
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   target_link_libraries(mirserver
     LINK_PRIVATE
@@ -82,6 +77,11 @@ else()
       ${MIRSERVER_LINKS}
   )
 endif()
+
+set_target_properties(mirserver PROPERTIES
+  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
+  SOVERSION ${MIR_VERSION_MAJOR}
+)
 
 target_link_libraries(mirds
   mirserver
