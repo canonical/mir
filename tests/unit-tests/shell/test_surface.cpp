@@ -307,6 +307,32 @@ TEST_F(ShellSurface, surfaces_with_input_channel_supports_input)
     }, std::logic_error);
 }
 
+TEST_F(ShellSurface, attributes)
+{
+    using namespace testing;
+
+    msh::Surface surf(
+            mt::fake_shared(surface_builder),
+            mf::a_surface(),
+            null_input_channel);
+
+    EXPECT_EQ(surf.configure(mir_surface_attrib_type,
+                             mir_surface_type_popover),
+              mir_surface_type_popover);
+
+    EXPECT_THROW({
+        surf.configure(static_cast<MirSurfaceAttrib>(111), 222);
+    }, std::logic_error);
+
+    EXPECT_THROW({
+        surf.configure(mir_surface_attrib_type, 333);
+    }, std::logic_error);
+
+    EXPECT_EQ(surf.configure(mir_surface_attrib_type,
+                             mir_surface_type_freestyle),
+              mir_surface_type_freestyle);
+}
+
 TEST_F(ShellSurface, types)
 {
     using namespace testing;
