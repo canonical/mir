@@ -23,9 +23,6 @@
 #include "../client_buffer_factory.h"
 #include "gbm_client_buffer.h"
 
-#include <stdexcept>
-#include <map>
-
 namespace mir
 {
 namespace client

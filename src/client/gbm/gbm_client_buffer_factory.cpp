@@ -20,9 +20,6 @@
 #include "gbm_client_buffer_factory.h"
 #include "gbm_client_buffer.h"
 
-#include <stdexcept>
-#include <memory>
-
 namespace mcl=mir::client;
 namespace mclg=mir::client::gbm;
 
