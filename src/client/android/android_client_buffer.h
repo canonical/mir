@@ -39,7 +39,7 @@ class AndroidClientBuffer : public ClientBuffer
 public:
     AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const&,
                         std::shared_ptr<MirBufferPackage> const&,
-                        geometry::Size size, geometry::PixelFormat pf );
+                        geometry::Size size, geometry::PixelFormat pf);
     ~AndroidClientBuffer();
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();

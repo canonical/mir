@@ -78,7 +78,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
                                                      geom::Size size, geom::PixelFormat pf)
     {
         buffer = std::make_shared<testing::NiceMock<MockBuffer>>();
-        return create_buffer_rv( p, size, pf);
+        return create_buffer_rv(p, size, pf);
     }
 
     MOCK_METHOD3(create_buffer_rv,

@@ -124,9 +124,9 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::get_create_wait_handle()
 
 /* todo: all these conversion functions are a bit of a kludge, probably
          better to have a more developed geometry::PixelFormat that can handle this */
-geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
+geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
 {
-    if ( pf == mir_pixel_format_abgr_8888 )
+    if (pf == mir_pixel_format_abgr_8888)
         return geom::PixelFormat::abgr_8888;
     return geom::PixelFormat::invalid;
 }

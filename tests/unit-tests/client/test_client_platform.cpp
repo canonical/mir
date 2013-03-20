@@ -29,23 +29,23 @@ namespace mcl=mir::client;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
-TEST(ClientPlatformTest, platform_creates )
+TEST(ClientPlatformTest, platform_creates)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto buffer_factory = platform->create_buffer_factory();
-    EXPECT_NE( buffer_factory.get(), (mcl::ClientBufferFactory*) NULL);
+    EXPECT_NE(buffer_factory.get(), (mcl::ClientBufferFactory*) NULL);
 }
 
-TEST(ClientPlatformTest, platform_creates_native_window )
+TEST(ClientPlatformTest, platform_creates_native_window)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get());
-    EXPECT_NE( *native_window, (EGLNativeWindowType) NULL);
+    EXPECT_NE(*native_window, (EGLNativeWindowType) NULL);
 }
 
 TEST(ClientPlatformTest, platform_creates_egl_native_display)

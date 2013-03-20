@@ -56,12 +56,12 @@ struct MockServerPackageGenerator : public StubServerTool
         pf_sent = mir_pixel_format_abgr_8888;
     }
 
-    void create_surface(google::protobuf::RpcController* ,
+    void create_surface(google::protobuf::RpcController*,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
                  google::protobuf::Closure* done)
     {
-        create_surface_response( response );
+        create_surface_response(response);
         surface_name = request->surface_name();
         done->Run();
     }
@@ -72,7 +72,7 @@ struct MockServerPackageGenerator : public StubServerTool
         ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done)
     {
-        create_buffer_response( response );
+        create_buffer_response(response);
         done->Run();
     }
 
@@ -164,7 +164,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& p,
                                                      geometry::Size size, geometry::PixelFormat pf)
     {
-        return create_buffer_rv( p, size, pf);
+        return create_buffer_rv(p, size, pf);
     }
 
     MOCK_METHOD3(create_buffer_rv,
@@ -271,7 +271,7 @@ struct MirClientSurfaceTest : public testing::Test
 };
 
 void empty_callback(MirSurface*, void*) { }
-TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
+TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation)
 {
     using namespace testing;
 
@@ -289,7 +289,7 @@ namespace
 void empty_surface_callback(MirSurface*, void*) {}
 }
 
-TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer )
+TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer)
 {
     using namespace testing;
 
@@ -307,7 +307,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer )
     buffer_wait_handle->wait_for_result();
 }
 
-TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_create )
+TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_create)
 {
     using namespace testing;
 
@@ -325,7 +325,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     ASSERT_EQ(submitted_package->data_items, mock_server_tool->server_package.data_items);
     ASSERT_EQ(submitted_package->fd_items,   mock_server_tool->server_package.fd_items);
     ASSERT_EQ(submitted_package->stride,   mock_server_tool->server_package.stride);
-    for(auto i=0; i< submitted_package->data_items; i++)
+    for (auto i=0; i< submitted_package->data_items; i++)
         EXPECT_EQ(submitted_package->data[i], mock_server_tool->server_package.data[i]);
 }
 

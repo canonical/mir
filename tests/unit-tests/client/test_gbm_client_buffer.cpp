@@ -86,9 +86,9 @@ TEST_F(MirGBMBufferTest, buffer_returns_set_package)
     EXPECT_EQ(package_return->data_items, package_copy->data_items);
     EXPECT_EQ(package_return->fd_items, package_copy->fd_items);
     EXPECT_EQ(package_return->stride, package_copy->stride);
-    for(auto i=0; i<mir_buffer_package_max; i++)
+    for (auto i=0; i<mir_buffer_package_max; i++)
         EXPECT_EQ(package_return->data[i], package_copy->data[i]);
-    for(auto i=0; i<mir_buffer_package_max; i++)
+    for (auto i=0; i<mir_buffer_package_max; i++)
         EXPECT_EQ(package_return->fd[i], package_copy->fd[i]);
 }
 

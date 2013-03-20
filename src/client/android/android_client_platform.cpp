@@ -36,7 +36,7 @@ namespace
 
 struct EmptyDeleter
 {
-    void operator()(void* )
+    void operator()(void*)
     {
     }
 };
@@ -73,7 +73,7 @@ struct MirNativeWindowDeleter
     MirNativeWindowDeleter(mcla::MirNativeWindow* window)
      : window(window) {}
 
-    void operator()(EGLNativeWindowType* type )
+    void operator()(EGLNativeWindowType* type)
     {
         delete type;
         delete window;
