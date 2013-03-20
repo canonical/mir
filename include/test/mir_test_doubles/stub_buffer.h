@@ -25,9 +25,6 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 namespace mir
 {
 namespace test

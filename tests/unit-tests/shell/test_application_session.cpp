@@ -22,6 +22,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 
 #include "src/server/shell/surface.h"
 
@@ -40,7 +41,9 @@ TEST(ApplicationSession, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    auto const mock_surface = std::make_shared<mtd::MockSurface>();
+    mtd::StubSurfaceBuilder surface_builder;
+    auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
 
@@ -60,7 +63,9 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
-    auto const mock_surface = std::make_shared<mtd::MockSurface>();
+    mtd::StubSurfaceBuilder surface_builder;
+    auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
 
