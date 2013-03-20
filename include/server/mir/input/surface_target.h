@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_WINDOW_TARGET_H_
-#define MIR_INPUT_WINDOW_TARGET_H_
+#ifndef MIR_INPUT_SURFACE_TARGET_H_
+#define MIR_INPUT_SURFACE_TARGET_H_
 
 #include "mir/geometry/size.h"
 
@@ -28,10 +28,10 @@ namespace mir
 namespace input
 {
 
-class WindowTarget
+class SurfaceTarget
 {
 public:
-    virtual ~WindowTarget() {}
+    virtual ~SurfaceTarget() {}
     
     virtual geometry::Size size() const = 0;
     virtual std::string name() const = 0;
@@ -39,12 +39,12 @@ public:
     virtual int server_input_fd() const = 0;    
 
 protected:
-    WindowTarget() = default;
-    WindowTarget(WindowTarget const&) = delete;
-    WindowTarget& operator=(WindowTarget const&) = delete;
+    SurfaceTarget() = default;
+    SurfaceTarget(SurfaceTarget const&) = delete;
+    SurfaceTarget& operator=(SurfaceTarget const&) = delete;
 };
 
 }
 } // namespace mir
 
-#endif // MIR_INPUT_WINDOW_TARGET_H_
+#endif // MIR_INPUT_SURFACE_TARGET_H_

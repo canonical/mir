@@ -22,7 +22,7 @@
 
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
-#include "mir/input/window_target.h"
+#include "mir/input/surface_target.h"
 
 #include <string>
 
@@ -41,7 +41,7 @@ namespace shell
 {
 class SurfaceBuilder;
 
-class Surface : public frontend::Surface, public input::WindowTarget
+class Surface : public frontend::Surface, public input::SurfaceTarget
 {
 public:
     Surface(

@@ -30,7 +30,7 @@ namespace doubles
 
 struct MockInputFocusSelector : public shell::InputFocusSelector
 {
-    MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<frontend::Session> const&, std::shared_ptr<frontend::Surface> const&));
+    MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<input::SessionTarget> const&, std::shared_ptr<input::SurfaceTarget> const&));
 };
 
 }

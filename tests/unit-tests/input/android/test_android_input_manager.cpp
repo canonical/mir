@@ -22,6 +22,8 @@
 #include "src/server/input/android/android_input_constants.h"
 
 #include "mir/input/input_channel.h"
+#include "mir/input/session_target.h"
+#include "mir/input/surface_target.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_viewable_area.h"
@@ -214,18 +216,17 @@ TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
 namespace
 {
 
-struct StubSession : public mtd::StubSession
+struct StubSessionTarget : public mi::SessionTarget
 {
     std::string name() override
     {
-        std::string const session_name = "Test";
-        return session_name;
+        return std::string();
     }
 };
 
-struct StubSurface : public mtd::StubSurface
+struct StubSurfaceTarget : public mi::SurfaceTarget
 {
-    StubSurface(int fd)
+    StubSurfaceTarget(int fd)
       : input_fd(fd)
     {
     }
@@ -234,13 +235,21 @@ struct StubSurface : public mtd::StubSurface
     {
         return input_fd;
     }
+    geom::Size size() const override
+    {
+        return geom::Size();
+    }
+    std::string name() const override
+    {
+        return std::string();
+    }
     
     int input_fd;
 };
 
 static bool
 application_handle_matches_session(droidinput::sp<droidinput::InputApplicationHandle> const& handle,
-                                   std::shared_ptr<mf::Session> const& session)
+                                   std::shared_ptr<mi::SessionTarget> const& session)
 {
    if (handle->getName() != droidinput::String8(session->name().c_str()))
         return false;
@@ -249,8 +258,8 @@ application_handle_matches_session(droidinput::sp<droidinput::InputApplicationHa
 
 static bool
 window_handle_matches_session_and_surface(droidinput::sp<droidinput::InputWindowHandle> const& handle,
-                                          std::shared_ptr<mf::Session> const& session,
-                                          std::shared_ptr<mf::Surface> const& surface)
+                                          std::shared_ptr<mi::SessionTarget> const& session,
+                                          std::shared_ptr<mi::SurfaceTarget> const& surface)
 {
     if (!application_handle_matches_session(handle->inputApplicationHandle, session))
         return false;
@@ -307,8 +316,8 @@ TEST_F(AndroidInputManagerFdSetup, set_input_focus)
 {
     using namespace ::testing;
     
-    auto session = std::make_shared<StubSession>();
-    auto surface = std::make_shared<StubSurface>(test_input_fd);
+    auto session = std::make_shared<StubSessionTarget>();
+    auto surface = std::make_shared<StubSurfaceTarget>(test_input_fd);
     
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
         .WillOnce(Return(droidinput::OK));
@@ -320,5 +329,5 @@ TEST_F(AndroidInputManagerFdSetup, set_input_focus)
     mia::InputManager manager(mt::fake_shared(config));
 
     manager.set_input_focus_to(session, surface);
-    manager.set_input_focus_to(session, std::shared_ptr<mf::Surface>());
+    manager.set_input_focus_to(session, std::shared_ptr<mi::SurfaceTarget>());
 }

@@ -19,6 +19,8 @@
 
 #include "mir/input/event_filter.h"
 #include "mir/frontend/surface_creation_parameters.h"
+#include "mir/input/session_target.h"
+#include "mir/input/surface_target.h"
 
 #include "src/server/input/android/default_android_input_configuration.h"
 #include "src/server/input/android/android_input_manager.h"
@@ -30,8 +32,6 @@
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/mock_viewable_area.h"
-#include "mir_test_doubles/stub_session.h"
-#include "mir_test_doubles/stub_surface.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 
@@ -247,19 +247,35 @@ MATCHER_P(WindowHandleWithInputFd, input_fd, "")
     return false;
 }
 
-struct StubInputSurface : public mtd::StubSurface
+struct StubSessionTarget : public mi::SessionTarget
 {
-    StubInputSurface(int fd)
-      : fd(fd)
+    std::string name() override
     {
+        return std::string();
     }
+};
 
-    int server_input_fd() const override
+struct StubSurfaceTarget : public mi::SurfaceTarget
+{
+    StubSurfaceTarget(int fd)
+      : input_fd(fd)
     {
-        return fd;
     }
     
-    int fd;
+    int server_input_fd() const override
+    {
+        return input_fd;
+    }
+    geom::Size size() const override
+    {
+        return geom::Size();
+    }
+    std::string name() const override
+    {
+        return std::string();
+    }
+    
+    int input_fd;
 };
 
 }
@@ -270,8 +286,8 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
 
     WaitCondition wait_condition;
 
-    mtd::StubSession session;
-    StubInputSurface surface(test_input_fd);
+    StubSessionTarget session;
+    StubSurfaceTarget surface(test_input_fd);
 
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).

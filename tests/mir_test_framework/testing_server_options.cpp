@@ -141,7 +141,7 @@ class StubInputManager : public mi::InputManager
         return std::make_shared<StubInputChannel>();
     }
 
-    void set_input_focus_to(std::shared_ptr<mf::Session> const& /* session */, std::shared_ptr<mf::Surface> const& /* surface */)
+    void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& /* session */, std::shared_ptr<mi::SurfaceTarget> const& /* surface */)
     {
     }
 };

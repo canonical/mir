@@ -23,10 +23,10 @@
 
 namespace mir
 {
-namespace frontend
+namespace input
 {
-class Session;
-class Surface;
+class SessionTarget;
+class SurfaceTarget;
 }
 
 namespace shell
@@ -37,8 +37,8 @@ class InputFocusSelector
 public:
     virtual ~InputFocusSelector() {}
     
-    virtual void set_input_focus_to(std::shared_ptr<frontend::Session> const& focus_application,
-                                    std::shared_ptr<frontend::Surface> const& focus_surface) = 0;
+    virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& focus_application,
+                                    std::shared_ptr<input::SurfaceTarget> const& focus_surface) = 0;
 
 protected:
     InputFocusSelector() = default;

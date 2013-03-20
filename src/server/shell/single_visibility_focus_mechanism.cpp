@@ -21,6 +21,9 @@
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/shell/input_focus_selector.h"
 
+#include "mir/shell/session.h"
+#include "surface.h" // TODO: Cleanup headers ~racarr
+
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
@@ -38,8 +41,10 @@ void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Sessi
         if (session == focus_session)
         {
             session->show();
-            
-            input_selector->set_input_focus_to(session, session->default_surface());
+
+            auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
+            auto shell_surface = std::dynamic_pointer_cast<msh::Surface>(session->default_surface());
+            input_selector->set_input_focus_to(shell_session, shell_surface);
         }
         else
         {
