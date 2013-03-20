@@ -31,8 +31,8 @@ namespace mf = mir::frontend;
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
                                           std::shared_ptr<mf::Surface> const& surface)
-    : droidinput::InputWindowHandle(input_app_handle),
-      surface(surface)
+  : droidinput::InputWindowHandle(input_app_handle),
+    surface(surface)
 {
     updateInfo();
 }
@@ -44,7 +44,8 @@ bool mia::InputWindowHandle::updateInfo()
         mInfo = new droidinput::InputWindowInfo();
 
         // TODO: How can we avoid recreating the InputChannel which the InputChannelFactory has already created?
-        mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"), surface->server_input_fd());
+        mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"),
+                                                           surface->server_input_fd());
     }
     
     mInfo->frameLeft = 0;
