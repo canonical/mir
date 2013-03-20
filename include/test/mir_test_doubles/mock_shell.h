@@ -19,7 +19,9 @@
 #ifndef MIR_TEST_DOUBLES_SHELL_H_
 #define MIR_TEST_DOUBLES_SHELL_H_
 
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
+#include "mir/frontend/surface_id.h"
 
 #include <gmock/gmock.h>
 
@@ -37,6 +39,8 @@ struct MockShell : public frontend::Shell
 
     MOCK_METHOD2(tag_session_with_lightdm_id, void(std::shared_ptr<frontend::Session> const&, int));
     MOCK_METHOD1(focus_session_with_lightdm_id, void(int));
+
+    MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, frontend::SurfaceCreationParameters const&));
 
     MOCK_METHOD0(shutdown, void());
 };

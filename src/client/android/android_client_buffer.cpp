@@ -117,12 +117,12 @@ uint32_t mcla::AndroidClientBuffer::age() const
     return buffer_age;
 }
 
-void mlca::AndroidClientBuffer::mark_as_submitted()
+void mcla::AndroidClientBuffer::mark_as_submitted()
 {
     buffer_age = 1;
 }
 
-void mlca::AndroidClientBuffer::increment_age()
+void mcla::AndroidClientBuffer::increment_age()
 {
     ++buffer_age;
 }

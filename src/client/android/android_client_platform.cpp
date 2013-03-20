@@ -19,7 +19,7 @@
 #include "mir_native_window.h"
 #include "android_client_platform.h"
 #include "android_registrar_gralloc.h"
-#include "android_client_buffer_depository.h"
+#include "android_client_buffer_factory.h"
 #include "client_surface_interpreter.h"
 #include "../mir_connection.h"
 #include "../native_client_platform_factory.h"
@@ -49,7 +49,7 @@ mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* /*c
     return std::make_shared<mcla::AndroidClientPlatform>();
 }
 
-std::shared_ptr<mcl::ClientBufferDepository> mcla::AndroidClientPlatform::create_buffer_factory()
+std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_buffer_factory()
 {
     const hw_module_t *hw_module;
     int error = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);

@@ -13,32 +13,30 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITOR_H_
-#define MIR_COMPOSITOR_COMPOSITOR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#define MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+
+#include "mir/shell/focus_setter.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace compositor
+namespace test
+{
+namespace doubles
 {
 
-class Compositor
+struct MockFocusSetter : public shell::FocusSetter
 {
-public:
-    virtual ~Compositor() {}
-
-    virtual void start() = 0;
-    virtual void stop() = 0;
-
-protected:
-    Compositor() = default;
-    Compositor(Compositor const&) = delete;
-    Compositor& operator=(Compositor const&) = delete;
+    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<frontend::Session> const&));
 };
 
 }
 }
+} // namespace mir
 
-#endif // MIR_COMPOSITOR_COMPOSITOR_H_
+#endif // MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_

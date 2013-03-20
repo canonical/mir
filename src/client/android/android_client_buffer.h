@@ -62,6 +62,8 @@ private:
     std::shared_ptr<const native_handle_t> native_handle;
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
 
+    uint32_t buffer_age;
+
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
 

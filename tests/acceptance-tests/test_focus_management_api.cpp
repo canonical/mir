@@ -18,6 +18,8 @@
 
 #include "mir_toolkit/mir_client_library_lightdm.h"
 
+#include "mir/frontend/surface_id.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
 
 #include "mir_test_doubles/mock_display.h"
@@ -39,10 +41,6 @@ namespace mtf = mir_test_framework;
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
-
-    geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
-                                                              geom::Size{geom::Width(1600),
-                                                                         geom::Height(1600)}};
 }
 
 namespace mir
@@ -126,13 +124,15 @@ public:
     MockShell(std::shared_ptr<Shell> const& impl) :
         impl(impl)
     {
-        using namespace testing;
+        using namespace ::testing;
         using frontend::Shell;
         ON_CALL(*this, open_session(_)).WillByDefault(Invoke(impl.get(), &Shell::open_session));
         ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &Shell::close_session));
 
         ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &Shell::tag_session_with_lightdm_id));
         ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &Shell::focus_session_with_lightdm_id));
+
+        ON_CALL(*this, create_surface_for(_, _)).WillByDefault(Invoke(impl.get(), &Shell::create_surface_for));
 
         ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &Shell::shutdown));
     }
@@ -143,6 +143,7 @@ public:
     MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<mf::Session> const& session, int id));
     MOCK_METHOD1(focus_session_with_lightdm_id, void (int id));
 
+    MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<mf::Session> const&, mf::SurfaceCreationParameters const&));
     MOCK_METHOD0(shutdown, void ());
 
 private:
@@ -168,7 +169,9 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
                     {
                         using namespace testing;
                         InSequence setup;
+                        
                         EXPECT_CALL(*mock_shell, open_session(_)).Times(2);
+                        EXPECT_CALL(*mock_shell, create_surface_for(_,_)).Times(1);
                         EXPECT_CALL(*mock_shell, close_session(_)).Times(2);
                         EXPECT_CALL(*mock_shell, shutdown());
                     }

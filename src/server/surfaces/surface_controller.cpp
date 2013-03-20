@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,34 +16,22 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_DRAWER_H_
-#define MIR_COMPOSITOR_DRAWER_H_
+#include "mir/surfaces/surface_controller.h"
+#include "mir/surfaces/surface_stack_model.h"
 
-namespace mir
+namespace ms = mir::surfaces;
+
+ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) :
+    surface_stack(surface_stack)
 {
-namespace graphics
-{
-class Display;
 }
 
-namespace compositor
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(frontend::SurfaceCreationParameters const& params)
 {
-
-// drawer is the interface by which "graphics/libgl" knows
-// the compositor.
-class Drawer
-{
-public:
-    virtual void render(graphics::Display* display) = 0;
-protected:
-    Drawer() = default;
-    ~Drawer() = default;
-private:
-    Drawer& operator=(Drawer const&) = delete;
-    Drawer(Drawer const&) = delete;
-};
-}
+    return surface_stack->create_surface(params);
 }
 
-
-#endif /* MIR_COMPOSITOR_DRAWER_H_ */
+void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
+{
+    surface_stack->destroy_surface(surface);
+}

@@ -53,7 +53,13 @@ public:
 }
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
-    : native_window(native_win)
+    : native_window{native_win},
+      egl_display{EGL_NO_DISPLAY},
+      egl_config{0},
+      egl_context{EGL_NO_CONTEXT},
+      egl_surface{EGL_NO_SURFACE},
+      egl_context_shared{EGL_NO_CONTEXT},
+      egl_surface_dummy{EGL_NO_SURFACE}
 {
     EGLint major, minor;
 
@@ -73,17 +79,29 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl surface\n"));
 
-    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr);
+    egl_context_shared = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr);
+    if (egl_context_shared == EGL_NO_CONTEXT)
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context dummy\n"));
+
+    egl_context = eglCreateContext(egl_display, egl_config, egl_context_shared, default_egl_context_attr);
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context\n"));
 
-    make_current();
+    EGLint pbuffer_attribs[]{EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
+    egl_surface_dummy = eglCreatePbufferSurface(egl_display, egl_config, pbuffer_attribs);
+    if (egl_surface_dummy == EGL_NO_SURFACE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not create dummy egl surface\n"));
+
+    if (eglMakeCurrent(egl_display, egl_surface_dummy, egl_surface_dummy, egl_context_shared) == EGL_FALSE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
 {
     eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
+    eglDestroyContext(egl_display, egl_context_shared);
+    eglDestroySurface(egl_display, egl_surface_dummy);
     eglTerminate(egl_display);
 }
 

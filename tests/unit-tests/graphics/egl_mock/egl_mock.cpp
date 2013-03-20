@@ -80,6 +80,9 @@ mir::EglMock::EglMock()
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
     .WillByDefault(Return(fake_egl_surface));
 
+    ON_CALL(*this, eglCreatePbufferSurface(_,_,_))
+    .WillByDefault(Return(fake_egl_surface));
+
     ON_CALL(*this, eglCreateContext(_,_,_,_))
     .WillByDefault(Return(fake_egl_context));
 
@@ -119,6 +122,8 @@ void mir::EglMock::silence_uninteresting()
     EXPECT_CALL(*this, eglChooseConfig(_,_,_,_,_))
         .Times(AtLeast(0));
     EXPECT_CALL(*this, eglCreateWindowSurface(_,_,_,_))
+        .Times(AtLeast(0));
+    EXPECT_CALL(*this, eglCreatePbufferSurface(_,_,_))
         .Times(AtLeast(0));
     EXPECT_CALL(*this, eglCreateContext(_,_,_,_))
         .Times(AtLeast(0));
