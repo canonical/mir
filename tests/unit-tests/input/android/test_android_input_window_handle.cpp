@@ -24,6 +24,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -53,7 +54,8 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     std::string const testing_surface_name = "Test";
     int const testing_server_fd = 2;
 
-    mtd::MockSurface surface;
+    mtd::StubSurfaceBuilder builder;
+    mtd::MockSurface surface(mt::fake_shared(builder));
 
     EXPECT_CALL(surface, server_input_fd()).Times(1)
         .WillOnce(Return(testing_server_fd));

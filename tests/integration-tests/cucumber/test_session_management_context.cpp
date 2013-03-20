@@ -25,6 +25,7 @@
 #include "mir/graphics/viewable_area.h"
 
 #include "mir_test_doubles/mock_session.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test/fake_shared.h"
@@ -164,7 +165,7 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
     using namespace ::testing;
 
     mtd::MockSession session;
-    mtd::MockSurface surface;
+    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
 
     EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
         .WillOnce(Return(mt::fake_shared<mf::Session>(session)));

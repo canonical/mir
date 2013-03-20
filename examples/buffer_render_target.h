@@ -36,6 +36,7 @@ class BufferRenderTarget
 {
 public:
     BufferRenderTarget(mir::compositor::Buffer& buffer);
+    ~BufferRenderTarget();
 
     void make_current();
 

@@ -33,7 +33,7 @@ namespace compositor
 
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
-class BufferProperties;
+struct BufferProperties;
 
 class BufferBundleManager : public surfaces::BufferBundleFactory
 {

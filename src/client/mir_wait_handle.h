@@ -25,7 +25,7 @@
 
 namespace mir_toolkit
 {
-class MirWaitHandle
+struct MirWaitHandle
 {
 public:
     MirWaitHandle();

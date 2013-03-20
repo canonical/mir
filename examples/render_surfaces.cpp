@@ -16,26 +16,25 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/swapper_factory.h"
-#include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/default_compositing_strategy.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/gl_renderer.h"
-#include "mir/graphics/buffer_initializer.h"
-#include "mir/logging/logger.h"
-#include "mir/logging/display_report.h"
-#include "mir/logging/dumb_console_logger.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/frontend/communicator.h"
 #include "mir/frontend/surface_creation_parameters.h"
+#include "mir/geometry/size.h"
+#include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/display.h"
+#include "mir/input/input_manager.h"
+#include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
-#include "mir/surfaces/surface_stack.h"
-#include "mir/geometry/rectangle.h"
+#include "mir/default_server_configuration.h"
+#include "mir/display_server.h"
+
 #include "mir/draw/mir_image.h"
 #include "buffer_render_target.h"
 #include "image_renderer.h"
 
+#include <thread>
+#include <atomic>
 #include <chrono>
 #include <csignal>
 #include <iostream>
@@ -44,28 +43,20 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace mg=mir::graphics;
-namespace mc=mir::compositor;
-namespace ml=mir::logging;
-namespace ms=mir::surfaces;
+namespace mg = mir::graphics;
+namespace mc = mir::compositor;
+namespace ms = mir::surfaces;
 namespace mf = mir::frontend;
-namespace geom=mir::geometry;
-namespace mt=mir::tools;
+namespace geom = mir::geometry;
+namespace mt = mir::tools;
+namespace mi = mir::input;
 
-namespace mir
+namespace
 {
 
-volatile std::sig_atomic_t running = true;
-
-void signal_handler(int /*signum*/)
+class StopWatch
 {
-    running = false;
-}
-
-// TODO(tvoss): This is only a helper class that shall ease time measurements
-// It's neither complete nor tested.
-struct StopWatch
-{
+public:
     StopWatch() : start(std::chrono::high_resolution_clock::now()),
                   last(start),
                   now(last)
@@ -96,6 +87,7 @@ struct StopWatch
         std::swap(last, now);
     }
 
+private:
     std::chrono::high_resolution_clock::time_point start;
     std::chrono::high_resolution_clock::time_point last;
     std::chrono::high_resolution_clock::time_point now;
@@ -119,11 +111,13 @@ public:
         img_renderer.render();
     }
 
+private:
     mt::ImageRenderer img_renderer;
 };
 
-struct Moveable
+class Moveable
 {
+public:
     Moveable() {}
     Moveable(ms::Surface& s, const geom::Size& display_size,
              float dx, float dy, const glm::vec3& rotation_axis, float alpha_offset)
@@ -173,6 +167,7 @@ struct Moveable
         surface->set_alpha(0.5 + 0.5 * sin(alpha_offset + 2 * M_PI * total_elapsed_sec / 3.0));
     }
 
+private:
     ms::Surface* surface;
     geom::Size display_size;
     float x;
@@ -185,33 +180,156 @@ struct Moveable
     glm::vec3 rotation_axis;
     float alpha_offset;
 };
+
+struct NullCommunicator : public mf::Communicator
+{
+    void start() {}
+};
+
+struct NullInputManager : public mi::InputManager
+{
+    void start() {}
+    void stop() {}
+    std::shared_ptr<mi::InputChannel> make_input_channel()
+    {
+        return std::shared_ptr<mi::InputChannel>();
+    }
+    void set_input_focus_to(std::shared_ptr<mf::Session> const& /* session */, 
+                            std::shared_ptr<mf::Surface> const& /* surface */)
+    {
+    }
+};
+
+class RenderSurfacesCompositingStrategy : public mc::DefaultCompositingStrategy
+{
+public:
+    RenderSurfacesCompositingStrategy(std::shared_ptr<mc::RenderView> const& render_view,
+                                      std::shared_ptr<mg::Renderer> const& renderer,
+                                      std::vector<Moveable>& moveables)
+        : mc::DefaultCompositingStrategy{render_view, renderer},
+          frames{0},
+          moveables(moveables)
+    {
+    }
+
+    void render(mg::DisplayBuffer& display_buffer)
+    {
+        stop_watch.stop();
+        if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
+        {
+            std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
+            frames = 0;
+            stop_watch.restart();
+        }
+
+        glClearColor(0.0, 1.0, 0.0, 1.0);
+        DefaultCompositingStrategy::render(display_buffer);
+
+        for (auto& m : moveables)
+            m.step();
+
+        frames++;
+    }
+
+private:
+    StopWatch stop_watch;
+    uint32_t frames;
+    std::vector<Moveable>& moveables;
+};
+
+class RenderSurfacesServerConfiguration : public mir::DefaultServerConfiguration
+{
+public:
+    RenderSurfacesServerConfiguration(unsigned int num_moveables)
+        : mir::DefaultServerConfiguration{0, nullptr},
+          moveables{num_moveables}
+    {
+    }
+
+    std::shared_ptr<mg::BufferInitializer> the_buffer_initializer() override
+    {
+        return std::make_shared<RenderResourcesBufferInitializer>();
+    }
+
+    std::shared_ptr<mf::Communicator> the_communicator() override
+    {
+        return std::make_shared<NullCommunicator>();
+    }
+
+    std::shared_ptr<mi::InputManager> the_input_manager() override
+    {
+        return std::make_shared<NullInputManager>();
+    }
+
+    std::shared_ptr<mc::CompositingStrategy> the_compositing_strategy() override
+    {
+        return std::make_shared<RenderSurfacesCompositingStrategy>(the_render_view(),
+                                                                   the_renderer(),
+                                                                   moveables);
+    }
+
+    void create_surfaces()
+    {
+        geom::Size const display_size{the_display()->view_area().size};
+        uint32_t const surface_side{300};
+        geom::Size const surface_size{geom::Width{surface_side},
+                                      geom::Height{surface_side}};
+
+        float const angular_step = 2.0 * M_PI / moveables.size();
+        float const w = display_size.width.as_uint32_t();
+        float const h = display_size.height.as_uint32_t();
+        auto const surface_pf = the_buffer_allocator()->supported_pixel_formats()[0];
+
+        int i = 0;
+        for (auto& m : moveables)
+        {
+            std::shared_ptr<ms::Surface> s = the_surface_builder()->create_surface(
+                    mf::a_surface().of_size(surface_size)
+                                   .of_pixel_format(surface_pf)
+                                   .of_buffer_usage(mc::BufferUsage::hardware)
+                    ).lock();
+
+            /*
+             * Place each surface at a different starting location and give it a
+             * different speed, rotation and alpha offset.
+             */
+            uint32_t const x = w * (0.5 + 0.25 * cos(i * angular_step)) - surface_side / 2.0;
+            uint32_t const y = h * (0.5 + 0.25 * sin(i * angular_step)) - surface_side / 2.0;
+
+            s->move_to({geom::X{x}, geom::Y{y}});
+            m = Moveable(*s, display_size,
+                    cos(0.1f + i * M_PI / 6.0f) * w / 3.0f,
+                    sin(0.1f + i * M_PI / 6.0f) * h / 3.0f,
+                    glm::vec3{(i % 3 == 0) * 1.0f, (i % 3 == 1) * 1.0f, (i % 3 == 2) * 1.0f},
+                    2.0f * M_PI * cos(i));
+            ++i;
+        }
+    }
+
+private:
+    std::vector<Moveable> moveables;
+};
+
+std::atomic<mir::DisplayServer*> signal_display_server;
+
+void signal_terminate(int)
+{
+    while (!signal_display_server.load())
+        std::this_thread::yield();
+
+    signal_display_server.load()->stop();
+}
+
 }
 
 int main(int argc, char **argv)
 {
-    /* Create and set up all the components we need */
-    auto logger = std::make_shared<ml::DumbConsoleLogger>();
-    auto platform = mg::create_platform(std::make_shared<ml::DisplayReport>(logger));
-    auto display = platform->create_display();
-    const geom::Size display_size = display->view_area().size;
-    auto buffer_initializer = std::make_shared<mir::RenderResourcesBufferInitializer>();
-    auto buffer_allocator = platform->create_buffer_allocator(buffer_initializer);
-    auto strategy = std::make_shared<mc::SwapperFactory>(buffer_allocator);
-    auto manager = std::make_shared<mc::BufferBundleManager>(strategy);
-    auto surface_stack = std::make_shared<ms::SurfaceStack>(manager);
-    auto gl_renderer = std::make_shared<mg::GLRenderer>(display_size);
-    mc::DefaultCompositingStrategy compositing_strategy{surface_stack,gl_renderer};
-
-    /* Set up graceful exit on SIGINT */
-    struct sigaction sa;
-    sa.sa_handler = mir::signal_handler;
-    sa.sa_flags = 0;
-    sigemptyset(&sa.sa_mask);
-
-    sigaction(SIGINT, &sa, NULL);
+    signal(SIGINT, signal_terminate);
+    signal(SIGTERM, signal_terminate);
+    signal(SIGPIPE, SIG_IGN);
 
     /* Parse the command line */
-    unsigned int num_moveables = 5;
+    unsigned int num_moveables{5};
 
     if (argc > 1)
     {
@@ -221,66 +339,13 @@ int main(int argc, char **argv)
 
     std::cout << "Rendering " << num_moveables << " surfaces" << std::endl;
 
-    /* Set up the surfaces */
-    std::vector<mir::Moveable> m{num_moveables};
+    RenderSurfacesServerConfiguration conf{num_moveables};
+    mir::DisplayServer server{conf};
+    signal_display_server.store(&server);
 
-    const uint32_t surface_size{300};
+    conf.create_surfaces();
 
-    for (unsigned int i = 0; i < num_moveables; ++i)
-    {
-        const float w = display_size.width.as_uint32_t();
-        const float h = display_size.height.as_uint32_t();
-        const float angular_step = 2.0 * M_PI / num_moveables;
-
-        std::shared_ptr<ms::Surface> s = surface_stack->create_surface(
-            mf::a_surface().of_size({geom::Width{surface_size}, geom::Height{surface_size}})
-                           .of_pixel_format(buffer_allocator->supported_pixel_formats()[0])
-                           .of_buffer_usage(mc::BufferUsage::hardware)
-            ).lock();
-
-        /*
-         * Place each surface at a different starting location and give it a
-         * different speed, rotation and alpha offset.
-         */
-        uint32_t x = w * (0.5 + 0.25 * cos(i * angular_step)) - surface_size / 2.0;
-        uint32_t y = h * (0.5 + 0.25 * sin(i * angular_step)) - surface_size / 2.0;
-
-        s->move_to({geom::X{x}, geom::Y{y}});
-        m[i] = mir::Moveable(*s, display_size,
-                              cos(0.1f + i * M_PI / 6.0f) * w / 3.0f,
-                              sin(0.1f + i * M_PI / 6.0f) * h / 3.0f,
-                              glm::vec3{(i % 3 == 0) * 1.0f, (i % 3 == 1) * 1.0f, (i % 3 == 2) * 1.0f},
-                              2.0f * M_PI * cos(i));
-    }
-
-    /* Make the output window current again */
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, display_size.width.as_uint32_t(), display_size.height.as_uint32_t());
-
-    /* Draw! */
-    uint32_t frames = 0;
-
-    mir::StopWatch stop_watch;
-
-    while (mir::running) {
-        stop_watch.stop();
-        if (stop_watch.elapsed_seconds_since_last_restart() >= 1) {
-            std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
-            frames = 0;
-            stop_watch.restart();
-        }
-        /* Update surface state */
-        for (unsigned int i = 0; i < num_moveables; ++i)
-            m[i].step();
-
-        glClearColor(0.0, 1.0, 0.0, 1.0);
-        display->for_each_display_buffer([&compositing_strategy](mg::DisplayBuffer& buffer)
-        {
-            compositing_strategy.render(buffer);
-        });
-
-        frames++;
-    }
+    server.run();
 
     return 0;
 }

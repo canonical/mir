@@ -49,27 +49,27 @@ public:
         std::shared_ptr<input::InputChannel> const& input_channel);
     ~Surface();
 
-    void hide();
+    virtual void hide();
 
-    void show();
+    virtual void show();
 
-    void destroy();
+    virtual void destroy();
 
-    void shutdown();
-    
-    std::string name() const;
+    virtual void shutdown();
 
-    geometry::Size size() const;
+    virtual std::string name() const;
 
-    geometry::PixelFormat pixel_format() const;
+    virtual geometry::Size size() const;
 
-    void advance_client_buffer();
+    virtual geometry::PixelFormat pixel_format() const;
 
-    std::shared_ptr<compositor::Buffer> client_buffer() const;
+    virtual void advance_client_buffer();
 
-    bool supports_input() const;
-    int client_input_fd() const;
-    int server_input_fd() const;
+    virtual std::shared_ptr<compositor::Buffer> client_buffer() const;
+
+    virtual bool supports_input() const;
+    virtual int client_input_fd() const;
+    virtual int server_input_fd() const;
 
 private:
     std::shared_ptr<SurfaceBuilder> const builder;

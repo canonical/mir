@@ -29,9 +29,12 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
+
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_display.h"
 
+#include <gtest/gtest.h>
 #include <thread>
 
 namespace geom = mir::geometry;

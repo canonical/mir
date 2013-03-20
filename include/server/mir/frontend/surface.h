@@ -47,8 +47,6 @@ public:
 
     virtual ~Surface() {}
 
-    virtual void hide() = 0;
-    virtual void show() = 0;
     virtual void destroy() = 0;
     virtual void shutdown() = 0;
     

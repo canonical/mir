@@ -36,7 +36,7 @@ namespace graphics
 {
 
 class Display;
-class PlatformIPCPackage;
+struct PlatformIPCPackage;
 class BufferInitializer;
 
 class DisplayReport;
