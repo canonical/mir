@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/consuming_placement_strategy.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 #include <algorithm>

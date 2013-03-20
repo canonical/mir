@@ -29,30 +29,11 @@
 #include <GLES2/gl2.h>
 
 static char const *socket_file = "/tmp/mir_socket";
-static MirConnection *connection = 0;
-static MirSurface *surface = 0;
-
-static void set_connection(MirConnection *new_connection, void * context)
-{
-    (void)context;
-    connection = new_connection;
-}
-
-static void surface_create_callback(MirSurface *new_surface, void *context)
-{
-    (void)context;
-    surface = new_surface;
-}
-
-static void surface_release_callback(MirSurface *old_surface, void *context)
-{
-    (void)old_surface;
-    (void)context;
-    surface = 0;
-}
 
 int main(int argc, char* argv[])
 {
+    MirConnection *connection = 0;
+    MirSurface *surface = 0;
     int arg;
     opterr = 0;
     while ((arg = getopt (argc, argv, "hf:")) != -1)
@@ -76,12 +57,11 @@ int main(int argc, char* argv[])
 
     puts("Starting");
 
-    mir_wait_for(mir_connect(socket_file, __PRETTY_FUNCTION__, set_connection, 0));
-    puts("Connected");
-
+    connection = mir_connect_sync(socket_file, __PRETTY_FUNCTION__);
     assert(connection != NULL);
     assert(mir_connection_is_valid(connection));
     assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
+    puts("Connected");
 
     MirDisplayInfo display_info;
     mir_connection_get_display_info(connection, &display_info);
@@ -91,12 +71,12 @@ int main(int argc, char* argv[])
 
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
-    mir_wait_for(mir_surface_create(connection, &request_params, surface_create_callback, 0));
-    puts("Surface created");
 
+    surface = mir_surface_create_sync(connection, &request_params);
     assert(surface != NULL);
     assert(mir_surface_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
+    puts("Surface created");
 
     /* egl setup */
     int major, minor, n, rc;
@@ -157,7 +137,7 @@ int main(int argc, char* argv[])
     eglDestroyContext(disp, context);
     eglTerminate(disp);
 
-    mir_wait_for(mir_surface_release(surface, surface_release_callback, 0));
+    mir_surface_release_sync(surface);
     puts("Surface released");
 
     mir_connection_release(connection);

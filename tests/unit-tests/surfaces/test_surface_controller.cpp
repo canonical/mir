@@ -18,7 +18,7 @@
 
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack_model.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 
 #include "mir_test/fake_shared.h"
 

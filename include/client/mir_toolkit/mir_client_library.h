@@ -235,6 +235,16 @@ MirWaitHandle *mir_surface_create(
     void *client_context);
 
 /**
+ * Create a surface like in mir_surface_create(), but also wait for creation
+ * to complete and return the resulting surface.
+ *   \param [in] connection  The connection
+ *   \param [in] params      Parameters describing the desired surface
+ *   \return                 The resulting surface
+ */
+MirSurface *mir_surface_create_sync(MirConnection *connection,
+                                    MirSurfaceParameters const *params);
+
+/**
  * Get a window type that can be used for OpenGL ES 2.0 acceleration
  *   \param [in] surface  the surface
  *   \return              an EGLNativeWindowType that the client can use
@@ -304,6 +314,13 @@ MirWaitHandle *mir_surface_next_buffer(
     void *client_context);
 
 /**
+ * Advance a surface's buffer as in mir_surface_next_buffer(), but also
+ * wait for the operation to complete.
+ *   \param [in] surface  The surface whose buffer to advance
+ */
+void mir_surface_next_buffer_sync(MirSurface *surface);
+
+/**
  * Release the supplied surface and any associated buffer. The
  * returned wait handle remains valid until the connection to the
  * server is released.
@@ -318,6 +335,13 @@ MirWaitHandle *mir_surface_release(
     MirSurface *surface,
     mir_surface_lifecycle_callback callback,
     void *client_context);
+
+/**
+ * Release the specified surface like in mir_surface_release(), but also
+ * wait for the operation to complete.
+ *   \param [in] surface  The surface to be released
+ */
+void mir_surface_release_sync(MirSurface *surface);
 
 /**
  * Wait on the supplied handle until the associated request has completed.

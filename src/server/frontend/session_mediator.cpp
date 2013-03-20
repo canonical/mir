@@ -21,7 +21,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir_toolkit/common.h"
 #include "mir/compositor/buffer_ipc_package.h"

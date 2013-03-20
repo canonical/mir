@@ -182,6 +182,22 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
 
             ASSERT_TRUE(surface == NULL);
 
+            surface = mir_surface_create_sync(connection, &request_params);
+
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            mir_surface_get_parameters(surface, &response_params);
+            EXPECT_EQ(request_params.width, response_params.width);
+            EXPECT_EQ(request_params.height, response_params.height);
+            EXPECT_EQ(request_params.pixel_format,
+                      response_params.pixel_format);
+            EXPECT_EQ(request_params.buffer_usage,
+                      response_params.buffer_usage);
+
+            mir_surface_release_sync(surface);
+
             mir_connection_release(connection);
         }
     } client_config;
@@ -364,12 +380,55 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
             ASSERT_TRUE(surface != NULL);
 
+            buffers = 0;
             mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+            EXPECT_EQ(buffers, 1);
 
             mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
             ASSERT_TRUE(surface == NULL);
 
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket,
+                                          __PRETTY_FUNCTION__);
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_software
+            };
+
+            surface = mir_surface_create_sync(connection, &request_params);
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            mir_surface_next_buffer_sync(surface);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            mir_surface_release_sync(surface);
+
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
             mir_connection_release(connection);
         }
     } client_config;

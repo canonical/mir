@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_SHELL_H_
 #define MIR_TEST_DOUBLES_SHELL_H_
 
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface_id.h"
 
