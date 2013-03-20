@@ -275,7 +275,7 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
 
     depository.deposit_package(packages[0], 1, size, pf);
     // Raw pointer so we don't influence the buffer's life-cycle
-    MockBuffer *first_buffer = reinterpret_cast<MockBuffer *>(depository.current_buffer().get());
+    MockBuffer *first_buffer = static_cast<MockBuffer *>(depository.current_buffer().get());
 
     depository.deposit_package(packages[1], 2, size, pf);
     depository.deposit_package(packages[2], 3, size, pf);
@@ -302,7 +302,7 @@ TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_b
     auto package2 = std::make_shared<MirBufferPackage>();
 
     depository.deposit_package(package1, 1, size, pf);
-    EXPECT_CALL(*reinterpret_cast<MockBuffer *>(depository.current_buffer().get()), mark_as_submitted());
+    EXPECT_CALL(*static_cast<MockBuffer *>(depository.current_buffer().get()), mark_as_submitted());
     depository.deposit_package(package2, 2, size, pf);
 }
 
@@ -319,13 +319,13 @@ TEST_F(MirBufferDepositoryTest, depository_respects_max_buffer_parameter)
         
         depository->deposit_package(packages[0], 1, size, pf);
         // Raw pointer so we don't influence the buffer's life-cycle
-        MockBuffer* first_buffer = reinterpret_cast<MockBuffer *>(depository->current_buffer().get());
+        MockBuffer* first_buffer = static_cast<MockBuffer *>(depository->current_buffer().get());
 
         int i;
         for (i = 1; i < num_buffers ; ++i)
         {
             depository->deposit_package(packages[i], i + 1, size, pf);
-            buffers[i] = reinterpret_cast<MockBuffer *>(depository->current_buffer().get());
+            buffers[i] = static_cast<MockBuffer *>(depository->current_buffer().get());
             // None of these buffers should be destroyed
             EXPECT_CALL(*buffers[i], Destroy()).Times(0);
         }
