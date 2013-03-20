@@ -22,8 +22,6 @@
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/surfaces/buffer_bundle.h"
 
-#include <stdexcept>
-#include <boost/throw_exception.hpp>
 #include <cassert>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -130,4 +128,3 @@ std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 {
     return client_buffer_resource;
 }
-
