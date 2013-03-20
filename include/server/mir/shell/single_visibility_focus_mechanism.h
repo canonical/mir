@@ -24,10 +24,6 @@
 
 namespace mir
 {
-namespace frontend
-{
-class Session;
-}
 
 namespace shell
 {
@@ -41,7 +37,7 @@ public:
                                             std::shared_ptr<shell::InputFocusSelector> const& input_selector);
     virtual ~SingleVisibilityFocusMechanism() {}
 
-    void set_focus_to(std::shared_ptr<frontend::Session> const& new_focus);
+    void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
 
 protected:
     SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;

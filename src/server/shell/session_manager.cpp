@@ -22,6 +22,7 @@
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/focus_setter.h"
+#include "mir/shell/session.h"
 
 #include <memory>
 #include <cassert>
@@ -67,8 +68,9 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const
 
 inline void msh::SessionManager::set_focus_to(std::shared_ptr<mf::Session> const& next_focus)
 {
-    focus_application = next_focus;
-    focus_setter->set_focus_to(next_focus);
+    auto shell_session = std::dynamic_pointer_cast<msh::Session>(next_focus);
+    focus_application = shell_session;
+    focus_setter->set_focus_to(shell_session);
 }
 
 void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)

@@ -34,7 +34,7 @@ msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_
 {
 }
 
-void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Session> const& focus_session)
+void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msh::Session> const& focus_session)
 {
     app_container->for_each(
         [&](std::shared_ptr<mf::Session> const& session) {
@@ -42,9 +42,8 @@ void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<mf::Sessi
         {
             session->show();
 
-            auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
-            auto shell_surface = std::dynamic_pointer_cast<msh::Surface>(session->default_surface());
-            input_selector->set_input_focus_to(shell_session, shell_surface);
+            auto shell_surface = std::dynamic_pointer_cast<msh::Surface>(focus_session->default_surface());
+            input_selector->set_input_focus_to(focus_session, shell_surface);
         }
         else
         {

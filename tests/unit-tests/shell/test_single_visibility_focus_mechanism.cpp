@@ -21,12 +21,12 @@
 #include "mir/shell/session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/session.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
-#include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/mock_input_focus_selector.h"
 #include "mir_test_doubles/stub_surface.h"
 
@@ -41,13 +41,28 @@ namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+struct MockShellSession : public msh::Session
+{
+    MOCK_METHOD1(create_surface, mf::SurfaceId(mf::SurfaceCreationParameters const&));
+    MOCK_METHOD1(destroy_surface, void(mf::SurfaceId));
+    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<mf::Surface>(mf::SurfaceId));
+    
+    MOCK_CONST_METHOD0(default_surface, std::shared_ptr<mf::Surface>());
+    
+    MOCK_METHOD0(name, std::string());
+    MOCK_METHOD0(shutdown, void());
+    
+    MOCK_METHOD0(hide, void());
+    MOCK_METHOD0(show, void());
+};
+
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
 
     NiceMock<mtd::MockInputFocusSelector> input_focus_selector;
 
-    mtd::MockSession app1, app2, app3;
+    MockShellSession app1, app2, app3;
     msh::SessionContainer model;
     
     ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<mf::Surface>()));
@@ -73,7 +88,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_input_focus_from_default_sur
 
     mtd::MockInputFocusSelector input_focus_selector;
     msh::SessionContainer model;
-    auto session = std::make_shared<mtd::MockSession>();
+    auto session = std::make_shared<MockShellSession>();
     auto surface = std::make_shared<mtd::StubSurface>();
 
     msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model), mt::fake_shared(input_focus_selector));

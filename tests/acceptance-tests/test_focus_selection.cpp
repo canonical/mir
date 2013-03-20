@@ -119,7 +119,7 @@ namespace
 {
 MATCHER(NonNullSession, "")
 {
-    return arg != std::shared_ptr<mf::Session>();
+    return arg != std::shared_ptr<msh::Session>();
 }
 MATCHER(NonNullSessionTarget, "")
 {
