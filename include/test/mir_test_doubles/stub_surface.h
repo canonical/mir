@@ -38,11 +38,6 @@ public:
     void destroy() {}
     void shutdown() {}
     
-    std::string name() const
-    {
-        return std::string("");
-    }
-    
     geometry::Size size() const
     {
         return geometry::Size();

@@ -25,7 +25,6 @@
 #include "mir/geometry/size.h"
 
 #include <memory>
-#include <string>
 
 namespace mir
 {
@@ -49,8 +48,6 @@ public:
 
     virtual void destroy() = 0;
     virtual void shutdown() = 0;
-    
-    virtual std::string name() const = 0;
     
     virtual geometry::Size size() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
