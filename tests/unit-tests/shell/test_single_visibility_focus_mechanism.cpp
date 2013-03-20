@@ -97,9 +97,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_input_focus_from_default_sur
     
     EXPECT_CALL(*session, default_surface()).Times(1).WillOnce(Return(surface));
     
-//    EXPECT_CALL(input_focus_selector, set_input_focus_to(Eq(session), Eq(surface))).Times(1);
-    // TODO: Restore expectation ~racarr
-    EXPECT_CALL(input_focus_selector, set_input_focus_to(_, _)).Times(1);
+    EXPECT_CALL(input_focus_selector, set_input_focus_to(Eq(session), Eq(surface))).Times(1);
 
     model.insert_session(session);
     focus_mechanism.set_focus_to(session);
