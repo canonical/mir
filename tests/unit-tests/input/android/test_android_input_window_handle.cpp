@@ -40,6 +40,7 @@ namespace mtd = mt::doubles;
 
 namespace
 {
+
 struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
 {
     bool updateInfo() { return true; }
