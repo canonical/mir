@@ -20,6 +20,7 @@
 #define MIR_SHELL_SESSION_H_
 
 #include "mir/frontend/session.h"
+#include "mir/input/session_target.h"
 
 #include <mutex>
 #include <atomic>
@@ -32,7 +33,7 @@ namespace mir
 namespace shell
 {
 
-class Session : public frontend::Session
+class Session : public frontend::Session, public input::SessionTarget
 {
 public:
     virtual ~Session() {}
