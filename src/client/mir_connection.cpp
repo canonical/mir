@@ -187,8 +187,8 @@ void mir_toolkit::MirConnection::done_disconnect()
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
         std::lock_guard<std::mutex> lock(release_wait_handle_guard);
-        for (auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
-            delete *it;
+        for (auto handle : release_wait_handles)
+            delete handle;
     }
 
     disconnect_wait_handle.result_received();
