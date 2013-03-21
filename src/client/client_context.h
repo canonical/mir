@@ -21,8 +21,8 @@
 
 namespace mir_toolkit
 {
-class MirPlatformPackage;
-class MirConnection;
+struct MirPlatformPackage;
+struct MirConnection;
 }
 
 namespace mir

@@ -38,7 +38,7 @@ TEST(geometry, rectangle)
     EXPECT_EQ(w2h4, copy.size);
     EXPECT_EQ(rect, copy);
 
-    Rectangle const default_rect;
+    Rectangle default_rect;
     EXPECT_EQ(Point(), default_rect.top_left);
     EXPECT_EQ(Size(), default_rect.size);
     EXPECT_NE(rect, default_rect);

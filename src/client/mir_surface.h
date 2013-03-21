@@ -36,11 +36,11 @@ namespace mir
 namespace client
 {
 class ClientBuffer;
-class MemoryRegion;
+struct MemoryRegion;
 }
 }
 
-class mir_toolkit::MirSurface : public mir::client::ClientSurface
+struct mir_toolkit::MirSurface : public mir::client::ClientSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;
