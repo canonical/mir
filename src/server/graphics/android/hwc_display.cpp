@@ -39,6 +39,7 @@ geom::Rectangle mga::HWCDisplay::view_area() const
 
 void mga::HWCDisplay::clear()
 {
+    AndroidDisplay::clear();
 }
 
 bool mga::HWCDisplay::post_update()
@@ -55,7 +56,7 @@ void mga::HWCDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuff
 
 std::shared_ptr<mg::DisplayConfiguration> mga::HWCDisplay::configuration()
 {
-    return std::shared_ptr<mg::DisplayConfiguration>();
+    return AndroidDisplay::configuration();
 }
 
 void mga::HWCDisplay::make_current()
