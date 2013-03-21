@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -33,7 +33,7 @@ mga::HWCDisplay::HWCDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>
 
 geom::Rectangle mga::HWCDisplay::view_area() const
 {
-    return geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, geom::Size{geom::Width{0}, geom::Height{0}}};
+    return AndroidDisplay::view_area();
 }
 
 void mga::HWCDisplay::clear()

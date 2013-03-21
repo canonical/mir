@@ -45,7 +45,7 @@ protected:
     mir::EglMock mock_egl;
 };
 
-TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait)
+TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
 {
     using namespace testing;
 
