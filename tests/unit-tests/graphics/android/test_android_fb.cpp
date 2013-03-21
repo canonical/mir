@@ -17,7 +17,7 @@
  */
 
 #include "src/server/graphics/android/android_display.h"
-#include "src/server/graphics/android/android_framebuffer_window_query.h"
+#include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test/egl_mock.h"
 
 #include <gtest/gtest.h>
@@ -28,16 +28,7 @@
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-
-class MockAndroidFramebufferWindow : public mga::AndroidFramebufferWindowQuery
-{
-public:
-    MockAndroidFramebufferWindow() {}
-    ~MockAndroidFramebufferWindow() {}
-
-    MOCK_CONST_METHOD0(android_native_window_type, EGLNativeWindowType());
-    MOCK_CONST_METHOD1(android_display_egl_config, EGLConfig(EGLDisplay));
-};
+namespace mtd=mir::test::doubles;
 
 class AndroidTestFramebufferInit : public ::testing::Test
 {
@@ -46,7 +37,7 @@ protected:
     {
         using namespace testing;
 
-        native_win = std::make_shared<MockAndroidFramebufferWindow>();
+        native_win = std::make_shared<mtd::MockAndroidFramebufferWindow>();
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
@@ -60,7 +51,7 @@ protected:
         height = 477;
     }
 
-    std::shared_ptr<MockAndroidFramebufferWindow> native_win;
+    std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
     mir::EglMock mock_egl;
     int width, height;
 };
