@@ -12,7 +12,7 @@ add_subdirectory(shell/)
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mir/server")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirserver")
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
@@ -68,7 +68,7 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
     LIBRARY DESTINATION lib
   )
   install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/server DESTINATION "include/mir"
+    ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
   )
 else()
   target_link_libraries(mirserver
