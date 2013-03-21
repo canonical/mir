@@ -21,12 +21,19 @@
 
 #include "mir/frontend/message_processor_report.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace logging
 {
+class Logger;
+
 class MessageProcessorReport : public mir::frontend::MessageProcessorReport
 {
+public:
+    MessageProcessorReport(std::shared_ptr<Logger> const& log);
+
     void received_invocation(void const* mediator, int id, std::string const& method);
 
     void completed_invocation(void const* mediator, int id, bool result);
@@ -36,6 +43,9 @@ class MessageProcessorReport : public mir::frontend::MessageProcessorReport
     void exception_handled(void const* mediator, int id, std::exception const& error);
 
     void exception_handled(void const* mediator, std::exception const& error);
+
+private:
+    std::shared_ptr<Logger> const log;
 };
 }
 }

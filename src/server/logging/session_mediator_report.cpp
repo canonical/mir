@@ -22,7 +22,7 @@
 
 namespace
 {
-char const* const component = "frontend";
+char const* const component = "frontend::SessionMediator";
 }
 
 namespace ml = mir::logging;
