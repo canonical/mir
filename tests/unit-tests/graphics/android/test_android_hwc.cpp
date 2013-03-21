@@ -18,30 +18,51 @@
 
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 
+class MockHWCInterface : public mga::HWCInterface
+{
+    MOCK_METHOD0(wait_for_vsync void());
+
+};
+
 class AndroidTestHWCFramebuffer : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
         native_win = std::make_shared<mtd::MockAndroidFramebufferWindow>();
+        mock_hwc_device = std::make_shared<MockHWCInterface>();
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
     }
 
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
+    std::shared_ptr<MockHWCInterface> mock_hwc_device;
 
     mir::EglMock mock_egl;
-    mt::HardwareAccessMock hw_access_mock;
 };
 
+TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait)
+{
+    mga::AndroidHWCDisplay display(native_win, hwc_device);
+
+    testing::InSeq
+    EXPECT_CALL(eglSwapBuffers());
+    EXPECT_CALL(*mock_hwc_device, wait_for_vsync)
+        .Times(1);
+ 
+    display.post();
+}
+
+#if 0
+//put in the hwc adapter class
 TEST_F(AndroidTestHWCFramebuffer, test_construction_registers_procs)
 {
     EXPECT_CALL(hw_access_mock, registerProc())
         .Times(1)
         .WillOnce(DoAll(SaveArg<X>(&procs), Return(1)));
 
-    mga::AndroidHWCDisplay display;
+    mga::AndroidHWCDisplay display(native_win, hwc_device);
 
     test::VerifyAndClear;
 
@@ -50,7 +71,6 @@ TEST_F(AndroidTestHWCFramebuffer, test_construction_registers_procs)
      EXPECT_NE(nullptr, proc->otherthing)
 }
 
-#if 0
 TEST_F(AndroidTestHWCFramebuffer, test_construction_activates_vsync_signal)
 {
     EXPECT_CALL(hw_access_mock, activate_vsync())
@@ -60,10 +80,6 @@ TEST_F(AndroidTestHWCFramebuffer, test_construction_activates_vsync_signal)
 
 }
 
-TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait)
-{
-
-}
 
 TEST_F(AndroidTestHWCFramebuffer, test_unconsumed_vsync_signal_wait)
 {
