@@ -46,20 +46,15 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
 
-namespace mir
-{
-namespace
-{
 struct ErrorServer : mir::protobuf::DisplayServer
 {
     static std::string const test_exception_text;
 
     void create_surface(
         google::protobuf::RpcController*,
-        const protobuf::SurfaceParameters*,
-        protobuf::Surface*,
+        const mir::protobuf::SurfaceParameters*,
+        mir::protobuf::Surface*,
         google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
@@ -67,8 +62,8 @@ struct ErrorServer : mir::protobuf::DisplayServer
 
     void release_surface(
         google::protobuf::RpcController*,
-        const protobuf::SurfaceId*,
-        protobuf::Void*,
+        const mir::protobuf::SurfaceId*,
+        mir::protobuf::Void*,
         google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
@@ -86,8 +81,8 @@ struct ErrorServer : mir::protobuf::DisplayServer
 
     void disconnect(
         google::protobuf::RpcController*,
-        const protobuf::Void*,
-        protobuf::Void*,
+        const mir::protobuf::Void*,
+        mir::protobuf::Void*,
         google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
@@ -95,8 +90,8 @@ struct ErrorServer : mir::protobuf::DisplayServer
 
     void test_file_descriptors(
         google::protobuf::RpcController*,
-        const protobuf::Void*,
-        protobuf::Buffer*,
+        const mir::protobuf::Void*,
+        mir::protobuf::Buffer*,
         google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
@@ -180,15 +175,7 @@ struct ClientConfigCommon : TestingClientConfiguration
     SurfaceSync ssync[max_surface_count];
 };
 const int ClientConfigCommon::max_surface_count;
-}
-}
 
-using mir::SurfaceSync;
-using mir::ClientConfigCommon;
-using mir::ErrorServer;
-
-namespace
-{
 void create_surface_callback(MirSurface* surface, void * context)
 {
     SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
