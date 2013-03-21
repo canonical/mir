@@ -46,6 +46,7 @@
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/session_mediator_report.h"
+#include "mir/logging/message_processor_report.h"
 #include "mir/logging/display_report.h"
 #include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
@@ -119,6 +120,7 @@ private:
 };
 
 char const* const log_app_mediator = "log-app-mediator";
+char const* const log_msg_processor = "log-msg-processor";
 char const* const log_display      = "log-display";
 
 boost::program_options::options_description program_options()
@@ -133,6 +135,7 @@ boost::program_options::options_description program_options()
         ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
         (log_display, po::value<bool>(), "log the Display report")
         (log_app_mediator, po::value<bool>(), "log the ApplicationMediator report")
+        (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
         ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
         ("tests-use-real-input", po::value<bool>(), "use real input in tests");
 
@@ -397,7 +400,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
             return std::make_shared<DefaultIpcFactory>(
                 shell,
                 the_session_mediator_report(),
-                std::make_shared<mf::NullMessageProcessorReport>(), // TODO configure
+                the_message_processor_report(),
                 the_graphics_platform(),
                 display,
                 allocator);
@@ -427,11 +430,12 @@ mir::DefaultServerConfiguration::the_message_processor_report()
     return message_processor_report(
         [this]() -> std::shared_ptr<mf::MessageProcessorReport>
         {
-//            if (the_options()->get(log_message_processor, false))
-//            {
+            if (the_options()->get(log_msg_processor, false))
+            {
 //                return std::make_shared<ml::MessageProcessorReport>(the_logger());
-//            }
-//            else
+                return std::make_shared<ml::MessageProcessorReport>();
+            }
+            else
             {
                 return std::make_shared<mf::NullMessageProcessorReport>();
             }
