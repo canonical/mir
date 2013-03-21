@@ -166,15 +166,24 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
                     auto const& mock_shell = std::make_shared<MockShell>(
                         DefaultServerConfiguration::the_frontend_shell());
 
-                    {
-                        using namespace testing;
-                        InSequence setup;
-                        
-                        EXPECT_CALL(*mock_shell, open_session(_)).Times(2);
-                        EXPECT_CALL(*mock_shell, create_surface_for(_,_)).Times(1);
-                        EXPECT_CALL(*mock_shell, close_session(_)).Times(2);
-                        EXPECT_CALL(*mock_shell, shutdown());
-                    }
+                    Sequence s1, s2;
+
+                    EXPECT_CALL(*mock_shell, open_session(_))
+                        .InSequence(s1, s2);
+
+                    EXPECT_CALL(*mock_shell, create_surface_for(_,_))
+                        .InSequence(s1);
+
+                    EXPECT_CALL(*mock_shell, open_session(_))
+                        .InSequence(s2);
+
+                    EXPECT_CALL(*mock_shell, close_session(_))
+                        .Times(2)
+                        .InSequence(s1, s2);
+
+                    EXPECT_CALL(*mock_shell, shutdown())
+                        .InSequence(s1, s2);
+
                     {
                         using namespace testing;
                         InSequence test;
