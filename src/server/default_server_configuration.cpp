@@ -421,6 +421,24 @@ mir::DefaultServerConfiguration::the_session_mediator_report()
         });
 }
 
+std::shared_ptr<mf::MessageProcessorReport>
+mir::DefaultServerConfiguration::the_message_processor_report()
+{
+    return message_processor_report(
+        [this]() -> std::shared_ptr<mf::MessageProcessorReport>
+        {
+//            if (the_options()->get(log_message_processor, false))
+//            {
+//                return std::make_shared<ml::MessageProcessorReport>(the_logger());
+//            }
+//            else
+            {
+                return std::make_shared<mf::NullMessageProcessorReport>();
+            }
+        });
+}
+
+
 std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
 {
     return logger(
