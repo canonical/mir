@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_properties.h"
 #include "android_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
@@ -44,7 +45,9 @@ struct AllocDevDeleter
 };
 }
 
-mga::AndroidBufferAllocator::AndroidBufferAllocator()
+mga::AndroidBufferAllocator::AndroidBufferAllocator(
+        std::shared_ptr<BufferInitializer> const& buffer_initializer)
+    : buffer_initializer{buffer_initializer}
 {
     int err;
 
@@ -68,10 +71,13 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator()
 std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
-    return std::shared_ptr<mc::Buffer>(
-        new AndroidBuffer(alloc_device,
-                          buffer_properties.size,
-                          buffer_properties.format));
+    auto buffer = std::make_shared<AndroidBuffer>(alloc_device,
+                                                  buffer_properties.size,
+                                                  buffer_properties.format);
+    
+    (*buffer_initializer)(*buffer);
+
+    return buffer;
 }
 
 std::vector<geom::PixelFormat> mga::AndroidBufferAllocator::supported_pixel_formats()
