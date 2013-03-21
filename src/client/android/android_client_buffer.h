@@ -21,7 +21,7 @@
 #define MIR_CLIENT_ANDROID_ANDROID_CLIENT_BUFFER_H_
 
 #include "mir_toolkit/mir_client_library.h"
-#include "../client_buffer.h"
+#include "../aging_buffer.h"
 #include "android_registrar.h"
 
 #include <system/window.h>
@@ -34,7 +34,7 @@ namespace client
 namespace android
 {
 
-class AndroidClientBuffer : public ClientBuffer
+class AndroidClientBuffer : public AgingBuffer
 {
 public:
     AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const&,
@@ -46,9 +46,6 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    uint32_t age() const;
-    void increment_age();
-    void mark_as_submitted();
     MirNativeBuffer get_native_handle();
     std::shared_ptr<MirBufferPackage> get_buffer_package() const;
 
@@ -61,8 +58,6 @@ private:
     std::shared_ptr<MirBufferPackage> creation_package;
     std::shared_ptr<const native_handle_t> native_handle;
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
-
-    uint32_t buffer_age;
 
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;

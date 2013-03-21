@@ -36,10 +36,6 @@ namespace test
 
 struct MockAgingBuffer : public mcl::AgingBuffer
 {
-    MockAgingBuffer()
-    {
-    }
-
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());

@@ -19,7 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/client_buffer_depository.h"
 #include "src/client/client_buffer_factory.h"
-#include "src/client/client_buffer.h"
+#include "src/client/aging_buffer.h"
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 
@@ -29,20 +29,13 @@
 namespace geom=mir::geometry;
 namespace mcl=mir::client;
 
-struct MockBuffer : public mcl::ClientBuffer
+struct MockBuffer : public mcl::AgingBuffer
 {
     MockBuffer()
     {
         using namespace testing;
-
-        internal_age = 0;
-
-        ON_CALL(*this, increment_age())
-            .WillByDefault(InvokeWithoutArgs([this](){++this->internal_age;}));
         ON_CALL(*this, mark_as_submitted())
-            .WillByDefault(Assign(&internal_age, 1));
-        ON_CALL(*this, age())
-            .WillByDefault(ReturnPointee(&internal_age));
+            .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
     }
 
     MOCK_METHOD0(Destroy, void());
@@ -51,17 +44,13 @@ struct MockBuffer : public mcl::ClientBuffer
         Destroy();
     }
 
+    MOCK_METHOD0(mark_as_submitted, void());
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
-    MOCK_CONST_METHOD0(age, uint32_t());
-    MOCK_METHOD0(increment_age, void());
-    MOCK_METHOD0(mark_as_submitted, void());
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
     MOCK_METHOD0(get_native_handle, MirNativeBuffer());
-
-    int internal_age;
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory

@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_
 #define MIR_CLIENT_GBM_GBM_CLIENT_BUFFER_H_
 
-#include "../client_buffer.h"
+#include "../aging_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/geometry/rectangle.h"
 
@@ -35,7 +35,7 @@ namespace gbm
 
 class DRMFDHandler;
 
-class GBMClientBuffer : public ClientBuffer
+class GBMClientBuffer : public AgingBuffer
 {
 public:
     GBMClientBuffer(std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
@@ -47,21 +47,16 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    uint32_t age() const;
     std::shared_ptr<mir_toolkit::MirBufferPackage> get_buffer_package() const;
     MirNativeBuffer get_native_handle();
 
     GBMClientBuffer(const GBMClientBuffer&) = delete;
     GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;
-
-    virtual void increment_age();
-    virtual void mark_as_submitted();
 private:
     const std::shared_ptr<DRMFDHandler> drm_fd_handler;
     const std::shared_ptr<mir_toolkit::MirBufferPackage> creation_package;
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
-    uint32_t buffer_age;
 };
 
 }
