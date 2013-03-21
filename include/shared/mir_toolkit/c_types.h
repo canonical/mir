@@ -75,14 +75,21 @@ typedef enum MirPixelFormat
     mir_pixel_format_bgr_888
 } MirPixelFormat;
 
-/** TODO */
+/**
+ * MirBufferUsage specifies how a surface can and will be used. A "hardware"
+ * surface can be used for OpenGL accelerated rendering. A "software" surface
+ * is one that can be addressed in main memory and blitted to directly.
+ */
 typedef enum MirBufferUsage
 {
     mir_buffer_usage_hardware = 1,
     mir_buffer_usage_software
 } MirBufferUsage;
 
-/** TODO */
+/**
+ * MirSurfaceParameters is the structure of minimum required information that
+ * you must provide to Mir in order to create a surface.
+ */
 typedef struct MirSurfaceParameters
 {
     char const *name;
@@ -118,7 +125,10 @@ typedef struct MirBufferPackage
     int stride;
 } MirBufferPackage;
 
-/** TODO */
+/**
+ * Retrieved information about a MirSurface. This is most useful for learning
+ * how and where to write to a 'mir_buffer_usage_software' surface.
+ */
 typedef struct MirGraphicsRegion
 {
     int width;
@@ -131,7 +141,9 @@ typedef struct MirGraphicsRegion
 
 enum { mir_supported_pixel_format_max = 32 };
 
-/** TODO */
+/**
+ * MirDisplayInfo provides details of the graphics environment.
+ */
 typedef struct MirDisplayInfo
 {
     int width;
