@@ -47,10 +47,9 @@ public:
     void clear();
     bool post_update();
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
-
     std::shared_ptr<DisplayConfiguration> configuration();
-
     void make_current();
+
 private:
     std::shared_ptr<HWCDevice> hwc_device;
 };
@@ -58,4 +57,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_DISPLAY_H_ */
