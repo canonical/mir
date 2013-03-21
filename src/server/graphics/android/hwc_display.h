@@ -23,6 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "android_display.h"
+#include "hwc_device.h"
 
 namespace mir
 {
@@ -50,6 +51,8 @@ public:
     std::shared_ptr<DisplayConfiguration> configuration();
 
     void make_current();
+private:
+    std::shared_ptr<HWCDevice> hwc_device;
 };
 
 }

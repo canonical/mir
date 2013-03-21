@@ -27,6 +27,7 @@ namespace android
 
 class HWCDevice
 {
+public:
     virtual void wait_for_vsync() = 0;
 };
 
