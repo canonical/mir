@@ -27,7 +27,7 @@ namespace mir
 {
 namespace compositor
 {
-class BufferIPCPackage;
+struct BufferIPCPackage;
 class BufferID;
 
 class Buffer : public surfaces::GraphicRegion

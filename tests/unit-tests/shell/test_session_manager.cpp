@@ -23,11 +23,15 @@
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/surfaces/surface.h"
-
+#include "mir/input/input_channel.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
-#include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_focus_setter.h"
+#include "mir_test_doubles/null_buffer_bundle.h"
+#include "mir_test_doubles/stub_surface_builder.h"
+
+#include "src/server/shell/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -36,6 +40,7 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -67,6 +72,7 @@ struct SessionManagerSetup : public testing::Test
     {
     }
 
+    mtd::StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
@@ -98,8 +104,12 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 
     EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
 
+    std::shared_ptr<mi::InputChannel> null_input_channel;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-       Return(std::make_shared<mtd::StubSurface>()));
+       Return(std::make_shared<msh::Surface>(
+           mt::fake_shared(surface_builder),
+           mf::a_surface(),
+           null_input_channel)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
@@ -110,7 +120,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
-    session->create_surface(mf::a_surface());
+    session->create_surface(mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     session_manager.close_session(session);
 }
@@ -158,10 +168,13 @@ TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
 
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
-    using namespace ::testing;    
-    
+    using namespace ::testing;
+    std::shared_ptr<mi::InputChannel> null_input_channel;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-        Return(std::make_shared<mtd::StubSurface>()));
+        Return(std::make_shared<msh::Surface>(
+            mt::fake_shared(surface_builder),
+            mf::a_surface(),
+            null_input_channel)));
 
     // Once for session creation and once for surface creation
     {

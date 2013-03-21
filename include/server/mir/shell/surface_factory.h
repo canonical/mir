@@ -31,10 +31,11 @@ class Surface;
 
 namespace shell
 {
+class Surface;
 class SurfaceFactory
 {
 public:
-    virtual std::shared_ptr<frontend::Surface> create_surface(const frontend::SurfaceCreationParameters& params) = 0;
+    virtual std::shared_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params) = 0;
 
 protected:
     virtual ~SurfaceFactory() {}

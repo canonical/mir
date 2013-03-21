@@ -30,7 +30,7 @@ namespace compositor
 {
 
 class BufferIDUniqueGenerator;
-class BufferProperties;
+struct BufferProperties;
 class BufferSwapper;
 
 class BufferBundleSurfaces : public surfaces::BufferBundle
