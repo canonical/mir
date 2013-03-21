@@ -41,7 +41,8 @@ public:
     void destroy_surface(frontend::SurfaceId surface);
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 
-    std::string name();
+    std::string name() const;
+
     void shutdown();
 
     void hide();
