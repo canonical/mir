@@ -16,34 +16,40 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_DRAWER_H_
-#define MIR_COMPOSITOR_DRAWER_H_
+#ifndef MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
+#define MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
+
+#include "mir/compositor/compositing_strategy.h"
+#include "mir/compositor/render_view.h"
+
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-class Display;
+class Renderer;
 }
 
+///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
 
-// drawer is the interface by which "graphics/libgl" knows
-// the compositor.
-class Drawer
+class DefaultCompositingStrategy : public CompositingStrategy
 {
 public:
-    virtual void render(graphics::Display* display) = 0;
-protected:
-    Drawer() = default;
-    ~Drawer() = default;
+    explicit DefaultCompositingStrategy(
+        std::shared_ptr<RenderView> const& render_view,
+        std::shared_ptr<graphics::Renderer> const& renderer);
+
+    virtual void render(graphics::DisplayBuffer& display_buffer);
+
 private:
-    Drawer& operator=(Drawer const&) = delete;
-    Drawer(Drawer const&) = delete;
+    std::shared_ptr<RenderView> const render_view;
+    std::shared_ptr<graphics::Renderer> const renderer;
 };
+
 }
 }
 
-
-#endif /* MIR_COMPOSITOR_DRAWER_H_ */
+#endif /* MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_ */

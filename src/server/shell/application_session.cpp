@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/application_session.h"
-#include "mir/frontend/surface.h"
+#include "surface.h"
 
 #include "mir/shell/surface_factory.h"
 
@@ -91,7 +91,7 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
     surfaces.erase(p);
 }
 
-std::string msh::ApplicationSession::name()
+std::string msh::ApplicationSession::name() const
 {
     return session_name;
 }

@@ -21,7 +21,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 #include "mir_test_doubles/mock_session.h"
@@ -49,7 +49,7 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(the_frontend_shell, std::shared_ptr<mf::Shell>());
     MOCK_METHOD0(the_input_manager, std::shared_ptr<mi::InputManager>());
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
-    MOCK_METHOD0(the_drawer, std::shared_ptr<mc::Drawer>());
+    MOCK_METHOD0(the_compositor, std::shared_ptr<mc::Compositor>());
 };
 
 struct MockSurface : public mf::Surface

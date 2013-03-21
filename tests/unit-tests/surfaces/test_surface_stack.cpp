@@ -23,7 +23,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/render_view.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"

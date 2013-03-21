@@ -21,7 +21,7 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 
-#include "mir/compositor/drawer.h"
+#include "mir/compositor/compositor.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
@@ -29,6 +29,8 @@
 
 #include <mutex>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -39,7 +41,7 @@ struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
-          compositor{config.the_drawer()},
+          compositor{config.the_compositor()},
           shell{config.the_frontend_shell()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
@@ -48,11 +50,12 @@ struct mir::DisplayServer::Private
     }
 
     std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mc::Drawer> compositor;
+    std::shared_ptr<mc::Compositor> compositor;
     std::shared_ptr<frontend::Shell> shell;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
+    std::condition_variable exit_cv;
     bool exit;
 };
 
@@ -69,32 +72,22 @@ mir::DisplayServer::~DisplayServer()
 
 void mir::DisplayServer::run()
 {
+    std::unique_lock<std::mutex> lk(p->exit_guard);
+
     p->communicator->start();
+    p->compositor->start();
     p->input_manager->start();
 
-    std::unique_lock<std::mutex> lk(p->exit_guard);
     while (!p->exit)
-    {
-        lk.unlock();
-        do_stuff();
-        lk.lock();
-    }
+        p->exit_cv.wait(lk);
 
     p->input_manager->stop();
-}
-
-void mir::DisplayServer::do_stuff()
-{
-    render(p->display.get());
+    p->compositor->stop();
 }
 
 void mir::DisplayServer::stop()
 {
     std::unique_lock<std::mutex> lk(p->exit_guard);
-    p->exit=true;
-}
-
-void mir::DisplayServer::render(mg::Display* display)
-{
-    p->compositor->render(display);
+    p->exit = true;
+    p->exit_cv.notify_one();
 }

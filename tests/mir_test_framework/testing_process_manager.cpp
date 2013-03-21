@@ -31,18 +31,6 @@
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 
-namespace
-{
-::testing::AssertionResult WasStarted(
-    std::shared_ptr<mtf::Process> const& server_process)
-{
-    if (server_process)
-        return ::testing::AssertionSuccess() << "server started";
-    else
-        return ::testing::AssertionFailure() << "server NOT started";
-}
-}
-
 namespace mir_test_framework
 {
 void startup_pause()
@@ -96,15 +84,11 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         signal_display_server = &server;
 
         {
-            struct ScopedFuture
-            {
-                std::future<void> future;
-                ~ScopedFuture() { future.wait(); }
-            } scoped;
-
-            scoped.future = std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
+            std::future<void> future = std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
 
             config.exec(&server);
+
+            future.wait();
         }
 
         config.on_exit(&server);

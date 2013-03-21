@@ -18,10 +18,17 @@
 
 #include "image_renderer.h"
 
+// Unfortunately we have to ignore warnings/errors in 3rd party code.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wall"
 #include <glm/glm.hpp>
+#pragma GCC diagnostic pop
 #include <glm/gtc/type_ptr.hpp>
 
 #include <memory>
+#include <vector>
+
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mt = mir::tools;
@@ -57,6 +64,28 @@ glm::vec3 vertex_attribs[4] =
     glm::vec3{1.0f, 1.0f, 0.0f},
     glm::vec3{1.0f, -1.0f, 0.0f}
 };
+
+typedef void(*MirGLGetObjectInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
+typedef void(*MirGLGetObjectiv)(GLuint, GLenum, GLint *);
+
+void throw_with_object_log(MirGLGetObjectInfoLog getObjectInfoLog,
+                           MirGLGetObjectiv      getObjectiv,
+                           std::string const &   msg,
+                           GLuint                object)
+{
+    GLint object_log_length = 0;
+    (*getObjectiv)(object, GL_INFO_LOG_LENGTH, &object_log_length);
+
+    GLuint const object_log_buffer_length = object_log_length + 1;
+    std::vector<char> log_chars(object_log_buffer_length);
+
+    (*getObjectInfoLog)(object, object_log_buffer_length, NULL, log_chars.data());
+
+    std::string object_info_err(msg + "\n");
+    object_info_err.append(log_chars.begin(), log_chars.end() - 1);
+
+    BOOST_THROW_EXCEPTION(std::runtime_error(object_info_err));
+}
 
 }
 
@@ -100,12 +129,9 @@ void mt::ImageRenderer::Resources::setup()
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
     {
-        glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &param);
-        auto info_log = std::unique_ptr<GLchar>(new GLchar[param + 1]);
-        glGetShaderInfoLog(vertex_shader, param + 1, NULL, info_log.get());
-        std::string info_str{"Failed to compile vertex shader:"};
-        info_str += info_log.get();
-        throw new std::runtime_error(info_str);
+        throw_with_object_log(glGetShaderInfoLog, glGetShaderiv,
+                              "Failed to compile vertex shader:",
+                              vertex_shader);
     }
 
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -114,12 +140,9 @@ void mt::ImageRenderer::Resources::setup()
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &param);
     if (param == GL_FALSE)
     {
-        glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &param);
-        auto info_log = std::unique_ptr<GLchar>(new GLchar[param + 1]);
-        glGetShaderInfoLog(vertex_shader, param + 1, NULL, info_log.get());
-        std::string info_str{"Failed to compile fragment shader:"};
-        info_str += info_log.get();
-        throw new std::runtime_error(info_str);
+        throw_with_object_log(glGetShaderInfoLog, glGetShaderiv,
+                              "Failed to compile fragment shader:",
+                              fragment_shader);
     }
 
     program = glCreateProgram();
@@ -129,12 +152,9 @@ void mt::ImageRenderer::Resources::setup()
     glGetProgramiv(program, GL_LINK_STATUS, &param);
     if (param == GL_FALSE)
     {
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &param);
-        auto info_log = std::unique_ptr<GLchar>(new GLchar[param + 1]);
-        glGetProgramInfoLog(program, param + 1, NULL, info_log.get());
-        std::string info_str{"Failed to compile fragment shader:"};
-        info_str += info_log.get();
-        throw new std::runtime_error(info_str);
+        throw_with_object_log(glGetProgramInfoLog, glGetProgramiv,
+                              "Failed to link shader program:",
+                              program);
     }
 
     glUseProgram(program);

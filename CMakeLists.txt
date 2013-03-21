@@ -24,8 +24,13 @@ set(
 )
 cmake_policy(SET CMP0015 NEW)
 
-set(CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
-set(CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
+if (NOT DEFINED CMAKE_C_COMPILER)
+  set (CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
+endif ()
+if (NOT DEFINED CMAKE_CXX_COMPILER)
+  set (CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
+endif ()
+
 set(CMAKE_GCOV gcov-${MIR_GCC_VERSION})
 
 project(Mir)
@@ -170,6 +175,10 @@ endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
+set (OLD_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+# Don't treat warnings as errors in 3rd_party/{gmock,cucumber-cpp}
+string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
 # Pulling in local gmock version
 # While this seems evil, we are doing
 # it to ensure/allow for:
@@ -196,6 +205,10 @@ include_directories (
 )
 # We need to build cucumber after gtest
 add_subdirectory(3rd_party/cucumber-cpp)
+
+# Restore -Werror for non-3rd-party code
+set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
+
 add_subdirectory(benchmarks/)
 add_subdirectory(tests/)
 add_subdirectory(tools/)

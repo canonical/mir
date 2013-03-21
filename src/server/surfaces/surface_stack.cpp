@@ -21,7 +21,7 @@
 #include "mir/surfaces/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/renderer.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 

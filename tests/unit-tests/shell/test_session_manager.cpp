@@ -20,7 +20,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/frontend/session_container.h"
 #include "mir/frontend/session.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel.h"
@@ -29,7 +29,7 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
-#include "mir/shell/surface_builder.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 
 #include "src/server/shell/surface.h"
 
@@ -47,28 +47,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-class StubSurfaceBuilder : public msh::SurfaceBuilder
-{
-public:
-    StubSurfaceBuilder() :
-        buffer_bundle(new mtd::NullBufferBundle()),
-        dummy_surface(std::make_shared<ms::Surface>(mf::a_surface().name, buffer_bundle))
-    {
-    }
-
-    std::weak_ptr<ms::Surface> create_surface(mf::SurfaceCreationParameters const& )
-    {
-        return dummy_surface;
-    }
-
-    void destroy_surface(std::weak_ptr<ms::Surface> const& )
-    {
-    }
-private:
-    std::shared_ptr<ms::BufferBundle> const buffer_bundle;
-    std::shared_ptr<ms::Surface>  dummy_surface;
-};
-
 struct MockSessionContainer : public msh::SessionContainer
 {
     MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::Session> const&));
@@ -94,7 +72,7 @@ struct SessionManagerSetup : public testing::Test
     {
     }
 
-    StubSurfaceBuilder surface_builder;
+    mtd::StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;

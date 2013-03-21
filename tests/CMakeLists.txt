@@ -16,6 +16,12 @@ option(
   ON
 )
 
+if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+  # Avoid clang complaints about poor quality gmock/gtest/cucumber headers
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
+endif ()
+
 if(MIR_ENABLE_DEATH_TESTS)
   add_definitions(-DMIR_DEATH_TESTS_ENABLED)
 endif(MIR_ENABLE_DEATH_TESTS)

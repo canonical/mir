@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SESSION_H_
-#define MIR_TEST_DOUBLES_STUB_SESSION_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SURFACE_H_
+#define MIR_TEST_DOUBLES_STUB_SURFACE_H_
 
-#include "mir/frontend/session.h"
+#include "mir/frontend/surface.h"
 
 namespace mir
 {
@@ -28,31 +28,40 @@ namespace test
 namespace doubles
 {
 
-struct StubSession : public frontend::Session
+class StubSurface : public frontend::Surface
 {
-    frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& /* params */)
+public:
+    virtual ~StubSurface() = default;
+    
+    void hide() {}
+    void show() {}
+    void destroy() {}
+    void shutdown() {}
+    
+    geometry::Size size() const
     {
-        return frontend::SurfaceId{0};
+        return geometry::Size();
     }
-    void destroy_surface(frontend::SurfaceId /* surface */)
+    geometry::PixelFormat pixel_format() const
     {
+        return geometry::PixelFormat();
     }
-    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId /* surface */) const
-    {
-        return std::shared_ptr<frontend::Surface>();
-    }
-    std::string name() const
-    {
-        return std::string();
-    }
-    void shutdown()
-    {
-    }
-    void hide()
+    void advance_client_buffer()
     {
     }
-    void show()
+    std::shared_ptr<compositor::Buffer> client_buffer() const
     {
+        return std::shared_ptr<compositor::Buffer>();
+    }
+    
+    virtual bool supports_input() const
+    {
+        return false;
+    }
+    
+    virtual int client_input_fd() const
+    {
+        return 0;
     }
 };
 
@@ -60,4 +69,4 @@ struct StubSession : public frontend::Session
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_SESSION_H_
+#endif // MIR_TEST_DOUBLES_STUB_SURFACE_H_

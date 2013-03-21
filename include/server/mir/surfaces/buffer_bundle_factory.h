@@ -27,7 +27,7 @@ namespace mir
 {
 namespace compositor
 {
-class BufferProperties;
+struct BufferProperties;
 }
 
 namespace surfaces

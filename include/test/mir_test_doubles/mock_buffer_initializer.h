@@ -21,6 +21,8 @@
 
 #include "mir/graphics/buffer_initializer.h"
 
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test

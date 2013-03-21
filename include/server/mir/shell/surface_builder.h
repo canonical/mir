@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace frontend { class SurfaceCreationParameters; }
+namespace frontend { struct SurfaceCreationParameters; }
 namespace surfaces { class Surface; }
 
 namespace shell
