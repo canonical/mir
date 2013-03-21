@@ -1,4 +1,5 @@
 list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_aging_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_buffer_depository.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_platform.cpp

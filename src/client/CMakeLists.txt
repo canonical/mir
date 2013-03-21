@@ -27,6 +27,7 @@ include_directories(
 set(
   CLIENT_SOURCES
 
+  aging_buffer.cpp
   client_buffer_depository.cpp
   mir_client_library.cpp
   mir_connection.cpp
