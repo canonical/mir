@@ -39,6 +39,7 @@ geom::Rectangle mga::HWCDisplay::view_area() const
 
 void mga::HWCDisplay::clear()
 {
+
 }
 
 bool mga::HWCDisplay::post_update()

@@ -24,6 +24,7 @@
 
 #include <memory>
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
@@ -57,10 +58,31 @@ TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
     EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
         .Times(1);
  
-    display.post_update();
+    display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        buffer.post_update();
+    });
 }
 
 #if 0
+//put in the hwc adapter class
+TEST_F(AndroidTestHWCFramebuffer, test_construction_registers_procs)
+{
+TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
+{
+    using namespace testing;
+
+    mga::HWCDisplay display(native_win, mock_hwc_device);
+
+    testing::InSequence sequence_enforcer;
+    EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
+        .Times(1);
+    EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
+        .Times(1);
+ 
+    display.post_update();
+}
+
 //put in the hwc adapter class
 TEST_F(AndroidTestHWCFramebuffer, test_construction_registers_procs)
 {
