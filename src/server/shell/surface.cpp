@@ -121,6 +121,20 @@ std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
     }
 }
 
+bool msh::Surface::supports_input() const
+{
+    if (input_channel)
+        return true;
+    return false;
+}
+
+int msh::Surface::client_input_fd() const
+{
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
+    return input_channel->client_fd();
+}
+
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;
@@ -162,18 +176,4 @@ bool msh::Surface::set_type(MirSurfaceType t)
     }
 
     return valid;
-}
-
-bool msh::Surface::supports_input() const
-{
-    if (input_channel)
-        return true;
-    return false;
-}
-
-int msh::Surface::client_input_fd() const
-{
-    if (!supports_input())
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return input_channel->client_fd();
 }

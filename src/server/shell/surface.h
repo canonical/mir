@@ -64,11 +64,10 @@ public:
 
     virtual std::shared_ptr<compositor::Buffer> client_buffer() const;
 
-    virtual int configure(MirSurfaceAttrib attrib, int value);
-
     virtual bool supports_input() const;
     virtual int client_input_fd() const;
 
+    virtual int configure(MirSurfaceAttrib attrib, int value);
     virtual MirSurfaceType type() const;
 
 private:
