@@ -23,7 +23,6 @@
 
 #include "mir/frontend/surface_creation_parameters.h"
 
-#include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <memory>
