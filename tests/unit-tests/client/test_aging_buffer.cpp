@@ -57,5 +57,39 @@ TEST(MirClientAgingBufferTest, buffer_age_starts_at_zero)
     EXPECT_EQ(0u, mock_buffer->age());
 }
 
+TEST(MirClientAgingBufferTest, buffer_age_set_to_one_on_submit)
+{
+    using namespace testing;
+
+    auto mock_buffer = std::make_shared<NiceMock<MockAgingBuffer>>();
+    mock_buffer->mark_as_submitted();
+
+    EXPECT_EQ(1u, mock_buffer->age());    
+}
+
+TEST(MirClientAgingBufferTest, buffer_age_increases_on_increment)
+{
+    using namespace testing;
+
+    auto mock_buffer = std::make_shared<NiceMock<MockAgingBuffer>>();
+    mock_buffer->mark_as_submitted();
+
+    for (uint32_t age = 2; age < 10; ++age)
+    {
+        mock_buffer->increment_age();
+        EXPECT_EQ(age, mock_buffer->age());
+    }
+}
+
+TEST(MirClientAgingBufferTest, incrementing_age_has_no_effect_for_unsubmitted_buffer)
+{
+    using namespace testing;
+
+    auto mock_buffer = std::make_shared<NiceMock<MockAgingBuffer>>();
+    mock_buffer->increment_age();
+
+    EXPECT_EQ(0u, mock_buffer->age());
+}
+
 }
 }
