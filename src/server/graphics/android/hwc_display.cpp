@@ -60,4 +60,5 @@ std::shared_ptr<mg::DisplayConfiguration> mga::HWCDisplay::configuration()
 
 void mga::HWCDisplay::make_current()
 {
+    AndroidDisplay::make_current();
 }

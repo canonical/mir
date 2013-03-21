@@ -377,11 +377,12 @@ TYPED_TEST(AndroidTestFramebufferInit, make_current_from_interface_calls_egl)
 {
     using namespace testing;
 
+    auto display = make_display_buffer<TypeParam>(this->native_win);
+
     EXPECT_CALL(this->mock_egl, eglMakeCurrent(this->mock_egl.fake_egl_display, _, _, _))
     .Times(Exactly(1))
     .WillOnce(Return(EGL_TRUE));
 
-    auto display = make_display_buffer<TypeParam>(this->native_win);
     display->make_current();
 }
 
@@ -389,11 +390,11 @@ TYPED_TEST(AndroidTestFramebufferInit, make_current_failure_throws)
 {
     using namespace testing;
 
+    auto display = make_display_buffer<TypeParam>(this->native_win);
+
     EXPECT_CALL(this->mock_egl, eglMakeCurrent(this->mock_egl.fake_egl_display, _, _, _))
     .Times(Exactly(1))
     .WillOnce(Return(EGL_FALSE));
-
-    auto display = make_display_buffer<TypeParam>(this->native_win);
 
     EXPECT_THROW(
     {
