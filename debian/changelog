@@ -1,4 +1,10 @@
-mir (0.0.2-0ubuntu2) UNRELEASED; urgency=low
+mir (0.0.2-0ubuntu3) UNRELEASED; urgency=low
+
+  * Add apport hook, source_mir.py
+
+ -- Bryce Harrington <bryce@ubuntu.com>  Thu, 21 Mar 2013 13:09:19 -0700
+
+mir (0.0.2-0ubuntu2) raring; urgency=low
 
   * Put mir in split mode
 
