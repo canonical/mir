@@ -12,6 +12,7 @@ add_library(
   android_buffer.cpp
   android_buffer_handle.cpp
   android_display.cpp
+  hwc_display.cpp
   android_display_selector.cpp
   android_framebuffer_window.cpp
   android_fb_factory.cpp

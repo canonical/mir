@@ -17,6 +17,7 @@
  */
 
 #include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/hwc_display.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test/egl_mock.h"
 
@@ -25,11 +26,33 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <algorithm>
+#include <list>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
+template<class T>
+std::shared_ptr<mg::Display> make_display(std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin);
+
+template <>
+std::shared_ptr<mg::Display> make_display<mga::AndroidDisplay>(
+                                std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin)
+{
+    return std::make_shared<mga::AndroidDisplay>(fbwin);
+}
+
+template<class T>
+std::shared_ptr<mg::DisplayBuffer> make_display_buffer(std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin);
+
+template <>
+std::shared_ptr<mg::DisplayBuffer> make_display_buffer<mga::AndroidDisplay>(
+                                std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin)
+{
+    return std::make_shared<mga::AndroidDisplay>(fbwin);
+}
+
+template<typename T>
 class AndroidTestFramebufferInit : public ::testing::Test
 {
 protected:
@@ -56,65 +79,62 @@ protected:
     int width, height;
 };
 
-TEST_F(AndroidTestFramebufferInit, eglGetDisplay)
+typedef ::testing::Types<mga::AndroidDisplay> MyTypes;
+TYPED_TEST_CASE(AndroidTestFramebufferInit, MyTypes);
+
+TYPED_TEST(AndroidTestFramebufferInit, eglGetDisplay)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
+    EXPECT_CALL(this->mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
-TEST_F(AndroidTestFramebufferInit, eglGetDisplay_failure)
+TYPED_TEST(AndroidTestFramebufferInit, eglGetDisplay_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
+    EXPECT_CALL(this->mock_egl, eglGetDisplay(EGL_DEFAULT_DISPLAY))
     .Times(Exactly(1))
     .WillOnce(Return((EGLDisplay)EGL_NO_DISPLAY));
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize)
+TYPED_TEST(AndroidTestFramebufferInit, eglInitialize)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
+    EXPECT_CALL(this->mock_egl, eglInitialize(this->mock_egl.fake_egl_display, _, _))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize_failure)
+TYPED_TEST(AndroidTestFramebufferInit, eglInitialize_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
+    EXPECT_CALL(this->mock_egl, eglInitialize(this->mock_egl.fake_egl_display, _, _))
     .Times(Exactly(1))
     .WillOnce(Return(EGL_FALSE));
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_major_version)
+TYPED_TEST(AndroidTestFramebufferInit, eglInitialize_failure_bad_major_version)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
+    EXPECT_CALL(this->mock_egl, eglInitialize(this->mock_egl.fake_egl_display, _, _))
     .Times(Exactly(1))
     .WillOnce(DoAll(
                   SetArgPointee<1>(2),
@@ -122,15 +142,15 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_major_version)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_minor_version)
+TYPED_TEST(AndroidTestFramebufferInit, eglInitialize_failure_bad_minor_version)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglInitialize(mock_egl.fake_egl_display, _, _))
+    EXPECT_CALL(this->mock_egl, eglInitialize(this->mock_egl.fake_egl_display, _, _))
     .Times(Exactly(1))
     .WillOnce(DoAll(
                   SetArgPointee<2>(2),
@@ -138,112 +158,97 @@ TEST_F(AndroidTestFramebufferInit, eglInitialize_failure_bad_minor_version)
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_requests_config)
+TYPED_TEST(AndroidTestFramebufferInit, eglCreateWindowSurface_requests_config)
 {
     using namespace testing;
     EGLConfig fake_config = (EGLConfig) 0x3432;
-    EXPECT_CALL(*native_win, android_display_egl_config(_))
+    EXPECT_CALL(*this->native_win, android_display_egl_config(_))
     .Times(Exactly(1))
     .WillOnce(Return(fake_config));
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, fake_config, _, _))
+    EXPECT_CALL(this->mock_egl, eglCreateWindowSurface(this->mock_egl.fake_egl_display, fake_config, _, _))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
-TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_nullarg)
+TYPED_TEST(AndroidTestFramebufferInit, eglCreateWindowSurface_nullarg)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, NULL))
+    EXPECT_CALL(this->mock_egl, eglCreateWindowSurface(this->mock_egl.fake_egl_display, _, _, NULL))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
-TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_uses_native_window_type)
+TYPED_TEST(AndroidTestFramebufferInit, eglCreateWindowSurface_uses_native_window_type)
 {
     using namespace testing;
     EGLNativeWindowType egl_window = (EGLNativeWindowType)0x4443;
 
-    EXPECT_CALL(*native_win, android_native_window_type())
+    EXPECT_CALL(*this->native_win, android_native_window_type())
     .Times(Exactly(1))
     .WillOnce(Return(egl_window));
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, egl_window,_))
+    EXPECT_CALL(this->mock_egl, eglCreateWindowSurface(this->mock_egl.fake_egl_display, _, egl_window,_))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
-TEST_F(AndroidTestFramebufferInit, eglCreateWindowSurface_failure)
+TYPED_TEST(AndroidTestFramebufferInit, eglCreateWindowSurface_failure)
 {
     using namespace testing;
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,_,_,_))
+    EXPECT_CALL(this->mock_egl, eglCreateWindowSurface(this->mock_egl.fake_egl_display,_,_,_))
     .Times(Exactly(1))
     .WillOnce(Return((EGLSurface)NULL));
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
     }, std::runtime_error);
 }
 
 /* create context stuff */
-TEST_F(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
+TYPED_TEST(AndroidTestFramebufferInit, CreateContext_window_cfg_matches_context_cfg)
 {
     using namespace testing;
 
     EGLConfig chosen_cfg, cfg;
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, _))
+    EXPECT_CALL(this->mock_egl, eglCreateWindowSurface(this->mock_egl.fake_egl_display, _, _, _))
     .Times(Exactly(1))
     .WillOnce(DoAll(
                   SaveArg<1>(&chosen_cfg),
-                  Return((EGLSurface)mock_egl.fake_egl_surface)));
+                  Return((EGLSurface)this->mock_egl.fake_egl_surface)));
 
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, Ne(EGL_NO_CONTEXT),_))
+    EXPECT_CALL(this->mock_egl, eglCreateContext(this->mock_egl.fake_egl_display, _, Ne(EGL_NO_CONTEXT),_))
     .Times(Exactly(1))
     .WillOnce(DoAll(
                   SaveArg<1>(&cfg),
-                  Return((EGLContext)mock_egl.fake_egl_context)));
+                  Return((EGLContext)this->mock_egl.fake_egl_context)));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 
     EXPECT_EQ(chosen_cfg, cfg);
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateContext_contexts_are_shared)
+TYPED_TEST(AndroidTestFramebufferInit, CreateContext_contexts_are_shared)
 {
     using namespace testing;
 
     EGLContext const shared_ctx{reinterpret_cast<EGLContext>(0x17)};
 
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, EGL_NO_CONTEXT,_))
+    EXPECT_CALL(this->mock_egl, eglCreateContext(this->mock_egl.fake_egl_display, _, EGL_NO_CONTEXT,_))
     .Times(Exactly(1))
     .WillOnce(Return(shared_ctx));
 
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, shared_ctx,_))
+    EXPECT_CALL(this->mock_egl, eglCreateContext(this->mock_egl.fake_egl_display, _, shared_ctx,_))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
 namespace
@@ -256,50 +261,39 @@ ACTION_P(AppendContextAttrPtr, vec)
 
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateContext_context_attr_null_terminated)
+TYPED_TEST(AndroidTestFramebufferInit, CreateContext_context_attr_null_terminated)
 {
     using namespace testing;
 
     std::vector<EGLint const*> context_attr_ptrs;
 
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
+    EXPECT_CALL(this->mock_egl, eglCreateContext(this->mock_egl.fake_egl_display, _, _, _ ))
     .Times(AtLeast(2))
     .WillRepeatedly(DoAll(AppendContextAttrPtr(&context_attr_ptrs),
-                          Return((EGLContext)mock_egl.fake_egl_context)));
+                          Return((EGLContext)this->mock_egl.fake_egl_context)));
 
-    EXPECT_NO_THROW(
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
+
+    for (auto context_attr : context_attr_ptrs)
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
-
-    EXPECT_NO_THROW(
-    {
-        for (auto context_attr : context_attr_ptrs)
-        {
-            int i = 0;
-            ASSERT_NE(nullptr, context_attr);
-            while(context_attr[i++] != EGL_NONE);
-        }
-    });
-
-    SUCCEED();
+        int i = 0;
+        ASSERT_NE(nullptr, context_attr);
+        while(context_attr[i++] != EGL_NONE);
+    }
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateContext_context_uses_client_version_2)
+TYPED_TEST(AndroidTestFramebufferInit, CreateContext_context_uses_client_version_2)
 {
     using namespace testing;
 
     std::vector<EGLint const*> context_attr_ptrs;
 
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
+    EXPECT_CALL(this->mock_egl, eglCreateContext(this->mock_egl.fake_egl_display, _, _, _ ))
     .Times(AtLeast(2))
     .WillRepeatedly(DoAll(AppendContextAttrPtr(&context_attr_ptrs),
-                          Return((EGLContext)mock_egl.fake_egl_context)));
+                          Return((EGLContext)this->mock_egl.fake_egl_context)));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 
     for (auto context_attr : context_attr_ptrs)
     {
@@ -321,69 +315,61 @@ TEST_F(AndroidTestFramebufferInit, CreateContext_context_uses_client_version_2)
     };
 }
 
-TEST_F(AndroidTestFramebufferInit, CreateContext_failure)
+TYPED_TEST(AndroidTestFramebufferInit, CreateContext_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
+    EXPECT_CALL(this->mock_egl, eglCreateContext(this->mock_egl.fake_egl_display, _, _, _ ))
     .Times(Exactly(1))
     .WillOnce(Return((EGLContext)EGL_NO_CONTEXT));
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
     }, std::runtime_error   );
 }
 
-TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_pbuffer_surface)
+TYPED_TEST(AndroidTestFramebufferInit, MakeCurrent_uses_correct_pbuffer_surface)
 {
     using namespace testing;
     EGLSurface fake_surface = (EGLSurface) 0x715;
 
-    EXPECT_CALL(mock_egl, eglCreatePbufferSurface(mock_egl.fake_egl_display, _, _))
+    EXPECT_CALL(this->mock_egl, eglCreatePbufferSurface(this->mock_egl.fake_egl_display, _, _))
     .Times(Exactly(1))
     .WillOnce(Return(fake_surface));
-    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, fake_surface, fake_surface, _))
+    EXPECT_CALL(this->mock_egl, eglMakeCurrent(this->mock_egl.fake_egl_display, fake_surface, fake_surface, _))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
-
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
-TEST_F(AndroidTestFramebufferInit, MakeCurrent_uses_correct_dummy_context)
+TYPED_TEST(AndroidTestFramebufferInit, MakeCurrent_uses_correct_dummy_context)
 {
     using namespace testing;
 
     EGLContext const dummy_ctx{reinterpret_cast<EGLContext>(0x17)};
 
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, EGL_NO_CONTEXT, _ ))
+    EXPECT_CALL(this->mock_egl, eglCreateContext(this->mock_egl.fake_egl_display, _, EGL_NO_CONTEXT, _ ))
     .Times(Exactly(1))
     .WillOnce(Return(dummy_ctx));
 
-    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, _, _, dummy_ctx))
+    EXPECT_CALL(this->mock_egl, eglMakeCurrent(this->mock_egl.fake_egl_display, _, _, dummy_ctx))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
-
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
-TEST_F(AndroidTestFramebufferInit, eglMakeCurrent_failure_throws)
+TYPED_TEST(AndroidTestFramebufferInit, eglMakeCurrent_failure_throws)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglMakeCurrent(mock_egl.fake_egl_display, _, _, _))
+    EXPECT_CALL(this->mock_egl, eglMakeCurrent(this->mock_egl.fake_egl_display, _, _, _))
     .Times(Exactly(1))
     .WillOnce(Return(EGL_FALSE));
 
     EXPECT_THROW(
     {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
     }, std::runtime_error);
 
 }
@@ -421,19 +407,19 @@ private:
 
 }
 
-TEST_F(AndroidTestFramebufferInit, eglContext_resources_freed)
+TYPED_TEST(AndroidTestFramebufferInit, eglContext_resources_freed)
 {
     using namespace testing;
 
     typedef FakeResourceStore<EGLContext> FakeContextStore;
     FakeContextStore store;
 
-    EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display, _, _, _ ))
+    EXPECT_CALL(this->mock_egl, eglCreateContext(this->mock_egl.fake_egl_display, _, _, _ ))
     .Times(AtLeast(2))
     .WillRepeatedly(DoAll(InvokeWithoutArgs(&store, &FakeContextStore::add_resource),
                           ReturnPointee(store.last_resource_ptr())));
 
-    EXPECT_CALL(mock_egl, eglDestroyContext(mock_egl.fake_egl_display, _))
+    EXPECT_CALL(this->mock_egl, eglDestroyContext(this->mock_egl.fake_egl_display, _))
     .Times(AtLeast(2))
     .WillRepeatedly(DoAll(WithArgs<1>(Invoke(&store, &FakeContextStore::remove_resource)),
                           Return(EGL_TRUE)));
@@ -441,31 +427,31 @@ TEST_F(AndroidTestFramebufferInit, eglContext_resources_freed)
     ASSERT_TRUE(store.empty());
 
     {
-        mga::AndroidDisplay display(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
         ASSERT_FALSE(store.empty());
     }
 
     ASSERT_TRUE(store.empty());
 }
 
-TEST_F(AndroidTestFramebufferInit, eglSurface_resources_freed)
+TYPED_TEST(AndroidTestFramebufferInit, eglSurface_resources_freed)
 {
     using namespace testing;
 
     typedef FakeResourceStore<EGLSurface> FakeSurfaceStore;
     FakeSurfaceStore store;
 
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display, _, _, _ ))
+    EXPECT_CALL(this->mock_egl, eglCreateWindowSurface(this->mock_egl.fake_egl_display, _, _, _ ))
     .Times(AtLeast(1))
     .WillRepeatedly(DoAll(InvokeWithoutArgs(&store, &FakeSurfaceStore::add_resource),
                           ReturnPointee(store.last_resource_ptr())));
 
-    EXPECT_CALL(mock_egl, eglCreatePbufferSurface(mock_egl.fake_egl_display, _, _ ))
+    EXPECT_CALL(this->mock_egl, eglCreatePbufferSurface(this->mock_egl.fake_egl_display, _, _ ))
     .Times(Exactly(1))
     .WillRepeatedly(DoAll(InvokeWithoutArgs(&store, &FakeSurfaceStore::add_resource),
                           ReturnPointee(store.last_resource_ptr())));
 
-    EXPECT_CALL(mock_egl, eglDestroySurface(mock_egl.fake_egl_display, _))
+    EXPECT_CALL(this->mock_egl, eglDestroySurface(this->mock_egl.fake_egl_display, _))
     .Times(AtLeast(2))
     .WillRepeatedly(DoAll(WithArgs<1>(Invoke(&store, &FakeSurfaceStore::remove_resource)),
                           Return(EGL_TRUE)));
@@ -473,34 +459,94 @@ TEST_F(AndroidTestFramebufferInit, eglSurface_resources_freed)
     ASSERT_TRUE(store.empty());
 
     {
-        mga::AndroidDisplay display(native_win);
+        auto display = make_display_buffer<TypeParam>(this->native_win); 
         ASSERT_FALSE(store.empty());
     }
 
     ASSERT_TRUE(store.empty());
 }
 
-TEST_F(AndroidTestFramebufferInit, eglDisplay_is_terminated)
+TYPED_TEST(AndroidTestFramebufferInit, eglDisplay_is_terminated)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_egl, eglTerminate(mock_egl.fake_egl_display))
+    EXPECT_CALL(this->mock_egl, eglTerminate(this->mock_egl.fake_egl_display))
     .Times(Exactly(1));
 
-    EXPECT_NO_THROW(
-    {
-        std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-    });
-
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
 }
 
-TEST_F(AndroidTestFramebufferInit, display_post_calls_swapbuffers_once)
+TYPED_TEST(AndroidTestFramebufferInit, framebuffer_correct_view_area)
+{
+    using namespace testing;
+    auto display = make_display_buffer<TypeParam>(this->native_win); 
+
+    EXPECT_CALL(this->mock_egl, eglQuerySurface(this->mock_egl.fake_egl_display, this->mock_egl.fake_egl_surface,
+                                          EGL_WIDTH, _ ))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<3>((EGLint) this->width),
+                        Return(EGL_TRUE)));
+
+    EXPECT_CALL(this->mock_egl, eglQuerySurface(this->mock_egl.fake_egl_display, this->mock_egl.fake_egl_surface,
+                                          EGL_HEIGHT, _ ))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<3>((EGLint) this->height),
+                        Return(EGL_TRUE)));
+
+    auto area = display->view_area();
+
+    EXPECT_EQ((int)area.top_left.x.as_uint32_t() , 0);
+    EXPECT_EQ((int)area.top_left.y.as_uint32_t() , 0);
+    EXPECT_EQ((int)area.size.width.as_uint32_t() , this->width);
+    EXPECT_EQ((int)area.size.height.as_uint32_t(), this->height);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* these tests are specific to gpu displays ONLY! they should not be typedtested */
+class GPUFramebuffer : public ::testing::Test
+{
+protected:
+    virtual void SetUp()
+    {
+        native_win = std::make_shared<mtd::MockAndroidFramebufferWindow>();
+        mock_egl.silence_uninteresting();
+    }
+
+    std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
+    mir::EglMock mock_egl;
+};
+
+TEST_F(GPUFramebuffer, display_post_calls_swapbuffers_once)
 {
     using namespace testing;
     std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
 
     EXPECT_CALL(mock_egl, eglSwapBuffers(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
-    .Times(Exactly(1));
+        .Times(Exactly(1));
 
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
@@ -508,7 +554,7 @@ TEST_F(AndroidTestFramebufferInit, display_post_calls_swapbuffers_once)
     });
 }
 
-TEST_F(AndroidTestFramebufferInit, display_post_successful)
+TEST_F(GPUFramebuffer, display_post_successful)
 {
     std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
 
@@ -518,12 +564,12 @@ TEST_F(AndroidTestFramebufferInit, display_post_successful)
     });
 }
 
-TEST_F(AndroidTestFramebufferInit, display_post_failure)
+TEST_F(GPUFramebuffer, display_post_failure)
 {
     using namespace testing;
     std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
 
-    EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
+    EXPECT_CALL(this->mock_egl, eglSwapBuffers(_,_))
     .Times(Exactly(1))
     .WillOnce(Return(EGL_FALSE));
 
@@ -531,29 +577,4 @@ TEST_F(AndroidTestFramebufferInit, display_post_failure)
     {
         EXPECT_FALSE(buffer.post_update());
     });
-}
-
-TEST_F(AndroidTestFramebufferInit, framebuffer_correct_view_area)
-{
-    using namespace testing;
-    std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-
-    EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display, mock_egl.fake_egl_surface,
-                                          EGL_WIDTH, _ ))
-        .Times(1)
-        .WillOnce(DoAll(SetArgPointee<3>((EGLint) width),
-                        Return(EGL_TRUE)));
-
-    EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display, mock_egl.fake_egl_surface,
-                                          EGL_HEIGHT, _ ))
-        .Times(1)
-        .WillOnce(DoAll(SetArgPointee<3>((EGLint) height),
-                        Return(EGL_TRUE)));
-
-    auto area = display->view_area();
-
-    EXPECT_EQ((int)area.top_left.x.as_uint32_t() , 0);
-    EXPECT_EQ((int)area.top_left.y.as_uint32_t() , 0);
-    EXPECT_EQ((int)area.size.width.as_uint32_t() , width);
-    EXPECT_EQ((int)area.size.height.as_uint32_t(), height);
 }
