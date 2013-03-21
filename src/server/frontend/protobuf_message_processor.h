@@ -47,7 +47,8 @@ struct ProtobufMessageProcessor : MessageProcessor
     ProtobufMessageProcessor(
         MessageSender* sender,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
-        std::shared_ptr<ResourceCache> const& resource_cache);
+        std::shared_ptr<ResourceCache> const& resource_cache,
+        std::shared_ptr<MessageProcessorReport> const& report);
 
 private:
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);

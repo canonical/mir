@@ -30,12 +30,14 @@ class DisplayServer;
 namespace frontend
 {
 class ResourceCache;
+class MessageProcessorReport;
 
 class ProtobufIpcFactory
 {
 public:
     virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server() = 0;
     virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
+    virtual std::shared_ptr<MessageProcessorReport> report() = 0;
 
 protected:
     ProtobufIpcFactory() {}

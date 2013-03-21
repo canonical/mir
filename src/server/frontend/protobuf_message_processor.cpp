@@ -18,7 +18,6 @@
 
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
-#include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -61,12 +60,13 @@ class ReallyDumbMessageProcessorReport : public mir::frontend::MessageProcessorR
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     MessageSender* sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
-    std::shared_ptr<ResourceCache> const& resource_cache) :
+    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<MessageProcessorReport> const& report) :
     sender(sender),
     display_server(display_server),
     resource_cache(resource_cache),
 //    report(std::make_shared<ReallyDumbMessageProcessorReport>())
-    report(std::make_shared<NullMessageProcessorReport>())
+    report(report)
 {
 }
 

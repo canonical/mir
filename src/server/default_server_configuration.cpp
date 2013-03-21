@@ -27,6 +27,7 @@
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
@@ -71,12 +72,14 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 public:
     explicit DefaultIpcFactory(
         std::shared_ptr<mf::Shell> const& shell,
-        std::shared_ptr<mf::SessionMediatorReport> const& report,
+        std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
+        std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::ViewableArea> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
-        report(report),
+        sm_report(sm_report),
+        mr_report(mr_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         graphics_display(graphics_display),
@@ -86,7 +89,8 @@ public:
 
 private:
     std::shared_ptr<mf::Shell> shell;
-    std::shared_ptr<mf::SessionMediatorReport> const report;
+    std::shared_ptr<mf::SessionMediatorReport> const sm_report;
+    std::shared_ptr<mf::MessageProcessorReport> const mr_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::ViewableArea> const graphics_display;
@@ -99,13 +103,18 @@ private:
             graphics_platform,
             graphics_display,
             buffer_allocator,
-            report,
+            sm_report,
             resource_cache());
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()
     {
         return cache;
+    }
+
+    virtual std::shared_ptr<mf::MessageProcessorReport> report()
+    {
+        return mr_report;
     }
 };
 
@@ -388,8 +397,10 @@ mir::DefaultServerConfiguration::the_ipc_factory(
             return std::make_shared<DefaultIpcFactory>(
                 shell,
                 the_session_mediator_report(),
+                std::make_shared<mf::NullMessageProcessorReport>(), // TODO configure
                 the_graphics_platform(),
-                display, allocator);
+                display,
+                allocator);
         });
 }
 

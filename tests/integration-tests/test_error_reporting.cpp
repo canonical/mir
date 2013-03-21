@@ -27,6 +27,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_doubles/stub_ipc_factory.h"
 
 #include <chrono>
 #include <mutex>
@@ -40,6 +41,7 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -208,33 +210,11 @@ void wait_for_surface_release(SurfaceSync* context)
 {
     context->wait_for_surface_release();
 }
-
-class StubIpcFactory : public mf::ProtobufIpcFactory
-{
-public:
-    StubIpcFactory() :
-        server(std::make_shared<ErrorServer>()),
-        cache(std::make_shared<mf::ResourceCache>())
-    {
-    }
-
-    std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
-    {
-        return server;
-    }
-
-    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
-    {
-        return cache;
-    }
-
-private:
-    std::shared_ptr<mir::protobuf::DisplayServer> server;
-    std::shared_ptr<mf::ResourceCache> const cache;
-};
 }
 
-TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
+using ErrorReporting = BespokeDisplayServerTestFixture;
+
+TEST_F(ErrorReporting, c_api_returns_error)
 {
 
     struct ServerConfig : TestingServerConfiguration
@@ -242,10 +222,10 @@ TEST_F(BespokeDisplayServerTestFixture, c_api_returns_error)
         std::shared_ptr<mf::ProtobufIpcFactory> the_ipc_factory(
             std::shared_ptr<mir::frontend::Shell> const&,
             std::shared_ptr<mg::ViewableArea> const&,
-            std::shared_ptr<mc::GraphicBufferAllocator> const&)
-
+            std::shared_ptr<mc::GraphicBufferAllocator> const&) override
         {
-            return std::make_shared<StubIpcFactory>();
+            static auto error_server = std::make_shared<ErrorServer>();
+            return std::make_shared<mtd::StubIpcFactory>(*error_server);
         }
     } server_config;
 

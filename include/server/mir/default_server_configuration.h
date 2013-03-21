@@ -43,6 +43,7 @@ class Shell;
 class Communicator;
 class ProtobufIpcFactory;
 class SessionMediatorReport;
+class MessageProcessorReport;
 }
 
 namespace shell
