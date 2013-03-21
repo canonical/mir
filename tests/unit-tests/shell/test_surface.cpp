@@ -316,21 +316,9 @@ TEST_F(ShellSurface, attributes)
             mf::a_surface(),
             null_input_channel);
 
-    EXPECT_EQ(mir_surface_type_popover,
-              surf.configure(mir_surface_attrib_type,
-                             mir_surface_type_popover));
-
     EXPECT_THROW({
         surf.configure(static_cast<MirSurfaceAttrib>(111), 222);
     }, std::logic_error);
-
-    EXPECT_THROW({
-        surf.configure(mir_surface_attrib_type, 333);
-    }, std::logic_error);
-
-    EXPECT_EQ(mir_surface_type_freestyle,
-              surf.configure(mir_surface_attrib_type,
-                             mir_surface_type_freestyle));
 }
 
 TEST_F(ShellSurface, types)
@@ -344,12 +332,26 @@ TEST_F(ShellSurface, types)
 
     EXPECT_EQ(mir_surface_type_normal, surf.type());
 
-    EXPECT_TRUE(surf.set_type(mir_surface_type_utility));
+    EXPECT_EQ(mir_surface_type_utility,
+              surf.configure(mir_surface_attrib_type,
+                             mir_surface_type_utility));
     EXPECT_EQ(mir_surface_type_utility, surf.type());
 
-    EXPECT_FALSE(surf.set_type(static_cast<MirSurfaceType>(999)));
+    EXPECT_THROW({
+        surf.configure(mir_surface_attrib_type, 999);
+    }, std::logic_error);
+    EXPECT_THROW({
+        surf.configure(mir_surface_attrib_type, -1);
+    }, std::logic_error);
     EXPECT_EQ(mir_surface_type_utility, surf.type());
 
-    EXPECT_TRUE(surf.set_type(mir_surface_type_dialog));
+    EXPECT_EQ(mir_surface_type_dialog,
+              surf.configure(mir_surface_attrib_type,
+                             mir_surface_type_dialog));
     EXPECT_EQ(mir_surface_type_dialog, surf.type());
+
+    EXPECT_EQ(mir_surface_type_freestyle,
+              surf.configure(mir_surface_attrib_type,
+                             mir_surface_type_freestyle));
+    EXPECT_EQ(mir_surface_type_freestyle, surf.type());
 }
