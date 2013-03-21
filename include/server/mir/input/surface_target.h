@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,32 +16,35 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
+#ifndef MIR_INPUT_SURFACE_TARGET_H_
+#define MIR_INPUT_SURFACE_TARGET_H_
 
-#include "mir/input/input_manager.h"
+#include "mir/geometry/size.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <string>
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct MockInputManager : public input::InputManager
+class SurfaceTarget
 {
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+public:
+    virtual ~SurfaceTarget() {}
     
-    MOCK_METHOD0(make_input_channel, std::shared_ptr<input::InputChannel>());
-    MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<input::SessionTarget> const& session, std::shared_ptr<input::SurfaceTarget> const& surface));
+    virtual geometry::Size size() const = 0;
+    virtual std::string name() const = 0;
+    
+    virtual int server_input_fd() const = 0;    
+
+protected:
+    SurfaceTarget() = default;
+    SurfaceTarget(SurfaceTarget const&) = delete;
+    SurfaceTarget& operator=(SurfaceTarget const&) = delete;
 };
 
 }
-}
-}
+} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H
+#endif // MIR_INPUT_SURFACE_TARGET_H_

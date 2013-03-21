@@ -41,6 +41,7 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
@@ -138,6 +139,10 @@ class StubInputManager : public mi::InputManager
     std::shared_ptr<mi::InputChannel> make_input_channel()
     {
         return std::make_shared<StubInputChannel>();
+    }
+
+    void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& /* session */, std::shared_ptr<mi::SurfaceTarget> const& /* surface */)
+    {
     }
 };
 }

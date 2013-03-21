@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_surface.h"
 
 #include "src/server/shell/surface.h"
 
@@ -58,6 +59,41 @@ TEST(ApplicationSession, create_and_destroy_surface)
     session.destroy_surface(surf);
 }
 
+TEST(ApplicationSession, default_surface_is_first_surface)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceFactory surface_factory;
+    mtd::StubSurfaceBuilder surface_builder;
+    {
+        InSequence seq;
+        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+            .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
+        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+            .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
+        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+            .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
+    }
+
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
+
+    mf::SurfaceCreationParameters params;
+    auto id1 = app_session.create_surface(params);
+    auto id2 = app_session.create_surface(params);
+    auto id3 = app_session.create_surface(params);
+    
+    auto default_surf = app_session.default_surface();
+    EXPECT_EQ(app_session.get_surface(id1), default_surf);
+    app_session.destroy_surface(id1);
+
+    default_surf = app_session.default_surface();
+    EXPECT_EQ(app_session.get_surface(id2), default_surf);
+    app_session.destroy_surface(id2);
+
+    default_surf = app_session.default_surface();
+    EXPECT_EQ(app_session.get_surface(id3), default_surf);
+    app_session.destroy_surface(id3);
+}
 
 TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {

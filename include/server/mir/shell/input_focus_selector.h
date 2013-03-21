@@ -16,27 +16,37 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
-#define MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#ifndef MIR_SHELL_INPUT_FOCUS_SELECTOR_H_
+#define MIR_SHELL_INPUT_FOCUS_SELECTOR_H_
 
-#include "mir/shell/focus_setter.h"
-
-#include <gmock/gmock.h>
+#include <memory>
 
 namespace mir
 {
-namespace test
+namespace input
 {
-namespace doubles
+class SessionTarget;
+class SurfaceTarget;
+}
+
+namespace shell
 {
 
-struct MockFocusSetter : public shell::FocusSetter
+class InputFocusSelector
 {
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<shell::Session> const&));
+public:
+    virtual ~InputFocusSelector() {}
+    
+    virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& focus_application,
+                                    std::shared_ptr<input::SurfaceTarget> const& focus_surface) = 0;
+
+protected:
+    InputFocusSelector() = default;
+    InputFocusSelector(InputFocusSelector const&) = delete;
+    InputFocusSelector& operator=(InputFocusSelector const&) = delete;
 };
 
 }
-}
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#endif // MIR_SHELL_INPUT_FOCUS_SELECTOR_H_

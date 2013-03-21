@@ -82,6 +82,14 @@ std::shared_ptr<mf::Surface> msh::ApplicationSession::get_surface(mf::SurfaceId 
     return checked_find(id)->second;
 }
 
+std::shared_ptr<msh::Surface> msh::ApplicationSession::default_surface() const
+{
+    if (surfaces.size())
+        return surfaces.begin()->second;
+    else
+        return std::shared_ptr<msh::Surface>();
+}
+
 void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);

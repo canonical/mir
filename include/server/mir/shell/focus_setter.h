@@ -23,20 +23,17 @@
 
 namespace mir
 {
-namespace frontend
-{
-class Session;
-}
 
 namespace shell
 {
+class Session;
 
 class FocusSetter
 {
 public:
     virtual ~FocusSetter() {}
 
-    virtual void set_focus_to(std::shared_ptr<frontend::Session> const& new_focus) = 0;
+    virtual void set_focus_to(std::shared_ptr<shell::Session> const& new_focus) = 0;
 
 protected:
     FocusSetter() = default;
