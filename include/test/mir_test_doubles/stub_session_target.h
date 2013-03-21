@@ -30,7 +30,7 @@ namespace doubles
 
 struct StubSessionTarget : public input::SessionTarget
 {
-    std::string name() override
+    std::string name() const override
     {
         return std::string();
     }

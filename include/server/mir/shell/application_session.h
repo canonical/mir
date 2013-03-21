@@ -42,8 +42,8 @@ public:
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 
     std::shared_ptr<Surface> default_surface() const;
+    std::string name() const;
 
-    std::string name();
     void shutdown();
 
     void hide();

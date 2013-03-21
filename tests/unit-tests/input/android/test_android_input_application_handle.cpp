@@ -35,7 +35,7 @@ namespace
 {
 struct MockSessionHandle : public mi::SessionTarget
 {
-    MOCK_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(name, std::string());
 };
 }
 

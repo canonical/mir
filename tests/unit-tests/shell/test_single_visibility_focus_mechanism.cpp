@@ -51,7 +51,7 @@ struct MockShellSession : public msh::Session
     
     MOCK_CONST_METHOD0(default_surface, std::shared_ptr<msh::Surface>());
     
-    MOCK_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(name, std::string());
     MOCK_METHOD0(shutdown, void());
     
     MOCK_METHOD0(hide, void());

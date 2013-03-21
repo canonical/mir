@@ -99,7 +99,7 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
     surfaces.erase(p);
 }
 
-std::string msh::ApplicationSession::name()
+std::string msh::ApplicationSession::name() const
 {
     return session_name;
 }
