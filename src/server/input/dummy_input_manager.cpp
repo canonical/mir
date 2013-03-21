@@ -20,7 +20,6 @@
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-namespace mf = mir::frontend;
 
 namespace
 {
