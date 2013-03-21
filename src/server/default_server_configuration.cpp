@@ -80,7 +80,7 @@ public:
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
-        mr_report(mr_report),
+        mp_report(mr_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         graphics_display(graphics_display),
@@ -91,7 +91,7 @@ public:
 private:
     std::shared_ptr<mf::Shell> shell;
     std::shared_ptr<mf::SessionMediatorReport> const sm_report;
-    std::shared_ptr<mf::MessageProcessorReport> const mr_report;
+    std::shared_ptr<mf::MessageProcessorReport> const mp_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::ViewableArea> const graphics_display;
@@ -115,7 +115,7 @@ private:
 
     virtual std::shared_ptr<mf::MessageProcessorReport> report()
     {
-        return mr_report;
+        return mp_report;
     }
 };
 
@@ -402,8 +402,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                display,
-                allocator);
+                display, allocator);
         });
 }
 

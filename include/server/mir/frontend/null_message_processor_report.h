@@ -25,7 +25,7 @@ namespace mir
 {
 namespace frontend
 {
-class NullMessageProcessorReport : public mir::frontend::MessageProcessorReport
+class NullMessageProcessorReport : public MessageProcessorReport
 {
     void received_invocation(void const*, int, std::string const&);
 
