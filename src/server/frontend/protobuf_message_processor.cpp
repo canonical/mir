@@ -26,37 +26,6 @@
 
 namespace mfd = mir::frontend::detail;
 
-namespace
-{
-class ReallyDumbMessageProcessorReport : public mir::frontend::MessageProcessorReport
-{
-    void received_invocation(void const* mediator, int id, std::string const& method)
-    {
-        std::cout << "RDMBR: mediator=" << mediator << ", id=" << id << ", method=\"" << method << "\"" << std::endl;
-    }
-
-    void completed_invocation(void const* mediator, int id, bool result)
-    {
-        std::cout << "RDMBR: mediator=" << mediator << ", id=" << id << " - completed " <<(result ? "continue" : "disconnect") << std::endl;
-    }
-
-    void unknown_method(void const* mediator, int id, std::string const& method)
-    {
-        std::cout << "RDMBR: mediator=" << mediator << ", id=" << id << ", UNKNOWN method=\"" << method << "\"" << std::endl;
-    }
-
-    void exception_handled(void const* mediator, int id, std::exception const& error)
-    {
-        std::cout << "RDMBR: mediator=" << mediator << ", id=" << id << ", ERROR: " << boost::diagnostic_information(error) << std::endl;
-    }
-
-    void exception_handled(void const* mediator, std::exception const& error)
-    {
-        std::cout << "RDMBR: mediator=" << mediator << ", ERROR: " << boost::diagnostic_information(error) << std::endl;
-    }
-};
-}
-
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     MessageSender* sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
@@ -65,7 +34,6 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     sender(sender),
     display_server(display_server),
     resource_cache(resource_cache),
-//    report(std::make_shared<ReallyDumbMessageProcessorReport>())
     report(report)
 {
 }
