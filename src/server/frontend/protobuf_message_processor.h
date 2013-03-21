@@ -37,10 +37,10 @@ namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class ResourceCache;
+class MessageProcessorReport;
 
 namespace detail
 {
-class ProtobufMessageProcessorReport;
 
 struct ProtobufMessageProcessor : MessageProcessor
 {
@@ -90,7 +90,7 @@ private:
     MessageSender* const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<ResourceCache> const resource_cache;
-    std::shared_ptr<ProtobufMessageProcessorReport> const report;
+    std::shared_ptr<MessageProcessorReport> const report;
 };
 }
 }

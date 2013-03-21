@@ -17,6 +17,7 @@
  */
 
 #include "protobuf_message_processor.h"
+#include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -25,41 +26,37 @@
 
 namespace mfd = mir::frontend::detail;
 
-class mfd::ProtobufMessageProcessorReport
+namespace
 {
-public:
-    ProtobufMessageProcessorReport() {}
-    virtual ~ProtobufMessageProcessorReport() = default;
 
-    void received_invocation(int id, std::string const& method)
+class ReallyDumbMessageProcessorReport : public mir::frontend::MessageProcessorReport
+{
+    void received_invocation(void const* mediator, int id, std::string const& method)
     {
-        std::cout << "PMBR: id=" << id << ", method=\"" << method << "\"" << std::endl;
+        std::cout << "RDMBR: mediator=" << mediator << ", id=" << id << ", method=\"" << method << "\"" << std::endl;
     }
 
-    void completed_invocation(int id, bool result)
+    void completed_invocation(void const* mediator, int id, bool result)
     {
-        std::cout << "PMBR: id=" << id << " - completed " <<(result ? "continue" : "disconnect") << std::endl;
+        std::cout << "RDMBR: mediator=" << mediator << ", id=" << id << " - completed " <<(result ? "continue" : "disconnect") << std::endl;
     }
 
-    void unknown_method(int id, std::string const& method)
+    void unknown_method(void const* mediator, int id, std::string const& method)
     {
-        std::cout << "PMBR: id=" << id << ", UNKNOWN method=\"" << method << "\"" << std::endl;
+        std::cout << "RDMBR: mediator=" << mediator << ", id=" << id << ", UNKNOWN method=\"" << method << "\"" << std::endl;
     }
 
-    void exception_handled(int id, std::exception const& error)
+    void exception_handled(void const* mediator, int id, std::exception const& error)
     {
-        std::cout << "PMBR: id=" << id << ", ERROR: " << boost::diagnostic_information(error) << std::endl;
+        std::cout << "RDMBR: mediator=" << mediator << ", id=" << id << ", ERROR: " << boost::diagnostic_information(error) << std::endl;
     }
 
-    void exception_handled(std::exception const& error)
+    void exception_handled(void const* mediator, std::exception const& error)
     {
-        std::cout << "PMBR: ERROR: " << boost::diagnostic_information(error) << std::endl;
+        std::cout << "RDMBR: mediator=" << mediator << ", ERROR: " << boost::diagnostic_information(error) << std::endl;
     }
-
-private:
-    ProtobufMessageProcessorReport(ProtobufMessageProcessorReport const&) = delete;
-    ProtobufMessageProcessorReport operator=(ProtobufMessageProcessorReport const&) = delete;
 };
+}
 
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     MessageSender* sender,
@@ -68,7 +65,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     sender(sender),
     display_server(display_server),
     resource_cache(resource_cache),
-    report(std::make_shared<ProtobufMessageProcessorReport>())
+    report(std::make_shared<ReallyDumbMessageProcessorReport>())
 {
 }
 
@@ -178,7 +175,7 @@ void mfd::ProtobufMessageProcessor::send_response(
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
 {
-    report->received_invocation(invocation.id(), invocation.method_name());
+    report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
 
     bool result = true;
 
@@ -221,17 +218,17 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         }
         else
         {
-            report->unknown_method(invocation.id(), invocation.method_name());
+            report->unknown_method(display_server.get(), invocation.id(), invocation.method_name());
             result = false;
         }
     }
     catch (std::exception const& error)
     {
-        report->exception_handled(invocation.id(), error);
+        report->exception_handled(display_server.get(), invocation.id(), error);
         result = false;
     }
 
-    report->completed_invocation(invocation.id(), result);
+    report->completed_invocation(display_server.get(), invocation.id(), result);
 
     return result;
 }
@@ -248,7 +245,7 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
     }
     catch (std::exception const& error)
     {
-        report->exception_handled(error);
+        report->exception_handled(display_server.get(), error);
         return false;
     }
 }
