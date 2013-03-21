@@ -46,6 +46,11 @@ public:
         std::cout << "PMBR: id=" << id << ", UNKNOWN method=\"" << method << "\"" << std::endl;
     }
 
+    void exception_handled(int id, std::exception const& error)
+    {
+        std::cout << "PMBR: id=" << id << ", ERROR: " << boost::diagnostic_information(error) << std::endl;
+    }
+
     void exception_handled(std::exception const& error)
     {
         std::cout << "PMBR: ERROR: " << boost::diagnostic_information(error) << std::endl;
@@ -171,17 +176,14 @@ void mfd::ProtobufMessageProcessor::send_response(
     sender->send(buffer2);
 }
 
-bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
+bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
 {
+    report->received_invocation(invocation.id(), invocation.method_name());
+
     bool result = true;
-    mir::protobuf::wire::Invocation invocation;
 
     try
     {
-        invocation.ParseFromIstream(&msg);
-
-        report->received_invocation(invocation.id(), invocation.method_name());
-
         // TODO comparing strings in an if-else chain isn't efficient.
         // It is probably possible to generate a Trie at compile time.
         if ("connect" == invocation.method_name())
@@ -222,14 +224,31 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
             report->unknown_method(invocation.id(), invocation.method_name());
             result = false;
         }
+    }
+    catch (std::exception const& error)
+    {
+        report->exception_handled(invocation.id(), error);
+        result = false;
+    }
 
-        report->completed_invocation(invocation.id(), result);
+    report->completed_invocation(invocation.id(), result);
+
+    return result;
+}
+
+
+bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
+{
+    try
+    {
+        mir::protobuf::wire::Invocation invocation;
+        invocation.ParseFromIstream(&msg);
+
+        return dispatch(invocation);
     }
     catch (std::exception const& error)
     {
         report->exception_handled(error);
-        result = false;
+        return false;
     }
-
-    return result;
 }

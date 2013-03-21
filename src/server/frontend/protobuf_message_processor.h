@@ -76,6 +76,8 @@ private:
 
     bool process_message(std::istream& msg);
 
+    bool dispatch(mir::protobuf::wire::Invocation const& invocation);
+
     template<class ParameterMessage, class ResultMessage>
     void invoke(
         void (protobuf::DisplayServer::*function)(
