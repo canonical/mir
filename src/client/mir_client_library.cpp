@@ -285,8 +285,8 @@ MirSurfaceType mir_toolkit::mir_surface_get_type(MirSurface *surf)
 
     if (surf)
     {
-        // I assume the type can only change from the client side. Otherwise
-        // we would have to send off a message to retrieve the latest...
+        // Only the client will ever change the type of a surface so it is
+        // safe to get the type from a local cache surf->attrib().
 
         int t = surf->attrib(mir_surface_attrib_type);
         type = static_cast<MirSurfaceType>(t);
