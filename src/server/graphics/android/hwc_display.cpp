@@ -39,7 +39,6 @@ geom::Rectangle mga::HWCDisplay::view_area() const
 
 void mga::HWCDisplay::clear()
 {
-
 }
 
 bool mga::HWCDisplay::post_update()
@@ -49,8 +48,9 @@ bool mga::HWCDisplay::post_update()
     return true;
 }
 
-void mga::HWCDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& /*f*/)
+void mga::HWCDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
+    f(*this);
 }
 
 std::shared_ptr<mg::DisplayConfiguration> mga::HWCDisplay::configuration()
