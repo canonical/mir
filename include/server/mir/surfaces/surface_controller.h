@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,32 +16,33 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
 
-#include "mir/surfaces/graphic_region.h"
+#ifndef MIR_SURFACES_SURFACE_CONTROLLER_H_
+#define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
-#include <memory>
+#include "mir/shell/surface_builder.h"
 
 namespace mir
 {
-namespace compositor
+namespace surfaces
 {
-struct BufferIPCPackage;
-class BufferID;
+class SurfaceStackModel;
 
-class Buffer : public surfaces::GraphicRegion
+/// Will grow up to provide synchronization of model updates
+class SurfaceController : public shell::SurfaceBuilder
 {
 public:
-    virtual ~Buffer() {}
+    explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
-    virtual BufferID id() const = 0;
+    virtual std::weak_ptr<Surface> create_surface(frontend::SurfaceCreationParameters const& params);
 
+    virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 protected:
-    Buffer() = default;
+    std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+
+
+#endif /* MIR_SURFACES_SURFACE_CONTROLLER_H_ */

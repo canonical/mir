@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,32 +16,22 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
+#include "mir/surfaces/surface_controller.h"
+#include "mir/surfaces/surface_stack_model.h"
 
-#include "mir/surfaces/graphic_region.h"
+namespace ms = mir::surfaces;
 
-#include <memory>
-
-namespace mir
+ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack) :
+    surface_stack(surface_stack)
 {
-namespace compositor
-{
-struct BufferIPCPackage;
-class BufferID;
-
-class Buffer : public surfaces::GraphicRegion
-{
-public:
-    virtual ~Buffer() {}
-
-    virtual std::shared_ptr<BufferIPCPackage> get_ipc_package() const = 0;
-    virtual BufferID id() const = 0;
-
-protected:
-    Buffer() = default;
-};
-
 }
+
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(frontend::SurfaceCreationParameters const& params)
+{
+    return surface_stack->create_surface(params);
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+
+void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
+{
+    surface_stack->destroy_surface(surface);
+}

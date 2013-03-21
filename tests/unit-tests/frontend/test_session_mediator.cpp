@@ -32,6 +32,7 @@
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_session.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test/fake_shared.h"
 
 #include "src/server/shell/surface.h"
@@ -61,7 +62,7 @@ public:
     {
         using namespace ::testing;
         
-        mock_surface = std::make_shared<mtd::MockSurface>();
+        mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
         
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
@@ -77,6 +78,7 @@ public:
         return mock_surface;
     }
 
+    mtd::StubSurfaceBuilder surface_builder;
     std::shared_ptr<mtd::MockSurface> mock_surface;
     mtd::StubBuffer stub_buffer;
     static int const testing_client_input_fd;

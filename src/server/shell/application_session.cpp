@@ -17,9 +17,9 @@
  */
 
 #include "mir/shell/application_session.h"
-#include "mir/frontend/surface.h"
+#include "surface.h"
 
-#include "mir/shell/surface_controller.h"
+#include "mir/shell/surface_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -30,10 +30,9 @@
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
-namespace ms = mir::surfaces;
 
 msh::ApplicationSession::ApplicationSession(
-    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name) :
     surface_factory(surface_factory),
     session_name(session_name),
@@ -92,7 +91,7 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
     surfaces.erase(p);
 }
 
-std::string msh::ApplicationSession::name()
+std::string msh::ApplicationSession::name() const
 {
     return session_name;
 }

@@ -18,18 +18,32 @@
 
 #include "src/server/graphics/android/android_buffer_allocator.h"
 #include "mir_test/hw_mock.h"
+#include "mir/graphics/buffer_initializer.h"
+#include "mir/compositor/buffer_properties.h"
+
+#include "mir_test_doubles/mock_buffer_initializer.h"
 
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <algorithm>
 
+namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
+namespace mc = mir::compositor;
+namespace mtd = mir::test::doubles;
 
 struct AndroidBufferAllocatorTest : public ::testing::Test
 {
     testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
+public:
+    AndroidBufferAllocatorTest()
+        : null_buffer_initializer{std::make_shared<mg::NullBufferInitializer>()}
+    {
+    }
+
+    std::shared_ptr<mg::BufferInitializer> const null_buffer_initializer;
 };
 
 TEST_F(AndroidBufferAllocatorTest, allocator_accesses_gralloc_module)
@@ -39,12 +53,12 @@ TEST_F(AndroidBufferAllocatorTest, allocator_accesses_gralloc_module)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::AndroidBufferAllocator allocator;
+    mga::AndroidBufferAllocator allocator(null_buffer_initializer);
 }
 
 TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
 {
-    mga::AndroidBufferAllocator allocator;
+    mga::AndroidBufferAllocator allocator{null_buffer_initializer};
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
     auto abgr_8888_count = std::count(supported_pixel_formats.begin(),
@@ -66,10 +80,26 @@ TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_contain_common_format
 
 TEST_F(AndroidBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
 {
-    mga::AndroidBufferAllocator allocator;
+    mga::AndroidBufferAllocator allocator{null_buffer_initializer};
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
     ASSERT_FALSE(supported_pixel_formats.empty());
     EXPECT_EQ(geom::PixelFormat::abgr_8888, supported_pixel_formats[0]);
 }
 
+TEST_F(AndroidBufferAllocatorTest, alloc_buffer_calls_initializer)
+{
+    using namespace testing;
+
+    auto buffer_initializer = std::make_shared<mtd::MockBufferInitializer>();
+
+    mga::AndroidBufferAllocator allocator{buffer_initializer};
+    mc::BufferProperties properties{geom::Size{geom::Width{2}, geom::Height{2}},
+                                    geom::PixelFormat::abgr_8888,
+                                    mc::BufferUsage::hardware};
+
+    EXPECT_CALL(*buffer_initializer, operator_call(_))
+        .Times(1);
+
+    allocator.alloc_buffer(properties);
+}

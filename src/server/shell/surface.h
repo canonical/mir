@@ -23,8 +23,6 @@
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
 
-#include <functional>
-
 namespace mir
 {
 namespace frontend
@@ -36,48 +34,43 @@ namespace input
 class InputChannel;
 }
 
-namespace surfaces
-{
-class SurfaceStackModel;
-}
-
 namespace shell
 {
+class SurfaceBuilder;
 
 class Surface : public frontend::Surface
 {
 public:
-    explicit Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, std::shared_ptr<input::InputChannel> const& input_channel);
-    Surface(std::weak_ptr<mir::surfaces::Surface> const& surface, 
-	    std::shared_ptr<input::InputChannel> const& input_channel,
-	    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const& deleter);
+    Surface(
+        std::shared_ptr<SurfaceBuilder> const& builder,
+        frontend::SurfaceCreationParameters const& params,
+        std::shared_ptr<input::InputChannel> const& input_channel);
     ~Surface();
 
-    void hide();
+    virtual void hide();
 
-    void show();
+    virtual void show();
 
-    void destroy();
+    virtual void destroy();
 
-    void shutdown();
+    virtual void shutdown();
 
-    geometry::Size size() const;
+    virtual geometry::Size size() const;
 
-    geometry::PixelFormat pixel_format() const;
+    virtual geometry::PixelFormat pixel_format() const;
 
-    void advance_client_buffer();
+    virtual void advance_client_buffer();
 
-    std::shared_ptr<compositor::Buffer> client_buffer() const;
+    virtual std::shared_ptr<compositor::Buffer> client_buffer() const;
 
-    bool supports_input() const;
-    int client_input_fd() const;
+    virtual bool supports_input() const;
+    virtual int client_input_fd() const;
 
 private:
-    std::weak_ptr<mir::surfaces::Surface> const surface;
+    std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
-    std::function<void(std::weak_ptr<mir::surfaces::Surface> const&)> const deleter;
+    std::weak_ptr<mir::surfaces::Surface> const surface;
 };
-
 }
 }
 

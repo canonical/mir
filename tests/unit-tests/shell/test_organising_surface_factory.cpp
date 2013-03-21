@@ -20,7 +20,7 @@
 
 #include <mir/shell/organising_surface_factory.h>
 #include <mir/shell/placement_strategy.h>
-#include <mir/shell/surface_creation_parameters.h>
+#include <mir/frontend/surface_creation_parameters.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -49,7 +49,7 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
 
         placement_strategy = std::make_shared<MockPlacementStrategy>();
     }
-    std::shared_ptr<mf::Surface> null_surface;
+    std::shared_ptr<msh::Surface> null_surface;
     std::shared_ptr<mtd::MockSurfaceFactory> underlying_surface_factory;
     std::shared_ptr<MockPlacementStrategy> placement_strategy;
 };
