@@ -393,5 +393,6 @@ TEST_F(MirClientSurfaceTest, default_surface_type)
                                                  (void*) NULL);
     surface->get_create_wait_handle()->wait_for_result();
 
-    EXPECT_EQ(surface->attrib(mir_surface_attrib_type), mir_surface_type_normal);
+    EXPECT_EQ(mir_surface_type_normal,
+              surface->attrib(mir_surface_attrib_type));
 }
