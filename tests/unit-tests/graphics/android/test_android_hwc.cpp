@@ -16,12 +16,21 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/graphics/android/hwc_device.h"
+#include "src/server/graphics/android/hwc_display.h"
+
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
+#include "mir_test/egl_mock.h"
 
-class MockHWCInterface : public mga::HWCInterface
+#include <memory>
+
+namespace mga=mir::graphics::android;
+namespace mtd=mir::test::doubles;
+
+class MockHWCInterface : public mga::HWCDevice
 {
-    MOCK_METHOD0(wait_for_vsync void());
-
+public:
+    MOCK_METHOD0(wait_for_vsync, void());
 };
 
 class AndroidTestHWCFramebuffer : public ::testing::Test
@@ -44,14 +53,17 @@ protected:
 
 TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait)
 {
-    mga::AndroidHWCDisplay display(native_win, hwc_device);
+    using namespace testing;
 
-    testing::InSeq
-    EXPECT_CALL(eglSwapBuffers());
-    EXPECT_CALL(*mock_hwc_device, wait_for_vsync)
+    mga::HWCDisplay display(native_win, mock_hwc_device);
+
+    testing::InSequence sequence_enforcer;
+    EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
+        .Times(1);
+    EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
         .Times(1);
  
-    display.post();
+    display.post_update();
 }
 
 #if 0

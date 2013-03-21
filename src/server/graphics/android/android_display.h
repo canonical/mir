@@ -37,7 +37,7 @@ namespace graphics
 namespace android
 {
 
-class AndroidDisplay : public Display, public DisplayBuffer
+class AndroidDisplay : public virtual Display, public virtual DisplayBuffer
 {
 public:
     explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>&);
