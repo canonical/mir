@@ -18,6 +18,7 @@
 
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
+#include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -28,7 +29,6 @@ namespace mfd = mir::frontend::detail;
 
 namespace
 {
-
 class ReallyDumbMessageProcessorReport : public mir::frontend::MessageProcessorReport
 {
     void received_invocation(void const* mediator, int id, std::string const& method)
@@ -65,7 +65,8 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     sender(sender),
     display_server(display_server),
     resource_cache(resource_cache),
-    report(std::make_shared<ReallyDumbMessageProcessorReport>())
+//    report(std::make_shared<ReallyDumbMessageProcessorReport>())
+    report(std::make_shared<NullMessageProcessorReport>())
 {
 }
 
