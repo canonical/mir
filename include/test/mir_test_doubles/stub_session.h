@@ -41,7 +41,7 @@ struct StubSession : public frontend::Session
     {
         return std::shared_ptr<frontend::Surface>();
     }
-    std::string name()
+    std::string name() const
     {
         return std::string();
     }
