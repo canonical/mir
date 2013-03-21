@@ -73,7 +73,7 @@ protected:
 private:
     droidinput::sp<droidinput::EventHubInterface> event_hub;
     droidinput::sp<droidinput::InputDispatcherInterface> dispatcher;
-    
+
     std::shared_ptr<InputThread> reader_thread;
     std::shared_ptr<InputThread> dispatcher_thread;
     
