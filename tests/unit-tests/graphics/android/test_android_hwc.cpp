@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc_device.h"
 #include "src/server/graphics/android/hwc_display.h"
 
+#include "mir_test_doubles/mock_hwc_interface.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test/egl_mock.h"
 
@@ -27,26 +27,20 @@
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
-class MockHWCInterface : public mga::HWCDevice
-{
-public:
-    MOCK_METHOD0(wait_for_vsync, void());
-};
-
 class AndroidTestHWCFramebuffer : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
         native_win = std::make_shared<mtd::MockAndroidFramebufferWindow>();
-        mock_hwc_device = std::make_shared<MockHWCInterface>();
+        mock_hwc_device = std::make_shared<mtd::MockHWCInterface>();
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
     }
 
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
-    std::shared_ptr<MockHWCInterface> mock_hwc_device;
+    std::shared_ptr<mtd::MockHWCInterface> mock_hwc_device;
 
     mir::EglMock mock_egl;
 };

@@ -19,6 +19,7 @@
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/hwc_display.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
+#include "mir_test_doubles/mock_hwc_interface.h"
 #include "mir_test/egl_mock.h"
 
 #include <gtest/gtest.h>
@@ -33,16 +34,6 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
 template<class T>
-std::shared_ptr<mg::Display> make_display(std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin);
-
-template <>
-std::shared_ptr<mg::Display> make_display<mga::AndroidDisplay>(
-                                std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin)
-{
-    return std::make_shared<mga::AndroidDisplay>(fbwin);
-}
-
-template<class T>
 std::shared_ptr<mg::DisplayBuffer> make_display_buffer(std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin);
 
 template <>
@@ -50,6 +41,14 @@ std::shared_ptr<mg::DisplayBuffer> make_display_buffer<mga::AndroidDisplay>(
                                 std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin)
 {
     return std::make_shared<mga::AndroidDisplay>(fbwin);
+}
+
+template <>
+std::shared_ptr<mg::DisplayBuffer> make_display_buffer<mga::HWCDisplay>(
+                                std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin)
+{
+    auto mock_hwc_device = std::make_shared<mtd::MockHWCInterface>();
+    return std::make_shared<mga::HWCDisplay>(fbwin, mock_hwc_device);
 }
 
 template<typename T>
@@ -60,7 +59,7 @@ protected:
     {
         using namespace testing;
 
-        native_win = std::make_shared<mtd::MockAndroidFramebufferWindow>();
+        native_win = std::make_shared<NiceMock<mtd::MockAndroidFramebufferWindow>>();
 
         /* silence uninteresting warning messages */
         mock_egl.silence_uninteresting();
@@ -79,7 +78,7 @@ protected:
     int width, height;
 };
 
-typedef ::testing::Types<mga::AndroidDisplay> MyTypes;
+typedef ::testing::Types<mga::AndroidDisplay, mga::HWCDisplay> MyTypes;
 TYPED_TEST_CASE(AndroidTestFramebufferInit, MyTypes);
 
 TYPED_TEST(AndroidTestFramebufferInit, eglGetDisplay)
@@ -532,7 +531,8 @@ class GPUFramebuffer : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        native_win = std::make_shared<mtd::MockAndroidFramebufferWindow>();
+        using namespace testing;
+        native_win = std::make_shared<NiceMock<mtd::MockAndroidFramebufferWindow>>();
         mock_egl.silence_uninteresting();
     }
 
