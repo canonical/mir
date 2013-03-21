@@ -19,15 +19,21 @@
 #include "mir_test_cucumber/session_management_context.h"
 
 #include "mir/frontend/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/frontend/session_container.h"
 #include "mir/frontend/shell.h"
+#include "mir/input/input_channel.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/default_server_configuration.h"
+
+#include "src/server/shell/surface.h"
+
+#include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test/fake_shared.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -35,7 +41,9 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 namespace mtc = mir::test::cucumber;
+namespace mtd = mir::test::doubles;
 
 namespace mir
 {
@@ -52,69 +60,21 @@ static const geom::Size default_view_size = geom::Size{default_view_width,
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
                                                                  default_view_size};
 
-struct DummySurface : public mf::Surface
-{
-    explicit DummySurface() {}
-    virtual ~DummySurface() {}
-    
-    virtual void hide() {}
-    virtual void show() {}
-    virtual void destroy() {}
-    virtual void shutdown() {}
-    
-    virtual geom::Size size() const
-    {
-        return geom::Size();
-    }
-    virtual geom::PixelFormat pixel_format() const
-    {
-        return geom::PixelFormat();
-    }
-
-    virtual void advance_client_buffer() {}
-    virtual std::shared_ptr<mc::Buffer> client_buffer() const
-    {
-        return std::shared_ptr<mc::Buffer>();
-    }
-    virtual bool supports_input() const
-    {
-        return true;
-    }
-    virtual int client_input_fd() const
-    {
-        return testing_client_input_fd;
-    }
-    static int testing_client_input_fd;
-};
-
-int DummySurface::testing_client_input_fd = 0;
-
-struct SizedDummySurface : public DummySurface
-{
-    explicit SizedDummySurface(geom::Size const& size)
-        : surface_size(size)
-    {
-    }
-    
-    geom::Size size() const
-    {
-        return surface_size;
-    }
-    
-    geom::Size const surface_size;
-};
-
 struct DummySurfaceFactory : public msh::SurfaceFactory
 {
     explicit DummySurfaceFactory()
     {
     }
 
-    std::shared_ptr<mf::Surface> create_surface(const mf::SurfaceCreationParameters& params)
+    std::shared_ptr<msh::Surface> create_surface(const mf::SurfaceCreationParameters& params)
     {
-        auto name = params.name;
-        return std::make_shared<SizedDummySurface>(params.size);
+        return std::make_shared<msh::Surface>(
+            mt::fake_shared(surface_builder),
+            params,
+            std::shared_ptr<mir::input::InputChannel>());
     }
+
+    mtd::StubSurfaceBuilder surface_builder;
 };
 
 class SizedDisplay : public mg::Display

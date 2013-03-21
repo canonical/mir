@@ -25,6 +25,7 @@
 
 #include <boost/asio.hpp>
 
+#include <atomic>
 #include <thread>
 #include <string>
 #include <vector>
@@ -47,7 +48,7 @@ class ProtobufIpcFactory;
 
 namespace detail
 {
-class SocketSession;
+struct SocketSession;
 }
 
 class ProtobufSocketCommunicator : public Communicator

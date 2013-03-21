@@ -40,7 +40,7 @@ msh::SurfaceSource::SurfaceSource(
     assert(surface_builder);
 }
 
-std::shared_ptr<mf::Surface> msh::SurfaceSource::create_surface(const mf::SurfaceCreationParameters& params)
+std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(const mf::SurfaceCreationParameters& params)
 {
     return std::make_shared<Surface>(
         surface_builder,

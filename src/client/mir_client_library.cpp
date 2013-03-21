@@ -47,7 +47,8 @@ mir_toolkit::MirConnection error_connection;
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void *result, void **context)
 {
-    *context = result;
+    if (context)
+        *context = result;
 }
 
 }
@@ -136,11 +137,30 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
 
 }
 
+MirSurface *mir_toolkit::mir_surface_create_sync(
+    MirConnection *connection, MirSurfaceParameters const *params)
+{
+    MirSurface *surface = nullptr;
+
+    mir_wait_for(mir_surface_create(connection, params,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        &surface));
+
+    return surface;
+}
+
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_release(
     MirSurface * surface,
     mir_surface_lifecycle_callback callback, void * context)
 {
     return surface->release_surface(callback, context);
+}
+
+void mir_toolkit::mir_surface_release_sync(MirSurface *surface)
+{
+    mir_wait_for(mir_surface_release(surface,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        nullptr));
 }
 
 int mir_toolkit::mir_debug_surface_id(MirSurface * surface)
@@ -196,6 +216,13 @@ void mir_toolkit::mir_surface_get_graphics_region(MirSurface * surface, MirGraph
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     return surface->next_buffer(callback, context);
+}
+
+void mir_toolkit::mir_surface_next_buffer_sync(MirSurface *surface)
+{
+    mir_wait_for(mir_surface_next_buffer(surface,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        nullptr));
 }
 
 void mir_toolkit::mir_wait_for(MirWaitHandle* wait_handle)

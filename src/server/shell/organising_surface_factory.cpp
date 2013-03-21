@@ -18,7 +18,7 @@
 
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/placement_strategy.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -34,7 +34,7 @@ msh::OrganisingSurfaceFactory::~OrganisingSurfaceFactory()
 {
 }
 
-std::shared_ptr<mf::Surface> msh::OrganisingSurfaceFactory::create_surface(const mf::SurfaceCreationParameters& params)
+std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(const mf::SurfaceCreationParameters& params)
 {
     auto placed_params = placement_strategy->place(params);
 

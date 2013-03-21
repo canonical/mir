@@ -37,7 +37,7 @@ class OperatorForRenderables;
 
 namespace frontend
 {
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 }
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface

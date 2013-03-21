@@ -1,4 +1,4 @@
-include_directories(${CUKE_INCLUDE_DIRS})
+include_directories(${CUKE_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 
 set(BEHAVIOR_TESTING_LINK_LIBRARIES 
   mirserver

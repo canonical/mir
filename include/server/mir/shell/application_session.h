@@ -29,6 +29,7 @@ namespace mir
 namespace shell
 {
 class SurfaceFactory;
+class Surface;
 
 class ApplicationSession : public frontend::Session
 {
@@ -40,7 +41,8 @@ public:
     void destroy_surface(frontend::SurfaceId surface);
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 
-    std::string name();
+    std::string name() const;
+
     void shutdown();
 
     void hide();
@@ -58,7 +60,7 @@ private:
 
     std::atomic<int> next_surface_id;
 
-    typedef std::map<frontend::SurfaceId, std::shared_ptr<frontend::Surface>> Surfaces;
+    typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;

@@ -29,7 +29,7 @@ namespace mir
 namespace compositor
 {
 
-class BufferProperties;
+struct BufferProperties;
 
 class GraphicBufferAllocator
 {
