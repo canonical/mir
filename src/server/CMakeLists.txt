@@ -14,9 +14,6 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
-MESSAGE(STATUS "GLog_LIBRARY=" ${GLog_LIBRARY})
-
-
 set(
   SRCS
   display_server.cpp
@@ -51,7 +48,6 @@ list(APPEND MIRSERVER_LINKS
   mirprotobuf
   3rd_party
   ${Boost_LIBRARIES}
-  ${GLog_LIBRARY}
 )
 
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
