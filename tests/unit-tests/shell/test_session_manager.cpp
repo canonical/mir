@@ -74,9 +74,9 @@ struct SessionManagerSetup : public testing::Test
 
     mtd::StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
-    MockSessionContainer container;
+    testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     MockFocusSequence sequence;
-    mtd::MockFocusSetter focus_setter;
+    testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
 
     msh::SessionManager session_manager;
 };
