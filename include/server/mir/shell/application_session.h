@@ -48,6 +48,8 @@ public:
     void hide();
     void show();
 
+    int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
+
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
