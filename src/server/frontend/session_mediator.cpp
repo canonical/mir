@@ -23,6 +23,7 @@
 #include "mir/frontend/surface.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
+#include "mir_toolkit/common.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer.h"
@@ -216,6 +217,32 @@ void mir::frontend::SessionMediator::disconnect(
 
     shell->close_session(session);
     session.reset();
+
+    done->Run();
+}
+
+void mir::frontend::SessionMediator::configure_surface(
+    google::protobuf::RpcController*, // controller,
+    const mir::protobuf::SurfaceSetting* request,
+    mir::protobuf::SurfaceSetting* response,
+    google::protobuf::Closure* done)
+{
+    MirSurfaceAttrib attrib = static_cast<MirSurfaceAttrib>(request->attrib());
+
+    // Required response fields:
+    response->mutable_surfaceid()->CopyFrom(request->surfaceid());
+    response->set_attrib(attrib);
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_configure_surface_called(session->name());
+
+    auto const id = frontend::SurfaceId(request->surfaceid().value());
+    int value = request->ivalue();
+    int newvalue = session->configure_surface(id, attrib, value);
+
+    response->set_ivalue(newvalue);
 
     done->Run();
 }

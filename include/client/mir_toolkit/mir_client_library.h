@@ -19,6 +19,7 @@
 #define MIR_CLIENT_LIBRARY_H
 
 #include "mir_toolkit/c_types.h"
+#include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
 /*
@@ -244,6 +245,23 @@ void mir_wait_for(MirWaitHandle *wait_handle);
  *   \return              An internal ID that identifies the surface
  */
 int mir_debug_surface_id(MirSurface *surface);
+
+/**
+ * Set the type (purpose) of a surface. This is not guaranteed to always work
+ * with some shell types (e.g. phone/tablet UIs). As such, you may have to
+ * wait on the function and check the result using mir_surface_get_type.
+ *   \param [in] surface  The surface to operate on
+ *   \param [in] type     The new type of the surface
+ *   \return              A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
+
+/**
+ * Get the type (purpose) of a surface.
+ *   \param [in] surface  The surface to query
+ *   \return              The type of the surface
+ */
+MirSurfaceType mir_surface_get_type(MirSurface *surface);
 
 #ifdef __cplusplus
 }

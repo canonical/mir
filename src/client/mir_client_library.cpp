@@ -278,3 +278,25 @@ catch (std::exception const&)
 {
     // Ignore
 }
+
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_set_type(MirSurface *surf,
+                                                           MirSurfaceType type)
+{
+    return surf ? surf->configure(mir_surface_attrib_type, type) : NULL;
+}
+
+MirSurfaceType mir_toolkit::mir_surface_get_type(MirSurface *surf)
+{
+    MirSurfaceType type = mir_surface_type_normal;
+
+    if (surf)
+    {
+        // Only the client will ever change the type of a surface so it is
+        // safe to get the type from a local cache surf->attrib().
+
+        int t = surf->attrib(mir_surface_attrib_type);
+        type = static_cast<MirSurfaceType>(t);
+    }
+
+    return type;
+}
