@@ -53,6 +53,11 @@ public:
     {
         return std::shared_ptr<compositor::Buffer>();
     }
+
+    virtual int configure(MirSurfaceAttrib, int)
+    {
+        return 0;
+    }
     
     virtual bool supports_input() const
     {

@@ -36,14 +36,13 @@ namespace mtd = mir::test::doubles;
 
 struct AndroidBufferAllocatorTest : public ::testing::Test
 {
-    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
-public:
     AndroidBufferAllocatorTest()
         : null_buffer_initializer{std::make_shared<mg::NullBufferInitializer>()}
     {
     }
 
     std::shared_ptr<mg::BufferInitializer> const null_buffer_initializer;
+    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
 };
 
 TEST_F(AndroidBufferAllocatorTest, allocator_accesses_gralloc_module)

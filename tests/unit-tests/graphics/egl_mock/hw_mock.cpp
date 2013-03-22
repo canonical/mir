@@ -27,7 +27,7 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 mt::HardwareModuleStub::HardwareModuleStub(hw_device_t& device)
-        : mock_hw_device(device)
+    : mock_hw_device(device)
 { 
     gr_methods.open = hw_open;
     methods = &gr_methods; 

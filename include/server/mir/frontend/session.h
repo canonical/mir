@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_SESSION_H_
 #define MIR_FRONTEND_SESSION_H_
 
+#include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
 
 #include <mutex>
@@ -48,6 +49,8 @@ public:
 
     virtual void hide() = 0;
     virtual void show() = 0;
+
+    virtual int configure_surface(SurfaceId id, MirSurfaceAttrib attrib, int value) = 0;
 
 protected:
     Session() = default;

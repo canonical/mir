@@ -22,6 +22,7 @@
 
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
+#include "mir_toolkit/common.h"
 
 namespace mir
 {
@@ -66,10 +67,17 @@ public:
     virtual bool supports_input() const;
     virtual int client_input_fd() const;
 
+    virtual int configure(MirSurfaceAttrib attrib, int value);
+    virtual MirSurfaceType type() const;
+
 private:
+    bool set_type(MirSurfaceType t);  // Use configure() to make public changes
+
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
+
+    MirSurfaceType type_value;
 };
 }
 }

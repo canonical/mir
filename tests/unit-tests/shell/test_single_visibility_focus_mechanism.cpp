@@ -53,6 +53,10 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     EXPECT_CALL(app2, hide()).Times(1);
     EXPECT_CALL(app3, hide()).Times(1);
 
+    EXPECT_CALL(app1, name()).Times(AnyNumber());
+    EXPECT_CALL(app2, name()).Times(AnyNumber());
+    EXPECT_CALL(app3, name()).Times(AnyNumber());
+
     model.insert_session(mt::fake_shared(app1));
     model.insert_session(mt::fake_shared(app2));
     model.insert_session(mt::fake_shared(app3));
