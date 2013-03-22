@@ -21,7 +21,6 @@
 #include "src/server/input/android/android_input_manager.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/input/event.h" // TODO: Remove once included in mir_client_library ~racarr
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub_input_configuration.h"

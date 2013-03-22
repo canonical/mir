@@ -114,10 +114,13 @@ mir_toolkit::MirEGLNativeDisplayType mir_toolkit::mir_connection_get_egl_native_
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
     MirConnection * connection,
     MirSurfaceParameters const * params,
+    MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback,
     void * context)
 {
     if (&error_connection == connection) return 0;
+    
+    // TODO: Make use of delegate
 
     try
     {
@@ -132,7 +135,9 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
 }
 
 MirSurface *mir_toolkit::mir_surface_create_sync(
-    MirConnection *connection, MirSurfaceParameters const *params)
+    MirConnection *connection, 
+    MirEventDelegate const* delegate,
+    MirSurfaceParameters const *params)
 {
     MirSurface *surface = nullptr;
 

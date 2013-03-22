@@ -256,6 +256,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 MirWaitHandle *mir_surface_create(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
+    MirEventDelegate const* event_handler,
     mir_surface_lifecycle_callback callback,
     void *context);
 
@@ -267,6 +268,7 @@ MirWaitHandle *mir_surface_create(
  *   \return                 The resulting surface
  */
 MirSurface *mir_surface_create_sync(MirConnection *connection,
+                                    MirEventDelegate const* event_handler,
                                     MirSurfaceParameters const *params);
 
 /**
