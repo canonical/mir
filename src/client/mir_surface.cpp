@@ -260,6 +260,8 @@ void MirSurface::on_configured()
         case mir_surface_attrib_state:
             if (configure_result.has_ivalue())
                 attrib_cache[a] = configure_result.ivalue();
+            else
+                assert(configure_result.has_error());
             break;
         default:
             assert(false);
