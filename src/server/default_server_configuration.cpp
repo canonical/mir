@@ -22,16 +22,18 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/compositor.h"
+#include "mir/compositor/default_compositing_strategy.h"
+#include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
-#include "mir/frontend/application_mediator_report.h"
-#include "mir/frontend/application_mediator.h"
+#include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/null_message_processor_report.h"
+#include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
-#include "mir/shell/session_container.h"
+#include "mir/frontend/session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
@@ -44,10 +46,12 @@
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
-#include "mir/logging/application_mediator_report.h"
+#include "mir/logging/session_mediator_report.h"
+#include "mir/logging/message_processor_report.h"
 #include "mir/logging/display_report.h"
-#include "mir/surfaces/surface_controller.h"
+#include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_controller.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -69,13 +73,15 @@ class DefaultIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
     explicit DefaultIpcFactory(
-        std::shared_ptr<msh::SessionStore> const& session_store,
-        std::shared_ptr<mf::ApplicationMediatorReport> const& report,
+        std::shared_ptr<mf::Shell> const& shell,
+        std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
+        std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::ViewableArea> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
-        session_store(session_store),
-        report(report),
+        shell(shell),
+        sm_report(sm_report),
+        mp_report(mr_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         graphics_display(graphics_display),
@@ -84,8 +90,9 @@ public:
     }
 
 private:
-    std::shared_ptr<msh::SessionStore> session_store;
-    std::shared_ptr<mf::ApplicationMediatorReport> const report;
+    std::shared_ptr<mf::Shell> shell;
+    std::shared_ptr<mf::SessionMediatorReport> const sm_report;
+    std::shared_ptr<mf::MessageProcessorReport> const mp_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::ViewableArea> const graphics_display;
@@ -93,12 +100,12 @@ private:
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
     {
-        return std::make_shared<mf::ApplicationMediator>(
-            session_store,
+        return std::make_shared<mf::SessionMediator>(
+            shell,
             graphics_platform,
             graphics_display,
             buffer_allocator,
-            report,
+            sm_report,
             resource_cache());
     }
 
@@ -106,9 +113,15 @@ private:
     {
         return cache;
     }
+
+    virtual std::shared_ptr<mf::MessageProcessorReport> report()
+    {
+        return mp_report;
+    }
 };
 
 char const* const log_app_mediator = "log-app-mediator";
+char const* const log_msg_processor = "log-msg-processor";
 char const* const log_display      = "log-display";
 
 char const* const glog                 = "glog";
@@ -127,6 +140,7 @@ boost::program_options::options_description program_options()
         ("file,f", po::value<std::string>(),    "Socket filename")
         (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
         (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
+        (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
         (glog,                                  "Use google::GLog for logging")
         (glog_stderrthreshold, po::value<int>(),"Copy log messages at or above this level "
                                                 "to stderr in addition to logfiles. The numbers "
@@ -264,11 +278,11 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
         });
 }
 
-std::shared_ptr<msh::SessionStore>
-mir::DefaultServerConfiguration::the_session_store()
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
 {
-    return session_store(
-        [this]() -> std::shared_ptr<msh::SessionStore>
+    return session_manager(
+        [this]() -> std::shared_ptr<msh::SessionManager>
         {
             auto session_container = std::make_shared<msh::SessionContainer>();
             auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container);
@@ -345,6 +359,16 @@ mir::DefaultServerConfiguration::the_render_view()
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
+    return surface_source(
+        [this]()
+        {
+            return std::make_shared<msh::SurfaceSource>(the_surface_builder(), the_input_channel_factory());
+        });
+}
+
+std::shared_ptr<msh::SurfaceBuilder>
+mir::DefaultServerConfiguration::the_surface_builder()
+{
     return surface_controller(
         [this]()
         {
@@ -352,13 +376,13 @@ mir::DefaultServerConfiguration::the_surface_factory()
         });
 }
 
-std::shared_ptr<mc::Drawer>
-mir::DefaultServerConfiguration::the_drawer()
+std::shared_ptr<mc::CompositingStrategy>
+mir::DefaultServerConfiguration::the_compositing_strategy()
 {
-    return compositor(
+    return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::Compositor>(the_render_view(), the_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_render_view(), the_renderer());
         });
 }
 
@@ -372,10 +396,20 @@ mir::DefaultServerConfiguration::the_buffer_bundle_factory()
         });
 }
 
+std::shared_ptr<mc::Compositor>
+mir::DefaultServerConfiguration::the_compositor()
+{
+    return compositor(
+        [this]()
+        {
+            return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
+                                                                 the_compositing_strategy());
+        });
+}
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
-    std::shared_ptr<msh::SessionStore> const& session_store,
+    std::shared_ptr<mf::Shell> const& shell,
     std::shared_ptr<mg::ViewableArea> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
@@ -383,29 +417,48 @@ mir::DefaultServerConfiguration::the_ipc_factory(
         [&]()
         {
             return std::make_shared<DefaultIpcFactory>(
-                session_store,
-                the_application_mediator_report(),
+                shell,
+                the_session_mediator_report(),
+                the_message_processor_report(),
                 the_graphics_platform(),
                 display, allocator);
         });
 }
 
-std::shared_ptr<mf::ApplicationMediatorReport>
-mir::DefaultServerConfiguration::the_application_mediator_report()
+std::shared_ptr<mf::SessionMediatorReport>
+mir::DefaultServerConfiguration::the_session_mediator_report()
 {
-    return application_mediator_report(
-        [this]() -> std::shared_ptr<mf::ApplicationMediatorReport>
+    return session_mediator_report(
+        [this]() -> std::shared_ptr<mf::SessionMediatorReport>
         {
             if (the_options()->get(log_app_mediator, false))
             {
-                return std::make_shared<ml::ApplicationMediatorReport>(the_logger());
+                return std::make_shared<ml::SessionMediatorReport>(the_logger());
             }
             else
             {
-                return std::make_shared<mf::NullApplicationMediatorReport>();
+                return std::make_shared<mf::NullSessionMediatorReport>();
             }
         });
 }
+
+std::shared_ptr<mf::MessageProcessorReport>
+mir::DefaultServerConfiguration::the_message_processor_report()
+{
+    return message_processor_report(
+        [this]() -> std::shared_ptr<mf::MessageProcessorReport>
+        {
+            if (the_options()->get(log_msg_processor, false))
+            {
+                return std::make_shared<ml::MessageProcessorReport>(the_logger());
+            }
+            else
+            {
+                return std::make_shared<mf::NullMessageProcessorReport>();
+            }
+        });
+}
+
 
 std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
 {
@@ -425,4 +478,9 @@ std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
                 return std::make_shared<ml::DumbConsoleLogger>();
             }
         });
+}
+
+std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
+{
+    return the_input_manager();
 }

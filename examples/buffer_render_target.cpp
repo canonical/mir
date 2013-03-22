@@ -32,6 +32,11 @@ mt::BufferRenderTarget::BufferRenderTarget(mc::Buffer& buffer)
     resources.setup(buffer);
 }
 
+mt::BufferRenderTarget::~BufferRenderTarget()
+{
+    glFinish();
+}
+
 void mt::BufferRenderTarget::make_current()
 {
     geom::Size buf_size = buffer.size();

@@ -19,7 +19,8 @@
 #ifndef MIR_SHELL_APPLICATION_MANAGER_H_
 #define MIR_SHELL_APPLICATION_MANAGER_H_
 
-#include "mir/shell/session_store.h"
+#include "mir/frontend/surface_id.h"
+#include "mir/frontend/shell.h"
 
 #include <mutex>
 #include <memory>
@@ -27,16 +28,20 @@
 
 namespace mir
 {
+namespace frontend
+{
+struct SurfaceCreationParameters;
+}
 
+/// Management of sessions and surfaces
 namespace shell
 {
 class SurfaceFactory;
-class Session;
 class SessionContainer;
 class FocusSequence;
 class FocusSetter;
 
-class SessionManager : public SessionStore
+class SessionManager : public frontend::Shell
 {
 public:
     explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
@@ -45,12 +50,15 @@ public:
                             std::shared_ptr<FocusSetter> const& focus_setter);
     virtual ~SessionManager();
 
-    virtual std::shared_ptr<Session> open_session(std::string const& name);
-    virtual void close_session(std::shared_ptr<Session> const& session);
+    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);
+    virtual void close_session(std::shared_ptr<frontend::Session> const& session);
     virtual void shutdown();
 
-    virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id);
+    virtual void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& session, int id);
     virtual void focus_session_with_lightdm_id(int id);
+    
+    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
+                                 frontend::SurfaceCreationParameters const& params);
 
     void focus_next();
 
@@ -65,11 +73,11 @@ private:
     std::shared_ptr<FocusSetter> const focus_setter;
 
     std::mutex mutex;
-    std::weak_ptr<Session> focus_application;
-    typedef std::vector<std::pair<int, std::shared_ptr<Session>>> Tags;
+    std::weak_ptr<frontend::Session> focus_application;
+    typedef std::vector<std::pair<int, std::shared_ptr<frontend::Session>>> Tags;
     Tags tags;
 
-    void set_focus_to(std::shared_ptr<Session> const& next_focus);
+    void set_focus_to(std::shared_ptr<frontend::Session> const& next_focus);
 };
 
 }

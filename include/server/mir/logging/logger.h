@@ -39,8 +39,6 @@ public:
         debug = 4
     };
 
-    virtual ~Logger() {}
-
     template<Severity severity>
     void log(const std::string& message)
     {
@@ -56,6 +54,7 @@ public:
 
 protected:
     Logger() {}
+    virtual ~Logger() = default;
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 

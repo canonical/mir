@@ -18,50 +18,48 @@
 
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/session_manager.h"
-#include "mir/shell/session_container.h"
-#include "mir/shell/session.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/session_container.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/shell/focus_sequence.h"
-#include "mir/shell/focus_setter.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 
-#include "src/server/surfaces/proxy_surface.h"
+#include "src/server/shell/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
-
 struct MockSessionContainer : public msh::SessionContainer
 {
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::Session> const&));
+    MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::Session> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
 };
 
 struct MockFocusSequence: public msh::FocusSequence
 {
-    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
-    MOCK_CONST_METHOD1(predecessor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
-    MOCK_CONST_METHOD0(default_focus, std::shared_ptr<msh::Session>());
-};
-
-struct MockFocusSetter: public msh::FocusSetter
-{
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<msh::Session> const&));
+    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
+    MOCK_CONST_METHOD1(predecessor_of, std::shared_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
+    MOCK_CONST_METHOD0(default_focus, std::shared_ptr<mf::Session>());
 };
 
 struct SessionManagerSetup : public testing::Test
@@ -74,10 +72,11 @@ struct SessionManagerSetup : public testing::Test
     {
     }
 
+    mtd::StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence sequence;
-    MockFocusSetter focus_setter;
+    mtd::MockFocusSetter focus_setter;
 
     msh::SessionManager session_manager;
 };
@@ -91,9 +90,9 @@ TEST_F(SessionManagerSetup, open_and_close_session)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_));
-    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
+    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
 
-    EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
+    EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
     session_manager.close_session(session);
@@ -104,24 +103,24 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     using namespace ::testing;
 
     EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
-    std::shared_ptr<ms::BufferBundle> buffer_bundle(new mtd::NullBufferBundle());
-    std::shared_ptr<ms::Surface> dummy_surface(
-        std::make_shared<ms::Surface>(
-            msh::a_surface().name,
-            buffer_bundle));
+
+    std::shared_ptr<mi::InputChannel> null_input_channel;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(
-        Return(std::make_shared<ms::BasicProxySurface>(dummy_surface)));
+       Return(std::make_shared<msh::Surface>(
+           mt::fake_shared(surface_builder),
+           mf::a_surface(),
+           null_input_channel)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1);
-    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
+    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
 
-    EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
+    EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
-    session->create_surface(msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    session->create_surface(mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     session_manager.close_session(session);
 }
@@ -129,7 +128,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 TEST_F(SessionManagerSetup, new_applications_receive_focus)
 {
     using namespace ::testing;
-    std::shared_ptr<msh::Session> new_session;
+    std::shared_ptr<mf::Session> new_session;
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
@@ -166,3 +165,27 @@ TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
 
     session_manager.close_session(session1);
 }
+
+TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
+{
+    using namespace ::testing;
+    std::shared_ptr<mi::InputChannel> null_input_channel;
+    ON_CALL(surface_factory, create_surface(_)).WillByDefault(
+        Return(std::make_shared<msh::Surface>(
+            mt::fake_shared(surface_builder),
+            mf::a_surface(),
+            null_input_channel)));
+
+    // Once for session creation and once for surface creation
+    {
+        InSequence seq;
+
+        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
+        EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
+        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
+    }
+    
+    auto session1 = session_manager.open_session("Weather Report");
+    session_manager.create_surface_for(session1, mf::a_surface());
+}
+

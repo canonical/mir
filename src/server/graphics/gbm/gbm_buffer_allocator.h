@@ -34,7 +34,7 @@ namespace gbm
 {
 
 class GBMPlatform;
-class EGLExtensions;
+struct EGLExtensions;
 
 class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {

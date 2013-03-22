@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_APPLICATION_SESSION_H_
 #define MIR_SHELL_APPLICATION_SESSION_H_
 
-#include "mir/shell/session.h"
+#include "mir/frontend/session.h"
 
 #include <map>
 
@@ -29,22 +29,26 @@ namespace mir
 namespace shell
 {
 class SurfaceFactory;
+class Surface;
 
-class ApplicationSession : public Session
+class ApplicationSession : public frontend::Session
 {
 public:
     explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
     ~ApplicationSession();
 
-    SurfaceId create_surface(SurfaceCreationParameters const& params);
-    void destroy_surface(SurfaceId surface);
-    std::shared_ptr<Surface> get_surface(SurfaceId surface) const;
+    frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
+    void destroy_surface(frontend::SurfaceId surface);
+    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 
-    std::string name();
+    std::string name() const;
+
     void shutdown();
 
     void hide();
     void show();
+
+    int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
@@ -54,12 +58,12 @@ private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
 
-    SurfaceId next_id();
+    frontend::SurfaceId next_id();
 
     std::atomic<int> next_surface_id;
 
-    typedef std::map<SurfaceId, std::shared_ptr<Surface>> Surfaces;
-    Surfaces::const_iterator checked_find(SurfaceId id) const;
+    typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
+    Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
 };

@@ -42,6 +42,14 @@ std::unordered_set<mir_toolkit::MirConnection*> mir_toolkit::MirConnection::vali
 namespace
 {
 mir_toolkit::MirConnection error_connection;
+
+// assign_result is compatible with all 2-parameter callbacks
+void assign_result(void *result, void **context)
+{
+    if (context)
+        *context = result;
+}
+
 }
 
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
@@ -65,6 +73,17 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_connect(char const* socket_file, ch
         callback(&error_connection, context);
         return 0;
     }
+}
+
+MirConnection *mir_toolkit::mir_connect_sync(char const *server,
+                                             char const *app_name)
+{
+    MirConnection *conn = nullptr;
+    mir_wait_for(mir_connect(server, app_name,
+                             reinterpret_cast<mir_connected_callback>
+                                             (assign_result),
+                             &conn));
+    return conn;
 }
 
 int mir_toolkit::mir_connection_is_valid(MirConnection * connection)
@@ -112,11 +131,30 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
 
 }
 
+MirSurface *mir_toolkit::mir_surface_create_sync(
+    MirConnection *connection, MirSurfaceParameters const *params)
+{
+    MirSurface *surface = nullptr;
+
+    mir_wait_for(mir_surface_create(connection, params,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        &surface));
+
+    return surface;
+}
+
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_release(
     MirSurface * surface,
     mir_surface_lifecycle_callback callback, void * context)
 {
     return surface->release_surface(callback, context);
+}
+
+void mir_toolkit::mir_surface_release_sync(MirSurface *surface)
+{
+    mir_wait_for(mir_surface_release(surface,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        nullptr));
 }
 
 int mir_toolkit::mir_debug_surface_id(MirSurface * surface)
@@ -174,6 +212,13 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_next_buffer(MirSurface *sur
     return surface->next_buffer(callback, context);
 }
 
+void mir_toolkit::mir_surface_next_buffer_sync(MirSurface *surface)
+{
+    mir_wait_for(mir_surface_next_buffer(surface,
+        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        nullptr));
+}
+
 void mir_toolkit::mir_wait_for(MirWaitHandle* wait_handle)
 {
     if (wait_handle)
@@ -226,4 +271,26 @@ try
 catch (std::exception const&)
 {
     // Ignore
+}
+
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_set_type(MirSurface *surf,
+                                                           MirSurfaceType type)
+{
+    return surf ? surf->configure(mir_surface_attrib_type, type) : NULL;
+}
+
+MirSurfaceType mir_toolkit::mir_surface_get_type(MirSurface *surf)
+{
+    MirSurfaceType type = mir_surface_type_normal;
+
+    if (surf)
+    {
+        // Only the client will ever change the type of a surface so it is
+        // safe to get the type from a local cache surf->attrib().
+
+        int t = surf->attrib(mir_surface_attrib_type);
+        type = static_cast<MirSurfaceType>(t);
+    }
+
+    return type;
 }

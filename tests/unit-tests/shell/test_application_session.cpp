@@ -18,19 +18,22 @@
 
 #include "mir/shell/application_session.h"
 #include "mir/compositor/buffer.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/surface_creation_parameters.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/stub_surface_builder.h"
 
-#include "src/server/surfaces/proxy_surface.h"
+#include "src/server/shell/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
+namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -38,7 +41,9 @@ TEST(ApplicationSession, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    auto const mock_surface = std::make_shared<mtd::MockSurface>();
+    mtd::StubSurfaceBuilder surface_builder;
+    auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
 
@@ -47,7 +52,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo");
 
-    msh::SurfaceCreationParameters params;
+    mf::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
 
     session.destroy_surface(surf);
@@ -58,7 +63,9 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
-    auto const mock_surface = std::make_shared<mtd::MockSurface>();
+    mtd::StubSurfaceBuilder surface_builder;
+    auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
 
@@ -73,7 +80,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
         EXPECT_CALL(*mock_surface, destroy()).Times(1);
     }
 
-    msh::SurfaceCreationParameters params;
+    mf::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
 
     app_session.hide();
@@ -88,7 +95,7 @@ TEST(Session, get_invalid_surface_throw_behavior)
 
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
-    msh::SurfaceId invalid_surface_id = msh::SurfaceId{1};
+    mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
             app_session.get_surface(invalid_surface_id);
@@ -101,7 +108,7 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
 
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
-    msh::SurfaceId invalid_surface_id = msh::SurfaceId{1};
+    mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
             app_session.destroy_surface(invalid_surface_id);
