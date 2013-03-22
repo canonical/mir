@@ -25,6 +25,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test/fake_event_hub.h"
+#include "mir_test/event_factory.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gtest/gtest.h>
@@ -32,6 +33,7 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace mis = mi::synthesis;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
@@ -46,6 +48,10 @@ namespace
 
 struct FakeInputServerConfiguration : public mir_test_framework::TestingServerConfiguration
 {
+    virtual void inject_input()
+    {
+    }
+
     void exec(mir::DisplayServer* /* display_server */) override
     {
         std::shared_ptr<mi::CursorListener> null_cursor_listener;
@@ -57,6 +63,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
 
         fake_event_hub->synthesize_builtin_keyboard_added();
         fake_event_hub->synthesize_device_scan_complete();
+        inject_input();
     }
 
     std::shared_ptr<mi::InputManager>
@@ -165,10 +172,26 @@ struct InputReceivingClient : ClientConfigCommon
 
 TEST_F(BespokeDisplayServerTestFixture, clients_receive_input)
 {
-    FakeInputServerConfiguration server_config;
+    using namespace ::testing;
+
+    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    {
+        void inject_input()
+        {
+            // TODO: Synchronization 
+            fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                             .of_scancode(KEY_ENTER));
+        }
+    } server_config;
     launch_server_process(server_config);
 
     InputReceivingClient client_config;
+    
+    // TODO: Matcher
+    // TODO: Synchronization
+    EXPECT_CALL(client_config.handler, handle_input(_)).Times(1);
+
     launch_client_process(client_config);
+
 }
 
