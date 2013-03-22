@@ -18,6 +18,8 @@
  */
 
 #include "hwc11_device.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mga=mir::graphics::android;
 
@@ -43,8 +45,12 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
     callbacks.hooks.vsync = vsync_hook;
     callbacks.hooks.hotplug = hotplug_hook;
 
-    hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks); 
-    hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
+    hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
+
+    if (hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
+    }
 }
     
 

@@ -31,7 +31,7 @@ class HWCDevice : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        mock_device = std::make_shared<mtd::MockHWCComposerDevice1>();
+        mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
     }
 
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
