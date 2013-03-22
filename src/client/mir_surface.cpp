@@ -252,14 +252,14 @@ void MirSurface::on_configured()
         configure_result.surfaceid().value() == surface.id().value() &&
         configure_result.has_attrib())
     {
-        switch (configure_result.attrib())
+        int a = configure_result.attrib();
+
+        switch (a)
         {
         case mir_surface_attrib_type:
+        case mir_surface_attrib_state:
             if (configure_result.has_ivalue())
-            {
-                int t = configure_result.ivalue();
-                attrib_cache[mir_surface_attrib_type] = t;
-            } // else error is probably set due to an unsupported attrib/value
+                attrib_cache[a] = configure_result.ivalue();
             break;
         default:
             assert(false);
