@@ -307,7 +307,13 @@ MirSurfaceState mir_toolkit::mir_surface_get_state(MirSurface *surf)
 
     if (surf)
     {
-        // TODO: Send a request to the server for the state
+        // TODO Would -1 be better replaced with a mir_surface_state_unknown?
+        //      I can think of other such uses for "unknown"...
+
+        surf->configure(mir_surface_attrib_state, -1)->wait_for_result();
+
+        int s = surf->attrib(mir_surface_attrib_state);
+        state = static_cast<MirSurfaceState>(s);
     }
 
     return state;
