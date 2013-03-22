@@ -16,54 +16,63 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_test_doubles/mock_hwc_composer_device_1.h"
+
+#include <memory>
 #include <gtest/gtest.h>
+
+namespace mtd=mir::test::doubles;
 
 class HWCDevice : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
+        mock_device = std::make_shared<mtd::MockHWCComposerDevice1>();
     }
+
+    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
 };
 
 TEST_F(HWCDevice, test_proc_registration)
 {
+    using namespace testing;
+
     hwc_procs_t* procs;
-    EXPECT_CALL(*mock_module, registerProcs(mock_module.get(),_))
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), _))
         .Times(1)
         .WillOnce(SaveArg<1>(&procs));
-    HWCDevice device(mock_module);
+    HWC11Device device(mock_device);
 
     EXPECT_NE(nullptr, procs->invalidate);
     EXPECT_NE(nullptr, procs->vsync);
     EXPECT_NE(nullptr, procs->hotplug);
-
 }
 
 #if 0
 TEST_F(HWCDevice, test_vsync_activation_comes_after_proc_registration)
 {
     testing::InSequence sequence_enforcer; 
-    EXPECT_CALL(*mock_module, registerProcs(mock_module.get(),_))
+    EXPECT_CALL(*mock_device, registerProcs(mock_device.get(),_))
         .Times(1);
-    HWCDevice device(mock_module);
-    EXPECT_CALL(*mock_module, eventControl(mock_module.get(), 0, HWC_EVENT_VSYNC, 1))
+    HWCDevice device(mock_device);
+    EXPECT_CALL(*mock_device, eventControl(mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
         .Times(1)
         .WillOnce(Return(0));
 
-    HWCDevice device(mock_module);
+    HWCDevice device(mock_device);
 }
 
 TEST_F(HWCDevice, test_vsync_activation_failure_throws)
 {
-    HWCDevice device(mock_module);
+    HWCDevice device(mock_device);
 
-    EXPECT_CALL(*mock_module, eventControl(mock_module.get(), 0, HWC_EVENT_VSYNC, 1))
+    EXPECT_CALL(*mock_device, eventControl(mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
         .Times(1)
         .WillOnce(Return(-EINVAL));
 
     EXPECT_THROW({
-        HWCDevice device(mock_module);
+        HWCDevice device(mock_device);
     }, std::runtime_error);
 }
 #endif

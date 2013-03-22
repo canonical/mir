@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_HWC_COMPOSER_DEVICE_1_H_
 
 #include <hardware/hwcomposer.h>
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -28,13 +29,29 @@ namespace test
 namespace doubles
 {
 
-class MockHWCComposerDevice1 : public hwc_composer_device_1
+class ICSHardwareComposerInterface
+{
+public:
+    virtual void registerProcs_interface(struct hwc_composer_device_1* dev, hwc_procs_t const* procs) = 0;
+
+};
+
+class MockHWCComposerDevice1 : public hwc_composer_device_1, public ICSHardwareComposerInterface
 {
 public:
     MockHWCComposerDevice1()
     {
         common.version = HWC_DEVICE_API_VERSION_1_1;
-    } 
+
+        registerProcs = hook_registerProcs; 
+    }
+
+    MOCK_METHOD2(registerProcs_interface, void(struct hwc_composer_device_1*, hwc_procs_t const*));
+    static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
+    {
+        MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
+        return mocker->registerProcs_interface(mock_hwc, procs);
+    }
 };
 
 }
