@@ -10,6 +10,7 @@ set(
   test_test_framework.cpp
   test_focus_management_api.cpp
   test_focus_selection.cpp
+  test_client_input.cpp
 )
 
 # TODO Disabled in binder version as this test uses detect_server() and that
@@ -26,6 +27,7 @@ add_executable(
 
   ${SOURCES}
 )
+uses_android_input(acceptance-tests)
 
 
 target_link_libraries(
