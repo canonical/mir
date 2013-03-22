@@ -44,32 +44,22 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-class MockSurfaceBuilder : public msh::SurfaceBuilder
+class StubSurfaceBuilder : public msh::SurfaceBuilder
 {
 public:
-    MockSurfaceBuilder() :
+    StubSurfaceBuilder() :
         buffer_bundle(new mtd::NullBufferBundle()),
         dummy_surface()
     {
-        using namespace testing;
-        ON_CALL(*this, create_surface(_)).
-            WillByDefault(Invoke(this, &MockSurfaceBuilder::do_create_surface));
-
-        ON_CALL(*this, destroy_surface(_)).
-            WillByDefault(Invoke(this, &MockSurfaceBuilder::do_destroy_surface));
     }
 
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const mf::SurfaceCreationParameters&));
-
-    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
-
-    std::weak_ptr<ms::Surface> do_create_surface(mf::SurfaceCreationParameters const& )
+    std::weak_ptr<ms::Surface> create_surface(mf::SurfaceCreationParameters const& )
     {
         dummy_surface = std::make_shared<ms::Surface>(mf::a_surface().name, buffer_bundle);
         return dummy_surface;
     }
 
-    void do_destroy_surface(std::weak_ptr<ms::Surface> const& )
+    void destroy_surface(std::weak_ptr<ms::Surface> const& )
     {
         reset_surface();
     }
@@ -82,6 +72,24 @@ public:
 private:
     std::shared_ptr<ms::BufferBundle> const buffer_bundle;
     std::shared_ptr<ms::Surface> dummy_surface;
+};
+
+class MockSurfaceBuilder : public StubSurfaceBuilder
+{
+public:
+    MockSurfaceBuilder()
+    {
+        using namespace testing;
+        ON_CALL(*this, create_surface(_)).
+            WillByDefault(Invoke(this, &StubSurfaceBuilder::create_surface));
+
+        ON_CALL(*this, destroy_surface(_)).
+            WillByDefault(Invoke(this, &StubSurfaceBuilder::destroy_surface));
+    }
+
+    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const mf::SurfaceCreationParameters&));
+
+    MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
 };
 
 typedef testing::NiceMock<mtd::MockBufferBundle> StubBufferBundle;
@@ -97,7 +105,7 @@ struct ShellSurface : testing::Test
 {
     std::shared_ptr<StubBufferBundle> const buffer_bundle;
     std::shared_ptr<mi::InputChannel> const null_input_channel;
-    MockSurfaceBuilder surface_builder;
+    StubSurfaceBuilder surface_builder;
 
     ShellSurface() :
         buffer_bundle(std::make_shared<StubBufferBundle>()),
@@ -117,6 +125,7 @@ TEST_F(ShellSurface, creation_and_destruction)
     using namespace testing;
 
     mf::SurfaceCreationParameters const params;
+    MockSurfaceBuilder surface_builder;
 
     InSequence sequence;
     EXPECT_CALL(surface_builder, create_surface(params)).Times(1);
@@ -133,6 +142,7 @@ TEST_F(ShellSurface, creation_throws_means_no_destroy)
     using namespace testing;
 
     mf::SurfaceCreationParameters const params;
+    MockSurfaceBuilder surface_builder;
 
     InSequence sequence;
     EXPECT_CALL(surface_builder, create_surface(params)).Times(1)
@@ -150,6 +160,7 @@ TEST_F(ShellSurface, creation_throws_means_no_destroy)
 TEST_F(ShellSurface, destroy)
 {
     using namespace testing;
+    MockSurfaceBuilder surface_builder;
 
     msh::Surface test(
             mt::fake_shared(surface_builder),
