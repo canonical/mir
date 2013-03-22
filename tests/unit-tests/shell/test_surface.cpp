@@ -95,8 +95,8 @@ struct MockInputChannel : public mi::InputChannel
 
 struct ShellSurface : testing::Test
 {
-    std::shared_ptr<StubBufferBundle> buffer_bundle;
-    std::shared_ptr<mi::InputChannel> null_input_channel;
+    std::shared_ptr<StubBufferBundle> const buffer_bundle;
+    std::shared_ptr<mi::InputChannel> const null_input_channel;
     MockSurfaceBuilder surface_builder;
 
     ShellSurface() :
@@ -116,16 +116,35 @@ TEST_F(ShellSurface, creation_and_destruction)
 {
     using namespace testing;
 
-    mf::SurfaceCreationParameters params;
+    mf::SurfaceCreationParameters const params;
 
     InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(_)).Times(1);
+    EXPECT_CALL(surface_builder, create_surface(params)).Times(1);
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
 
     msh::Surface test(
         mt::fake_shared(surface_builder),
         params,
         null_input_channel);
+}
+
+TEST_F(ShellSurface, creation_throws_means_no_destroy)
+{
+    using namespace testing;
+
+    mf::SurfaceCreationParameters const params;
+
+    InSequence sequence;
+    EXPECT_CALL(surface_builder, create_surface(params)).Times(1)
+        .WillOnce(Throw(std::runtime_error(__PRETTY_FUNCTION__)));
+    EXPECT_CALL(surface_builder, destroy_surface(_)).Times(Exactly(0));
+
+    EXPECT_THROW({
+        msh::Surface test(
+            mt::fake_shared(surface_builder),
+            params,
+            null_input_channel);
+    }, std::runtime_error);
 }
 
 TEST_F(ShellSurface, destroy)
