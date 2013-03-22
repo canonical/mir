@@ -51,7 +51,7 @@ class AndroidFramebufferSelectorTest : public ::testing::Test
 {
 public:
     AndroidFramebufferSelectorTest()
-     : mock_fb_factory(std::make_shared<testing::NiceMock<MockFbFactory>>())
+        : mock_fb_factory(std::make_shared<testing::NiceMock<MockFbFactory>>())
     {
     }
 

@@ -25,7 +25,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mga::AndroidDisplaySelector::AndroidDisplaySelector(std::shared_ptr<mga::FBFactory> const& factory)
- : fb_factory(factory) 
+    : fb_factory(factory) 
 {
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
