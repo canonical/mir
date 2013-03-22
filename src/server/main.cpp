@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/display_server.h"
+#include "mir/run_mir.h"
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 

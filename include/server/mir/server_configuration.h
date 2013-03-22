@@ -57,9 +57,6 @@ protected:
     ServerConfiguration(ServerConfiguration const&) = delete;
     ServerConfiguration& operator=(ServerConfiguration const&) = delete;
 };
-
-/// Run mir with the supplied configuration
-void run_mir(ServerConfiguration& config);
 }
 
 
