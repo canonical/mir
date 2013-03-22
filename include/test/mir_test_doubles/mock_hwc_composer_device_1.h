@@ -33,7 +33,7 @@ class ICSHardwareComposerInterface
 {
 public:
     virtual void registerProcs_interface(struct hwc_composer_device_1* dev, hwc_procs_t const* procs) = 0;
-
+    virtual int eventControl_interface(struct hwc_composer_device_1* dev, int disp, int event, int enabled) = 0;
 };
 
 class MockHWCComposerDevice1 : public hwc_composer_device_1, public ICSHardwareComposerInterface
@@ -43,15 +43,23 @@ public:
     {
         common.version = HWC_DEVICE_API_VERSION_1_1;
 
-        registerProcs = hook_registerProcs; 
+        registerProcs = hook_registerProcs;
+        eventControl = hook_eventControl;
     }
 
-    MOCK_METHOD2(registerProcs_interface, void(struct hwc_composer_device_1*, hwc_procs_t const*));
     static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
     {
         MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
         return mocker->registerProcs_interface(mock_hwc, procs);
     }
+    static int hook_eventControl(struct hwc_composer_device_1* mock_hwc, int disp, int event, int enabled)
+    {
+        MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
+        return mocker->eventControl_interface(mock_hwc, disp, event, enabled);
+    }
+
+    MOCK_METHOD2(registerProcs_interface, void(struct hwc_composer_device_1*, hwc_procs_t const*));
+    MOCK_METHOD4(eventControl_interface, int(struct hwc_composer_device_1* dev, int disp, int event, int enabled));
 };
 
 }

@@ -53,30 +53,29 @@ TEST_F(HWCDevice, test_proc_registration)
     EXPECT_NE(nullptr, procs->hotplug);
 }
 
-#if 0
 TEST_F(HWCDevice, test_vsync_activation_comes_after_proc_registration)
 {
-    testing::InSequence sequence_enforcer; 
-    EXPECT_CALL(*mock_device, registerProcs(mock_device.get(),_))
+    using namespace testing;
+
+    InSequence sequence_enforcer; 
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(),_))
         .Times(1);
-    HWCDevice device(mock_device);
-    EXPECT_CALL(*mock_device, eventControl(mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
         .Times(1)
         .WillOnce(Return(0));
 
-    HWCDevice device(mock_device);
+    mga::HWC11Device device(mock_device);
 }
-#endif
 
 TEST_F(HWCDevice, test_vsync_activation_failure_throws)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_device, eventControl(mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
         .Times(1)
         .WillOnce(Return(-EINVAL));
 
     EXPECT_THROW({
-        HWC11Device device(mock_device);
+        mga::HWC11Device device(mock_device);
     }, std::runtime_error);
 }
