@@ -33,7 +33,7 @@ class AndroidTestHWCFramebuffer : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        native_win = std::make_shared<mtd::MockAndroidFramebufferWindow>();
+        native_win = std::make_shared<testing::NiceMock<mtd::MockAndroidFramebufferWindow>>();
         mock_hwc_device = std::make_shared<mtd::MockHWCInterface>();
 
         /* silence uninteresting warning messages */
