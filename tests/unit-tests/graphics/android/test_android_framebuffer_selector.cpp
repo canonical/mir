@@ -97,6 +97,21 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_modul
     selector.primary_display();
 }
 
+TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_does_not_open)
+{
+    using namespace testing;
+
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<1>(nullptr), Return(-1)));
+;
+    EXPECT_CALL(*mock_fb_factory, create_gpu_display())
+        .Times(1);
+
+    mga::AndroidDisplaySelector selector(mock_fb_factory);
+    selector.primary_display();
+}
+
 TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_version_not_supported)
 {
     using namespace testing;
