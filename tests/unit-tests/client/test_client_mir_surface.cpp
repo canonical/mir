@@ -396,3 +396,23 @@ TEST_F(MirClientSurfaceTest, default_surface_type)
     EXPECT_EQ(mir_surface_type_normal,
               surface->attrib(mir_surface_attrib_type));
 }
+
+TEST_F(MirClientSurfaceTest, default_surface_state)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_depository, deposit_package_rv(_,_,_,_))
+        .Times(1);
+
+    auto surface = std::make_shared<MirSurface> (connection.get(),
+                                                 *client_comm_channel,
+                                                 logger,
+                                                 mock_depository,
+                                                 params,
+                                                 &empty_callback,
+                                                 (void*) NULL);
+    surface->get_create_wait_handle()->wait_for_result();
+
+    EXPECT_EQ(mir_surface_state_restored,
+              surface->attrib(mir_surface_attrib_state));
+}
