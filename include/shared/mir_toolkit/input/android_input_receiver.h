@@ -25,6 +25,7 @@
 #include <androidfw/Input.h>
 
 #include <memory>
+#include <chrono>
 
 namespace droidinput = android;
 
@@ -53,6 +54,8 @@ public:
     int get_fd() const;
     
     bool next_event(MirEvent &ev);
+    
+    bool poll(std::chrono::milliseconds timeout);
 
 protected:
     InputReceiver(const InputReceiver&) = delete;

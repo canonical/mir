@@ -22,6 +22,8 @@
 
 #include <androidfw/InputTransport.h>
 
+#include <poll.h>
+
 namespace miat = mir::input::android::transport;
 
 miat::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
@@ -67,4 +69,22 @@ bool miat::InputReceiver::next_event(MirEvent &ev)
     // so the client handles all events.
     
     return handled_event;
+}
+
+bool miat::InputReceiver::poll(std::chrono::milliseconds timeout)
+{
+    struct pollfd pfd;
+    
+    pfd.fd = get_fd();
+    pfd.events = POLLIN;
+    
+    auto status = ::poll(&pfd, 1, timeout.count());
+    
+    if (status > 0)
+        return true;
+    if (status == 0)
+        return false;
+    
+    // TODO: What to do in case of error? ~racarr
+    return false;
 }
