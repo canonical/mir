@@ -43,6 +43,12 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsurfaces
 )
 
+if (NOT MIR_DISABLE_INPUT)
+list(APPEND MIRSERVER_ARCHIVES
+  mirinputandroidtransport
+)
+endif()
+
 list(APPEND MIRSERVER_LINKS
   mirplatformgraphics
   mirprotobuf
