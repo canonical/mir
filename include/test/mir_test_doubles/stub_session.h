@@ -54,6 +54,10 @@ struct StubSession : public frontend::Session
     void show()
     {
     }
+    int configure_surface(frontend::SurfaceId, MirSurfaceAttrib, int)
+    {
+        return 0;
+    }
 };
 
 }
