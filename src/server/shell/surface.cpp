@@ -155,7 +155,7 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
     case mir_surface_attrib_state:
         if (!set_state(static_cast<MirSurfaceState>(value)))
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                                   "type."));
+                                                   "state."));
         result = state();
         break;
     default:
