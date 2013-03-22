@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_LIBRARY_LIGHTDM_H
 #define MIR_CLIENT_LIBRARY_LIGHTDM_H
 
-#include "mir_client_library.h"
+#include "mir_toolkit/mir_client_library.h"
 
 #ifdef __cplusplus
 namespace mir_toolkit {
