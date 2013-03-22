@@ -36,7 +36,8 @@ msh::Surface::Surface(
   : builder(builder),
     input_channel(input_channel),
     surface(builder->create_surface(params)),
-    type_value(mir_surface_type_normal)
+    type_value(mir_surface_type_normal),
+    state_value(mir_surface_state_restored)
 {
 }
 
@@ -151,6 +152,12 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
                                                    "type."));
         result = type();
         break;
+    case mir_surface_attrib_state:
+        if (!set_state(static_cast<MirSurfaceState>(value)))
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
+                                                   "type."));
+        result = state();
+        break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
@@ -172,6 +179,24 @@ bool msh::Surface::set_type(MirSurfaceType t)
     if (t >= 0 && t < mir_surface_type_arraysize_)
     {
         type_value = t;
+        valid = true;
+    }
+
+    return valid;
+}
+
+MirSurfaceState msh::Surface::state() const
+{
+    return state_value;
+}
+
+bool msh::Surface::set_state(MirSurfaceState s)
+{
+    bool valid = false;
+
+    if (s >= 0 && s < mir_surface_state_arraysize_)
+    {
+        state_value = s;
         valid = true;
     }
 
