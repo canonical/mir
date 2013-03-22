@@ -18,9 +18,9 @@
 
 #include "mir/display_server.h"
 #include "mir/default_server_configuration.h"
+#include "mir/abnormal_exit.h"
 
 #include <thread>
-#include <boost/program_options/errors.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <atomic>
@@ -61,9 +61,9 @@ try
     run_mir(config);
     return 0;
 }
-catch (boost::program_options::error const&)
+catch (mir::AbnormalExit const& error)
 {
-    // Can't run with these options - but no need for additional output
+    std::cerr << error.what() << std::endl;
     return 1;
 }
 catch (std::exception const& error)
