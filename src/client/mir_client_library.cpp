@@ -294,3 +294,21 @@ MirSurfaceType mir_toolkit::mir_surface_get_type(MirSurface *surf)
 
     return type;
 }
+
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_set_state(
+    MirSurface *surf, MirSurfaceState state)
+{
+    return surf ? surf->configure(mir_surface_attrib_state, state) : NULL;
+}
+
+MirSurfaceState mir_toolkit::mir_surface_get_state(MirSurface *surf)
+{
+    MirSurfaceState state = mir_surface_state_restored;
+
+    if (surf)
+    {
+        // TODO: Send a request to the server for the state
+    }
+
+    return state;
+}
