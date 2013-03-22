@@ -60,57 +60,25 @@ TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
  
     display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
-        buffer.post_update();
+        EXPECT_TRUE(buffer.post_update());
     });
 }
 
-#if 0
-//put in the hwc adapter class
-TEST_F(AndroidTestHWCFramebuffer, test_construction_registers_procs)
-{
-TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
+TEST_F(AndroidTestHWCFramebuffer, test_hwc_failure)
 {
     using namespace testing;
 
     mga::HWCDisplay display(native_win, mock_hwc_device);
 
     testing::InSequence sequence_enforcer;
-    EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
-        .Times(1);
+    EXPECT_CALL(this->mock_egl, eglSwapBuffers(_,_))
+        .Times(1)
+        .WillOnce(Return(EGL_FALSE));
     EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
         .Times(1);
  
-    display.post_update();
+    display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        EXPECT_FALSE(buffer.post_update());
+    });
 }
-
-//put in the hwc adapter class
-TEST_F(AndroidTestHWCFramebuffer, test_construction_registers_procs)
-{
-    EXPECT_CALL(hw_access_mock, registerProc())
-        .Times(1)
-        .WillOnce(DoAll(SaveArg<X>(&procs), Return(1)));
-
-    mga::AndroidHWCDisplay display(native_win, hwc_device);
-
-    test::VerifyAndClear;
-
-     EXPECT_NE(nullptr, proc->vsync)
-     EXPECT_NE(nullptr, proc->hotplug)
-     EXPECT_NE(nullptr, proc->otherthing)
-}
-
-TEST_F(AndroidTestHWCFramebuffer, test_construction_activates_vsync_signal)
-{
-    EXPECT_CALL(hw_access_mock, activate_vsync())
-        .Times(1);
-
-    mga::AndroidHWCDisplay display;
-
-}
-
-
-TEST_F(AndroidTestHWCFramebuffer, test_unconsumed_vsync_signal_wait)
-{
-
-}
-#endif

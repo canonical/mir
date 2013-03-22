@@ -27,7 +27,6 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <algorithm>
-#include <list>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -78,8 +77,8 @@ protected:
     int width, height;
 };
 
-typedef ::testing::Types<mga::AndroidDisplay, mga::HWCDisplay> MyTypes;
-TYPED_TEST_CASE(AndroidTestFramebufferInit, MyTypes);
+typedef ::testing::Types<mga::AndroidDisplay, mga::HWCDisplay> FramebufferTestTypes;
+TYPED_TEST_CASE(AndroidTestFramebufferInit, FramebufferTestTypes);
 
 TYPED_TEST(AndroidTestFramebufferInit, eglGetDisplay)
 {

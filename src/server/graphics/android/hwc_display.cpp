@@ -27,8 +27,8 @@ namespace geom=mir::geometry;
 
 mga::HWCDisplay::HWCDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& fb_window,
                             std::shared_ptr<HWCDevice> const& hwc_device)
- : AndroidDisplay(fb_window),
-   hwc_device(hwc_device)
+    : AndroidDisplay(fb_window),
+      hwc_device(hwc_device)
 {
 }
 
@@ -44,9 +44,9 @@ void mga::HWCDisplay::clear()
 
 bool mga::HWCDisplay::post_update()
 {
-    AndroidDisplay::post_update();
+    auto rc = AndroidDisplay::post_update();
     hwc_device->wait_for_vsync();
-    return true;
+    return rc;
 }
 
 void mga::HWCDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
