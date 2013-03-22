@@ -74,22 +74,25 @@ private:
     std::shared_ptr<ms::Surface> dummy_surface;
 };
 
-class MockSurfaceBuilder : public StubSurfaceBuilder
+class MockSurfaceBuilder : public msh::SurfaceBuilder
 {
 public:
     MockSurfaceBuilder()
     {
         using namespace testing;
         ON_CALL(*this, create_surface(_)).
-            WillByDefault(Invoke(this, &StubSurfaceBuilder::create_surface));
+            WillByDefault(Invoke(&self, &StubSurfaceBuilder::create_surface));
 
         ON_CALL(*this, destroy_surface(_)).
-            WillByDefault(Invoke(this, &StubSurfaceBuilder::destroy_surface));
+            WillByDefault(Invoke(&self, &StubSurfaceBuilder::destroy_surface));
     }
 
     MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const mf::SurfaceCreationParameters&));
 
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
+
+private:
+    StubSurfaceBuilder self;
 };
 
 typedef testing::NiceMock<mtd::MockBufferBundle> StubBufferBundle;
@@ -162,14 +165,23 @@ TEST_F(ShellSurface, destroy)
     using namespace testing;
     MockSurfaceBuilder surface_builder;
 
+    InSequence sequence;
+    EXPECT_CALL(surface_builder, create_surface(_)).Times(AnyNumber());
+    EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
+
     msh::Surface test(
             mt::fake_shared(surface_builder),
             mf::a_surface(),
             null_input_channel);
 
+    Mock::VerifyAndClearExpectations(&test);
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
 
+    // Check destroy_surface is called immediately
     test.destroy();
+
+    Mock::VerifyAndClearExpectations(&test);
+    EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
 }
 
 TEST_F(ShellSurface, client_buffer_throw_behavior)
