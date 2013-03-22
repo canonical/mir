@@ -192,6 +192,5 @@ TEST_F(BespokeDisplayServerTestFixture, clients_receive_input)
     EXPECT_CALL(client_config.handler, handle_input(_)).Times(1);
 
     launch_client_process(client_config);
-
 }
 
