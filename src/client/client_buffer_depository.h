@@ -58,7 +58,7 @@ public:
     std::shared_ptr<ClientBuffer> current_buffer();
 
 private:
-    std::shared_ptr<ClientBufferFactory> factory;
+    std::shared_ptr<ClientBufferFactory> const factory;
     typedef std::map<int, std::shared_ptr<ClientBuffer>> BufferMap;
     BufferMap buffers;
     BufferMap::iterator current_buffer_iter;
