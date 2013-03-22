@@ -56,6 +56,8 @@ struct MockShellSession : public msh::Session
     
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+
+    MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
 };
 
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)

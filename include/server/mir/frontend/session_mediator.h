@@ -100,6 +100,11 @@ public:
                         mir::protobuf::DRMAuthMagicStatus* response,
                         google::protobuf::Closure* done);
 
+    void configure_surface(google::protobuf::RpcController* controller,
+                           const mir::protobuf::SurfaceSetting*,
+                           mir::protobuf::SurfaceSetting*,
+                           google::protobuf::Closure* done);
+
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;

@@ -23,6 +23,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
+#include "egl_native_display_container.h"
 #include "mir_logger.h"
 #include "make_rpc_channel.h"
 
@@ -109,6 +110,11 @@ void mir_toolkit::mir_connection_release(MirConnection * connection)
 mir_toolkit::MirEGLNativeDisplayType mir_toolkit::mir_connection_get_egl_native_display(MirConnection *connection)
 {
     return connection->egl_native_display();
+}
+
+int mir_toolkit::mir_egl_native_display_is_valid(MirEGLNativeDisplayType egl_display)
+{
+    return mcl::EGLNativeDisplayContainer::instance().validate(egl_display);
 }
 
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
@@ -271,4 +277,26 @@ try
 catch (std::exception const&)
 {
     // Ignore
+}
+
+mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_set_type(MirSurface *surf,
+                                                           MirSurfaceType type)
+{
+    return surf ? surf->configure(mir_surface_attrib_type, type) : NULL;
+}
+
+MirSurfaceType mir_toolkit::mir_surface_get_type(MirSurface *surf)
+{
+    MirSurfaceType type = mir_surface_type_normal;
+
+    if (surf)
+    {
+        // Only the client will ever change the type of a surface so it is
+        // safe to get the type from a local cache surf->attrib().
+
+        int t = surf->attrib(mir_surface_attrib_type);
+        type = static_cast<MirSurfaceType>(t);
+    }
+
+    return type;
 }

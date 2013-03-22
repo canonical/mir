@@ -3,6 +3,7 @@ set(
 
   session_mediator.cpp
   null_session_mediator_report.cpp
+  null_message_processor_report.cpp
   protobuf_message_processor.cpp
   null_message_processor.cpp
   surface_creation_parameters.cpp
