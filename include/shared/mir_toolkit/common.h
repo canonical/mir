@@ -56,6 +56,7 @@ typedef enum MirSurfaceType
  */
 typedef enum MirSurfaceState
 {
+    mir_surface_state_unknown,
     mir_surface_state_restored,
     mir_surface_state_minimized,
     mir_surface_state_minimised = mir_surface_state_minimized,

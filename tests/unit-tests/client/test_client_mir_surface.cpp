@@ -413,6 +413,6 @@ TEST_F(MirClientSurfaceTest, default_surface_state)
                                                  (void*) NULL);
     surface->get_create_wait_handle()->wait_for_result();
 
-    EXPECT_EQ(mir_surface_state_restored,
+    EXPECT_EQ(mir_surface_state_unknown,
               surface->attrib(mir_surface_attrib_state));
 }

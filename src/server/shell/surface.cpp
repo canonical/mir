@@ -153,7 +153,8 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
         result = type();
         break;
     case mir_surface_attrib_state:
-        if (!set_state(static_cast<MirSurfaceState>(value)))
+        if (value != mir_surface_state_unknown &&
+            !set_state(static_cast<MirSurfaceState>(value)))
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                    "state."));
         result = state();
@@ -194,7 +195,8 @@ bool msh::Surface::set_state(MirSurfaceState s)
 {
     bool valid = false;
 
-    if (s >= 0 && s < mir_surface_state_arraysize_)
+    if (s > mir_surface_state_unknown &&
+        s < mir_surface_state_arraysize_)
     {
         state_value = s;
         valid = true;
