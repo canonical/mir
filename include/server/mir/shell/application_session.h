@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_APPLICATION_SESSION_H_
 #define MIR_SHELL_APPLICATION_SESSION_H_
 
-#include "mir/frontend/session.h"
+#include "mir/shell/session.h"
 
 #include <map>
 
@@ -31,7 +31,7 @@ namespace shell
 class SurfaceFactory;
 class Surface;
 
-class ApplicationSession : public frontend::Session
+class ApplicationSession : public Session
 {
 public:
     explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
@@ -40,6 +40,8 @@ public:
     frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
     void destroy_surface(frontend::SurfaceId surface);
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
+
+    std::shared_ptr<Surface> default_surface() const;
 
     std::string name() const;
 

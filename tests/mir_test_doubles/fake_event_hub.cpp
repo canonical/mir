@@ -2,6 +2,7 @@
 
 #include <androidfw/Keyboard.h>
 #include <thread> 
+#include <chrono>
 
 using droidinput::AxisInfo;
 using droidinput::InputDeviceIdentifier;
@@ -300,7 +301,7 @@ void mia::FakeEventHub::synthesize_device_scan_complete()
 void mia::FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
 {
     RawEvent event;
-    event.when = 0;
+    event.when = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     event.type = EV_KEY;
     event.code = parameters.scancode;
 
@@ -321,7 +322,7 @@ void mia::FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
 void mia::FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters)
 {
     RawEvent event;
-    event.when = 0;
+    event.when = 0; // TODO: This may need a timestamp to go over the wire ~racarr
     event.type = EV_KEY;
     event.code = parameters.button;
 

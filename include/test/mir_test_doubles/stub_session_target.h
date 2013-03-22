@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,13 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SESSION_TARGET_H_
+#define MIR_TEST_DOUBLES_STUB_SESSION_TARGET_H_
 
-#include "mir/input/input_manager.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "mir/input/session_target.h"
 
 namespace mir
 {
@@ -31,17 +28,17 @@ namespace test
 namespace doubles
 {
 
-struct MockInputManager : public input::InputManager
+struct StubSessionTarget : public input::SessionTarget
 {
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
-    
-    MOCK_METHOD0(make_input_channel, std::shared_ptr<input::InputChannel>());
-    MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<input::SessionTarget> const& session, std::shared_ptr<input::SurfaceTarget> const& surface));
+    std::string name() const override
+    {
+        return std::string();
+    }
 };
 
 }
 }
-}
+} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_MANAGER_H
+#endif // MIR_TEST_DOUBLES_STUB_SESSION_TARGET_H_
+
