@@ -20,6 +20,11 @@
 
 namespace mcl = mir::client;
 
+mcl::AgingBuffer::AgingBuffer()
+    : buffer_age(0)
+{
+}
+
 uint32_t mcl::AgingBuffer::age() const
 {
     return buffer_age;

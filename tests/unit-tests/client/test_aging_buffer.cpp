@@ -34,46 +34,69 @@ namespace mir
 namespace test
 {
 
-struct MockAgingBuffer : public mcl::AgingBuffer
+struct MyAgingBuffer : public mcl::AgingBuffer
 {
-    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
-    MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<mir_toolkit::MirBufferPackage>());
-    MOCK_METHOD0(get_native_handle, MirNativeBuffer());
+    std::shared_ptr<mcl::MemoryRegion> secure_for_cpu_write()
+    {
+        exit(1);
+    }
+
+    geom::Size size() const
+    {
+        exit(1);
+    }
+
+    geom::Stride stride() const
+    {
+        exit(1);
+    }
+
+    geom::PixelFormat pixel_format() const
+    {
+        exit(1);
+    }
+
+    std::shared_ptr<mir_toolkit::MirBufferPackage> get_buffer_package() const
+    {
+        exit(1);
+    }
+
+    MirNativeBuffer get_native_handle()
+    {
+        exit(1);
+    }
 };
 
 TEST(MirClientAgingBufferTest, buffer_age_starts_at_zero)
 {
     using namespace testing;
 
-    auto mock_buffer = std::make_shared<NiceMock<MockAgingBuffer>>();
+    MyAgingBuffer buffer;
 
-    EXPECT_EQ(0u, mock_buffer->age());
+    EXPECT_EQ(0u, buffer.age());
 }
 
 TEST(MirClientAgingBufferTest, buffer_age_set_to_one_on_submit)
 {
     using namespace testing;
 
-    auto mock_buffer = std::make_shared<NiceMock<MockAgingBuffer>>();
-    mock_buffer->mark_as_submitted();
+    MyAgingBuffer buffer;
+    buffer.mark_as_submitted();
 
-    EXPECT_EQ(1u, mock_buffer->age());    
+    EXPECT_EQ(1u, buffer.age());    
 }
 
 TEST(MirClientAgingBufferTest, buffer_age_increases_on_increment)
 {
     using namespace testing;
 
-    auto mock_buffer = std::make_shared<NiceMock<MockAgingBuffer>>();
-    mock_buffer->mark_as_submitted();
+    MyAgingBuffer buffer;
+    buffer.mark_as_submitted();
 
     for (uint32_t age = 2; age < 10; ++age)
     {
-        mock_buffer->increment_age();
-        EXPECT_EQ(age, mock_buffer->age());
+        buffer.increment_age();
+        EXPECT_EQ(age, buffer.age());
     }
 }
 
@@ -81,10 +104,10 @@ TEST(MirClientAgingBufferTest, incrementing_age_has_no_effect_for_unsubmitted_bu
 {
     using namespace testing;
 
-    auto mock_buffer = std::make_shared<NiceMock<MockAgingBuffer>>();
-    mock_buffer->increment_age();
+    MyAgingBuffer buffer;
+    buffer.increment_age();
 
-    EXPECT_EQ(0u, mock_buffer->age());
+    EXPECT_EQ(0u, buffer.age());
 }
 
 }

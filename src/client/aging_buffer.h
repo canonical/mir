@@ -29,6 +29,7 @@ namespace client
 class AgingBuffer : public ClientBuffer
 {
 public:
+    AgingBuffer();
     virtual uint32_t age() const;
     virtual void increment_age();
     virtual void mark_as_submitted();
