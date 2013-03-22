@@ -19,6 +19,7 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 
+#include <stdexcept>
 #include <memory>
 #include <gtest/gtest.h>
 
@@ -65,17 +66,17 @@ TEST_F(HWCDevice, test_vsync_activation_comes_after_proc_registration)
 
     HWCDevice device(mock_device);
 }
+#endif
 
 TEST_F(HWCDevice, test_vsync_activation_failure_throws)
 {
-    HWCDevice device(mock_device);
+    using namespace testing;
 
     EXPECT_CALL(*mock_device, eventControl(mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
         .Times(1)
         .WillOnce(Return(-EINVAL));
 
     EXPECT_THROW({
-        HWCDevice device(mock_device);
+        HWC11Device device(mock_device);
     }, std::runtime_error);
 }
-#endif
