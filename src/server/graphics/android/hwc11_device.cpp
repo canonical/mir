@@ -44,6 +44,7 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
     callbacks.hooks.hotplug = hotplug_hook;
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks); 
+    hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
 }
     
 
