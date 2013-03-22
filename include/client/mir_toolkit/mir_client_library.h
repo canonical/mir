@@ -268,8 +268,8 @@ MirWaitHandle *mir_surface_create(
  *   \return                 The resulting surface
  */
 MirSurface *mir_surface_create_sync(MirConnection *connection,
-                                    MirEventDelegate const* event_handler,
-                                    MirSurfaceParameters const *params);
+                                    MirSurfaceParameters const *params,
+                                    MirEventDelegate const* event_handler);
 
 /**
  * Get a window type that can be used for OpenGL ES 2.0 acceleration.

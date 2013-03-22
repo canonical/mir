@@ -121,6 +121,7 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
     if (&error_connection == connection) return 0;
     
     // TODO: Make use of delegate
+    (void)delegate;
 
     try
     {
@@ -136,12 +137,13 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
 
 MirSurface *mir_toolkit::mir_surface_create_sync(
     MirConnection *connection, 
-    MirEventDelegate const* delegate,
-    MirSurfaceParameters const *params)
+    MirSurfaceParameters const *params,
+    MirEventDelegate const* delegate)
 {
     MirSurface *surface = nullptr;
 
     mir_wait_for(mir_surface_create(connection, params,
+                                    delegate,
         reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
         &surface));
 

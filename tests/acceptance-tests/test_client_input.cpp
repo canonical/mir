@@ -149,7 +149,12 @@ struct InputReceivingClient : ClientConfigCommon
              mir_pixel_format_abgr_8888,
              mir_buffer_usage_hardware
          };
-         mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+         MirEventDelegate const event_delegate =
+         {
+             handle_input,
+             this
+         };
+         mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
          mir_connection_release(connection);
     }
     

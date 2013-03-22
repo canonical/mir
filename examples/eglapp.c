@@ -127,7 +127,7 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
     surfaceparm.pixel_format = dinfo.supported_pixel_format[0];
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
 
-    surface = mir_surface_create_sync(connection, &surfaceparm);
+    surface = mir_surface_create_sync(connection, &surfaceparm, NULL);
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
     egldisplay = eglGetDisplay(

@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_software};
 
-    surface = mir_surface_create_sync(connection, &request_params);
+    surface = mir_surface_create_sync(connection, &request_params, NULL);
     assert(surface != NULL);
     assert(mir_surface_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
