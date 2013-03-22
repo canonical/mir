@@ -20,38 +20,9 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 
-#include <thread>
 #include <boost/exception/diagnostic_information.hpp>
 
-#include <atomic>
-#include <csignal>
 #include <iostream>
-
-namespace
-{
-std::atomic<mir::DisplayServer*> signal_display_server;
-
-extern "C" void signal_terminate(int)
-{
-    while (!signal_display_server.load())
-        std::this_thread::yield();
-
-    signal_display_server.load()->stop();
-}
-
-void run_mir(mir::ServerConfiguration& config)
-{
-    signal(SIGINT, signal_terminate);
-    signal(SIGTERM, signal_terminate);
-    signal(SIGPIPE, SIG_IGN);
-
-    mir::DisplayServer server(config);
-
-    signal_display_server.store(&server);
-
-    server.run();
-}
-}
 
 int main(int argc, char const* argv[])
 try
