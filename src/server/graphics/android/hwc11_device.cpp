@@ -21,9 +21,31 @@
 
 namespace mga=mir::graphics::android;
 
-mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> /*hwc_device*/)
+namespace
+{
+static void invalidate_hook(const struct hwc_procs* /*procs*/)
 {
 }
+
+static void vsync_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int64_t /*timestamp*/)
+{
+}
+
+static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*connected*/)
+{
+}
+}
+
+mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
+    : hwc_device(hwc_device)
+{
+    callbacks.hooks.invalidate = invalidate_hook;
+    callbacks.hooks.vsync = vsync_hook;
+    callbacks.hooks.hotplug = hotplug_hook;
+
+    hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks); 
+}
+    
 
 void mga::HWC11Device::wait_for_vsync()
 {

@@ -28,13 +28,24 @@ namespace graphics
 {
 namespace android
 {
+class HWC11Device;
+
+struct HWCCallbacks
+{
+    hwc_procs_t hooks;
+    HWC11Device* self;
+};
 
 class HWC11Device : public HWCDevice 
 {
 public:
-    explicit HWC11Device(std::shared_ptr<hwc_composer_device_1> hwc_device);
+    explicit HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
 
     void wait_for_vsync();
+
+private:
+    HWCCallbacks callbacks;
+    std::shared_ptr<hwc_composer_device_1> hwc_device;
 };
 
 }
