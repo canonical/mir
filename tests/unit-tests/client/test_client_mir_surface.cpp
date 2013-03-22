@@ -413,6 +413,14 @@ TEST_F(MirClientSurfaceTest, default_surface_state)
                                                  (void*) NULL);
     surface->get_create_wait_handle()->wait_for_result();
 
+    /*
+     * Most surface state changes will come from the server/shell. And the
+     * client can never assume to be sure about a surface state for very long
+     * without having to query the server. So to the client's MirSurface, the
+     * default state is "unknown" until the server-side surface exists. Once
+     * the surface exists on the server, it will default to "restored" and
+     * likely change again as defined by custom shell behaviour.
+     */
     EXPECT_EQ(mir_surface_state_unknown,
               surface->attrib(mir_surface_attrib_state));
 }
