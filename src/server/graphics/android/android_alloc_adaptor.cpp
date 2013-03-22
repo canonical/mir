@@ -74,6 +74,7 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     ret = alloc_dev->alloc(alloc_dev.get(), (int) size.width.as_uint32_t(), (int) size.height.as_uint32_t(),
                            format, usage_flag, &buf_handle, &stride_as_int);
 
+    //todo: kdub we should not be passing an empty ptr around like this
     AndroidBufferHandleEmptyDeleter empty_del;
     AndroidBufferHandle *null_handle = NULL;
     if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
