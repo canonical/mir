@@ -16,11 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/graphics/android/hwc11_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 
 #include <memory>
 #include <gtest/gtest.h>
 
+namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
 class HWCDevice : public ::testing::Test
@@ -38,11 +40,12 @@ TEST_F(HWCDevice, test_proc_registration)
 {
     using namespace testing;
 
-    hwc_procs_t* procs;
+    hwc_procs_t const* procs;
     EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), _))
         .Times(1)
         .WillOnce(SaveArg<1>(&procs));
-    HWC11Device device(mock_device);
+
+    mga::HWC11Device device(mock_device);
 
     EXPECT_NE(nullptr, procs->invalidate);
     EXPECT_NE(nullptr, procs->vsync);
