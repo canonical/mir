@@ -22,9 +22,13 @@
 #include "src/server/input/android/android_input_constants.h"
 
 #include "mir/input/input_channel.h"
+#include "mir/input/session_target.h"
+#include "mir/input/surface_target.h"
 
-#include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_viewable_area.h"
+#include "mir_test_doubles/stub_session_target.h"
+#include "mir_test_doubles/stub_surface_target.h"
 
 #include <InputDispatcher.h>
 #include <InputListener.h>
@@ -126,7 +130,7 @@ namespace
 
 struct AndroidInputManagerSetup : public testing::Test
 {
-    void SetUp()
+    AndroidInputManagerSetup()
     {
         using namespace ::testing;
 
@@ -206,4 +210,92 @@ TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
     auto package = manager.make_input_channel();
     EXPECT_GT(package->client_fd(), 0);
     EXPECT_GT(package->server_fd(), 0);
+}
+
+namespace
+{
+
+static bool
+application_handle_matches_session(droidinput::sp<droidinput::InputApplicationHandle> const& handle,
+                                   std::shared_ptr<mi::SessionTarget> const& session)
+{
+   if (handle->getName() != droidinput::String8(session->name().c_str()))
+        return false;
+   return true;
+}
+
+static bool
+window_handle_matches_session_and_surface(droidinput::sp<droidinput::InputWindowHandle> const& handle,
+                                          std::shared_ptr<mi::SessionTarget> const& session,
+                                          std::shared_ptr<mi::SurfaceTarget> const& surface)
+{
+    if (!application_handle_matches_session(handle->inputApplicationHandle, session))
+        return false;
+    if (handle->getInputChannel()->getFd() != surface->server_input_fd())
+        return false;
+    return true;
+}
+
+MATCHER_P2(WindowHandleFor, session, surface, "")
+{
+    return window_handle_matches_session_and_surface(arg, session, surface);
+}
+
+MATCHER_P(ApplicationHandleFor, session, "")
+{
+    return application_handle_matches_session(arg, session);
+}
+
+MATCHER_P2(VectorContainingWindowHandleFor, session, surface, "")
+{
+    auto i = arg.size();
+    for (i = 0; i < arg.size(); i++)
+    {
+        if (window_handle_matches_session_and_surface(arg[i], session, surface))
+            return true;
+    }
+    return false;
+}
+
+MATCHER(EmptyVector, "")
+{
+    return arg.size() == 0;
+}
+
+// TODO: It would be nice if it were possible to mock the interface between 
+// droidinput::InputChannel and droidinput::InputDispatcher rather than use
+// valid fds to allow non-throwing construction of a real input channel.
+struct AndroidInputManagerFdSetup : public AndroidInputManagerSetup
+{
+    void SetUp() override
+    {
+        test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+    }
+    void TearDown() override
+    {
+        close(test_input_fd);
+    }
+    int test_input_fd;
+};
+
+}
+
+TEST_F(AndroidInputManagerFdSetup, set_input_focus)
+{
+    using namespace ::testing;
+    
+    auto session = std::make_shared<mtd::StubSessionTarget>();
+    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+    
+    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
+        .WillOnce(Return(droidinput::OK));
+    EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);
+    EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
+    EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
+    EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
+
+    mia::InputManager manager(mt::fake_shared(config));
+
+    manager.set_input_focus_to(session, surface);
+    manager.set_input_focus_to(session, std::shared_ptr<mi::SurfaceTarget>());
 }

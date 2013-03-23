@@ -52,6 +52,7 @@ class SessionManager;
 class SurfaceFactory;
 class SurfaceSource;
 class SurfaceBuilder;
+class InputFocusSelector;
 }
 namespace surfaces
 {
@@ -113,6 +114,7 @@ public:
 
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<input::InputManager> the_input_manager();
+    virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
 
     virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
 

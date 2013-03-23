@@ -22,7 +22,11 @@
 
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/surface_target.h"
+
 #include "mir_toolkit/common.h"
+
+#include <string>
 
 namespace mir
 {
@@ -39,7 +43,7 @@ namespace shell
 {
 class SurfaceBuilder;
 
-class Surface : public frontend::Surface
+class Surface : public frontend::Surface, public input::SurfaceTarget
 {
 public:
     Surface(
@@ -56,6 +60,8 @@ public:
 
     virtual void shutdown();
 
+    virtual std::string name() const;
+
     virtual geometry::Size size() const;
 
     virtual geometry::PixelFormat pixel_format() const;
@@ -66,6 +72,7 @@ public:
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;
+    virtual int server_input_fd() const;
 
     virtual int configure(MirSurfaceAttrib attrib, int value);
     virtual MirSurfaceType type() const;

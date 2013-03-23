@@ -44,7 +44,9 @@ TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
 
     // The policy filters ALL key events before queuing
     policy.interceptKeyBeforeQueueing(&ev, policy_flags);
-    EXPECT_EQ(policy_flags, droidinput::POLICY_FLAG_FILTERED);
+
+    // If the event is unfiltered we will allow it to pass to applications
+    EXPECT_TRUE(policy_flags & droidinput::POLICY_FLAG_PASS_TO_USER);
 
     // Android uses alternate notation...the policy returns true if the event was NOT handled (e.g. the EventFilter
     // returns false)
