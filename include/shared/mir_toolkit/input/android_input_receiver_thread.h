@@ -45,7 +45,7 @@ public:
     InputReceiverThread(std::shared_ptr<InputReceiver> const& receiver, 
                         std::function<void(mir_toolkit::MirSurface*, MirEvent*, void*)> event_handling_callback,
                         void* context);
-    virtual ~InputReceiverThread();
+    virtual ~InputReceiverThread() {};
 
     void start();
     void stop();
@@ -54,6 +54,7 @@ protected:
     InputReceiverThread& operator=(const InputReceiverThread&) = delete;
 private:
     std::shared_ptr<InputReceiver> const receiver;
+    std::function<void(mir_toolkit::MirSurface*, MirEvent*, void*)> handler;
 };
 
 }
