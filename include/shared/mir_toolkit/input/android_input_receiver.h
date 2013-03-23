@@ -53,9 +53,9 @@ public:
     virtual ~InputReceiver();
     int get_fd() const;
     
-    bool next_event(MirEvent &ev);
+    virtual bool next_event(MirEvent &ev);
     
-    bool poll(std::chrono::milliseconds timeout);
+    virtual bool poll(std::chrono::milliseconds timeout);
 
 protected:
     InputReceiver(const InputReceiver&) = delete;
