@@ -25,6 +25,8 @@
 #include "mir/graphics/viewable_area.h"
 
 #include "mir_test_doubles/mock_session.h"
+#include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test/fake_shared.h"
 
@@ -50,24 +52,6 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(the_input_manager, std::shared_ptr<mi::InputManager>());
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
     MOCK_METHOD0(the_compositor, std::shared_ptr<mc::Compositor>());
-};
-
-struct MockSurface : public mf::Surface
-{
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
-    MOCK_METHOD0(destroy, void());
-    MOCK_METHOD0(shutdown, void());
-    MOCK_METHOD0(advance_client_buffer, void());
-
-    MOCK_CONST_METHOD0(size, mir::geometry::Size ());
-    MOCK_CONST_METHOD0(pixel_format, mir::geometry::PixelFormat ());
-    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer> ());
-
-    MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
-
-    MOCK_CONST_METHOD0(supports_input, bool());
-    MOCK_CONST_METHOD0(client_input_fd, int());
 };
 
 MATCHER_P(NamedWindowWithNoGeometry, name, "")
@@ -181,7 +165,7 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
     using namespace ::testing;
 
     mtd::MockSession session;
-    MockSurface surface;
+    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
 
     EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
         .WillOnce(Return(mt::fake_shared<mf::Session>(session)));

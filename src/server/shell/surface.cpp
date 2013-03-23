@@ -89,6 +89,18 @@ mir::geometry::Size msh::Surface::size() const
     }
 }
 
+std::string msh::Surface::name() const
+{
+    if (auto const& s = surface.lock())
+    {
+        return s->name();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
 mir::geometry::PixelFormat msh::Surface::pixel_format() const
 {
     if (auto const& s = surface.lock())
@@ -133,6 +145,13 @@ int msh::Surface::client_input_fd() const
     if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return input_channel->client_fd();
+}
+
+int msh::Surface::server_input_fd() const
+{
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
+    return input_channel->server_fd();
 }
 
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)

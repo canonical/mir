@@ -53,6 +53,7 @@ public:
     virtual std::string the_socket_file() const;
     using DefaultServerConfiguration::the_options;
 
+
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
 };
