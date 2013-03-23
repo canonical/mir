@@ -26,11 +26,6 @@
 #include <atomic>
 #include <thread>
 
-namespace mir_toolkit
-{
-class MirSurface;
-}
-
 namespace mir
 {
 namespace input
@@ -45,8 +40,7 @@ class InputReceiverThread
 {
 public:
     InputReceiverThread(std::shared_ptr<InputReceiver> const& receiver, 
-                        std::function<void(mir_toolkit::MirSurface*, MirEvent*, void*)> event_handling_callback,
-                        void* context);
+                        std::function<void(MirEvent*)> event_handling_callback);
     virtual ~InputReceiverThread() {};
 
     void start();
@@ -57,7 +51,7 @@ protected:
     InputReceiverThread& operator=(const InputReceiverThread&) = delete;
 private:
     std::shared_ptr<InputReceiver> const receiver;
-    std::function<void(mir_toolkit::MirSurface*, MirEvent*, void*)> handler;
+    std::function<void(MirEvent*)> handler;
     
     void thread_loop();
     std::atomic<bool> running;

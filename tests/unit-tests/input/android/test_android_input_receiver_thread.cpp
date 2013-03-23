@@ -62,8 +62,7 @@ TEST(AndroidInputReceiverThread, polls_until_stopped)
 
     MockInputReceiver input_receiver;
     miat::InputReceiverThread input_thread(mt::fake_shared(input_receiver), 
-        std::function<void(MirSurface*, MirEvent*, void*)>(), nullptr);
-    
+                                           std::function<void(MirEvent*)>());    
     {
         InSequence seq;
         EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(Return(false));
@@ -83,14 +82,14 @@ TEST(AndroidInputReceiverThread, receives_and_dispatches_available_events_when_r
     {
         InputDelegate(MockEventHandler& handler)
           : handler(handler) {}
-        void operator()(MirSurface* /* surface */, MirEvent* ev, void* /* context */)
+        void operator()(MirEvent* ev)
         {
             handler.handle_event(ev);
         }
         MockEventHandler &handler;
     } input_delegate(mock_handler);
 
-    miat::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate, nullptr);
+    miat::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate);
     {
         InSequence seq;
 
@@ -100,7 +99,6 @@ TEST(AndroidInputReceiverThread, receives_and_dispatches_available_events_when_r
         EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(false)));
     }
     EXPECT_CALL(mock_handler, handle_event(_)).Times(1);
-    
 
     input_thread.start();
     input_thread.join();
