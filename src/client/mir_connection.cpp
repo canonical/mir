@@ -63,11 +63,15 @@ mir_toolkit::MirConnection::~MirConnection()
 
 mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::create_surface(
     MirSurfaceParameters const & params,
+    MirEventDelegate const& delegate,
     mir_surface_lifecycle_callback callback,
     void * context)
 {
     auto depository = platform->create_platform_depository();
     auto null_log = std::make_shared<mir::client::NullLogger>();
+
+    (void) delegate; // TODO: ~racarr make use of delgate to input platform
+    
     auto surface = new MirSurface(this, server, null_log, depository, params, callback, context);
     return surface->get_create_wait_handle();
 }

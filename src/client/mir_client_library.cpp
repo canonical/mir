@@ -120,12 +120,9 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
 {
     if (&error_connection == connection) return 0;
     
-    // TODO: Make use of delegate
-    (void)delegate;
-
     try
     {
-        return connection->create_surface(*params, callback, context);
+        return connection->create_surface(*params, *delegate, callback, context);
     }
     catch (std::exception const&)
     {
