@@ -26,6 +26,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <androidfw/InputTransport.h>
+
 namespace miat = mir::input::android::transport;
 namespace mt = mir::test;
 
@@ -40,7 +42,7 @@ struct MockEventHandler
 struct MockInputReceiver : public miat::InputReceiver
 {
     MockInputReceiver()
-      : InputReceiver(0) // TODO: ? maybe initialize with null channel ~racarr
+      : InputReceiver(droidinput::sp<droidinput::InputChannel>()) // TODO: ? maybe initialize with null channel ~racarr
     {
     }
     MOCK_METHOD1(next_event, bool(MirEvent &));
@@ -68,6 +70,7 @@ TEST(AndroidInputReceiverThread, polls_until_stopped)
         EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(false)));
     }
     input_thread.start();
+    input_thread.join();
 }
 
 TEST(AndroidInputReceiverThread, receives_and_dispatches_available_events_when_ready)
@@ -100,6 +103,7 @@ TEST(AndroidInputReceiverThread, receives_and_dispatches_available_events_when_r
     
 
     input_thread.start();
+    input_thread.join();
 }
 
 // TODO: Test for threaded delivery ~racarrg

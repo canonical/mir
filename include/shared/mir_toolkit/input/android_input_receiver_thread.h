@@ -23,6 +23,8 @@
 
 #include <functional>
 #include <memory>
+#include <atomic>
+#include <thread>
 
 namespace mir_toolkit
 {
@@ -49,12 +51,17 @@ public:
 
     void start();
     void stop();
+    void join();
 protected:
     InputReceiverThread(const InputReceiverThread&) = delete;
     InputReceiverThread& operator=(const InputReceiverThread&) = delete;
 private:
     std::shared_ptr<InputReceiver> const receiver;
     std::function<void(mir_toolkit::MirSurface*, MirEvent*, void*)> handler;
+    
+    void thread_loop();
+    std::atomic<bool> running;
+    std::thread thread;
 };
 
 }
