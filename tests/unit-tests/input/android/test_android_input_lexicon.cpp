@@ -15,8 +15,8 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#include "src/server/input/android/transport/android_input_lexicon.h"
 
+#include "mir_toolkit/input/android_input_lexicon.h"
 #include "mir_toolkit/input/event.h"
 
 #include <androidfw/Input.h>

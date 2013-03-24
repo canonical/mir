@@ -16,9 +16,9 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_toolkit/input/android_input_receiver.h"
-#include "android_input_lexicon.h"
-#include "../android_input_constants.h"
+#include "android_input_receiver.h"
+#include "mir_toolkit/input/android_input_lexicon.h"
+//#include "../android_input_constants.h"
 
 #include <androidfw/InputTransport.h>
 

@@ -35,6 +35,7 @@ set(
   mir_basic_rpc_channel.cpp
   ${PROTO_SRCS}
 )
+add_subdirectory(input)
 
 if (MIR_TRANSPORT STREQUAL "socket")
 list(APPEND CLIENT_SOURCES
@@ -96,6 +97,8 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
+  
+  mirinputandroidtransport
 
   mirprotobuf
 

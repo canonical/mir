@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_toolkit/input/android_input_receiver.h"
+#include "src/client/input/android_input_receiver.h"
 #include "mir_toolkit/input/event.h"
 
 #include <androidfw/InputTransport.h>

@@ -1,0 +1,63 @@
+/*
+ * Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Robert Carr <robert.carr@canonical.com>
+ */
+
+#include "android_input_receiver_thread.h"
+#include "android_input_receiver.h"
+
+#include <thread>
+
+namespace miat = mir::input::android::transport;
+
+miat::InputReceiverThread::InputReceiverThread(std::shared_ptr<miat::InputReceiver> const& receiver,
+                                               std::function<void(MirEvent*)> event_handling_callback)
+  : receiver(receiver),
+    handler(event_handling_callback),
+    running(false)
+{
+}
+
+void miat::InputReceiverThread::start()
+{
+    running = true;
+    thread = std::thread(std::mem_fn(&miat::InputReceiverThread::thread_loop), this);
+}
+
+void miat::InputReceiverThread::stop()
+{
+    running = false;
+}
+
+void miat::InputReceiverThread::join()
+{
+    thread.join();
+}
+
+void miat::InputReceiverThread::thread_loop()
+{
+    std::chrono::milliseconds timeout(10);
+    while (running)
+    {
+        if (receiver->poll(timeout))
+        {
+            MirEvent ev;
+            while(receiver->next_event(ev))
+                handler(&ev); // TODO: ~racarr lol
+        }
+        std::this_thread::yield(); // TODO: ~racarr comment or remove
+    }
+}

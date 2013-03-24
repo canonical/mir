@@ -17,7 +17,7 @@
  *              Robert Carr <robert.carr@canonical.com>
  */
 
-#include "android_input_lexicon.h"
+#include "mir_toolkit/input/android_input_lexicon.h"
 
 #include <androidfw/Input.h>
 
