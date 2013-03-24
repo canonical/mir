@@ -16,30 +16,34 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
-#define MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#ifndef MIR_CLIENT_INPUT_PLATFORM_H_
+#define MIR_CLIENT_INPUT_PLATFORM_H_
+
+#include "mir_toolkit/input/event.h"
+
+#include <memory>
+#include <functional>
 
 namespace mir
 {
 namespace client
 {
+class InputReceiverThread;
 
-class InputReceiverThread
+class InputPlatform
 {
 public:
-    virtual ~InputReceiverThread() {};
+    virtual ~InputPlatform() = default;  
 
-    virtual void start() = 0;
-    virtual void stop() = 0;
-    virtual void join() = 0;
+    virtual std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> callback) = 0;
 
 protected:
-    InputReceiverThread() = default;
-    InputReceiverThread(const InputReceiverThread&) = delete;
-    InputReceiverThread& operator=(const InputReceiverThread&) = delete;
+    InputPlatform() = default;
+    InputPlatform(const InputPlatform&) = delete;
+    InputPlatform& operator=(const InputPlatform&) = delete;
 };
 
 }
 } // namespace mir
 
-#endif // MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#endif // MIR_CLIENT_INPUT_PLATFORM_H_

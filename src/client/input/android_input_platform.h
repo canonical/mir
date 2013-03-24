@@ -16,30 +16,30 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
-#define MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#ifndef MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
+#define MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
+
+#include "input_platform.h"
 
 namespace mir
 {
 namespace client
 {
 
-class InputReceiverThread
+class AndroidInputPlatform
 {
 public:
-    virtual ~InputReceiverThread() {};
+    AndroidInputPlatform();
+    virtual ~AndroidInputPlatform() = default;  
 
-    virtual void start() = 0;
-    virtual void stop() = 0;
-    virtual void join() = 0;
+    std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> callback);
 
 protected:
-    InputReceiverThread() = default;
-    InputReceiverThread(const InputReceiverThread&) = delete;
-    InputReceiverThread& operator=(const InputReceiverThread&) = delete;
+    AndroidInputPlatform(const AndroidInputPlatform&) = delete;
+    AndroidInputPlatform& operator=(const AndroidInputPlatform&) = delete;
 };
 
 }
 } // namespace mir
 
-#endif // MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#endif // MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_

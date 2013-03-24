@@ -16,30 +16,18 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
-#define MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#include "android_input_platform.h"
 
-namespace mir
+namespace mcl = mir::client;
+
+mcl::AndroidInputPlatform::AndroidInputPlatform()
 {
-namespace client
-{
-
-class InputReceiverThread
-{
-public:
-    virtual ~InputReceiverThread() {};
-
-    virtual void start() = 0;
-    virtual void stop() = 0;
-    virtual void join() = 0;
-
-protected:
-    InputReceiverThread() = default;
-    InputReceiverThread(const InputReceiverThread&) = delete;
-    InputReceiverThread& operator=(const InputReceiverThread&) = delete;
-};
-
 }
-} // namespace mir
 
-#endif // MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+std::shared_ptr<mcl::InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> callback)
+{
+    (void)fd;
+    (void)callback;
+    // TODO: ~Implement ~racarr
+    return std::shared_ptr<mcl::InputReceiverThread>();
+}
