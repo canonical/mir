@@ -33,7 +33,7 @@ class InputReceiverThread;
 class InputPlatform
 {
 public:
-    virtual ~InputPlatform() = default;  
+    virtual ~InputPlatform() {};  
 
     virtual std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> callback) = 0;
 

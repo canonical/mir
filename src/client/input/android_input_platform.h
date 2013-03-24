@@ -26,11 +26,11 @@ namespace mir
 namespace client
 {
 
-class AndroidInputPlatform
+class AndroidInputPlatform : public InputPlatform
 {
 public:
     AndroidInputPlatform();
-    virtual ~AndroidInputPlatform() = default;  
+    virtual ~AndroidInputPlatform();  
 
     std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> callback);
 

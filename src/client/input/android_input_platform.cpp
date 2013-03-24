@@ -27,7 +27,12 @@ mcl::AndroidInputPlatform::AndroidInputPlatform()
 {
 }
 
-std::shared_ptr<mcl::InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent*)> callback)
+mcl::AndroidInputPlatform::~AndroidInputPlatform()
+{
+}
+
+std::shared_ptr<mcl::InputReceiverThread> mcl::AndroidInputPlatform::create_input_thread(
+    int fd, std::function<void(MirEvent*)> callback)
 {
     auto receiver = std::make_shared<miat::InputReceiver>(fd);
     return std::make_shared<miat::InputReceiverThread>(receiver, callback);

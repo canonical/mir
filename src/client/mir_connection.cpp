@@ -25,6 +25,8 @@
 #include "client_buffer_depository.h"
 #include "make_rpc_channel.h"
 
+#include "input/android_input_platform.h"
+
 #include <thread>
 #include <cstddef>
 
@@ -46,7 +48,8 @@ mir_toolkit::MirConnection::MirConnection(
         channel(channel),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         log(log),
-        client_platform_factory(client_platform_factory)
+        client_platform_factory(client_platform_factory),
+        input_platform(std::make_shared<mcl::AndroidInputPlatform>()) // TODO: Abstract ~racarr?
 {
     {
         std::lock_guard<std::mutex> lock(connection_guard);
