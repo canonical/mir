@@ -19,6 +19,8 @@
 #ifndef MIR_INPUT_ANDROID_INPUT_RECEIVER_THREAD_H_
 #define MIR_INPUT_ANDROID_INPUT_RECEIVER_THREAD_H_
 
+#include "input_receiver_thread.h"
+
 #include "mir_toolkit/input/event.h"
 
 #include <functional>
@@ -36,7 +38,7 @@ namespace transport
 {
 class InputReceiver;
 
-class InputReceiverThread
+class InputReceiverThread : public client::InputReceiverThread
 {
 public:
     InputReceiverThread(std::shared_ptr<InputReceiver> const& receiver, 
@@ -46,9 +48,11 @@ public:
     void start();
     void stop();
     void join();
+
 protected:
     InputReceiverThread(const InputReceiverThread&) = delete;
     InputReceiverThread& operator=(const InputReceiverThread&) = delete;
+
 private:
     std::shared_ptr<InputReceiver> const receiver;
     std::function<void(MirEvent*)> handler;
