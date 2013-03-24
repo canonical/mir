@@ -23,6 +23,7 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
+#include "mir_toolkit/common.h"
 
 #include <memory>
 
@@ -46,8 +47,6 @@ public:
 
     virtual ~Surface() {}
 
-    virtual void hide() = 0;
-    virtual void show() = 0;
     virtual void destroy() = 0;
     virtual void shutdown() = 0;
 
@@ -61,6 +60,8 @@ public:
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;
+
+    virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
 
 protected:
     Surface() = default;

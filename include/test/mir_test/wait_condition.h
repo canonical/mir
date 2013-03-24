@@ -55,6 +55,10 @@ ACTION_P(ReturnFalseAndWakeUp, wait_condition)
     wait_condition->wake_up_everyone();
     return false;
 }
+ACTION_P(WakeUp, wait_condition)
+{
+    wait_condition->wake_up_everyone();
+}
 }
 
 #endif // MIR_TEST_WAIT_CONDITION_H_

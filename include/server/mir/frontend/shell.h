@@ -28,7 +28,7 @@ namespace mir
 namespace frontend
 {
 class Session;
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 
 class Shell
 {

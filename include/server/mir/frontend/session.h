@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_SESSION_H_
 #define MIR_FRONTEND_SESSION_H_
 
+#include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
 
 #include <mutex>
@@ -43,11 +44,13 @@ public:
     virtual void destroy_surface(SurfaceId surface) = 0;
     virtual std::shared_ptr<Surface> get_surface(SurfaceId surface) const = 0;
 
-    virtual std::string name() = 0;
+    virtual std::string name() const = 0;
     virtual void shutdown() = 0;
 
     virtual void hide() = 0;
     virtual void show() = 0;
+
+    virtual int configure_surface(SurfaceId id, MirSurfaceAttrib attrib, int value) = 0;
 
 protected:
     Session() = default;

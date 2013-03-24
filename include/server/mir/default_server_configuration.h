@@ -43,6 +43,7 @@ class Shell;
 class Communicator;
 class ProtobufIpcFactory;
 class SessionMediatorReport;
+class MessageProcessorReport;
 }
 
 namespace shell
@@ -51,6 +52,7 @@ class SessionManager;
 class SurfaceFactory;
 class SurfaceSource;
 class SurfaceBuilder;
+class InputFocusSelector;
 }
 namespace surfaces
 {
@@ -100,6 +102,7 @@ public:
 
     virtual std::shared_ptr<frontend::Communicator> the_communicator();
     virtual std::shared_ptr<frontend::SessionMediatorReport> the_session_mediator_report();
+    virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
 
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
     virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
@@ -111,6 +114,7 @@ public:
 
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<input::InputManager> the_input_manager();
+    virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
 
     virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
 
@@ -128,6 +132,7 @@ protected:
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
+    CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;

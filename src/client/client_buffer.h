@@ -28,7 +28,7 @@
 
 namespace mir_toolkit
 {
-class MirBufferPackage;
+struct MirBufferPackage;
 }
 
 namespace mir

@@ -28,6 +28,9 @@ class DummyInputManager : public mi::InputManager
     void stop() {}
     void start() {}
     virtual std::shared_ptr<mi::InputChannel> make_input_channel() { return std::shared_ptr<mi::InputChannel>(); }
+    void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& /* session */, std::shared_ptr<mi::SurfaceTarget> const& /* surface */)
+    {
+    }
 }; 
 }
 

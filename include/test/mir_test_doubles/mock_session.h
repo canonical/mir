@@ -36,11 +36,13 @@ struct MockSession : public frontend::Session
     MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
     
-    MOCK_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(name, std::string());
     MOCK_METHOD0(shutdown, void());
     
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+
+    MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 };
 
 }

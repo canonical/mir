@@ -114,6 +114,14 @@ message Void {
   optional string error = 127;
 }
 
+message SurfaceSetting {
+  optional SurfaceId surfaceid = 1;
+  optional int32     attrib = 2;
+  optional int32     ivalue = 3;
+  // optional string    svalue = 4;  // Expected for future use
+  optional string error = 127;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -127,5 +135,7 @@ service DisplayServer {
   rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
 
   rpc test_file_descriptors(Void) returns (Buffer);
+
+  rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
 }
 

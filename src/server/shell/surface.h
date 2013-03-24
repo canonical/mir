@@ -22,6 +22,11 @@
 
 #include "mir/frontend/surface.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/surface_target.h"
+
+#include "mir_toolkit/common.h"
+
+#include <string>
 
 namespace mir
 {
@@ -38,7 +43,7 @@ namespace shell
 {
 class SurfaceBuilder;
 
-class Surface : public frontend::Surface
+class Surface : public frontend::Surface, public input::SurfaceTarget
 {
 public:
     Surface(
@@ -47,29 +52,39 @@ public:
         std::shared_ptr<input::InputChannel> const& input_channel);
     ~Surface();
 
-    void hide();
+    virtual void hide();
 
-    void show();
+    virtual void show();
 
-    void destroy();
+    virtual void destroy();
 
-    void shutdown();
+    virtual void shutdown();
 
-    geometry::Size size() const;
+    virtual std::string name() const;
 
-    geometry::PixelFormat pixel_format() const;
+    virtual geometry::Size size() const;
 
-    void advance_client_buffer();
+    virtual geometry::PixelFormat pixel_format() const;
 
-    std::shared_ptr<compositor::Buffer> client_buffer() const;
+    virtual void advance_client_buffer();
 
-    bool supports_input() const;
-    int client_input_fd() const;
+    virtual std::shared_ptr<compositor::Buffer> client_buffer() const;
+
+    virtual bool supports_input() const;
+    virtual int client_input_fd() const;
+    virtual int server_input_fd() const;
+
+    virtual int configure(MirSurfaceAttrib attrib, int value);
+    virtual MirSurfaceType type() const;
 
 private:
+    bool set_type(MirSurfaceType t);  // Use configure() to make public changes
+
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
+
+    MirSurfaceType type_value;
 };
 }
 }

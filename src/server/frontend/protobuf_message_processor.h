@@ -37,15 +37,18 @@ namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class ResourceCache;
+class MessageProcessorReport;
 
 namespace detail
 {
+
 struct ProtobufMessageProcessor : MessageProcessor
 {
     ProtobufMessageProcessor(
         MessageSender* sender,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
-        std::shared_ptr<ResourceCache> const& resource_cache);
+        std::shared_ptr<ResourceCache> const& resource_cache,
+        std::shared_ptr<MessageProcessorReport> const& report);
 
 private:
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
@@ -74,6 +77,8 @@ private:
 
     bool process_message(std::istream& msg);
 
+    bool dispatch(mir::protobuf::wire::Invocation const& invocation);
+
     template<class ParameterMessage, class ResultMessage>
     void invoke(
         void (protobuf::DisplayServer::*function)(
@@ -86,6 +91,7 @@ private:
     MessageSender* const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<ResourceCache> const resource_cache;
+    std::shared_ptr<MessageProcessorReport> const report;
 };
 }
 }

@@ -39,5 +39,5 @@ bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputE
 
 void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
 {
-    policy_flags = droidinput::POLICY_FLAG_FILTERED;
+    policy_flags |= droidinput::POLICY_FLAG_PASS_TO_USER;
 }

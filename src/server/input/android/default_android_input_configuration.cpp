@@ -26,6 +26,8 @@
 #include <InputDispatcher.h>
 #include <InputReader.h>
 
+#include <string>
+
 namespace droidinput = android;
 
 namespace mi = mir::input;

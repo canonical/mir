@@ -60,7 +60,6 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
 }
 
 mgg::KMSDisplayConfiguration::KMSDisplayConfiguration(int drm_fd)
-    : drm_fd{drm_fd}
 {
     DRMModeResources resources{drm_fd};
 

@@ -49,6 +49,10 @@ mir_toolkit::MirSurface::MirSurface(
     message.set_buffer_usage(params.buffer_usage);
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
+
+    for (int i = 0; i < mir_surface_attrib_arraysize_; i++)
+        attrib_cache[i] = -1;
+    attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
 }
 
 mir_toolkit::MirSurface::~MirSurface()
@@ -223,4 +227,47 @@ void mir_toolkit::MirSurface::populate(MirBufferPackage& buffer_package)
 EGLNativeWindowType mir_toolkit::MirSurface::generate_native_window()
 {
     return *accelerated_window;
+}
+
+MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
+{
+    mp::SurfaceSetting setting;
+    setting.mutable_surfaceid()->CopyFrom(surface.id());
+    setting.set_attrib(at);
+    setting.set_ivalue(value);
+
+    configure_wait_handle.expect_result();
+    server.configure_surface(0, &setting, &configure_result, 
+              google::protobuf::NewCallback(this, &MirSurface::on_configured));
+
+    return &configure_wait_handle;
+}
+
+void MirSurface::on_configured()
+{
+    if (configure_result.has_surfaceid() &&
+        configure_result.surfaceid().value() == surface.id().value() &&
+        configure_result.has_attrib())
+    {
+        switch (configure_result.attrib())
+        {
+        case mir_surface_attrib_type:
+            if (configure_result.has_ivalue())
+            {
+                int t = configure_result.ivalue();
+                attrib_cache[mir_surface_attrib_type] = t;
+            } // else error is probably set due to an unsupported attrib/value
+            break;
+        default:
+            assert(false);
+            break;
+        }
+
+        configure_wait_handle.result_received();
+    }
+}
+
+int MirSurface::attrib(MirSurfaceAttrib at) const
+{
+    return attrib_cache[at];
 }
