@@ -42,7 +42,7 @@ class InputReceiverThread : public client::InputReceiverThread
 {
 public:
     InputReceiverThread(std::shared_ptr<InputReceiver> const& receiver, 
-                        std::function<void(MirEvent*)> event_handling_callback);
+                        std::function<void(MirEvent*)> event_handling_callback); // TODO: Const ~racarr
     virtual ~InputReceiverThread() {};
 
     void start();

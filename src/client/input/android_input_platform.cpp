@@ -17,17 +17,18 @@
  */
 
 #include "android_input_platform.h"
+#include "android_input_receiver.h"
+#include "android_input_receiver_thread.h"
 
 namespace mcl = mir::client;
+namespace miat = mir::input::android::transport;
 
 mcl::AndroidInputPlatform::AndroidInputPlatform()
 {
 }
 
-std::shared_ptr<mcl::InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> callback)
+std::shared_ptr<mcl::InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent*)> callback)
 {
-    (void)fd;
-    (void)callback;
-    // TODO: ~Implement ~racarr
-    return std::shared_ptr<mcl::InputReceiverThread>();
+    auto receiver = std::make_shared<miat::InputReceiver>(fd);
+    return std::make_shared<miat::InputReceiverThread>(receiver, callback);
 }
