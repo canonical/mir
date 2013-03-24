@@ -36,6 +36,7 @@ mir_toolkit::MirSurface::MirSurface(
     std::shared_ptr<mcl::ClientBufferDepository> const& depository,
     std::shared_ptr<mcl::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
+    MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
@@ -50,6 +51,8 @@ mir_toolkit::MirSurface::MirSurface(
     message.set_height(params.height);
     message.set_pixel_format(params.pixel_format);
     message.set_buffer_usage(params.buffer_usage);
+
+    (void)delegate;
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }

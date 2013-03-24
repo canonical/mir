@@ -282,7 +282,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation )
     EXPECT_CALL(*mock_depository, deposit_package_rv(_,_,_,_))
         .Times(1);
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, &empty_callback, (void*) NULL);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, nullptr, &empty_callback, (void*) NULL);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
@@ -300,7 +300,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer )
     EXPECT_CALL(*mock_depository, deposit_package_rv(_,_,_,_))
         .Times(1);
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, &empty_callback, (void*) NULL);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, nullptr, &empty_callback, (void*) NULL);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
@@ -321,7 +321,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
         .WillOnce(
             SaveArg<0>(&submitted_package));
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, &empty_callback, (void*) NULL);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, nullptr, &empty_callback, (void*) NULL);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 
@@ -344,7 +344,7 @@ TEST_F(MirClientSurfaceTest, message_width_used_in_buffer_creation )
         .Times(1)
         .WillOnce(SaveArg<2>(&sz));
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, &empty_callback, (void*) NULL);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, nullptr, &empty_callback, (void*) NULL);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 
@@ -362,7 +362,7 @@ TEST_F(MirClientSurfaceTest, message_height_used_in_buffer_creation )
         .Times(1)
         .WillOnce(SaveArg<2>(&sz));
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, &empty_callback, (void*) NULL);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, nullptr, &empty_callback, (void*) NULL);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 
@@ -380,7 +380,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
         .Times(1)
         .WillOnce(SaveArg<3>(&pf));
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, &empty_callback, (void*) NULL);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, input_platform, params, nullptr, &empty_callback, (void*) NULL);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
 

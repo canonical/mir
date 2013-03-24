@@ -122,7 +122,7 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
     
     try
     {
-        return connection->create_surface(*params, *delegate, callback, context);
+        return connection->create_surface(*params, delegate, callback, context);
     }
     catch (std::exception const&)
     {

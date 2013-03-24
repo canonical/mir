@@ -52,7 +52,8 @@ public:
         const std::shared_ptr<mir::client::Logger>& logger,
         const std::shared_ptr<mir::client::ClientBufferDepository>& depository,
         const std::shared_ptr<mir::client::InputPlatform>& input_platform,
-        MirSurfaceParameters const & params,
+        MirSurfaceParameters const& params,
+        MirEventDelegate const* delegate,
         mir_surface_lifecycle_callback callback, void * context);
 
     ~MirSurface();

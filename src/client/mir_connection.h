@@ -60,7 +60,7 @@ public:
 
     MirWaitHandle* create_surface(
         MirSurfaceParameters const & params,
-        MirEventDelegate const& delegate,
+        MirEventDelegate const* delegate,
         mir_surface_lifecycle_callback callback,
         void * context);
     MirWaitHandle* release_surface(
