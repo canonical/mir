@@ -75,7 +75,7 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::create_surface(
 
     (void) delegate; // TODO: ~racarr make use of delgate to input platform
     
-    auto surface = new MirSurface(this, server, null_log, depository, params, callback, context);
+    auto surface = new MirSurface(this, server, null_log, depository, input_platform, params, callback, context);
     return surface->get_create_wait_handle();
 }
 

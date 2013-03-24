@@ -35,6 +35,7 @@ namespace mir
 namespace client
 {
 class ClientBuffer;
+class InputPlatform;
 struct MemoryRegion;
 }
 }
@@ -50,6 +51,7 @@ public:
         mir::protobuf::DisplayServer::Stub & server,
         const std::shared_ptr<mir::client::Logger>& logger,
         const std::shared_ptr<mir::client::ClientBufferDepository>& depository,
+        const std::shared_ptr<mir::client::InputPlatform>& input_platform,
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
 
@@ -93,6 +95,7 @@ private:
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
+    std::shared_ptr<mir::client::InputPlatform> const input_platform;
 
     std::shared_ptr<mir::client::Logger> logger;
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
