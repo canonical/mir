@@ -79,21 +79,17 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
     }
 }
 
-void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
+void mfd::SocketSession::on_new_message(const boost::system::error_code& error)
 {
-    bool alive{true};
-
-    if (!ec)
+    if (error)
     {
-        std::istream msg(&message);
-        alive = processor->process_message(msg);
-    }
-    else
-    {
-        std::cerr << "ERROR reading message: " << ec.message() << std::endl;
+        connected_sessions->remove(id());
+        BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 
-    if (alive)
+    std::istream msg(&message);
+
+    if (processor->process_message(msg))
     {
         read_next_message();
     }
@@ -106,5 +102,8 @@ void mfd::SocketSession::on_new_message(const boost::system::error_code& ec)
 void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size_t)
 {
     if (error)
-        std::cerr << "ERROR sending response: " << error.message() << std::endl;
+    {
+        connected_sessions->remove(id());
+        BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
+    }
 }

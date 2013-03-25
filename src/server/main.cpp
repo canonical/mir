@@ -16,42 +16,13 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/display_server.h"
+#include "mir/run_mir.h"
 #include "mir/default_server_configuration.h"
+#include "mir/abnormal_exit.h"
 
-#include <thread>
-#include <boost/program_options/errors.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
-#include <atomic>
-#include <csignal>
 #include <iostream>
-
-namespace
-{
-std::atomic<mir::DisplayServer*> signal_display_server;
-
-extern "C" void signal_terminate(int)
-{
-    while (!signal_display_server.load())
-        std::this_thread::yield();
-
-    signal_display_server.load()->stop();
-}
-
-void run_mir(mir::ServerConfiguration& config)
-{
-    signal(SIGINT, signal_terminate);
-    signal(SIGTERM, signal_terminate);
-    signal(SIGPIPE, SIG_IGN);
-
-    mir::DisplayServer server(config);
-
-    signal_display_server.store(&server);
-
-    server.run();
-}
-}
 
 int main(int argc, char const* argv[])
 try
@@ -61,9 +32,9 @@ try
     run_mir(config);
     return 0;
 }
-catch (boost::program_options::error const&)
+catch (mir::AbnormalExit const& error)
 {
-    // Can't run with these options - but no need for additional output
+    std::cerr << error.what() << std::endl;
     return 1;
 }
 catch (std::exception const& error)
