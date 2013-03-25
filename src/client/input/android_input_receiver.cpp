@@ -24,30 +24,31 @@
 
 #include <poll.h>
 
+namespace mclia = mir::client::input::android;
 namespace miat = mir::input::android::transport;
 
-miat::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
+mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
   : input_channel(input_channel),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel))
 {
 }
 
-miat::InputReceiver::InputReceiver(int fd)
+mclia::InputReceiver::InputReceiver(int fd)
   : input_channel(new droidinput::InputChannel(droidinput::String8("TODO: Name"), fd)),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel))
 {
 }
 
-miat::InputReceiver::~InputReceiver()
+mclia::InputReceiver::~InputReceiver()
 {
 }
 
-int miat::InputReceiver::get_fd() const
+int mclia::InputReceiver::get_fd() const
 {
     return input_channel->getFd();
 }
 
-bool miat::InputReceiver::next_event(MirEvent &ev)
+bool mclia::InputReceiver::next_event(MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
@@ -71,7 +72,7 @@ bool miat::InputReceiver::next_event(MirEvent &ev)
     return handled_event;
 }
 
-bool miat::InputReceiver::poll(std::chrono::milliseconds timeout)
+bool mclia::InputReceiver::poll(std::chrono::milliseconds timeout)
 {
     struct pollfd pfd;
     

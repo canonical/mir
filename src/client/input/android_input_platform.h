@@ -27,6 +27,8 @@ namespace client
 {
 namespace input
 {
+namespace android
+{
 
 class AndroidInputPlatform : public InputPlatform
 {
@@ -41,6 +43,7 @@ protected:
     AndroidInputPlatform& operator=(const AndroidInputPlatform&) = delete;
 };
 
+}
 }
 }
 } // namespace mir

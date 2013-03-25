@@ -37,11 +37,11 @@ class InputConsumer;
 
 namespace mir
 {
+namespace client
+{
 namespace input
 {
 namespace android
-{
-namespace transport
 {
 
 class InputReceiver

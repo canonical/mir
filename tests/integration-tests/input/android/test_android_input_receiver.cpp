@@ -27,9 +27,7 @@
 #include <unistd.h>
 #include <memory>
 
-namespace mi = mir::input;
-namespace mia = mi::android;
-namespace miat = mia::transport;
+namespace mclia = mir::client::input::android;
 
 namespace droidinput = android;
 
@@ -137,14 +135,14 @@ public:
 
 TEST_F(AndroidInputReceiverSetup, receiever_takes_channel_fd)
 {
-    miat::InputReceiver receiver(android_client_channel);
+    mclia::InputReceiver receiver(android_client_channel);
     
     EXPECT_EQ(android_client_channel->getFd(), receiver.get_fd());
 }
 
 TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 {
-    miat::InputReceiver receiver(android_client_channel);
+    mclia::InputReceiver receiver(android_client_channel);
     TestingInputProducer producer(android_server_channel);
     
     producer.produce_a_key_event();
@@ -159,7 +157,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 
 TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 {
-    miat::InputReceiver receiver(android_client_channel);
+    mclia::InputReceiver receiver(android_client_channel);
     TestingInputProducer producer(android_server_channel);
     
     producer.produce_a_key_event();
@@ -175,7 +173,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 
 TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
 {
-    miat::InputReceiver receiver(android_client_channel);
+    mclia::InputReceiver receiver(android_client_channel);
     TestingInputProducer producer(android_server_channel);
     
     // Produce 3 motion events before client handles any.

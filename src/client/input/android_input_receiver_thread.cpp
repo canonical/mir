@@ -21,9 +21,9 @@
 
 #include <thread>
 
-namespace miat = mir::input::android::transport;
+namespace mclia = mir::client::input::android;
 
-miat::InputReceiverThread::InputReceiverThread(std::shared_ptr<miat::InputReceiver> const& receiver,
+mclia::InputReceiverThread::InputReceiverThread(std::shared_ptr<mclia::InputReceiver> const& receiver,
                                                std::function<void(MirEvent*)> event_handling_callback)
   : receiver(receiver),
     handler(event_handling_callback),
@@ -31,23 +31,23 @@ miat::InputReceiverThread::InputReceiverThread(std::shared_ptr<miat::InputReceiv
 {
 }
 
-void miat::InputReceiverThread::start()
+void mclia::InputReceiverThread::start()
 {
     running = true;
-    thread = std::thread(std::mem_fn(&miat::InputReceiverThread::thread_loop), this);
+    thread = std::thread(std::mem_fn(&mclia::InputReceiverThread::thread_loop), this);
 }
 
-void miat::InputReceiverThread::stop()
+void mclia::InputReceiverThread::stop()
 {
     running = false;
 }
 
-void miat::InputReceiverThread::join()
+void mclia::InputReceiverThread::join()
 {
     thread.join();
 }
 
-void miat::InputReceiverThread::thread_loop()
+void mclia::InputReceiverThread::thread_loop()
 {
     std::chrono::milliseconds timeout(10);
     while (running)

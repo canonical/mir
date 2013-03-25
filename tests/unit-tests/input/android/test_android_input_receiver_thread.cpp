@@ -30,7 +30,7 @@
 
 #include <atomic>
 
-namespace miat = mir::input::android::transport;
+namespace mclia = mir::client::input::android;
 namespace mt = mir::test;
 
 namespace
@@ -41,7 +41,7 @@ struct MockEventHandler
     MOCK_METHOD1(handle_event, void(MirEvent*));
 };
 
-struct MockInputReceiver : public miat::InputReceiver
+struct MockInputReceiver : public mclia::InputReceiver
 {
     MockInputReceiver()
       : InputReceiver(droidinput::sp<droidinput::InputChannel>()) // TODO: ? maybe initialize with null channel ~racarr
@@ -63,7 +63,7 @@ TEST(AndroidInputReceiverThread, polls_until_stopped)
     using namespace ::testing;
 
     MockInputReceiver input_receiver;
-    miat::InputReceiverThread input_thread(mt::fake_shared(input_receiver), 
+    mclia::InputReceiverThread input_thread(mt::fake_shared(input_receiver), 
                                            std::function<void(MirEvent*)>());    
     {
         InSequence seq;
@@ -91,7 +91,7 @@ TEST(AndroidInputReceiverThread, receives_and_dispatches_available_events_when_r
         MockEventHandler &handler;
     } input_delegate(mock_handler);
 
-    miat::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate);
+    mclia::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate);
     {
         InSequence seq;
 
@@ -127,7 +127,7 @@ TEST(AndroidInputReceiverThread, input_callback_invoked_from_thread)
         std::atomic<bool> &handled;
     } input_delegate(handled);
 
-    miat::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate);
+    mclia::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate);
     {
         InSequence seq;
 
