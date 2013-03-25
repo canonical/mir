@@ -29,6 +29,7 @@
 #include "client_platform.h"
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -36,6 +37,8 @@ namespace client
 {
 class ClientBuffer;
 class InputPlatform;
+class InputReceiverThread;
+
 struct MemoryRegion;
 }
 }
@@ -100,6 +103,9 @@ private:
 
     std::shared_ptr<mir::client::Logger> logger;
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
+    
+    std::function<void(MirEvent*)> handle_event_callback;
+    std::shared_ptr<mir::client::InputReceiverThread> input_thread;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

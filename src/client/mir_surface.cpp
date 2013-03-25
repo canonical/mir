@@ -21,6 +21,8 @@
 #include "client_buffer.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
+#include "input/input_receiver_thread.h"
+#include "input/input_platform.h"
 
 #include <cassert>
 
@@ -51,14 +53,17 @@ mir_toolkit::MirSurface::MirSurface(
     message.set_height(params.height);
     message.set_pixel_format(params.pixel_format);
     message.set_buffer_usage(params.buffer_usage);
-
-    (void)delegate;
+    
+    if (delegate)
+        handle_event_callback = std::bind(delegate->handle_input, this, std::placeholders::_1, delegate->context);
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 }
 
 mir_toolkit::MirSurface::~MirSurface()
 {
+    if (input_thread)
+        input_thread->stop();
     release_cpu_region();
 }
 
@@ -169,6 +174,13 @@ void mir_toolkit::MirSurface::created(mir_surface_lifecycle_callback callback, v
     accelerated_window = platform->create_egl_native_window(this);
 
     callback(this, context);
+    
+    if (surface.fd_size() > 0 && handle_event_callback) // TODO: Test this logic ~racarr
+    {
+        input_thread = input_platform->create_input_thread(surface.fd(0), handle_event_callback);
+        input_thread->start();
+    }
+
     create_wait_handle.result_received();
 }
 

@@ -26,15 +26,19 @@
 #include "src/client/mir_surface.h"
 #include "src/client/mir_connection.h"
 #include "src/client/input/input_platform.h"
+#include "src/client/input/input_receiver_thread.h"
 #include "mir/frontend/resource_cache.h"
 
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test/gmock_fixes.h"
+#include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <fcntl.h>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -54,6 +58,14 @@ struct MockServerPackageGenerator : public StubServerTool
         width_sent  = 891;
         height_sent = 458;
         pf_sent = mir_pixel_format_abgr_8888;
+
+        input_fd = open("/dev/null", O_APPEND);
+    }
+    ~MockServerPackageGenerator()
+    {
+        close(input_fd);
+        for (int i = 0; i < server_package.fd_items; i++)
+            close(server_package.fd[0]);
     }
 
     void create_surface(google::protobuf::RpcController* ,
@@ -84,8 +96,10 @@ struct MockServerPackageGenerator : public StubServerTool
         int num_fd = 2, num_data = 8;
         for (auto i=0; i<num_fd; i++)
         {
-            server_package.fd[i] = i*3;
+            server_package.fd[i] = open("/dev/null", O_APPEND);
         }
+        server_package.fd_items = num_fd;
+        server_package.data_items = num_data;
         for (auto i=0; i<num_data; i++)
         {
             server_package.data[i] = i*2;
@@ -98,6 +112,8 @@ struct MockServerPackageGenerator : public StubServerTool
     int width_sent;
     int height_sent;
     int pf_sent;
+    
+    int input_fd;
 
     private:
     int global_buffer_id;
@@ -107,7 +123,7 @@ struct MockServerPackageGenerator : public StubServerTool
         response->set_buffer_id(global_buffer_id);
 
         /* assemble buffers */
-        response->set_fds_on_side_channel(1);
+        response->set_fds_on_side_channel(server_package.fd_items);
         for (int i=0; i< server_package.data_items; i++)
         {
             response->add_data(server_package.data[i]);
@@ -122,10 +138,14 @@ struct MockServerPackageGenerator : public StubServerTool
 
     void create_surface_response(mir::protobuf::Surface* response)
     {
+        response->set_fds_on_side_channel(1);
+
         response->mutable_id()->set_value(2);
         response->set_width(width_sent);
         response->set_height(height_sent);
         response->set_pixel_format(pf_sent);
+        response->add_fd(input_fd);
+
         create_buffer_response(response->mutable_buffer());
     }
 };
@@ -203,6 +223,18 @@ struct StubClientInputPlatform : public mcl::InputPlatform
     {
         return std::shared_ptr<mcl::InputReceiverThread>();
     }
+};
+
+struct MockClientInputPlatform : public mcl::InputPlatform
+{
+    MOCK_METHOD2(create_input_thread, std::shared_ptr<mcl::InputReceiverThread>(int, std::function<void(MirEvent*)>));
+};
+
+struct MockInputReceiverThread : public mcl::InputReceiverThread
+{
+    MOCK_METHOD0(start, void());
+    MOCK_METHOD0(stop, void());
+    MOCK_METHOD0(join, void());
 };
 
 }
@@ -387,3 +419,36 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     EXPECT_EQ(pf, geom::PixelFormat::abgr_8888);
 }
 
+namespace
+{
+static void null_event_callback(MirSurface*, MirEvent*, void*)
+{
+}
+}
+
+TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread)
+{
+    using namespace ::testing;
+
+    using namespace testing;
+    
+    auto mock_input_platform = std::make_shared<mt::MockClientInputPlatform>();
+    auto mock_input_thread = std::make_shared<mt::MockInputReceiverThread>();
+    MirEventDelegate delegate = {null_event_callback, nullptr};
+
+    EXPECT_CALL(*mock_depository, deposit_package_rv(_,_,_,_))
+        .Times(1);
+    
+//    EXPECT_CALL(*mock_input_platform, create_input_thread(mt::MockServerPackageGenerator::client_input_fd, _)).Times(1)
+  //      .WillOnce(Return(mock_input_thread));
+    EXPECT_CALL(*mock_input_platform, create_input_thread(_, _)).Times(1)
+        .WillOnce(Return(mock_input_thread));
+    EXPECT_CALL(*mock_input_thread, start()).Times(1);
+    EXPECT_CALL(*mock_input_thread, stop()).Times(1);
+
+    {
+        auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_depository, mock_input_platform, params, &delegate, &empty_callback, (void*) NULL);
+        auto wait_handle = surface->get_create_wait_handle();
+        wait_handle->wait_for_result();
+    }
+}
