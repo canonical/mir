@@ -88,5 +88,4 @@ void mga::HWC11Device::commit_frame()
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
-
 }
