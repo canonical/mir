@@ -58,7 +58,11 @@ TEST_F(MessageProcessorReportTest, everything_fine)
 {
     mir::time::Timestamp a_time;
     EXPECT_CALL(time_source, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::informational,
+        EndsWith(": a_function(), elapsed=0µs"),
+        "frontend::MessageProcessor")).Times(1);
 
-    report.received_invocation(this, 1, __PRETTY_FUNCTION__);
+    report.received_invocation(this, 1, "a_function");
     report.completed_invocation(this, 1, true);
 }
