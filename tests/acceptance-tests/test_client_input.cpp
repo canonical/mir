@@ -61,6 +61,9 @@ struct FocusNotifyingInputManager : public mia::InputManager
     void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& session, std::shared_ptr<mi::SurfaceTarget> const& surface) override
     {
         InputManager::set_input_focus_to(session, surface);
+        
+        // We need a synchronization primitive inorder to halt test event injection
+        // until after a surface has taken focus (lest the events be discarded).
         if (surface)
             on_focus_set.wake_up_everyone();
     }
