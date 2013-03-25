@@ -53,10 +53,10 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
       : input_config(the_event_filters(), the_display(), std::shared_ptr<mi::CursorListener>())
     {
     }
+
     virtual void inject_input()
     {
     }
-
     void exec(mir::DisplayServer* /* display_server */) override
     {
         inject_input();
@@ -136,14 +136,14 @@ struct MockInputHandler
 
 struct InputReceivingClient : ClientConfigCommon
 {
+    virtual ~InputReceivingClient() = default;
+    
+
     static void handle_input(MirSurface* /* surface */, MirEvent* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
         client->handler->handle_input(ev);
     }
-    
-    virtual ~InputReceivingClient() = default;
-    
     virtual void expect_input()
     {
     }
@@ -151,6 +151,7 @@ struct InputReceivingClient : ClientConfigCommon
     void exec()
     {
         handler = std::make_shared<MockInputHandler>();
+
         expect_input();
 
         mir_wait_for(mir_connect(
@@ -172,8 +173,11 @@ struct InputReceivingClient : ClientConfigCommon
              this
          };
          mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
+
          std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
          mir_connection_release(connection);
+
          handler.reset();
     }
     
