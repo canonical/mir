@@ -118,11 +118,11 @@ int mir_toolkit::mir_egl_native_display_is_valid(MirEGLNativeDisplayType egl_dis
 }
 
 mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
-    MirConnection * connection,
-    MirSurfaceParameters const * params,
+    MirConnection* connection,
+    MirSurfaceParameters const* params,
     MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback,
-    void * context)
+    void* context)
 {
     if (&error_connection == connection) return 0;
     
