@@ -87,9 +87,8 @@ void mir_eglapp_swap_buffers(void)
 
 static void mir_eglapp_handle_input(MirSurface* surface, MirEvent* ev, void* context)
 {
-    (void)surface;
-    (void)context;
-    printf("ev: %d \n", ev->details.key.key_code);
+    if (ev->details.key.key_code == 45) /* Q */
+        running = 0;
 }
 
 mir_eglapp_bool mir_eglapp_init(int *width, int *height)
