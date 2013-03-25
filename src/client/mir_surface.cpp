@@ -38,7 +38,6 @@ mir_toolkit::MirSurface::MirSurface(
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
-      last_buffer_id(-1),
       buffer_depository(depository),
       logger(logger)
 {
@@ -92,7 +91,7 @@ bool mir_toolkit::MirSurface::is_valid() const
 
 void mir_toolkit::MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
-    auto buffer = buffer_depository->access_buffer(last_buffer_id);
+    auto buffer = buffer_depository->current_buffer();
 
     secured_region = buffer->secure_for_cpu_write();
     region_out.width = secured_region->width.as_uint32_t();
@@ -129,9 +128,9 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::get_create_wait_handle()
 
 /* todo: all these conversion functions are a bit of a kludge, probably
          better to have a more developed geometry::PixelFormat that can handle this */
-geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
+geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
 {
-    if ( pf == mir_pixel_format_abgr_8888 )
+    if (pf == mir_pixel_format_abgr_8888)
         return geom::PixelFormat::abgr_8888;
     return geom::PixelFormat::invalid;
 }
@@ -139,7 +138,6 @@ geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 
 void mir_toolkit::MirSurface::process_incoming_buffer()
 {
     auto const& buffer = surface.buffer();
-    last_buffer_id = buffer.buffer_id();
 
     auto surface_width = geom::Width(surface.width());
     auto surface_height = geom::Height(surface.height());
@@ -152,7 +150,7 @@ void mir_toolkit::MirSurface::process_incoming_buffer()
     try
     {
         buffer_depository->deposit_package(std::move(ipc_package),
-                                last_buffer_id,
+                                buffer.buffer_id(),
                                 surface_size, surface_pf);
     } catch (const std::runtime_error& err)
     {
@@ -188,13 +186,13 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::release_surface(
 
 std::shared_ptr<mir_toolkit::MirBufferPackage> mir_toolkit::MirSurface::get_current_buffer_package()
 {
-    auto buffer = buffer_depository->access_buffer(last_buffer_id);
+    auto buffer = buffer_depository->current_buffer();
     return buffer->get_buffer_package();
 }
 
 std::shared_ptr<mcl::ClientBuffer> mir_toolkit::MirSurface::get_current_buffer()
 {
-    return buffer_depository->access_buffer(last_buffer_id);
+    return buffer_depository->current_buffer();
 }
 
 void mir_toolkit::MirSurface::populate(MirBufferPackage& buffer_package)
