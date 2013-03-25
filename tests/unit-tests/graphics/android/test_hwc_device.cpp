@@ -155,9 +155,7 @@ int save_set_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_conte
 
     hwc_display_contents_1_t* primary_display = displays[0];
     memcpy(saved_displays[0], primary_display, sizeof(hwc_display_contents_1_t));
-    /* just look at primary display for now */
-    
-//    for(auto i=0; i<displays 
+
     return 0;
 }
 

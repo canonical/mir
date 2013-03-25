@@ -80,10 +80,13 @@ void mga::HWC11Device::commit_frame()
     hwc_display_contents_1_t displays;
     hwc_display_contents_1_t* disp;
     displays.numHwLayers = 0;
-    displays.flags = 0;
     displays.retireFenceFd = -1;
     disp = &displays;
 
-    hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &disp); 
+    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &disp);
+    if (rc != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+    }
 
 }
