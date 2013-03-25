@@ -22,7 +22,6 @@
 #include "hwc_display.h"
 
 #include <ui/FramebufferNativeWindow.h>
-#include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -44,8 +43,6 @@ class EmptyHWC : public mga::HWCDevice
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc1_1_gpu_display() const
 {
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
-    if (!android_window.get())
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not open FB window"));
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
     auto empty_hwc = std::make_shared<EmptyHWC>();
     return std::make_shared<mga::HWCDisplay>(window, empty_hwc);
@@ -55,8 +52,6 @@ std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc1_1_gpu_display() 
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_gpu_display() const
 {
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
-    if (!android_window.get())
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not open FB window"));
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
 
     return std::make_shared<mga::AndroidDisplay>(window);
