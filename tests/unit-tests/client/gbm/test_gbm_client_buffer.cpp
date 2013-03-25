@@ -17,13 +17,14 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/gbm/gbm_client_buffer_depository.h"
 #include "src/client/gbm/gbm_client_buffer.h"
 #include "mock_drm_fd_handler.h"
 
 #include <xf86drm.h>
 #include <sys/mman.h>
 #include <gtest/gtest.h>
+
+#include <stdexcept>
 
 namespace geom=mir::geometry;
 namespace mclg=mir::client::gbm;
@@ -85,9 +86,9 @@ TEST_F(MirGBMBufferTest, buffer_returns_set_package)
     EXPECT_EQ(package_return->data_items, package_copy->data_items);
     EXPECT_EQ(package_return->fd_items, package_copy->fd_items);
     EXPECT_EQ(package_return->stride, package_copy->stride);
-    for(auto i=0; i<mir_buffer_package_max; i++)
+    for (auto i=0; i<mir_buffer_package_max; i++)
         EXPECT_EQ(package_return->data[i], package_copy->data[i]);
-    for(auto i=0; i<mir_buffer_package_max; i++)
+    for (auto i=0; i<mir_buffer_package_max; i++)
         EXPECT_EQ(package_return->fd[i], package_copy->fd[i]);
 }
 
@@ -135,7 +136,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_gem_open_failure)
     mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
 
     EXPECT_THROW({
-        auto mem_region = buffer.secure_for_cpu_write();
+        buffer.secure_for_cpu_write();
     }, std::runtime_error);
 }
 

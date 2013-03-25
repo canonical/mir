@@ -17,6 +17,7 @@
  */
 
 #include "protobuf_message_processor.h"
+#include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -28,10 +29,12 @@ namespace mfd = mir::frontend::detail;
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     MessageSender* sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
-    std::shared_ptr<ResourceCache> const& resource_cache) :
+    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<MessageProcessorReport> const& report) :
     sender(sender),
     display_server(display_server),
-    resource_cache(resource_cache)
+    resource_cache(resource_cache),
+    report(report)
 {
 }
 
@@ -142,13 +145,14 @@ void mfd::ProtobufMessageProcessor::send_response(
     sender->send(buffer2);
 }
 
-bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
+bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
 {
-    mir::protobuf::wire::Invocation invocation;
+    report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
+
+    bool result = true;
 
     try
     {
-        invocation.ParseFromIstream(&msg);
         // TODO comparing strings in an if-else chain isn't efficient.
         // It is probably possible to generate a Trie at compile time.
         if ("connect" == invocation.method_name())
@@ -179,24 +183,45 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
         {
             invoke(&protobuf::DisplayServer::select_focus_by_lightdm_id, invocation);
         }
+        else if ("configure_surface" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::configure_surface, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::disconnect, invocation);
-            return false;
+            result = false;
         }
         else
         {
-            /*log->error()*/
-            std::cerr << "Unknown method:" << invocation.method_name() << std::endl;
-            return false;
+            report->unknown_method(display_server.get(), invocation.id(), invocation.method_name());
+            result = false;
         }
-
     }
     catch (std::exception const& error)
     {
-        std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
-        return false;
+        report->exception_handled(display_server.get(), invocation.id(), error);
+        result = false;
     }
 
-    return true;
+    report->completed_invocation(display_server.get(), invocation.id(), result);
+
+    return result;
+}
+
+
+bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
+{
+    try
+    {
+        mir::protobuf::wire::Invocation invocation;
+        invocation.ParseFromIstream(&msg);
+
+        return dispatch(invocation);
+    }
+    catch (std::exception const& error)
+    {
+        report->exception_handled(display_server.get(), error);
+        return false;
+    }
 }

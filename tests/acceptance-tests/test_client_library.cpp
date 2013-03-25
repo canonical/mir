@@ -205,6 +205,80 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
     launch_client_process(client_config);
 }
 
+TEST_F(DefaultDisplayServerTestFixture, surface_types)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
+
+            mir_wait_for(mir_surface_create(connection, &request_params, NULL, create_surface_callback, this));
+
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            EXPECT_EQ(mir_surface_type_normal,
+                      mir_surface_get_type(surface));
+
+            mir_wait_for(mir_surface_set_type(surface,
+                                              mir_surface_type_freestyle));
+            EXPECT_EQ(mir_surface_type_freestyle,
+                      mir_surface_get_type(surface));
+
+            mir_wait_for(mir_surface_set_type(surface,
+                                            static_cast<MirSurfaceType>(999)));
+            EXPECT_EQ(mir_surface_type_freestyle,
+                      mir_surface_get_type(surface));
+
+            mir_wait_for(mir_surface_set_type(surface,
+                                              mir_surface_type_dialog));
+            EXPECT_EQ(mir_surface_type_dialog,
+                      mir_surface_get_type(surface));
+
+            mir_wait_for(mir_surface_set_type(surface,
+                                            static_cast<MirSurfaceType>(888)));
+            EXPECT_EQ(mir_surface_type_dialog,
+                      mir_surface_get_type(surface));
+
+            // Stress-test synchronization logic with some flooding
+            for (int i = 0; i < 100; i++)
+            {
+                mir_surface_set_type(surface, mir_surface_type_normal);
+                mir_surface_set_type(surface, mir_surface_type_utility);
+                mir_surface_set_type(surface, mir_surface_type_dialog);
+                mir_surface_set_type(surface, mir_surface_type_overlay);
+                mir_surface_set_type(surface, mir_surface_type_freestyle);
+                mir_wait_for(mir_surface_set_type(surface,
+                                                  mir_surface_type_popover));
+                ASSERT_EQ(mir_surface_type_popover,
+                          mir_surface_get_type(surface));
+            }
+
+            mir_wait_for(mir_surface_release(surface, release_surface_callback,
+                                             this));
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
 TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces)
 {
     int const n_surfaces = 13;

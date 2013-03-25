@@ -36,7 +36,8 @@ public:
 
     BinderCallContext(
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
-        std::shared_ptr<ResourceCache> const& resource_cache);
+        std::shared_ptr<ResourceCache> const& resource_cache,
+        std::shared_ptr<MessageProcessorReport> const& report);
 
     bool process_message(android::Parcel const& request, android::Parcel* response);
 
@@ -51,11 +52,13 @@ private:
 
 mfd::BinderCallContext::BinderCallContext(
     std::shared_ptr<protobuf::DisplayServer> const& mediator,
-    std::shared_ptr<ResourceCache> const& resource_cache) :
+    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<MessageProcessorReport> const& report) :
     processor(std::make_shared<detail::ProtobufMessageProcessor>(
             this,
             mediator,
-            resource_cache)),
+            resource_cache,
+            report)),
     response(0)
 {
 }
@@ -136,7 +139,10 @@ android::status_t mfd::BinderService::onTransact(
 {
     auto const client_pid = android::IPCThreadState::self()->getCallingPid();
 
-    BinderCallContext context(get_session_for(client_pid), ipc_factory->resource_cache());
+    BinderCallContext context(
+        get_session_for(client_pid),
+        ipc_factory->resource_cache(),
+        ipc_factory->report());
 
     if (!context.process_message(request, response))
     {

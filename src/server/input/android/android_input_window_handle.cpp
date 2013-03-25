@@ -57,18 +57,18 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->name = droidinput::String8(surface->name().c_str());
     mInfo->layoutParamsFlags = droidinput::InputWindowInfo::FLAG_NOT_TOUCH_MODAL;
     mInfo->layoutParamsType = droidinput::InputWindowInfo::TYPE_APPLICATION;
-//    mInfo->touchableRegion = touchable_region;
     mInfo->scaleFactor = 1.f;
     mInfo->visible = true;
     mInfo->canReceiveKeys = true;
     mInfo->hasFocus = true;
     mInfo->hasWallpaper = false;
     mInfo->paused = false;
-//    mInfo->layer = props.layer;
     mInfo->dispatchingTimeout = INT_MAX;
     mInfo->ownerPid = 0;
     mInfo->ownerUid = 0;
     mInfo->inputFeatures = 0;
+
+    // TODO: Set touchableRegion and layer for touch events.
     
     return true;
 }

@@ -20,11 +20,13 @@
 #include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir_test/egl_mock.h"
+#include "mir_test/gl_mock.h"
 #ifndef ANDROID
 #include "gbm/mock_drm.h"
 #include "gbm/mock_gbm.h"
-#include "mir_test/egl_mock.h"
-#include "mir_test/gl_mock.h"
+#else
+#include "mir_test/hw_mock.h"
 #endif
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -69,11 +71,14 @@ public:
 
     std::shared_ptr<ml::Logger> logger;
     std::shared_ptr<mg::BufferInitializer> buffer_initializer;
-#ifndef ANDROID
-    ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
-    ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
+
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
+#ifdef ANDROID
+    mir::test::HardwareAccessMock hw_access_mock;
+#else
+    ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
+    ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 #endif
 };
 

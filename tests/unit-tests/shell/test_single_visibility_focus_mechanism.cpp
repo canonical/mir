@@ -56,6 +56,8 @@ struct MockShellSession : public msh::Session
     
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+
+    MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
 };
 
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
@@ -76,6 +78,10 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     EXPECT_CALL(app1, show()).Times(1);
     EXPECT_CALL(app2, hide()).Times(1);
     EXPECT_CALL(app3, hide()).Times(1);
+
+    EXPECT_CALL(app1, name()).Times(AnyNumber());
+    EXPECT_CALL(app2, name()).Times(AnyNumber());
+    EXPECT_CALL(app3, name()).Times(AnyNumber());
 
     model.insert_session(mt::fake_shared(app1));
     model.insert_session(mt::fake_shared(app2));

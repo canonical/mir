@@ -9,6 +9,11 @@ add_subdirectory(options/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
 
+set(PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirserver")
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
@@ -30,6 +35,7 @@ add_executable(
   mirds
 
   main.cpp
+  run_mir.cpp
 )
 
 set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
@@ -67,6 +73,15 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   )
   install(TARGETS mirserver
     LIBRARY DESTINATION lib
+  )
+  install(DIRECTORY
+    ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
+  )
+  install(DIRECTORY
+    ${CMAKE_SOURCE_DIR}/include/shared/mir DESTINATION "include/mirserver"
+  )
+  install(DIRECTORY
+    ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit DESTINATION "include/mirserver"
   )
 else()
   target_link_libraries(mirserver

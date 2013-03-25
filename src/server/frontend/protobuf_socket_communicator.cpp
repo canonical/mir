@@ -55,7 +55,8 @@ void mf::ProtobufSocketCommunicator::start_accept()
     auto session = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
         ipc_factory->make_ipc_server(),
-        ipc_factory->resource_cache());
+        ipc_factory->resource_cache(),
+        ipc_factory->report());
 
     socket_session->set_processor(session);
 
