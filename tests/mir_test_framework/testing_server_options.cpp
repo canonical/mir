@@ -190,7 +190,7 @@ void mtf::TestingServerConfiguration::exec(DisplayServer* )
 {
 }
 
-void mtf::TestingServerConfiguration::on_exit(DisplayServer* )
+void mtf::TestingServerConfiguration::on_exit()
 {
 }
 
