@@ -52,8 +52,11 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
         BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
     }
 }
-    
 
 void mga::HWC11Device::wait_for_vsync()
+{
+}
+
+void mga::HWC11Device::notify_vsync()
 {
 }

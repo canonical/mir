@@ -79,3 +79,51 @@ TEST_F(HWCDevice, test_vsync_activation_failure_throws)
         mga::HWC11Device device(mock_device);
     }, std::runtime_error);
 }
+
+//the HWC calls the vsync hook like this, we must ensure it is always able to do so
+TEST_F(HWCDevice, test_vsync_hook_is_callable)
+{
+    using namespace testing;
+
+    hwc_procs_t const* procs;
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), _))
+        .Times(1)
+        .WillOnce(SaveArg<1>(&procs));
+
+    mga::HWC11Device device(mock_device);
+    procs->vsync(procs, 0, 0);
+}
+
+#include <thread>
+#include <chrono>
+
+namespace
+{
+static mga::HWC11Device *global_device;
+void* waiting_device(void*)
+{
+    global_device->wait_for_vsync();
+    return NULL;
+}
+}
+
+TEST_F(HWCDevice, test_vsync_hook_waits)
+{
+    mga::HWC11Device device(mock_device);
+    global_device = &device;
+
+    pthread_t thread;
+    pthread_create(&thread, NULL, waiting_device, NULL);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    void* retval;
+    auto error = pthread_tryjoin_np(thread, &retval);
+    ASSERT_EQ(EBUSY, error);
+
+    device.notify_vsync();
+    error = pthread_join(thread, &retval);
+    ASSERT_EQ(0, error);
+
+}
+
