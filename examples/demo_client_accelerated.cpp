@@ -30,14 +30,6 @@
 
 static char const *socket_file = "/tmp/mir_socket";
 
-static void handle_input(MirSurface *surface, MirEvent* ev, void* user_data)
-{
-    (void)surface;
-    (void)ev;
-    (void)user_data;
-    printf("Handling input \n");
-}
-
 int main(int argc, char* argv[])
 {
     MirConnection *connection = 0;
@@ -79,10 +71,8 @@ int main(int argc, char* argv[])
 
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
-    MirEventDelegate const event_delegate =
-        {handle_input, NULL};
 
-    surface = mir_surface_create_sync(connection, &request_params, &event_delegate);
+    surface = mir_surface_create_sync(connection, &request_params, NULL);
     assert(surface != NULL);
     assert(mir_surface_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
