@@ -37,19 +37,6 @@ extern "C" void signal_terminate(int)
 }
 }
 
-void mir::run_mir(ServerConfiguration& config)
-{
-    signal(SIGINT, signal_terminate);
-    signal(SIGTERM, signal_terminate);
-    signal(SIGPIPE, SIG_IGN);
-
-    mir::DisplayServer server(config);
-
-    signal_display_server.store(&server);
-
-    server.run();
-}
-
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
     signal(SIGINT, signal_terminate);
