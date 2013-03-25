@@ -139,8 +139,8 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
 }
 
 MirSurface *mir_toolkit::mir_surface_create_sync(
-    MirConnection *connection, 
-    MirSurfaceParameters const *params,
+    MirConnection* connection, 
+    MirSurfaceParameters const* params,
     MirEventDelegate const* delegate)
 {
     MirSurface *surface = nullptr;
