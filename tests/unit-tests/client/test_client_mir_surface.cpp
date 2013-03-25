@@ -172,7 +172,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     }
 
     MOCK_METHOD3(create_buffer,
-                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const &,
+                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
                                                     geom::Size, geom::PixelFormat));
 
     std::shared_ptr<MirBufferPackage> current_package;
