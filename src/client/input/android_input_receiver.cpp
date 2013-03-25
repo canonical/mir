@@ -70,7 +70,7 @@ bool mclia::InputReceiver::next_event(MirEvent &ev)
     return handled_event;
 }
 
-bool mclia::InputReceiver::poll(std::chrono::milliseconds timeout)
+bool mclia::InputReceiver::poll(std::chrono::milliseconds const& timeout)
 {
     struct pollfd pfd;
     

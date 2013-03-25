@@ -48,7 +48,7 @@ struct MockInputReceiver : public mclia::InputReceiver
     {
     }
     MOCK_METHOD1(next_event, bool(MirEvent &));
-    MOCK_METHOD1(poll, bool(std::chrono::milliseconds));
+    MOCK_METHOD1(poll, bool(std::chrono::milliseconds const&));
 };
 
 ACTION_P(StopThread, thread)

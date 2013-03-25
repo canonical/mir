@@ -55,7 +55,7 @@ public:
     
     virtual bool next_event(MirEvent &ev);
     
-    virtual bool poll(std::chrono::milliseconds timeout); // TODO: Reference? ~racarr
+    virtual bool poll(std::chrono::milliseconds const& timeout);
 
 protected:
     InputReceiver(const InputReceiver&) = delete;
