@@ -17,7 +17,7 @@
  */
 
 #include "android_input_receiver.h"
-#include "mir_toolkit/input/android_input_lexicon.h"
+#include "mir/input/android/android_input_lexicon.h"
 
 #include <androidfw/InputTransport.h>
 

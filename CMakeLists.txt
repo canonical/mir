@@ -118,7 +118,7 @@ set (MIR_DISABLE_INPUT
 )
 
 set (MIR_INPUT_USE_ANDROID_TYPES
-  true
+  false
   CACHE
   BOOL
   "Use android types in input stack instead of std library"

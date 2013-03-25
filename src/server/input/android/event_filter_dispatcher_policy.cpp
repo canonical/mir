@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 #include "event_filter_dispatcher_policy.h"
-#include "mir_toolkit/input/android_input_lexicon.h"
+#include "mir/input/android/android_input_lexicon.h"
 
 namespace mi = mir::input;
 namespace mia = mi::android;
