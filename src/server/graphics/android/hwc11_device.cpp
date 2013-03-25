@@ -39,7 +39,8 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 }
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
-    : hwc_device(hwc_device)
+    : hwc_device(hwc_device),
+      vsync_occurred(false)
 {
     callbacks.hooks.invalidate = invalidate_hook;
     callbacks.hooks.vsync = vsync_hook;
@@ -53,10 +54,19 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
     }
 }
 
-void mga::HWC11Device::wait_for_vsync()
-{
-}
-
 void mga::HWC11Device::notify_vsync()
 {
+    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
+    vsync_occurred = true;
+    vsync_trigger.notify_all();
+}
+
+void mga::HWC11Device::wait_for_vsync()
+{
+    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
+    vsync_occurred = false;
+    while(!vsync_occurred)
+    {
+        vsync_trigger.wait(lk);
+    }
 }

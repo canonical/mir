@@ -19,6 +19,8 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 
+#include <thread>
+#include <chrono>
 #include <stdexcept>
 #include <memory>
 #include <gtest/gtest.h>
@@ -93,9 +95,6 @@ TEST_F(HWCDevice, test_vsync_hook_is_callable)
     mga::HWC11Device device(mock_device);
     procs->vsync(procs, 0, 0);
 }
-
-#include <thread>
-#include <chrono>
 
 namespace
 {

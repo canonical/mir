@@ -20,6 +20,8 @@
 #define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
 #include "hwc_device.h"
 #include <hardware/hwcomposer.h>
+#include <mutex>
+#include <condition_variable>
 #include <memory>
 
 namespace mir
@@ -47,6 +49,9 @@ public:
 private:
     HWCCallbacks callbacks;
     std::shared_ptr<hwc_composer_device_1> hwc_device;
+    std::mutex vsync_wait_mutex;
+    std::condition_variable vsync_trigger;
+    bool vsync_occurred;
 };
 
 }
