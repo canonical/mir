@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #ifndef MIR_TIME_HIGH_RESOLUTION_CLOCK_H_
 #define MIR_TIME_HIGH_RESOLUTION_CLOCK_H_
 
@@ -37,7 +36,5 @@ private:
 };
 }
 }
-
-
 
 #endif /* MIR_TIME_HIGH_RESOLUTION_CLOCK_H_ */

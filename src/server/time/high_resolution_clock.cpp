@@ -18,7 +18,6 @@
 
 #include "mir/time/high_resolution_clock.h"
 
-
 mir::time::Timestamp mir::time::HighResolutionClock::sample() const
 {
     return clock.now();

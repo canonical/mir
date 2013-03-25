@@ -475,7 +475,7 @@ std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_in
 std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time_source()
 {
     return time_source(
-        [this]()
+        []()
         {
             return std::make_shared<mir::time::HighResolutionClock>();
         });
