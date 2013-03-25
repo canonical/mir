@@ -192,7 +192,7 @@ struct InputReceivingClient : ClientConfigCommon
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, clients_receive_input)
+TEST_F(BespokeDisplayServerTestFixture, clients_receive_key_input)
 {
     using namespace ::testing;
 
