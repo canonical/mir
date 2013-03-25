@@ -28,6 +28,8 @@
 
 #include <androidfw/InputTransport.h>
 
+#include <atomic>
+
 namespace miat = mir::input::android::transport;
 namespace mt = mir::test;
 
@@ -104,4 +106,39 @@ TEST(AndroidInputReceiverThread, receives_and_dispatches_available_events_when_r
     input_thread.join();
 }
 
-// TODO: Test for threaded delivery ~racarrg
+TEST(AndroidInputReceiverThread, input_callback_invoked_from_thread)
+{
+    using namespace ::testing;
+    MockEventHandler mock_handler;
+    MockInputReceiver input_receiver;
+    std::atomic<bool> handled;
+    
+    handled = false;
+
+
+    struct InputDelegate
+    {
+        InputDelegate(std::atomic<bool> &handled)
+          : handled(handled) {}
+        void operator()(MirEvent* /*ev*/)
+        {
+            handled = true;
+        }
+        std::atomic<bool> &handled;
+    } input_delegate(handled);
+
+    miat::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate);
+    {
+        InSequence seq;
+
+        EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(input_receiver, next_event(_)).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(input_receiver, next_event(_)).Times(1).WillOnce(Return(false));
+        EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(false)));
+    }
+
+    input_thread.start();
+    while (handled == false) { } // We would block forever here were delivery not threaded
+    input_thread.join();
+}
+
