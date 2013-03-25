@@ -37,6 +37,7 @@ namespace mis = mi::synthesis;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
+#include <thread>
 
 namespace
 {
@@ -49,6 +50,7 @@ namespace
 struct FakeInputServerConfiguration : public mir_test_framework::TestingServerConfiguration
 {
     FakeInputServerConfiguration()
+      : input_config(the_event_filters(), the_display(), std::shared_ptr<mi::CursorListener>())
     {
     }
     virtual void inject_input()
@@ -57,31 +59,25 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
 
     void exec(mir::DisplayServer* /* display_server */) override
     {
-
+        inject_input();
     }
 
     std::shared_ptr<mi::InputManager>
     the_input_manager()
     {
-        std::shared_ptr<mi::CursorListener> null_cursor_listener;
-        input_config = std::make_shared<mtd::FakeEventHubInputConfiguration>(the_event_filters(),
-                                                                             the_display(),
-                                                                             null_cursor_listener);
-
-        fake_event_hub = input_config->the_fake_event_hub();
+        fake_event_hub = input_config.the_fake_event_hub();
 
         fake_event_hub->synthesize_builtin_keyboard_added();
         fake_event_hub->synthesize_device_scan_complete();
-        inject_input();
 
         return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
         {
-            return std::make_shared<mia::InputManager>(input_config);
+            return std::make_shared<mia::InputManager>(mt::fake_shared(input_config));
         });
     }
 
-    std::shared_ptr<mtd::FakeEventHubInputConfiguration> input_config;
+    mtd::FakeEventHubInputConfiguration input_config;
     mia::FakeEventHub* fake_event_hub;
 };
 
@@ -93,6 +89,8 @@ struct ClientConfigCommon : TestingClientConfiguration
         surface(0)
     {
     }
+    
+    virtual ~ClientConfigCommon() {}
 
     static void connection_callback(MirConnection* connection, void* context)
     {
@@ -138,16 +136,23 @@ struct MockInputHandler
 
 struct InputReceivingClient : ClientConfigCommon
 {
-    static void handle_input(MirSurface* surface, MirEvent* ev, void* context)
+    static void handle_input(MirSurface* /* surface */, MirEvent* ev, void* context)
     {
-        (void) surface;
-
         auto client = static_cast<InputReceivingClient *>(context);
-        client->handler.handle_input(ev);
+        client->handler->handle_input(ev);
+    }
+    
+    virtual ~InputReceivingClient() = default;
+    
+    virtual void expect_input()
+    {
     }
 
     void exec()
     {
+        handler = std::make_shared<MockInputHandler>();
+        expect_input();
+
         mir_wait_for(mir_connect(
             mir_test_socket,
             __PRETTY_FUNCTION__,
@@ -167,10 +172,12 @@ struct InputReceivingClient : ClientConfigCommon
              this
          };
          mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
+         std::this_thread::sleep_for(std::chrono::milliseconds(200));
          mir_connection_release(connection);
+         handler.reset();
     }
     
-    MockInputHandler handler;
+    std::shared_ptr<MockInputHandler> handler;
 };
 
 }
@@ -183,19 +190,21 @@ TEST_F(BespokeDisplayServerTestFixture, clients_receive_input)
     {
         void inject_input()
         {
-            // TODO: Synchronization 
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             fake_event_hub->synthesize_event(mis::a_key_down_event()
                                              .of_scancode(KEY_ENTER));
         }
     } server_config;
     launch_server_process(server_config);
-
-    InputReceivingClient client_config;
     
-    // TODO: Matcher
-    // TODO: Synchronization
-    EXPECT_CALL(client_config.handler, handle_input(_)).Times(1);
-
+    struct KeyReceivingClient : InputReceivingClient
+    {
+        void expect_input()
+        {
+            using namespace ::testing;
+            EXPECT_CALL(*handler, handle_input(_)).Times(1);
+        }
+    } client_config;
     launch_client_process(client_config);
 }
 

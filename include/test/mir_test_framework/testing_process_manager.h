@@ -40,6 +40,7 @@ using namespace mir;
 struct TestingClientConfiguration
 {
     // Code to run in client process
+    virtual ~TestingClientConfiguration() {};
     virtual void exec() = 0;
 };
 
