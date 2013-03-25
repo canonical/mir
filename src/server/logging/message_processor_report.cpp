@@ -18,6 +18,7 @@
 
 #include "mir/logging/message_processor_report.h"
 #include "mir/logging/logger.h"
+#include "mir/time/high_resolution_clock.h" // TODO make dependency explicit
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <sstream>
@@ -31,21 +32,56 @@ char const* const component = "frontend::MessageProcessor";
 
 
 ml::MessageProcessorReport::MessageProcessorReport(std::shared_ptr<Logger> const& log) :
-    log(log)
+    log(log),
+    time_source(std::make_shared<time::HighResolutionClock>()) // TODO make dependency explicit
 {
 }
 
 void ml::MessageProcessorReport::received_invocation(void const* mediator, int id, std::string const& method)
 {
-    std::ostringstream out;
-    out << "mediator=" << mediator << ", id=" << id << ", method=\"" << method << "\"";
-    log->log<Logger::informational>(out.str(), component);
+    std::lock_guard<std::mutex> lock(mutex);
+    auto& invocations = mediators[mediator].current_invocations;
+    auto& invocation = invocations[id];
+
+    invocation.start = time_source->sample();
+    invocation.method = method;
 }
 
 void ml::MessageProcessorReport::completed_invocation(void const* mediator, int id, bool result)
 {
+    auto const end = time_source->sample();
     std::ostringstream out;
-    out << "mediator=" << mediator << ", id=" << id << " - completed " <<(result ? "continue" : "disconnect");
+
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+
+        auto const pm = mediators.find(mediator);
+        if (pm != mediators.end())
+        {
+            auto& invocations = pm->second.current_invocations;
+
+            auto const pi = invocations.find(id);
+            if (pi != invocations.end())
+            {
+                out << "mediator=" << mediator << ": "
+                    << pi->second.method << "(), elapsed="
+                    << std::chrono::duration_cast<std::chrono::microseconds>(end - pi->second.start).count()
+                    << "µs";
+
+                if (!pi->second.exception.empty())
+                    out << " ERROR=" << pi->second.exception;
+
+                if (!result)
+                    out << " (disconnecting)";
+            }
+
+            invocations.erase(pi);
+
+            if (invocations.empty())
+                mediators.erase(mediator);
+        }
+    }
+
     log->log<Logger::informational>(out.str(), component);
 }
 
@@ -54,13 +90,28 @@ void ml::MessageProcessorReport::unknown_method(void const* mediator, int id, st
     std::ostringstream out;
     out << "mediator=" << mediator << ", id=" << id << ", UNKNOWN method=\"" << method << "\"";
     log->log<Logger::informational>(out.str(), component);
+
+    std::lock_guard<std::mutex> lock(mutex);
+    auto const pm = mediators.find(mediator);
+    if (pm != mediators.end())
+        mediators.erase(mediator);
 }
 
 void ml::MessageProcessorReport::exception_handled(void const* mediator, int id, std::exception const& error)
 {
-    std::ostringstream out;
-    out << "mediator=" << mediator << ", id=" << id << ", ERROR: " << boost::diagnostic_information(error);
-    log->log<Logger::informational>(out.str(), component);
+    std::lock_guard<std::mutex> lock(mutex);
+
+    auto const pm = mediators.find(mediator);
+    if (pm != mediators.end())
+    {
+        auto& invocations = pm->second.current_invocations;
+
+        auto const pi = invocations.find(id);
+        if (pi != invocations.end())
+        {
+            pi->second.exception = boost::diagnostic_information(error);
+        }
+    }
 }
 
 void ml::MessageProcessorReport::exception_handled(void const* mediator, std::exception const& error)
@@ -68,6 +119,11 @@ void ml::MessageProcessorReport::exception_handled(void const* mediator, std::ex
     std::ostringstream out;
     out << "mediator=" << mediator << ", ERROR: " << boost::diagnostic_information(error);
     log->log<Logger::informational>(out.str(), component);
+
+    std::lock_guard<std::mutex> lock(mutex);
+    auto const pm = mediators.find(mediator);
+    if (pm != mediators.end())
+        mediators.erase(mediator);
 }
 
 
