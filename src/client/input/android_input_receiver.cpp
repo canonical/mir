@@ -18,7 +18,6 @@
 
 #include "android_input_receiver.h"
 #include "mir_toolkit/input/android_input_lexicon.h"
-//#include "../android_input_constants.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -34,7 +33,7 @@ mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> con
 }
 
 mclia::InputReceiver::InputReceiver(int fd)
-  : input_channel(new droidinput::InputChannel(droidinput::String8("TODO: Name"), fd)),
+  : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)), 
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel))
 {
 }
@@ -59,7 +58,6 @@ bool mclia::InputReceiver::next_event(MirEvent &ev)
     while((status = input_consumer->consume(&event_factory, consume_batches,
                                           default_frame_time, &event_sequence_id, &android_event)) != droidinput::WOULD_BLOCK)
         {
-            // todo: Racarr ~ Lol
             miat::Lexicon::translate(android_event, ev);
             input_consumer->sendFinishedSignal(event_sequence_id, true);
             handled_event = true;
