@@ -8,6 +8,7 @@ add_subdirectory(surfaces/)
 add_subdirectory(options/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
+add_subdirectory(time/)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -47,6 +48,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirgraphics
   mirinput
   mirsurfaces
+  mirtime
 )
 
 list(APPEND MIRSERVER_LINKS
