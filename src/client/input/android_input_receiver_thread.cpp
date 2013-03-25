@@ -33,8 +33,10 @@ mclia::InputReceiverThread::InputReceiverThread(std::shared_ptr<mclia::InputRece
 
 mclia::InputReceiverThread::~InputReceiverThread()
 {
-    stop();
-    join();
+    if (running)
+        stop();
+    if (thread.joinable())
+        join();
 }
 
 void mclia::InputReceiverThread::start()
