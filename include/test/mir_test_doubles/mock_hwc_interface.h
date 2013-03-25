@@ -34,6 +34,7 @@ class MockHWCInterface : public graphics::android::HWCDevice
 {
 public:
     MOCK_METHOD0(wait_for_vsync, void());
+    MOCK_METHOD0(commit_frame, void());
 };
 
 }

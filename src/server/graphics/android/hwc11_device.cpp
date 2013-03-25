@@ -72,4 +72,9 @@ void mga::HWC11Device::wait_for_vsync()
     {
         vsync_trigger.wait(lk);
     }
+} 
+
+void mga::HWC11Device::commit_frame()
+{
+
 }

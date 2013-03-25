@@ -44,6 +44,7 @@ public:
     explicit HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
 
     void wait_for_vsync();
+    void commit_frame();
     void notify_vsync();
 
 private:

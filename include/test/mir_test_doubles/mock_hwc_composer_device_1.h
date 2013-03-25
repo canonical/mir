@@ -34,7 +34,7 @@ class ICSHardwareComposerInterface
 public:
     virtual void registerProcs_interface(struct hwc_composer_device_1* dev, hwc_procs_t const* procs) = 0;
     virtual int eventControl_interface(struct hwc_composer_device_1* dev, int disp, int event, int enabled) = 0;
-    virtual int set_interface(struct hwc_composer_device_1 *dev, size_t numDisplays, hwc_display_contents_1_t** displays);
+    virtual int set_interface(struct hwc_composer_device_1 *dev, size_t numDisplays, hwc_display_contents_1_t** displays) = 0;
 };
 
 class MockHWCComposerDevice1 : public hwc_composer_device_1, public ICSHardwareComposerInterface

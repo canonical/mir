@@ -143,12 +143,12 @@ TEST_F(HWCDevice, test_hwc_gles_set)
 {
     using namespace testing;
 
-    hwc_display_contents_1_t* displays; 
+    hwc_display_contents_1_t const* displays; 
     mga::HWC11Device device(mock_device);
 
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
-        .Times(1)
-        .WillOnce(SaveArg<2>(&displays));
+        .Times(1);
+//        .WillOnce(SaveArgPointee<2>(&displays));
 
     device.commit_frame();
 
