@@ -106,7 +106,6 @@ public:
     static const int32_t motion_event_action_flags = AMOTION_EVENT_ACTION_MOVE;
     // We have to have at least 1 pointer or the publisher will fail to marshal a motion event
     static const int32_t default_pointer_count = 1;
-    
 };
 
 class AndroidInputReceiverSetup : public testing::Test
