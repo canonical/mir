@@ -26,6 +26,7 @@
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/event_factory.h"
+#include "mir_test/wait_condition.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gtest/gtest.h>
@@ -144,6 +145,7 @@ struct InputReceivingClient : ClientConfigCommon
     {
         auto client = static_cast<InputReceivingClient *>(context);
         client->handler->handle_input(ev);
+        client->event_injected.wake_up_everyone();
     }
     virtual void expect_input()
     {
@@ -175,7 +177,7 @@ struct InputReceivingClient : ClientConfigCommon
          };
          mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
 
-         std::this_thread::sleep_for(std::chrono::milliseconds(200));
+         event_injected.wait_for_at_most_seconds(1);
 
          mir_connection_release(connection);
 
@@ -185,6 +187,7 @@ struct InputReceivingClient : ClientConfigCommon
     }
     
     std::shared_ptr<MockInputHandler> handler;
+    mir::WaitCondition event_injected;
 };
 
 }
