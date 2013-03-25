@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/abnormal_exit.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
@@ -150,6 +151,8 @@ void parse_arguments(
 {
     namespace po = boost::program_options;
 
+    bool exit_with_helptext = false;
+
     auto desc = program_options();
 
     try
@@ -161,13 +164,20 @@ void parse_arguments(
 
         if (options->is_set("help"))
         {
-            BOOST_THROW_EXCEPTION(po::error("help text requested"));
+            exit_with_helptext = true;
         }
     }
     catch (po::error const& error)
     {
-        std::cerr << desc << "\n";
-        throw;
+        exit_with_helptext = true;
+    }
+
+    if (exit_with_helptext)
+    {
+        std::ostringstream help_text;
+        help_text << desc;
+
+        BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
     }
 }
 

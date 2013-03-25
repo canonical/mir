@@ -66,7 +66,7 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto depository = platform->create_platform_depository();
+    auto depository = std::make_shared<mir::client::ClientBufferDepository>(platform->create_buffer_factory(), 3);
     auto null_log = std::make_shared<mir::client::NullLogger>();
     auto surface = new MirSurface(this, server, null_log, depository, params, callback, context);
     return surface->get_create_wait_handle();
@@ -187,8 +187,8 @@ void mir_toolkit::MirConnection::done_disconnect()
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
         std::lock_guard<std::mutex> lock(release_wait_handle_guard);
-        for(auto it = release_wait_handles.begin(); it != release_wait_handles.end(); it++)
-            delete *it;
+        for (auto handle : release_wait_handles)
+            delete handle;
     }
 
     disconnect_wait_handle.result_received();

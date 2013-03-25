@@ -35,6 +35,7 @@ add_executable(
   mirds
 
   main.cpp
+  run_mir.cpp
 )
 
 set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
