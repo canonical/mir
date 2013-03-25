@@ -50,7 +50,7 @@ public:
         MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,
         std::shared_ptr<mir::client::Logger> const & logger,
-        std::shared_ptr<mir::client::ClientBufferDepository> const & depository,
+        std::shared_ptr<mir::client::ClientBufferFactory> const & buffer_factory,
         MirSurfaceParameters const & params,
         mir_surface_lifecycle_callback callback, void * context);
 

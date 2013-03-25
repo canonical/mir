@@ -33,14 +33,15 @@ mir_toolkit::MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
     std::shared_ptr<mir::client::Logger> const & logger,
-    std::shared_ptr<mcl::ClientBufferDepository> const & depository,
+    std::shared_ptr<mcl::ClientBufferFactory> const & factory,
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
-      buffer_depository(depository),
       logger(logger)
 {
+    buffer_depository = std::make_shared<mcl::ClientBufferDepository>(factory, 3);
+
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
     message.set_width(params.width);
