@@ -49,3 +49,18 @@ void mir::run_mir(ServerConfiguration& config)
 
     server.run();
 }
+
+void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
+{
+    signal(SIGINT, signal_terminate);
+    signal(SIGTERM, signal_terminate);
+    signal(SIGPIPE, SIG_IGN);
+
+    mir::DisplayServer server(config);
+
+    signal_display_server.store(&server);
+
+    init(server);
+
+    server.run();
+}

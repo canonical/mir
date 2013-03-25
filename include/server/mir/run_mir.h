@@ -20,12 +20,16 @@
 #ifndef MIR_RUN_MIR_H_
 #define MIR_RUN_MIR_H_
 
+#include <functional>
+
 namespace mir
 {
 class ServerConfiguration;
+class DisplayServer;
 
 /// Run mir with the supplied configuration
 void run_mir(ServerConfiguration& config);
+void run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init);
 }
 
 
