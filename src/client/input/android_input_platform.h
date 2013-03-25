@@ -36,7 +36,7 @@ public:
     AndroidInputPlatform();
     virtual ~AndroidInputPlatform();  
 
-    std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> callback);
+    std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> const& callback);
 
 protected:
     AndroidInputPlatform(const AndroidInputPlatform&) = delete;

@@ -32,7 +32,7 @@ mclia::AndroidInputPlatform::~AndroidInputPlatform()
 }
 
 std::shared_ptr<mcli::InputReceiverThread> mclia::AndroidInputPlatform::create_input_thread(
-    int fd, std::function<void(MirEvent*)> callback)
+    int fd, std::function<void(MirEvent*)> const& callback)
 {
     auto receiver = std::make_shared<mclia::InputReceiver>(fd);
     return std::make_shared<mclia::InputReceiverThread>(receiver, callback);

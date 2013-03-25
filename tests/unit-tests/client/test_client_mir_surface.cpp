@@ -219,7 +219,7 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
 
 struct StubClientInputPlatform : public mcli::InputPlatform
 {
-    std::shared_ptr<mcli::InputReceiverThread> create_input_thread(int /* fd */, std::function<void(MirEvent*)> /* callback */)
+    std::shared_ptr<mcli::InputReceiverThread> create_input_thread(int /* fd */, std::function<void(MirEvent*)> const& /* callback */)
     {
         return std::shared_ptr<mcli::InputReceiverThread>();
     }
@@ -227,7 +227,7 @@ struct StubClientInputPlatform : public mcli::InputPlatform
 
 struct MockClientInputPlatform : public mcli::InputPlatform
 {
-    MOCK_METHOD2(create_input_thread, std::shared_ptr<mcli::InputReceiverThread>(int, std::function<void(MirEvent*)>));
+    MOCK_METHOD2(create_input_thread, std::shared_ptr<mcli::InputReceiverThread>(int, std::function<void(MirEvent*)> const&));
 };
 
 struct MockInputReceiverThread : public mcli::InputReceiverThread
