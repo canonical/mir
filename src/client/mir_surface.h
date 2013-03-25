@@ -82,7 +82,7 @@ private:
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_lifecycle_callback callback, void * context);
     void new_buffer(mir_surface_lifecycle_callback callback, void * context);
-    mir::geometry::PixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf );
+    mir::geometry::PixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
 
     /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
              race in surface, last_buffer_id */
@@ -94,8 +94,6 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
-
-    int last_buffer_id;
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
