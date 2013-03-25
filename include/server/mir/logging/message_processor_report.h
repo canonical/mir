@@ -54,7 +54,9 @@ class Logger;
 class MessageProcessorReport : public mir::frontend::MessageProcessorReport
 {
 public:
-    MessageProcessorReport(std::shared_ptr<Logger> const& log);
+    MessageProcessorReport(
+        std::shared_ptr<Logger> const& log,
+        std::shared_ptr<time::TimeSource> const& time_source);
 
     void received_invocation(void const* mediator, int id, std::string const& method);
 

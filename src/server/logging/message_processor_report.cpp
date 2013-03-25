@@ -18,7 +18,6 @@
 
 #include "mir/logging/message_processor_report.h"
 #include "mir/logging/logger.h"
-#include "mir/time/high_resolution_clock.h" // TODO make dependency explicit
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <sstream>
@@ -31,9 +30,11 @@ char const* const component = "frontend::MessageProcessor";
 }
 
 
-ml::MessageProcessorReport::MessageProcessorReport(std::shared_ptr<Logger> const& log) :
+ml::MessageProcessorReport::MessageProcessorReport(
+    std::shared_ptr<Logger> const& log,
+    std::shared_ptr<time::TimeSource> const& time_source) :
     log(log),
-    time_source(std::make_shared<time::HighResolutionClock>()) // TODO make dependency explicit
+    time_source(time_source)
 {
 }
 

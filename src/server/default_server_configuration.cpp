@@ -442,7 +442,7 @@ mir::DefaultServerConfiguration::the_message_processor_report()
         {
             if (the_options()->get(log_msg_processor, false))
             {
-                return std::make_shared<ml::MessageProcessorReport>(the_logger());
+                return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_time_source());
             }
             else
             {
