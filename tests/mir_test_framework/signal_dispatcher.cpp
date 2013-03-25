@@ -18,8 +18,8 @@
 
 #include "mir_test_framework/signal_dispatcher.h"
 
-#include <thread>
 #include <mutex>
+#include <thread>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -104,6 +104,7 @@ struct mtf::SignalDispatcher::Private
 {
     Private() : worker_thread(std::bind(&Private::worker, this))
     {
+        worker_thread.detach();
     }
 
     void worker()
