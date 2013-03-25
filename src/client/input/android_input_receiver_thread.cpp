@@ -56,8 +56,8 @@ void mclia::InputReceiverThread::thread_loop()
         {
             MirEvent ev;
             while(receiver->next_event(ev))
-                handler(&ev); // TODO: ~racarr lol
+                handler(&ev);
         }
-        std::this_thread::yield(); // TODO: ~racarr comment or remove
+        std::this_thread::yield(); // yield() is needed to ensure reasonable runtime under valgrind
     }
 }
