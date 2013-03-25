@@ -37,8 +37,11 @@ namespace mir
 namespace client
 {
 class ClientBuffer;
+namespace input
+{
 class InputPlatform;
 class InputReceiverThread;
+}
 
 struct MemoryRegion;
 }
@@ -55,7 +58,7 @@ public:
         mir::protobuf::DisplayServer::Stub & server,
         const std::shared_ptr<mir::client::Logger>& logger,
         const std::shared_ptr<mir::client::ClientBufferDepository>& depository,
-        const std::shared_ptr<mir::client::InputPlatform>& input_platform,
+        const std::shared_ptr<mir::client::input::InputPlatform>& input_platform,
         MirSurfaceParameters const& params,
         MirEventDelegate const* delegate,
         mir_surface_lifecycle_callback callback, void * context);
@@ -103,7 +106,7 @@ private:
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
-    std::shared_ptr<mir::client::InputPlatform> const input_platform;
+    std::shared_ptr<mir::client::input::InputPlatform> const input_platform;
 
     std::shared_ptr<mir::client::Logger> logger;
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
@@ -114,7 +117,7 @@ private:
     int attrib_cache[mir_surface_attrib_arraysize_];
 
     std::function<void(MirEvent*)> handle_event_callback;
-    std::shared_ptr<mir::client::InputReceiverThread> input_thread;
+    std::shared_ptr<mir::client::input::InputReceiverThread> input_thread;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

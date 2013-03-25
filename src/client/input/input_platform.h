@@ -28,6 +28,8 @@ namespace mir
 {
 namespace client
 {
+namespace input
+{
 class InputReceiverThread;
 
 class InputPlatform
@@ -43,6 +45,7 @@ protected:
     InputPlatform& operator=(const InputPlatform&) = delete;
 };
 
+}
 }
 } // namespace mir
 

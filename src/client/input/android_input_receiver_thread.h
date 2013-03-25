@@ -38,7 +38,7 @@ namespace transport
 {
 class InputReceiver;
 
-class InputReceiverThread : public client::InputReceiverThread
+class InputReceiverThread : public client::input::InputReceiverThread
 {
 public:
     InputReceiverThread(std::shared_ptr<InputReceiver> const& receiver, 

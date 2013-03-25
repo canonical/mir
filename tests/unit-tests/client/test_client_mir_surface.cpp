@@ -42,6 +42,7 @@
 #include <fcntl.h>
 
 namespace mcl = mir::client;
+namespace mcli = mcl::input;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
 
@@ -216,20 +217,20 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
     }
 };
 
-struct StubClientInputPlatform : public mcl::InputPlatform
+struct StubClientInputPlatform : public mcli::InputPlatform
 {
-    std::shared_ptr<mcl::InputReceiverThread> create_input_thread(int /* fd */, std::function<void(MirEvent*)> /* callback */)
+    std::shared_ptr<mcli::InputReceiverThread> create_input_thread(int /* fd */, std::function<void(MirEvent*)> /* callback */)
     {
-        return std::shared_ptr<mcl::InputReceiverThread>();
+        return std::shared_ptr<mcli::InputReceiverThread>();
     }
 };
 
-struct MockClientInputPlatform : public mcl::InputPlatform
+struct MockClientInputPlatform : public mcli::InputPlatform
 {
-    MOCK_METHOD2(create_input_thread, std::shared_ptr<mcl::InputReceiverThread>(int, std::function<void(MirEvent*)>));
+    MOCK_METHOD2(create_input_thread, std::shared_ptr<mcli::InputReceiverThread>(int, std::function<void(MirEvent*)>));
 };
 
-struct MockInputReceiverThread : public mcl::InputReceiverThread
+struct MockInputReceiverThread : public mcli::InputReceiverThread
 {
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());

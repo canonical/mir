@@ -23,6 +23,8 @@ namespace mir
 {
 namespace client
 {
+namespace input
+{
 
 class InputReceiverThread
 {
@@ -39,6 +41,7 @@ protected:
     InputReceiverThread& operator=(const InputReceiverThread&) = delete;
 };
 
+}
 }
 } // namespace mir
 

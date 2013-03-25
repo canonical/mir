@@ -28,6 +28,7 @@
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
+namespace mcli = mir::client::input;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -36,7 +37,7 @@ mir_toolkit::MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
     std::shared_ptr<mir::client::Logger> const& logger,
     std::shared_ptr<mcl::ClientBufferDepository> const& depository,
-    std::shared_ptr<mcl::InputPlatform> const& input_platform,
+    std::shared_ptr<mcli::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
     MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback, void * context)

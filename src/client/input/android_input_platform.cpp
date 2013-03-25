@@ -20,18 +20,18 @@
 #include "android_input_receiver.h"
 #include "android_input_receiver_thread.h"
 
-namespace mcl = mir::client;
+namespace mcli = mir::client::input;
 namespace miat = mir::input::android::transport;
 
-mcl::AndroidInputPlatform::AndroidInputPlatform()
+mcli::AndroidInputPlatform::AndroidInputPlatform()
 {
 }
 
-mcl::AndroidInputPlatform::~AndroidInputPlatform()
+mcli::AndroidInputPlatform::~AndroidInputPlatform()
 {
 }
 
-std::shared_ptr<mcl::InputReceiverThread> mcl::AndroidInputPlatform::create_input_thread(
+std::shared_ptr<mcli::InputReceiverThread> mcli::AndroidInputPlatform::create_input_thread(
     int fd, std::function<void(MirEvent*)> callback)
 {
     auto receiver = std::make_shared<miat::InputReceiver>(fd);

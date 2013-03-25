@@ -42,7 +42,10 @@ namespace client
 class Logger;
 class ClientBufferDepository;
 class ClientPlatformFactory;
+namespace input
+{
 class InputPlatform;
+}
 }
 }
 
@@ -116,7 +119,7 @@ private:
     std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
-    std::shared_ptr<mir::client::InputPlatform> const input_platform;
+    std::shared_ptr<mir::client::input::InputPlatform> const input_platform;
 
     std::string error_message;
 
