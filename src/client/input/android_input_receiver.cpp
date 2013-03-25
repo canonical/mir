@@ -53,10 +53,9 @@ bool mclia::InputReceiver::next_event(MirEvent &ev)
     uint32_t event_sequence_id;
     bool handled_event = false;
 
-    // The consumer is non-blocking so we attempt to consume as many events as possible.
     droidinput::status_t status;
-    while((status = input_consumer->consume(&event_factory, consume_batches,
-                                          default_frame_time, &event_sequence_id, &android_event)) != droidinput::WOULD_BLOCK)
+    if((status = input_consumer->consume(&event_factory, consume_batches,
+                                         default_frame_time, &event_sequence_id, &android_event)) != droidinput::WOULD_BLOCK)
         {
             miat::Lexicon::translate(android_event, ev);
             input_consumer->sendFinishedSignal(event_sequence_id, true);

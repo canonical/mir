@@ -43,7 +43,7 @@ class InputReceiverThread : public input::InputReceiverThread
 public:
     InputReceiverThread(std::shared_ptr<InputReceiver> const& receiver, 
                         std::function<void(MirEvent*)> const& event_handling_callback);
-    virtual ~InputReceiverThread() {};
+    virtual ~InputReceiverThread();
 
     void start();
     void stop();

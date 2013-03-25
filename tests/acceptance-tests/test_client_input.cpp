@@ -162,6 +162,11 @@ struct MockInputHandler
 
 struct InputReceivingClient : ClientConfigCommon
 {
+    InputReceivingClient()
+      : events_received(0)
+    {
+    }
+
     virtual ~InputReceivingClient() = default;
     
 
@@ -169,7 +174,8 @@ struct InputReceivingClient : ClientConfigCommon
     {
         auto client = static_cast<InputReceivingClient *>(context);
         client->handler->handle_input(ev);
-        client->event_injected.wake_up_everyone();
+        client->event_received[client->events_received].wake_up_everyone();
+        client->events_received++;
     }
     virtual void expect_input()
     {
@@ -201,8 +207,12 @@ struct InputReceivingClient : ClientConfigCommon
          };
          mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
 
-         event_injected.wait_for_at_most_seconds(1);
+         event_received[0].wait_for_at_most_seconds(1);
+         event_received[1].wait_for_at_most_seconds(1);
+         event_received[2].wait_for_at_most_seconds(1);
 
+         mir_surface_release_sync(surface);
+         
          mir_connection_release(connection);
 
          // ClientConfiguration d'tor is not called on client side so we need this
@@ -211,7 +221,8 @@ struct InputReceivingClient : ClientConfigCommon
     }
     
     std::shared_ptr<MockInputHandler> handler;
-    mir::WaitCondition event_injected;
+    mir::WaitCondition event_received[3];
+    int events_received;
 };
 
 }

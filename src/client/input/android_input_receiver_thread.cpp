@@ -31,6 +31,12 @@ mclia::InputReceiverThread::InputReceiverThread(std::shared_ptr<mclia::InputRece
 {
 }
 
+mclia::InputReceiverThread::~InputReceiverThread()
+{
+    stop();
+    join();
+}
+
 void mclia::InputReceiverThread::start()
 {
     running = true;
@@ -49,6 +55,7 @@ void mclia::InputReceiverThread::join()
 
 void mclia::InputReceiverThread::thread_loop()
 {
+    // TODO: There is room for usage of optimization here through usage of a wake pipe and epoll
     std::chrono::milliseconds timeout(10);
     while (running)
     {
