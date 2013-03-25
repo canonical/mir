@@ -42,11 +42,48 @@ class MockHWCComposerDevice1 : public hwc_composer_device_1, public ICSHardwareC
 public:
     MockHWCComposerDevice1()
     {
+        using namespace testing;
+
         common.version = HWC_DEVICE_API_VERSION_1_1;
 
         registerProcs = hook_registerProcs;
         eventControl = hook_eventControl;
         set = hook_set;
+
+        ON_CALL(*this, set_interface(_,_,_))
+            .WillByDefault(Invoke(this, &MockHWCComposerDevice1::save_set_arguments));
+    }
+
+    ~MockHWCComposerDevice1()
+    {
+        free_save_arguments();
+    }
+
+    int save_set_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
+    {
+        free_save_arguments();
+
+        if (nullptr == displays)
+            return -1;
+        
+        displays_in_last_set =    (hwc_display_contents_1_t**) malloc(sizeof(hwc_display_contents_1_t*));
+        displays_in_last_set[0] = (hwc_display_contents_1_t*) malloc(sizeof(hwc_display_contents_1_t));
+
+        hwc_display_contents_1_t* primary_display = displays[0];
+        memcpy(displays_in_last_set[0], primary_display, sizeof(hwc_display_contents_1_t));
+
+        return 0;
+    }
+
+    void free_save_arguments()
+    {
+        if(displays_in_last_set)
+        {
+            if(displays_in_last_set[0])
+                free(displays_in_last_set[0]);
+
+            free(displays_in_last_set);
+        }
     }
 
     static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
@@ -68,6 +105,8 @@ public:
     MOCK_METHOD2(registerProcs_interface, void(struct hwc_composer_device_1*, hwc_procs_t const*));
     MOCK_METHOD4(eventControl_interface, int(struct hwc_composer_device_1* dev, int disp, int event, int enabled));
     MOCK_METHOD3(set_interface, int(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t**));
+
+    hwc_display_contents_1_t** displays_in_last_set;
 };
 
 }

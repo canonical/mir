@@ -82,7 +82,6 @@ TEST_F(HWCDevice, test_vsync_activation_failure_throws)
     }, std::runtime_error);
 }
 
-
 namespace
 {
 static mga::HWC11Device *global_device;
@@ -139,34 +138,6 @@ TEST_F(HWCDevice, test_vsync_hook_is_callable)
     ASSERT_EQ(0, error);
 }
 
-namespace
-{
-
-static hwc_display_contents_1_t** saved_displays;
-
-int save_set_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
-{
-    if (nullptr == displays)
-        return -1;
-    
-    saved_displays =    (hwc_display_contents_1_t**) malloc(sizeof(hwc_display_contents_1_t*));
-    saved_displays[0] = (hwc_display_contents_1_t*) malloc(sizeof(hwc_display_contents_1_t));
-
-
-    hwc_display_contents_1_t* primary_display = displays[0];
-    memcpy(saved_displays[0], primary_display, sizeof(hwc_display_contents_1_t));
-
-    return 0;
-}
-
-void free_save_arguments()
-{
-    free(saved_displays[0]);
-    free(saved_displays);
-}
-
-}
-
 TEST_F(HWCDevice, test_hwc_gles_set)
 {
     using namespace testing;
@@ -174,16 +145,14 @@ TEST_F(HWCDevice, test_hwc_gles_set)
     mga::HWC11Device device(mock_device);
 
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
-        .Times(1)
-        .WillOnce(Invoke(save_set_arguments));
+        .Times(1);
 
     device.commit_frame();
 
+    auto saved_displays = mock_device->displays_in_last_set; 
     EXPECT_NE(nullptr, *saved_displays);
     EXPECT_EQ(0u,  (*saved_displays)->numHwLayers);
     EXPECT_EQ(-1, (*saved_displays)->retireFenceFd);
-
-    free_save_arguments();
 }
 
 TEST_F(HWCDevice, test_hwc_gles_set_error)
