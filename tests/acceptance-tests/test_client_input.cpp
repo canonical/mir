@@ -32,11 +32,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <thread>
-
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
+namespace msh = mir::shell; // TODO: Remove if experiment fails ~racarr
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
@@ -48,6 +47,26 @@ namespace
 
 namespace
 {
+
+struct FocusNotifyingInputManager : public mia::InputManager
+{
+    FocusNotifyingInputManager(std::shared_ptr<mia::InputConfiguration> const& configuration,
+                               mir::WaitCondition &wait_condition)
+      : InputManager(configuration),
+        on_focus_set(wait_condition)
+    {
+
+    }
+    
+    void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& session, std::shared_ptr<mi::SurfaceTarget> const& surface) override
+    {
+        InputManager::set_input_focus_to(session, surface);
+        if (surface)
+            on_focus_set.wake_up_everyone();
+    }
+
+    mir::WaitCondition &on_focus_set;
+};
 
 struct FakeInputServerConfiguration : public mir_test_framework::TestingServerConfiguration
 {
@@ -66,6 +85,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
 
     void exec(mir::DisplayServer* /* display_server */) override
     {
+        on_focus_set.wait_for_at_most_seconds(1);
         inject_input();
     }
 
@@ -75,12 +95,13 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
         return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
         {
-            return std::make_shared<mia::InputManager>(mt::fake_shared(input_config));
+            return std::make_shared<FocusNotifyingInputManager>(mt::fake_shared(input_config), on_focus_set);
         });
     }
 
     mtd::FakeEventHubInputConfiguration input_config;
     mia::FakeEventHub* fake_event_hub;
+    mir::WaitCondition on_focus_set;
 };
 
 
@@ -200,7 +221,6 @@ TEST_F(BespokeDisplayServerTestFixture, clients_receive_key_input)
     {
         void inject_input()
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             fake_event_hub->synthesize_event(mis::a_key_down_event()
                                              .of_scancode(KEY_ENTER));
         }
