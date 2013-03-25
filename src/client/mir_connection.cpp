@@ -50,7 +50,7 @@ mir_toolkit::MirConnection::MirConnection(
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         log(log),
         client_platform_factory(client_platform_factory),
-        input_platform(std::make_shared<mclia::AndroidInputPlatform>()) // TODO: Abstract ~racarr?
+        input_platform(std::make_shared<mclia::AndroidInputPlatform>())
 {
     {
         std::lock_guard<std::mutex> lock(connection_guard);

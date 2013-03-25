@@ -44,7 +44,7 @@ struct MockEventHandler
 struct MockInputReceiver : public mclia::InputReceiver
 {
     MockInputReceiver()
-      : InputReceiver(droidinput::sp<droidinput::InputChannel>()) // TODO: ? maybe initialize with null channel ~racarr
+      : InputReceiver(droidinput::sp<droidinput::InputChannel>())
     {
     }
     MOCK_METHOD1(next_event, bool(MirEvent &));
