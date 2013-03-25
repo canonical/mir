@@ -35,7 +35,7 @@ class DisplayServer;
  */
 void run_mir(
     ServerConfiguration& config,
-    std::function<void(DisplayServer&)> init = [](DisplayServer&) {});
+    std::function<void(DisplayServer&)> init);
 }
 
 
