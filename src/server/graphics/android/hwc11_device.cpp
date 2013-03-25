@@ -76,5 +76,14 @@ void mga::HWC11Device::wait_for_vsync()
 
 void mga::HWC11Device::commit_frame()
 {
+    /* gles only for now */
+    hwc_display_contents_1_t displays;
+    hwc_display_contents_1_t* disp;
+    displays.numHwLayers = 0;
+    displays.flags = 0;
+    displays.retireFenceFd = -1;
+    disp = &displays;
+
+    hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &disp); 
 
 }
