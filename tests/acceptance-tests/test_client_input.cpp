@@ -219,13 +219,18 @@ struct InputReceivingClient : ClientConfigCommon
 TEST_F(BespokeDisplayServerTestFixture, clients_receive_key_input)
 {
     using namespace ::testing;
+    
+    int const num_events_produced = 3;
 
     struct InputProducingServerConfiguration : FakeInputServerConfiguration
     {
         void inject_input()
         {
-            fake_event_hub->synthesize_event(mis::a_key_down_event()
-                                             .of_scancode(KEY_ENTER));
+            // We send multiple events in order to verify the client is handling them
+            // and server dispatch does not become backed up.
+            for (int i = 0; i < num_events_produced; i++)
+                fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                                 .of_scancode(KEY_ENTER));
         }
     } server_config;
     launch_server_process(server_config);
@@ -235,7 +240,7 @@ TEST_F(BespokeDisplayServerTestFixture, clients_receive_key_input)
         void expect_input()
         {
             using namespace ::testing;
-            EXPECT_CALL(*handler, handle_input(_)).Times(1);
+            EXPECT_CALL(*handler, handle_input(_)).Times(num_events_produced);
         }
     } client_config;
     launch_client_process(client_config);
