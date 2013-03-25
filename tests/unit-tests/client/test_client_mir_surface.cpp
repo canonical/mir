@@ -435,7 +435,7 @@ static void null_event_callback(MirSurface*, MirEvent*, void*)
 }
 }
 
-TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread)
+TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_specified)
 {
     using namespace ::testing;
     
@@ -443,7 +443,7 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread)
     auto mock_input_thread = std::make_shared<mt::MockInputReceiverThread>();
     MirEventDelegate delegate = {null_event_callback, nullptr};
 
-    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_)).Times(1);
+    EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_)).Times(2);
 
     EXPECT_CALL(*mock_input_platform, create_input_thread(_, _)).Times(1)
         .WillOnce(Return(mock_input_thread));
@@ -452,6 +452,13 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread)
 
     {
         auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, depository, mock_input_platform, params, &delegate, &empty_callback, (void*) NULL);
+        auto wait_handle = surface->get_create_wait_handle();
+        wait_handle->wait_for_result();
+    }
+
+    {
+        // This surface should not trigger a call to the input platform as no input delegate is specified.
+        auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, depository, mock_input_platform, params, nullptr, &empty_callback, (void*) NULL);
         auto wait_handle = surface->get_create_wait_handle();
         wait_handle->wait_for_result();
     }

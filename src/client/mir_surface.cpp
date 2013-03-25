@@ -178,7 +178,7 @@ void mir_toolkit::MirSurface::created(mir_surface_lifecycle_callback callback, v
 
     callback(this, context);
     
-    if (surface.fd_size() > 0 && handle_event_callback) // TODO: Test this logic ~racarr
+    if (surface.fd_size() > 0 && handle_event_callback)
     {
         input_thread = input_platform->create_input_thread(surface.fd(0), handle_event_callback);
         input_thread->start();
