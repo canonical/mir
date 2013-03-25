@@ -34,6 +34,7 @@ class ICSHardwareComposerInterface
 public:
     virtual void registerProcs_interface(struct hwc_composer_device_1* dev, hwc_procs_t const* procs) = 0;
     virtual int eventControl_interface(struct hwc_composer_device_1* dev, int disp, int event, int enabled) = 0;
+    virtual int set_interface(struct hwc_composer_device_1 *dev, size_t numDisplays, hwc_display_contents_1_t** displays);
 };
 
 class MockHWCComposerDevice1 : public hwc_composer_device_1, public ICSHardwareComposerInterface
@@ -45,6 +46,7 @@ public:
 
         registerProcs = hook_registerProcs;
         eventControl = hook_eventControl;
+        set = hook_set;
     }
 
     static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
@@ -57,9 +59,15 @@ public:
         MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
         return mocker->eventControl_interface(mock_hwc, disp, event, enabled);
     }
+    static int hook_set(struct hwc_composer_device_1 *mock_hwc, size_t numDisplays, hwc_display_contents_1_t** displays)
+    {
+        MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
+        return mocker->set_interface(mock_hwc, numDisplays, displays);
+    }
 
     MOCK_METHOD2(registerProcs_interface, void(struct hwc_composer_device_1*, hwc_procs_t const*));
     MOCK_METHOD4(eventControl_interface, int(struct hwc_composer_device_1* dev, int disp, int event, int enabled));
+    MOCK_METHOD3(set_interface, int(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t**));
 };
 
 }

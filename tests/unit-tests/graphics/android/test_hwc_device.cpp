@@ -138,3 +138,19 @@ TEST_F(HWCDevice, test_vsync_hook_is_callable)
     error = pthread_join(thread, &retval);
     ASSERT_EQ(0, error);
 }
+
+TEST_F(HWCDevice, test_hwc_gles_set)
+{
+    using namespace testing;
+
+    hwc_display_contents_1_t* displays; 
+    mga::HWC11Device device(mock_device);
+
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
+        .Times(1)
+        .WillOnce(SaveArg<2>(&displays));
+
+    device.commit_frame();
+
+    EXPECT_NE(nullptr, displays);
+}
