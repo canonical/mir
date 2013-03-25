@@ -24,7 +24,7 @@
 namespace mclia = mir::client::input::android;
 
 mclia::InputReceiverThread::InputReceiverThread(std::shared_ptr<mclia::InputReceiver> const& receiver,
-                                               std::function<void(MirEvent*)> event_handling_callback)
+                                                std::function<void(MirEvent*)> const& event_handling_callback)
   : receiver(receiver),
     handler(event_handling_callback),
     running(false)

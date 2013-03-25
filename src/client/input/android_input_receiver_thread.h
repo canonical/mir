@@ -42,7 +42,7 @@ class InputReceiverThread : public input::InputReceiverThread
 {
 public:
     InputReceiverThread(std::shared_ptr<InputReceiver> const& receiver, 
-                        std::function<void(MirEvent*)> event_handling_callback); // TODO: Const ~racarr
+                        std::function<void(MirEvent*)> const& event_handling_callback); // TODO: Const ~racarr
     virtual ~InputReceiverThread() {};
 
     void start();
@@ -55,7 +55,7 @@ protected:
 
 private:
     std::shared_ptr<InputReceiver> const receiver;
-    std::function<void(MirEvent*)> handler;
+    std::function<void(MirEvent*)> const handler;
     
     void thread_loop();
     std::atomic<bool> running;
