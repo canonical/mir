@@ -64,19 +64,19 @@ const native_handle_t* mcla::AndroidClientBuffer::convert_to_native_handle(const
 {
     int native_handle_header_size = sizeof(native_handle_t);
     int total = package->fd_items + package->data_items + native_handle_header_size;
-    native_handle_t* handle = (native_handle_t*) malloc(sizeof(int) * total );
+    native_handle_t* handle = (native_handle_t*) malloc(sizeof(int) * total);
 
     handle->version = native_handle_header_size;
     handle->numFds  = package->fd_items;
     handle->numInts = package->data_items;
 
-    for(auto i=0; i< handle->numFds; i++)
+    for (auto i=0; i< handle->numFds; i++)
     {
         handle->data[i] = package->fd[i];
     }
 
     int offset_i = handle->numFds;
-    for(auto i=0; i< handle->numInts; i++)
+    for (auto i=0; i< handle->numInts; i++)
     {
         handle->data[offset_i+i] = package->data[i];
     }

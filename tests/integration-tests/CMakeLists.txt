@@ -10,6 +10,7 @@ set(
 add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
+add_subdirectory(shell/)
 add_subdirectory(process/)
 if (NOT MIR_DISABLE_INPUT)
 add_subdirectory(input/)

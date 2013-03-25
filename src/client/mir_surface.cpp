@@ -38,7 +38,6 @@ mir_toolkit::MirSurface::MirSurface(
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
-      last_buffer_id(-1),
       buffer_depository(depository),
       logger(logger)
 {
@@ -50,6 +49,10 @@ mir_toolkit::MirSurface::MirSurface(
     message.set_buffer_usage(params.buffer_usage);
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
+
+    for (int i = 0; i < mir_surface_attrib_arraysize_; i++)
+        attrib_cache[i] = -1;
+    attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
 }
 
 mir_toolkit::MirSurface::~MirSurface()
@@ -88,7 +91,7 @@ bool mir_toolkit::MirSurface::is_valid() const
 
 void mir_toolkit::MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
-    auto buffer = buffer_depository->access_buffer(last_buffer_id);
+    auto buffer = buffer_depository->current_buffer();
 
     secured_region = buffer->secure_for_cpu_write();
     region_out.width = secured_region->width.as_uint32_t();
@@ -125,9 +128,9 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::get_create_wait_handle()
 
 /* todo: all these conversion functions are a bit of a kludge, probably
          better to have a more developed geometry::PixelFormat that can handle this */
-geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf )
+geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
 {
-    if ( pf == mir_pixel_format_abgr_8888 )
+    if (pf == mir_pixel_format_abgr_8888)
         return geom::PixelFormat::abgr_8888;
     return geom::PixelFormat::invalid;
 }
@@ -135,7 +138,6 @@ geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 
 void mir_toolkit::MirSurface::process_incoming_buffer()
 {
     auto const& buffer = surface.buffer();
-    last_buffer_id = buffer.buffer_id();
 
     auto surface_width = geom::Width(surface.width());
     auto surface_height = geom::Height(surface.height());
@@ -148,7 +150,7 @@ void mir_toolkit::MirSurface::process_incoming_buffer()
     try
     {
         buffer_depository->deposit_package(std::move(ipc_package),
-                                last_buffer_id,
+                                buffer.buffer_id(),
                                 surface_size, surface_pf);
     } catch (const std::runtime_error& err)
     {
@@ -184,13 +186,13 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::release_surface(
 
 std::shared_ptr<mir_toolkit::MirBufferPackage> mir_toolkit::MirSurface::get_current_buffer_package()
 {
-    auto buffer = buffer_depository->access_buffer(last_buffer_id);
+    auto buffer = buffer_depository->current_buffer();
     return buffer->get_buffer_package();
 }
 
 std::shared_ptr<mcl::ClientBuffer> mir_toolkit::MirSurface::get_current_buffer()
 {
-    return buffer_depository->access_buffer(last_buffer_id);
+    return buffer_depository->current_buffer();
 }
 
 void mir_toolkit::MirSurface::populate(MirBufferPackage& buffer_package)
@@ -225,4 +227,47 @@ void mir_toolkit::MirSurface::populate(MirBufferPackage& buffer_package)
 EGLNativeWindowType mir_toolkit::MirSurface::generate_native_window()
 {
     return *accelerated_window;
+}
+
+MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
+{
+    mp::SurfaceSetting setting;
+    setting.mutable_surfaceid()->CopyFrom(surface.id());
+    setting.set_attrib(at);
+    setting.set_ivalue(value);
+
+    configure_wait_handle.expect_result();
+    server.configure_surface(0, &setting, &configure_result, 
+              google::protobuf::NewCallback(this, &MirSurface::on_configured));
+
+    return &configure_wait_handle;
+}
+
+void MirSurface::on_configured()
+{
+    if (configure_result.has_surfaceid() &&
+        configure_result.surfaceid().value() == surface.id().value() &&
+        configure_result.has_attrib())
+    {
+        switch (configure_result.attrib())
+        {
+        case mir_surface_attrib_type:
+            if (configure_result.has_ivalue())
+            {
+                int t = configure_result.ivalue();
+                attrib_cache[mir_surface_attrib_type] = t;
+            } // else error is probably set due to an unsupported attrib/value
+            break;
+        default:
+            assert(false);
+            break;
+        }
+
+        configure_wait_handle.result_received();
+    }
+}
+
+int MirSurface::attrib(MirSurfaceAttrib at) const
+{
+    return attrib_cache[at];
 }

@@ -17,11 +17,12 @@
  */
 
 #include "mir/surfaces/buffer_bundle.h"
+#include "mir/shell/focus_sequence.h"
 #include "mir/shell/session_manager.h"
-#include "mir/frontend/session_container.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface_creation_parameters.h"
-#include "mir/shell/focus_sequence.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -74,9 +75,9 @@ struct SessionManagerSetup : public testing::Test
 
     mtd::StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
-    MockSessionContainer container;
+    testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     MockFocusSequence sequence;
-    mtd::MockFocusSetter focus_setter;
+    testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
 
     msh::SessionManager session_manager;
 };
@@ -90,7 +91,7 @@ TEST_F(SessionManagerSetup, open_and_close_session)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_));
-    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
+    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
 
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
@@ -115,7 +116,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1);
-    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<mf::Session>())).Times(1);
+    EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
 
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
 
@@ -146,7 +147,7 @@ TEST_F(SessionManagerSetup, apps_selected_by_id_receive_focus)
 
     session_manager.tag_session_with_lightdm_id(session1, 1);
 
-    EXPECT_CALL(focus_setter, set_focus_to(session1));
+    EXPECT_CALL(focus_setter, set_focus_to(Eq(session1)));
     session_manager.focus_session_with_lightdm_id(1);
 }
 
@@ -161,7 +162,7 @@ TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
     session_manager.focus_session_with_lightdm_id(1);
 
     EXPECT_CALL(sequence, default_focus()).WillOnce(Return(session2));
-    EXPECT_CALL(focus_setter, set_focus_to(session2));
+    EXPECT_CALL(focus_setter, set_focus_to(Eq(session2)));
 
     session_manager.close_session(session1);
 }

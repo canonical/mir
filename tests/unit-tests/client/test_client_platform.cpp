@@ -22,6 +22,10 @@
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
+#ifdef ANDROID
+#include "mir_test/hw_mock.h"
+#endif
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -29,26 +33,33 @@ namespace mcl=mir::client;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
-TEST(ClientPlatformTest, platform_creates )
+class ClientPlatformTest : public ::testing::Test
+{
+#ifdef ANDROID
+    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
+#endif
+};
+
+TEST_F(ClientPlatformTest, platform_creates)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
-    auto depository = platform->create_platform_depository();
-    EXPECT_NE( depository.get(), (mcl::ClientBufferDepository*) NULL);
+    auto buffer_factory = platform->create_buffer_factory();
+    EXPECT_NE(buffer_factory.get(), (mcl::ClientBufferFactory*) NULL);
 }
 
-TEST(ClientPlatformTest, platform_creates_native_window )
+TEST_F(ClientPlatformTest, platform_creates_native_window)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
     auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get());
-    EXPECT_NE( *native_window, (EGLNativeWindowType) NULL);
+    EXPECT_NE(*native_window, (EGLNativeWindowType) NULL);
 }
 
-TEST(ClientPlatformTest, platform_creates_egl_native_display)
+TEST_F(ClientPlatformTest, platform_creates_egl_native_display)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;

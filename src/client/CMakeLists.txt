@@ -27,6 +27,8 @@ include_directories(
 set(
   CLIENT_SOURCES
 
+  aging_buffer.cpp
+  client_buffer_depository.cpp
   mir_client_library.cpp
   mir_connection.cpp
   mir_wait_handle.cpp
@@ -54,12 +56,13 @@ set(
   CLIENT_SOURCES
 
   android/android_client_buffer.cpp
-  android/android_client_buffer_depository.cpp
+  android/android_client_buffer_factory.cpp
   android/android_registrar.cpp
   android/android_client_platform.cpp
   android/mir_native_window.cpp
   android/client_surface_interpreter.cpp
   android/syncfence.cpp
+  android/android_native_display_container.cpp
   ${CLIENT_SOURCES}
 )
 endif()
@@ -69,8 +72,9 @@ set(
   CLIENT_SOURCES
 
   gbm/gbm_client_platform.cpp
-  gbm/gbm_client_buffer_depository.cpp
+  gbm/gbm_client_buffer_factory.cpp
   gbm/gbm_client_buffer.cpp
+  gbm/mesa_native_display_container.cpp
   ${CLIENT_SOURCES}
 )
 endif()
@@ -105,24 +109,21 @@ target_link_libraries(
 )
 
 set(
-  CLIENT_PUBLIC_HEADERS
+  CLIENT_HEADER_DIRS
 
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library.h
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library_lightdm.h
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_client_library_drm.h
-)
-
-set_target_properties(
-  mirclient
-  PROPERTIES
-  PUBLIC_HEADER "${CLIENT_PUBLIC_HEADERS}"
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit  
+  ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit
 )
 
 install(
   TARGETS mirclient
   LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  PUBLIC_HEADER DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
+  ARCHIVE DESTINATION lib)
+
+install(
+   DIRECTORY ${CLIENT_HEADER_DIRS} DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}"
+   FILES_MATCHING PATTERN "*.h")
+
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc

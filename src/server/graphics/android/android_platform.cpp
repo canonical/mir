@@ -20,15 +20,10 @@
 #include "android_platform.h"
 #include "android_buffer_allocator.h"
 #include "android_display.h"
-#include "android_framebuffer_window.h"
+#include "android_display_selector.h"
+#include "android_fb_factory.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
-
-#include <ui/FramebufferNativeWindow.h>
-
-#include <boost/throw_exception.hpp>
-
-#include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -42,9 +37,9 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
-    auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
-    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-    return std::make_shared<mga::AndroidDisplay>(window);
+    auto fb_factory = std::make_shared<mga::AndroidFBFactory>();
+    auto selector = std::make_shared<mga::AndroidDisplaySelector>(fb_factory);
+    return selector->primary_display();
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()

@@ -35,7 +35,8 @@ msh::Surface::Surface(
     std::shared_ptr<input::InputChannel> const& input_channel)
   : builder(builder),
     input_channel(input_channel),
-    surface(builder->create_surface(params))
+    surface(builder->create_surface(params)),
+    type_value(mir_surface_type_normal)
 {
 }
 
@@ -88,6 +89,18 @@ mir::geometry::Size msh::Surface::size() const
     }
 }
 
+std::string msh::Surface::name() const
+{
+    if (auto const& s = surface.lock())
+    {
+        return s->name();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
 mir::geometry::PixelFormat msh::Surface::pixel_format() const
 {
     if (auto const& s = surface.lock())
@@ -132,4 +145,54 @@ int msh::Surface::client_input_fd() const
     if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return input_channel->client_fd();
+}
+
+int msh::Surface::server_input_fd() const
+{
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
+    return input_channel->server_fd();
+}
+
+int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
+{
+    int result = 0;
+
+    /*
+     * TODO: In future, query the shell implementation for the subset of
+     *       attributes/types it implements.
+     */
+    switch (attrib)
+    {
+    case mir_surface_attrib_type:
+        if (!set_type(static_cast<MirSurfaceType>(value)))
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
+                                                   "type."));
+        result = type();
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
+                                               "attribute."));
+        break;
+    }
+
+    return result;
+}
+
+MirSurfaceType msh::Surface::type() const
+{
+    return type_value;
+}
+
+bool msh::Surface::set_type(MirSurfaceType t)
+{
+    bool valid = false;
+
+    if (t >= 0 && t < mir_surface_type_arraysize_)
+    {
+        type_value = t;
+        valid = true;
+    }
+
+    return valid;
 }

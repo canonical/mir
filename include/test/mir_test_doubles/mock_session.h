@@ -41,6 +41,8 @@ struct MockSession : public frontend::Session
     
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+
+    MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 };
 
 }

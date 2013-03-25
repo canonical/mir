@@ -42,6 +42,10 @@ void mir::frontend::NullSessionMediatorReport::session_drm_auth_magic_called(std
 {
 }
 
+void mir::frontend::NullSessionMediatorReport::session_configure_surface_called(std::string const&)
+{
+}
+
 void mir::frontend::NullSessionMediatorReport::session_error(
         std::string const&,
         char const* ,

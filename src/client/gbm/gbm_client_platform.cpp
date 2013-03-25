@@ -18,9 +18,11 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "gbm_client_platform.h"
-#include "gbm_client_buffer_depository.h"
+#include "gbm_client_buffer_factory.h"
+#include "mesa_native_display_container.h"
 #include "drm_fd_handler.h"
 #include "../mir_connection.h"
+#include "../client_buffer_factory.h"
 #include "../native_client_platform_factory.h"
 
 #include <xf86drm.h>
@@ -60,6 +62,22 @@ private:
     int drm_fd;
 };
 
+struct NativeDisplayDeleter
+{
+    NativeDisplayDeleter(mcl::EGLNativeDisplayContainer& container)
+    : container(container)
+    {
+    }
+    void operator() (EGLNativeDisplayType* p)
+    {
+        auto display = *(reinterpret_cast<MirEGLNativeDisplayType*>(p));
+        container.release(display);
+        delete p;
+    }
+
+    mcl::EGLNativeDisplayContainer& container;
+};
+
 }
 
 std::shared_ptr<mcl::ClientPlatform>
@@ -76,19 +94,22 @@ mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* con
         drm_fd = platform_package.fd[0];
 
     auto drm_fd_handler = std::make_shared<RealDRMFDHandler>(drm_fd);
-    return std::make_shared<mclg::GBMClientPlatform>(context, drm_fd_handler);
+    return std::make_shared<mclg::GBMClientPlatform>(context, drm_fd_handler, mcl::EGLNativeDisplayContainer::instance());
 }
 
 mclg::GBMClientPlatform::GBMClientPlatform(
         ClientContext* const context,
-        std::shared_ptr<DRMFDHandler> const& drm_fd_handler)
-    : context{context}, drm_fd_handler{drm_fd_handler}
+        std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
+        mcl::EGLNativeDisplayContainer& display_container)
+    : context{context},
+      drm_fd_handler{drm_fd_handler},
+      display_container(display_container)
 {
 }
 
-std::shared_ptr<mcl::ClientBufferDepository> mclg::GBMClientPlatform::create_platform_depository()
+std::shared_ptr<mcl::ClientBufferFactory> mclg::GBMClientPlatform::create_buffer_factory()
 {
-    return std::make_shared<mclg::GBMClientBufferDepository>(drm_fd_handler);
+    return std::make_shared<mclg::GBMClientBufferFactory>(drm_fd_handler);
 }
 
 std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_window(ClientSurface* client_surface)
@@ -100,7 +121,9 @@ std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_
 
 std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()
 {
-    auto native_display = std::make_shared<EGLNativeDisplayType>();
-    *native_display = reinterpret_cast<EGLNativeDisplayType>(context->mir_connection());
-    return native_display;
+    MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
+    *mir_native_display = display_container.create(context->mir_connection());
+    auto egl_native_display = reinterpret_cast<EGLNativeDisplayType*>(mir_native_display);
+
+    return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(display_container));
 }

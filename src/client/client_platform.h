@@ -25,7 +25,7 @@ namespace mir
 {
 namespace client
 {
-class ClientBufferDepository;
+class ClientBufferFactory;
 class ClientSurface;
 class ClientContext;
 
@@ -36,7 +36,7 @@ public:
     ClientPlatform(const ClientPlatform& p) = delete;
     ClientPlatform& operator=(const ClientPlatform& p) = delete;
 
-    virtual std::shared_ptr<ClientBufferDepository> create_platform_depository () = 0;
+    virtual std::shared_ptr<ClientBufferFactory> create_buffer_factory () = 0;
     virtual std::shared_ptr<EGLNativeWindowType> create_egl_native_window(ClientSurface *surface) = 0;
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;
 };

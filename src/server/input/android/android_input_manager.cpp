@@ -18,12 +18,16 @@
  */
 
 #include "mir/graphics/viewable_area.h"
+#include "mir/input/session_target.h"
+#include "mir/input/surface_target.h"
 
 #include "android_input_manager.h"
 #include "android_input_constants.h"
 #include "android_input_configuration.h"
 #include "android_input_thread.h"
 #include "android_input_channel.h"
+#include "android_input_window_handle.h"
+#include "android_input_application_handle.h"
 #include "default_android_input_configuration.h"
 
 #include <EventHub.h>
@@ -40,7 +44,8 @@ mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& 
   : event_hub(config->the_event_hub()),
     dispatcher(config->the_dispatcher()),
     reader_thread(config->the_reader_thread()),
-    dispatcher_thread(config->the_dispatcher_thread())
+    dispatcher_thread(config->the_dispatcher_thread()),
+    focused_window_handle(0)
 {
 }
 
@@ -71,6 +76,28 @@ void mia::InputManager::start()
 std::shared_ptr<mi::InputChannel> mia::InputManager::make_input_channel()
 {
     return std::make_shared<mia::AndroidInputChannel>();
+}
+
+void mia::InputManager::set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& session, std::shared_ptr<mi::SurfaceTarget> const& surface)
+{
+    if (focused_window_handle.get())
+    {
+        dispatcher->unregisterInputChannel(focused_window_handle->getInfo()->inputChannel);
+        focused_window_handle.clear();
+        focused_application_handle.clear();
+    }
+
+    droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> windows;
+    if (surface)
+    {
+        focused_application_handle = new mia::InputApplicationHandle(session);
+        focused_window_handle = new mia::InputWindowHandle(focused_application_handle, surface);
+        dispatcher->setFocusedApplication(focused_application_handle);
+
+        dispatcher->registerInputChannel(focused_window_handle->getInfo()->inputChannel, focused_window_handle, false);
+        windows.push_back(focused_window_handle);
+    }
+    dispatcher->setInputWindows(windows);
 }
 
 std::shared_ptr<mi::InputManager> mi::create_input_manager(
