@@ -67,4 +67,7 @@ compile and run code, and is well suited for a development workflow.
         $ make
 
 N.B. The `cross-compile-android.sh` script in mir's top level directory
-provides a scripting example of how to cross compile. The 'setup partial-armhf-chroot.sh' will attempt to download all the arm dependencies you need. You have to have your APT sources.list files pointed at arm repositories.
+provides a scripting example of how to cross compile.
+The 'setup-partial-armhf-chroot.sh' will attempt to download all the arm
+dependencies you need. You have to have your APT sources.list files pointed at
+arm repositories.
