@@ -77,17 +77,3 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
     if (p != surfaces.end()) surfaces.erase(p);
     // else; TODO error logging
 }
-
-void ms::SurfaceStack::raise_to_top(std::weak_ptr<ms::Surface> surface)
-{
-    std::lock_guard<std::mutex> lg(guard);
-
-    auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
-
-    if (p != surfaces.end())
-    {
-        surfaces.push_back(*p);
-        surfaces.erase(p);
-    }
-
-}
