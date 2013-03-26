@@ -20,7 +20,6 @@
 #include "mir/display_server.h"
 
 #include <thread>
-#include <future>
 #include <atomic>
 #include <csignal>
 #include <iostream>
@@ -48,9 +47,7 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 
     signal_display_server.store(&server);
 
-    std::future<void> future = std::async(std::launch::async, std::bind(init, std::ref(server)));
+    init(server);
 
     server.run();
-
-    future.wait();
 }
