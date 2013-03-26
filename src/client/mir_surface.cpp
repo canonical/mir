@@ -36,14 +36,14 @@ mir_toolkit::MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
     std::shared_ptr<mir::client::Logger> const& logger,
-    std::shared_ptr<mcl::ClientBufferDepository> const& depository,
+    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     std::shared_ptr<mcli::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
     MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
-      buffer_depository(depository),
+      buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, 3)),
       input_platform(input_platform),
       logger(logger)
 {

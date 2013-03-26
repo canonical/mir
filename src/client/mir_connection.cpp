@@ -71,10 +71,9 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto depository = std::make_shared<mir::client::ClientBufferDepository>(platform->create_buffer_factory(), 3);
     auto null_log = std::make_shared<mir::client::NullLogger>();
+    auto surface = new MirSurface(this, server, null_log, platform->create_buffer_factory(), input_platform, params, delegate, callback, context);
 
-    auto surface = new MirSurface(this, server, null_log, depository, input_platform, params, delegate, callback, context);
     return surface->get_create_wait_handle();
 }
 

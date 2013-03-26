@@ -56,9 +56,9 @@ public:
     MirSurface(
         MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,
-        const std::shared_ptr<mir::client::Logger>& logger,
-        const std::shared_ptr<mir::client::ClientBufferDepository>& depository,
-        const std::shared_ptr<mir::client::input::InputPlatform>& input_platform,
+        std::shared_ptr<mir::client::Logger> const& logger,
+        std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
+        std::shared_ptr<mir::client::input::InputPlatform> const& input_platform,
         MirSurfaceParameters const& params,
         MirEventDelegate const* delegate,
         mir_surface_lifecycle_callback callback, void * context);
