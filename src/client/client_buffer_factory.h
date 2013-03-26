@@ -35,8 +35,14 @@ class ClientBuffer;
 class ClientBufferFactory
 {
 public:
-    virtual std::shared_ptr<ClientBuffer> create_buffer(std::shared_ptr<mir_toolkit::MirBufferPackage> const & package,
+    virtual std::shared_ptr<ClientBuffer> create_buffer(std::shared_ptr<mir_toolkit::MirBufferPackage> const& package,
                                                         geometry::Size size, geometry::PixelFormat pf) = 0;
+
+protected:
+	ClientBufferFactory() = default;
+	ClientBufferFactory(ClientBufferFactory const &) = delete;
+	ClientBufferFactory &operator=(ClientBufferFactory const &) = delete;	
+	virtual ~ClientBufferFactory() {}
 };
 
 }

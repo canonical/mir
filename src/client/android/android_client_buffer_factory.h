@@ -41,9 +41,9 @@ class AndroidRegistrar;
 class AndroidClientBufferFactory : public ClientBufferFactory
 {
 public:
-    explicit AndroidClientBufferFactory(std::shared_ptr<AndroidRegistrar> const &);
+    explicit AndroidClientBufferFactory(std::shared_ptr<AndroidRegistrar> const&);
 
-    virtual std::shared_ptr<ClientBuffer> create_buffer(std::shared_ptr<mir_toolkit::MirBufferPackage> const & package,
+    virtual std::shared_ptr<ClientBuffer> create_buffer(std::shared_ptr<mir_toolkit::MirBufferPackage> const& package,
                                                         geometry::Size size, geometry::PixelFormat pf);
 private:
     std::shared_ptr<AndroidRegistrar> registrar;
