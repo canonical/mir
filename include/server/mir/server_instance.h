@@ -18,40 +18,23 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_DISPLAY_SERVER_H_
-#define MIR_DISPLAY_SERVER_H_
+#ifndef MIR_SERVER_INSTANCE_H_
+#define MIR_SERVER_INSTANCE_H_
 
 #include <memory>
 
-/// All things Mir
+#include "mir/display_server.h"
+
 namespace mir
 {
-namespace compositor
-{
-
-class BufferAllocationStrategy;
-class BufferBundleFactory;
-
-}
-namespace frontend
-{
-
-class Communicator;
-
-}
-namespace graphics
-{
-class Display;
-}
-
 class ServerConfiguration;
 
-class DisplayServer
+class ServerInstance : public mir::DisplayServer
 {
 public:
-    explicit DisplayServer(ServerConfiguration& config);
+    explicit ServerInstance(ServerConfiguration& config);
 
-    ~DisplayServer();
+    ~ServerInstance();
 
     void run();
     void stop();
@@ -60,11 +43,11 @@ private:
     struct Private;
     std::unique_ptr<Private> p;
 
-    DisplayServer() = delete;
-    DisplayServer(const DisplayServer&) = delete;
-    DisplayServer& operator=(const DisplayServer&) = delete;
+    ServerInstance() = delete;
+    ServerInstance(const ServerInstance&) = delete;
+    ServerInstance& operator=(const ServerInstance&) = delete;
 };
 
 }
 
-#endif /* MIR_DISPLAY_SERVER_H_ */
+#endif /* MIR_SERVER_INSTANCE_H_ */

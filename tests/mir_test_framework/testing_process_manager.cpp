@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_framework/testing_process_manager.h"
-#include "mir/display_server.h"
+#include "mir/server_instance.h"
 #include "mir_test_framework/signal_dispatcher.h"
 #include "mir_test_framework/detect_server.h"
 
@@ -55,7 +55,7 @@ namespace
 // TODO: Get rid of the volatile-hack here and replace it with
 // something that doesn't spinlock the thread it is waiting on
 // C.f. FrontendShutdown test DISABLED_before_client_connects
-mir::DisplayServer* volatile signal_display_server;
+mir::ServerInstance* volatile signal_display_server;
 }
 
 void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
@@ -79,12 +79,12 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         SignalDispatcher::instance()->signal_channel().connect(
                 boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
 
-        mir::DisplayServer server(config);
+        mir::ServerInstance server(config);
 
         signal_display_server = &server;
 
         {
-            std::future<void> future = std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
+            std::future<void> future = std::async(std::launch::async, std::bind(&mir::ServerInstance::run, &server));
 
             config.exec(&server);
 

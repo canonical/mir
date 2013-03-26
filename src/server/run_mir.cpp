@@ -17,7 +17,7 @@
  */
 
 #include "mir/run_mir.h"
-#include "mir/display_server.h"
+#include "mir/server_instance.h"
 
 #include <thread>
 #include <atomic>
@@ -26,7 +26,7 @@
 
 namespace
 {
-std::atomic<mir::DisplayServer*> signal_display_server;
+std::atomic<mir::ServerInstance*> signal_display_server;
 
 extern "C" void signal_terminate(int)
 {
@@ -43,7 +43,7 @@ void mir::run_mir(ServerConfiguration& config)
     signal(SIGTERM, signal_terminate);
     signal(SIGPIPE, SIG_IGN);
 
-    mir::DisplayServer server(config);
+    mir::ServerInstance server(config);
 
     signal_display_server.store(&server);
 

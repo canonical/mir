@@ -18,7 +18,7 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/display_server.h"
+#include "mir/server_instance.h"
 #include "mir/server_configuration.h"
 
 #include "mir/compositor/compositor.h"
@@ -37,7 +37,7 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 
-struct mir::DisplayServer::Private
+struct mir::ServerInstance::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
@@ -59,18 +59,18 @@ struct mir::DisplayServer::Private
     bool exit;
 };
 
-mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
+mir::ServerInstance::ServerInstance(ServerConfiguration& config) :
     p()
 {
-    p.reset(new DisplayServer::Private(config));
+    p.reset(new ServerInstance::Private(config));
 }
 
-mir::DisplayServer::~DisplayServer()
+mir::ServerInstance::~ServerInstance()
 {
     p->shell->shutdown();
 }
 
-void mir::DisplayServer::run()
+void mir::ServerInstance::run()
 {
     std::unique_lock<std::mutex> lk(p->exit_guard);
 
@@ -85,7 +85,7 @@ void mir::DisplayServer::run()
     p->compositor->stop();
 }
 
-void mir::DisplayServer::stop()
+void mir::ServerInstance::stop()
 {
     std::unique_lock<std::mutex> lk(p->exit_guard);
     p->exit = true;

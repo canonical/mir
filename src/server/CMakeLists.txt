@@ -22,7 +22,7 @@ configure_file(
 
 set(
   SRCS
-  display_server.cpp
+  server_instance.cpp
   default_server_configuration.cpp
 )
 

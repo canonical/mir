@@ -497,7 +497,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
 {
     struct ServerConfig : BufferCounterConfig
     {
-        void on_exit(mir::DisplayServer*)
+        void on_exit(mir::ServerInstance*)
         {
             EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
             EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
@@ -546,7 +546,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
 {
     struct ServerConfig : BufferCounterConfig
     {
-        void on_exit(mir::DisplayServer*)
+        void on_exit(mir::ServerInstance*)
         {
             EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
             EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());

@@ -27,7 +27,7 @@
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
 #include "mir/default_server_configuration.h"
-#include "mir/display_server.h"
+#include "mir/server_instance.h"
 
 #include "mir/draw/mir_image.h"
 #include "buffer_render_target.h"
@@ -310,7 +310,7 @@ private:
     std::vector<Moveable> moveables;
 };
 
-std::atomic<mir::DisplayServer*> signal_display_server;
+std::atomic<mir::ServerInstance*> signal_display_server;
 
 void signal_terminate(int)
 {
@@ -340,7 +340,7 @@ int main(int argc, char **argv)
     std::cout << "Rendering " << num_moveables << " surfaces" << std::endl;
 
     RenderSurfacesServerConfiguration conf{num_moveables};
-    mir::DisplayServer server{conf};
+    mir::ServerInstance server{conf};
     signal_display_server.store(&server);
 
     conf.create_surfaces();
