@@ -123,7 +123,7 @@ public:
     virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
     virtual std::shared_ptr<time::TimeSource> the_time_source();
     
-    virtual std::function<void(ServerInstance*)> the_ready_to_run_handler();
+    virtual std::function<void(DisplayServer*)> the_ready_to_run_handler();
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;

@@ -481,7 +481,7 @@ std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time
         });
 }
 
-std::function<void(mir::ServerInstance*)> mir::DefaultServerConfiguration::the_ready_to_run_handler()
+std::function<void(mir::DisplayServer*)> mir::DefaultServerConfiguration::the_ready_to_run_handler()
 {
-    return std::function<void(mir::ServerInstance*)>();
+    return std::function<void(mir::DisplayServer*)>();
 }
