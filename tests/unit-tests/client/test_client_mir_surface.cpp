@@ -323,6 +323,22 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer)
     buffer_wait_handle->wait_for_result();
 }
 
+MATCHER_P(BufferPackageMatches, package, "")
+{
+    // Can't simply use memcmp() on the whole struct because age is not sent over the wire
+    if (package.data_items != arg.data_items)
+        return false;
+    if (package.fd_items != arg.fd_items)
+        return false;
+    if (memcmp(package.data, arg.data, sizeof(package.data[0]) * package.data_items))
+        return false;
+    if (memcmp(package.fd, arg.fd, sizeof(package.fd[0]) * package.fd_items))
+        return false;
+    if (package.stride != arg.stride)
+        return false;
+    return true;
+}
+
 TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_create)
 {
     using namespace testing;
@@ -344,11 +360,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     wait_handle->wait_for_result();
 
     /* check for same contents */
-    ASSERT_EQ(submitted_package->data_items, mock_server_tool->server_package.data_items);
-    ASSERT_EQ(submitted_package->fd_items,   mock_server_tool->server_package.fd_items);
-    ASSERT_EQ(submitted_package->stride,   mock_server_tool->server_package.stride);
-    for (auto i=0; i< submitted_package->data_items; i++)
-        EXPECT_EQ(submitted_package->data[i], mock_server_tool->server_package.data[i]);
+    EXPECT_THAT(*submitted_package, BufferPackageMatches(mock_server_tool->server_package));
 }
 
 TEST_F(MirClientSurfaceTest, message_width_used_in_buffer_creation )
@@ -425,22 +437,6 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     wait_handle->wait_for_result();
 
     EXPECT_EQ(pf, geom::PixelFormat::abgr_8888);
-}
-
-MATCHER_P(BufferPackageMatches, package, "")
-{
-    // Can't simply use memcmp() on the whole struct because age is not sent over the wire
-    if (package.data_items != arg.data_items)
-        return false;
-    if (package.fd_items != arg.fd_items)
-        return false;
-    if (memcmp(package.data, arg.data, sizeof(package.data[0]) * package.data_items))
-        return false;
-    if (memcmp(package.fd, arg.fd, sizeof(package.fd[0]) * package.fd_items))
-        return false;
-    if (package.stride != arg.stride)
-        return false;
-    return true;
 }
 
 TEST_F(MirClientSurfaceTest, get_buffer_returns_last_received_buffer_package)
