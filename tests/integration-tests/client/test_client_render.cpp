@@ -462,12 +462,10 @@ struct TestClientIPCRender : public testing::Test
         mock_server = std::make_shared<mt::StubServerGenerator>(package, 14);
         test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server);
         test_server->comm->start();
-        printf("oo\n");
     }
 
     void TearDown()
     {
-        printf("tear\n");
         test_server.reset();
     }
 
@@ -483,12 +481,12 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
     std::shared_ptr<mtf::Process> client_process;
 
-    std::shared_ptr<mga::AndroidBufferAllocator>  allocator;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;
 
     std::shared_ptr<mc::Buffer> android_buffer;
     std::shared_ptr<mc::Buffer> second_android_buffer;
+    std::shared_ptr<mga::AndroidBufferAllocator>  allocator;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;
