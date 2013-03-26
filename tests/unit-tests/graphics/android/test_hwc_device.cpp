@@ -112,7 +112,7 @@ TEST_F(HWCDevice, test_vsync_hook_waits)
 
 }
 
-TEST_F(HWCDevice, test_vsync_hook_is_callable)
+TEST_F(HWCDevice, test_vsync_hook_from_hwc_unblocks_wait)
 {
     using namespace testing;
 
@@ -149,10 +149,8 @@ TEST_F(HWCDevice, test_hwc_gles_set)
 
     device.commit_frame();
 
-    auto saved_displays = mock_device->displays_in_last_set; 
-    EXPECT_NE(nullptr, *saved_displays);
-    EXPECT_EQ(0u,  (*saved_displays)->numHwLayers);
-    EXPECT_EQ(-1, (*saved_displays)->retireFenceFd);
+    EXPECT_EQ(0u, mock_device->display0_content.numHwLayers);
+    EXPECT_EQ(-1, mock_device->display0_content.retireFenceFd);
 }
 
 TEST_F(HWCDevice, test_hwc_gles_set_error)
