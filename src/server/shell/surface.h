@@ -30,6 +30,9 @@
 
 namespace mir
 {
+
+class EventQueue;
+
 namespace frontend
 {
 struct SurfaceCreationParameters;
@@ -49,7 +52,7 @@ public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
         frontend::SurfaceCreationParameters const& params,
-        void *event_queue,
+        std::shared_ptr<EventQueue> const& event_queue,
         std::shared_ptr<input::InputChannel> const& input_channel);
     ~Surface();
 
@@ -86,7 +89,7 @@ private:
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
-    void *event_queue;
+    std::shared_ptr<EventQueue> const event_queue;
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;

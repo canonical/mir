@@ -31,6 +31,9 @@ add_library(mirserver ${MIRSERVER_LINKAGE}
   ${SRCS}
 )
 
+# TODO: Move eventqueue to a subdir. "event/" ?
+add_library(mireventqueue STATIC event_queue.cpp)
+
 add_executable(
   mirds
 
@@ -47,6 +50,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirgraphics
   mirinput
   mirsurfaces
+  mireventqueue
 )
 
 list(APPEND MIRSERVER_LINKS

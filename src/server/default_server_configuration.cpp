@@ -62,6 +62,11 @@ namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
+namespace mir
+{
+class EventQueue;
+}
+
 namespace
 {
 std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
@@ -347,10 +352,18 @@ mir::DefaultServerConfiguration::the_render_view()
         });
 }
 
-void *
+std::shared_ptr<mir::EventQueue>
 mir::DefaultServerConfiguration::the_event_queue() const
 {
-    return NULL;
+    std::shared_ptr<mir::EventQueue> todo;
+    return todo;
+    #if 0 
+    return event_queue(
+        [this]()
+        {
+            return std::make_shared<EventQueue>();
+        });
+        #endif
 }
 
 std::shared_ptr<msh::SurfaceFactory>
