@@ -347,13 +347,23 @@ mir::DefaultServerConfiguration::the_render_view()
         });
 }
 
+void *
+mir::DefaultServerConfiguration::the_event_queue() const
+{
+    return NULL;
+}
+
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
     return surface_source(
         [this]()
         {
-            return std::make_shared<msh::SurfaceSource>(the_surface_builder(), the_input_channel_factory());
+            return std::make_shared<msh::SurfaceSource>(
+                the_surface_builder(),
+                the_input_channel_factory(),
+                the_event_queue()
+                );
         });
 }
 
@@ -412,7 +422,8 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                display, allocator);
+                display,
+                allocator);
         });
 }
 

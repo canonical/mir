@@ -32,10 +32,12 @@ namespace mi = mir::input;
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
     frontend::SurfaceCreationParameters const& params,
+    void *event_queue,
     std::shared_ptr<input::InputChannel> const& input_channel)
   : builder(builder),
     input_channel(input_channel),
     surface(builder->create_surface(params)),
+    event_queue(event_queue),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored)
 {
@@ -183,6 +185,8 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
                                                "attribute."));
         break;
     }
+
+    // TODO: Notify event_queue of a successful setting.
 
     return result;
 }

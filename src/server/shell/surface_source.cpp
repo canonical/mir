@@ -33,9 +33,11 @@ namespace mf = mir::frontend;
 
 msh::SurfaceSource::SurfaceSource(
     std::shared_ptr<SurfaceBuilder> const& surface_builder,
-    std::shared_ptr<mi::InputChannelFactory> const& input_factory) :
+    std::shared_ptr<mi::InputChannelFactory> const& input_factory,
+    void *event_queue) :
     surface_builder(surface_builder),
-    input_factory(input_factory)
+    input_factory(input_factory),
+    todo(event_queue)
 {
     assert(surface_builder);
 }
@@ -45,6 +47,7 @@ std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(const mf::Surfa
     return std::make_shared<Surface>(
         surface_builder,
         params,
+        todo,
         input_factory->make_input_channel());
 }
 

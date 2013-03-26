@@ -37,7 +37,10 @@ class SurfaceBuilder;
 class SurfaceSource : public SurfaceFactory
 {
 public:
-    explicit SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder, std::shared_ptr<input::InputChannelFactory> const& input_factory);
+    explicit SurfaceSource(
+        std::shared_ptr<SurfaceBuilder> const& surface_builder,
+        std::shared_ptr<input::InputChannelFactory> const& input_factory,
+        void *event_queue);
     virtual ~SurfaceSource() {}
 
     std::shared_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params);
@@ -49,6 +52,7 @@ protected:
 private:
     std::shared_ptr<SurfaceBuilder> const surface_builder;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
+    void *todo;
 };
 
 }
