@@ -10,3 +10,7 @@ message Result {
   required uint32 id = 1;
   optional bytes response = 2;
 }
+
+message RawEvents {
+  optional bytes seq = 1;
+}

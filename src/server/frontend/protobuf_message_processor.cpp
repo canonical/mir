@@ -142,6 +142,21 @@ void mfd::ProtobufMessageProcessor::send_response(
     sender->send(buffer2);
 }
 
+void mfd::ProtobufMessageProcessor::send_events(
+    mir::protobuf::EventSequence *seq)
+{
+    std::ostringstream buffer1;
+    seq->SerializeToOstream(&buffer1);
+
+    mir::protobuf::wire::RawEvents raw;
+    raw.set_seq(buffer1.str());
+
+    std::ostringstream buffer2;
+    raw.SerializeToOstream(&buffer2);
+
+    sender->send(buffer2);
+}
+
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
 {
     report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
