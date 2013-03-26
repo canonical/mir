@@ -32,13 +32,13 @@ namespace gp = google::protobuf;
 mir_toolkit::MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
-    const std::shared_ptr<mir::client::Logger>& logger,
-    const std::shared_ptr<mcl::ClientBufferDepository>& depository,
-    MirSurfaceParameters const & params,
+    std::shared_ptr<mir::client::Logger> const& logger,
+    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
+    MirSurfaceParameters const& params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
-      buffer_depository(depository),
+      buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, 3)),
       logger(logger)
 {
     mir::protobuf::SurfaceParameters message;
