@@ -19,6 +19,7 @@
 #define MIR_SERVER_CONFIGURATION_H_
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -41,6 +42,8 @@ class InputManager;
 class EventFilter;
 }
 
+class ServerInstance;
+
 class ServerConfiguration
 {
 public:
@@ -49,6 +52,8 @@ public:
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
+
+    virtual std::function<void(ServerInstance*)> the_ready_to_run_handler() = 0;
 
 protected:
     ServerConfiguration() = default;
