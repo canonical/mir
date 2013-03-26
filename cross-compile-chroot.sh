@@ -7,9 +7,11 @@ BUILD_DIR=build-android-arm
 
 if [ "$MIR_NDK_PATH" = "" ]; then
     export MIR_NDK_PATH=`pwd`/partial-armhf-chroot
-    if [ ! -d partial-armhf-chroot ]; then 
+    if [ ! -d ${MIR_NDK_PATH} ]; then 
         echo "no partial root specified or detected. attempting to create one"
-        ./setup-partial-armhf-chroot.sh
+        pushd tools > /dev/null
+            ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH}
+        popd > /dev/null
     fi
 fi
 

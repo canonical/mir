@@ -9,7 +9,13 @@
 #
 
 set -e
-BUILD_DIR=build-android-arm
+
+if [ -z ${1} ]; then
+    BUILD_DIR=build-android-arm
+else
+    BUILD_DIR=${1}
+fi
+
 pushd ${BUILD_DIR} > /dev/null 
     #
     # Upload and run the tests!

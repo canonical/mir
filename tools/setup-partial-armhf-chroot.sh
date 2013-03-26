@@ -2,13 +2,18 @@
 
 set -e
 
-echo "creating phablet-compatible quantal armhf partial chroot for mir compiles in directory ./partial-armhf-chroot"
-
-if [ ! -d partial-armhf-chroot ]; then
-    mkdir partial-armhf-chroot
+if [ -z $1 ]; then
+    echo "please supply directory to create partial chroot in. (eg, ./setup-partial-armhf-chroot.sh mychroot-dir)"
+    exit
 fi
 
-pushd partial-armhf-chroot > /dev/null
+echo "creating phablet-compatible quantal armhf partial chroot for mir compiles in directory ${1}"
+
+if [ ! -d ${1} ]; then
+    mkdir -p ${1} 
+fi
+
+pushd ${1} > /dev/null
 
     ARCHITECTURE=armhf
 
