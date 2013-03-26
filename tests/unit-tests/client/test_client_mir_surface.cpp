@@ -403,15 +403,10 @@ TEST_F(MirClientSurfaceTest, default_surface_type)
 
 TEST_F(MirClientSurfaceTest, default_surface_state)
 {
-    using namespace testing;
-
-    EXPECT_CALL(*mock_depository, deposit_package_rv(_,_,_,_))
-        .Times(1);
-
     auto surface = std::make_shared<MirSurface> (connection.get(),
                                                  *client_comm_channel,
                                                  logger,
-                                                 mock_depository,
+                                                 depository,
                                                  params,
                                                  &empty_callback,
                                                  (void*) NULL);
