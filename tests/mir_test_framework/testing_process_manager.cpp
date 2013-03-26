@@ -17,12 +17,15 @@
  */
 
 #include "mir_test_framework/testing_process_manager.h"
+#include "mir/display_server.h"
+#include "mir_test_framework/signal_dispatcher.h"
 #include "mir_test_framework/detect_server.h"
-#include "mir/run_mir.h"
 
+#include <boost/asio.hpp>
 #include <gmock/gmock.h>
 #include <chrono>
 #include <thread>
+#include <future>
 #include <stdexcept>
 
 namespace mc = mir::compositor;
@@ -47,6 +50,14 @@ mtf::TestingProcessManager::~TestingProcessManager()
 {
 }
 
+namespace
+{
+// TODO: Get rid of the volatile-hack here and replace it with
+// something that doesn't spinlock the thread it is waiting on
+// C.f. FrontendShutdown test DISABLED_before_client_connects
+mir::DisplayServer* volatile signal_display_server;
+}
+
 void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguration& config)
 {
     pid_t pid = fork();
@@ -64,7 +75,21 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
-        mir::run_mir(config, [&](mir::DisplayServer& server) { config.exec(&server); });
+        SignalDispatcher::instance()->enable_for(SIGTERM);
+        SignalDispatcher::instance()->signal_channel().connect(
+                boost::bind(&TestingProcessManager::os_signal_handler, this, _1));
+
+        mir::DisplayServer server(config);
+
+        signal_display_server = &server;
+
+        {
+            std::future<void> future = std::async(std::launch::async, std::bind(&mir::DisplayServer::run, &server));
+
+            config.exec(&server);
+
+            future.wait();
+        }
 
         config.on_exit();
     }
@@ -199,4 +224,19 @@ void mtf::TestingProcessManager::tear_down_all()
 {
     tear_down_clients();
     tear_down_server();
+}
+
+void mtf::TestingProcessManager::os_signal_handler(int signal)
+{
+    switch(signal)
+    {
+    case SIGTERM:
+        while (!signal_display_server)
+            std::this_thread::yield();
+
+        signal_display_server->stop();
+        break;
+    default:
+        break;
+    }
 }
