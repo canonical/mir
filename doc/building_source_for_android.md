@@ -56,7 +56,7 @@ compile and run code, and is well suited for a development workflow.
    targeting a quantal phablet image)
 
 2. Set up a chroot with the mir dependencies installed. At the moment, you
-   can look at the script and instructions in lp:~kdub/mir/ndk-rewrite as an
+   can look at the script and instructions in lp:mir as an
    example of how to set up a partial chroot you can build mir against.
 
 3. There are a few ways to do this, but here is an example of how to build mir for android
