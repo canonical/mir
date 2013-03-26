@@ -52,6 +52,7 @@
 #include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
+#include "mir/time/high_resolution_clock.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -469,4 +470,13 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
 std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
 {
     return the_input_manager();
+}
+
+std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time_source()
+{
+    return time_source(
+        []()
+        {
+            return std::make_shared<mir::time::HighResolutionClock>();
+        });
 }

@@ -16,14 +16,14 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TIME_SOURCE_H_
-#define MIR_TIME_SOURCE_H_
+#ifndef MIR_TIME_TIME_SOURCE_H_
+#define MIR_TIME_TIME_SOURCE_H_
 
-#include "mir/chrono/chrono.h"
-
-#include <cstdint>
+#include <chrono>
 
 namespace mir
+{
+namespace time
 {
 
 typedef std::chrono::high_resolution_clock::time_point Timestamp;
@@ -31,14 +31,14 @@ typedef std::chrono::high_resolution_clock::time_point Timestamp;
 class TimeSource
 {
 public:
-    virtual ~TimeSource() {}
+    virtual ~TimeSource() = default;
 
     virtual Timestamp sample() const = 0;
 
 protected:
     TimeSource() = default;
 };
-
+}
 }
 
-#endif // MIR_TIME_SOURCE_H_
+#endif // MIR_TIME_TIME_SOURCE_H_

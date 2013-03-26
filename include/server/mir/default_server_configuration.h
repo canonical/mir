@@ -54,6 +54,10 @@ class SurfaceSource;
 class SurfaceBuilder;
 class InputFocusSelector;
 }
+namespace time
+{
+class TimeSource;
+}
 namespace surfaces
 {
 class BufferBundleFactory;
@@ -117,6 +121,7 @@ public:
     virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
 
     virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
+    virtual std::shared_ptr<time::TimeSource> the_time_source();
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
@@ -143,6 +148,7 @@ protected:
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
     CachedPtr<surfaces::SurfaceController> surface_controller;
+    CachedPtr<time::TimeSource> time_source;
 
 private:
     std::shared_ptr<options::Option> options;
