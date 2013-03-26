@@ -49,6 +49,14 @@ namespace
 {
 static int test_width  = 300;
 static int test_height = 200;
+struct AllocDevDeleter
+{
+    void operator()(alloc_device_t* t)
+    {
+        /* android takes care of delete for us */
+        t->common.close((hw_device_t*)t);
+    }
+};
 }
 
 namespace mir
@@ -451,7 +459,8 @@ struct TestClientIPCRender : public testing::Test
         if (err < 0)
             throw std::runtime_error("Could not open hardware module");
         gralloc_open(hw_module, &alloc_device_raw);
-        alloc_device = mt::fake_shared(*alloc_device_raw);
+        AllocDevDeleter del;
+        alloc_device = std::shared_ptr<struct alloc_device_t>(alloc_device_raw, del);
         auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
         buffer_converter = std::make_shared<mtd::TestGrallocMapper>(hw_module, alloc_device.get());
 
@@ -471,7 +480,6 @@ struct TestClientIPCRender : public testing::Test
     void TearDown()
     {
         test_server.reset();
-        gralloc_close(alloc_device.get());
     }
 
     mir::protobuf::Connection response;
@@ -487,9 +495,9 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<mtf::Process> client_process;
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;
+    std::shared_ptr<struct alloc_device_t> alloc_device;
     std::shared_ptr<mga::AndroidBuffer> android_buffer;
     std::shared_ptr<mga::AndroidBuffer> second_android_buffer;
-    std::shared_ptr<struct alloc_device_t> alloc_device;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;
