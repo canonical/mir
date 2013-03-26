@@ -38,10 +38,9 @@ mir_toolkit::MirSurface::MirSurface(
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
+      buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, 3)),
       logger(logger)
 {
-    buffer_depository = std::make_shared<mcl::ClientBufferDepository>(factory, 3);
-
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
     message.set_width(params.width);
