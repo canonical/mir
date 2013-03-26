@@ -38,12 +38,18 @@ TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
     EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(&surface), *native_window);
 }
 
-TEST(GBMClientPlatformTest, egl_native_display_is_client_connection)
+TEST(GBMClientPlatformTest, egl_native_display_is_valid_until_released)
 {
     mtd::MockClientContext context;
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
-    auto native_display = platform->create_egl_native_display();
-    EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(context.connection),
-              *native_display);
+
+    EGLNativeDisplayType nd;
+    {
+        std::shared_ptr<EGLNativeDisplayType> native_display = platform->create_egl_native_display();
+
+        nd = *native_display;
+        EXPECT_TRUE(mir_egl_native_display_is_valid(nd));
+    }
+    EXPECT_FALSE(mir_egl_native_display_is_valid(nd));
 }

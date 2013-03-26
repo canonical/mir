@@ -21,6 +21,10 @@
 
 #include "src/server/shell/surface.h"
 
+#include "mir/frontend/surface_creation_parameters.h"
+
+#include <gmock/gmock.h>
+
 #include <memory>
 
 namespace mir
@@ -43,12 +47,14 @@ struct MockSurface : public shell::Surface
     MOCK_METHOD0(shutdown, void());
     MOCK_METHOD0(advance_client_buffer, void());
 
+    MOCK_CONST_METHOD0(name, std::string ());
     MOCK_CONST_METHOD0(size, geometry::Size ());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());
     
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
+    MOCK_CONST_METHOD0(server_input_fd, int());
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
 };

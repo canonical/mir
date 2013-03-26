@@ -42,6 +42,10 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
 
+    MOCK_CONST_METHOD0(age, uint32_t());
+    MOCK_METHOD0(mark_as_submitted, void());
+    MOCK_METHOD0(increment_age, void());
+
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
     MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
 

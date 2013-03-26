@@ -18,139 +18,18 @@
 #ifndef MIR_CLIENT_LIBRARY_H
 #define MIR_CLIENT_LIBRARY_H
 
+#include "mir_toolkit/c_types.h"
 #include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
-/** The C client API
+/*
+ * The C client API
  */
 namespace mir_toolkit {
 extern "C" {
 #endif
 
 /* This header defines the Mir client library's C API. */
-
-/* Display server connection API */
-typedef void* MirEGLNativeWindowType;
-typedef void* MirEGLNativeDisplayType;
-typedef struct MirConnection MirConnection;
-typedef struct MirSurface MirSurface;
-
-/**
- * Returned by asynchronous functions. Must not be freed by callers. See the
- * individual function documentation for information on the lifetime of wait
- * handles.
- */
-typedef struct MirWaitHandle MirWaitHandle;
-
-/**
- * Callback to be passed when issuing a mir_connect request.
- *   \param [in] connection   The new connection
- *   \param [in,out] context  Context provided by client in calling mir_connect
- */
-typedef void (*mir_connected_callback)(MirConnection *connection, void *context);
-
-/**
- * Callback to be passed when calling mir_surface_create,
- * mir_surface_next_buffer or mir_surface_release.
- *   \param [in] surface      The surface being updated
- *   \param [in,out] context  Context provided by client
- */
-typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *context);
-
-/**
- * The order of components in a format enum matches the order of the
- * components as they would be written in an integer representing a pixel
- * value of that format.
- *
- * For example, abgr_8888 corresponds to 0xAABBGGRR, which will end up as
- * R,G,B,A in memory on a little-endian system, and as A,B,G,R on a
- * big-endian system.
- */
-typedef enum MirPixelFormat
-{
-    mir_pixel_format_invalid,
-    mir_pixel_format_abgr_8888,
-    mir_pixel_format_xbgr_8888,
-    mir_pixel_format_argb_8888,
-    mir_pixel_format_xrgb_8888,
-    mir_pixel_format_bgr_888
-} MirPixelFormat;
-
-/**
- * MirBufferUsage specifies how a surface can and will be used. A "hardware"
- * surface can be used for OpenGL accelerated rendering. A "software" surface
- * is one that can be addressed in main memory and blitted to directly.
- */
-typedef enum MirBufferUsage
-{
-    mir_buffer_usage_hardware = 1,
-    mir_buffer_usage_software
-} MirBufferUsage;
-
-/**
- * MirSurfaceParameters is the structure of minimum required information that
- * you must provide to Mir in order to create a surface.
- */
-typedef struct MirSurfaceParameters
-{
-    char const *name;
-    int width;
-    int height;
-    MirPixelFormat pixel_format;
-    MirBufferUsage buffer_usage;
-} MirSurfaceParameters;
-
-enum { mir_platform_package_max = 32 };
-
-/** TODO */
-typedef struct MirPlatformPackage
-{
-    int data_items;
-    int fd_items;
-
-    int data[mir_platform_package_max];
-    int fd[mir_platform_package_max];
-} MirPlatformPackage;
-
-enum { mir_buffer_package_max = 32 };
-
-/** TODO */
-typedef struct MirBufferPackage
-{
-    int data_items;
-    int fd_items;
-
-    int data[mir_buffer_package_max];
-    int fd[mir_buffer_package_max];
-
-    int stride;
-} MirBufferPackage;
-
-/**
- * Retrieved information about a MirSurface. This is most useful for learning
- * how and where to write to a 'mir_buffer_usage_software' surface.
- */
-typedef struct MirGraphicsRegion
-{
-    int width;
-    int height;
-    int stride;
-    MirPixelFormat pixel_format;
-    char *vaddr;
-} MirGraphicsRegion;
-
-enum { mir_supported_pixel_format_max = 32 };
-
-/**
- * MirDisplayInfo provides details of the graphics environment.
- */
-typedef struct MirDisplayInfo
-{
-    int width;
-    int height;
-    int supported_pixel_format_items;
-    MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
-} MirDisplayInfo;
 
 /**
  * Request a connection to the Mir server. The supplied callback is called when
@@ -222,6 +101,13 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
  *   \return                 An EGLNativeDisplayType that the client can use
  */
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection);
+
+/**
+ * Validate an EGL native display
+ *   \param [in] display the display
+ *   \return             whether the display is valid for use with EGL
+  */
+int mir_egl_native_display_is_valid(MirEGLNativeDisplayType display);
 
 /**
  * Request a new Mir surface on the supplied connection with the supplied

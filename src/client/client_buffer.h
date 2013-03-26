@@ -53,6 +53,9 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual uint32_t age() const = 0;
+    virtual void increment_age() = 0;
+    virtual void mark_as_submitted() = 0;
 
     virtual MirNativeBuffer get_native_handle() = 0;
     virtual std::shared_ptr<mir_toolkit::MirBufferPackage> get_buffer_package() const = 0;

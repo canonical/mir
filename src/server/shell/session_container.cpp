@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/frontend/session_container.h"
+#include "mir/shell/session_container.h"
 #include "mir/frontend/session.h"
 
 #include <boost/throw_exception.hpp>
@@ -42,7 +42,6 @@ msh::SessionContainer::~SessionContainer()
 void msh::SessionContainer::insert_session(std::shared_ptr<mf::Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
-    auto name = session->name();
 
     apps.push_back(session);
 }
