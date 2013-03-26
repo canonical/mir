@@ -101,6 +101,7 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::get_graphic_region_fr
                         const std::shared_ptr<mc::BufferIPCPackage>& package,
                         geom::Size sz)
 {
+printf("start...\n");
     native_handle_t* handle;
     handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
     handle->version = sizeof(native_handle_t);
@@ -115,6 +116,7 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::get_graphic_region_fr
     int *vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
     module->lock(module, handle, usage, 0, 0, sz.width.as_uint32_t(), sz.height.as_uint32_t(), (void**) &vaddr);
+printf("end...\n");
 
     MirGraphicsRegion* region = new MirGraphicsRegion;
     RegionDeleter del(module, handle);
