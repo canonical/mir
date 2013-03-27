@@ -49,6 +49,16 @@ struct MockGraphicsPlatform : public mg::Platform
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
 };
 
+MATCHER_P(PlatformPackageMatches, package, "")
+{
+    if (arg.data_items != (int)package.ipc_data.size())
+        return false;
+    if (arg.fd_items != (int)package.ipc_fds.size())
+        return false;
+    // TODO: Match contents ~racarr
+    return true;
+}
+
 }
 
 // TODO: Fixture ~racarr
@@ -58,16 +68,19 @@ TEST(MirServerMesaEGLNativeDisplay, display_get_platform_queries_server_display)
 
     MockDisplayServer mock_server;
     MockGraphicsPlatform graphics_platform;
-    mg::PlatformIPCPackage platform_package; // TODO: Initialize with some data ~racarr
-
-    auto display = mgeglm::create_native_display(&mock_server);
+    mg::PlatformIPCPackage platform_package;
     
+    platform_package.ipc_data = {1, 2};
+    platform_package.ipc_fds = {2, 3};
+
     EXPECT_CALL(mock_server, graphics_platform()).Times(1)
         .WillOnce(Return(mt::fake_shared(graphics_platform))); // TODO: Test that this is cached once we have a fixture ~racarr
     EXPECT_CALL(graphics_platform, get_ipc_package()).Times(1)
         .WillOnce(Return(mt::fake_shared(platform_package)));
+
+    auto display = mgeglm::create_native_display(&mock_server);
     
     mir_toolkit::MirPlatformPackage package;
     display->display_get_platform(display.get(), &package);
-    // TODO: Expect that package = platform_package ~racarr
+    EXPECT_THAT(package, PlatformPackageMatches(platform_package));
 }

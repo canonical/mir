@@ -41,6 +41,7 @@ struct mir::ServerInstance::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
+          graphics_platform{config.the_graphics_platform()},
           compositor{config.the_compositor()},
           shell{config.the_frontend_shell()},
           communicator{config.the_communicator()},
@@ -51,6 +52,7 @@ struct mir::ServerInstance::Private
     }
 
     std::shared_ptr<mg::Display> display;
+    std::shared_ptr<mg::Platform> graphics_platform;
     std::shared_ptr<mc::Compositor> compositor;
     std::shared_ptr<frontend::Shell> shell;
     std::shared_ptr<mf::Communicator> communicator;
@@ -95,4 +97,9 @@ void mir::ServerInstance::stop()
     std::unique_lock<std::mutex> lk(p->exit_guard);
     p->exit = true;
     p->exit_cv.notify_one();
+}
+
+std::shared_ptr<mg::Platform> mir::ServerInstance::graphics_platform()
+{
+    return p->graphics_platform;
 }
