@@ -79,13 +79,38 @@ struct MirServerMesaEGLNativeDisplaySetup : public testing::Test
     mg::PlatformIPCPackage test_platform_package;
 };
 
-MATCHER_P(PlatformPackageMatches, package, "")
+MATCHER_P(PackageMatches, package, "")
 {
     if (arg.data_items != (int)package.ipc_data.size())
         return false;
+    for (uint i = 0; i < package.ipc_data.size(); i++)
+    {
+        if (arg.data[i] != package.ipc_data[i]) return false;
+    }
     if (arg.fd_items != (int)package.ipc_fds.size())
         return false;
-    // TODO: Match contents ~racarr
+    for (uint i = 0; i < package.ipc_fds.size(); i++)
+    {
+        if (arg.fd[i] != package.ipc_fds[i]) return false;
+    }
+    return true;
+}
+
+MATCHER_P(StrideMatches, package, "")
+{
+    if (arg.stride != package.stride)
+    {
+        return false;
+    }
+    return true;
+}
+
+MATCHER_P(ParametersHaveSize, size, "")
+{
+    if ((uint32_t)arg.width != size.width.as_uint32_t())
+        return false;
+    if ((uint32_t)arg.height != size.height.as_uint32_t())
+        return false;
     return true;
 }
 
@@ -102,7 +127,7 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, display_get_platform_is_cached_platfo
     
     mir_toolkit::MirPlatformPackage package;
     display->display_get_platform(display.get(), &package);
-    EXPECT_THAT(package, PlatformPackageMatches(test_platform_package));
+    EXPECT_THAT(package, PackageMatches(test_platform_package));
 
     mir_toolkit::MirPlatformPackage requeried_package;
     // The package is cached to allow the package creator to control lifespan of fd members
@@ -118,12 +143,13 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_current_buffer)
     using namespace ::testing;
     
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    auto buffer = std::make_shared<mtd::MockBuffer>(geom::Size(), geom::Stride(), geom::PixelFormat()); // TODO: Populate with some contents ~racarr
+    auto buffer = std::make_shared<mtd::MockBuffer>(geom::Size(), geom::Stride(), geom::PixelFormat());
     
     mc::BufferIPCPackage test_buffer_package;
     
     test_buffer_package.ipc_data = {1, 2};
     test_buffer_package.ipc_fds = {2, 3};
+    test_buffer_package.stride = 77;
 
     EXPECT_CALL(mock_server, graphics_platform()).Times(1);
     auto display = mgeglm::create_native_display(&mock_server);
@@ -136,7 +162,7 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_current_buffer)
     mir_toolkit::MirBufferPackage buffer_package;
     display->surface_get_current_buffer(
         display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface), &buffer_package);
-    // TODO: Match contents
+    EXPECT_THAT(buffer_package, AllOf(PackageMatches(test_buffer_package), StrideMatches(test_buffer_package)));
 }
 
 TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_advance_buffer)
@@ -152,25 +178,30 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_advance_buffer)
     
     display->surface_advance_buffer(
         display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface));
-    // TODO: Match contents
 }
 
 TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_parameters)
 {
     using namespace ::testing;
     
+    geom::Size const test_surface_size = geom::Size{geom::Width{17},
+                                                    geom::Height{29}};
+    geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
+
     EXPECT_CALL(mock_server, graphics_platform()).Times(1);
     auto display = mgeglm::create_native_display(&mock_server);
 
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    // TODO: Contents for matching ~racarr
-    EXPECT_CALL(surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(geom::Size()));
-    EXPECT_CALL(surface, pixel_format()).Times(AtLeast(1)).WillRepeatedly(Return(geom::PixelFormat()));
+    EXPECT_CALL(surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(test_surface_size));
+    EXPECT_CALL(surface, pixel_format()).Times(AtLeast(1)).WillRepeatedly(Return(test_pixel_format));
     
     mir_toolkit::MirSurfaceParameters parameters;
     display->surface_get_parameters(
         display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface), &parameters);
-    // TODO: Match contents
+
+    EXPECT_THAT(parameters, ParametersHaveSize(test_surface_size));
+    // TODO: Test that pixel formats are castable
+    EXPECT_EQ(parameters.pixel_format, static_cast<mir_toolkit::MirPixelFormat>(geom::PixelFormat::xrgb_8888));
 
     // TODO: What to do about buffer usage besides hardware? ~racarr
     EXPECT_EQ(parameters.buffer_usage, mir_toolkit::mir_buffer_usage_hardware);
