@@ -25,8 +25,6 @@
 
 namespace mir
 {
-class EventQueue;
-
 namespace input
 {
 class InputChannelFactory;
@@ -39,10 +37,7 @@ class SurfaceBuilder;
 class SurfaceSource : public SurfaceFactory
 {
 public:
-    explicit SurfaceSource(
-        std::shared_ptr<SurfaceBuilder> const& surface_builder,
-        std::shared_ptr<input::InputChannelFactory> const& input_factory,
-        std::shared_ptr<mir::EventQueue> const& event_queue);
+    explicit SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder, std::shared_ptr<input::InputChannelFactory> const& input_factory);
     virtual ~SurfaceSource() {}
 
     std::shared_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params);
@@ -54,7 +49,6 @@ protected:
 private:
     std::shared_ptr<SurfaceBuilder> const surface_builder;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
-    std::shared_ptr<EventQueue> const event_queue;
 };
 
 }

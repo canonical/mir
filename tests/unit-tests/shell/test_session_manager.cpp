@@ -110,7 +110,6 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
        Return(std::make_shared<msh::Surface>(
            mt::fake_shared(surface_builder),
            mf::a_surface(),
-           nullptr,
            null_input_channel)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
@@ -176,7 +175,6 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         Return(std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
             mf::a_surface(),
-            nullptr,
             null_input_channel)));
 
     // Once for session creation and once for surface creation

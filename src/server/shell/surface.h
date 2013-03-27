@@ -52,7 +52,6 @@ public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
         frontend::SurfaceCreationParameters const& params,
-        std::shared_ptr<EventQueue> const& event_queue,
         std::shared_ptr<input::InputChannel> const& input_channel);
     ~Surface();
 
@@ -82,7 +81,7 @@ public:
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
-    void set_event_queue(std::shared_ptr<EventQueue> & evq);
+    void set_event_queue(std::shared_ptr<EventQueue> & q);
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes

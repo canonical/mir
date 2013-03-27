@@ -63,11 +63,6 @@ namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
 
-namespace mir
-{
-class EventQueue;
-}
-
 namespace
 {
 std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
@@ -353,31 +348,13 @@ mir::DefaultServerConfiguration::the_render_view()
         });
 }
 
-std::shared_ptr<mir::EventQueue>
-mir::DefaultServerConfiguration::the_event_queue() const
-{
-    std::shared_ptr<mir::EventQueue> todo;
-    return todo;
-    #if 0 
-    return event_queue(
-        [this]()
-        {
-            return std::make_shared<EventQueue>();
-        });
-        #endif
-}
-
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
     return surface_source(
         [this]()
         {
-            return std::make_shared<msh::SurfaceSource>(
-                the_surface_builder(),
-                the_input_channel_factory(),
-                the_event_queue()
-                );
+            return std::make_shared<msh::SurfaceSource>(the_surface_builder(), the_input_channel_factory());
         });
 }
 
@@ -436,8 +413,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                display,
-                allocator);
+                display, allocator);
         });
 }
 

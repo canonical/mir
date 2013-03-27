@@ -71,7 +71,6 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
         return std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
             params,
-            nullptr, // FIXME
             std::shared_ptr<mir::input::InputChannel>());
     }
 

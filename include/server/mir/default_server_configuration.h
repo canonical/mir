@@ -27,8 +27,6 @@
 
 namespace mir
 {
-class EventQueue;
-
 namespace compositor
 {
 class BufferAllocationStrategy;
@@ -111,7 +109,6 @@ public:
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
 
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
-    virtual std::shared_ptr<EventQueue> the_event_queue() const;
     virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
 
     virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
