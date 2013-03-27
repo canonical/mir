@@ -37,7 +37,7 @@ namespace geom = mir::geometry;
 
 ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory)
     : buffer_bundle_factory{bb_factory},
-      change_callback{[]{}}
+      notify_change{[]{}}
 {
     assert(buffer_bundle_factory);
 }
@@ -52,11 +52,11 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
     }
 }
 
-void ms::SurfaceStack::notify_changes(std::function<void()> const& f)
+void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 {
-    std::lock_guard<std::mutex> lock{callback_mutex};
+    std::lock_guard<std::mutex> lock{notify_change_mutex};
     assert(f);
-    change_callback = f;
+    notify_change = f;
 }
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params)
@@ -72,8 +72,8 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::Surf
             buffer_bundle_factory->create_buffer_bundle(buffer_properties),
             [this]()
             {
-                std::lock_guard<std::mutex> lock{callback_mutex};
-                change_callback();
+                std::lock_guard<std::mutex> lock{notify_change_mutex};
+                notify_change();
             }));
 
     {
@@ -82,8 +82,8 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::Surf
     }
 
     {
-        std::lock_guard<std::mutex> lock{callback_mutex};
-        change_callback();
+        std::lock_guard<std::mutex> lock{notify_change_mutex};
+        notify_change();
     }
 
     return surface;
@@ -101,8 +101,8 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
     }
 
     {
-        std::lock_guard<std::mutex> lock{callback_mutex};
-        change_callback();
+        std::lock_guard<std::mutex> lock{notify_change_mutex};
+        notify_change();
     }
 }
 

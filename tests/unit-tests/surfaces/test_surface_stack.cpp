@@ -329,7 +329,7 @@ TEST(SurfaceStack, create_surface_notifies_changes)
     EXPECT_CALL(mock_cb, call()).Times(1);
 
     ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
-    stack.notify_changes(std::bind(&MockCallback::call, &mock_cb));
+    stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -344,7 +344,7 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
     EXPECT_CALL(mock_cb, call()).Times(1);
 
     ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
-    stack.notify_changes(std::bind(&MockCallback::call, &mock_cb));
+    stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));

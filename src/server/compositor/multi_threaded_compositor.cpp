@@ -126,8 +126,8 @@ void mc::MultiThreadedCompositor::start()
         thread_functors.push_back(std::move(thread_functor));
     });
 
-    /* Register change notification */
-    render_view->notify_changes([this]()
+    /* Recomposite whenever the render view changes */
+    render_view->set_change_callback([this]()
     {
         for (auto& f : thread_functors)
             f->schedule_compositing();
@@ -140,7 +140,7 @@ void mc::MultiThreadedCompositor::start()
 
 void mc::MultiThreadedCompositor::stop()
 {
-    render_view->notify_changes([]{});
+    render_view->set_change_callback([]{});
 
     for (auto& f : thread_functors)
         f->stop();

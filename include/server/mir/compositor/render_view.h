@@ -68,14 +68,14 @@ public:
     virtual void for_each_if(FilterForRenderables& filter, OperatorForRenderables& renderable_operator) = 0;
 
     /**
-     * Registers a callback to be called whenever the state of the
+     * Sets a callback to be called whenever the state of the
      * RenderView changes.
      *
      * The supplied callback should not directly or indirectly (e.g.,
      * by changing a property of a Renderable) change the state of
      * the RenderView, otherwise a deadlock may occur.
      */
-    virtual void notify_changes(std::function<void()> const& f) = 0;
+    virtual void set_change_callback(std::function<void()> const& f) = 0;
 
 protected:
     RenderView() = default;

@@ -55,7 +55,7 @@ public:
 
     // From RenderView
     virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
-    virtual void notify_changes(std::function<void()> const& f);
+    virtual void set_change_callback(std::function<void()> const& f);
 
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params);
@@ -70,8 +70,8 @@ private:
     std::mutex guard;
     std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
     std::vector<std::shared_ptr<Surface>> surfaces;
-    std::mutex callback_mutex;
-    std::function<void()> change_callback;
+    std::mutex notify_change_mutex;
+    std::function<void()> notify_change;
 };
 
 }

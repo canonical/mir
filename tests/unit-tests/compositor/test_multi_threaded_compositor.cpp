@@ -67,7 +67,7 @@ public:
     {
     }
 
-    void notify_changes(std::function<void()> const& f)
+    void set_change_callback(std::function<void()> const& f)
     {
         std::lock_guard<std::mutex> lock{callback_mutex};
         assert(f);

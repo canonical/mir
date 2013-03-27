@@ -82,7 +82,7 @@ private:
     float alpha_value;
 
     bool is_hidden;
-    std::function<void()> change_callback;
+    std::function<void()> notify_change;
 };
 
 }

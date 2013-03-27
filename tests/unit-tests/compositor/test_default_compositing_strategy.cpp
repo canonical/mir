@@ -41,7 +41,7 @@ namespace
 struct MockRenderView : mc::RenderView
 {
     MOCK_METHOD2(for_each_if, void(mc::FilterForRenderables&, mc::OperatorForRenderables&));
-    MOCK_METHOD1(notify_changes, void(std::function<void()> const&));
+    MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
 };
 
 struct FakeRenderView : mc::RenderView
@@ -61,7 +61,7 @@ struct FakeRenderView : mc::RenderView
         }
     }
 
-    void notify_changes(std::function<void()> const&) {}
+    void set_change_callback(std::function<void()> const&) {}
 
     std::vector<mg::Renderable*> renderables;
 };
