@@ -166,3 +166,45 @@ TEST_F(HWCDevice, test_hwc_gles_set_error)
         device.commit_frame();
     }, std::runtime_error);
 }
+
+TEST_F(HWCDevice, test_hwc_turns_on_display_after_proc_registration)
+{
+    InSequence sequence_enforcer; 
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(),_))
+        .Times(1);
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(1);
+
+    mga::HWC11Device device(mock_device);
+}
+
+TEST_F(HWCDevice, test_hwc_throws_on_blank_error)
+{
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        mga::HWC11Device device(mock_device);
+    }, std::runtime_error);
+}
+
+TEST_F(HWCDevice, test_hwc_display_is_deactivated_on_destroy)
+{
+    using namespace testing;
+
+
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), HWC_PRIMARY_DISPLAY, HWC_EVENT_VSYNC, 0))
+        .Times(0);
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(0);
+    auto device = std::make_shared<mga::HWC11Device>(mock_device);
+    testing::VerifyAndClearExpectations(*mock_device);
+
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(1);
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, 0))
+        .Times(1);
+    device.reset();
+}
+
