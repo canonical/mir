@@ -19,25 +19,36 @@
 #include "android_fb_factory.h"
 #include "android_framebuffer_window.h"
 #include "android_display.h"
+#include "hwc_display.h"
 
 #include <ui/FramebufferNativeWindow.h>
-#include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
+namespace
+{
+//TODO: kdub temporary construction of a hwc device while I work on the real one 
+class EmptyHWC : public mga::HWCDevice
+{
+    void wait_for_vsync() 
+    {
+    }
+};
+}
+
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc1_1_gpu_display() const
 {
-    //TODO: this will construct the hwc 1.1 framebuffer later
-    return create_gpu_display();
+    auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
+    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
+    auto empty_hwc = std::make_shared<EmptyHWC>();
+    return std::make_shared<mga::HWCDisplay>(window, empty_hwc);
 }
 
 /* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_gpu_display() const
 {
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
-    if (!android_window.get())
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not open FB window"));
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
 
     return std::make_shared<mga::AndroidDisplay>(window);
