@@ -50,7 +50,6 @@ int mclia::InputReceiver::get_fd() const
     return input_channel->getFd();
 }
 
-#include <stdio.h>
 bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
@@ -63,14 +62,11 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
         fd_added = true;
     }
     
-    printf("Polling \n");
     auto result = looper->pollOnce(timeout.count());
-    printf("Polled\n");
     if (result == ALOOPER_POLL_WAKE)
         return false;
     else if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
         return false;
-    printf("Cnsuming\n");
 
     if(input_consumer->consume(&event_factory, consume_batches,
         default_frame_time, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
