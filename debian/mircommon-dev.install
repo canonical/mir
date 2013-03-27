@@ -1,1 +1,2 @@
-usr/include/mir_toolkit/*.h
+usr/include/mircommon
+usr/lib/pkgconfig/mircommon.pc
