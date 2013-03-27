@@ -22,7 +22,7 @@
 #include <thread>
 #include <atomic>
 #include <csignal>
-#include <iostream>
+#include <future>
 
 namespace
 {
@@ -43,11 +43,18 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
     signal(SIGTERM, signal_terminate);
     signal(SIGPIPE, SIG_IGN);
 
-    mir::DisplayServer server(config);
+    // Run on a separate thread as the signal handler can run on this one
+    std::future<void> future = std::async(std::launch::async,
+        [&]()
+        {
+            mir::DisplayServer server(config);
 
-    signal_display_server.store(&server);
+            signal_display_server.store(&server);
 
-    init(server);
+            init(server);
 
-    server.run();
+            server.run();
+        });
+
+    future.wait();
 }
