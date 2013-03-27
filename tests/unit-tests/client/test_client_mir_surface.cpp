@@ -492,7 +492,7 @@ TEST_F(MirClientSurfaceTest, default_surface_state)
     auto surface = std::make_shared<MirSurface> (connection.get(),
                                                  *client_comm_channel,
                                                  logger,
-                                                 depository,
+                                                 mock_buffer_factory,
                                                  params,
                                                  &empty_callback,
                                                  (void*) NULL);
