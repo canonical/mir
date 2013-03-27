@@ -16,17 +16,36 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#include "inprocess_egl_client.h"
+
 #include "mir/run_mir.h"
 #include "mir/default_server_configuration.h"
 
+namespace me = mir::examples;
+
 namespace
 {
+
+struct InprocessClientStarter
+{
+    void operator()(mir::DisplayServer *server)
+    {
+        // TODO: Figure out management of this why use new? racarr
+        auto client = new me::InprocessEGLClient(server);
+        client->start();
+    }
+};
 
 struct ExampleServerConfiguration : public mir::DefaultServerConfiguration
 {
     ExampleServerConfiguration(int argc, char const* argv[])
       : DefaultServerConfiguration(argc, argv)
     {
+    }
+
+    std::function<void(mir::DisplayServer *)> the_ready_to_run_handler() override
+    {
+        return InprocessClientStarter();
     }
 };
 
