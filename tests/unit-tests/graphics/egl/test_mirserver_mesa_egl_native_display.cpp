@@ -180,6 +180,16 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_advance_buffer)
         display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface));
 }
 
+TEST(MirServerMesaEGLNativeDisplayInvariants, pixel_format_formats_are_castable)
+{
+    EXPECT_EQ(static_cast<mir_toolkit::MirPixelFormat>(geom::PixelFormat::invalid), mir_toolkit::mir_pixel_format_invalid);
+    EXPECT_EQ(static_cast<mir_toolkit::MirPixelFormat>(geom::PixelFormat::abgr_8888), mir_toolkit::mir_pixel_format_abgr_8888);
+    EXPECT_EQ(static_cast<mir_toolkit::MirPixelFormat>(geom::PixelFormat::xbgr_8888), mir_toolkit::mir_pixel_format_xbgr_8888);
+    EXPECT_EQ(static_cast<mir_toolkit::MirPixelFormat>(geom::PixelFormat::argb_8888), mir_toolkit::mir_pixel_format_argb_8888);
+    EXPECT_EQ(static_cast<mir_toolkit::MirPixelFormat>(geom::PixelFormat::xrgb_8888), mir_toolkit::mir_pixel_format_xrgb_8888);
+    EXPECT_EQ(static_cast<mir_toolkit::MirPixelFormat>(geom::PixelFormat::bgr_888), mir_toolkit::mir_pixel_format_bgr_888);
+}
+
 TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_parameters)
 {
     using namespace ::testing;
@@ -200,7 +210,6 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_parameters)
         display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface), &parameters);
 
     EXPECT_THAT(parameters, ParametersHaveSize(test_surface_size));
-    // TODO: Test that pixel formats are castable
     EXPECT_EQ(parameters.pixel_format, static_cast<mir_toolkit::MirPixelFormat>(geom::PixelFormat::xrgb_8888));
 
     // TODO: What to do about buffer usage besides hardware? ~racarr
