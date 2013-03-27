@@ -17,7 +17,7 @@ Build-Depends: cmake,
                libprotobuf-dev,
                pkg-config,
                libhybris-dev [armhf],
-               libgoogle-glog-dev, libgflags-dev
+               libgoogle-glog-dev
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
