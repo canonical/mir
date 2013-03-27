@@ -27,14 +27,14 @@
 
 namespace mcl=mir::client;
 
-mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const &factory, int max_buffers)
+mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const& factory, int max_buffers)
     : factory(factory),
       current_buffer_iter(buffers.end()),
       max_age(max_buffers - 1)
 {
 }
 
-void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> const & package, int id, geometry::Size size, geometry::PixelFormat pf)
+void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> const& package, int id, geometry::Size size, geometry::PixelFormat pf)
 {
     for (auto next = buffers.begin(); next != buffers.end();)
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,52 +16,45 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_DISPLAY_H_
+#define MIR_GRAPHICS_ANDROID_HWC_DISPLAY_H_
 
+#include <memory>
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "android_framebuffer_window.h"
-
-#include <EGL/egl.h>
-#include <memory>
+#include "android_display.h"
+#include "hwc_device.h"
 
 namespace mir
 {
-namespace geometry
-{
-class Rectangle;
-}
 namespace graphics
 {
 namespace android
 {
 
-class AndroidDisplay : public virtual Display, public virtual DisplayBuffer
+class HWCDevice;
+class AndroidFramebufferWindowQuery;
+
+class HWCDisplay : public virtual Display,
+                   public virtual DisplayBuffer,
+                   private AndroidDisplay 
 {
 public:
-    explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>&);
-    ~AndroidDisplay();
+    HWCDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const& fb_window,
+               std::shared_ptr<HWCDevice> const& hwc_device);
 
     geometry::Rectangle view_area() const;
     void clear();
     bool post_update();
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
-
     std::shared_ptr<DisplayConfiguration> configuration();
-
     void make_current();
+
 private:
-    std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
-    EGLDisplay egl_display;
-    EGLConfig egl_config;
-    EGLContext egl_context;
-    EGLSurface egl_surface;
-    EGLContext egl_context_shared;
-    EGLSurface egl_surface_dummy;
+    std::shared_ptr<HWCDevice> hwc_device;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_DISPLAY_H_ */
