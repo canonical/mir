@@ -61,8 +61,6 @@ public:
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 
-    virtual void raise_to_top(std::weak_ptr<Surface> surface);
-
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
