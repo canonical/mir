@@ -62,6 +62,12 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
     }
 }
 
+mga::HWC11Device::~HWC11Device()
+{
+    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
+    hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
+}
+
 void mga::HWC11Device::notify_vsync()
 {
     std::unique_lock<std::mutex> lk(vsync_wait_mutex);
