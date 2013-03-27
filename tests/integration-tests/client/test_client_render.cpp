@@ -18,31 +18,28 @@
 
 #include "mir_test_framework/process.h"
 
-#include "mir_toolkit/mir_client_library.h"
-
 #include "mir/compositor/buffer_ipc_package.h"
-#include "src/server/frontend/protobuf_socket_communicator.h"
-#include "mir/frontend/resource_cache.h"
+#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/android_buffer.h"
-#include "src/server/graphics/android/android_alloc_adaptor.h"
+#include "src/server/graphics/android/android_buffer_allocator.h"
 
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
-#include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
-
 #include <thread>
-#include <GLES2/gl2.h>
 #include <hardware/gralloc.h>
+#include <GLES2/gl2.h>
 
 namespace mtf = mir_test_framework;
 namespace mt=mir::test;
 namespace mtd=mir::test::draw;
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
+namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
 namespace
@@ -443,21 +440,13 @@ struct TestClientIPCRender : public testing::Test
         size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
         pf = geom::PixelFormat::abgr_8888;
 
-        /* allocate an android buffer */
-        int err;
-        const hw_module_t *hw_module;
-        struct alloc_device_t *alloc_device_raw;
-        err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
-        if (err < 0)
-            throw std::runtime_error("Could not open hardware module");
-        gralloc_open(hw_module, &alloc_device_raw);
-        alloc_device = mt::fake_shared(*alloc_device_raw);
-        auto alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(alloc_device);
-        buffer_converter = std::make_shared<mtd::TestGrallocMapper>(hw_module, alloc_device.get());
+        auto initializer = std::make_shared<mg::NullBufferInitializer>(); 
+        allocator = std::make_shared<mga::AndroidBufferAllocator> (initializer);
+        mc::BufferProperties properties(size, pf, mc::BufferUsage::hardware);
+        android_buffer = allocator->alloc_buffer(properties);
+        second_android_buffer = allocator->alloc_buffer(properties);
 
-
-        android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
-        second_android_buffer = std::make_shared<mga::AndroidBuffer>(alloc_adaptor, size, pf);
+        buffer_converter = std::make_shared<mtd::TestGrallocMapper>();
 
         package = android_buffer->get_ipc_package();
         second_package = second_android_buffer->get_ipc_package();
@@ -471,7 +460,6 @@ struct TestClientIPCRender : public testing::Test
     void TearDown()
     {
         test_server.reset();
-        gralloc_close(alloc_device.get());
     }
 
     mir::protobuf::Connection response;
@@ -485,11 +473,13 @@ struct TestClientIPCRender : public testing::Test
     mc::BufferID id2;
     std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
     std::shared_ptr<mtf::Process> client_process;
+
     std::shared_ptr<mc::BufferIPCPackage> package;
     std::shared_ptr<mc::BufferIPCPackage> second_package;
-    std::shared_ptr<mga::AndroidBuffer> android_buffer;
-    std::shared_ptr<mga::AndroidBuffer> second_android_buffer;
-    std::shared_ptr<struct alloc_device_t> alloc_device;
+
+    std::shared_ptr<mc::Buffer> android_buffer;
+    std::shared_ptr<mc::Buffer> second_android_buffer;
+    std::shared_ptr<mga::AndroidBufferAllocator>  allocator;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;
