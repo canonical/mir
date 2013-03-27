@@ -16,17 +16,20 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#include "mir/display_server.h"
 #include "mir/graphics/egl/mesa_native_display.h"
 #include "mir/graphics/platform_ipc_package.h"
-
-#include "mir/display_server.h"
 #include "mir/graphics/platform.h"
+#include "mir/frontend/surface.h"
+#include "mir/compositor/buffer.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 #include "mir_toolkit/c_types.h"
 
 namespace mg = mir::graphics;
 namespace mgeglm = mg::egl::mesa;
+namespace mf = mir::frontend;
 
 namespace
 {
@@ -53,6 +56,23 @@ public:
             package->fd[i] = platform_package->ipc_fds[i];
         }
     }
+    
+    void surface_get_buffer(mf::Surface *surface, mir_toolkit::MirBufferPackage *package)
+    {
+        auto buffer = surface->client_buffer();
+        auto buffer_package = buffer->get_ipc_package();
+        package->data_items = buffer_package->ipc_data.size();
+        for (int i = 0; i < package->data_items; i++)
+        {
+            package->data[i] = buffer_package->ipc_data[i];
+        }
+        package->fd_items = buffer_package->ipc_fds.size();
+        for (int i = 0; i < package->fd_items; i++)
+        {
+            package->fd[i] = buffer_package->ipc_fds[i];
+        }
+        package->stride = buffer_package->stride;
+    }
 private:
     std::shared_ptr<mg::Platform> graphics_platform;
     std::shared_ptr<mg::PlatformIPCPackage> platform_package;
@@ -62,6 +82,15 @@ static void native_display_get_platform(mir_toolkit::MirMesaEGLNativeDisplay* di
 {
     auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
     impl->populate_platform_package(package);
+}
+
+static void native_display_surface_get_buffer(mir_toolkit::MirMesaEGLNativeDisplay* display, 
+                                              mir_toolkit::MirEGLNativeWindowType surface,
+                                              mir_toolkit::MirBufferPackage* buffer_package)
+{
+    auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
+    auto mir_surface = static_cast<mf::Surface *>(surface);
+    impl->surface_get_buffer(mir_surface, buffer_package);
 }
 
 struct NativeDisplayDeleter
@@ -84,6 +113,7 @@ std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_disp
                                                                                 NativeDisplayDeleter());
     native_display->context = static_cast<void *>(impl);
     native_display->display_get_platform = native_display_get_platform;
+    native_display->surface_get_current_buffer = native_display_surface_get_buffer;
     
     return native_display;
 }

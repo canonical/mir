@@ -20,11 +20,15 @@
 #include "mir/graphics/egl/mesa_native_display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_toolkit/c_types.h"
 #include "mir_toolkit/mesa/native_display.h"
 
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -32,7 +36,9 @@
 namespace mg = mir::graphics;
 namespace mgeglm = mg::egl::mesa;
 namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 namespace mt = mir::test;
+namespace mtd = mt::doubles;
 
 namespace
 {
@@ -105,4 +111,30 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, display_get_platform_is_cached_platfo
     
     EXPECT_FALSE(memcmp(&requeried_package.data, &package.data, sizeof(package.data[0])*package.data_items));
     EXPECT_FALSE(memcmp(&requeried_package.fd, &package.fd, sizeof(package.fd[0])*package.fd_items));
+}
+
+TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_current_buffer)
+{
+    using namespace ::testing;
+    
+    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
+    auto buffer = std::make_shared<mtd::MockBuffer>(geom::Size(), geom::Stride(), geom::PixelFormat()); // TODO: Populate with some contents ~racarr
+    
+    mc::BufferIPCPackage test_buffer_package;
+    
+    test_buffer_package.ipc_data = {1, 2};
+    test_buffer_package.ipc_fds = {2, 3};
+
+    EXPECT_CALL(mock_server, graphics_platform()).Times(1);
+    auto display = mgeglm::create_native_display(&mock_server);
+    
+    EXPECT_CALL(surface, client_buffer()).Times(1)
+        .WillOnce(Return(buffer));
+    EXPECT_CALL(*buffer, get_ipc_package()).Times(1)
+        .WillOnce(Return(mt::fake_shared(test_buffer_package)));
+    
+    mir_toolkit::MirBufferPackage buffer_package;
+    display->surface_get_current_buffer(
+        display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface), &buffer_package);
+    // TODO: Match contents
 }
