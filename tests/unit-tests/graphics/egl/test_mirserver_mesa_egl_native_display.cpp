@@ -49,6 +49,30 @@ struct MockGraphicsPlatform : public mg::Platform
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
 };
 
+struct MirServerMesaEGLNativeDisplaySetup : public testing::Test
+{
+    MirServerMesaEGLNativeDisplaySetup()
+    {
+        using namespace ::testing;
+
+        test_platform_package.ipc_data = {1, 2};
+        test_platform_package.ipc_fds = {2, 3};
+        
+        ON_CALL(mock_server, graphics_platform())
+            .WillByDefault(Return(mt::fake_shared(graphics_platform))); 
+
+        ON_CALL(graphics_platform, get_ipc_package())
+            .WillByDefault(Return(mt::fake_shared(test_platform_package)));
+    }
+
+    // Test dependencies
+    MockDisplayServer mock_server;
+    MockGraphicsPlatform graphics_platform;
+
+    // Useful stub data
+    mg::PlatformIPCPackage test_platform_package;
+};
+
 MATCHER_P(PlatformPackageMatches, package, "")
 {
     if (arg.data_items != (int)package.ipc_data.size())
@@ -61,26 +85,24 @@ MATCHER_P(PlatformPackageMatches, package, "")
 
 }
 
-// TODO: Fixture ~racarr
-TEST(MirServerMesaEGLNativeDisplay, display_get_platform_queries_server_display)
+TEST_F(MirServerMesaEGLNativeDisplaySetup, display_get_platform_is_cached_platform_package)
 {
     using namespace ::testing;
-
-    MockDisplayServer mock_server;
-    MockGraphicsPlatform graphics_platform;
-    mg::PlatformIPCPackage platform_package;
     
-    platform_package.ipc_data = {1, 2};
-    platform_package.ipc_fds = {2, 3};
-
-    EXPECT_CALL(mock_server, graphics_platform()).Times(1)
-        .WillOnce(Return(mt::fake_shared(graphics_platform))); // TODO: Test that this is cached once we have a fixture ~racarr
-    EXPECT_CALL(graphics_platform, get_ipc_package()).Times(1)
-        .WillOnce(Return(mt::fake_shared(platform_package)));
+    EXPECT_CALL(mock_server, graphics_platform()).Times(1);
+    EXPECT_CALL(graphics_platform, get_ipc_package()).Times(1);
 
     auto display = mgeglm::create_native_display(&mock_server);
     
     mir_toolkit::MirPlatformPackage package;
     display->display_get_platform(display.get(), &package);
-    EXPECT_THAT(package, PlatformPackageMatches(platform_package));
+    EXPECT_THAT(package, PlatformPackageMatches(test_platform_package));
+
+    mir_toolkit::MirPlatformPackage requeried_package;
+    // The package is cached to allow the package creator to control lifespan of fd members
+    // and so this should not trigger another call to get_ipc_package()
+    display->display_get_platform(display.get(), &requeried_package);
+    
+    EXPECT_FALSE(memcmp(&requeried_package.data, &package.data, sizeof(package.data[0])*package.data_items));
+    EXPECT_FALSE(memcmp(&requeried_package.fd, &package.fd, sizeof(package.fd[0])*package.fd_items));
 }
