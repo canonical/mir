@@ -30,6 +30,7 @@ namespace input
 namespace android
 {
 
+/// Implementation of client input machinery for android input stack wire protocol.
 class AndroidInputPlatform : public InputPlatform
 {
 public:
