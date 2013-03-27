@@ -142,6 +142,14 @@ void mfd::ProtobufMessageProcessor::send_response(
     sender->send(buffer2);
 }
 
+/* TODO
+void mfd::ProtobufMessageProcessor::handle_event(HighLevelEventStruct *e)
+{
+   Implement the interface of EventSink
+   ...
+}
+*/
+
 void mfd::ProtobufMessageProcessor::send_events(
     mir::protobuf::EventSequence *seq)
 {
