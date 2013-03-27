@@ -33,6 +33,7 @@ namespace android
 {
 class InputChannel;
 class InputConsumer;
+class Looper;
 }
 
 namespace mir
@@ -54,8 +55,10 @@ public:
     virtual ~InputReceiver();
     int get_fd() const;
     
-    virtual bool next_event(MirEvent &ev);
+    virtual bool next_event(std::chrono::milliseconds const& timeout, MirEvent &ev);
+    virtual bool next_event(MirEvent &ev) { return next_event(std::chrono::milliseconds(-1), ev); }
     
+    // TODO: Remove ~racarr
     virtual bool poll(std::chrono::milliseconds const& timeout);
 
 protected:
@@ -66,6 +69,7 @@ private:
     droidinput::sp<droidinput::InputChannel> input_channel;
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PooledInputEventFactory event_factory;
+    droidinput::sp<droidinput::Looper> looper;
     
     static const bool consume_batches = true;
     static const bool do_not_consume_batches = false;

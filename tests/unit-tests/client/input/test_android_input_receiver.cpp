@@ -126,9 +126,14 @@ public:
         fsync(android_server_channel->getFd());
         fsync(android_client_channel->getFd());
     }
+
     droidinput::sp<droidinput::InputChannel> android_client_channel;
     droidinput::sp<droidinput::InputChannel> android_server_channel;
+    
+    static std::chrono::milliseconds const next_event_timeout;
 };
+
+std::chrono::milliseconds const AndroidInputReceiverSetup::next_event_timeout(1000);
 
 }
 
@@ -149,7 +154,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
     flush_channels();
     
     MirEvent ev;
-    EXPECT_EQ(true, receiver.next_event(ev));
+    EXPECT_EQ(true, receiver.next_event(next_event_timeout, ev));
     EXPECT_EQ(MIR_INPUT_EVENT_TYPE_KEY, ev.type);
     EXPECT_EQ(producer.testing_key_event_key_code, ev.details.key.key_code);
 }
@@ -159,11 +164,11 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
     mclia::InputReceiver receiver(android_client_channel);
     TestingInputProducer producer(android_server_channel);
     
-    producer.produce_a_key_event();
+//    producer.produce_a_key_event();
     flush_channels();
     
     MirEvent ev;
-    EXPECT_EQ(true, receiver.next_event(ev));
+    EXPECT_EQ(true, receiver.next_event(next_event_timeout, ev));
     
     flush_channels();
     
@@ -184,7 +189,9 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     
     MirEvent ev;
     // Handle all three events as a batched event
-    EXPECT_TRUE(receiver.next_event(ev));
+    EXPECT_TRUE(receiver.next_event(next_event_timeout, ev));
     // Now there should be no events
-    EXPECT_FALSE(receiver.next_event(ev));
+    EXPECT_FALSE(receiver.next_event(next_event_timeout, ev));
 }
+
+// TODO: Test for wake
