@@ -45,7 +45,7 @@ mclia::InputReceiver::~InputReceiver()
 {
 }
 
-int mclia::InputReceiver::get_fd() const
+int mclia::InputReceiver::fd() const
 {
     return input_channel->getFd();
 }
@@ -61,7 +61,7 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
     if (!fd_added)
     {
         // TODO: Why will this fail from the constructor? ~racarr
-        looper->addFd(get_fd(), get_fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
+        looper->addFd(fd(), fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
         fd_added = true;
     }
     

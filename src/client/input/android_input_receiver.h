@@ -53,7 +53,7 @@ public:
     InputReceiver(int fd);
 
     virtual ~InputReceiver();
-    int get_fd() const;
+    int fd() const;
     
     /// Synchronously receive an event with millisecond timeout. A negative timeout value is used to indicate
     /// indefinite polling.

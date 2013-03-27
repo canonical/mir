@@ -141,7 +141,7 @@ TEST_F(AndroidInputReceiverSetup, receiever_takes_channel_fd)
 {
     mclia::InputReceiver receiver(android_client_channel);
     
-    EXPECT_EQ(android_client_channel->getFd(), receiver.get_fd());
+    EXPECT_EQ(android_client_channel->getFd(), receiver.fd());
 }
 
 TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
