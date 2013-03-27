@@ -50,6 +50,8 @@ int mclia::InputReceiver::get_fd() const
     return input_channel->getFd();
 }
 
+// TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
+// with the existing client io_service ~racarr ~tvoss
 bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
@@ -58,6 +60,7 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
 
     if (!fd_added)
     {
+        // TODO: Why will this fail from the constructor? ~racarr
         looper->addFd(get_fd(), get_fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
         fd_added = true;
     }
