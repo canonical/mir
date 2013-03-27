@@ -27,6 +27,8 @@
 
 namespace mir
 {
+class EventSink;
+
 namespace graphics
 {
 class Platform;
@@ -105,6 +107,8 @@ public:
                            mir::protobuf::SurfaceSetting*,
                            google::protobuf::Closure* done);
 
+    void set_event_sink(std::shared_ptr<EventSink> const& sink);
+
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
@@ -118,6 +122,8 @@ private:
     std::shared_ptr<ResourceCache> const resource_cache;
 
     std::shared_ptr<Session> session;
+
+    std::shared_ptr<EventSink> event_sink;
 };
 
 }

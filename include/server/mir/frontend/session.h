@@ -29,6 +29,7 @@
 
 namespace mir
 {
+class EventSink;
 
 namespace frontend
 {
@@ -51,6 +52,9 @@ public:
     virtual void show() = 0;
 
     virtual int configure_surface(SurfaceId id, MirSurfaceAttrib attrib, int value) = 0;
+
+    // TODO: pure virtual in future?
+    virtual void set_event_sink(std::shared_ptr<EventSink> const&) {}
 
 protected:
     Session() = default;

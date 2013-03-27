@@ -22,6 +22,7 @@
 
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/protobuf/google_protobuf_guard.h"
+#include "mir/frontend/session_mediator.h"
 
 #include <boost/signals2.hpp>
 
@@ -52,13 +53,21 @@ void mf::ProtobufSocketCommunicator::start_accept()
         next_id(),
         connected_sessions);
 
-    auto session = std::make_shared<detail::ProtobufMessageProcessor>(
+    std::shared_ptr<mir::protobuf::DisplayServer> ds =
+        ipc_factory->make_ipc_server();
+
+    auto proc = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
-        ipc_factory->make_ipc_server(),
+        ds,
         ipc_factory->resource_cache(),
         ipc_factory->report());
-
-    socket_session->set_processor(session);
+    
+    // TODO: Be less evil. This really should not be cast, but would require
+    //       some interface changes first.
+    mf::SessionMediator &sm = *static_cast<mf::SessionMediator*>(ds.get());
+    sm.set_event_sink(proc);
+        
+    socket_session->set_processor(proc);
 
     acceptor.async_accept(
         socket_session->get_socket(),

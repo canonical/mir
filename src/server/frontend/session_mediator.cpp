@@ -61,6 +61,7 @@ void mir::frontend::SessionMediator::connect(
     report->session_connect_called(request->application_name());
 
     session = shell->open_session(request->application_name());
+    session->set_event_sink(event_sink);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -247,3 +248,8 @@ void mir::frontend::SessionMediator::configure_surface(
     done->Run();
 }
 
+void mir::frontend::SessionMediator::set_event_sink(
+    std::shared_ptr<mir::EventSink> const& sink)
+{
+    event_sink = sink;
+}

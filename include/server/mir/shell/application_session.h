@@ -26,6 +26,7 @@
 
 namespace mir
 {
+class EventSink;
 
 namespace shell
 {
@@ -52,6 +53,8 @@ public:
     void show();
 
     int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
+
+    void set_event_sink(std::shared_ptr<mir::EventSink> const& sink);
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
