@@ -48,6 +48,7 @@ void mclia::InputReceiverThread::start()
 void mclia::InputReceiverThread::stop()
 {
     running = false;
+    receiver->wake();
 }
 
 void mclia::InputReceiverThread::join()
@@ -57,16 +58,11 @@ void mclia::InputReceiverThread::join()
 
 void mclia::InputReceiverThread::thread_loop()
 {
-    // TODO: There is room for usage of optimization here through usage of a wake pipe and epoll
-    std::chrono::milliseconds timeout(10);
     while (running)
     {
-        if (receiver->poll(timeout))
-        {
-            MirEvent ev;
-            while(receiver->next_event(ev))
-                handler(&ev);
-        }
+        MirEvent ev;
+        while(running && receiver->next_event(ev))
+            handler(&ev);
         std::this_thread::yield(); // yield() is needed to ensure reasonable runtime under valgrind
     }
 }

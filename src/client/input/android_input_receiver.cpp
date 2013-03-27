@@ -20,21 +20,24 @@
 #include "mir/input/android/android_input_lexicon.h"
 
 #include <androidfw/InputTransport.h>
-
-#include <poll.h>
+#include <utils/Looper.h>
 
 namespace mclia = mir::client::input::android;
 namespace miat = mir::input::android::transport;
 
 mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
   : input_channel(input_channel),
-    input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel))
+    input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
+    looper(new droidinput::Looper(true)),
+    fd_added(false)
 {
 }
 
 mclia::InputReceiver::InputReceiver(int fd)
   : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)), 
-    input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel))
+    input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
+    looper(new droidinput::Looper(true)),
+    fd_added(false)
 {
 }
 
@@ -47,20 +50,34 @@ int mclia::InputReceiver::get_fd() const
     return input_channel->getFd();
 }
 
-bool mclia::InputReceiver::next_event(MirEvent &ev)
+// TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
+// with the existing client io_service ~racarr ~tvoss
+bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
     bool handled_event = false;
 
-    droidinput::status_t status;
-    if((status = input_consumer->consume(&event_factory, consume_batches,
-                                         default_frame_time, &event_sequence_id, &android_event)) != droidinput::WOULD_BLOCK)
-        {
-            miat::Lexicon::translate(android_event, ev);
-            input_consumer->sendFinishedSignal(event_sequence_id, true);
-            handled_event = true;
-        }
+    if (!fd_added)
+    {
+        // TODO: Why will this fail from the constructor? ~racarr
+        looper->addFd(get_fd(), get_fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
+        fd_added = true;
+    }
+    
+    auto result = looper->pollOnce(timeout.count());
+    if (result == ALOOPER_POLL_WAKE)
+        return false;
+    else if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
+        return false;
+
+    if(input_consumer->consume(&event_factory, consume_batches,
+        default_frame_time, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
+    {
+        miat::Lexicon::translate(android_event, ev);
+        input_consumer->sendFinishedSignal(event_sequence_id, true);
+        handled_event = true;
+    }
 
 
     // So far once we have sent an event to the client there is no chance for redispatch
@@ -69,20 +86,7 @@ bool mclia::InputReceiver::next_event(MirEvent &ev)
     return handled_event;
 }
 
-bool mclia::InputReceiver::poll(std::chrono::milliseconds const& timeout)
+void mclia::InputReceiver::wake()
 {
-    struct pollfd pfd;
-    
-    pfd.fd = get_fd();
-    pfd.events = POLLIN;
-    
-    auto status = ::poll(&pfd, 1, timeout.count());
-    
-    if (status > 0)
-        return true;
-    if (status == 0)
-        return false;
-    
-    // TODO: What to do in case of error? ~racarr
-    return false;
+    looper->wake();
 }
