@@ -111,7 +111,7 @@ public:
 class AndroidInputReceiverSetup : public testing::Test
 {
 public:
-    void SetUp()
+    AndroidInputReceiverSetup()
     {
         droidinput::String8 const testing_channel_name = droidinput::String8("Terrapin");
         auto status = droidinput::InputChannel::openInputChannelPair(testing_channel_name, 
@@ -164,7 +164,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
     mclia::InputReceiver receiver(android_client_channel);
     TestingInputProducer producer(android_server_channel);
     
-//    producer.produce_a_key_event();
+    producer.produce_a_key_event();
     flush_channels();
     
     MirEvent ev;
@@ -191,7 +191,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     // Handle all three events as a batched event
     EXPECT_TRUE(receiver.next_event(next_event_timeout, ev));
     // Now there should be no events
-    EXPECT_FALSE(receiver.next_event(next_event_timeout, ev));
+    EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(0), ev));
 }
 
 // TODO: Test for wake

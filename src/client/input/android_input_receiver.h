@@ -45,7 +45,7 @@ namespace input
 namespace android
 {
 
-/// Synchronously receives input events in a nonblocking manner.
+/// Synchronously receives input events in a blocking manner
 class InputReceiver
 {
 public:
@@ -55,11 +55,13 @@ public:
     virtual ~InputReceiver();
     int get_fd() const;
     
+    /// Synchronously receive an event with millisecond timeout. A negative timeout value is used to indicate
+    /// indefinite polling.
     virtual bool next_event(std::chrono::milliseconds const& timeout, MirEvent &ev);
     virtual bool next_event(MirEvent &ev) { return next_event(std::chrono::milliseconds(-1), ev); }
     
-    // TODO: Remove ~racarr
-    virtual bool poll(std::chrono::milliseconds const& timeout);
+    /// May be used from any thread to wake an InputReceiver blocked in next_event
+    virtual void wake();
 
 protected:
     InputReceiver(const InputReceiver&) = delete;
@@ -70,6 +72,8 @@ private:
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PooledInputEventFactory event_factory;
     droidinput::sp<droidinput::Looper> looper;
+
+    bool fd_added;
     
     static const bool consume_batches = true;
     static const bool do_not_consume_batches = false;

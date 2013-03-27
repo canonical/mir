@@ -21,8 +21,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test/fake_shared.h"
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -30,8 +28,9 @@
 
 #include <atomic>
 
+#include <fcntl.h>
+
 namespace mclia = mir::client::input::android;
-namespace mt = mir::test;
 
 namespace
 {
@@ -43,42 +42,57 @@ struct MockEventHandler
 
 struct MockInputReceiver : public mclia::InputReceiver
 {
-    MockInputReceiver()
-      : InputReceiver(droidinput::sp<droidinput::InputChannel>())
+    MockInputReceiver(int fd)
+      : InputReceiver(fd)
     {
     }
     MOCK_METHOD1(next_event, bool(MirEvent &));
-    MOCK_METHOD1(poll, bool(std::chrono::milliseconds const&));
+};
+
+struct AndroidInputReceiverThreadSetup : public testing::Test
+{
+    AndroidInputReceiverThreadSetup()
+    {
+        test_receiver_fd = open("/dev/null", O_APPEND);
+        input_receiver = std::make_shared<MockInputReceiver>(test_receiver_fd);
+    }
+    virtual ~AndroidInputReceiverThreadSetup()
+    {
+        close(test_receiver_fd);
+    }
+
+    int test_receiver_fd;
+    std::shared_ptr<MockInputReceiver> input_receiver;
 };
 
 ACTION_P(StopThread, thread)
 {
     thread->stop();
+//    thread->join();
 }
 
 }
 
-TEST(AndroidInputReceiverThread, polls_until_stopped)
+TEST_F(AndroidInputReceiverThreadSetup, reads_events_until_stopped)
 {
     using namespace ::testing;
 
-    MockInputReceiver input_receiver;
-    mclia::InputReceiverThread input_thread(mt::fake_shared(input_receiver), 
-                                           std::function<void(MirEvent*)>());    
+    mclia::InputReceiverThread input_thread(input_receiver, 
+        std::function<void(MirEvent*)>());    
     {
         InSequence seq;
-        EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(Return(false));
-        EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(false)));
+        EXPECT_CALL(*input_receiver, next_event(_)).Times(1).WillOnce(Return(false));
+        EXPECT_CALL(*input_receiver, next_event(_)).Times(1).WillOnce(Return(false));
+        EXPECT_CALL(*input_receiver, next_event(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(false)));
     }
     input_thread.start();
     input_thread.join();
 }
 
-TEST(AndroidInputReceiverThread, receives_and_dispatches_available_events_when_ready)
+TEST_F(AndroidInputReceiverThreadSetup, receives_and_dispatches_available_events_when_ready)
 {
     using namespace ::testing;
     MockEventHandler mock_handler;
-    MockInputReceiver input_receiver;
 
     struct InputDelegate
     {
@@ -91,30 +105,27 @@ TEST(AndroidInputReceiverThread, receives_and_dispatches_available_events_when_r
         MockEventHandler &handler;
     } input_delegate(mock_handler);
 
-    mclia::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate);
+    mclia::InputReceiverThread input_thread(input_receiver, input_delegate);
     {
         InSequence seq;
 
-        EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(input_receiver, next_event(_)).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(input_receiver, next_event(_)).Times(1).WillOnce(Return(false));
-        EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(false)));
+        EXPECT_CALL(*input_receiver, next_event(_)).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(*input_receiver, next_event(_)).Times(1).WillOnce(Return(false));
+        EXPECT_CALL(*input_receiver, next_event(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(true)));
     }
-    EXPECT_CALL(mock_handler, handle_event(_)).Times(1);
+    EXPECT_CALL(mock_handler, handle_event(_)).Times(2);
 
     input_thread.start();
     input_thread.join();
 }
 
-TEST(AndroidInputReceiverThread, input_callback_invoked_from_thread)
+TEST_F(AndroidInputReceiverThreadSetup, input_callback_invoked_from_thread)
 {
     using namespace ::testing;
     MockEventHandler mock_handler;
-    MockInputReceiver input_receiver;
     std::atomic<bool> handled;
     
     handled = false;
-
 
     struct InputDelegate
     {
@@ -127,14 +138,11 @@ TEST(AndroidInputReceiverThread, input_callback_invoked_from_thread)
         std::atomic<bool> &handled;
     } input_delegate(handled);
 
-    mclia::InputReceiverThread input_thread(mt::fake_shared(input_receiver), input_delegate);
+    mclia::InputReceiverThread input_thread(input_receiver, input_delegate);
     {
         InSequence seq;
 
-        EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(input_receiver, next_event(_)).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(input_receiver, next_event(_)).Times(1).WillOnce(Return(false));
-        EXPECT_CALL(input_receiver, poll(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(false)));
+        EXPECT_CALL(*input_receiver, next_event(_)).Times(1).WillOnce(DoAll(StopThread(&input_thread), Return(true)));
     }
 
     input_thread.start();

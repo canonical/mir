@@ -22,22 +22,22 @@
 #include <androidfw/InputTransport.h>
 #include <utils/Looper.h>
 
-#include <poll.h>
-
 namespace mclia = mir::client::input::android;
 namespace miat = mir::input::android::transport;
 
 mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
   : input_channel(input_channel),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
-    looper(new droidinput::Looper(true))
+    looper(new droidinput::Looper(true)),
+    fd_added(false)
 {
-    looper->addFd(get_fd(), 0, ALOOPER_EVENT_INPUT, nullptr, nullptr);
 }
 
 mclia::InputReceiver::InputReceiver(int fd)
   : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)), 
-    input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel))
+    input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
+    looper(new droidinput::Looper(true)),
+    fd_added(false)
 {
 }
 
@@ -50,17 +50,27 @@ int mclia::InputReceiver::get_fd() const
     return input_channel->getFd();
 }
 
+#include <stdio.h>
 bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
     bool handled_event = false;
+
+    if (!fd_added)
+    {
+        looper->addFd(get_fd(), get_fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
+        fd_added = true;
+    }
     
+    printf("Polling \n");
     auto result = looper->pollOnce(timeout.count());
+    printf("Polled\n");
     if (result == ALOOPER_POLL_WAKE)
         return false;
     else if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
         return false;
+    printf("Cnsuming\n");
 
     if(input_consumer->consume(&event_factory, consume_batches,
         default_frame_time, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
@@ -77,20 +87,7 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
     return handled_event;
 }
 
-bool mclia::InputReceiver::poll(std::chrono::milliseconds const& timeout)
+void mclia::InputReceiver::wake()
 {
-    struct pollfd pfd;
-    
-    pfd.fd = get_fd();
-    pfd.events = POLLIN;
-    
-    auto status = ::poll(&pfd, 1, timeout.count());
-    
-    if (status > 0)
-        return true;
-    if (status == 0)
-        return false;
-    
-    // TODO: What to do in case of error? ~racarr
-    return false;
+    looper->wake();
 }
