@@ -45,6 +45,9 @@ struct MirMesaEGLNativeDisplay
     void *context;
 };
 
+// TODO: What happens to old is_valid function? At least make a comment in proposal ~racarr
+int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display);
+
 #ifdef __cplusplus
 } // extern "C"
 }

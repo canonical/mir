@@ -27,9 +27,15 @@
 #include "mir_toolkit/mesa/native_display.h"
 #include "mir_toolkit/c_types.h"
 
+#include <mutex>
+#include <set>
+
 namespace mg = mir::graphics;
 namespace mgeglm = mg::egl::mesa;
 namespace mf = mir::frontend;
+
+std::mutex valid_displays_guard;
+std::set<mir_toolkit::MirMesaEGLNativeDisplay *> valid_displays;
 
 namespace
 {
@@ -127,12 +133,23 @@ struct NativeDisplayDeleter
 {
     void operator()(mir_toolkit::MirMesaEGLNativeDisplay *display)
     {
+        std::unique_lock<std::mutex> lg(valid_displays_guard);
+        valid_displays.erase(display);
         auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
         delete impl;
         delete display;
     }
 };
 
+}
+
+extern "C"
+{
+int mir_toolkit::mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay *display)
+{
+    std::unique_lock<std::mutex> lg(valid_displays_guard);
+    return valid_displays.find(display) != valid_displays.end();
+}
 }
 
 std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_display(mir::DisplayServer* server)
@@ -146,6 +163,9 @@ std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_disp
     native_display->surface_get_current_buffer = native_display_surface_get_current_buffer;
     native_display->surface_get_parameters = native_display_surface_get_parameters;
     native_display->surface_advance_buffer = native_display_surface_advance_buffer;
+    
+    std::unique_lock<std::mutex> lg(valid_displays_guard);
+    valid_displays.insert(native_display.get());
     
     return native_display;
 }

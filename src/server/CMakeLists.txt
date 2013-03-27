@@ -24,6 +24,7 @@ set(
   SRCS
   server_instance.cpp
   default_server_configuration.cpp
+  run_mir.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -36,7 +37,6 @@ add_executable(
   mirds
 
   main.cpp
-  run_mir.cpp
 )
 
 set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
