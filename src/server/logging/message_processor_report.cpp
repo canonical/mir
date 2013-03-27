@@ -38,8 +38,43 @@ ml::MessageProcessorReport::MessageProcessorReport(
 {
 }
 
+ml::MessageProcessorReport::~MessageProcessorReport() noexcept(true)
+{
+    if (!mediators.empty())
+    {
+        std::ostringstream out;
+
+        {
+            out << "Calls outstanding on exit:\n";
+
+            std::lock_guard<std::mutex> lock(mutex);
+
+            for (auto const& med : mediators)
+            {
+                for (auto const & invocation: med.second.current_invocations)
+                {
+                    out << "mediator=" << med.first << ": "
+                        << invocation.second.method << "()";
+
+                    if (!invocation.second.exception.empty())
+                        out << " ERROR=" << invocation.second.exception;
+
+                    out << '\n';
+                }
+            }
+        }
+
+        log->log<Logger::informational>(out.str(), component);
+    }
+}
+
+
 void ml::MessageProcessorReport::received_invocation(void const* mediator, int id, std::string const& method)
 {
+    std::ostringstream out;
+    out << "mediator=" << mediator << ", method=" << method << "()";
+    log->log<Logger::debug>(out.str(), component);
+
     std::lock_guard<std::mutex> lock(mutex);
     auto& invocations = mediators[mediator].current_invocations;
     auto& invocation = invocations[id];

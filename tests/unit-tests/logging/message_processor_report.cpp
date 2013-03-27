@@ -50,7 +50,13 @@ struct MessageProcessorReport : public Test
     mir::logging::MessageProcessorReport report;
 
     MessageProcessorReport() :
-        report(mir::test::fake_shared(logger), mir::test::fake_shared(time_source)) {}
+        report(mir::test::fake_shared(logger), mir::test::fake_shared(time_source))
+    {
+        EXPECT_CALL(logger, log(
+            mir::logging::Logger::debug,
+            _,
+            "frontend::MessageProcessor")).Times(AnyNumber());
+    }
 };
 }
 
@@ -134,5 +140,35 @@ TEST_F(MessageProcessorReport, reports_error_deserializing_call)
         "frontend::MessageProcessor")).Times(1);
 
     report.exception_handled(this, std::runtime_error(testError));
+}
+
+TEST_F(MessageProcessorReport, logs_a_debug_message_when_invocation_starts)
+{
+    mir::time::Timestamp a_time;
+    EXPECT_CALL(time_source, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::informational,
+        HasSubstr("Calls outstanding on exit:"),
+        "frontend::MessageProcessor")).Times(AnyNumber());
+
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::debug,
+        _,
+        "frontend::MessageProcessor")).Times(1);
+
+    report.received_invocation(this, 1, __PRETTY_FUNCTION__);
+}
+
+TEST_F(MessageProcessorReport, logs_incomplete_calls_on_destruction)
+{
+    mir::time::Timestamp a_time;
+    EXPECT_CALL(time_source, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
+
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::informational,
+        HasSubstr("Calls outstanding on exit:"),
+        "frontend::MessageProcessor")).Times(1);
+
+    report.received_invocation(this, 1, __PRETTY_FUNCTION__);
 }
 

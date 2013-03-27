@@ -68,6 +68,8 @@ public:
 
     void exception_handled(void const* mediator, std::exception const& error);
 
+    ~MessageProcessorReport() noexcept(true);
+
 private:
     std::shared_ptr<Logger> const log;
     std::shared_ptr<time::TimeSource> const time_source;
