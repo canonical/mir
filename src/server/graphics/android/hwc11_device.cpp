@@ -56,7 +56,10 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
         BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
     }
 
-    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0);
+    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
+    }
 }
 
 void mga::HWC11Device::notify_vsync()
