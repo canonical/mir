@@ -60,7 +60,7 @@ private:
 
 static void native_display_get_platform(mir_toolkit::MirMesaEGLNativeDisplay* display, mir_toolkit::MirPlatformPackage* package)
 {
-    auto impl = (MesaNativeDisplayImpl*)display->context; // TODO: Fix cast ~racarr
+    auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
     impl->populate_platform_package(package);
 }
 
@@ -68,7 +68,7 @@ struct NativeDisplayDeleter
 {
     void operator()(mir_toolkit::MirMesaEGLNativeDisplay *display)
     {
-        auto impl = (MesaNativeDisplayImpl*)display->context; // TODO: Fix cast ~racarr
+        auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
         delete impl;
         delete display;
     }
@@ -82,7 +82,7 @@ std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_disp
 
     auto native_display = std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay>(new mir_toolkit::MirMesaEGLNativeDisplay, 
                                                                                 NativeDisplayDeleter());
-    native_display->context = (mir_toolkit::MirConnection *)impl; // TODO: Fix cast ~racarr
+    native_display->context = static_cast<void *>(impl);
     native_display->display_get_platform = native_display_get_platform;
     
     return native_display;

@@ -42,7 +42,7 @@ struct MirMesaEGLNativeDisplay
     void (*surface_advance_buffer)(MirMesaEGLNativeDisplay* display,
                                    MirEGLNativeWindowType surface);
 
-    MirConnection* context; // TODO: Fix type ~racarr
+    void *context;
 };
 
 #ifdef __cplusplus
