@@ -20,7 +20,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/render_view.h"
+#include "mir/compositor/renderables.h"
 
 #include <thread>
 #include <condition_variable>
@@ -101,10 +101,10 @@ private:
 
 mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
-    std::shared_ptr<mc::RenderView> const& render_view,
+    std::shared_ptr<mc::Renderables> const& renderables,
     std::shared_ptr<mc::CompositingStrategy> const& strategy)
     : display{display},
-      render_view{render_view},
+      renderables{renderables},
       compositing_strategy{strategy}
 {
 }
@@ -127,7 +127,7 @@ void mc::MultiThreadedCompositor::start()
     });
 
     /* Recomposite whenever the render view changes */
-    render_view->set_change_callback([this]()
+    renderables->set_change_callback([this]()
     {
         for (auto& f : thread_functors)
             f->schedule_compositing();
@@ -140,7 +140,7 @@ void mc::MultiThreadedCompositor::start()
 
 void mc::MultiThreadedCompositor::stop()
 {
-    render_view->set_change_callback([]{});
+    renderables->set_change_callback([]{});
 
     for (auto& f : thread_functors)
         f->stop();

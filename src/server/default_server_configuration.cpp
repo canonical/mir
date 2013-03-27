@@ -338,8 +338,8 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
         });
 }
 
-std::shared_ptr<mc::RenderView>
-mir::DefaultServerConfiguration::the_render_view()
+std::shared_ptr<mc::Renderables>
+mir::DefaultServerConfiguration::the_renderables()
 {
     return surface_stack(
         [this]()
@@ -374,7 +374,7 @@ mir::DefaultServerConfiguration::the_compositing_strategy()
     return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_render_view(), the_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer());
         });
 }
 
@@ -395,7 +395,7 @@ mir::DefaultServerConfiguration::the_compositor()
         [this]()
         {
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
-                                                                 the_render_view(),
+                                                                 the_renderables(),
                                                                  the_compositing_strategy());
         });
 }

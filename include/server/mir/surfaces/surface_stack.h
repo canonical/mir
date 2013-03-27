@@ -20,7 +20,7 @@
 #define MIR_SURFACES_SURFACESTACK_H_
 
 #include "surface_stack_model.h"
-#include "mir/compositor/render_view.h"
+#include "mir/compositor/renderables.h"
 
 #include <memory>
 #include <vector>
@@ -47,13 +47,13 @@ namespace surfaces
 class BufferBundleFactory;
 class Surface;
 
-class SurfaceStack : public compositor::RenderView, public SurfaceStackModel
+class SurfaceStack : public compositor::Renderables, public SurfaceStackModel
 {
 public:
     explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory);
     virtual ~SurfaceStack() = default;
 
-    // From RenderView
+    // From Renderables
     virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
     virtual void set_change_callback(std::function<void()> const& f);
 
