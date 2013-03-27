@@ -32,6 +32,7 @@ namespace input
 {
 class InputReceiverThread;
 
+// Interface for MirSurface to construct input dispatcher threads.
 class InputPlatform
 {
 public:

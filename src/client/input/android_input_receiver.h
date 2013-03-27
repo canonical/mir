@@ -44,6 +44,7 @@ namespace input
 namespace android
 {
 
+/// Synchronously receives input events in a nonblocking manner.
 class InputReceiver
 {
 public:

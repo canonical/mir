@@ -38,6 +38,7 @@ namespace android
 {
 class InputReceiver;
 
+/// Responsible for polling an InputReceiver to read and dispatch events when appropriate.
 class InputReceiverThread : public input::InputReceiverThread
 {
 public:
