@@ -57,7 +57,7 @@ public:
         }
     }
     
-    void surface_get_buffer(mf::Surface *surface, mir_toolkit::MirBufferPackage *package)
+    void surface_get_current_buffer(mf::Surface *surface, mir_toolkit::MirBufferPackage *package)
     {
         auto buffer = surface->client_buffer();
         auto buffer_package = buffer->get_ipc_package();
@@ -73,6 +73,19 @@ public:
         }
         package->stride = buffer_package->stride;
     }
+    
+    void surface_advance_buffer(mf::Surface* surface)
+    {
+        surface->advance_client_buffer();
+    }
+    
+    void surface_get_parameters(mf::Surface* surface, mir_toolkit::MirSurfaceParameters *parameters)
+    {
+        parameters->width = surface->size().width.as_uint32_t();
+        parameters->height = surface->size().height.as_uint32_t();
+        parameters->pixel_format = static_cast<mir_toolkit::MirPixelFormat>(surface->pixel_format());
+        parameters->buffer_usage = mir_toolkit::mir_buffer_usage_hardware;
+    }
 private:
     std::shared_ptr<mg::Platform> graphics_platform;
     std::shared_ptr<mg::PlatformIPCPackage> platform_package;
@@ -84,13 +97,30 @@ static void native_display_get_platform(mir_toolkit::MirMesaEGLNativeDisplay* di
     impl->populate_platform_package(package);
 }
 
-static void native_display_surface_get_buffer(mir_toolkit::MirMesaEGLNativeDisplay* display, 
-                                              mir_toolkit::MirEGLNativeWindowType surface,
-                                              mir_toolkit::MirBufferPackage* buffer_package)
+static void native_display_surface_get_current_buffer(mir_toolkit::MirMesaEGLNativeDisplay* display, 
+                                                      mir_toolkit::MirEGLNativeWindowType surface,
+                                                      mir_toolkit::MirBufferPackage* buffer_package)
 {
     auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
     auto mir_surface = static_cast<mf::Surface *>(surface);
-    impl->surface_get_buffer(mir_surface, buffer_package);
+    impl->surface_get_current_buffer(mir_surface, buffer_package);
+}
+
+static void native_display_surface_get_parameters(mir_toolkit::MirMesaEGLNativeDisplay* display, 
+                                                  mir_toolkit::MirEGLNativeWindowType surface,
+                                                  mir_toolkit::MirSurfaceParameters* parameters)
+{
+    auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
+    auto mir_surface = static_cast<mf::Surface *>(surface);
+    impl->surface_get_parameters(mir_surface, parameters);
+}
+
+static void native_display_surface_advance_buffer(mir_toolkit::MirMesaEGLNativeDisplay* display, 
+                                                  mir_toolkit::MirEGLNativeWindowType surface)
+{
+    auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
+    auto mir_surface = static_cast<mf::Surface *>(surface);
+    impl->surface_advance_buffer(mir_surface);
 }
 
 struct NativeDisplayDeleter
@@ -113,7 +143,9 @@ std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_disp
                                                                                 NativeDisplayDeleter());
     native_display->context = static_cast<void *>(impl);
     native_display->display_get_platform = native_display_get_platform;
-    native_display->surface_get_current_buffer = native_display_surface_get_buffer;
+    native_display->surface_get_current_buffer = native_display_surface_get_current_buffer;
+    native_display->surface_get_parameters = native_display_surface_get_parameters;
+    native_display->surface_advance_buffer = native_display_surface_advance_buffer;
     
     return native_display;
 }

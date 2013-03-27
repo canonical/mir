@@ -138,3 +138,40 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_current_buffer)
         display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface), &buffer_package);
     // TODO: Match contents
 }
+
+TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_advance_buffer)
+{
+    using namespace ::testing;
+    
+    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
+    
+    EXPECT_CALL(mock_server, graphics_platform()).Times(1);
+    auto display = mgeglm::create_native_display(&mock_server);
+    
+    EXPECT_CALL(surface, advance_client_buffer()).Times(1);
+    
+    display->surface_advance_buffer(
+        display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface));
+    // TODO: Match contents
+}
+
+TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_parameters)
+{
+    using namespace ::testing;
+    
+    EXPECT_CALL(mock_server, graphics_platform()).Times(1);
+    auto display = mgeglm::create_native_display(&mock_server);
+
+    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
+    // TODO: Contents for matching ~racarr
+    EXPECT_CALL(surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(geom::Size()));
+    EXPECT_CALL(surface, pixel_format()).Times(AtLeast(1)).WillRepeatedly(Return(geom::PixelFormat()));
+    
+    mir_toolkit::MirSurfaceParameters parameters;
+    display->surface_get_parameters(
+        display.get(), static_cast<mir_toolkit::MirEGLNativeWindowType>(&surface), &parameters);
+    // TODO: Match contents
+
+    // TODO: What to do about buffer usage besides hardware? ~racarr
+    EXPECT_EQ(parameters.buffer_usage, mir_toolkit::mir_buffer_usage_hardware);
+}
