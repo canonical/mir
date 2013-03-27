@@ -125,7 +125,7 @@ void mtf::TestingProcessManager::tear_down_clients()
 
         if (clients.empty())
         {
-            // Allow some time for server-side only tests to run
+            // Allow some time for server-side to register signal handler
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
 
