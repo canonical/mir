@@ -66,3 +66,73 @@ TEST_F(MessageProcessorReportTest, everything_fine)
     report.received_invocation(this, 1, "a_function");
     report.completed_invocation(this, 1, true);
 }
+
+TEST_F(MessageProcessorReportTest, slow_call)
+{
+    mir::time::Timestamp a_time;
+    mir::time::Timestamp another_time = a_time + std::chrono::microseconds(1234);
+
+    EXPECT_CALL(time_source, sample()).Times(2)
+    .WillOnce(Return(a_time)).WillOnce(Return(another_time));
+
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::informational,
+        EndsWith("elapsed=1234µs"),
+        "frontend::MessageProcessor")).Times(1);
+
+    report.received_invocation(this, 1, __PRETTY_FUNCTION__);
+    report.completed_invocation(this, 1, true);
+}
+
+TEST_F(MessageProcessorReportTest, reports_disconnect)
+{
+    mir::time::Timestamp a_time;
+    EXPECT_CALL(time_source, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::informational,
+        HasSubstr("(disconnecting)"),
+        "frontend::MessageProcessor")).Times(1);
+
+    report.received_invocation(this, 1, __PRETTY_FUNCTION__);
+    report.completed_invocation(this, 1, false);
+}
+
+TEST_F(MessageProcessorReportTest, reports_error_during_call)
+{
+    const char* testError = "***Test error***";
+
+    mir::time::Timestamp a_time;
+    EXPECT_CALL(time_source, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::informational,
+        HasSubstr(testError),
+        "frontend::MessageProcessor")).Times(1);
+
+    report.received_invocation(this, 1, __PRETTY_FUNCTION__);
+    report.exception_handled(this, 1, std::runtime_error(testError));
+    report.completed_invocation(this, 1, false);
+}
+
+TEST_F(MessageProcessorReportTest, reports_unknown_method)
+{
+    EXPECT_CALL(time_source, sample()).Times(0);
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::warning,
+        HasSubstr("UNKNOWN method=\"unknown_function_name\""),
+        "frontend::MessageProcessor")).Times(1);
+
+    report.unknown_method(this, 1, "unknown_function_name");
+}
+
+TEST_F(MessageProcessorReportTest, reports_error_deserializing_call)
+{
+    const char* testError = "***Test error***";
+
+    EXPECT_CALL(logger, log(
+        mir::logging::Logger::informational,
+        HasSubstr(testError),
+        "frontend::MessageProcessor")).Times(1);
+
+    report.exception_handled(this, std::runtime_error(testError));
+}
+

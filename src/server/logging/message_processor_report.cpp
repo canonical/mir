@@ -90,7 +90,7 @@ void ml::MessageProcessorReport::unknown_method(void const* mediator, int id, st
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", id=" << id << ", UNKNOWN method=\"" << method << "\"";
-    log->log<Logger::informational>(out.str(), component);
+    log->log<Logger::warning>(out.str(), component);
 
     std::lock_guard<std::mutex> lock(mutex);
     auto const pm = mediators.find(mediator);
