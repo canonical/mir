@@ -42,19 +42,19 @@ public:
     MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
 };
 
-struct MessageProcessorReportTest : public Test
+struct MessageProcessorReport : public Test
 {
     MockLogger     logger;
     MockTimeSource time_source;
 
     mir::logging::MessageProcessorReport report;
 
-    MessageProcessorReportTest() :
+    MessageProcessorReport() :
         report(mir::test::fake_shared(logger), mir::test::fake_shared(time_source)) {}
 };
 }
 
-TEST_F(MessageProcessorReportTest, everything_fine)
+TEST_F(MessageProcessorReport, everything_fine)
 {
     mir::time::Timestamp a_time;
     EXPECT_CALL(time_source, sample()).Times(2).WillRepeatedly(Return(a_time));
@@ -67,7 +67,7 @@ TEST_F(MessageProcessorReportTest, everything_fine)
     report.completed_invocation(this, 1, true);
 }
 
-TEST_F(MessageProcessorReportTest, slow_call)
+TEST_F(MessageProcessorReport, slow_call)
 {
     mir::time::Timestamp a_time;
     mir::time::Timestamp another_time = a_time + std::chrono::microseconds(1234);
@@ -84,7 +84,7 @@ TEST_F(MessageProcessorReportTest, slow_call)
     report.completed_invocation(this, 1, true);
 }
 
-TEST_F(MessageProcessorReportTest, reports_disconnect)
+TEST_F(MessageProcessorReport, reports_disconnect)
 {
     mir::time::Timestamp a_time;
     EXPECT_CALL(time_source, sample()).Times(2).WillRepeatedly(Return(a_time));
@@ -97,7 +97,7 @@ TEST_F(MessageProcessorReportTest, reports_disconnect)
     report.completed_invocation(this, 1, false);
 }
 
-TEST_F(MessageProcessorReportTest, reports_error_during_call)
+TEST_F(MessageProcessorReport, reports_error_during_call)
 {
     const char* testError = "***Test error***";
 
@@ -113,7 +113,7 @@ TEST_F(MessageProcessorReportTest, reports_error_during_call)
     report.completed_invocation(this, 1, false);
 }
 
-TEST_F(MessageProcessorReportTest, reports_unknown_method)
+TEST_F(MessageProcessorReport, reports_unknown_method)
 {
     EXPECT_CALL(time_source, sample()).Times(0);
     EXPECT_CALL(logger, log(
@@ -124,7 +124,7 @@ TEST_F(MessageProcessorReportTest, reports_unknown_method)
     report.unknown_method(this, 1, "unknown_function_name");
 }
 
-TEST_F(MessageProcessorReportTest, reports_error_deserializing_call)
+TEST_F(MessageProcessorReport, reports_error_deserializing_call)
 {
     const char* testError = "***Test error***";
 
