@@ -35,6 +35,7 @@ msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name) :
     surface_factory(surface_factory),
+    event_queue(std::make_shared<EventQueue>()),
     session_name(session_name),
     next_surface_id(0)
 {
@@ -61,6 +62,7 @@ mf::SurfaceId msh::ApplicationSession::create_surface(const mf::SurfaceCreationP
     auto const id = next_id();
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
+    surf->set_event_queue(event_queue);
     surfaces[id] = surf;
     return id;
 }

@@ -82,6 +82,8 @@ public:
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
+    void set_event_queue(std::shared_ptr<EventQueue> & evq);
+
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
@@ -89,7 +91,7 @@ private:
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
-    std::shared_ptr<EventQueue> const event_queue;
+    std::shared_ptr<EventQueue> event_queue;
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;

@@ -20,6 +20,7 @@
 #define MIR_SHELL_APPLICATION_SESSION_H_
 
 #include "mir/shell/session.h"
+#include "mir/event_queue.h"
 
 #include <map>
 
@@ -58,6 +59,7 @@ protected:
 
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
+    std::shared_ptr<EventQueue> event_queue;
     std::string const session_name;
 
     frontend::SurfaceId next_id();

@@ -51,6 +51,11 @@ msh::Surface::~Surface()
     }
 }
 
+void msh::Surface::set_event_queue(std::shared_ptr<EventQueue> & evq)
+{
+    event_queue = evq;
+}
+
 void msh::Surface::hide()
 {
     if (auto const& s = surface.lock())
