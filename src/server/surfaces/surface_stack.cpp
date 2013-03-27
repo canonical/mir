@@ -70,21 +70,14 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::Surf
         new ms::Surface(
             params.name,
             buffer_bundle_factory->create_buffer_bundle(buffer_properties),
-            [this]()
-            {
-                std::lock_guard<std::mutex> lock{notify_change_mutex};
-                notify_change();
-            }));
+            [this]() { emit_change_notification(); }));
 
     {
         std::lock_guard<std::mutex> lg(guard);
         surfaces.push_back(surface);
     }
 
-    {
-        std::lock_guard<std::mutex> lock{notify_change_mutex};
-        notify_change();
-    }
+    emit_change_notification();
 
     return surface;
 }
@@ -100,10 +93,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         // else; TODO error logging
     }
 
-    {
-        std::lock_guard<std::mutex> lock{notify_change_mutex};
-        notify_change();
-    }
+    emit_change_notification();
 }
 
 void ms::SurfaceStack::raise_to_top(std::weak_ptr<ms::Surface> surface)
@@ -118,4 +108,10 @@ void ms::SurfaceStack::raise_to_top(std::weak_ptr<ms::Surface> surface)
         surfaces.erase(p);
     }
 
+}
+
+void ms::SurfaceStack::emit_change_notification()
+{
+    std::lock_guard<std::mutex> lock{notify_change_mutex};
+    notify_change();
 }

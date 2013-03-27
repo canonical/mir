@@ -67,6 +67,9 @@ public:
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
+
+    void emit_change_notification();
+
     std::mutex guard;
     std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
     std::vector<std::shared_ptr<Surface>> surfaces;
