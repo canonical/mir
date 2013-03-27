@@ -1,9 +1,7 @@
 include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/include/mir_test_cucumber)
 
 set(
   INTEGRATION_TESTS_SRCS
-  test_renderloop.cpp
   test_surfaceloop.cpp
   test_error_reporting.cpp
   test_display_info.cpp
@@ -12,12 +10,15 @@ set(
 add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
+add_subdirectory(shell/)
 add_subdirectory(process/)
 if (NOT MIR_DISABLE_INPUT)
 add_subdirectory(input/)
 endif()
 
 if (MIR_PLATFORM STREQUAL "android")
+  include_directories(${PROJECT_SOURCE_DIR}/include/accessory)
+
   add_subdirectory(graphics/android)
 endif()
 
@@ -38,6 +39,7 @@ add_subdirectory(cucumber)
 add_executable(
   integration-tests
   ${INTEGRATION_TESTS_SRCS})
+uses_android_input(integration-tests)
 
 target_link_libraries(
   integration-tests

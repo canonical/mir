@@ -9,6 +9,7 @@ set(
   test_surfaceloop.cpp
   test_test_framework.cpp
   test_focus_management_api.cpp
+  test_focus_selection.cpp
 )
 
 # TODO Disabled in binder version as this test uses detect_server() and that

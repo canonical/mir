@@ -56,7 +56,7 @@ public:
     * Constructors and destructors
     */
     Vector() = default;
-    Vector(const Vector<ValueType>& rhs) = default;
+    Vector(const Vector<ValueType>& /* rhs */) = default;
 //  explicit Vector(const SortedVector<ValueType>& rhs);
     virtual ~Vector() {}
 

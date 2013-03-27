@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/graphics/android/android_platform.h"
-#include "src/graphics/android/android_buffer_allocator.h"
-#include "src/graphics/android/android_display.h"
+#include "src/server/graphics/android/android_platform.h"
+#include "src/server/graphics/android/android_buffer_allocator.h"
+#include "src/server/graphics/android/android_display.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/compositor/swapper_factory.h"
@@ -61,8 +61,8 @@ protected:
         ASSERT_TRUE(platform != NULL);
         ASSERT_TRUE(display != NULL);
 
-        auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-        allocator = platform->create_buffer_allocator(buffer_initializer);
+        null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+        allocator = platform->create_buffer_allocator(null_buffer_initializer);
         strategy = std::make_shared<mc::SwapperFactory>(allocator);
         size = geom::Size{geom::Width{gl_animation.texture_width()},
                           geom::Height{gl_animation.texture_height()}};
@@ -71,6 +71,7 @@ protected:
     }
 
     md::glAnimationBasic gl_animation;
+    std::shared_ptr<mg::BufferInitializer> null_buffer_initializer;
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
     std::shared_ptr<mc::SwapperFactory> strategy;
     geom::Size size;
@@ -107,8 +108,9 @@ TEST(AndroidBufferIntegrationBasic, alloc_does_not_throw)
 {
     using namespace testing;
 
+    auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     EXPECT_NO_THROW({
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     });
 
@@ -143,7 +145,7 @@ TEST_F(AndroidBufferIntegration, buffer_ok_with_egl_context)
     using namespace testing;
 
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::abgr_8888);
@@ -176,7 +178,7 @@ TEST_F(AndroidBufferIntegration, DISABLED_buffer_ok_with_egl_context_repeat)
     mtd::DrawPatternSolid red_pattern(0xFF0000FF);
     mtd::DrawPatternSolid green_pattern(0xFF00FF00);
 
-    auto allocator = std::make_shared<mga::AndroidBufferAllocator>();
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
 
     geom::PixelFormat pf(geom::PixelFormat::abgr_8888);

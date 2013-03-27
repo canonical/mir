@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "session_management_context.h"
+#include "mir_test_cucumber/session_management_context.h"
 
 #include <gtest/gtest.h>
 #include <cucumber-cpp/defs.hpp>

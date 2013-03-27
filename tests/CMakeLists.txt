@@ -16,12 +16,22 @@ option(
   ON
 )
 
+if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+  # Avoid clang complaints about poor quality gmock/gtest/cucumber headers
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
+endif ()
+
 if(MIR_ENABLE_DEATH_TESTS)
   add_definitions(-DMIR_DEATH_TESTS_ENABLED)
 endif(MIR_ENABLE_DEATH_TESTS)
 
+include_directories(${PROJECT_SOURCE_DIR}/include/server)
+include_directories(${PROJECT_SOURCE_DIR}/include/client)
+include_directories(${PROJECT_SOURCE_DIR}/include/test)
+
 if (MIR_PLATFORM STREQUAL "android")
-  include_directories( ${LIBHARDWARE_INCLUDE_DIRS} ${ANDROID_UI_INCLUDE_DIRS})
+  include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
 endif()
 
 add_subdirectory(acceptance-tests/)
@@ -38,3 +48,5 @@ if(MIR_ENABLE_DEATH_TESTS)
 else()
   message(STATUS "Death tests are disabled and are not run.")
 endif(MIR_ENABLE_DEATH_TESTS)
+
+mir_add_memcheck_test()

@@ -7,8 +7,10 @@
 #include <istream>
 #include <ostream>
 #include <fstream>
+#include <sstream>
 #include <iterator>
 #include <iostream>
+#include <vector>
 #include <libgen.h>
 
 #include <getopt.h>
@@ -50,38 +52,36 @@ int get_output_width()
     return width;
 }
 
-std::string& ltrim(std::string &s) {
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-        return s;
-}
-
-const char* ordinary_cmd_line_pattern()
+string ordinary_cmd_line_pattern()
 {
     static const char* pattern = "ADD_TEST(\"%s.%s\" \"%s\" \"--gtest_filter=%s\")\n";
     return pattern;
 }
 
-const char* memcheck_cmd_line_pattern()
+vector<string> valgrind_cmd_patterns()
 {
-    static const char* pattern = "ADD_TEST(\"memcheck(%s.%s)\" \"valgrind\" \"--trace-children=yes\" \"%s\" \"--gtest_death_test_use_fork\" \"--gtest_filter=%s\")\n";
+    vector<string> patterns{
+        "valgrind",
+        "--error-exitcode=1",
+        "--trace-children=yes",
+        "%s",
+        "--gtest_death_test_use_fork",
+        "--gtest_filter=%s"
+    };
 
-    return pattern;
+    return patterns;
 }
 
-std::string elide_string_right(const std::string& in, std::size_t max_size)
+string memcheck_cmd_line_pattern()
 {
-    assert(max_size >= 3);
+    stringstream ss;
 
-    std::string result(in.begin(), in.begin() + max_size);
+    ss << "ADD_TEST(\"memcheck(%s.%s)\"";
+    for (auto& s : valgrind_cmd_patterns())
+        ss << " \"" << s << "\"";
+    ss << ")" << endl;
 
-    if (in.size() >= max_size)
-    {
-        *(result.end()-1) = '.';
-        *(result.end()-2) = '.';
-        *(result.end()-3) = '.';
-    }
-
-    return result;
+    return ss.str();
 }
 
 std::string elide_string_left(const std::string& in, std::size_t max_size)
@@ -103,12 +103,14 @@ std::string elide_string_left(const std::string& in, std::size_t max_size)
 struct Configuration
 {
     Configuration() : executable(NULL),
-                      enable_memcheck(false)
+                      enable_memcheck(false),
+                      memcheck_test(false)
     {
     }
 
     const char* executable;
     bool enable_memcheck;
+    bool memcheck_test;
 };
 
 bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
@@ -116,6 +118,7 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
     static struct option long_options[] = {
         {"executable", required_argument, 0, 0},
         {"enable-memcheck", no_argument, 0, 0},
+        {"memcheck-test", no_argument, 0, 0},
         {0, 0, 0, 0}
     };
 
@@ -147,9 +150,64 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
             config.executable = optarg;
         else if (c == 'm' || !strcmp(optname, "enable-memcheck"))
             config.enable_memcheck = true;
+        else if (!strcmp(optname, "memcheck-test"))
+            config.memcheck_test = true;
     }
 
     return true;
+}
+
+string prepareMemcheckTestLine(string const& exe)
+{
+    stringstream ss;
+
+    ss << "ADD_TEST(\"memcheck-test\" \"sh\" \"-c\" \"";
+    for (auto& s : valgrind_cmd_patterns())
+        ss << s << " ";
+    ss << "; if [ $? != 0 ]; then exit 0; else exit 1; fi\")";
+
+    char cmd_line[1024] = "";
+    snprintf(cmd_line,
+             sizeof(cmd_line),
+             ss.str().c_str(),
+             exe.c_str(),
+             "*"
+             );
+
+    return cmd_line;
+}
+
+void emitMemcheckTest(string const& exe)
+{
+    ifstream CTestTestfile("CTestTestfile.cmake", ifstream::in);
+    bool need_memcheck_test = true;
+    string line;
+
+    string memcheckTestLine = prepareMemcheckTestLine(exe);
+
+    if (CTestTestfile.is_open())
+    {
+        while (CTestTestfile.good())
+        {
+            getline(CTestTestfile, line);
+
+            if (line == memcheckTestLine)
+                need_memcheck_test = false;
+        }
+
+        CTestTestfile.close();
+    }
+
+    if (need_memcheck_test)
+    {
+        ofstream CTestTestfileW ("CTestTestfile.cmake", ofstream::app | ofstream::out);
+
+        if (CTestTestfileW.is_open())
+        {
+            CTestTestfileW << memcheckTestLine << endl;
+            CTestTestfileW.close();
+        }
+    }
 }
 }
 
@@ -163,8 +221,16 @@ int main (int argc, char **argv)
     if (!parse_configuration_from_cmd_line(argc, argv, config) || config.executable == NULL)
     {
         cout << "Usage: PATH_TO_TEST_BINARY --gtest_list_tests | " << basename(argv[0])
-             << " --executable PATH_TO_TEST_BINARY [--enable-memcheck]" << endl;
+             << " --executable PATH_TO_TEST_BINARY [--enable-memcheck]" << std::endl
+             << " or " << std::endl << basename(argv[0])
+             << " --executable PATH_TO_MEMCHECK_BINARY --memcheck-test" << std::endl;
         return 1;
+    }
+
+    if (config.memcheck_test)
+    {
+        emitMemcheckTest(config.executable);
+        return 0;
     }
 
     set<string> tests;
@@ -198,7 +264,8 @@ int main (int argc, char **argv)
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),
-                config.enable_memcheck ? memcheck_cmd_line_pattern() : ordinary_cmd_line_pattern(),
+                config.enable_memcheck ? memcheck_cmd_line_pattern().c_str() :
+                                         ordinary_cmd_line_pattern().c_str(),
                 test_suite.c_str(),
                 elide_string_left(*test, output_width/2).c_str(),
                 config.executable,

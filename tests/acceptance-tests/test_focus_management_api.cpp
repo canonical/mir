@@ -18,7 +18,9 @@
 
 #include "mir_toolkit/mir_client_library_lightdm.h"
 
-#include "mir/shell/session_store.h"
+#include "mir/frontend/surface_id.h"
+#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/frontend/shell.h"
 
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -30,6 +32,7 @@
 #include <thread>
 #include <fcntl.h>
 
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -38,10 +41,6 @@ namespace mtf = mir_test_framework;
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
-
-    geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
-                                                              geom::Size{geom::Width(1600),
-                                                                         geom::Height(1600)}};
 }
 
 namespace mir
@@ -119,33 +118,36 @@ struct ClientConfigCommon : TestingClientConfiguration
     }
 };
 
-class MockSessionStore : public shell::SessionStore
+class MockShell : public frontend::Shell
 {
 public:
-    MockSessionStore(std::shared_ptr<SessionStore> const& impl) :
+    MockShell(std::shared_ptr<Shell> const& impl) :
         impl(impl)
     {
-        using namespace testing;
-        using shell::SessionStore;
-        ON_CALL(*this, open_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::open_session));
-        ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &SessionStore::close_session));
+        using namespace ::testing;
+        using frontend::Shell;
+        ON_CALL(*this, open_session(_)).WillByDefault(Invoke(impl.get(), &Shell::open_session));
+        ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &Shell::close_session));
 
-        ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &SessionStore::tag_session_with_lightdm_id));
-        ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &SessionStore::focus_session_with_lightdm_id));
+        ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &Shell::tag_session_with_lightdm_id));
+        ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &Shell::focus_session_with_lightdm_id));
 
-        ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &SessionStore::shutdown));
+        ON_CALL(*this, create_surface_for(_, _)).WillByDefault(Invoke(impl.get(), &Shell::create_surface_for));
+
+        ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &Shell::shutdown));
     }
 
-    MOCK_METHOD1(open_session, std::shared_ptr<shell::Session> (std::string const& name));
-    MOCK_METHOD1(close_session, void (std::shared_ptr<shell::Session> const& session));
+    MOCK_METHOD1(open_session, std::shared_ptr<mf::Session> (std::string const& name));
+    MOCK_METHOD1(close_session, void (std::shared_ptr<mf::Session> const& session));
 
-    MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<shell::Session> const& session, int id));
+    MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<mf::Session> const& session, int id));
     MOCK_METHOD1(focus_session_with_lightdm_id, void (int id));
 
+    MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<mf::Session> const&, mf::SurfaceCreationParameters const&));
     MOCK_METHOD0(shutdown, void ());
 
 private:
-    std::shared_ptr<shell::SessionStore> const impl;
+    std::shared_ptr<frontend::Shell> const impl;
 };
 }
 
@@ -153,33 +155,44 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<shell::SessionStore>
-        the_session_store()
+        std::shared_ptr<frontend::Shell>
+        the_frontend_shell() override
         {
-            return session_store(
-                [this]() -> std::shared_ptr<shell::SessionStore>
+            return session_manager(
+                [this]() -> std::shared_ptr<frontend::Shell>
                 {
                     using namespace ::testing;
 
-                    auto const& mock_session_store = std::make_shared<MockSessionStore>(
-                        DefaultServerConfiguration::the_session_store());
+                    auto const& mock_shell = std::make_shared<MockShell>(
+                        DefaultServerConfiguration::the_frontend_shell());
 
-                    {
-                        using namespace testing;
-                        InSequence setup;
-                        EXPECT_CALL(*mock_session_store, open_session(_)).Times(2);
-                        EXPECT_CALL(*mock_session_store, close_session(_)).Times(2);
-                        EXPECT_CALL(*mock_session_store, shutdown());
-                    }
+                    Sequence s1, s2;
+
+                    EXPECT_CALL(*mock_shell, open_session(_))
+                        .InSequence(s1, s2);
+
+                    EXPECT_CALL(*mock_shell, create_surface_for(_,_))
+                        .InSequence(s1);
+
+                    EXPECT_CALL(*mock_shell, open_session(_))
+                        .InSequence(s2);
+
+                    EXPECT_CALL(*mock_shell, close_session(_))
+                        .Times(2)
+                        .InSequence(s1, s2);
+
+                    EXPECT_CALL(*mock_shell, shutdown())
+                        .InSequence(s1, s2);
+
                     {
                         using namespace testing;
                         InSequence test;
 
-                        EXPECT_CALL(*mock_session_store, tag_session_with_lightdm_id(_, _));
-                        EXPECT_CALL(*mock_session_store, focus_session_with_lightdm_id(_));
+                        EXPECT_CALL(*mock_shell, tag_session_with_lightdm_id(_, _));
+                        EXPECT_CALL(*mock_shell, focus_session_with_lightdm_id(_));
                     }
 
-                    return mock_session_store;
+                    return mock_shell;
                 });
         }
     } server_config;

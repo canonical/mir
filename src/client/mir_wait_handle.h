@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
+ *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #ifndef MIR_CLIENT_MIR_WAIT_HANDLE_H_
@@ -24,12 +25,13 @@
 
 namespace mir_toolkit
 {
-class MirWaitHandle
+struct MirWaitHandle
 {
 public:
     MirWaitHandle();
     ~MirWaitHandle();
 
+    void expect_result();
     void result_received();
     void wait_for_result();
 
@@ -37,7 +39,8 @@ private:
     std::mutex guard;
     std::condition_variable wait_condition;
 
-    bool result_has_occurred;
+    int expecting;
+    int received;
 };
 }
 
