@@ -18,28 +18,21 @@
 
 #include "mir_test_framework/process.h"
 
-#include "mir_toolkit/mir_client_library.h"
-
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
-#include "src/server/frontend/protobuf_socket_communicator.h"
-#include "mir/frontend/resource_cache.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/android_buffer.h"
 #include "src/server/graphics/android/android_buffer_allocator.h"
-#include "src/server/graphics/android/android_alloc_adaptor.h"
 
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
-#include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
-
 #include <thread>
-#include <GLES2/gl2.h>
 #include <hardware/gralloc.h>
+#include <GLES2/gl2.h>
 
 namespace mtf = mir_test_framework;
 namespace mt=mir::test;
