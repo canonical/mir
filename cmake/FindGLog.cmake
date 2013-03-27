@@ -5,7 +5,8 @@ endif ()
 
 find_path(GLog_INCLUDE_DIR glog/logging.h)
 
-find_library(GLog_LIBRARY glog)
+find_library(GLog_LIBRARY libglog.so
+             HINTS /usr/lib/arm-linux-gnueabihf/)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(GLog DEFAULT_MSG GLog_LIBRARY GLog_INCLUDE_DIR)
