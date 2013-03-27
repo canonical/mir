@@ -299,3 +299,58 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 
     stack.destroy_surface(surface);
 }
+
+namespace
+{
+
+struct StubBufferBundleFactory : public ms::BufferBundleFactory
+{
+    std::shared_ptr<ms::BufferBundle> create_buffer_bundle(mc::BufferProperties const&)
+    {
+        return std::make_shared<mc::BufferBundleSurfaces>(
+            std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper()));
+    }
+};
+
+class MockCallback
+{
+public:
+    MOCK_METHOD0(call, void());
+};
+
+}
+
+TEST(SurfaceStack, create_surface_notifies_changes)
+{
+    using namespace ::testing;
+
+    MockCallback mock_cb;
+
+    EXPECT_CALL(mock_cb, call()).Times(1);
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    stack.notify_changes(std::bind(&MockCallback::call, &mock_cb));
+
+    std::weak_ptr<ms::Surface> surface = stack.create_surface(
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+}
+
+TEST(SurfaceStack, destroy_surface_notifies_changes)
+{
+    using namespace ::testing;
+
+    MockCallback mock_cb;
+
+    EXPECT_CALL(mock_cb, call()).Times(1);
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    stack.notify_changes(std::bind(&MockCallback::call, &mock_cb));
+
+    std::weak_ptr<ms::Surface> surface = stack.create_surface(
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+
+    Mock::VerifyAndClearExpectations(&mock_cb);
+    EXPECT_CALL(mock_cb, call()).Times(1);
+
+    stack.destroy_surface(surface);
+}

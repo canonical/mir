@@ -16,12 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_RENDERABLE_COLLECTION_H
-#define MIR_GRAPHICS_RENDERABLE_COLLECTION_H
+#ifndef MIR_GRAPHICS_RENDER_VIEW_H
+#define MIR_GRAPHICS_RENDER_VIEW_H
 
 #include "mir/geometry/forward.h"
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -66,6 +67,16 @@ public:
 
     virtual void for_each_if(FilterForRenderables& filter, OperatorForRenderables& renderable_operator) = 0;
 
+    /**
+     * Registers a callback to be called whenever the state of the
+     * RenderView changes.
+     *
+     * The supplied callback should not directly or indirectly (e.g.,
+     * by changing a property of a Renderable) change the state of
+     * the RenderView, otherwise a deadlock may occur.
+     */
+    virtual void notify_changes(std::function<void()> const& f) = 0;
+
 protected:
     RenderView() = default;
 
@@ -78,4 +89,4 @@ private:
 }
 
 
-#endif /* MIR_GRAPHICS_RENDERABLE_COLLECTION_H */
+#endif /* MIR_GRAPHICS_RENDER_VIEW_H */

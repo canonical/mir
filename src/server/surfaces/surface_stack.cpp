@@ -35,7 +35,9 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory) : buffer_bundle_factory(bb_factory)
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory)
+    : buffer_bundle_factory{bb_factory},
+      change_callback{[]{}}
 {
     assert(buffer_bundle_factory);
 }
@@ -50,10 +52,15 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
     }
 }
 
+void ms::SurfaceStack::notify_changes(std::function<void()> const& f)
+{
+    std::lock_guard<std::mutex> lock{callback_mutex};
+    assert(f);
+    change_callback = f;
+}
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params)
 {
-    std::lock_guard<std::mutex> lg(guard);
 
     mc::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
@@ -62,20 +69,41 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::Surf
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
             params.name,
-            buffer_bundle_factory->create_buffer_bundle(buffer_properties)));
+            buffer_bundle_factory->create_buffer_bundle(buffer_properties),
+            [this]()
+            {
+                std::lock_guard<std::mutex> lock{callback_mutex};
+                change_callback();
+            }));
 
-    surfaces.push_back(surface);
+    {
+        std::lock_guard<std::mutex> lg(guard);
+        surfaces.push_back(surface);
+    }
+
+    {
+        std::lock_guard<std::mutex> lock{callback_mutex};
+        change_callback();
+    }
+
     return surface;
 }
 
 void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    {
+        std::lock_guard<std::mutex> lg(guard);
 
-    auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
+        auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
 
-    if (p != surfaces.end()) surfaces.erase(p);
-    // else; TODO error logging
+        if (p != surfaces.end()) surfaces.erase(p);
+        // else; TODO error logging
+    }
+
+    {
+        std::lock_guard<std::mutex> lock{callback_mutex};
+        change_callback();
+    }
 }
 
 void ms::SurfaceStack::raise_to_top(std::weak_ptr<ms::Surface> surface)

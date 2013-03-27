@@ -395,6 +395,7 @@ mir::DefaultServerConfiguration::the_compositor()
         [this]()
         {
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
+                                                                 the_render_view(),
                                                                  the_compositing_strategy());
         });
 }
