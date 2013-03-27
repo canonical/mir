@@ -50,7 +50,7 @@ public:
     Platform& operator=(const Platform& p) = delete;
 
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<BufferInitializer>& buffer_initializer) = 0;
+        std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
     virtual std::shared_ptr<Display> create_display() = 0;
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 };
