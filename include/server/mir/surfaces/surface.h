@@ -45,7 +45,8 @@ class BufferBundle;
 class Surface : public graphics::Renderable
 {
 public:
-    Surface(const std::string& name, std::shared_ptr<BufferBundle> buffer_bundle);
+    Surface(const std::string& name, std::shared_ptr<BufferBundle> buffer_bundle,
+            std::function<void()> const& change_callback);
 
     ~Surface();
 
@@ -81,6 +82,7 @@ private:
     float alpha_value;
 
     bool is_hidden;
+    std::function<void()> notify_change;
 };
 
 }
