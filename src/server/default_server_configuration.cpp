@@ -99,15 +99,18 @@ private:
     std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
+        std::shared_ptr<mir::EventSink> const& sink)
     {
-        return std::make_shared<mf::SessionMediator>(
+        auto sm = std::make_shared<mf::SessionMediator>(
             shell,
             graphics_platform,
             graphics_display,
             buffer_allocator,
             sm_report,
             resource_cache());
+        sm->set_event_sink(sink);
+        return sm;
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()
