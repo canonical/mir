@@ -42,11 +42,10 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
     auto const sdp = SignalDispatcher::instance();
     sdp->enable_for(SIGINT);
     sdp->enable_for(SIGTERM);
+    sdp->signal_channel().connect(&signal_terminate);
 
     DisplayServer server(config);
     signal_display_server.store(&server);
-
-    sdp->signal_channel().connect(&signal_terminate);
 
     init(server);
     server.run();

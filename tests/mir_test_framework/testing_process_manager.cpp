@@ -121,14 +121,6 @@ void mtf::TestingProcessManager::tear_down_clients()
 {
     if (is_test_process)
     {
-        using namespace testing;
-
-        if (clients.empty())
-        {
-            // Allow some time for server-side to register signal handler
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        }
-
         for(auto client = clients.begin(); client != clients.end(); ++client)
         {
             auto result((*client)->wait_for_termination());
