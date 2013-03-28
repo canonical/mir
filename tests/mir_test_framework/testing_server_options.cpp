@@ -186,11 +186,11 @@ std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
             });
 }
 
-void mtf::TestingServerConfiguration::exec(ServerInstance* )
+void mtf::TestingServerConfiguration::exec()
 {
 }
 
-void mtf::TestingServerConfiguration::on_exit(ServerInstance* )
+void mtf::TestingServerConfiguration::on_exit()
 {
 }
 

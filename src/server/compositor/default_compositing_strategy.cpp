@@ -32,12 +32,12 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
-    std::shared_ptr<RenderView> const& view,
+    std::shared_ptr<Renderables> const& renderables,
     std::shared_ptr<mg::Renderer> const& renderer)
-    : render_view(view),
+    : renderables(renderables),
       renderer(renderer)
 {
-    assert(render_view);
+    assert(renderables);
     assert(renderer);
 }
 
@@ -69,7 +69,7 @@ void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buf
     display_buffer.make_current();
     display_buffer.clear();
 
-    render_view->for_each_if(selector, applicator);
+    renderables->for_each_if(selector, applicator);
 
     display_buffer.post_update();
 }

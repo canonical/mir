@@ -32,7 +32,7 @@ namespace compositor
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 class BufferBundleManager;
-class RenderView;
+class Renderables;
 class Drawer;
 class CompositingStrategy;
 class Compositor;
@@ -102,7 +102,7 @@ public:
     virtual std::shared_ptr<compositor::CompositingStrategy> the_compositing_strategy();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<compositor::RenderView> the_render_view();
+    virtual std::shared_ptr<compositor::Renderables> the_renderables();
 
     virtual std::shared_ptr<frontend::Communicator> the_communicator();
     virtual std::shared_ptr<frontend::SessionMediatorReport> the_session_mediator_report();

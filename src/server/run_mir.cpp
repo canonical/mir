@@ -17,18 +17,19 @@
  */
 
 #include "mir/run_mir.h"
-#include "mir/server_instance.h"
 
-#include <thread>
+#include "mir/server_instance.h"
+#include "mir/signal_dispatcher.h"
+
 #include <atomic>
+#include <thread>
 #include <csignal>
-#include <iostream>
 
 namespace
 {
 std::atomic<mir::ServerInstance*> signal_display_server;
 
-extern "C" void signal_terminate(int)
+void signal_terminate(int)
 {
     while (!signal_display_server.load())
         std::this_thread::yield();
@@ -37,15 +38,16 @@ extern "C" void signal_terminate(int)
 }
 }
 
-void mir::run_mir(ServerConfiguration& config)
+void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
-    signal(SIGINT, signal_terminate);
-    signal(SIGTERM, signal_terminate);
-    signal(SIGPIPE, SIG_IGN);
+    auto const sdp = SignalDispatcher::instance();
+    sdp->enable_for(SIGINT);
+    sdp->enable_for(SIGTERM);
+    sdp->signal_channel().connect(&signal_terminate);
 
-    mir::ServerInstance server(config);
-
+    ServerInstance server(config);
     signal_display_server.store(&server);
 
+    init(server);
     server.run();
 }

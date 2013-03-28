@@ -111,12 +111,6 @@ target_link_libraries(
     ${Boost_LIBRARIES}
 )
 
-if (MIR_TRANSPORT STREQUAL "binder")
-target_link_libraries(mir_demo_client binder)
-target_link_libraries(mir_demo_client_accelerated binder)
-target_link_libraries(mir_demo_client_unaccelerated binder)
-endif()
-
 set (DEMO_CLIENTS
   mir_demo_client
   mir_demo_client_unaccelerated

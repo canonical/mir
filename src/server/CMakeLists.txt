@@ -23,8 +23,9 @@ configure_file(
 set(
   SRCS
   server_instance.cpp
-  default_server_configuration.cpp
   run_mir.cpp
+  default_server_configuration.cpp
+  signal_dispatcher.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
