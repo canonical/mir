@@ -27,13 +27,20 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
-std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc1_1_gpu_display(
-                                            std::shared_ptr<hwc_composer_device_1> const& hwc_device) const
+bool mga::AndroidFBFactory::can_create_hwc_display() const
 {
+    return true;
+}
+
+std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc_display() const
+{
+    return create_gpu_display();
+#if 0
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device);
     return std::make_shared<mga::HWCDisplay>(window, hwc);
+#endif
 }
 
 /* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */

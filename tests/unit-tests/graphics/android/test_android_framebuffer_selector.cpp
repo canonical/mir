@@ -37,9 +37,9 @@ struct MockFbFactory : public mga::FBFactory
     MockFbFactory()
     {
         using namespace testing;
-        ON_CALL(*this, can_create_hwc_display(_))
+        ON_CALL(*this, can_create_hwc_display())
             .WillByDefault(Return(true));
-        ON_CALL(*this, create_hwc_display(_))
+        ON_CALL(*this, create_hwc_display())
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
         ON_CALL(*this, create_gpu_display())
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
@@ -75,7 +75,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_selection_gets_hwc_device)
 }
 
 /* this case occurs when the libhardware library cannot find the right .so files */
-TEST_F(AndroidFramebufferSelectorTest, hwc_device_unavailble_always_creates_gpu_display)
+TEST_F(AndroidFramebufferSelectorTest, hwc_module_unavailble_always_creates_gpu_display)
 {
     using namespace testing;
 
@@ -84,27 +84,12 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_device_unavailble_always_creates_gpu_
         .WillOnce(Return(-1));
     EXPECT_CALL(*mock_fb_factory, can_create_hwc_display())
         .Times(0);
-    EXPECT_CALL(*mock_fb_factory, create_gpu_display(_))
-        .Times(1); 
-
-    mga::AndroidDisplaySelector selector(mock_fb_factory);
-    selector.primary_display();
-}
-/*
-TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_module_not_found)
-{
-    using namespace testing;
-
-    EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
-        .Times(1)
-        .WillOnce(Return(-1));
     EXPECT_CALL(*mock_fb_factory, create_gpu_display())
         .Times(1); 
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
-*/
 
 /* this is normal operation on hwc capable device */
 TEST_F(AndroidFramebufferSelectorTest, creates_hwc_device_when_hwc_possible)
@@ -114,7 +99,7 @@ TEST_F(AndroidFramebufferSelectorTest, creates_hwc_device_when_hwc_possible)
     EXPECT_CALL(*mock_fb_factory, can_create_hwc_display())
         .Times(1)
         .WillOnce(Return(true));
-    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display(_))
+    EXPECT_CALL(*mock_fb_factory, create_hwc_display())
         .Times(1); 
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
@@ -129,13 +114,14 @@ TEST_F(AndroidFramebufferSelectorTest, creates_gpu_device_when_hwc_not_possible)
     EXPECT_CALL(*mock_fb_factory, can_create_hwc_display())
         .Times(1)
         .WillOnce(Return(false));
-    EXPECT_CALL(*mock_fb_factory, create_gpu_display(_))
+    EXPECT_CALL(*mock_fb_factory, create_gpu_display())
         .Times(1); 
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
 
+#if 0
 class HWCFactoryTest : public ::testing::Test
 {
 public:
@@ -224,3 +210,4 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_v
         fb_factory.create_hwc_device();
     });
 }
+#endif
