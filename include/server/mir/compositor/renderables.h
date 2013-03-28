@@ -16,12 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_RENDERABLE_COLLECTION_H
-#define MIR_GRAPHICS_RENDERABLE_COLLECTION_H
+#ifndef MIR_COMPOSITOR_RENDERABLES_H_
+#define MIR_COMPOSITOR_RENDERABLES_H_
 
 #include "mir/geometry/forward.h"
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -59,23 +60,32 @@ protected:
 
 };
 
-class RenderView
+class Renderables
 {
 public:
-    virtual ~RenderView() {}
+    virtual ~Renderables() {}
 
     virtual void for_each_if(FilterForRenderables& filter, OperatorForRenderables& renderable_operator) = 0;
 
+    /**
+     * Sets a callback to be called whenever the state of the
+     * Renderables changes.
+     *
+     * The supplied callback should not directly or indirectly (e.g.,
+     * by changing a property of a Renderable) change the state of
+     * the Renderables, otherwise a deadlock may occur.
+     */
+    virtual void set_change_callback(std::function<void()> const& f) = 0;
+
 protected:
-    RenderView() = default;
+    Renderables() = default;
 
 private:
-    RenderView(RenderView const&) = delete;
-    RenderView& operator=(RenderView const&) = delete;
+    Renderables(Renderables const&) = delete;
+    Renderables& operator=(Renderables const&) = delete;
 };
 
 }
 }
 
-
-#endif /* MIR_GRAPHICS_RENDERABLE_COLLECTION_H */
+#endif /* MIR_COMPOSITOR_RENDERABLES_H_ */

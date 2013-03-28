@@ -40,7 +40,7 @@ public:
     virtual void exec(DisplayServer* display_server);
 
     // Code to run in server process after server exits
-    virtual void on_exit(DisplayServer* display_server);
+    virtual void on_exit();
 
     // TODO can we remove this function and default to real graphics in tests?
     std::shared_ptr<graphics::Platform> the_graphics_platform();

@@ -37,12 +37,16 @@ struct MockFbFactory : public mga::FBFactory
     MockFbFactory()
     {
         using namespace testing;
-        ON_CALL(*this, create_hwc1_1_gpu_display(_))
+        ON_CALL(*this, can_create_hwc_display(_))
+            .WillByDefault(Return(true));
+        ON_CALL(*this, create_hwc_display(_))
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
         ON_CALL(*this, create_gpu_display())
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
     }
-    MOCK_CONST_METHOD1(create_hwc1_1_gpu_display, std::shared_ptr<mg::Display>(std::shared_ptr<hwc_composer_device_1> const& hwc_device));
+
+    MOCK_CONST_METHOD0(can_create_hwc_display, bool());
+    MOCK_CONST_METHOD0(create_hwc_display, std::shared_ptr<mg::Display>());
     MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mg::Display>());
  
 };
@@ -70,32 +74,23 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_selection_gets_hwc_device)
     selector.primary_display();
 }
 
-TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_success)
+/* this case occurs when the libhardware library cannot find the right .so files */
+TEST_F(AndroidFramebufferSelectorTest, hwc_device_unavailble_always_creates_gpu_display)
 {
     using namespace testing;
 
-    EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display(_))
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+        .Times(1)
+        .WillOnce(Return(-1));
+    EXPECT_CALL(*mock_fb_factory, can_create_hwc_display())
+        .Times(0);
+    EXPECT_CALL(*mock_fb_factory, create_gpu_display(_))
         .Times(1); 
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
-
-TEST_F(AndroidFramebufferSelectorTest, hwc_creates_with_hwc_device_used_to_deteremine_version)
-{
-    using namespace testing;
-
-    EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display(hw_access_mock.mock_hwc_device))
-        .Times(1); 
-
-    mga::AndroidDisplaySelector selector(mock_fb_factory);
-    selector.primary_display();
-}
-
+/*
 TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_module_not_found)
 {
     using namespace testing;
@@ -109,32 +104,123 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_modul
     mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
+*/
 
-TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_does_not_open)
+/* this is normal operation on hwc capable device */
+TEST_F(AndroidFramebufferSelectorTest, creates_hwc_device_when_hwc_possible)
 {
     using namespace testing;
 
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+    EXPECT_CALL(*mock_fb_factory, can_create_hwc_display())
         .Times(1)
-        .WillOnce(DoAll(SetArgPointee<1>(nullptr), Return(-1)));
-;
-    EXPECT_CALL(*mock_fb_factory, create_gpu_display())
-        .Times(1);
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display(_))
+        .Times(1); 
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
 }
 
-TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_version_not_supported)
+/* this happens when we don't support the hwc version, or there's a problem creating the HWCDevice */
+TEST_F(AndroidFramebufferSelectorTest, creates_gpu_device_when_hwc_not_possible)
 {
     using namespace testing;
 
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
-    EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_factory, create_gpu_display())
-        .Times(1);
+    EXPECT_CALL(*mock_fb_factory, can_create_hwc_display())
+        .Times(1)
+        .WillOnce(Return(false));
+    EXPECT_CALL(*mock_fb_factory, create_gpu_display(_))
+        .Times(1); 
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
     selector.primary_display();
+}
+
+class HWCFactoryTest : public ::testing::Test
+{
+public:
+    HWCFactoryTest()
+    {
+    }
+};
+
+TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_version_11_success)
+{
+    using namespace testing;
+
+    std::shared_ptr<hw_module_t> mock_hwc_module;
+
+    mock_hwc_module.version = HWC_DEVICE_API_VERSION_1_0;
+    EXPECT_CALL(mock_hwc_module, open_interface());
+        .Times(1);
+    EXPECT_CALL(mock_hwc_module, close_interface());
+        .Times(1);
+
+    mga::AndroidFBFactory fb_factory(mock_hwc_module); 
+
+    EXPECT_TRUE(fb_factory.can_create_hwc_device());
+    EXPECT_NE(nullptr, fb_factory.create_hwc_device());
+}
+
+TEST_F(AndroidFramebufferSelectorTest, hwc_device_failure_because_hwc_does_not_open)
+{
+    using namespace testing;
+
+    std::shared_ptr<hw_module_t> mock_hwc_module;
+    EXPECT_CALL(mock_hwc_module, open_interface())
+        .Times(1)
+        .WillOnce(Return(-1));;
+    EXPECT_CALL(mock_hwc_module, close_interface())
+        .Times(0);
+
+    mga::AndroidFBFactory fb_factory(mock_hwc_module); 
+
+    EXPECT_FALSE(fb_factory.can_create_hwc_device());
+    EXPECT_THROW({
+        fb_factory.create_hwc_device();
+    });
+}
+
+// TODO: kdub support v 1.0 and 1.2
+TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_version10_not_supported)
+{
+    using namespace testing;
+
+    std::shared_ptr<hw_module_t> mock_hwc_module;
+
+    mock_hwc_module.version = HWC_DEVICE_API_VERSION_1_0;
+    EXPECT_CALL(mock_hwc_module, open_interface());
+        .Times(1);
+    EXPECT_CALL(mock_hwc_module, close_interface());
+        .Times(1);
+
+    mga::AndroidFBFactory fb_factory(mock_hwc_module); 
+
+    EXPECT_FALSE(fb_factory.can_create_hwc_device());
+    EXPECT_THROW({
+        fb_factory.create_hwc_device();
+    });
+}
+
+TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_version12_not_supported)
+{
+    using namespace testing;
+
+    auto mock_hwc_device = std::make_shared<mtd::MockHWCComposerDevice1>();
+    mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_2;
+
+    std::shared_ptr<hw_module_t> mock_hwc_module;
+
+    mock_hwc_module.version = HWC_DEVICE_API_VERSION_1_0;
+    EXPECT_CALL(mock_hwc_module, open_interface());
+        .Times(1);
+    EXPECT_CALL(mock_hwc_module, close_interface());
+        .Times(1);
+
+    mga::AndroidFBFactory fb_factory(mock_hwc_module); 
+
+    EXPECT_FALSE(fb_factory.can_create_hwc_device());
+    EXPECT_THROW({
+        fb_factory.create_hwc_device();
+    });
 }

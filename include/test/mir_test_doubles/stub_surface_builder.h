@@ -44,7 +44,7 @@ public:
 
     std::weak_ptr<surfaces::Surface> create_surface(frontend::SurfaceCreationParameters const& param)
     {
-        dummy_surface = std::make_shared<surfaces::Surface>(param.name, buffer_bundle);
+        dummy_surface = std::make_shared<surfaces::Surface>(param.name, buffer_bundle, []{});
         return dummy_surface;
     }
 

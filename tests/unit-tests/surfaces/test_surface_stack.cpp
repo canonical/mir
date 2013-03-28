@@ -21,7 +21,7 @@
 #include "mir/surfaces/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/render_view.h"
+#include "mir/compositor/renderables.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
@@ -255,6 +255,61 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         mf::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
+
+    stack.destroy_surface(surface);
+}
+
+namespace
+{
+
+struct StubBufferBundleFactory : public ms::BufferBundleFactory
+{
+    std::shared_ptr<ms::BufferBundle> create_buffer_bundle(mc::BufferProperties const&)
+    {
+        return std::make_shared<mc::BufferBundleSurfaces>(
+            std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper()));
+    }
+};
+
+class MockCallback
+{
+public:
+    MOCK_METHOD0(call, void());
+};
+
+}
+
+TEST(SurfaceStack, create_surface_notifies_changes)
+{
+    using namespace ::testing;
+
+    MockCallback mock_cb;
+
+    EXPECT_CALL(mock_cb, call()).Times(1);
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
+
+    std::weak_ptr<ms::Surface> surface = stack.create_surface(
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+}
+
+TEST(SurfaceStack, destroy_surface_notifies_changes)
+{
+    using namespace ::testing;
+
+    MockCallback mock_cb;
+
+    EXPECT_CALL(mock_cb, call()).Times(1);
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
+
+    std::weak_ptr<ms::Surface> surface = stack.create_surface(
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+
+    Mock::VerifyAndClearExpectations(&mock_cb);
+    EXPECT_CALL(mock_cb, call()).Times(1);
 
     stack.destroy_surface(surface);
 }

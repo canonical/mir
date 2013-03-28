@@ -22,8 +22,10 @@ configure_file(
 
 set(
   SRCS
+  run_mir.cpp
   display_server.cpp
   default_server_configuration.cpp
+  signal_dispatcher.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -36,7 +38,6 @@ add_executable(
   mirds
 
   main.cpp
-  run_mir.cpp
 )
 
 set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
@@ -72,12 +73,6 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   )
   install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/shared/mir DESTINATION "include/mirserver"
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit DESTINATION "include/mirserver"
   )
 else()
   target_link_libraries(mirserver

@@ -56,10 +56,10 @@ compile and run code, and is well suited for a development workflow.
    targeting a quantal phablet image)
 
 2. Set up a chroot with the mir dependencies installed. At the moment, you
-   can look at the script and instructions in lp:~kdub/mir/ndk-rewrite as an
+   can look at the script and instructions in lp:mir as an
    example of how to set up a partial chroot you can build mir against.
 
-3. There are a few options, but here is an example of how to build mir for android
+3. There are a few ways to do this, but here is an example of how to build mir for android
 
         $ bzr branch lp:mir
         $ mkdir mir/build; cd mir/build
@@ -67,4 +67,7 @@ compile and run code, and is well suited for a development workflow.
         $ make
 
 N.B. The `cross-compile-android.sh` script in mir's top level directory
-provides a scripting example of how to cross compile
+provides a scripting example of how to cross compile.
+The 'setup-partial-armhf-chroot.sh' will attempt to download all the arm
+dependencies you need. You have to have your APT sources.list files pointed at
+arm repositories.
