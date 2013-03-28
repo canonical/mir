@@ -34,6 +34,9 @@ class EmptyHWC : public mga::HWCDevice
     void wait_for_vsync() 
     {
     }
+    void commit_frame()
+    {
+    }
 };
 }
 

@@ -45,6 +45,7 @@ void mga::HWCDisplay::clear()
 bool mga::HWCDisplay::post_update()
 {
     auto rc = AndroidDisplay::post_update();
+    hwc_device->commit_frame();
     hwc_device->wait_for_vsync();
     return rc;
 }

@@ -1,17 +1,26 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(protobuf/)
 
+set(PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
+set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mircommon")
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/mircommon.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
+)
+
 set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
 
-# Some headers contain common definitions required for both client and
-# server development...
-set (MIR_COMMON_HEADERS
-  ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit/common.h
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/shared/mir ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit
+  DESTINATION "include/mircommon"
 )
 
-# TODO: Find a more elegant include/ structure. Ideally one in which everything
-#       lives under "include/mir/".
-install (FILES ${MIR_COMMON_HEADERS} DESTINATION "include/mir_toolkit/")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
+  DESTINATION lib/pkgconfig
+)
