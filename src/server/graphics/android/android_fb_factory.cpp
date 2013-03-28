@@ -20,33 +20,20 @@
 #include "android_framebuffer_window.h"
 #include "android_display.h"
 #include "hwc_display.h"
+#include "hwc11_device.h"
 
 #include <ui/FramebufferNativeWindow.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
-namespace
-{
-//TODO: kdub temporary construction of a hwc device while I work on the real one 
-class EmptyHWC : public mga::HWCDevice
-{
-    void wait_for_vsync() 
-    {
-    }
-    void commit_frame()
-    {
-    }
-};
-}
-
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc1_1_gpu_display(
-                                            std::shared_ptr<hwc_composer_device_1> const& /*hwc_device*/) const
+                                            std::shared_ptr<hwc_composer_device_1> const& hwc_device) const
 {
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-    auto empty_hwc = std::make_shared<EmptyHWC>();
-    return std::make_shared<mga::HWCDisplay>(window, empty_hwc);
+    auto hwc = std::make_shared<mga::HWC11Device>(hwc_device);
+    return std::make_shared<mga::HWCDisplay>(window, hwc);
 }
 
 /* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
