@@ -55,7 +55,7 @@ public:
 
     std::weak_ptr<ms::Surface> create_surface(mf::SurfaceCreationParameters const& )
     {
-        dummy_surface = std::make_shared<ms::Surface>(mf::a_surface().name, buffer_bundle);
+        dummy_surface = std::make_shared<ms::Surface>(mf::a_surface().name, buffer_bundle, []{});
         return dummy_surface;
     }
 

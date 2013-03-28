@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -15,33 +15,28 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_COMPOSITOR_RENDERING_OPERATOR_H_
-#define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
-#include "mir/graphics/renderer.h"
-#include "mir/compositor/renderables.h"
-#include <vector>
-
+#ifndef MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
+#define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 namespace mir
 {
-namespace compositor
+namespace graphics
+{
+namespace android
 {
 
-class Renderable;
-
-class RenderingOperator : public OperatorForRenderables
+class HWCDevice
 {
 public:
-    explicit RenderingOperator(graphics::Renderer& renderer);
-
-    void operator()(graphics::Renderable& renderable);
-
+    HWCDevice() = default;
+    virtual ~HWCDevice() {}
+    virtual void wait_for_vsync() = 0;
 private:
-    graphics::Renderer& renderer;
-
-    std::vector<std::shared_ptr<void>> resources;
+    HWCDevice(HWCDevice const&) = delete;
+    HWCDevice& operator=(HWCDevice const&) = delete; 
 };
 
 }
 }
-#endif /* MIR_COMPOSITOR_RENDERING_OPERATOR_H_ */
+}
+#endif /* MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_ */

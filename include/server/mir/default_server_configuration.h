@@ -32,7 +32,7 @@ namespace compositor
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 class BufferBundleManager;
-class RenderView;
+class Renderables;
 class Drawer;
 class CompositingStrategy;
 class Compositor;
@@ -53,6 +53,10 @@ class SurfaceFactory;
 class SurfaceSource;
 class SurfaceBuilder;
 class InputFocusSelector;
+}
+namespace time
+{
+class TimeSource;
 }
 namespace surfaces
 {
@@ -98,7 +102,7 @@ public:
     virtual std::shared_ptr<compositor::CompositingStrategy> the_compositing_strategy();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<compositor::RenderView> the_render_view();
+    virtual std::shared_ptr<compositor::Renderables> the_renderables();
 
     virtual std::shared_ptr<frontend::Communicator> the_communicator();
     virtual std::shared_ptr<frontend::SessionMediatorReport> the_session_mediator_report();
@@ -117,6 +121,7 @@ public:
     virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
 
     virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
+    virtual std::shared_ptr<time::TimeSource> the_time_source();
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
@@ -143,6 +148,7 @@ protected:
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
     CachedPtr<surfaces::SurfaceController> surface_controller;
+    CachedPtr<time::TimeSource> time_source;
 
 private:
     std::shared_ptr<options::Option> options;

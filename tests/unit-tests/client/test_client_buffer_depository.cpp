@@ -36,6 +36,9 @@ struct MockBuffer : public mcl::AgingBuffer
         using namespace testing;
         ON_CALL(*this, mark_as_submitted())
             .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
+
+        // By default we expect all buffers to be destroyed.        
+        EXPECT_CALL(*this, Destroy()).Times(1);
     }
 
     MOCK_METHOD0(Destroy, void());
@@ -67,7 +70,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     }
 
     MOCK_METHOD3(create_buffer,
-                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const &,
+                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
                                                     geom::Size, geom::PixelFormat));
 
     std::shared_ptr<mcl::ClientBuffer> buffer;
@@ -265,19 +268,23 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
     depository.deposit_package(packages[0], 1, size, pf);
     // Raw pointer so we don't influence the buffer's life-cycle
     MockBuffer *first_buffer = static_cast<MockBuffer *>(depository.current_buffer().get());
+    // We expect this to not be destroyed before we deposit the fourth buffer.
+    bool buffer_destroyed = false;
+    ON_CALL(*first_buffer, Destroy()).WillByDefault(Invoke([&buffer_destroyed] () {buffer_destroyed = true;}));
+
 
     depository.deposit_package(packages[1], 2, size, pf);
     depository.deposit_package(packages[2], 3, size, pf);
 
     // We've deposited three different buffers now; the fourth should trigger the destruction
     // of the first buffer.
-    EXPECT_CALL(*first_buffer, Destroy());
+    ASSERT_FALSE(buffer_destroyed);
 
     depository.deposit_package(packages[3], 4, size, pf);
 
     // Explicitly verify that the buffer has been destroyed here, before the depository goes out of scope
     // and its destructor cleans everything up.
-    Mock::VerifyAndClearExpectations(first_buffer);
+    EXPECT_TRUE(buffer_destroyed);
 }
 
 TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_buffer)
@@ -300,33 +307,33 @@ TEST_F(MirBufferDepositoryTest, depository_respects_max_buffer_parameter)
     using namespace testing;
     std::shared_ptr<mcl::ClientBufferDepository> depository;
     std::shared_ptr<MirBufferPackage> packages[10];
-    MockBuffer *buffers[10];
+    bool buffer_destroyed[10];
 
     for (int num_buffers = 2; num_buffers < 10; ++num_buffers)
     {
         depository = std::make_shared<mcl::ClientBufferDepository>(mock_factory, num_buffers);
-        
-        depository->deposit_package(packages[0], 1, size, pf);
-        // Raw pointer so we don't influence the buffer's life-cycle
-        MockBuffer* first_buffer = static_cast<MockBuffer *>(depository->current_buffer().get());
+
+        // Reset destroyed tracking; resetting the depository will have destroyed all the buffers
+        for (bool& destroyed_flag : buffer_destroyed)
+            destroyed_flag = false;
 
         int i;
-        for (i = 1; i < num_buffers ; ++i)
+        for (i = 0; i < num_buffers ; ++i)
         {
+            MockBuffer *buffer;
             depository->deposit_package(packages[i], i + 1, size, pf);
-            buffers[i] = static_cast<MockBuffer *>(depository->current_buffer().get());
-            // None of these buffers should be destroyed
-            EXPECT_CALL(*buffers[i], Destroy()).Times(0);
+            buffer = static_cast<MockBuffer *>(depository->current_buffer().get());
+            ON_CALL(*buffer, Destroy()).WillByDefault(Invoke([&buffer_destroyed, i] () {buffer_destroyed[i] = true;}));
         }
 
         // Next deposit should destroy first buffer
-        EXPECT_CALL(*first_buffer, Destroy()).Times(1);
+        ASSERT_FALSE(buffer_destroyed[0]);
         depository->deposit_package(packages[i], i+1, size, pf);
-        EXPECT_TRUE(Mock::VerifyAndClearExpectations(first_buffer));
+        EXPECT_TRUE(buffer_destroyed[0]);
 
         // Verify none of the other buffers have been destroyed
         for (i = 1; i < num_buffers; ++i)
-            EXPECT_TRUE(Mock::VerifyAndClearExpectations(buffers[i]));
+            EXPECT_FALSE(buffer_destroyed[i]);
     }
 }
 

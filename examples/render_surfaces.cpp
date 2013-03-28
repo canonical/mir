@@ -203,10 +203,10 @@ struct NullInputManager : public mi::InputManager
 class RenderSurfacesCompositingStrategy : public mc::DefaultCompositingStrategy
 {
 public:
-    RenderSurfacesCompositingStrategy(std::shared_ptr<mc::RenderView> const& render_view,
+    RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
                                       std::shared_ptr<mg::Renderer> const& renderer,
                                       std::vector<Moveable>& moveables)
-        : mc::DefaultCompositingStrategy{render_view, renderer},
+        : mc::DefaultCompositingStrategy{renderables, renderer},
           frames{0},
           moveables(moveables)
     {
@@ -263,7 +263,7 @@ public:
 
     std::shared_ptr<mc::CompositingStrategy> the_compositing_strategy() override
     {
-        return std::make_shared<RenderSurfacesCompositingStrategy>(the_render_view(),
+        return std::make_shared<RenderSurfacesCompositingStrategy>(the_renderables(),
                                                                    the_renderer(),
                                                                    moveables);
     }

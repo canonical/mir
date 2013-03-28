@@ -8,6 +8,7 @@ add_subdirectory(surfaces/)
 add_subdirectory(options/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
+add_subdirectory(time/)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -47,6 +48,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirgraphics
   mirinput
   mirsurfaces
+  mirtime
 )
 
 list(APPEND MIRSERVER_LINKS
@@ -70,12 +72,6 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   )
   install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/shared/mir DESTINATION "include/mirserver"
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit DESTINATION "include/mirserver"
   )
 else()
   target_link_libraries(mirserver

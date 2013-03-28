@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -15,33 +15,28 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_COMPOSITOR_RENDERING_OPERATOR_H_
-#define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
-#include "mir/graphics/renderer.h"
-#include "mir/compositor/renderables.h"
-#include <vector>
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_INTERFACE_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_INTERFACE_H_
+
+#include "src/server/graphics/android/hwc_device.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace compositor
+namespace test
+{
+namespace doubles
 {
 
-class Renderable;
-
-class RenderingOperator : public OperatorForRenderables
+class MockHWCInterface : public graphics::android::HWCDevice
 {
 public:
-    explicit RenderingOperator(graphics::Renderer& renderer);
-
-    void operator()(graphics::Renderable& renderable);
-
-private:
-    graphics::Renderer& renderer;
-
-    std::vector<std::shared_ptr<void>> resources;
+    MOCK_METHOD0(wait_for_vsync, void());
 };
 
 }
 }
-#endif /* MIR_COMPOSITOR_RENDERING_OPERATOR_H_ */
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_INTERFACE_H_ */

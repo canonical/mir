@@ -36,11 +36,13 @@ namespace compositor
 
 class CompositingStrategy;
 class CompositingFunctor;
+class Renderables;
 
 class MultiThreadedCompositor : public Compositor
 {
 public:
     MultiThreadedCompositor(std::shared_ptr<graphics::Display> const& display,
+                            std::shared_ptr<Renderables> const& renderables,
                             std::shared_ptr<CompositingStrategy> const& strategy);
     ~MultiThreadedCompositor();
 
@@ -49,6 +51,7 @@ public:
 
 private:
     std::shared_ptr<graphics::Display> const display;
+    std::shared_ptr<Renderables> const renderables;
     std::shared_ptr<CompositingStrategy> const compositing_strategy;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
