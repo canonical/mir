@@ -76,10 +76,6 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     FakeInputServerConfiguration()
       : input_config(the_event_filters(), the_display(), std::shared_ptr<mi::CursorListener>())
     {
-        fake_event_hub = input_config.the_fake_event_hub();
-
-        fake_event_hub->synthesize_builtin_keyboard_added();
-        fake_event_hub->synthesize_device_scan_complete();
     }
 
     virtual void inject_input()
@@ -95,6 +91,11 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     std::shared_ptr<mi::InputManager>
     the_input_manager()
     {
+        fake_event_hub = input_config.the_fake_event_hub();
+
+        fake_event_hub->synthesize_builtin_keyboard_added();
+        fake_event_hub->synthesize_device_scan_complete();
+
         return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
         {

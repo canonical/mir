@@ -113,12 +113,14 @@ bool KeyMap::probeKeyMap(const InputDeviceIdentifier& deviceIdentifier,
 status_t KeyMap::loadGenericMaps()
 {
     status_t status = 0;
+    String8 generic_kl_file("Generic.kl");
+    String8 generic_kcm_file("Generic.kcm");
 
     setTo(keyLayoutFile, "Generic.kl");
     setTo(keyCharacterMapFile, "Generic.kcm");
     
     status = KeyCharacterMap::loadContents(
-        String8("Generic.kcm"), 
+       "Generic.kcm",
         GenericKeyMap::keymap_contents(), 
         KeyCharacterMap::FORMAT_BASE, 
         &keyCharacterMap);
@@ -126,7 +128,7 @@ status_t KeyMap::loadGenericMaps()
         return status;
 
     status = KeyLayoutMap::load(
-        String8("Generic.kl"), 
+        "Generic.kl",
         GenericKeyMap::key_layout_contents(), 
         &keyLayoutMap);
     
