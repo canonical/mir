@@ -191,7 +191,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     // Handle all three events as a batched event
     EXPECT_TRUE(receiver.next_event(next_event_timeout, ev));
     // Now there should be no events
-    EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(0), ev));
+    EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(1), ev)); // Minimal timeout needed for valgrind
 }
 
 // TODO: Test for wake
