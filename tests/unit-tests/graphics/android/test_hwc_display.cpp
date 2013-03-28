@@ -55,6 +55,8 @@ TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
     testing::InSequence sequence_enforcer;
     EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
         .Times(1);
+    EXPECT_CALL(*mock_hwc_device, commit_frame())
+        .Times(1);
     EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
         .Times(1);
  
@@ -74,6 +76,8 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_failure)
     EXPECT_CALL(this->mock_egl, eglSwapBuffers(_,_))
         .Times(1)
         .WillOnce(Return(EGL_FALSE));
+    EXPECT_CALL(*mock_hwc_device, commit_frame())
+        .Times(1);
     EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
         .Times(1);
  
