@@ -28,13 +28,20 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<HWCFactory> const& /*hwc_factory*/)
+    : is_hwc_capable(false)
 {
+    const hw_module_t *hw_module;
+    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
+    if (rc != 0)
+    {
+        return;
+    }
 
 }
 
 bool mga::AndroidFBFactory::can_create_hwc_display() const
 {
-    return true;
+    return is_hwc_capable;
 }
 
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc_display() const

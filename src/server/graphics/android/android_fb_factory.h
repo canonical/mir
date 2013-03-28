@@ -36,6 +36,9 @@ public:
     std::shared_ptr<Display> create_hwc_display() const;
     bool can_create_hwc_display() const;
     std::shared_ptr<Display> create_gpu_display() const;
+
+private:
+    bool is_hwc_capable;
 };
 
 }
