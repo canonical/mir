@@ -27,7 +27,7 @@
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
 #include "mir/default_server_configuration.h"
-#include "mir/display_server.h"
+#include "mir/run_mir.h"
 
 #include "mir/draw/mir_image.h"
 #include "buffer_render_target.h"
@@ -309,25 +309,10 @@ public:
 private:
     std::vector<Moveable> moveables;
 };
-
-std::atomic<mir::DisplayServer*> signal_display_server;
-
-void signal_terminate(int)
-{
-    while (!signal_display_server.load())
-        std::this_thread::yield();
-
-    signal_display_server.load()->stop();
-}
-
 }
 
 int main(int argc, char **argv)
 {
-    signal(SIGINT, signal_terminate);
-    signal(SIGTERM, signal_terminate);
-    signal(SIGPIPE, SIG_IGN);
-
     /* Parse the command line */
     unsigned int num_moveables{5};
 
@@ -340,12 +325,8 @@ int main(int argc, char **argv)
     std::cout << "Rendering " << num_moveables << " surfaces" << std::endl;
 
     RenderSurfacesServerConfiguration conf{num_moveables};
-    mir::DisplayServer server{conf};
-    signal_display_server.store(&server);
 
-    conf.create_surfaces();
-
-    server.run();
+    mir::run_mir(conf, [&](mir::DisplayServer&) {conf.create_surfaces();});
 
     return 0;
 }
