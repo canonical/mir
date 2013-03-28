@@ -20,23 +20,39 @@
 #include "android_framebuffer_window.h"
 #include "android_display.h"
 #include "hwc_display.h"
+#include "hwc_factory.h"
 #include "hwc11_device.h"
 
+#include <boost/throw_exception.hpp>
 #include <ui/FramebufferNativeWindow.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
-mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<HWCFactory> const& /*hwc_factory*/)
-    : is_hwc_capable(false)
+mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<HWCFactory> const& hwc_factory)
+    : hwc_factory(hwc_factory),
+      is_hwc_capable(false)
 {
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
-    if (rc != 0)
+    if ((rc != 0) || (hw_module == nullptr))
     {
         return;
     }
 
+    hwc_composer_device_1* hwc_device_raw;
+    rc = hw_module->methods->open(hw_module, HWC_HARDWARE_COMPOSER, (hw_device_t**) &hwc_device_raw);
+    if ((rc != 0) || (hwc_device_raw == nullptr))
+    {
+        return;
+    }
+
+    auto hwc_dev = std::shared_ptr<hwc_composer_device_1>( hwc_device_raw, [](hwc_composer_device_1*){}   );
+    if (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1)
+    {
+        hwc_device = hwc_factory->create_hwc_1_1();
+        is_hwc_capable = true;
+    }
 }
 
 bool mga::AndroidFBFactory::can_create_hwc_display() const
@@ -46,7 +62,12 @@ bool mga::AndroidFBFactory::can_create_hwc_display() const
 
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc_display() const
 {
-    return create_gpu_display();
+    if(!is_hwc_capable)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("factory cannot create hwc display"));
+    }
+
+    return std::shared_ptr<mg::Display>();
 #if 0
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);

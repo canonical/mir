@@ -36,6 +36,11 @@ namespace geom=mir::geometry;
 
 struct MockHWCFactory: public mga::HWCFactory
 {
+    MockHWCFactory()
+    {
+        ON_CALL(*this, create_hwc_1_1())
+            .WillByDefault(testing::Return(std::shared_ptr<mga::HWCDevice>()));
+    }
     MOCK_CONST_METHOD0(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>());
 };
 
@@ -99,7 +104,6 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_module_unavailble_always_creates_gpu_
     EXPECT_THROW({
         fb_factory.create_hwc_display();
     }, std::runtime_error);
-    fb_factory.create_gpu_display();
 }
 
 #if 0

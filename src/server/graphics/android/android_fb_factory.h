@@ -29,6 +29,7 @@ namespace android
 {
 
 class HWCFactory;
+class HWCDevice;
 class AndroidFBFactory : public FBFactory
 {
 public:
@@ -38,6 +39,8 @@ public:
     std::shared_ptr<Display> create_gpu_display() const;
 
 private:
+    std::shared_ptr<HWCFactory> hwc_factory;
+    std::shared_ptr<HWCDevice> hwc_device;
     bool is_hwc_capable;
 };
 
