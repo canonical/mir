@@ -313,6 +313,8 @@ status_t InputPublisher::publishMotionEvent(
     }
 
     InputMessage msg;
+    memset(&msg, 0, sizeof(InputMessage));
+
     msg.header.type = InputMessage::TYPE_MOTION;
     msg.body.motion.seq = seq;
     msg.body.motion.deviceId = deviceId;
