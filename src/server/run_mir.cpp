@@ -18,9 +18,10 @@
 
 #include "mir/run_mir.h"
 #include "mir/display_server.h"
+#include "mir/signal_dispatcher.h"
 
-#include <thread>
 #include <atomic>
+#include <thread>
 #include <csignal>
 
 namespace
@@ -38,14 +39,15 @@ extern "C" void signal_terminate(int)
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
-    mir::DisplayServer server(config);
+    auto const sdp = SignalDispatcher::instance();
+    sdp->enable_for(SIGINT);
+    sdp->enable_for(SIGTERM);
+
+    DisplayServer server(config);
     signal_display_server.store(&server);
 
-    signal(SIGINT, signal_terminate);
-    signal(SIGTERM, signal_terminate);
-    signal(SIGPIPE, SIG_IGN);
+    sdp->signal_channel().connect(&signal_terminate);
 
     init(server);
-
     server.run();
 }
