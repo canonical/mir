@@ -29,7 +29,19 @@ mf::ClientBufferTracker::ClientBufferTracker()
 
 void mf::ClientBufferTracker::add(mc::BufferID const& id)
 {
-	id_age_map[id.as_uint32_t()] = 0;
+	for (auto &id_age_pair : id_age_map)
+		++id_age_pair.second;
+
+	id_age_map[id.as_uint32_t()] = 1;
+
+	for (auto pair = id_age_map.begin(); pair != id_age_map.end(); ++pair)
+	{
+		if (pair->second > 3)
+		{
+			id_age_map.erase(pair);
+			break;
+		}
+	}
 }
 
 bool mf::ClientBufferTracker::client_has(mc::BufferID const& id)

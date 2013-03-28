@@ -26,8 +26,6 @@ namespace mc = mir::compositor;
 
 TEST(ClientBufferTracker, just_added_buffer_is_known_by_client)
 {
-    using namespace testing;
-
     mf::ClientBufferTracker tracker;
     mc::BufferID id{5};
 
@@ -37,10 +35,45 @@ TEST(ClientBufferTracker, just_added_buffer_is_known_by_client)
 
 TEST(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 {
-    using namespace testing;
-
     mf::ClientBufferTracker tracker;
 
     tracker.add(mc::BufferID{5});
     EXPECT_FALSE(tracker.client_has(mc::BufferID{6}));
+}
+
+TEST(ClientBufferTracker, tracks_sequence_of_buffers)
+{
+    mf::ClientBufferTracker tracker;
+    mc::BufferID one{1};
+    mc::BufferID two{2};
+    mc::BufferID three{3};
+    mc::BufferID four{4};
+
+    tracker.add(one);
+    tracker.add(two);
+    tracker.add(three);
+
+    EXPECT_TRUE(tracker.client_has(one));
+    EXPECT_TRUE(tracker.client_has(two));
+    EXPECT_TRUE(tracker.client_has(three));
+    EXPECT_FALSE(tracker.client_has(four));
+}
+
+TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
+{
+    mf::ClientBufferTracker tracker;
+
+    mc::BufferID one{1};
+    mc::BufferID two{2};
+    mc::BufferID three{3};
+
+    tracker.add(one);
+    tracker.add(two);
+    tracker.add(three);
+    tracker.add(two);
+    tracker.add(three);
+
+    EXPECT_FALSE(tracker.client_has(one));
+    EXPECT_TRUE(tracker.client_has(two));
+    EXPECT_TRUE(tracker.client_has(three));
 }
