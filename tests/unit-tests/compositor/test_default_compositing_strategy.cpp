@@ -38,14 +38,15 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockRenderView : mc::RenderView
+struct MockRenderables : mc::Renderables
 {
     MOCK_METHOD2(for_each_if, void(mc::FilterForRenderables&, mc::OperatorForRenderables&));
+    MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
 };
 
-struct FakeRenderView : mc::RenderView
+struct FakeRenderables : mc::Renderables
 {
-    FakeRenderView(std::vector<mg::Renderable*> renderables) :
+    FakeRenderables(std::vector<mg::Renderable*> renderables) :
         renderables(renderables)
     {
     }
@@ -59,6 +60,8 @@ struct FakeRenderView : mc::RenderView
             if (filter(renderable)) renderable_operator(renderable);
         }
     }
+
+    void set_change_callback(std::function<void()> const&) {}
 
     std::vector<mg::Renderable*> renderables;
 };
@@ -75,10 +78,10 @@ TEST(DefaultCompositingStrategy, render)
     using namespace testing;
 
     mtd::MockSurfaceRenderer mock_renderer;
-    MockRenderView render_view;
+    MockRenderables renderables;
     mtd::MockDisplayBuffer display_buffer;
 
-    mc::DefaultCompositingStrategy comp(mt::fake_shared(render_view),
+    mc::DefaultCompositingStrategy comp(mt::fake_shared(renderables),
                                         mt::fake_shared(mock_renderer));
 
     EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
@@ -96,7 +99,7 @@ TEST(DefaultCompositingStrategy, render)
     EXPECT_CALL(display_buffer, post_update())
             .Times(1);
 
-    EXPECT_CALL(render_view, for_each_if(_,_))
+    EXPECT_CALL(renderables, for_each_if(_,_))
                 .Times(1);
 
     comp.render(display_buffer);
@@ -115,18 +118,18 @@ TEST(DefaultCompositingStrategy, skips_invisible_renderables)
     EXPECT_CALL(mr2, hidden()).WillOnce(Return(true));
     EXPECT_CALL(mr3, hidden()).WillOnce(Return(false));
 
-    std::vector<mg::Renderable*> renderables;
-    renderables.push_back(&mr1);
-    renderables.push_back(&mr2);
-    renderables.push_back(&mr3);
+    std::vector<mg::Renderable*> renderable_vec;
+    renderable_vec.push_back(&mr1);
+    renderable_vec.push_back(&mr2);
+    renderable_vec.push_back(&mr3);
 
     EXPECT_CALL(mock_renderer, render(_,Ref(mr1))).Times(1);
     EXPECT_CALL(mock_renderer, render(_,Ref(mr2))).Times(0);
     EXPECT_CALL(mock_renderer, render(_,Ref(mr3))).Times(1);
 
-    FakeRenderView render_view(renderables);
+    FakeRenderables renderables(renderable_vec);
 
-    mc::DefaultCompositingStrategy comp(mt::fake_shared(render_view),
+    mc::DefaultCompositingStrategy comp(mt::fake_shared(renderables),
                                         mt::fake_shared(mock_renderer));
 
     comp.render(display_buffer);
