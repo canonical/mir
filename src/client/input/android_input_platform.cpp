@@ -37,3 +37,8 @@ std::shared_ptr<mcli::InputReceiverThread> mclia::AndroidInputPlatform::create_i
     auto receiver = std::make_shared<mclia::InputReceiver>(fd);
     return std::make_shared<mclia::InputReceiverThread>(receiver, callback);
 }
+
+std::shared_ptr<mcli::InputPlatform> mcli::InputPlatform::create()
+{
+    return std::make_shared<mclia::AndroidInputPlatform>();
+}

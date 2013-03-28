@@ -25,13 +25,13 @@
 #include "client_buffer_depository.h"
 #include "make_rpc_channel.h"
 
-#include "input/android_input_platform.h"
+#include "input/input_platform.h"
 
 #include <thread>
 #include <cstddef>
 
 namespace mcl = mir::client;
-namespace mclia = mcl::input::android;
+namespace mcli = mcl::input;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -50,7 +50,7 @@ mir_toolkit::MirConnection::MirConnection(
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         log(log),
         client_platform_factory(client_platform_factory),
-        input_platform(std::make_shared<mclia::AndroidInputPlatform>())
+        input_platform(mcli::InputPlatform::create())
 {
     {
         std::lock_guard<std::mutex> lock(connection_guard);

@@ -39,6 +39,8 @@ public:
     virtual ~InputPlatform() {};  
 
     virtual std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> const& callback) = 0;
+    
+    static std::shared_ptr<InputPlatform> create();
 
 protected:
     InputPlatform() = default;
