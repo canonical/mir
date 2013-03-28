@@ -52,9 +52,10 @@ mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<HWCFactory> const& hwc_f
                             {
                                 device->common.close((hw_device_t*) device);
                             });
+
     if (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1)
     {
-        hwc_device = hwc_factory->create_hwc_1_1();
+        hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
         is_hwc_capable = true;
     }
 }
@@ -68,16 +69,12 @@ std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc_display() const
 {
     if(!is_hwc_capable)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("factory cannot create hwc display"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
     }
 
-    return std::shared_ptr<mg::Display>();
-#if 0
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-    auto hwc = std::make_shared<mga::HWC11Device>(hwc_device);
-    return std::make_shared<mga::HWCDisplay>(window, hwc);
-#endif
+    return std::make_shared<mga::HWCDisplay>(window, hwc_device);
 }
 
 /* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
@@ -85,6 +82,5 @@ std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_gpu_display() const
 {
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-
     return std::make_shared<mga::AndroidDisplay>(window);
 }

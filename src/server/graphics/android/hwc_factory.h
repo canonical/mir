@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_
 
 #include <memory>
+#include <hardware/hwcomposer.h>
 
 namespace mir
 {
@@ -35,7 +36,7 @@ public:
     HWCFactory() = default;
     virtual ~HWCFactory() {}
 
-    virtual std::shared_ptr<HWCDevice> create_hwc_1_1() const = 0;
+    virtual std::shared_ptr<HWCDevice> create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const = 0;
 private:
     HWCFactory(HWCFactory const&) = delete;
     HWCFactory& operator=(HWCFactory const&) = delete; 

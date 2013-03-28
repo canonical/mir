@@ -38,10 +38,11 @@ struct MockHWCFactory: public mga::HWCFactory
 {
     MockHWCFactory()
     {
-        ON_CALL(*this, create_hwc_1_1())
-            .WillByDefault(testing::Return(std::shared_ptr<mga::HWCDevice>()));
+        using namespace testing;
+        ON_CALL(*this, create_hwc_1_1(_))
+            .WillByDefault(Return(std::shared_ptr<mga::HWCDevice>()));
     }
-    MOCK_CONST_METHOD0(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>());
+    MOCK_CONST_METHOD1(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>(std::shared_ptr<hwc_composer_device_1> const&));
 };
 
 #if 0
@@ -100,7 +101,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_module_unavailble_always_creates_gpu_
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1)
         .WillOnce(Return(-1));
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1())
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(0);
 
     mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
@@ -117,7 +118,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_version_11_success)
 
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
 
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1())
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(1);
 
     mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
@@ -133,7 +134,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_v
 
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
 
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1())
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(0);
 
     mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
@@ -150,7 +151,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_v
 
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_2;
 
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1())
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(0);
 
     mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
