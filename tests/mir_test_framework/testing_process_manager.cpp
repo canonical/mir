@@ -71,6 +71,7 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     else
     {
         server_process = std::shared_ptr<Process>(new Process(pid));
+        startup_pause();
         server_process_was_started = true;
     }
 }
@@ -95,7 +96,6 @@ void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguratio
     if (pid == 0)
     {
         is_test_process = false;
-        startup_pause();
 
         // Need to avoid terminating server or other clients
         server_process->detach();
