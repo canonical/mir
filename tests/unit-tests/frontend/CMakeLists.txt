@@ -14,11 +14,9 @@ list(APPEND UNIT_TEST_SOURCES
 # Really, it tests for a side-effect of passing an FD over a socket using libancillary.
 # So, we should write an integration level test that passes FDs between
 # processes and get rid of this test and test_file_descriptors()
-if (MIR_TRANSPORT STREQUAL "socket")
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_sends_fds.cpp
 )
-endif()
 
 if (MIR_PLATFORM STREQUAL "android")
   list(APPEND UNIT_TEST_SOURCES
