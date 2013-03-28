@@ -59,7 +59,8 @@ void mf::ProtobufSocketCommunicator::start_accept()
         ipc_factory->report());
 
     std::shared_ptr<mir::protobuf::DisplayServer> ds =
-        ipc_factory->make_ipc_server(session);
+        ipc_factory->make_ipc_server(nullptr /*session */);
+        // ^ FIXME circular shared_ptr dependency causes a leak (gmock)
 
     session->set_display_server(ds);
     
