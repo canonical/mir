@@ -29,7 +29,7 @@ try
 {
     mir::DefaultServerConfiguration config(argc, argv);
 
-    run_mir(config);
+    run_mir(config, [](mir::DisplayServer&) {/* empty init */});
     return 0;
 }
 catch (mir::AbnormalExit const& error)

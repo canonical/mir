@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
+#include "mir/signal_dispatcher.h"
 #include "mir_test_framework/process.h"
-#include "mir_test_framework/signal_dispatcher.h"
 
 #include <chrono>
 #include <thread>
@@ -26,9 +26,6 @@
 #include <gtest/gtest.h>
 
 namespace mtf = mir_test_framework;
-
-namespace mir
-{
 
 struct SignalCollector
 {
@@ -66,7 +63,7 @@ struct SignalCollector
 void a_main_function_accessing_the_signal_dispatcher()
 {
     // Ensure that the SignalDispatcher has been created.
-    mtf::SignalDispatcher::instance();
+    mir::SignalDispatcher::instance();
     // Don't return (and exit) before the parent process has a chance to signal
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
@@ -74,10 +71,10 @@ void a_main_function_accessing_the_signal_dispatcher()
 template<int signal>
 void a_main_function_collecting_received_signals()
 {
-    mtf::SignalDispatcher::instance()->enable_for(signal);
+    mir::SignalDispatcher::instance()->enable_for(signal);
     SignalCollector sc;
     boost::signals2::scoped_connection conn(
-        mtf::SignalDispatcher::instance()->signal_channel().connect(boost::ref(sc)));
+        mir::SignalDispatcher::instance()->signal_channel().connect(boost::ref(sc)));
 
     ::kill(getpid(), signal);
 
@@ -94,11 +91,6 @@ int a_gtest_exit_function()
     return ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-}
-
-using mir::a_main_function_accessing_the_signal_dispatcher;
-using mir::a_successful_exit_function;
-using mir::a_main_function_collecting_received_signals;
 
 TEST(SignalDispatcher,
     DISABLED_a_default_dispatcher_does_not_catch_any_signals)
