@@ -40,7 +40,8 @@ class EmptyHWC : public mga::HWCDevice
 };
 }
 
-std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc1_1_gpu_display() const
+std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc1_1_gpu_display(
+                                            std::shared_ptr<hwc_composer_device_1> const& /*hwc_device*/) const
 {
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);

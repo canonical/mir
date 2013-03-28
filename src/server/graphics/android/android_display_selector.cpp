@@ -37,14 +37,15 @@ mga::AndroidDisplaySelector::AndroidDisplaySelector(std::shared_ptr<mga::FBFacto
         return;
     }
 
-    hw_device_t* hwc_device;
-    rc = hw_module->methods->open(hw_module, HWC_HARDWARE_COMPOSER, &hwc_device);
+    hwc_composer_device_1* hwc_device_raw;
+    rc = hw_module->methods->open(hw_module, HWC_HARDWARE_COMPOSER, (hw_device_t**) &hwc_device_raw);
+    hwc_device = std::shared_ptr<hwc_composer_device_1>( hwc_device_raw, [](hwc_composer_device_1*){}   );
 
     if ((hwc_device != nullptr) &&
         (rc == 0 ) &&
-        (hwc_device->version == HWC_DEVICE_API_VERSION_1_1))
+        (hwc_device->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
-        allocate_primary_fb = std::bind(&FBFactory::create_hwc1_1_gpu_display, fb_factory);
+        allocate_primary_fb = std::bind(&FBFactory::create_hwc1_1_gpu_display, fb_factory, std::ref(hwc_device));
     }
     else
     {

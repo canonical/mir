@@ -31,7 +31,7 @@ namespace android
 class AndroidFBFactory : public FBFactory
 {
 public:
-    std::shared_ptr<Display> create_hwc1_1_gpu_display() const;
+    std::shared_ptr<Display> create_hwc1_1_gpu_display(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const;
     std::shared_ptr<Display> create_gpu_display() const;
 };
 

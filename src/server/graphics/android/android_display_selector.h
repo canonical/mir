@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_
 
 #include "display_selector.h"
+#include <hardware/hwcomposer.h>
 
 namespace mir
 {
@@ -41,6 +42,8 @@ public:
 
 private:
     std::shared_ptr<FBFactory> fb_factory;
+
+    std::shared_ptr<hwc_composer_device_1> hwc_device;
     std::shared_ptr<Display> primary_hwc_display;
     std::function<std::shared_ptr<Display>()> allocate_primary_fb;
 };

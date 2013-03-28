@@ -37,12 +37,12 @@ struct MockFbFactory : public mga::FBFactory
     MockFbFactory()
     {
         using namespace testing;
-        ON_CALL(*this, create_hwc1_1_gpu_display())
+        ON_CALL(*this, create_hwc1_1_gpu_display(_))
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
         ON_CALL(*this, create_gpu_display())
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
     }
-    MOCK_CONST_METHOD0(create_hwc1_1_gpu_display, std::shared_ptr<mg::Display>());
+    MOCK_CONST_METHOD1(create_hwc1_1_gpu_display, std::shared_ptr<mg::Display>(std::shared_ptr<hwc_composer_device_1> const& hwc_device));
     MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mg::Display>());
  
 };
@@ -76,7 +76,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_success)
 
     EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
         .Times(1);
-    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display())
+    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display(_))
         .Times(1); 
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
@@ -89,7 +89,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_creates_with_hwc_device_used_to_deter
 
     EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
         .Times(1);
-    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display(hw_access_mock.mock_hwc_device.get()))
+    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display(hw_access_mock.mock_hwc_device))
         .Times(1); 
 
     mga::AndroidDisplaySelector selector(mock_fb_factory);
