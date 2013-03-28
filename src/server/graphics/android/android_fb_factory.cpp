@@ -47,7 +47,11 @@ mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<HWCFactory> const& hwc_f
         return;
     }
 
-    auto hwc_dev = std::shared_ptr<hwc_composer_device_1>( hwc_device_raw, [](hwc_composer_device_1*){}   );
+    auto hwc_dev = std::shared_ptr<hwc_composer_device_1>( hwc_device_raw,
+                            [](hwc_composer_device_1* device)
+                            {
+                                device->common.close((hw_device_t*) device);
+                            });
     if (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1)
     {
         hwc_device = hwc_factory->create_hwc_1_1();
