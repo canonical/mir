@@ -70,7 +70,7 @@ protected:
 private:
     droidinput::sp<droidinput::InputChannel> input_channel;
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
-    droidinput::PooledInputEventFactory event_factory;
+    droidinput::PreallocatedInputEventFactory event_factory;
     droidinput::sp<droidinput::Looper> looper;
 
     bool fd_added;
