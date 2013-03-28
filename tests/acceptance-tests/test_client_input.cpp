@@ -116,8 +116,6 @@ struct ClientConfigCommon : TestingClientConfiguration
         surface(0)
     {
     }
-    
-    virtual ~ClientConfigCommon() = default;
 
     static void connection_callback(MirConnection* connection, void* context)
     {
@@ -167,9 +165,6 @@ struct InputReceivingClient : ClientConfigCommon
       : events_received(0)
     {
     }
-
-    virtual ~InputReceivingClient() = default;
-    
 
     static void handle_input(MirSurface* /* surface */, MirEvent* ev, void* context)
     {
