@@ -39,9 +39,6 @@ public:
     void run();
     void stop();
 
-    std::shared_ptr<graphics::Platform> graphics_platform();
-    std::shared_ptr<shell::SurfaceFactory> surface_factory();
-
 private:
     struct Private;
     std::unique_ptr<Private> p;

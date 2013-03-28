@@ -97,12 +97,3 @@ void mir::ServerInstance::stop()
     p->exit_cv.notify_one();
 }
 
-std::shared_ptr<mg::Platform> mir::ServerInstance::graphics_platform()
-{
-    return p->graphics_platform;
-}
-
-std::shared_ptr<msh::SurfaceFactory> mir::ServerInstance::surface_factory()
-{
-    return p->surface_factory;
-}
