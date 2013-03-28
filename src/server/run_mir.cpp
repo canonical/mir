@@ -18,7 +18,7 @@
 
 #include "mir/run_mir.h"
 
-#include "mir/server_instance.h"
+#include "mir/display_server.h"
 #include "mir/signal_dispatcher.h"
 
 #include <atomic>
@@ -27,7 +27,7 @@
 
 namespace
 {
-std::atomic<mir::ServerInstance*> signal_display_server;
+std::atomic<mir::DisplayServer*> signal_display_server;
 
 void signal_terminate(int)
 {
@@ -45,7 +45,7 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
     sdp->enable_for(SIGTERM);
     sdp->signal_channel().connect(&signal_terminate);
 
-    ServerInstance server(config);
+    DisplayServer server(config);
     signal_display_server.store(&server);
 
     init(server);
