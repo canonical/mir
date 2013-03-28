@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_FB_FACTORY_H_
 
 #include <memory>
-#include <hardware/hwcomposer.h>
 
 namespace mir
 {

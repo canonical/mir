@@ -57,10 +57,11 @@ protected:
         ASSERT_FALSE(mtd::is_surface_flinger_running());
 
         /* note about android_window: OMAP4 drivers seem to only be able to open fb once
-           per process (gralloc's framebuffer_close() doesn't seem to work). once we
-           figure out why, we can put display in the test fixture */
+           per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
+           figure out why, we can remove android_window in the test fixture */
         android_window = std::make_shared< ::android::FramebufferNativeWindow>();
 
+        /* determine hwc11 capable devices so we can skip the hwc11 tests on non supported tests */
         run_hwc11_tests = false;
         const hw_module_t *hw_module;
         int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
@@ -77,10 +78,6 @@ protected:
                 }
             }
         }
-    }
-
-    virtual void SetUp()
-    {
     }
 
     md::glAnimationBasic gl_animation;
@@ -102,7 +99,6 @@ bool AndroidGPUDisplay::run_hwc11_tests;
 
 }
 
-
 /* gpu display tests. These are our back-up display modes, and should be run on every device. */
 TEST_F(AndroidGPUDisplay, display_creation_ok)
 {
@@ -112,7 +108,7 @@ TEST_F(AndroidGPUDisplay, display_creation_ok)
     });
 }
 
-TEST_F(AndroidGPUDisplay, display_post_ok)
+TEST_F(AndroidGPUDisplay, gpu_display_post_ok)
 {
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
     auto display = std::make_shared<mga::AndroidDisplay>(window);
@@ -126,23 +122,7 @@ TEST_F(AndroidGPUDisplay, display_post_ok)
     });
 }
 
-TEST_F(AndroidGPUDisplay, display_clear_and_post_ok)
-{
-    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-    auto display = std::make_shared<mga::AndroidDisplay>(window);
-
-    EXPECT_NO_THROW(
-    {
-        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
-        {
-            glClearColor(0.0f,0.0f,0.0f,1.0f);
-            glClear(GL_COLOR_BUFFER_BIT); 
-            buffer.post_update();
-        });
-    });
-}
-
-TEST_F(AndroidGPUDisplay, buffer_ok_with_gles_context)
+TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
     using namespace testing;
 
@@ -164,7 +144,7 @@ TEST_F(AndroidGPUDisplay, buffer_ok_with_gles_context)
 #define YELLOW "\033[33m"
 #define RESET "\033[0m"
 #define SUCCEED_IF_NO_HARDWARE_SUPPORT() \
-    if(!run_hwc11_tests) { SUCCEED(); std::cout << YELLOW << "--> This device does not have HWC 1.1 support. Skipping test.\n" << RESET; return;}
+    if(!run_hwc11_tests) { SUCCEED(); std::cout << YELLOW << "--> This device does not have HWC 1.1 support. Skipping test." << RESET << std::endl; return;}
 
 /* hwc 1.1 tests. These are only ran on devices that have hwc 1.1 device support */
 TEST_F(AndroidGPUDisplay, hwc11_display_creation_ok)
@@ -179,7 +159,7 @@ TEST_F(AndroidGPUDisplay, hwc11_display_creation_ok)
     });
 }
 
-TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles_context)
+TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 {
     SUCCEED_IF_NO_HARDWARE_SUPPORT();
 

@@ -17,23 +17,19 @@
  */
 
 #include "src/server/graphics/android/android_fb_factory.h"
-#include "src/server/graphics/android/hwc_device.h"
 #include "src/server/graphics/android/hwc_factory.h"
 
 #include "mir_test/hw_mock.h"
-#include "mir_test_doubles/null_display.h"
 
-#include <hardware/hwcomposer.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>
 
 namespace mt=mir::test;
-namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
-namespace mg=mir::graphics;
-namespace geom=mir::geometry;
 
+namespace
+{
 struct MockHWCFactory: public mga::HWCFactory
 {
     MockHWCFactory()
@@ -45,32 +41,10 @@ struct MockHWCFactory: public mga::HWCFactory
     MOCK_CONST_METHOD1(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>(std::shared_ptr<hwc_composer_device_1> const&));
 };
 
-#if 0
-//this is now the class we're testing! 
-struct MockFbFactory : public mga::FBFactory
-{
-    MockFbFactory()
-    {
-        using namespace testing;
-        ON_CALL(*this, can_create_hwc_display())
-            .WillByDefault(Return(true));
-        ON_CALL(*this, create_hwc_display())
-            .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
-        ON_CALL(*this, create_gpu_display())
-            .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
-    }
-
-    MOCK_CONST_METHOD0(can_create_hwc_display, bool());
-    MOCK_CONST_METHOD0(create_hwc_display, std::shared_ptr<mg::Display>());
-    MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mg::Display>());
- 
-};
-#endif
-
-class AndroidFramebufferSelectorTest : public ::testing::Test
+class AndroidFBFactoryTest : public ::testing::Test
 {
 public:
-    AndroidFramebufferSelectorTest()
+    AndroidFBFactoryTest()
         : mock_hwc_factory(std::make_shared<MockHWCFactory>())
     {
     }
@@ -82,8 +56,9 @@ public:
     std::shared_ptr<MockHWCFactory> mock_hwc_factory;
     mt::HardwareAccessMock hw_access_mock;
 };
+}
 
-TEST_F(AndroidFramebufferSelectorTest, hwc_selection_gets_hwc_device)
+TEST_F(AndroidFBFactoryTest, hwc_selection_gets_hwc_device)
 {
     using namespace testing;
 
@@ -94,7 +69,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_selection_gets_hwc_device)
 }
 
 /* this case occurs when the libhardware library is not found/malformed */
-TEST_F(AndroidFramebufferSelectorTest, hwc_module_unavailble_always_creates_gpu_display)
+TEST_F(AndroidFBFactoryTest, hwc_module_unavailble_always_creates_gpu_display)
 {
     using namespace testing;
 
@@ -112,7 +87,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_module_unavailble_always_creates_gpu_
 }
 
 /* this is normal operation on hwc capable device */
-TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_version_11_success)
+TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_version_11_success)
 {
     using namespace testing;
 
@@ -123,12 +98,11 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_version_11_success)
 
     mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
     EXPECT_TRUE(fb_factory.can_create_hwc_display());
-    fb_factory.create_hwc_display();
 }
 
 
 // TODO: kdub support v 1.0 and 1.2
-TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_version10_not_supported)
+TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_failure_because_hwc_version10_not_supported)
 {
     using namespace testing;
 
@@ -145,7 +119,7 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_v
     }, std::runtime_error);
 }
 
-TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_version12_not_supported)
+TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_failure_because_hwc_version12_not_supported)
 {
     using namespace testing;
 

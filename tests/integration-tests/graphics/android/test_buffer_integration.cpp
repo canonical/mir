@@ -43,7 +43,7 @@ namespace mtd=mir::test::draw;
 namespace
 {
 
-class AndroidGraphicsPlatform : public ::testing::Test
+class AndroidBufferIntegration : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -69,7 +69,7 @@ protected:
 
 }
 
-TEST_F(AndroidGraphicsPlatform, allocator_creation_ok)
+TEST_F(AndroidBufferIntegration, allocator_creation_ok)
 {
     using namespace testing;
 
@@ -78,7 +78,7 @@ TEST_F(AndroidGraphicsPlatform, allocator_creation_ok)
     });
 }
 
-TEST_F(AndroidGraphicsPlatform, allocator_can_create_sw_buffer)
+TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
 {
     using namespace testing;
 
@@ -93,21 +93,21 @@ TEST_F(AndroidGraphicsPlatform, allocator_can_create_sw_buffer)
     EXPECT_TRUE(red_pattern.check(region));
 }
 
-TEST_F(AndroidGraphicsPlatform, allocator_can_create_hw_buffer)
+TEST_F(AndroidBufferIntegration, allocator_can_create_hw_buffer)
 {
     using namespace testing;
 
     mc::BufferProperties sw_properties{size, pf, mc::BufferUsage::hardware};
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
 
-    //note: it is a bit trickier to test that a gpu can render... just check no throw for now
+    //TODO: kdub it is a bit trickier to test that a gpu can render... just check no throw for now
     EXPECT_NO_THROW({
         auto test_buffer = allocator->alloc_buffer(sw_properties);
     });
 }
 
 
-TEST_F(AndroidGraphicsPlatform, strategy_creation_ok)
+TEST_F(AndroidBufferIntegration, strategy_creation_ok)
 {
     using namespace testing;
 
@@ -117,7 +117,7 @@ TEST_F(AndroidGraphicsPlatform, strategy_creation_ok)
     });
 }
 
-TEST_F(AndroidGraphicsPlatform, swapper_creation_is_sane)
+TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
 {
     using namespace testing;
 

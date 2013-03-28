@@ -21,7 +21,6 @@
 #include "android_display.h"
 #include "hwc_display.h"
 #include "hwc_factory.h"
-#include "hwc11_device.h"
 
 #include <boost/throw_exception.hpp>
 #include <ui/FramebufferNativeWindow.h>
@@ -41,7 +40,7 @@ mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<HWCFactory> const& hwc_f
     }
 
     hwc_composer_device_1* hwc_device_raw;
-    rc = hw_module->methods->open(hw_module, HWC_HARDWARE_COMPOSER, (hw_device_t**) &hwc_device_raw);
+    rc = hw_module->methods->open(hw_module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
     if ((rc != 0) || (hwc_device_raw == nullptr))
     {
         return;
@@ -77,7 +76,7 @@ std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc_display() const
     return std::make_shared<mga::HWCDisplay>(window, hwc_device);
 }
 
-/* note: gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
+/* note: OMAP4 gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_gpu_display() const
 {
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
