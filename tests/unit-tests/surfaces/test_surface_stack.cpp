@@ -234,47 +234,6 @@ TEST(
     stack.for_each_if(filter, renderable_operator);
 }
 
-TEST(
-    SurfaceStack,
-    test_restacking)
-{
-    using namespace ::testing;
-
-    MockBufferBundleFactory buffer_bundle_factory;
-    EXPECT_CALL(
-        buffer_bundle_factory,
-        create_buffer_bundle(_)).Times(AtLeast(1));
-
-    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
-
-    auto surface1 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-    auto surface2 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-    auto surface3 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-
-    mtd::MockSurfaceRenderer renderer;
-    MockFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator(&renderer);
-
-    ON_CALL(filter, filter(_)).WillByDefault(Return(true));
-    EXPECT_CALL(renderer, render(_,_)).Times(3);
-    EXPECT_CALL(filter, filter(_)).Times(3);
-
-    stack.raise_to_top(surface2);
-
-    {
-      InSequence seq;
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface2.lock()))).Times(1);
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface3.lock()))).Times(1);
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface1.lock()))).Times(1);
-    }
-
-    stack.for_each_if(filter, renderable_operator);
-
-}
-
 TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 {
     using namespace ::testing;

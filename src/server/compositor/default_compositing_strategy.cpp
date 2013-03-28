@@ -32,9 +32,9 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
-    std::shared_ptr<Renderables> const& view,
+    std::shared_ptr<Renderables> const& renderables,
     std::shared_ptr<mg::Renderer> const& renderer)
-    : renderables(view),
+    : renderables(renderables),
       renderer(renderer)
 {
     assert(renderables);

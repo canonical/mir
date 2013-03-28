@@ -126,7 +126,7 @@ void mc::MultiThreadedCompositor::start()
         thread_functors.push_back(std::move(thread_functor));
     });
 
-    /* Recomposite whenever the render view changes */
+    /* Recomposite whenever the renderables change */
     renderables->set_change_callback([this]()
     {
         for (auto& f : thread_functors)
