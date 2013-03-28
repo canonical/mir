@@ -20,19 +20,43 @@
 #define MIR_LOGGING_MESSAGE_PROCESSOR_REPORT_H_
 
 #include "mir/frontend/message_processor_report.h"
+#include "mir/time/time_source.h"
 
 #include <memory>
+#include <mutex>
+#include <unordered_map>
 
 namespace mir
 {
 namespace logging
 {
+namespace detail
+{
+struct InvocationDetails
+{
+    time::Timestamp start;
+    std::string method;
+    std::string exception;
+};
+
+typedef std::unordered_map<int, InvocationDetails> Invocations;
+
+struct MediatorDetails
+{
+    Invocations current_invocations;
+};
+
+typedef std::unordered_map<void const*, MediatorDetails> Mediators;
+}
+
 class Logger;
 
 class MessageProcessorReport : public mir::frontend::MessageProcessorReport
 {
 public:
-    MessageProcessorReport(std::shared_ptr<Logger> const& log);
+    MessageProcessorReport(
+        std::shared_ptr<Logger> const& log,
+        std::shared_ptr<time::TimeSource> const& time_source);
 
     void received_invocation(void const* mediator, int id, std::string const& method);
 
@@ -44,8 +68,13 @@ public:
 
     void exception_handled(void const* mediator, std::exception const& error);
 
+    ~MessageProcessorReport() noexcept(true);
+
 private:
     std::shared_ptr<Logger> const log;
+    std::shared_ptr<time::TimeSource> const time_source;
+    std::mutex mutex;
+    detail::Mediators mediators;
 };
 }
 }
