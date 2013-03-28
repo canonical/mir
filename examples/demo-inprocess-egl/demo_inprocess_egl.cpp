@@ -21,6 +21,8 @@
 #include "mir/run_mir.h"
 #include "mir/default_server_configuration.h"
 
+namespace msh = mir::shell;
+namespace mg = mir::graphics;
 namespace me = mir::examples;
 
 namespace
@@ -28,11 +30,21 @@ namespace
 
 struct InprocessClientStarter
 {
-    void operator()(mir::DisplayServer& server)
+    InprocessClientStarter(std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+                           std::shared_ptr<mg::Platform> const& graphics_platform)
+      : surface_factory(surface_factory),
+        graphics_platform(graphics_platform)
     {
-        auto client = new me::InprocessEGLClient(server);
+    }
+
+    void operator()(mir::DisplayServer&)
+    {
+        auto client = new me::InprocessEGLClient(graphics_platform, surface_factory);
         client->start();
     }
+    
+    std::shared_ptr<msh::SurfaceFactory> const surface_factory;
+    std::shared_ptr<mg::Platform> const graphics_platform;
 };
 
 }
@@ -42,5 +54,5 @@ int main(int argc, char const* argv[])
 {
     mir::DefaultServerConfiguration config(argc, argv);
     
-    mir::run_mir(config, InprocessClientStarter());
+    mir::run_mir(config, InprocessClientStarter(config.the_surface_factory(), config.the_graphics_platform()));
 }

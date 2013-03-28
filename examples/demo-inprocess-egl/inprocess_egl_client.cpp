@@ -19,7 +19,6 @@
 #include "inprocess_egl_client.h"
 #include "example_egl_helper.h"
 
-#include "mir/display_server.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
 #include "mir/frontend/surface_creation_parameters.h"
@@ -37,12 +36,16 @@
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
+namespace msh = mir::shell;
+namespace mg = mir::graphics;
+namespace mgeglm = mg::egl::mesa;
 namespace me = mir::examples;
-namespace mgeglm = mir::graphics::egl::mesa;
 namespace geom = mir::geometry;
 
-me::InprocessEGLClient::InprocessEGLClient(mir::DisplayServer& server)
-  : server(server)
+me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
+                                           std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
+  : graphics_platform(graphics_platform),
+    surface_factory(surface_factory)
 {
 }
 
@@ -60,12 +63,11 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
-    auto surface_factory = server.surface_factory();
     auto surface = surface_factory->create_surface(params);
     
     surface->advance_client_buffer(); // TODO: What a wart!
     
-    auto native_display = mgeglm::create_native_display(server.graphics_platform());
+    auto native_display = mgeglm::create_native_display(graphics_platform);
     me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display.get()), reinterpret_cast<EGLNativeWindowType>(surface.get()));
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());

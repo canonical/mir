@@ -20,10 +20,18 @@
 #define MIR_EXAMPLES_INPROCESS_EGL_CLIENT_H_
 
 #include <thread>
+#include <memory>
 
 namespace mir
 {
-class DisplayServer;
+namespace graphics
+{
+class Platform;
+}
+namespace shell
+{
+class SurfaceFactory;
+}
 
 namespace examples
 {
@@ -32,7 +40,8 @@ namespace examples
 class InprocessEGLClient
 {
 public:
-    InprocessEGLClient(mir::DisplayServer& server);
+    InprocessEGLClient(std::shared_ptr<graphics::Platform> const& graphics_platform,
+                       std::shared_ptr<shell::SurfaceFactory> const& surface_factory);
     virtual ~InprocessEGLClient() {}
     
     void start();
@@ -41,7 +50,8 @@ protected:
     InprocessEGLClient& operator=(InprocessEGLClient const&) = delete;
 
 private:
-    mir::DisplayServer& server;
+    std::shared_ptr<graphics::Platform> const graphics_platform;
+    std::shared_ptr<shell::SurfaceFactory> const surface_factory;
     
     std::thread client_thread;
     void thread_loop();
