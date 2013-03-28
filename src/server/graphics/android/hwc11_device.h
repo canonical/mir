@@ -16,28 +16,48 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
+#define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
+#include "hwc_device.h"
+#include <hardware/hwcomposer.h>
+#include <mutex>
+#include <condition_variable>
+#include <memory>
+
 namespace mir
 {
 namespace graphics
 {
 namespace android
 {
+class HWC11Device;
 
-class HWCDevice
+struct HWCCallbacks
+{
+    hwc_procs_t hooks;
+    HWC11Device* self;
+};
+
+class HWC11Device : public HWCDevice 
 {
 public:
-    HWCDevice() = default;
-    virtual ~HWCDevice() {}
-    virtual void wait_for_vsync() = 0;
-    virtual void commit_frame() = 0;
+    explicit HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
+    ~HWC11Device();
+
+    void wait_for_vsync();
+    void commit_frame();
+    void notify_vsync();
+
 private:
-    HWCDevice(HWCDevice const&) = delete;
-    HWCDevice& operator=(HWCDevice const&) = delete; 
+    HWCCallbacks callbacks;
+    std::shared_ptr<hwc_composer_device_1> hwc_device;
+    std::mutex vsync_wait_mutex;
+    std::condition_variable vsync_trigger;
+    bool vsync_occurred;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_ */
+
+#endif /* MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_ */

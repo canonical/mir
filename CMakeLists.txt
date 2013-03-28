@@ -103,13 +103,6 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
-set (MIR_TRANSPORT
-  socket
-  CACHE
-  STRING
-  "IPC transport to build (options are 'socket' or 'binder')"
-)
-
 set (MIR_DISABLE_INPUT
   false
   CACHE
