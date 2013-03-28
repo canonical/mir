@@ -83,6 +83,19 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_success)
     selector.primary_display();
 }
 
+TEST_F(AndroidFramebufferSelectorTest, hwc_creates_with_hwc_device_used_to_deteremine_version)
+{
+    using namespace testing;
+
+    EXPECT_CALL(hw_access_mock, hw_get_module(_, _))
+        .Times(1);
+    EXPECT_CALL(*mock_fb_factory, create_hwc1_1_gpu_display(hw_access_mock.mock_hwc_device.get()))
+        .Times(1); 
+
+    mga::AndroidDisplaySelector selector(mock_fb_factory);
+    selector.primary_display();
+}
+
 TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_module_not_found)
 {
     using namespace testing;
