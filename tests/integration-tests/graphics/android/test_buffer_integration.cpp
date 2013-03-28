@@ -62,13 +62,52 @@ protected:
     geom::Size size;
     geom::PixelFormat pf;
     mc::BufferProperties buffer_properties;
+    mtd::TestGrallocMapper sw_renderer;
 
     std::shared_ptr<mg::Platform> platform;
 };
 
 }
 
-TEST_F(AndroidGraphicsPlatform, alloc_does_not_throw)
+TEST_F(AndroidGraphicsPlatform, allocator_creation_ok)
+{
+    using namespace testing;
+
+    EXPECT_NO_THROW({
+        auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
+    });
+}
+
+TEST_F(AndroidGraphicsPlatform, allocator_can_create_sw_buffer)
+{
+    using namespace testing;
+
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
+
+    mc::BufferProperties sw_properties{size, pf, mc::BufferUsage::software};
+    auto test_buffer = allocator->alloc_buffer(sw_properties);
+
+    auto region = sw_renderer.get_graphic_region_from_package(test_buffer->get_ipc_package(), size);
+    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
+    red_pattern.draw(region);
+    EXPECT_TRUE(red_pattern.check(region));
+}
+
+TEST_F(AndroidGraphicsPlatform, allocator_can_create_hw_buffer)
+{
+    using namespace testing;
+
+    mc::BufferProperties sw_properties{size, pf, mc::BufferUsage::hardware};
+    auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
+
+    //note: it is a bit trickier to test that a gpu can render... just check no throw for now
+    EXPECT_NO_THROW({
+        auto test_buffer = allocator->alloc_buffer(sw_properties);
+    });
+}
+
+
+TEST_F(AndroidGraphicsPlatform, strategy_creation_ok)
 {
     using namespace testing;
 
@@ -76,7 +115,6 @@ TEST_F(AndroidGraphicsPlatform, alloc_does_not_throw)
         auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
         auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     });
-
 }
 
 TEST_F(AndroidGraphicsPlatform, swapper_creation_is_sane)
