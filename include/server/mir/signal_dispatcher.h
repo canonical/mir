@@ -16,14 +16,14 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_SIGNAL_DISPATCHER_H_
-#define MIR_TEST_FRAMEWORK_SIGNAL_DISPATCHER_H_
+#ifndef MIR_SIGNAL_DISPATCHER_H_
+#define MIR_SIGNAL_DISPATCHER_H_
 
 #include <boost/signals2.hpp>
 
 #include <memory>
 
-namespace mir_test_framework
+namespace mir
 {
 
 // Singleton class that decouples
@@ -58,4 +58,4 @@ private:
 };
 }
 
-#endif // MIR_TEST_FRAMEWORK_SIGNAL_DISPATCHER_H_
+#endif // MIR_SIGNAL_DISPATCHER_H_
