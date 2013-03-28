@@ -22,7 +22,7 @@ configure_file(
 
 set(
   SRCS
-  server_instance.cpp
+  display_server.cpp
   run_mir.cpp
   default_server_configuration.cpp
   signal_dispatcher.cpp

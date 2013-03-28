@@ -18,23 +18,21 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_SERVER_INSTANCE_H_
-#define MIR_SERVER_INSTANCE_H_
+#ifndef MIR_DISPLAY_SERVER_H_
+#define MIR_DISPLAY_SERVER_H_
 
 #include <memory>
-
-#include "mir/display_server.h"
 
 namespace mir
 {
 class ServerConfiguration;
 
-class ServerInstance : public mir::DisplayServer
+class DisplayServer
 {
 public:
-    explicit ServerInstance(ServerConfiguration& config);
+    explicit DisplayServer(ServerConfiguration& config);
 
-    ~ServerInstance();
+    ~DisplayServer();
 
     void run();
     void stop();
@@ -43,11 +41,11 @@ private:
     struct Private;
     std::unique_ptr<Private> p;
 
-    ServerInstance() = delete;
-    ServerInstance(const ServerInstance&) = delete;
-    ServerInstance& operator=(const ServerInstance&) = delete;
+    DisplayServer() = delete;
+    DisplayServer(const DisplayServer&) = delete;
+    DisplayServer& operator=(const DisplayServer&) = delete;
 };
 
 }
 
-#endif /* MIR_SERVER_INSTANCE_H_ */
+#endif /* MIR_DISPLAY_SERVER_H_ */
