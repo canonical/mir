@@ -481,8 +481,3 @@ std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time
             return std::make_shared<mir::time::HighResolutionClock>();
         });
 }
-
-std::function<void(mir::DisplayServer*)> mir::DefaultServerConfiguration::the_ready_to_run_handler()
-{
-    return std::function<void(mir::DisplayServer*)>();
-}

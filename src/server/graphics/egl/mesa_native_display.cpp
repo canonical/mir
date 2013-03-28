@@ -42,8 +42,8 @@ namespace
 class MesaNativeDisplayImpl
 {
 public:
-    MesaNativeDisplayImpl(mir::DisplayServer& server)
-        : graphics_platform(server.graphics_platform())
+    MesaNativeDisplayImpl(std::shared_ptr<mg::Platform> const& graphics_platform)
+        : graphics_platform(graphics_platform)
     {
     }
     
@@ -158,9 +158,9 @@ int mir_toolkit::mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
 }
 }
 
-std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_display(mir::DisplayServer& server)
+std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_display(std::shared_ptr<mg::Platform> const& platform)
 {
-    auto impl = new MesaNativeDisplayImpl(server);
+    auto impl = new MesaNativeDisplayImpl(platform);
 
     auto native_display = std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay>(new mir_toolkit::MirMesaEGLNativeDisplay, 
                                                                                 NativeDisplayDeleter());

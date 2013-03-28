@@ -55,7 +55,6 @@ struct MockServerConfiguration : public mir::ServerConfiguration
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
     MOCK_METHOD0(the_graphics_platform, std::shared_ptr<mg::Platform>());
     MOCK_METHOD0(the_compositor, std::shared_ptr<mc::Compositor>());
-    MOCK_METHOD0(the_ready_to_run_handler, std::function<void(mir::DisplayServer*)>());
 };
 
 MATCHER_P(NamedWindowWithNoGeometry, name, "")

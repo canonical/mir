@@ -48,7 +48,6 @@ struct mir::ServerInstance::Private
           surface_factory{config.the_surface_factory()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
-          ready_to_run{config.the_ready_to_run_handler()},
           exit(false)
     {
     }
@@ -60,7 +59,6 @@ struct mir::ServerInstance::Private
     std::shared_ptr<msh::SurfaceFactory> surface_factory;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
-    std::function<void(mir::DisplayServer*)> ready_to_run;
     std::mutex exit_guard;
     std::condition_variable exit_cv;
     bool exit;
@@ -85,9 +83,6 @@ void mir::ServerInstance::run()
     p->compositor->start();
     p->input_manager->start();
 
-    if (p->ready_to_run)
-        p->ready_to_run(this);
-    
     while (!p->exit)
         p->exit_cv.wait(lk);
 

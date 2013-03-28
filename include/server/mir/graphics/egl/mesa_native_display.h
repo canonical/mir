@@ -28,15 +28,15 @@ struct MirMesaEGLNativeDisplay;
 
 namespace mir
 {
-class DisplayServer;
-
 namespace graphics
 {
+class Platform;
+
 namespace egl
 {
 namespace mesa
 {
-std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> create_native_display(mir::DisplayServer& server);
+std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> create_native_display(std::shared_ptr<Platform> const& platform);
 }
 }
 }

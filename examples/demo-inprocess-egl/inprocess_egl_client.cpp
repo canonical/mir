@@ -65,7 +65,7 @@ void me::InprocessEGLClient::thread_loop()
     
     surface->advance_client_buffer(); // TODO: What a wart!
     
-    auto native_display = mgeglm::create_native_display(server);
+    auto native_display = mgeglm::create_native_display(server.graphics_platform());
     me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display.get()), reinterpret_cast<EGLNativeWindowType>(surface.get()));
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
