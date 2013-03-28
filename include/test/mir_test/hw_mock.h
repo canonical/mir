@@ -51,6 +51,8 @@ public:
 
     MOCK_METHOD2(hw_get_module, int(const char *id, const struct hw_module_t**));
 
+    bool open_count_matches_close();
+
     std::shared_ptr<alloc_device_t> mock_alloc_device; 
     std::shared_ptr<hwc_composer_device_1> mock_hwc_device;
  

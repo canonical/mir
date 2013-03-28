@@ -74,6 +74,10 @@ public:
     {
     }
 
+    void TearDown()
+    {
+        EXPECT_TRUE(hw_access_mock.open_count_matches_close());
+    }
     std::shared_ptr<MockHWCFactory> mock_hwc_factory;
     mt::HardwareAccessMock hw_access_mock;
 };
@@ -105,27 +109,6 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_module_unavailble_always_creates_gpu_
         fb_factory.create_hwc_display();
     }, std::runtime_error);
 }
-
-#if 0
-TEST_F(AndroidFramebufferSelectorTest, hwc_device_failure_because_hwc_does_not_open)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_hwc_module, open_interface())
-        .Times(1)
-        .WillOnce(Return(-1));;
-    EXPECT_CALL(mock_hwc_module, close_interface())
-        .Times(0);
-
-    std::shared_ptr<MockHWCFactory> mock_hwc_factory;
-    mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
-
-    EXPECT_FALSE(fb_factory.can_create_hwc_device());
-    EXPECT_THROW({
-        fb_factory.create_hwc_device();
-    });
-}
-#endif
 
 /* this is normal operation on hwc capable device */
 TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_version_11_success)
@@ -177,4 +160,3 @@ TEST_F(AndroidFramebufferSelectorTest, hwc_with_hwc_device_failure_because_hwc_v
         fb_factory.create_hwc_display();
     }, std::runtime_error);
 }
-
