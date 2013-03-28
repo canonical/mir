@@ -26,6 +26,7 @@ namespace mir
 namespace examples
 {
 
+/// Simple helper class for managing an EGL rendering with a sensible default configuration.
 class EGLHelper
 {
 public:

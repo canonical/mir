@@ -92,6 +92,12 @@ public:
         parameters->pixel_format = static_cast<mir_toolkit::MirPixelFormat>(surface->pixel_format());
         parameters->buffer_usage = mir_toolkit::mir_buffer_usage_hardware;
     }
+    
+    static MesaNativeDisplayImpl* impl(mir_toolkit::MirMesaEGLNativeDisplay* display)
+    {
+        return static_cast<MesaNativeDisplayImpl*>(display->context);
+    }
+
 private:
     std::shared_ptr<mg::Platform> graphics_platform;
     std::shared_ptr<mg::PlatformIPCPackage> platform_package;
@@ -99,7 +105,7 @@ private:
 
 static void native_display_get_platform(mir_toolkit::MirMesaEGLNativeDisplay* display, mir_toolkit::MirPlatformPackage* package)
 {
-    auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
+    auto impl = MesaNativeDisplayImpl::impl(display);
     impl->populate_platform_package(package);
 }
 
@@ -107,7 +113,7 @@ static void native_display_surface_get_current_buffer(mir_toolkit::MirMesaEGLNat
                                                       mir_toolkit::MirEGLNativeWindowType surface,
                                                       mir_toolkit::MirBufferPackage* buffer_package)
 {
-    auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
+    auto impl = MesaNativeDisplayImpl::impl(display);
     auto mir_surface = static_cast<mf::Surface *>(surface);
     impl->surface_get_current_buffer(mir_surface, buffer_package);
 }
@@ -116,7 +122,7 @@ static void native_display_surface_get_parameters(mir_toolkit::MirMesaEGLNativeD
                                                   mir_toolkit::MirEGLNativeWindowType surface,
                                                   mir_toolkit::MirSurfaceParameters* parameters)
 {
-    auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
+    auto impl = MesaNativeDisplayImpl::impl(display);
     auto mir_surface = static_cast<mf::Surface *>(surface);
     impl->surface_get_parameters(mir_surface, parameters);
 }
@@ -124,7 +130,7 @@ static void native_display_surface_get_parameters(mir_toolkit::MirMesaEGLNativeD
 static void native_display_surface_advance_buffer(mir_toolkit::MirMesaEGLNativeDisplay* display, 
                                                   mir_toolkit::MirEGLNativeWindowType surface)
 {
-    auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
+    auto impl = MesaNativeDisplayImpl::impl(display);
     auto mir_surface = static_cast<mf::Surface *>(surface);
     impl->surface_advance_buffer(mir_surface);
 }

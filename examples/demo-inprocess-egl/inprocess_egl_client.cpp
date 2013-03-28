@@ -59,11 +59,11 @@ void me::InprocessEGLClient::thread_loop()
     auto params = mf::a_surface().of_name("Inprocess EGL Demo")
         .of_size(surface_size)
         .of_buffer_usage(mc::BufferUsage::hardware)
-        .of_pixel_format(geom::PixelFormat::argb_8888); // TODO: Choose pixel format based on supported formats
+        .of_pixel_format(geom::PixelFormat::argb_8888);
     auto surface_factory = server->surface_factory();
     auto surface = surface_factory->create_surface(params);
     
-    surface->advance_client_buffer(); // TODO: What a wart! ~racarr
+    surface->advance_client_buffer(); // TODO: What a wart!
     
     auto native_display = mgeglm::create_native_display(server);
     me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display.get()), reinterpret_cast<EGLNativeWindowType>(surface.get()));
@@ -74,7 +74,6 @@ void me::InprocessEGLClient::thread_loop()
     mir::draw::glAnimationBasic gl_animation;
     gl_animation.init_gl();
     
-    // TODO: Might make sense for this to have a way to quit besides server shut down.
     for(;;)
     {
         gl_animation.render_gl();

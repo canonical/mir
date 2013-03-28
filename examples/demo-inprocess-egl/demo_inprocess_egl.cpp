@@ -30,7 +30,6 @@ struct InprocessClientStarter
 {
     void operator()(mir::DisplayServer *server)
     {
-        // TODO: Figure out management of this why use new? racarr
         auto client = new me::InprocessEGLClient(server);
         client->start();
     }

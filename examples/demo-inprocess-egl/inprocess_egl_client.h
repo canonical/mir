@@ -28,6 +28,7 @@ class DisplayServer;
 namespace examples
 {
 
+/// Encapsulation of a simple threaded client demonstrating inprocess EGL rendering
 class InprocessEGLClient
 {
 public:

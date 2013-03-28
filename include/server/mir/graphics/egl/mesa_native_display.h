@@ -43,4 +43,3 @@ std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> create_native_display(mir:
 } // namespace mir
 
 #endif // MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_
-
