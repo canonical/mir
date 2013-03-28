@@ -36,6 +36,7 @@
 namespace mg = mir::graphics;
 namespace mgeglm = mg::egl::mesa;
 namespace mc = mir::compositor;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -46,6 +47,7 @@ namespace
 struct MockDisplayServer : public mir::DisplayServer
 {
     MOCK_METHOD0(graphics_platform, std::shared_ptr<mg::Platform>());
+    MOCK_METHOD0(surface_factory, std::shared_ptr<msh::SurfaceFactory>());
 };
 
 struct MockGraphicsPlatform : public mg::Platform

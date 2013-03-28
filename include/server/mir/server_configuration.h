@@ -32,6 +32,10 @@ namespace frontend
 class Communicator;
 class Shell;
 }
+namespace shell
+{
+class SurfaceFactory;
+}
 namespace graphics
 {
 class Display;
@@ -50,6 +54,7 @@ class ServerConfiguration
 public:
     virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell() = 0;
+    virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<graphics::Platform> the_graphics_platform() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;

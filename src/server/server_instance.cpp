@@ -34,6 +34,7 @@
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
+namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 
@@ -44,6 +45,7 @@ struct mir::ServerInstance::Private
           graphics_platform{config.the_graphics_platform()},
           compositor{config.the_compositor()},
           shell{config.the_frontend_shell()},
+          surface_factory{config.the_surface_factory()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
           ready_to_run{config.the_ready_to_run_handler()},
@@ -54,7 +56,8 @@ struct mir::ServerInstance::Private
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mg::Platform> graphics_platform;
     std::shared_ptr<mc::Compositor> compositor;
-    std::shared_ptr<frontend::Shell> shell;
+    std::shared_ptr<frontend::Shell> shell;    
+    std::shared_ptr<msh::SurfaceFactory> surface_factory;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::function<void(mir::DisplayServer*)> ready_to_run;
@@ -102,4 +105,9 @@ void mir::ServerInstance::stop()
 std::shared_ptr<mg::Platform> mir::ServerInstance::graphics_platform()
 {
     return p->graphics_platform;
+}
+
+std::shared_ptr<msh::SurfaceFactory> mir::ServerInstance::surface_factory()
+{
+    return p->surface_factory;
 }
