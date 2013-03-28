@@ -85,21 +85,29 @@ set_target_properties(
   SOVERSION ${MIR_VERSION_MAJOR}
 )
 
-target_link_libraries(
-  mirclient
-
+set(
+  MIR_CLIENT_LIBRARIES
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   
-  mirinputandroidtransport
-
   mirprotobuf
 
   ${DRM_LIBRARIES}
   ${ANDROID_STDLIB}
   3rd_party
+)
+
+if (NOT MIR_DISABLE_INPUT)
+  list(APPEND MIR_CLIENT_LIBRARIES
+    mirinputandroidtransport)
+endif()
+
+target_link_libraries(
+  mirclient
+
+  ${MIR_CLIENT_LIBRARIES}
 )
 
 install(
