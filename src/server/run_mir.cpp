@@ -28,7 +28,7 @@ namespace
 {
 std::atomic<mir::DisplayServer*> signal_display_server;
 
-extern "C" void signal_terminate(int)
+void signal_terminate(int)
 {
     while (!signal_display_server.load())
         std::this_thread::yield();
