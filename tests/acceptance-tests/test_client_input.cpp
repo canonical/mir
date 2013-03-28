@@ -84,7 +84,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
 
     void exec(mir::DisplayServer* /* display_server */) override
     {
-        on_focus_set.wait_for_at_most_seconds(1);
+        on_focus_set.wait_for_at_most_seconds(5);
         inject_input();
     }
 
@@ -208,9 +208,9 @@ struct InputReceivingClient : ClientConfigCommon
          };
          mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
 
-         event_received[0].wait_for_at_most_seconds(1);
-         event_received[1].wait_for_at_most_seconds(1);
-         event_received[2].wait_for_at_most_seconds(1);
+         event_received[0].wait_for_at_most_seconds(5);
+         event_received[1].wait_for_at_most_seconds(5);
+         event_received[2].wait_for_at_most_seconds(5);
 
          mir_surface_release_sync(surface);
          
