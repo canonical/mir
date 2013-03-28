@@ -18,18 +18,48 @@
 
 #include "example_egl_helper.h"
 
+#include <assert.h>
+
 namespace me = mir::examples;
 
-me::EGLHelper::EGLHelper(EGLNativeDisplayType native_display, EGLNativeWindowType native_surface)
+me::EGLHelper::EGLHelper(EGLNativeDisplayType native_display, EGLNativeWindowType native_window)
 {
-    // TODO: ~racarr
-    (void) native_display;
-    (void) native_surface;
+    display = eglGetDisplay(native_display);
+    assert(display != EGL_NO_DISPLAY);
+
+    int major, minor, rc;
+    rc = eglInitialize(display, &major, &minor);
+    assert(rc == EGL_TRUE);
+    assert(major == 1);
+    assert(minor == 4);
+
+    EGLint attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE };
+    EGLConfig egl_config;
+    int n;
+    rc = eglChooseConfig(display, attribs, &egl_config, 1, &n);
+    assert(rc == EGL_TRUE);
+    assert(n == 1);
+
+    surface = eglCreateWindowSurface(display, egl_config, native_window, nullptr);
+    assert(surface != EGL_NO_SURFACE);
+
+    EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    context = eglCreateContext(display, egl_config, EGL_NO_CONTEXT, context_attribs);
+    assert(surface != EGL_NO_CONTEXT);
 }
 
 me::EGLHelper::~EGLHelper()
 {
-    // TODO: ~racarr
+    eglDestroySurface(display, surface);
+    eglDestroyContext(display, context);
+    eglTerminate(display);
 }
 
 EGLDisplay me::EGLHelper::the_display() const

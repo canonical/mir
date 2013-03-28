@@ -19,6 +19,8 @@
 #ifndef MIR_EXAMPLES_INPROCESS_EGL_CLIENT_H_
 #define MIR_EXAMPLES_INPROCESS_EGL_CLIENT_H_
 
+#include <thread>
+
 namespace mir
 {
 class DisplayServer;
@@ -39,6 +41,9 @@ protected:
 
 private:
     mir::DisplayServer* server;
+    
+    std::thread client_thread;
+    void thread_loop();
 };
 
 }
