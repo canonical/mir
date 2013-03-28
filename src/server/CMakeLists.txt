@@ -73,12 +73,6 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
   )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/shared/mir DESTINATION "include/mirserver"
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit DESTINATION "include/mirserver"
-  )
 else()
   target_link_libraries(mirserver
     LINK_PUBLIC
