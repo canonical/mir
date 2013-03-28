@@ -36,17 +36,10 @@ set(
   ${PROTO_SRCS}
 )
 
-if (MIR_TRANSPORT STREQUAL "socket")
 list(APPEND CLIENT_SOURCES
   mir_socket_rpc_channel.cpp
   make_socket_rpc_channel.cpp
 )
-elseif (MIR_TRANSPORT STREQUAL "binder")
-list(APPEND CLIENT_SOURCES
-  mir_binder_rpc_channel.cpp
-  make_binder_rpc_channel.cpp
-)
-endif()
 
 if( MIR_PLATFORM STREQUAL "android")
 include_directories(${LIBHARDWARE_INCLUDE_DIRS})
