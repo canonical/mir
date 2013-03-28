@@ -28,9 +28,11 @@ namespace graphics
 namespace android
 {
 
+class HWCFactory;
 class AndroidFBFactory : public FBFactory
 {
 public:
+    explicit AndroidFBFactory(std::shared_ptr<HWCFactory> const& hwc_factory);
     std::shared_ptr<Display> create_hwc_display() const;
     bool can_create_hwc_display() const;
     std::shared_ptr<Display> create_gpu_display() const;

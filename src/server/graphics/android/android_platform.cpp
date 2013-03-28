@@ -37,9 +37,12 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
+#if 0
     auto fb_factory = std::make_shared<mga::AndroidFBFactory>();
     auto selector = std::make_shared<mga::AndroidDisplaySelector>(fb_factory);
     return selector->primary_display();
+#endif
+    return std::shared_ptr<mg::Display>();
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()

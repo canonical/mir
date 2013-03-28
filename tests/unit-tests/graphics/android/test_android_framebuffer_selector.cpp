@@ -18,6 +18,7 @@
 
 #include "src/server/graphics/android/android_fb_factory.h"
 #include "src/server/graphics/android/hwc_device.h"
+#include "src/server/graphics/android/hwc_factory.h"
 
 #include "mir_test/hw_mock.h"
 #include "mir_test_doubles/null_display.h"
