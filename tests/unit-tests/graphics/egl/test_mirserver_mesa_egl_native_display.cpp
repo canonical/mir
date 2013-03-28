@@ -125,7 +125,7 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, display_get_platform_is_cached_platfo
     EXPECT_CALL(mock_server, graphics_platform()).Times(1);
     EXPECT_CALL(graphics_platform, get_ipc_package()).Times(1);
 
-    auto display = mgeglm::create_native_display(&mock_server);
+    auto display = mgeglm::create_native_display(mock_server);
     
     mir_toolkit::MirPlatformPackage package;
     display->display_get_platform(display.get(), &package);
@@ -154,7 +154,7 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_current_buffer)
     test_buffer_package.stride = 77;
 
     EXPECT_CALL(mock_server, graphics_platform()).Times(1);
-    auto display = mgeglm::create_native_display(&mock_server);
+    auto display = mgeglm::create_native_display(mock_server);
     
     EXPECT_CALL(surface, client_buffer()).Times(1)
         .WillOnce(Return(buffer));
@@ -174,7 +174,7 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_advance_buffer)
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
     
     EXPECT_CALL(mock_server, graphics_platform()).Times(1);
-    auto display = mgeglm::create_native_display(&mock_server);
+    auto display = mgeglm::create_native_display(mock_server);
     
     EXPECT_CALL(surface, advance_client_buffer()).Times(1);
     
@@ -201,7 +201,7 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_parameters)
     geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
 
     EXPECT_CALL(mock_server, graphics_platform()).Times(1);
-    auto display = mgeglm::create_native_display(&mock_server);
+    auto display = mgeglm::create_native_display(mock_server);
 
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
     EXPECT_CALL(surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(test_surface_size));

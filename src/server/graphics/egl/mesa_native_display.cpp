@@ -35,19 +35,19 @@ namespace mgeglm = mg::egl::mesa;
 namespace mf = mir::frontend;
 
 std::mutex valid_displays_guard;
-std::set<mir_toolkit::MirMesaEGLNativeDisplay *> valid_displays;
+std::set<mir_toolkit::MirMesaEGLNativeDisplay*> valid_displays;
 
 namespace
 {
 class MesaNativeDisplayImpl
 {
 public:
-    MesaNativeDisplayImpl(mir::DisplayServer *server)
-        : graphics_platform(server->graphics_platform())
+    MesaNativeDisplayImpl(mir::DisplayServer& server)
+        : graphics_platform(server.graphics_platform())
     {
     }
     
-    void populate_platform_package(mir_toolkit::MirPlatformPackage *package)
+    void populate_platform_package(mir_toolkit::MirPlatformPackage* package)
     {
         if (!platform_package)
             platform_package = graphics_platform->get_ipc_package();
@@ -63,7 +63,7 @@ public:
         }
     }
     
-    void surface_get_current_buffer(mf::Surface *surface, mir_toolkit::MirBufferPackage *package)
+    void surface_get_current_buffer(mf::Surface* surface, mir_toolkit::MirBufferPackage* package)
     {
         auto buffer = surface->client_buffer();
         auto buffer_package = buffer->get_ipc_package();
@@ -85,7 +85,7 @@ public:
         surface->advance_client_buffer();
     }
     
-    void surface_get_parameters(mf::Surface* surface, mir_toolkit::MirSurfaceParameters *parameters)
+    void surface_get_parameters(mf::Surface* surface, mir_toolkit::MirSurfaceParameters* parameters)
     {
         parameters->width = surface->size().width.as_uint32_t();
         parameters->height = surface->size().height.as_uint32_t();
@@ -114,7 +114,7 @@ static void native_display_surface_get_current_buffer(mir_toolkit::MirMesaEGLNat
                                                       mir_toolkit::MirBufferPackage* buffer_package)
 {
     auto impl = MesaNativeDisplayImpl::impl(display);
-    auto mir_surface = static_cast<mf::Surface *>(surface);
+    auto mir_surface = static_cast<mf::Surface*>(surface);
     impl->surface_get_current_buffer(mir_surface, buffer_package);
 }
 
@@ -123,7 +123,7 @@ static void native_display_surface_get_parameters(mir_toolkit::MirMesaEGLNativeD
                                                   mir_toolkit::MirSurfaceParameters* parameters)
 {
     auto impl = MesaNativeDisplayImpl::impl(display);
-    auto mir_surface = static_cast<mf::Surface *>(surface);
+    auto mir_surface = static_cast<mf::Surface*>(surface);
     impl->surface_get_parameters(mir_surface, parameters);
 }
 
@@ -131,13 +131,13 @@ static void native_display_surface_advance_buffer(mir_toolkit::MirMesaEGLNativeD
                                                   mir_toolkit::MirEGLNativeWindowType surface)
 {
     auto impl = MesaNativeDisplayImpl::impl(display);
-    auto mir_surface = static_cast<mf::Surface *>(surface);
+    auto mir_surface = static_cast<mf::Surface*>(surface);
     impl->surface_advance_buffer(mir_surface);
 }
 
 struct NativeDisplayDeleter
 {
-    void operator()(mir_toolkit::MirMesaEGLNativeDisplay *display)
+    void operator()(mir_toolkit::MirMesaEGLNativeDisplay* display)
     {
         std::unique_lock<std::mutex> lg(valid_displays_guard);
         valid_displays.erase(display);
@@ -151,20 +151,20 @@ struct NativeDisplayDeleter
 
 extern "C"
 {
-int mir_toolkit::mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay *display)
+int mir_toolkit::mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
     std::unique_lock<std::mutex> lg(valid_displays_guard);
     return valid_displays.find(display) != valid_displays.end();
 }
 }
 
-std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_display(mir::DisplayServer* server)
+std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> mgeglm::create_native_display(mir::DisplayServer& server)
 {
     auto impl = new MesaNativeDisplayImpl(server);
 
     auto native_display = std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay>(new mir_toolkit::MirMesaEGLNativeDisplay, 
                                                                                 NativeDisplayDeleter());
-    native_display->context = static_cast<void *>(impl);
+    native_display->context = static_cast<void*>(impl);
     native_display->display_get_platform = native_display_get_platform;
     native_display->surface_get_current_buffer = native_display_surface_get_current_buffer;
     native_display->surface_get_parameters = native_display_surface_get_parameters;

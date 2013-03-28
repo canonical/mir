@@ -41,7 +41,7 @@ namespace me = mir::examples;
 namespace mgeglm = mir::graphics::egl::mesa;
 namespace geom = mir::geometry;
 
-me::InprocessEGLClient::InprocessEGLClient(mir::DisplayServer* server)
+me::InprocessEGLClient::InprocessEGLClient(mir::DisplayServer& server)
   : server(server)
 {
 }
@@ -60,7 +60,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
-    auto surface_factory = server->surface_factory();
+    auto surface_factory = server.surface_factory();
     auto surface = surface_factory->create_surface(params);
     
     surface->advance_client_buffer(); // TODO: What a wart!

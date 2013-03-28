@@ -36,7 +36,7 @@ namespace egl
 {
 namespace mesa
 {
-std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> create_native_display(mir::DisplayServer* server);
+std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> create_native_display(mir::DisplayServer& server);
 }
 }
 }

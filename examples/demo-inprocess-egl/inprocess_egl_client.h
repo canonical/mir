@@ -32,7 +32,7 @@ namespace examples
 class InprocessEGLClient
 {
 public:
-    InprocessEGLClient(mir::DisplayServer* server);
+    InprocessEGLClient(mir::DisplayServer& server);
     virtual ~InprocessEGLClient() {}
     
     void start();
@@ -41,7 +41,7 @@ protected:
     InprocessEGLClient& operator=(InprocessEGLClient const&) = delete;
 
 private:
-    mir::DisplayServer* server;
+    mir::DisplayServer& server;
     
     std::thread client_thread;
     void thread_loop();

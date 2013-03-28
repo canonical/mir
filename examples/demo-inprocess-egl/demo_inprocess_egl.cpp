@@ -28,31 +28,19 @@ namespace
 
 struct InprocessClientStarter
 {
-    void operator()(mir::DisplayServer *server)
+    void operator()(mir::DisplayServer& server)
     {
         auto client = new me::InprocessEGLClient(server);
         client->start();
     }
 };
 
-struct ExampleServerConfiguration : public mir::DefaultServerConfiguration
-{
-    ExampleServerConfiguration(int argc, char const* argv[])
-      : DefaultServerConfiguration(argc, argv)
-    {
-    }
-
-    std::function<void(mir::DisplayServer *)> the_ready_to_run_handler() override
-    {
-        return InprocessClientStarter();
-    }
-};
-
 }
+
 
 int main(int argc, char const* argv[])
 {
-    ExampleServerConfiguration config(argc, argv);
+    mir::DefaultServerConfiguration config(argc, argv);
     
-    mir::run_mir(config);
+    mir::run_mir(config, InprocessClientStarter());
 }
