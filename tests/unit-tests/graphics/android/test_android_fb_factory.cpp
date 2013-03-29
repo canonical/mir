@@ -41,6 +41,12 @@ struct MockHWCFactory: public mga::HWCFactory
     MOCK_CONST_METHOD1(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>(std::shared_ptr<hwc_composer_device_1> const&));
 };
 
+struct MockDisplayFactory: public mga::DisplayFactory
+{
+    MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mga::AndroidDisplay>());
+    MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mga::HWCDisplay>(std::shared_ptr<mga::HWCDevice> const&));
+};
+
 class AndroidFBFactoryTest : public ::testing::Test
 {
 public:
@@ -54,6 +60,7 @@ public:
         EXPECT_TRUE(hw_access_mock.open_count_matches_close());
     }
     std::shared_ptr<MockHWCFactory> mock_hwc_factory;
+    std::shared_ptr<MockDisplayFactory> mock_display_factory;
     mt::HardwareAccessMock hw_access_mock;
 };
 }
@@ -65,7 +72,7 @@ TEST_F(AndroidFBFactoryTest, hwc_selection_gets_hwc_device)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
+    mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory); 
 }
 
 /* this case occurs when the libhardware library is not found/malformed */
@@ -76,13 +83,9 @@ TEST_F(AndroidFBFactoryTest, hwc_module_unavailble_always_creates_gpu_display)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1)
         .WillOnce(Return(-1));
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
-        .Times(0);
 
-    mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
-    EXPECT_FALSE(fb_factory.can_create_hwc_display());
     EXPECT_THROW({
-        fb_factory.create_hwc_display();
+        mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory); 
     }, std::runtime_error);
 }
 
@@ -95,13 +98,14 @@ TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_version_11_success)
 
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(1);
+    EXPECT_CALL(*mock_display_factory, create_hwc_display())
+        .Times(1);
 
-    mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
-    EXPECT_TRUE(fb_factory.can_create_hwc_display());
+    mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory);
+    fb_factory.create_fb();
 }
 
-
-// TODO: kdub support v 1.0 and 1.2
+// TODO: kdub support v 1.0 and 1.2. for the time being, alloc a fallback gpu display
 TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_failure_because_hwc_version10_not_supported)
 {
     using namespace testing;
@@ -110,13 +114,13 @@ TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_failure_because_hwc_version10_n
 
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(0);
+    EXPECT_CALL(*mock_display_factory, create_hwc_display())
+        .Times(0);
+    EXPECT_CALL(*mock_display_factory, create_gpu_display())
+        .Times(1);
 
-    mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
-
-    EXPECT_FALSE(fb_factory.can_create_hwc_display());
-    EXPECT_THROW({
-        fb_factory.create_hwc_display();
-    }, std::runtime_error);
+    mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory); 
+    fb_factory.create_fb();
 }
 
 TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_failure_because_hwc_version12_not_supported)
@@ -127,11 +131,11 @@ TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_failure_because_hwc_version12_n
 
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(0);
+    EXPECT_CALL(*mock_display_factory, create_hwc_display())
+        .Times(0);
+    EXPECT_CALL(*mock_display_factory, create_gpu_display())
+        .Times(1);
 
-    mga::AndroidFBFactory fb_factory(mock_hwc_factory); 
-
-    EXPECT_FALSE(fb_factory.can_create_hwc_display());
-    EXPECT_THROW({
-        fb_factory.create_hwc_display();
-    }, std::runtime_error);
+    mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory); 
+    fb_factory.create_fb();
 }
