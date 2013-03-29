@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_ANDROID_SYNCFENCE_H_
-#define MIR_CLIENT_ANDROID_SYNCFENCE_H_
+#ifndef MIR_GRAPHICS_ANDROID_SYNCFENCE_H_
+#define MIR_GRAPHICS_ANDROID_SYNCFENCE_H_
 
 #include <memory>
 
@@ -73,4 +73,4 @@ private:
 }
 }
 }
-#endif /* MIR_CLIENT_ANDROID_SYNCFENCE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_SYNCFENCE_H_ */

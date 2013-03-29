@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
-#define MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
+#ifndef MIR_GRAPHICS_ANDROID_MIR_NATIVE_WINDOW_H_
+#define MIR_GRAPHICS_ANDROID_MIR_NATIVE_WINDOW_H_
 
 #include <system/window.h>
 #include <cstdarg>
@@ -50,4 +50,4 @@ private:
 }
 }
 
-#endif /* MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_MIR_NATIVE_WINDOW_H_ */
