@@ -26,11 +26,6 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 
-namespace mir_toolkit
-{
-struct MirBufferPackage;
-}
-
 namespace mir
 {
 

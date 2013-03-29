@@ -19,12 +19,6 @@
 #ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
 #define MIR_CLIENT_CLIENT_CONTEXT_H_
 
-namespace mir_toolkit
-{
-struct MirPlatformPackage;
-struct MirConnection;
-}
-
 namespace mir
 {
 namespace client

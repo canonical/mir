@@ -24,11 +24,6 @@
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
 
-namespace mir_toolkit
-{
-    struct MirBufferPackage;
-}
-
 namespace mir
 {
 namespace test
