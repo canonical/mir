@@ -22,7 +22,7 @@
 #define MIR_COMMON_H_
 
 /**
- * \defgroup mir_toolkit MIR graphics tools API
+ * \addtogroup mir_toolkit
  * @{
  */
 /* This is C code. Not C++. */

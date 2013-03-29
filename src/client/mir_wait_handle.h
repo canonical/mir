@@ -24,7 +24,7 @@
 #include <mutex> 
 
 /**
- * \defgroup mir_toolkit MIR graphics tools API
+ * \addtogroup mir_toolkit
  * @{
  */
 struct MirWaitHandle

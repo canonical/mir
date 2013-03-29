@@ -23,7 +23,7 @@
 
 #ifdef __cplusplus
 /**
- * \defgroup mir_toolkit MIR graphics tools API
+ * \addtogroup mir_toolkit
  * @{
  */
 extern "C" {
