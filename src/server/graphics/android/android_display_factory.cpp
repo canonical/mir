@@ -1,4 +1,3 @@
-
 /*
  * Copyright © 2013 Canonical Ltd.
  *
@@ -20,8 +19,8 @@
 #include "android_display_factory.h"
 #include "android_display.h"
 #include "hwc_display.h"
-
 #include "android_framebuffer_window.h"
+
 #include <ui/FramebufferNativeWindow.h>
 
 namespace mga=mir::graphics::android;

@@ -45,7 +45,7 @@ mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<DisplayFactory> const& f
 
 void mga::AndroidFBFactory::setup_hwc_dev(const hw_module_t* module)
 {
-    if (!module->methods)
+    if ((!module->methods) || !(module->methods->open))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
     }

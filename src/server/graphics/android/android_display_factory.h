@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_FACTORY_H_
 
 #include "display_factory.h"
-#include <memory>
 
 namespace mir
 {
