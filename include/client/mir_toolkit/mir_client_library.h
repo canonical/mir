@@ -22,10 +22,10 @@
 #include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
-/*
- * The C client API
+/**
+ * \defgroup mir_toolkit MIR graphics tools API
+ * @{
  */
-namespace mir_toolkit {
 extern "C" {
 #endif
 
@@ -265,8 +265,7 @@ MirSurfaceType mir_surface_get_type(MirSurface *surface);
 
 #ifdef __cplusplus
 }
-}
-using namespace mir_toolkit;
+/**@}*/
 #endif
 
 #endif /* MIR_CLIENT_LIBRARY_H */

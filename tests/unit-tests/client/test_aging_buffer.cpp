@@ -56,7 +56,7 @@ struct MyAgingBuffer : public mcl::AgingBuffer
         exit(1);
     }
 
-    std::shared_ptr<mir_toolkit::MirBufferPackage> get_buffer_package() const
+    std::shared_ptr<MirBufferPackage> get_buffer_package() const
     {
         exit(1);
     }

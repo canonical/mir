@@ -35,8 +35,8 @@ class ClientContext
 public:
     virtual ~ClientContext() {}
 
-    virtual mir_toolkit::MirConnection* mir_connection() = 0;
-    virtual void populate(mir_toolkit::MirPlatformPackage& platform_package) = 0;
+    virtual MirConnection* mir_connection() = 0;
+    virtual void populate(MirPlatformPackage& platform_package) = 0;
 
 protected:
     ClientContext() = default;
