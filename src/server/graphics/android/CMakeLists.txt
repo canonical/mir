@@ -17,6 +17,7 @@ add_library(
   android_hwc_factory.cpp
   android_framebuffer_window.cpp
   android_fb_factory.cpp
+  android_display_factory.cpp
   android_alloc_adaptor.cpp
 )
 

@@ -17,14 +17,13 @@
  */
 
 #include "android_fb_factory.h"
-#include "android_framebuffer_window.h"
-#include "android_display.h"
-#include "hwc_display.h"
 #include "hwc_factory.h"
 #include "display_factory.h"
+#include "android_display.h"
+#include "hwc_display.h"
 
 #include <boost/throw_exception.hpp>
-#include <ui/FramebufferNativeWindow.h>
+#include <stdexcept>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -48,7 +47,7 @@ void mga::AndroidFBFactory::setup_hwc_dev(const hw_module_t* module)
 {
     if (!module->methods)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display hwc module unusable"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
     }
 
     hwc_composer_device_1* hwc_device_raw;
@@ -59,11 +58,11 @@ void mga::AndroidFBFactory::setup_hwc_dev(const hw_module_t* module)
         BOOST_THROW_EXCEPTION(std::runtime_error("display hwc module unusable"));
     }
 
-    hwc_dev = std::shared_ptr<hwc_composer_device_1>( hwc_device_raw,
-                                                      [](hwc_composer_device_1* device)
-                                                      {
-                                                          device->common.close((hw_device_t*) device);
-                                                      });
+    hwc_dev = std::shared_ptr<hwc_composer_device_1>(hwc_device_raw,
+                                                     [](hwc_composer_device_1* device)
+                                                     {
+                                                         device->common.close((hw_device_t*) device);
+                                                     });
 }
 
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_fb() const
