@@ -21,6 +21,7 @@
 #include "android_display.h"
 #include "hwc_display.h"
 #include "hwc_factory.h"
+#include "display_factory.h"
 
 #include <boost/throw_exception.hpp>
 #include <ui/FramebufferNativeWindow.h>
@@ -28,9 +29,10 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
-mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<DisplayFactory> const& /*fb_factory*/, std::shared_ptr<HWCFactory> const& hwc_factory)
-    : hwc_factory(hwc_factory),
-      is_hwc_capable(false)
+mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<DisplayFactory> const& fb_factory,
+                                        std::shared_ptr<HWCFactory> const& hwc_factory)
+    : fb_factory(fb_factory),
+      hwc_factory(hwc_factory)
 {
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
@@ -39,28 +41,40 @@ mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<DisplayFactory> const& /
         return;
     }
 
+    setup_hwc_dev(hw_module);
+}
+
+void mga::AndroidFBFactory::setup_hwc_dev(const hw_module_t* module)
+{
+    if (!module->methods)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display hwc module unusable"));
+    }
+
     hwc_composer_device_1* hwc_device_raw;
-    rc = hw_module->methods->open(hw_module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
+    int rc = module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
+
     if ((rc != 0) || (hwc_device_raw == nullptr))
     {
-        return;
+        BOOST_THROW_EXCEPTION(std::runtime_error("display hwc module unusable"));
     }
 
-    auto hwc_dev = std::shared_ptr<hwc_composer_device_1>( hwc_device_raw,
-                            [](hwc_composer_device_1* device)
-                            {
-                                device->common.close((hw_device_t*) device);
-                            });
-
-    if (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1)
-    {
-        hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
-        is_hwc_capable = true;
-    }
+    hwc_dev = std::shared_ptr<hwc_composer_device_1>( hwc_device_raw,
+                                                      [](hwc_composer_device_1* device)
+                                                      {
+                                                          device->common.close((hw_device_t*) device);
+                                                      });
 }
 
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_fb() const
-{
-    return std::shared_ptr<mg::Display>();
+{ 
+    if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
+    {
+        auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
+        return fb_factory->create_hwc_display(hwc_device);
+    }
+    else
+    {
+        return fb_factory->create_gpu_display();
+    }
 }
-

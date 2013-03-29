@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_FB_FACTORY_H_
 
 #include "fb_factory.h"
+#include <hardware/hwcomposer.h>
 
 namespace mir
 {
@@ -39,9 +40,12 @@ public:
     std::shared_ptr<Display> create_fb() const;
 
 private:
+    void setup_hwc_dev(const hw_module_t* module);
+
+    std::shared_ptr<DisplayFactory> fb_factory;
     std::shared_ptr<HWCFactory> hwc_factory;
-    std::shared_ptr<HWCDevice> hwc_device;
-    bool is_hwc_capable;
+
+    std::shared_ptr<hwc_composer_device_1> hwc_dev;
 };
 
 }

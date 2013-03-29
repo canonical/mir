@@ -55,6 +55,22 @@ int mt::HardwareModuleStub::hw_close(struct hw_device_t*)
     return 0;
 }
 
+mt::FailingHardwareModuleStub::FailingHardwareModuleStub()
+{
+    gr_methods.open = hw_open;
+    methods = &gr_methods; 
+}
+
+int mt::FailingHardwareModuleStub::hw_open(const struct hw_module_t*, const char*, struct hw_device_t**)
+{
+    return -1;
+}
+
+int mt::FailingHardwareModuleStub::hw_close(struct hw_device_t*)
+{
+    return 0;
+}
+
 mt::HardwareAccessMock::HardwareAccessMock()
 {
     using namespace testing;

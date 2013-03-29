@@ -44,6 +44,15 @@ struct MockHWCFactory: public mga::HWCFactory
 
 struct MockDisplayFactory: public mga::DisplayFactory
 {
+    MockDisplayFactory()
+    {
+        using namespace testing;
+        ON_CALL(*this, create_gpu_display())
+            .WillByDefault(Return(std::shared_ptr<mga::AndroidDisplay>()));
+        ON_CALL(*this, create_hwc_display(_))
+            .WillByDefault(Return(std::shared_ptr<mga::HWCDisplay>()));
+
+    }
     MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mga::AndroidDisplay>());
     MOCK_CONST_METHOD1(create_hwc_display, std::shared_ptr<mga::HWCDisplay>(std::shared_ptr<mga::HWCDevice> const&));
 };
@@ -52,7 +61,8 @@ class AndroidFBFactoryTest : public ::testing::Test
 {
 public:
     AndroidFBFactoryTest()
-        : mock_hwc_factory(std::make_shared<MockHWCFactory>())
+        : mock_display_factory(std::make_shared<MockDisplayFactory>()),
+          mock_hwc_factory(std::make_shared<MockHWCFactory>())
     {
     }
 
@@ -60,8 +70,9 @@ public:
     {
         EXPECT_TRUE(hw_access_mock.open_count_matches_close());
     }
-    std::shared_ptr<MockHWCFactory> mock_hwc_factory;
+
     std::shared_ptr<MockDisplayFactory> mock_display_factory;
+    std::shared_ptr<MockHWCFactory> mock_hwc_factory;
     mt::HardwareAccessMock hw_access_mock;
 };
 }
@@ -76,7 +87,7 @@ TEST_F(AndroidFBFactoryTest, hwc_selection_gets_hwc_device)
     mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory); 
 }
 
-/* this case occurs when the libhardware library is not found/malformed */
+/* this case occurs when the system cannot find the hwc library. it is a nonfatal error because we have a backup to try */
 TEST_F(AndroidFBFactoryTest, hwc_module_unavailble_always_creates_gpu_display)
 {
     using namespace testing;
@@ -84,6 +95,27 @@ TEST_F(AndroidFBFactoryTest, hwc_module_unavailble_always_creates_gpu_display)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1)
         .WillOnce(Return(-1));
+
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
+        .Times(0);
+    EXPECT_CALL(*mock_display_factory, create_hwc_display(_))
+        .Times(0);
+    EXPECT_CALL(*mock_display_factory, create_gpu_display())
+        .Times(1);
+
+    mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory); 
+    fb_factory.create_fb();
+}
+
+/* this case occurs when the hwc library doesn't work (error) */
+TEST_F(AndroidFBFactoryTest, hwc_module_unopenable_throws)
+{
+    using namespace testing;
+
+    mt::FailingHardwareModuleStub failing_hwc_module_stub;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
 
     EXPECT_THROW({
         mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory); 
