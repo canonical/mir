@@ -51,9 +51,18 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::tools;
 
+///\page render_surfaces.cpp render_surfaces.cpp: A simple program using the mir library.
+/// render_surfaces shows the use of mir to render some moving surfaces
+/// \example render_surfaces.cpp A simple program using the mir library.
+
 namespace
 {
 
+///\page render_surfaces.cpp
+///\section StopWatch StopWatch
+/// \snippet render_surfaces.cpp StopWatch_tag
+///\internal [StopWatch_tag]
+// tracks elapsed time - for animation.
 class StopWatch
 {
 public:
@@ -92,7 +101,13 @@ private:
     std::chrono::high_resolution_clock::time_point last;
     std::chrono::high_resolution_clock::time_point now;
 };
+///\internal [StopWatch_tag]
 
+///\page render_surfaces.cpp
+///\section RenderResourcesBufferInitializer RenderResourcesBufferInitializer
+/// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
+///\internal [RenderResourcesBufferInitializer_tag]
+// Utility class for to initialize the buffers for each surface.
 class RenderResourcesBufferInitializer : public mg::BufferInitializer
 {
 public:
@@ -114,7 +129,13 @@ public:
 private:
     mt::ImageRenderer img_renderer;
 };
+///\internal [RenderResourcesBufferInitializer_tag]
 
+///\page render_surfaces.cpp
+///\section Moveable Moveable
+/// \snippet render_surfaces.cpp Moveable_tag
+///\internal [Moveable_tag]
+// Adapter to support movement of surfaces.
 class Moveable
 {
 public:
@@ -180,12 +201,24 @@ private:
     glm::vec3 rotation_axis;
     float alpha_offset;
 };
+///\internal [Moveable_tag]
 
+///\page render_surfaces.cpp
+///\section NullCommunicator NullCommunicator
+/// \snippet render_surfaces.cpp NullCommunicator_tag
+///\internal [NullCommunicator_tag]
+// Stub out server connectivity.
 struct NullCommunicator : public mf::Communicator
 {
     void start() {}
 };
+///\internal [NullCommunicator_tag]
 
+///\page render_surfaces.cpp
+///\section NullInputManager NullInputManager
+/// \snippet render_surfaces.cpp NullInputManager_tag
+///\internal [NullInputManager_tag]
+// Stub out input.
 struct NullInputManager : public mi::InputManager
 {
     void start() {}
@@ -199,14 +232,20 @@ struct NullInputManager : public mi::InputManager
     {
     }
 };
+///\internal [NullInputManager_tag]
 
-class RenderSurfacesCompositingStrategy : public mc::DefaultCompositingStrategy
+///\page render_surfaces.cpp
+///\section RenderSurfacesCompositingStrategy RenderSurfacesCompositingStrategy
+/// \snippet render_surfaces.cpp RenderSurfacesCompositingStrategy_tag
+///\internal [RenderSurfacesCompositingStrategy_tag]
+// Decorate the DefaultCompositingStrategy with to move surfaces.
+class RenderSurfacesCompositingStrategy : public mc::CompositingStrategy
 {
 public:
     RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
                                       std::shared_ptr<mg::Renderer> const& renderer,
                                       std::vector<Moveable>& moveables)
-        : mc::DefaultCompositingStrategy{renderables, renderer},
+        : default_compositing_strategy{renderables, renderer},
           frames{0},
           moveables(moveables)
     {
@@ -223,7 +262,7 @@ public:
         }
 
         glClearColor(0.0, 1.0, 0.0, 1.0);
-        DefaultCompositingStrategy::render(display_buffer);
+        default_compositing_strategy.render(display_buffer);
 
         for (auto& m : moveables)
             m.step();
@@ -232,11 +271,18 @@ public:
     }
 
 private:
+    mc::DefaultCompositingStrategy default_compositing_strategy;
     StopWatch stop_watch;
     uint32_t frames;
     std::vector<Moveable>& moveables;
 };
+///\internal [RenderSurfacesCompositingStrategy_tag]
 
+///\page render_surfaces.cpp
+///\section RenderSurfacesServerConfiguration RenderSurfacesServerConfiguration
+/// \snippet render_surfaces.cpp RenderSurfacesServerConfiguration_tag
+///\internal [RenderSurfacesServerConfiguration_tag]
+// Extend the default configuration to manage moveables.
 class RenderSurfacesServerConfiguration : public mir::DefaultServerConfiguration
 {
 public:
@@ -309,8 +355,14 @@ public:
 private:
     std::vector<Moveable> moveables;
 };
+///\internal [RenderSurfacesServerConfiguration_tag]
 }
 
+///\page render_surfaces.cpp
+///\section main main()
+/// \snippet render_surfaces.cpp main_tag
+///\internal [main_tag]
+// Pull the bits together.
 int main(int argc, char **argv)
 {
     /* Parse the command line */
@@ -330,3 +382,4 @@ int main(int argc, char **argv)
 
     return 0;
 }
+///\internal [main_tag]
