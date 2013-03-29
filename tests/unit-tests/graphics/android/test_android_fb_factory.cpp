@@ -71,8 +71,8 @@ public:
         EXPECT_TRUE(hw_access_mock.open_count_matches_close());
     }
 
-    std::shared_ptr<MockDisplayFactory> mock_display_factory;
-    std::shared_ptr<MockHWCFactory> mock_hwc_factory;
+    std::shared_ptr<MockDisplayFactory> const mock_display_factory;
+    std::shared_ptr<MockHWCFactory> const mock_hwc_factory;
     mt::HardwareAccessMock hw_access_mock;
 };
 }
