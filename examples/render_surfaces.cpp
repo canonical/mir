@@ -201,6 +201,7 @@ public:
     // Override for a bespoke compositing strategy
     std::shared_ptr<mc::CompositingStrategy> the_compositing_strategy() override;
 
+    // New function to initialize moveables with surfaces
     void create_surfaces()
     {
         auto const display = the_display();
@@ -352,8 +353,7 @@ std::shared_ptr<mg::BufferInitializer> RenderSurfacesServerConfiguration::the_bu
 ///\section RenderSurfacesCompositingStrategy RenderSurfacesCompositingStrategy
 /// \snippet render_surfaces.cpp RenderSurfacesCompositingStrategy_tag
 ///\internal [RenderSurfacesCompositingStrategy_tag]
-// Decorate the DefaultCompositingStrategy with to move surfaces.
-
+// Decorate the DefaultCompositingStrategy in order to move surfaces.
 std::shared_ptr<mc::CompositingStrategy> RenderSurfacesServerConfiguration::the_compositing_strategy()
 {
     class RenderSurfacesCompositingStrategy : public mc::CompositingStrategy
