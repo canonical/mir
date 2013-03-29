@@ -11,7 +11,6 @@ set(
   testing_process_manager.cpp
   display_server_test_fixture.cpp
   process.cpp
-  signal_dispatcher.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS

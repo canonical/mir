@@ -20,12 +20,22 @@
 #ifndef MIR_RUN_MIR_H_
 #define MIR_RUN_MIR_H_
 
+#include <functional>
+
 namespace mir
 {
 class ServerConfiguration;
+class DisplayServer;
 
-/// Run mir with the supplied configuration
-void run_mir(ServerConfiguration& config);
+/**
+ *  Run a DisplayServer with the supplied configuration.
+ *  init will be called after constructing the server, but before invoking DisplayServer::run()
+ *  The server will be stopped on receipt of SIGTERM or SIGINT
+ *  This function does not return until the server has stopped.
+ */
+void run_mir(
+    ServerConfiguration& config,
+    std::function<void(DisplayServer&)> init);
 }
 
 
