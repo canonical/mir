@@ -44,6 +44,8 @@ struct MockLogger : public ml::Logger
 {
     MOCK_METHOD3(log,
                  void(ml::Logger::Severity, const std::string&, const std::string&));
+
+    ~MockLogger() noexcept(true) {}
 };
 
 class GBMDisplayTest : public ::testing::Test
