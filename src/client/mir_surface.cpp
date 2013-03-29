@@ -237,7 +237,7 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
     setting.set_ivalue(value);
 
     configure_wait_handle.expect_result();
-    server.configure_surface(0, &setting, &configure_result, 
+    server.configure_surface(0, &setting, &configure_result,
               google::protobuf::NewCallback(this, &MirSurface::on_configured));
 
     return &configure_wait_handle;

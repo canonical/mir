@@ -122,7 +122,7 @@ TEST(SessionManagementContext, constructs_shell_from_server_configuration)
 
     MockServerConfiguration server_configuration;
     mtd::MockShell shell;
-    
+
     EXPECT_CALL(server_configuration, the_frontend_shell()).Times(1)
         .WillOnce(Return(mt::fake_shared<mf::Shell>(shell)));
 
@@ -148,7 +148,7 @@ TEST_F(SessionManagementContextSetup, open_window_consuming_creates_surface_with
 TEST_F(SessionManagementContextSetup, open_window_with_size_creates_surface_with_size)
 {
     using namespace ::testing;
-    
+
     mtd::MockSession session;
 
     EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
@@ -174,11 +174,11 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
         .WillOnce(Return(test_surface_id));
 
     EXPECT_TRUE(ctx->open_window_with_size(test_window_name, test_window_size));
-    
+
     EXPECT_CALL(session, get_surface(test_surface_id)).Times(1)
         .WillOnce(Return(mt::fake_shared<mf::Surface>(surface)));
     EXPECT_CALL(surface, size()).Times(1).WillOnce(Return(test_window_size));
-    
+
     EXPECT_EQ(test_window_size, ctx->get_window_size(test_window_name));
 }
 

@@ -51,7 +51,7 @@ struct MockSurface : public shell::Surface
     MOCK_CONST_METHOD0(size, geometry::Size ());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());
-    
+
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
     MOCK_CONST_METHOD0(server_input_fd, int());

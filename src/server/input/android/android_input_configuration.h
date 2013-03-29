@@ -43,7 +43,7 @@ class InputConfiguration
 {
 public:
     virtual ~InputConfiguration() {}
-    
+
     virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub() = 0;
     virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() = 0;
     virtual std::shared_ptr<InputThread> the_dispatcher_thread() = 0;

@@ -83,7 +83,7 @@ TEST(MirClientAgingBufferTest, buffer_age_set_to_one_on_submit)
     MyAgingBuffer buffer;
     buffer.mark_as_submitted();
 
-    EXPECT_EQ(1u, buffer.age());    
+    EXPECT_EQ(1u, buffer.age());
 }
 
 TEST(MirClientAgingBufferTest, buffer_age_increases_on_increment)

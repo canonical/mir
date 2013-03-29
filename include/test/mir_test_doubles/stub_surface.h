@@ -32,12 +32,12 @@ class StubSurface : public frontend::Surface
 {
 public:
     virtual ~StubSurface() = default;
-    
+
     void hide() {}
     void show() {}
     void destroy() {}
     void shutdown() {}
-    
+
     geometry::Size size() const
     {
         return geometry::Size();
@@ -58,12 +58,12 @@ public:
     {
         return 0;
     }
-    
+
     virtual bool supports_input() const
     {
         return false;
     }
-    
+
     virtual int client_input_fd() const
     {
         return 0;

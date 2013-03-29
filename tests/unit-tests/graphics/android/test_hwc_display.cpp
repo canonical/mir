@@ -59,7 +59,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
         .Times(1);
     EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
         .Times(1);
- 
+
     display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
         EXPECT_TRUE(buffer.post_update());
@@ -80,7 +80,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_failure)
         .Times(1);
     EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
         .Times(1);
- 
+
     display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
         EXPECT_FALSE(buffer.post_update());
