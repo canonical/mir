@@ -16,28 +16,23 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/android_platform.h"
+#include "mir/graphics/platform.h"
 #include "src/server/graphics/android/android_buffer_allocator.h"
-#include "src/server/graphics/android/android_display.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
 
-#include "mir/draw/graphics.h"
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
 
 #include <gtest/gtest.h>
-#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
-namespace md=mir::draw;
 namespace mtd=mir::test::draw;
 
 namespace
@@ -69,15 +64,6 @@ protected:
 
 }
 
-TEST_F(AndroidBufferIntegration, allocator_creation_ok)
-{
-    using namespace testing;
-
-    EXPECT_NO_THROW({
-        auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
-    });
-}
-
 TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
 {
     using namespace testing;
@@ -97,24 +83,12 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_hw_buffer)
 {
     using namespace testing;
 
-    mc::BufferProperties sw_properties{size, pf, mc::BufferUsage::hardware};
+    mc::BufferProperties hw_properties{size, pf, mc::BufferUsage::hardware};
     auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
 
-    //TODO: kdub it is a bit trickier to test that a gpu can render... just check no throw for now
-    EXPECT_NO_THROW({
-        auto test_buffer = allocator->alloc_buffer(sw_properties);
-    });
-}
-
-
-TEST_F(AndroidBufferIntegration, strategy_creation_ok)
-{
-    using namespace testing;
-
-    EXPECT_NO_THROW({
-        auto allocator = std::make_shared<mga::AndroidBufferAllocator>(null_buffer_initializer);
-        auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
-    });
+    //TODO: kdub it is a bit trickier to test that a gpu can render... just check creation for now
+    auto test_buffer = allocator->alloc_buffer(hw_properties);
+    EXPECT_NE(nullptr, test_buffer);
 }
 
 TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)

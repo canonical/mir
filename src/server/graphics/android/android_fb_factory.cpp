@@ -59,10 +59,10 @@ void mga::AndroidFBFactory::setup_hwc_dev(const hw_module_t* module)
     }
 
     hwc_dev = std::shared_ptr<hwc_composer_device_1>(hwc_device_raw,
-                                                     [](hwc_composer_device_1* device)
-                                                     {
-                                                         device->common.close((hw_device_t*) device);
-                                                     });
+                  [](hwc_composer_device_1* device)
+                  {
+                     device->common.close((hw_device_t*) device);
+                  });
 }
 
 std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_fb() const

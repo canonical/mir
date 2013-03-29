@@ -16,21 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/android_platform.h"
-#include "src/server/graphics/android/android_buffer_allocator.h"
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_display.h"
-#include "mir/graphics/buffer_initializer.h"
-#include "mir/graphics/null_display_report.h"
-#include "mir/compositor/swapper_factory.h"
-#include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle_surfaces.h"
-#include "mir/compositor/buffer_properties.h"
 
 #include "mir/draw/graphics.h"
 #include "mir_test/draw/android_graphics.h"
-#include "mir_test/draw/patterns.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -100,25 +91,14 @@ bool AndroidGPUDisplay::run_hwc11_tests;
 }
 
 /* gpu display tests. These are our back-up display modes, and should be run on every device. */
-TEST_F(AndroidGPUDisplay, display_creation_ok)
-{
-    EXPECT_NO_THROW({
-        auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-        auto display = std::make_shared<mga::AndroidDisplay>(window);
-    });
-}
-
 TEST_F(AndroidGPUDisplay, gpu_display_post_ok)
 {
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
     auto display = std::make_shared<mga::AndroidDisplay>(window);
 
-    EXPECT_NO_THROW(
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
-        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
-        {
-            buffer.post_update();
-        });
+        buffer.post_update();
     });
 }
 
@@ -145,19 +125,6 @@ TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 #define RESET "\033[0m"
 #define SUCCEED_IF_NO_HARDWARE_SUPPORT() \
     if(!run_hwc11_tests) { SUCCEED(); std::cout << YELLOW << "--> This device does not have HWC 1.1 support. Skipping test." << RESET << std::endl; return;}
-
-/* hwc 1.1 tests. These are only ran on devices that have hwc 1.1 device support */
-TEST_F(AndroidGPUDisplay, hwc11_display_creation_ok)
-{
-    SUCCEED_IF_NO_HARDWARE_SUPPORT();
-
-    EXPECT_NO_THROW({
-        auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
-        auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-        auto hwc = std::make_shared<mga::HWC11Device>(hwc_device);
-        std::make_shared<mga::HWCDisplay>(window, hwc);
-    });
-}
 
 TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 {
