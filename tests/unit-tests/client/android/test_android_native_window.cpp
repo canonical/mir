@@ -18,7 +18,7 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
-#include "mir/graphics/android/syncfence.h"
+#include "src/shared/graphics/android/syncfence.h"
 #include "src/client/mir_client_surface.h"
 
 #include <gmock/gmock.h>

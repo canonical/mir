@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/syncfence.h"
+#include "syncfence.h"
 
 namespace mcla = mir::client::android;
 
