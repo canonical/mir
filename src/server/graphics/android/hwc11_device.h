@@ -38,7 +38,7 @@ struct HWCCallbacks
     HWC11Device* self;
 };
 
-class HWC11Device : public HWCDevice 
+class HWC11Device : public HWCDevice
 {
 public:
     explicit HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device);

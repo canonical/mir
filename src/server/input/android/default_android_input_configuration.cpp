@@ -47,7 +47,7 @@ public:
     virtual ~CommonInputThread()
     {
     }
-    
+
     void start()
     {
         thread->run(name.c_str(), droidinput::PRIORITY_URGENT_DISPLAY);
@@ -60,7 +60,7 @@ public:
     {
         thread->join();
     }
-   
+
 protected:
     CommonInputThread(const CommonInputThread&) = delete;
     CommonInputThread& operator=(const CommonInputThread&) = delete;

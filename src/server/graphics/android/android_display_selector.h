@@ -36,7 +36,7 @@ class FBFactory;
 class AndroidDisplaySelector : public DisplaySelector
 {
 public:
-    AndroidDisplaySelector(std::shared_ptr<FBFactory> const& factory); 
+    AndroidDisplaySelector(std::shared_ptr<FBFactory> const& factory);
     std::shared_ptr<Display> primary_display();
 
 private:

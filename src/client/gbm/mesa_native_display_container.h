@@ -38,10 +38,10 @@ class MesaNativeDisplayContainer : public EGLNativeDisplayContainer
 public:
     MesaNativeDisplayContainer();
     virtual ~MesaNativeDisplayContainer();
-    
+
     mir_toolkit::MirEGLNativeDisplayType create(mir_toolkit::MirConnection* connection);
     void release(mir_toolkit::MirEGLNativeDisplayType display);
-    
+
     bool validate(mir_toolkit::MirEGLNativeDisplayType display) const;
 
 protected:

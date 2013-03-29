@@ -33,7 +33,7 @@ namespace android
 class DisplaySelector
 {
 public:
-    virtual std::shared_ptr<Display> primary_display() = 0; 
+    virtual std::shared_ptr<Display> primary_display() = 0;
     virtual ~DisplaySelector() {}
 
 protected:

@@ -34,7 +34,7 @@ public:
     virtual void commit_frame() = 0;
 private:
     HWCDevice(HWCDevice const&) = delete;
-    HWCDevice& operator=(HWCDevice const&) = delete; 
+    HWCDevice& operator=(HWCDevice const&) = delete;
 };
 
 }

@@ -40,7 +40,7 @@ struct BufferSwapperDouble : testing::Test
 
         buffer_a_addr = buffer_a.get();
         buffer_b_addr = buffer_b.get();
- 
+
         auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
         swapper = std::make_shared<mc::BufferSwapperMulti>(double_list);
 

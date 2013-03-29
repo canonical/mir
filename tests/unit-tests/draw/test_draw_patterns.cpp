@@ -70,7 +70,7 @@ private:
             }
         }
     }
-    
+
     bool check_stride_region_unaltered()
     {
         uint32_t* region = (uint32_t*) test_region->vaddr;
