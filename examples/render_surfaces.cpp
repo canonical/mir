@@ -51,12 +51,10 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::tools;
 
-/**
- * \page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
- * \tableofcontents
- * render_surfaces shows the use of mir to render some moving surfaces
- * \example render_surfaces.cpp A simple program using the mir library.
- */
+///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
+///\tableofcontents
+///render_surfaces shows the use of mir to render some moving surfaces
+///\example render_surfaces.cpp A simple program using the mir library.
 
 namespace
 {
