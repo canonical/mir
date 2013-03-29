@@ -25,7 +25,7 @@ namespace geom=mir::geometry;
 mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
 {
     buffer_swapper->client_acquire(buffer, buffer_id);
-    allocating_swapper = buffer_swapper; 
+    allocating_swapper = buffer_swapper;
 }
 
 mc::TemporaryClientBuffer::~TemporaryClientBuffer()
@@ -37,7 +37,7 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
 {
     buffer_swapper->compositor_acquire(buffer, buffer_id);
-    allocating_swapper = buffer_swapper; 
+    allocating_swapper = buffer_swapper;
 }
 
 mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
@@ -72,7 +72,7 @@ void mc::TemporaryBuffer::bind_to_texture()
 }
 
 std::shared_ptr<mc::BufferIPCPackage> mc::TemporaryBuffer::get_ipc_package() const
-{   
+{
     return buffer->get_ipc_package();
 }
 

@@ -63,7 +63,7 @@ public:
 
     droidinput::sp<droidinput::EventHubInterface> the_event_hub();
     input::android::FakeEventHub* the_fake_event_hub();
-    
+
 
 protected:
     FakeEventHubInputConfiguration(FakeEventHubInputConfiguration const&) = delete;
