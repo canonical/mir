@@ -35,7 +35,6 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
-namespace msh = mir::shell; // TODO: Remove if experiment fails ~racarr
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
@@ -84,12 +83,12 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
 
     void exec(mir::DisplayServer* /* display_server */) override
     {
-        on_focus_set.wait_for_at_most_seconds(5);
+        on_focus_set.wait_for_at_most_seconds(20);
         inject_input();
     }
 
     std::shared_ptr<mi::InputManager>
-    the_input_manager()
+    the_input_manager() override
     {
         fake_event_hub = input_config.the_fake_event_hub();
 
