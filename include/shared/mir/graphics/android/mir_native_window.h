@@ -19,7 +19,6 @@
 #ifndef MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
 #define MIR_CLIENT_ANDROID_MIR_NATIVE_WINDOW_H_
 
-#include "../mir_client_surface.h"
 #include <system/window.h>
 #include <cstdarg>
 #include <memory>
