@@ -51,14 +51,16 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::tools;
 
-///\page render_surfaces.cpp render_surfaces.cpp: A simple program using the mir library.
-/// render_surfaces shows the use of mir to render some moving surfaces
-/// \example render_surfaces.cpp A simple program using the mir library.
+/**
+ * \page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
+ * \tableofcontents
+ * render_surfaces shows the use of mir to render some moving surfaces
+ * \example render_surfaces.cpp A simple program using the mir library.
+ */
 
 namespace
 {
-
-///\page render_surfaces.cpp
+///\page render_surfaces-example
 ///\section StopWatch StopWatch
 /// \snippet render_surfaces.cpp StopWatch_tag
 ///\internal [StopWatch_tag]
@@ -103,7 +105,7 @@ private:
 };
 ///\internal [StopWatch_tag]
 
-///\page render_surfaces.cpp
+///\page render_surfaces-example
 ///\section Moveable Moveable
 /// \snippet render_surfaces.cpp Moveable_tag
 ///\internal [Moveable_tag]
@@ -175,7 +177,7 @@ private:
 };
 ///\internal [Moveable_tag]
 
-///\page render_surfaces.cpp
+///\page render_surfaces-example
 ///\section RenderSurfacesServerConfiguration RenderSurfacesServerConfiguration
 /// \snippet render_surfaces.cpp RenderSurfacesServerConfiguration_tag
 ///\internal [RenderSurfacesServerConfiguration_tag]
@@ -248,7 +250,7 @@ private:
 ///\internal [RenderSurfacesServerConfiguration_tag]
 }
 
-///\page render_surfaces.cpp
+///\page render_surfaces-example
 ///\section main main()
 /// \snippet render_surfaces.cpp main_tag
 ///\internal [main_tag]
@@ -275,7 +277,7 @@ int main(int argc, char **argv)
 ///\internal [main_tag]
 
 
-///\page render_surfaces.cpp
+///\page render_surfaces-example
 ///\section NullCommunicator NullCommunicator
 /// \snippet render_surfaces.cpp NullCommunicator_tag
 ///\internal [NullCommunicator_tag]
@@ -291,7 +293,7 @@ std::shared_ptr<mf::Communicator> RenderSurfacesServerConfiguration::the_communi
 }
 ///\internal [NullCommunicator_tag]
 
-///\page render_surfaces.cpp
+///\page render_surfaces-example
 ///\section NullInputManager NullInputManager
 /// \snippet render_surfaces.cpp NullInputManager_tag
 ///\internal [NullInputManager_tag]
@@ -316,7 +318,7 @@ std::shared_ptr<mi::InputManager> RenderSurfacesServerConfiguration::the_input_m
 }
 ///\internal [NullInputManager_tag]
 
-///\page render_surfaces.cpp
+///\page render_surfaces-example
 ///\section RenderResourcesBufferInitializer RenderResourcesBufferInitializer
 /// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
 ///\internal [RenderResourcesBufferInitializer_tag]
@@ -349,7 +351,7 @@ std::shared_ptr<mg::BufferInitializer> RenderSurfacesServerConfiguration::the_bu
 }
 ///\internal [RenderResourcesBufferInitializer_tag]
 
-///\page render_surfaces.cpp
+///\page render_surfaces-example
 ///\section RenderSurfacesCompositingStrategy RenderSurfacesCompositingStrategy
 /// \snippet render_surfaces.cpp RenderSurfacesCompositingStrategy_tag
 ///\internal [RenderSurfacesCompositingStrategy_tag]
