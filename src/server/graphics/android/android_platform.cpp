@@ -37,6 +37,7 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
+/*
     auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
     auto fb_factory = std::make_shared<mga::AndroidFBFactory>(hwc_factory);
     if (fb_factory->can_create_hwc_display())
@@ -47,6 +48,8 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
     {
         return fb_factory->create_gpu_display();
     }
+*/
+    return std::shared_ptr<mg::Display>();
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()

@@ -30,13 +30,13 @@ namespace android
 
 class HWCFactory;
 class HWCDevice;
+class DisplayFactory;
 class AndroidFBFactory : public FBFactory
 {
 public:
-    explicit AndroidFBFactory(std::shared_ptr<HWCFactory> const& hwc_factory);
-    std::shared_ptr<Display> create_hwc_display() const;
-    bool can_create_hwc_display() const;
-    std::shared_ptr<Display> create_gpu_display() const;
+    AndroidFBFactory(std::shared_ptr<DisplayFactory> const& fb_factory, std::shared_ptr<HWCFactory> const& hwc_factory);
+
+    std::shared_ptr<Display> create_fb() const;
 
 private:
     std::shared_ptr<HWCFactory> hwc_factory;

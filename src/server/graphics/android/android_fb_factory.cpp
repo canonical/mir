@@ -28,7 +28,7 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
-mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<HWCFactory> const& hwc_factory)
+mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<DisplayFactory> const& /*fb_factory*/, std::shared_ptr<HWCFactory> const& hwc_factory)
     : hwc_factory(hwc_factory),
       is_hwc_capable(false)
 {
@@ -59,27 +59,8 @@ mga::AndroidFBFactory::AndroidFBFactory(std::shared_ptr<HWCFactory> const& hwc_f
     }
 }
 
-bool mga::AndroidFBFactory::can_create_hwc_display() const
+std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_fb() const
 {
-    return is_hwc_capable;
+    return std::shared_ptr<mg::Display>();
 }
 
-std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_hwc_display() const
-{
-    if(!is_hwc_capable)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
-    }
-
-    auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
-    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-    return std::make_shared<mga::HWCDisplay>(window, hwc_device);
-}
-
-/* note: OMAP4 gralloc seems to choke when this is opened/closed more than once per process. must investigate drivers further */
-std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_gpu_display() const
-{
-    auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
-    auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
-    return std::make_shared<mga::AndroidDisplay>(window);
-}

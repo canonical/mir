@@ -18,6 +18,7 @@
 
 #include "src/server/graphics/android/android_fb_factory.h"
 #include "src/server/graphics/android/hwc_factory.h"
+#include "src/server/graphics/android/display_factory.h"
 
 #include "mir_test/hw_mock.h"
 
@@ -44,7 +45,7 @@ struct MockHWCFactory: public mga::HWCFactory
 struct MockDisplayFactory: public mga::DisplayFactory
 {
     MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mga::AndroidDisplay>());
-    MOCK_CONST_METHOD0(create_gpu_display, std::shared_ptr<mga::HWCDisplay>(std::shared_ptr<mga::HWCDevice> const&));
+    MOCK_CONST_METHOD1(create_hwc_display, std::shared_ptr<mga::HWCDisplay>(std::shared_ptr<mga::HWCDevice> const&));
 };
 
 class AndroidFBFactoryTest : public ::testing::Test
@@ -98,7 +99,7 @@ TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_version_11_success)
 
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(1);
-    EXPECT_CALL(*mock_display_factory, create_hwc_display())
+    EXPECT_CALL(*mock_display_factory, create_hwc_display(_))
         .Times(1);
 
     mga::AndroidFBFactory fb_factory(mock_display_factory, mock_hwc_factory);
@@ -114,7 +115,7 @@ TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_failure_because_hwc_version10_n
 
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(0);
-    EXPECT_CALL(*mock_display_factory, create_hwc_display())
+    EXPECT_CALL(*mock_display_factory, create_hwc_display(_))
         .Times(0);
     EXPECT_CALL(*mock_display_factory, create_gpu_display())
         .Times(1);
@@ -131,7 +132,7 @@ TEST_F(AndroidFBFactoryTest, hwc_with_hwc_device_failure_because_hwc_version12_n
 
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(0);
-    EXPECT_CALL(*mock_display_factory, create_hwc_display())
+    EXPECT_CALL(*mock_display_factory, create_hwc_display(_))
         .Times(0);
     EXPECT_CALL(*mock_display_factory, create_gpu_display())
         .Times(1);
