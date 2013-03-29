@@ -69,6 +69,7 @@ std::shared_ptr<mg::Display> mga::AndroidFBFactory::create_fb() const
 { 
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
+        //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
         auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
         return fb_factory->create_hwc_display(hwc_device);
     }
