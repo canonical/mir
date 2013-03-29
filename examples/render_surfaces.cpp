@@ -274,48 +274,6 @@ int main(int argc, char **argv)
 }
 ///\internal [main_tag]
 
-
-///\page render_surfaces-example
-///\section NullCommunicator NullCommunicator
-/// \snippet render_surfaces.cpp NullCommunicator_tag
-///\internal [NullCommunicator_tag]
-// Stub out server connectivity.
-std::shared_ptr<mf::Communicator> RenderSurfacesServerConfiguration::the_communicator()
-{
-    struct NullCommunicator : public mf::Communicator
-    {
-        void start() {}
-    };
-
-    return std::make_shared<NullCommunicator>();
-}
-///\internal [NullCommunicator_tag]
-
-///\page render_surfaces-example
-///\section NullInputManager NullInputManager
-/// \snippet render_surfaces.cpp NullInputManager_tag
-///\internal [NullInputManager_tag]
-// Stub out input.
-std::shared_ptr<mi::InputManager> RenderSurfacesServerConfiguration::the_input_manager()
-{
-    struct NullInputManager : public mi::InputManager
-    {
-        void start() {}
-        void stop() {}
-        std::shared_ptr<mi::InputChannel> make_input_channel()
-        {
-            return std::shared_ptr<mi::InputChannel>();
-        }
-        void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& /* session */,
-                                std::shared_ptr<mi::SurfaceTarget> const& /* surface */)
-        {
-        }
-    };
-
-    return std::make_shared<NullInputManager>();
-}
-///\internal [NullInputManager_tag]
-
 ///\page render_surfaces-example
 ///\section RenderResourcesBufferInitializer RenderResourcesBufferInitializer
 /// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
@@ -399,3 +357,43 @@ std::shared_ptr<mc::CompositingStrategy> RenderSurfacesServerConfiguration::the_
                                                                moveables);
 }
 ///\internal [RenderSurfacesCompositingStrategy_tag]
+///\page render_surfaces-example
+///\section NullCommunicator NullCommunicator
+/// \snippet render_surfaces.cpp NullCommunicator_tag
+///\internal [NullCommunicator_tag]
+// Stub out server connectivity.
+std::shared_ptr<mf::Communicator> RenderSurfacesServerConfiguration::the_communicator()
+{
+    struct NullCommunicator : public mf::Communicator
+    {
+        void start() {}
+    };
+
+    return std::make_shared<NullCommunicator>();
+}
+///\internal [NullCommunicator_tag]
+
+///\page render_surfaces-example
+///\section NullInputManager NullInputManager
+/// \snippet render_surfaces.cpp NullInputManager_tag
+///\internal [NullInputManager_tag]
+// Stub out input.
+std::shared_ptr<mi::InputManager> RenderSurfacesServerConfiguration::the_input_manager()
+{
+    struct NullInputManager : public mi::InputManager
+    {
+        void start() {}
+        void stop() {}
+        std::shared_ptr<mi::InputChannel> make_input_channel()
+        {
+            return std::shared_ptr<mi::InputChannel>();
+        }
+        void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& /* session */,
+                                std::shared_ptr<mi::SurfaceTarget> const& /* surface */)
+        {
+        }
+    };
+
+    return std::make_shared<NullInputManager>();
+}
+///\internal [NullInputManager_tag]
