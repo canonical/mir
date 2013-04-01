@@ -32,6 +32,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <thread>
+#include <functional>
+
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
@@ -80,20 +83,27 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     virtual void inject_input()
     {
     }
-
+    
     void exec(mir::DisplayServer* /* display_server */) override
     {
-        on_focus_set.wait_for_at_most_seconds(20);
-        inject_input();
+        input_injection_thread = std::thread([this]() -> void
+        {
+            on_focus_set.wait_for_at_most_seconds(10);
+            fake_event_hub->synthesize_builtin_keyboard_added();
+            fake_event_hub->synthesize_device_scan_complete();
+            inject_input();
+        });
+    }
+    
+    void on_exit() override
+    {
+        input_injection_thread.join();
     }
 
     std::shared_ptr<mi::InputManager>
     the_input_manager() override
     {
         fake_event_hub = input_config.the_fake_event_hub();
-
-        fake_event_hub->synthesize_builtin_keyboard_added();
-        fake_event_hub->synthesize_device_scan_complete();
 
         return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
@@ -105,6 +115,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     mtd::FakeEventHubInputConfiguration input_config;
     mia::FakeEventHub* fake_event_hub;
     mir::WaitCondition on_focus_set;
+    std::thread input_injection_thread;
 };
 
 
