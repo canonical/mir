@@ -1,7 +1,7 @@
 #include "mir_test/fake_event_hub.h"
 
 #include <androidfw/Keyboard.h>
-#include <thread> 
+#include <thread>
 #include <chrono>
 
 using droidinput::AxisInfo;

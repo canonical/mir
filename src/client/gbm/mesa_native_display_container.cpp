@@ -105,11 +105,11 @@ mclg::MesaNativeDisplayContainer::create(mir_toolkit::MirConnection* connection)
     display->surface_advance_buffer = gbm_egl_surface_advance_buffer;
     display->surface_get_parameters = gbm_egl_surface_get_parameters;
     display->context = connection;
-    
+
     std::lock_guard<std::mutex> lg(guard);
     auto egl_display = static_cast<mir_toolkit::MirEGLNativeDisplayType>(display);
     valid_displays.insert(egl_display);
-    
+
     return egl_display;
 }
 
@@ -117,11 +117,11 @@ void
 mclg::MesaNativeDisplayContainer::release(mir_toolkit::MirEGLNativeDisplayType display)
 {
     std::lock_guard<std::mutex> lg(guard);
-    
+
     auto it = valid_displays.find(display);
     if (it == valid_displays.end())
         return;
 
     delete static_cast<MirMesaEGLNativeDisplay*>(*it);
     valid_displays.erase(it);
-}    
+}

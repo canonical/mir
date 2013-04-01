@@ -41,7 +41,7 @@ struct MockSessionHandle : public mi::SessionTarget
 
 
 TEST(AndroidInputApplicationHandle, takes_name_from_session_and_specifies_max_timeout)
-{   
+{
     using namespace ::testing;
     std::string const testing_session_name = "Cats";
     MockSessionHandle session;

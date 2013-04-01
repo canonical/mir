@@ -61,9 +61,9 @@ public:
 
     void start();
     void stop();
-    
+
     std::shared_ptr<InputChannel> make_input_channel();
-    
+
     void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& session, std::shared_ptr<input::SurfaceTarget> const& surface);
 
 protected:
@@ -76,7 +76,7 @@ private:
 
     std::shared_ptr<InputThread> reader_thread;
     std::shared_ptr<InputThread> dispatcher_thread;
-    
+
     droidinput::sp<droidinput::InputWindowHandle> focused_window_handle;
     droidinput::sp<droidinput::InputApplicationHandle> focused_application_handle;
 };

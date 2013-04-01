@@ -54,7 +54,7 @@ public:
 private:
     BufferID buffer_id;
     std::weak_ptr<BufferSwapper> allocating_swapper;
-}; 
+};
 
 class TemporaryCompositorBuffer : public TemporaryBuffer
 {
@@ -66,7 +66,7 @@ private:
     BufferID buffer_id;
     std::weak_ptr<BufferSwapper> allocating_swapper;
 };
- 
+
 }
 }
 

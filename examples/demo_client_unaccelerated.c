@@ -32,7 +32,7 @@ static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
 {
     char *row = region->vaddr;
     int j;
-    
+
     for (j = 0; j < region->height; j++)
     {
         int i;
@@ -142,14 +142,14 @@ int main(int argc, char* argv[])
     fill_pattern(pattern, pixel_format);
 
     MirGraphicsRegion graphics_region;
-    int i=0; 
+    int i=0;
     while (1)
     {
         mir_surface_next_buffer_sync(surface);
         mir_surface_get_graphics_region( surface, &graphics_region);
         if ((i++ % 2) == 0)
             render_pattern(&graphics_region, pattern[0]);
-        else 
+        else
             render_pattern(&graphics_region, pattern[1]);
     }
 

@@ -440,7 +440,7 @@ struct TestClientIPCRender : public testing::Test
         size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
         pf = geom::PixelFormat::abgr_8888;
 
-        auto initializer = std::make_shared<mg::NullBufferInitializer>(); 
+        auto initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = std::make_shared<mga::AndroidBufferAllocator> (initializer);
         mc::BufferProperties properties(size, pf, mc::BufferUsage::hardware);
         android_buffer = allocator->alloc_buffer(properties);

@@ -31,7 +31,7 @@ class InputChannelFactory
 {
 public:
     virtual ~InputChannelFactory() {}
-    
+
     virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
 
 protected:

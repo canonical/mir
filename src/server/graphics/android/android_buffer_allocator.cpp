@@ -74,7 +74,7 @@ std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
     auto buffer = std::make_shared<AndroidBuffer>(alloc_device,
                                                   buffer_properties.size,
                                                   buffer_properties.format);
-    
+
     (*buffer_initializer)(*buffer);
 
     return buffer;

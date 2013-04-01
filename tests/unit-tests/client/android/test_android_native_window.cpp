@@ -71,7 +71,7 @@ TEST_F(AndroidNativeWindowTest, native_window_query_hook)
         .WillOnce(Return(width));
 
     window->query(window.get(), NATIVE_WINDOW_WIDTH ,&returned_width);
-    
+
     EXPECT_EQ(width, returned_width);
 }
 
@@ -101,7 +101,7 @@ TEST_F(AndroidNativeWindowTest, native_window_setswapinterval_hook_callable)
 /* dequeue hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
 {
-    ANativeWindowBuffer* returned_buffer; 
+    ANativeWindowBuffer* returned_buffer;
     int fence_fd;
     std::shared_ptr<ANativeWindow> window = std::make_shared<mcla::MirNativeWindow>(mock_driver_interpreter);
 
@@ -113,7 +113,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
 {
     using namespace testing;
 
-    ANativeWindowBuffer* returned_buffer; 
+    ANativeWindowBuffer* returned_buffer;
     ANativeWindowBuffer fake_buffer;
     int fence_fd;
     std::shared_ptr<ANativeWindow> window = std::make_shared<mcla::MirNativeWindow>(mock_driver_interpreter);
@@ -130,7 +130,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_indicates_buffer_immediately_usable)
 {
-    ANativeWindowBuffer* returned_buffer; 
+    ANativeWindowBuffer* returned_buffer;
     int fence_fd;
     std::shared_ptr<ANativeWindow> window = std::make_shared<mcla::MirNativeWindow>(mock_driver_interpreter);
 
@@ -151,7 +151,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
 {
     using namespace testing;
 
-    ANativeWindowBuffer* returned_buffer; 
+    ANativeWindowBuffer* returned_buffer;
     ANativeWindowBuffer fake_buffer;
     std::shared_ptr<ANativeWindow> window = std::make_shared<mcla::MirNativeWindow>(mock_driver_interpreter);
 
@@ -186,7 +186,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_waits_for_sync_before_return
         .Times(1);
     EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(_))
         .Times(1);
-    
+
     window->queueBuffer(tmp, mock_fence);
 }
 

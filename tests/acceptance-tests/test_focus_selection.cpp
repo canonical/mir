@@ -171,7 +171,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
     launch_server_process(server_config);
 
     SurfaceCreatingClient client;
-    
+
     launch_client_process(client);
 }
 
@@ -181,13 +181,13 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
     {
         std::shared_ptr<mtd::MockInputFocusSelector> focus_selector;
         bool expected;
-        
+
         ServerConfig()
           : focus_selector(std::make_shared<mtd::MockInputFocusSelector>()),
             expected(false)
         {
         }
-            
+
         std::shared_ptr<msh::InputFocusSelector>
         the_input_focus_selector() override
         {
@@ -197,19 +197,19 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
             {
                 InSequence seq;
 
-                EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSessionTarget(), NullSurfaceTarget())).Times(1);                    
+                EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSessionTarget(), NullSurfaceTarget())).Times(1);
                 EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSessionTarget(), NonNullSurfaceTarget())).Times(1);
                 expected = true;
             }
-                
+
             return focus_selector;
         }
     } server_config;
 
-        
+
     launch_server_process(server_config);
 
     SurfaceCreatingClient client;
-    
+
     launch_client_process(client);
 }
