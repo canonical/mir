@@ -50,10 +50,8 @@ struct MockServerConfiguration : public mir::ServerConfiguration
 {
     MOCK_METHOD0(the_communicator, std::shared_ptr<mf::Communicator>());
     MOCK_METHOD0(the_frontend_shell, std::shared_ptr<mf::Shell>());
-    MOCK_METHOD0(the_surface_factory, std::shared_ptr<msh::SurfaceFactory>());
     MOCK_METHOD0(the_input_manager, std::shared_ptr<mi::InputManager>());
     MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
-    MOCK_METHOD0(the_graphics_platform, std::shared_ptr<mg::Platform>());
     MOCK_METHOD0(the_compositor, std::shared_ptr<mc::Compositor>());
 };
 

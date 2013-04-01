@@ -21,6 +21,9 @@
 #include "mir/run_mir.h"
 #include "mir/default_server_configuration.h"
 
+#include <boost/exception/diagnostic_information.hpp>
+#include <iostream>
+
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace me = mir::examples;
@@ -50,8 +53,22 @@ struct InprocessClientStarter
 
 
 int main(int argc, char const* argv[])
+try
 {
     mir::DefaultServerConfiguration config(argc, argv);
-    
-    mir::run_mir(config, InprocessClientStarter(config.the_surface_factory(), config.the_graphics_platform()));
+
+    std::shared_ptr<me::InprocessEGLClient> client;
+    mir::run_mir(config, [&](mir::DisplayServer&)
+    {
+        client = std::make_shared<me::InprocessEGLClient>(
+            config.the_surface_factory(),
+            config.the_graphics_platform());
+    }
+
+    return 0;
+}
+catch (std::exception const& error)
+{
+    std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
+    return 1;
 }
