@@ -42,7 +42,7 @@ class AndroidInputChannel : public InputChannel
 public:
     explicit AndroidInputChannel();
     virtual ~AndroidInputChannel();
-    
+
     int client_fd() const;
     int server_fd() const;
 

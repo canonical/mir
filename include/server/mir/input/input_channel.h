@@ -28,7 +28,7 @@ class InputChannel
 {
 public:
     virtual ~InputChannel() {}
-    
+
     virtual int client_fd() const = 0;
     virtual int server_fd() const = 0;
 

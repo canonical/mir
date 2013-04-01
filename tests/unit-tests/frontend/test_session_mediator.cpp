@@ -61,14 +61,14 @@ public:
     StubbedSession()
     {
         using namespace ::testing;
-        
+
         mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
-        
+
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
         EXPECT_CALL(*mock_surface, client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mt::fake_shared(stub_buffer)));
         EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber());
-        
+
         EXPECT_CALL(*mock_surface, supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
         EXPECT_CALL(*mock_surface, client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
     }
@@ -164,7 +164,7 @@ TEST_F(SessionMediatorTest, disconnect_releases_session)
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
-    
+
     EXPECT_CALL(*shell, close_session(_)).Times(1);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
@@ -319,13 +319,13 @@ TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
-    
+
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-    
+
     {
         mp::SurfaceParameters request;
         mp::Surface response;
-        
+
         mediator.create_surface(nullptr, &request, &response, null_callback.get());
         EXPECT_EQ(StubbedSession::testing_client_input_fd, response.fd(0));
     }
@@ -342,13 +342,13 @@ TEST_F(SessionMediatorTest, no_input_channel_is_nonfatal)
         .WillOnce(testing::Return(false));
     EXPECT_CALL(*stubbed_session->mock_surface, client_input_fd())
         .Times(0);
-    
+
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-    
+
     {
         mp::SurfaceParameters request;
         mp::Surface response;
-        
+
         mediator.create_surface(nullptr, &request, &response, null_callback.get());
     }
 

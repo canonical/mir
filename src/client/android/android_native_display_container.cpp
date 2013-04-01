@@ -52,4 +52,4 @@ mcla::AndroidNativeDisplayContainer::create(mir_toolkit::MirConnection* connecti
 void
 mcla::AndroidNativeDisplayContainer::release(mir_toolkit::MirEGLNativeDisplayType /* display */)
 {
-}    
+}

@@ -43,7 +43,7 @@ struct OrganisingSurfaceFactorySetup : public testing::Test
     void SetUp()
     {
         using namespace ::testing;
-        
+
         underlying_surface_factory = std::make_shared<mtd::MockSurfaceFactory>();
         ON_CALL(*underlying_surface_factory, create_surface(_)).WillByDefault(Return(null_surface));
 
@@ -61,9 +61,9 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     using namespace ::testing;
 
     msh::OrganisingSurfaceFactory factory(underlying_surface_factory, placement_strategy);
-    
+
     EXPECT_CALL(*underlying_surface_factory, create_surface(_)).Times(1);
-    
+
     auto params = mf::a_surface();
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(mf::a_surface()));
@@ -76,15 +76,15 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
     using namespace ::testing;
 
     msh::OrganisingSurfaceFactory factory(underlying_surface_factory, placement_strategy);
-    
+
     auto params = mf::a_surface();
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
-    
+
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
     EXPECT_CALL(*underlying_surface_factory, create_surface(placed_params));
-    
+
     factory.create_surface(params);
 }
 

@@ -39,7 +39,7 @@ public:
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;
 private:
-    ClientSurface& surface; 
+    ClientSurface& surface;
     int driver_pixel_format;
 };
 

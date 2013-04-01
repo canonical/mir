@@ -15,11 +15,6 @@ set(CMAKE_FIND_ROOT_PATH  "${MIR_NDK_PATH}")
 include_directories(SYSTEM ${MIR_NDK_PATH}/usr/include)
 list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${MIR_NDK_PATH}/usr/include")
 
-#add directories from the chroot to search for libraries
-link_directories(${MIR_NDK_PATH}/lib/
-               ${MIR_ARM_EABI}/usr/lib
-               ${MIR_NDK_PATH}/usr/lib/${MIR_ARM_EABI})
-
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_EXECUTABLE_RUNTIME_C_FLAG "-Wl,-rpath-link,")

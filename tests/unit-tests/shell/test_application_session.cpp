@@ -81,7 +81,7 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     auto id1 = app_session.create_surface(params);
     auto id2 = app_session.create_surface(params);
     auto id3 = app_session.create_surface(params);
-    
+
     auto default_surf = app_session.default_surface();
     EXPECT_EQ(app_session.get_surface(id1), default_surf);
     app_session.destroy_surface(id1);

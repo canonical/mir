@@ -27,7 +27,7 @@ namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-namespace 
+namespace
 {
 class TemporaryTestBuffer : public mc::TemporaryBuffer
 {
@@ -74,7 +74,7 @@ TEST_F(TemporaryBuffersTest, client_buffer_acquires_and_releases)
         .Times(1);
 
     mc::TemporaryClientBuffer proxy_buffer(mock_swapper);
-} 
+}
 
 TEST_F(TemporaryBuffersTest, client_buffer_handles_swapper_destruction)
 {
@@ -84,7 +84,7 @@ TEST_F(TemporaryBuffersTest, client_buffer_handles_swapper_destruction)
 
     mc::TemporaryClientBuffer proxy_buffer(mock_swapper);
     mock_swapper.reset();
-} 
+}
 
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 {
@@ -95,7 +95,7 @@ TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
         .Times(1);
 
     mc::TemporaryCompositorBuffer proxy_buffer(mock_swapper);
-} 
+}
 
 TEST_F(TemporaryBuffersTest, compositor_buffer_handles_swapper_destruction)
 {
@@ -105,7 +105,7 @@ TEST_F(TemporaryBuffersTest, compositor_buffer_handles_swapper_destruction)
 
     mc::TemporaryCompositorBuffer proxy_buffer(mock_swapper);
     mock_swapper.reset();
-} 
+}
 
 TEST_F(TemporaryBuffersTest, base_test_size)
 {
@@ -116,7 +116,7 @@ TEST_F(TemporaryBuffersTest, base_test_size)
     geom::Size size;
     size = proxy_buffer.size();
     EXPECT_EQ(buffer_size, size);
-} 
+}
 
 TEST_F(TemporaryBuffersTest, base_test_stride)
 {
@@ -127,7 +127,7 @@ TEST_F(TemporaryBuffersTest, base_test_stride)
     geom::Stride stride;
     stride = proxy_buffer.stride();
     EXPECT_EQ(buffer_stride, stride);
-} 
+}
 
 TEST_F(TemporaryBuffersTest, base_test_pixel_format)
 {
@@ -138,7 +138,7 @@ TEST_F(TemporaryBuffersTest, base_test_pixel_format)
     geom::PixelFormat pixel_format;
     pixel_format = proxy_buffer.pixel_format();
     EXPECT_EQ(buffer_pixel_format, pixel_format);
-} 
+}
 
 TEST_F(TemporaryBuffersTest, base_bind_to_texture)
 {
@@ -147,7 +147,7 @@ TEST_F(TemporaryBuffersTest, base_bind_to_texture)
         .Times(1);
 
     proxy_buffer.bind_to_texture();
-} 
+}
 
 TEST_F(TemporaryBuffersTest, base_get_ipc_package)
 {
@@ -156,7 +156,7 @@ TEST_F(TemporaryBuffersTest, base_get_ipc_package)
         .Times(1);
 
     proxy_buffer.get_ipc_package();
-} 
+}
 
 TEST_F(TemporaryBuffersTest, base_test_id)
 {

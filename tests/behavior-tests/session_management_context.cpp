@@ -99,12 +99,12 @@ public:
     {
         (void)f;
     }
-    
+
     std::shared_ptr<mg::DisplayConfiguration> configuration()
     {
         return std::shared_ptr<mg::DisplayConfiguration>();
     }
-    
+
     geom::Rectangle area;
 };
 

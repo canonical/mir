@@ -59,7 +59,7 @@ TEST_F(HWCDevice, test_vsync_activation_comes_after_proc_registration)
 {
     using namespace testing;
 
-    InSequence sequence_enforcer; 
+    InSequence sequence_enforcer;
     EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(),_))
         .Times(1);
     EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_EVENT_VSYNC, 1))
@@ -171,7 +171,7 @@ TEST_F(HWCDevice, test_hwc_gles_set_error)
 TEST_F(HWCDevice, test_hwc_turns_on_display_after_proc_registration)
 {
     using namespace testing;
-    InSequence sequence_enforcer; 
+    InSequence sequence_enforcer;
     EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(),_))
         .Times(1);
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))

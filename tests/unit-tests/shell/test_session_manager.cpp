@@ -87,7 +87,7 @@ struct SessionManagerSetup : public testing::Test
 TEST_F(SessionManagerSetup, open_and_close_session)
 {
     using namespace ::testing;
- 
+
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_));
@@ -185,7 +185,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
     }
-    
+
     auto session1 = session_manager.open_session("Weather Report");
     session_manager.create_surface_for(session1, mf::a_surface());
 }
