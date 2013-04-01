@@ -42,10 +42,8 @@ struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
         : display{config.the_display()},
-          graphics_platform{config.the_graphics_platform()},
           compositor{config.the_compositor()},
           shell{config.the_frontend_shell()},
-          surface_factory{config.the_surface_factory()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
           exit(false)
@@ -53,10 +51,8 @@ struct mir::DisplayServer::Private
     }
 
     std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mg::Platform> graphics_platform;
     std::shared_ptr<mc::Compositor> compositor;
     std::shared_ptr<frontend::Shell> shell;    
-    std::shared_ptr<msh::SurfaceFactory> surface_factory;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
@@ -96,4 +92,3 @@ void mir::DisplayServer::stop()
     p->exit = true;
     p->exit_cv.notify_one();
 }
-
