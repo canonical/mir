@@ -55,4 +55,19 @@ TEST(AndroidInputApplicationHandle, takes_name_from_session_and_specifies_max_ti
     EXPECT_EQ(droidinput::String8(testing_session_name.c_str()), info->name);
 }
 
+TEST(AndroidInputApplicationHandle, does_not_own_session)
+{
+    using namespace ::testing;
+    std::string const testing_session_name = "Let it Grow";
+    
+    auto session = std::make_shared<MockSessionHandle>();
+    EXPECT_CALL(*session, name()).Times(AtLeast(1))
+        .WillRepeatedly(Return(testing_session_name));
+    
+    mia::InputApplicationHandle application_handle(session);
+    EXPECT_TRUE(application_handle.updateInfo());
+    session.reset();
+    EXPECT_FALSE(application_handle.updateInfo());
+
+}
 
