@@ -45,13 +45,9 @@ namespace geom = mir::geometry;
 me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
                                            std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
   : graphics_platform(graphics_platform),
-    surface_factory(surface_factory)
+    surface_factory(surface_factory),
+    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop) this)
 {
-}
-
-void me::InprocessEGLClient::start()
-{
-    client_thread = std::thread(std::mem_fn(&InprocessEGLClient::thread_loop), this);
 }
 
 void me::InprocessEGLClient::thread_loop()

@@ -40,7 +40,6 @@ struct InprocessClientStarter
     void operator()(mir::DisplayServer&)
     {
         auto client = new me::InprocessEGLClient(graphics_platform, surface_factory);
-        client->start();
     }
     
     std::shared_ptr<msh::SurfaceFactory> const surface_factory;

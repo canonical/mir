@@ -43,8 +43,7 @@ public:
     InprocessEGLClient(std::shared_ptr<graphics::Platform> const& graphics_platform,
                        std::shared_ptr<shell::SurfaceFactory> const& surface_factory);
     virtual ~InprocessEGLClient() {}
-    
-    void start();
+
 protected:
     InprocessEGLClient(InprocessEGLClient const&) = delete;
     InprocessEGLClient& operator=(InprocessEGLClient const&) = delete;
