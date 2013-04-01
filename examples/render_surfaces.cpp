@@ -325,6 +325,7 @@ int main(int argc, char **argv)
     std::cout << "Rendering " << num_moveables << " surfaces" << std::endl;
 
     RenderSurfacesServerConfiguration conf{num_moveables};
+
     mir::run_mir(conf, [&](mir::DisplayServer&) {conf.create_surfaces();});
 
     return 0;
