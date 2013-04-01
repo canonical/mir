@@ -74,12 +74,6 @@ private:
     droidinput::sp<droidinput::Looper> looper;
 
     bool fd_added;
-    
-    static const bool consume_batches = true;
-    static const bool do_not_consume_batches = false;
-    static const int default_frame_time = -1;
-    static const bool handle_event = true;
-    static const bool do_not_handle_event = false;
 };
 
 }

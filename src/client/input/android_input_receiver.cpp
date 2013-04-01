@@ -71,8 +71,8 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
     else if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
         return false;
 
-    if(input_consumer->consume(&event_factory, consume_batches,
-        default_frame_time, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
+    if(input_consumer->consume(&event_factory, true,
+        -1, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
     {
         miat::Lexicon::translate(android_event, ev);
         input_consumer->sendFinishedSignal(event_sequence_id, true);
