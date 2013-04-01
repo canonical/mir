@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
 #define MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
 
-#include <map>
+#include <list>
 #include <memory>
 
 #include "mir/geometry/pixel_format.h"
@@ -59,10 +59,8 @@ public:
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
-    typedef std::map<int, std::shared_ptr<ClientBuffer>> BufferMap;
-    BufferMap buffers;
-    BufferMap::iterator current_buffer_iter;
-    const unsigned max_age;
+    std::list<std::pair<int, std::shared_ptr<ClientBuffer>>> buffers;
+    const unsigned int max_buffers;
 };
 }
 }
