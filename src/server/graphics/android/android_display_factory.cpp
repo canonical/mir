@@ -40,7 +40,13 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
         return;
     }
 
-    setup_hwc_dev(hw_module);
+    try
+    {
+        setup_hwc_dev(hw_module);
+    } catch (std::runtime_error &e)
+    {
+        /* TODO: log error. this is nonfatal, we'll just create the backup display */
+    }
 }
 
 void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
@@ -50,7 +56,7 @@ void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
         BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
     }
 
-    hwc_composer_device_1* hwc_device_raw;
+    hwc_composer_device_1* hwc_device_raw = nullptr;
     int rc = module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
 
     if ((rc != 0) || (hwc_device_raw == nullptr))
