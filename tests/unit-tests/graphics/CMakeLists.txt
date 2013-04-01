@@ -11,9 +11,7 @@ endif()
 
 if (MIR_PLATFORM STREQUAL "gbm")
 add_subdirectory(gbm/)
+add_subdirectory(egl)
 endif()
 
-add_subdirectory(egl)
-
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
-

@@ -19,7 +19,9 @@ set(
   null_display_report.cpp
 )
 
-add_subdirectory(egl/)
+if (MIR_PLATFORM STREQUAL "gbm")
+  add_subdirectory(egl/)
+endif()
 
 add_library(
   mirgraphics STATIC

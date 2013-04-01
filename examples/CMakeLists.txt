@@ -120,7 +120,9 @@ set (DEMO_CLIENTS
   mir_eglplasma
 )
 
-add_subdirectory(demo-inprocess-egl)
+if (MIR_PLATORM STREQUAL "gbm")
+  add_subdirectory(demo-inprocess-egl)
+endif()
 
 install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION bin)
 
