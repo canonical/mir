@@ -25,8 +25,8 @@ MESSAGE(STATUS "GLog_LIBRARY=" ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
 
 set(
   SRCS
-  display_server.cpp
   run_mir.cpp
+  display_server.cpp
   default_server_configuration.cpp
   signal_dispatcher.cpp
 )
