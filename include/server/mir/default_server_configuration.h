@@ -122,7 +122,7 @@ public:
 
     virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
     virtual std::shared_ptr<time::TimeSource> the_time_source();
-    
+
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();

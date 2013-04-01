@@ -17,7 +17,6 @@
  */
 
 #include "mir/run_mir.h"
-
 #include "mir/display_server.h"
 #include "mir/signal_dispatcher.h"
 
