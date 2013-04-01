@@ -120,7 +120,7 @@ set (DEMO_CLIENTS
   mir_eglplasma
 )
 
-if (MIR_PLATORM STREQUAL "gbm")
+if (MIR_PLATFORM STREQUAL "gbm")
   add_subdirectory(demo-inprocess-egl)
 endif()
 

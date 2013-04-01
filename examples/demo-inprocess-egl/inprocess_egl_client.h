@@ -42,7 +42,6 @@ class InprocessEGLClient
 public:
     InprocessEGLClient(std::shared_ptr<graphics::Platform> const& graphics_platform,
                        std::shared_ptr<shell::SurfaceFactory> const& surface_factory);
-    virtual ~InprocessEGLClient() {}
 
 protected:
     InprocessEGLClient(InprocessEGLClient const&) = delete;

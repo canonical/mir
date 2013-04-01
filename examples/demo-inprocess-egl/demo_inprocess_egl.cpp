@@ -32,12 +32,14 @@ try
     mir::DefaultServerConfiguration config(argc, argv);
 
     std::shared_ptr<me::InprocessEGLClient> client;
-    mir::run_mir(config, [&](mir::DisplayServer&)
+    mir::run_mir(config, [&config, &client](mir::DisplayServer&) -> void
     {
+        auto factory = config.the_surface_factory();
+        auto platform = config.the_graphics_platform();
         client = std::make_shared<me::InprocessEGLClient>(
-            config.the_surface_factory(),
-            config.the_graphics_platform());
-    }
+              config.the_surface_factory(),
+              config.the_graphics_platform());
+    });
 
     return 0;
 }

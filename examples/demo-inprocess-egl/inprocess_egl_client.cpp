@@ -46,7 +46,7 @@ me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& 
                                            std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
   : graphics_platform(graphics_platform),
     surface_factory(surface_factory),
-    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop) this)
+    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this)
 {
 }
 
