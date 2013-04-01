@@ -19,8 +19,6 @@
 #ifndef MIR_INPUT_CURSOR_LISTENER_H_
 #define MIR_INPUT_CURSOR_LISTENER_H_
 
-// TODO: As this is due to be implemented in the graphics namespace for rendering the cursor perhaps this interface
-// belongs in mir::graphics
 namespace mir
 {
 namespace input
