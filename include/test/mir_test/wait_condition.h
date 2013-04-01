@@ -27,6 +27,8 @@
 
 namespace mir
 {
+namespace test
+{
 struct WaitCondition
 {
     WaitCondition() : woken(false) {}
@@ -48,10 +50,7 @@ struct WaitCondition
     std::condition_variable condition;
     bool woken;
 };
-}
 
-namespace
-{
 ACTION_P(ReturnFalseAndWakeUp, wait_condition)
 {
     wait_condition->wake_up_everyone();
@@ -60,6 +59,7 @@ ACTION_P(ReturnFalseAndWakeUp, wait_condition)
 ACTION_P(WakeUp, wait_condition)
 {
     wait_condition->wake_up_everyone();
+}
 }
 }
 

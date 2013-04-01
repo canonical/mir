@@ -53,7 +53,7 @@ namespace
 struct FocusNotifyingInputManager : public mia::InputManager
 {
     FocusNotifyingInputManager(std::shared_ptr<mia::InputConfiguration> const& configuration,
-                               mir::WaitCondition &wait_condition)
+                               mt::WaitCondition &wait_condition)
       : InputManager(configuration),
         on_focus_set(wait_condition)
     {
@@ -70,7 +70,7 @@ struct FocusNotifyingInputManager : public mia::InputManager
             on_focus_set.wake_up_everyone();
     }
 
-    mir::WaitCondition &on_focus_set;
+    mt::WaitCondition &on_focus_set;
 };
 
 struct FakeInputServerConfiguration : public mir_test_framework::TestingServerConfiguration
@@ -114,7 +114,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
 
     mtd::FakeEventHubInputConfiguration input_config;
     mia::FakeEventHub* fake_event_hub;
-    mir::WaitCondition on_focus_set;
+    mt::WaitCondition on_focus_set;
     std::thread input_injection_thread;
 };
 
@@ -227,7 +227,7 @@ struct InputReceivingClient : ClientConfigCommon
     }
     
     std::shared_ptr<MockInputHandler> handler;
-    mir::WaitCondition event_received[3];
+    mt::WaitCondition event_received[3];
     int events_received;
 };
 
