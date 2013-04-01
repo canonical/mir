@@ -65,7 +65,9 @@ public:
     {
         droidinput::PointerProperties filler_pointer_properties;
         droidinput::PointerCoords filler_pointer_coordinates;
-        filler_pointer_coordinates.clear();
+
+        memset(&filler_pointer_properties, 0, sizeof(droidinput::PointerProperties));
+        memset(&filler_pointer_coordinates, 0, sizeof(droidinput::PointerCoords));
 
         input_publisher->publishMotionEvent(
             incrementing_seq_id,
