@@ -37,7 +37,6 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
-namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
