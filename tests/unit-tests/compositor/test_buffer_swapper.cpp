@@ -34,18 +34,6 @@ struct BufferSwapperConstruction : testing::Test
         buffer_c = std::make_shared<mtd::StubBuffer>();
     }
 
-    bool check_ref(std::shared_ptr<mc::Buffer> buffer, mc::BufferID id)
-    {
-        if ((id == id1) && (buffer.get() == buffer_a.get()))
-            return true;
-        if ((id == id2) && (buffer.get() == buffer_b.get()))
-            return true;
-        if ((id == id3) && (buffer.get() == buffer_c.get()))
-            return true;
-
-        return false;
-    }
-
     std::shared_ptr<mc::Buffer> buffer_a;
     std::shared_ptr<mc::Buffer> buffer_b;
     std::shared_ptr<mc::Buffer> buffer_c;
@@ -127,7 +115,7 @@ TEST_F(BufferSwapperConstruction, references_match_ids_triple)
     auto buffer_1 = swapper.compositor_acquire();
     auto buffer_2 = swapper.client_acquire();
     swapper.client_release(buffer_2);
-    auto buffer_3 = swapper.client_acquire(buffer_3);
+    auto buffer_3 = swapper.client_acquire();
     /* swapper is now 'empty' */
 
     EXPECT_EQ(buffer_a, buffer_1);
