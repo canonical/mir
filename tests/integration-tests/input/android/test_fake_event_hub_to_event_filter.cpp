@@ -103,7 +103,7 @@ TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
 
     mir::WaitCondition wait_condition;
 
-    EXPECT_CALL(event_filter, handles(KeyDownEvent())).Times(1)
+    EXPECT_CALL(event_filter, handles(mt::KeyDownEvent())).Times(1)
         .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_keyboard_added();

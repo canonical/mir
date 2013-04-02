@@ -40,7 +40,7 @@ struct MemoryRegion;
 }
 }
 
-struct mir_toolkit::MirSurface : public mir::client::ClientSurface
+struct MirSurface : public mir::client::ClientSurface
 {
 public:
     MirSurface(MirSurface const &) = delete;

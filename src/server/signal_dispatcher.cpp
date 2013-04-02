@@ -60,9 +60,20 @@ struct EventSocketPair
 
     int read_signal_from(SocketIdentifier id)
     {
-        int signal;
-        if (::read(sockets[id], &signal, sizeof(signal)) < 0)
-            throw std::runtime_error("Problem reading_from socket");
+        int signal{0};
+        ssize_t nread{0};
+
+        while (nread <= 0)
+        {
+            nread = ::read(sockets[id], &signal, sizeof(signal));
+
+            if (nread == 0)
+                throw std::runtime_error("Write end of socket has been closed");
+            else if (nread > 0 && nread < static_cast<ssize_t>(sizeof(signal)))
+                throw std::runtime_error("Incomplete message retrieved");
+            else if (nread < 0 && errno != EINTR)
+                throw std::runtime_error("Problem reading from socket");
+        }
 
         return signal;
     }

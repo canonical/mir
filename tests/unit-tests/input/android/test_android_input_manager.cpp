@@ -40,6 +40,9 @@
 
 #include <initializer_list>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 namespace droidinput = android;
 
 namespace mi = mir::input;

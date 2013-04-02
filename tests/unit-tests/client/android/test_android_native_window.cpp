@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/mir_native_window.h"
+#include "mir/graphics/android/android_driver_interpreter.h"
+#include "src/shared/graphics/android/syncfence.h"
 #include "src/client/mir_client_surface.h"
-#include "src/client/android/mir_native_window.h"
-#include "src/client/android/android_driver_interpreter.h"
-#include "src/client/android/syncfence.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
