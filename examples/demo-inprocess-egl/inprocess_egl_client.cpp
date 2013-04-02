@@ -24,7 +24,7 @@
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/graphics/egl/mesa_native_display.h"
+#include "mir/graphics/platform.h"
 
 #include "mir/draw/graphics.h"
 
@@ -38,7 +38,6 @@ namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
-namespace mgeglm = mg::egl::mesa;
 namespace me = mir::examples;
 namespace geom = mir::geometry;
 
@@ -63,8 +62,8 @@ void me::InprocessEGLClient::thread_loop()
     
     surface->advance_client_buffer(); // TODO: What a wart!
     
-    auto native_display = mgeglm::create_native_display(graphics_platform);
-    me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display.get()), reinterpret_cast<EGLNativeWindowType>(surface.get()));
+    auto native_display = graphics_platform->mir_native_display();
+    me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display), reinterpret_cast<EGLNativeWindowType>(surface.get()));
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
     assert(rc == EGL_TRUE);
