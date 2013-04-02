@@ -34,7 +34,7 @@ if (MIR_PLATFORM STREQUAL "android")
   include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
 endif()
 
-#add_subdirectory(acceptance-tests/)
+add_subdirectory(acceptance-tests/)
 add_subdirectory(unit-tests/)
 #add_subdirectory(integration-tests/)
 add_subdirectory(mir_test_framework/)
