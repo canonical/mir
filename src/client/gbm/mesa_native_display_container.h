@@ -39,10 +39,10 @@ public:
     MesaNativeDisplayContainer();
     virtual ~MesaNativeDisplayContainer();
 
-    mir_toolkit::MirEGLNativeDisplayType create(mir_toolkit::MirConnection* connection);
-    void release(mir_toolkit::MirEGLNativeDisplayType display);
+    MirEGLNativeDisplayType create(MirConnection* connection);
+    void release(MirEGLNativeDisplayType display);
 
-    bool validate(mir_toolkit::MirEGLNativeDisplayType display) const;
+    bool validate(MirEGLNativeDisplayType display) const;
 
 protected:
     MesaNativeDisplayContainer(MesaNativeDisplayContainer const&) = delete;
@@ -50,7 +50,7 @@ protected:
 
 private:
     std::mutex mutable guard;
-    std::unordered_set<mir_toolkit::MirEGLNativeDisplayType> valid_displays;
+    std::unordered_set<MirEGLNativeDisplayType> valid_displays;
 };
 }
 }

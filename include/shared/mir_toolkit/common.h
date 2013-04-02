@@ -21,9 +21,13 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
 /* This is C code. Not C++. */
 
-/*
+/**
  * Attributes of a surface that the client and server/shell may wish to
  * get or set over the wire.
  */
@@ -45,5 +49,6 @@ typedef enum MirSurfaceType
 } MirSurfaceType;
 
 /* TODO: Surface states here */
+/**@}*/
 
 #endif

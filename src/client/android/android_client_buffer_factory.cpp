@@ -29,7 +29,7 @@ mcla::AndroidClientBufferFactory::AndroidClientBufferFactory(std::shared_ptr<And
 {
 }
 
-std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferFactory::create_buffer(std::shared_ptr<mir_toolkit::MirBufferPackage> const& package, geom::Size size, geom::PixelFormat pf)
+std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferFactory::create_buffer(std::shared_ptr<MirBufferPackage> const& package, geom::Size size, geom::PixelFormat pf)
 {
     return std::make_shared<mcla::AndroidClientBuffer>(registrar, package, size, pf);
 }

@@ -35,7 +35,7 @@ extern "C"
 static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay* display,
                                          MirPlatformPackage* package)
 {
-    mir_toolkit::mir_connection_get_platform(display->context, package);
+    mir_connection_get_platform(display->context, package);
 }
 
 static void gbm_egl_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* display */,
@@ -43,7 +43,7 @@ static void gbm_egl_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* displ
                                                MirBufferPackage* buffer_package)
 {
     MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_toolkit::mir_surface_get_current_buffer(ms, buffer_package);
+    mir_surface_get_current_buffer(ms, buffer_package);
 }
 
 static void buffer_advanced_callback(MirSurface*  /* surface */,
@@ -55,7 +55,7 @@ static void gbm_egl_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display *
                                            MirEGLNativeWindowType surface)
 {
     MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_toolkit::mir_wait_for(mir_toolkit::mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
+    mir_wait_for(mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
 }
 
 static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display */,
@@ -63,7 +63,7 @@ static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display *
                                            MirSurfaceParameters* surface_parameters)
 {
     MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_toolkit::mir_surface_get_parameters(ms,  surface_parameters);
+    mir_surface_get_parameters(ms,  surface_parameters);
 }
 
 }
@@ -90,14 +90,14 @@ mclg::MesaNativeDisplayContainer::~MesaNativeDisplayContainer()
 }
 
 bool
-mclg::MesaNativeDisplayContainer::validate(mir_toolkit::MirEGLNativeDisplayType display) const
+mclg::MesaNativeDisplayContainer::validate(MirEGLNativeDisplayType display) const
 {
     std::lock_guard<std::mutex> lg(guard);
     return (valid_displays.find(display) != valid_displays.end());
 }
 
-mir_toolkit::MirEGLNativeDisplayType
-mclg::MesaNativeDisplayContainer::create(mir_toolkit::MirConnection* connection)
+MirEGLNativeDisplayType
+mclg::MesaNativeDisplayContainer::create(MirConnection* connection)
 {
     MirMesaEGLNativeDisplay* display = new MirMesaEGLNativeDisplay();
     display->display_get_platform = gbm_egl_display_get_platform;
@@ -107,14 +107,14 @@ mclg::MesaNativeDisplayContainer::create(mir_toolkit::MirConnection* connection)
     display->context = connection;
 
     std::lock_guard<std::mutex> lg(guard);
-    auto egl_display = static_cast<mir_toolkit::MirEGLNativeDisplayType>(display);
+    auto egl_display = static_cast<MirEGLNativeDisplayType>(display);
     valid_displays.insert(egl_display);
 
     return egl_display;
 }
 
 void
-mclg::MesaNativeDisplayContainer::release(mir_toolkit::MirEGLNativeDisplayType display)
+mclg::MesaNativeDisplayContainer::release(MirEGLNativeDisplayType display)
 {
     std::lock_guard<std::mutex> lg(guard);
 
