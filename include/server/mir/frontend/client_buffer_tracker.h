@@ -20,7 +20,7 @@
  #define MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
 
 #include <stdint.h>
-#include <map>
+#include <list>
 
 namespace mir
 {
@@ -41,7 +41,9 @@ public:
 	void add(compositor::BufferID const& id);
 	bool client_has(compositor::BufferID const& id);
 private:
-	std::map<uint32_t, uint32_t> id_age_map;
+	std::list<uint32_t>::iterator find_buffer(compositor::BufferID const& id);
+
+	std::list<uint32_t> ids;
 };
 
 }

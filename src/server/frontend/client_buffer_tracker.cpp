@@ -23,28 +23,37 @@ namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 
 mf::ClientBufferTracker::ClientBufferTracker()
-	: id_age_map()
+	: ids()
 {
 }
 
 void mf::ClientBufferTracker::add(mc::BufferID const& id)
 {
-	for (auto &id_age_pair : id_age_map)
-		++id_age_pair.second;
+	auto existing_id = find_buffer(id);
 
-	id_age_map[id.as_uint32_t()] = 1;
-
-	for (auto pair = id_age_map.begin(); pair != id_age_map.end(); ++pair)
+	if (existing_id != ids.end())
 	{
-		if (pair->second > 3)
-		{
-			id_age_map.erase(pair);
-			break;
-		}
+		ids.push_front(*existing_id);
+		ids.erase(existing_id);
 	}
+	else
+	{
+		ids.push_front(id.as_uint32_t());
+	}
+	if (ids.size() > 3)
+		ids.pop_back();
 }
 
 bool mf::ClientBufferTracker::client_has(mc::BufferID const& id)
 {
-	return id_age_map.find(id.as_uint32_t()) != id_age_map.end();
+	return find_buffer(id) != ids.end();
+}
+
+std::list<uint32_t>::iterator mf::ClientBufferTracker::find_buffer(compositor::BufferID const& id)
+{
+	auto iterator = ids.begin();
+
+	for (; iterator != ids.end() && *iterator != id.as_uint32_t(); ++iterator);
+
+	return iterator;
 }

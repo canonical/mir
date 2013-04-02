@@ -66,14 +66,22 @@ TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
     mc::BufferID one{1};
     mc::BufferID two{2};
     mc::BufferID three{3};
+    mc::BufferID four{4};
 
     tracker.add(one);
     tracker.add(two);
     tracker.add(three);
+
+    ASSERT_TRUE(tracker.client_has(one));
+    ASSERT_TRUE(tracker.client_has(two));
+    ASSERT_TRUE(tracker.client_has(three));
+
     tracker.add(two);
     tracker.add(three);
+    tracker.add(four);
 
     EXPECT_FALSE(tracker.client_has(one));
     EXPECT_TRUE(tracker.client_has(two));
     EXPECT_TRUE(tracker.client_has(three));
+    EXPECT_TRUE(tracker.client_has(four));
 }
