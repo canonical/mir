@@ -16,10 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_FB_FACTORY_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_FB_FACTORY_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_FACTORY_H_
 
-#include "fb_factory.h"
+#include "display_factory.h"
+#include <hardware/hwcomposer.h>
 
 namespace mir
 {
@@ -28,15 +29,26 @@ namespace graphics
 namespace android
 {
 
-class AndroidFBFactory : public FBFactory
+class HWCFactory;
+class HWCDevice;
+class DisplayAllocator;
+class AndroidDisplayFactory : public DisplayFactory
 {
 public:
-    std::shared_ptr<Display> create_hwc1_1_gpu_display() const;
-    std::shared_ptr<Display> create_gpu_display() const;
+    AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory, std::shared_ptr<HWCFactory> const& hwc_factory);
+
+    std::shared_ptr<Display> create_display() const;
+
+private:
+    void setup_hwc_dev(const hw_module_t* module);
+
+    std::shared_ptr<DisplayAllocator> display_factory;
+    std::shared_ptr<HWCFactory> hwc_factory;
+    std::shared_ptr<hwc_composer_device_1> hwc_dev;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_FB_FACTORY_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_FACTORY_H_ */
