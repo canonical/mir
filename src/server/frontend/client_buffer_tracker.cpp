@@ -23,37 +23,37 @@ namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 
 mf::ClientBufferTracker::ClientBufferTracker()
-	: ids()
+    : ids()
 {
 }
 
 void mf::ClientBufferTracker::add(mc::BufferID const& id)
 {
-	auto existing_id = find_buffer(id);
+    auto existing_id = find_buffer(id);
 
-	if (existing_id != ids.end())
-	{
-		ids.push_front(*existing_id);
-		ids.erase(existing_id);
-	}
-	else
-	{
-		ids.push_front(id.as_uint32_t());
-	}
-	if (ids.size() > 3)
-		ids.pop_back();
+    if (existing_id != ids.end())
+    {
+        ids.push_front(*existing_id);
+        ids.erase(existing_id);
+    }
+    else
+    {
+        ids.push_front(id.as_uint32_t());
+    }
+    if (ids.size() > 3)
+        ids.pop_back();
 }
 
 bool mf::ClientBufferTracker::client_has(mc::BufferID const& id)
 {
-	return find_buffer(id) != ids.end();
+    return find_buffer(id) != ids.end();
 }
 
 std::list<uint32_t>::iterator mf::ClientBufferTracker::find_buffer(compositor::BufferID const& id)
 {
-	auto iterator = ids.begin();
+    auto iterator = ids.begin();
 
-	for (; iterator != ids.end() && *iterator != id.as_uint32_t(); ++iterator);
+    for (; iterator != ids.end() && *iterator != id.as_uint32_t(); ++iterator);
 
-	return iterator;
+    return iterator;
 }
