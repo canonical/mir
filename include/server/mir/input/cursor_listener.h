@@ -24,6 +24,8 @@ namespace mir
 namespace input
 {
 
+/// An interface for listening to absolute cursor events (without context): For example to update
+/// the position of the visible cursor.
 class CursorListener
 {
 public:

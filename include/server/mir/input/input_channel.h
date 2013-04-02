@@ -24,6 +24,7 @@ namespace mir
 namespace input
 {
 
+/// Encapsulates a paired set of fd's suitable for input communication.
 class InputChannel
 {
 public:
