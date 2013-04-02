@@ -54,15 +54,12 @@ private:
     template<class T>
     void initialize_queues(T);
 
-    //std::map<BufferID, std::shared_ptr<Buffer>> buffers;
-
     std::mutex swapper_mutex;
-
     std::condition_variable client_available_cv;
+
     std::deque<std::shared_ptr<Buffer>> client_queue;
     std::deque<std::shared_ptr<Buffer>> compositor_queue;
     unsigned int in_use_by_client;
-
     const unsigned int swapper_size;
 };
 
