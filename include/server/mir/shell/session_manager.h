@@ -78,6 +78,7 @@ private:
     Tags tags;
 
     void set_focus_to(std::shared_ptr<frontend::Session> const& next_focus);
+    void set_focus_to_locked(std::shared_ptr<frontend::Session> const& next_focus);
 };
 
 }
