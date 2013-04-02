@@ -142,13 +142,11 @@ void mfd::ProtobufMessageProcessor::send_response(
     sender->send(buffer2);
 }
 
-/* TODO
-void mfd::ProtobufMessageProcessor::handle_event(HighLevelEventStruct *e)
+void mfd::ProtobufMessageProcessor::handle_event(Event const& e)
 {
-   Implement the interface of EventSink
-   ...
+   // TODO: Send e via send_events. Should e be a sequence/list??
+   (void)e;
 }
-*/
 
 void mfd::ProtobufMessageProcessor::send_events(
     mir::protobuf::EventSequence *seq)

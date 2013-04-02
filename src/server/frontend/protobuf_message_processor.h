@@ -74,6 +74,7 @@ private:
     // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response);
 
+    void handle_event(mir::Event const& e);
     void send_events(mir::protobuf::EventSequence *seq);
 
     template<class Response>

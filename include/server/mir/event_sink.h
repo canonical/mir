@@ -21,11 +21,12 @@
 
 namespace mir
 {
+struct Event;
 
 class EventSink
 {
-private:
-    int todo;
+public:
+    virtual void handle_event(Event const& e) = 0;
 };
 
 } // namespace mir
