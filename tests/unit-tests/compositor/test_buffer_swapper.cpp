@@ -112,9 +112,8 @@ TEST_F(BufferSwapperConstruction, references_match_ids_double)
 {
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
 
-    std::shared_ptr<mc::Buffer> buffer_1, buffer_2;
-    swapper.compositor_acquire(buffer_1);
-    swapper.client_acquire(buffer_2);
+    auto buffer_1 = swapper.compositor_acquire();
+    auto buffer_2 = swapper.client_acquire();
     /* swapper is now 'empty' */
 
     EXPECT_EQ(buffer_a, buffer_1);
@@ -125,11 +124,10 @@ TEST_F(BufferSwapperConstruction, references_match_ids_triple)
 {
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
-    std::shared_ptr<mc::Buffer> buffer_1, buffer_2, buffer_3;
-    swapper.compositor_acquire(buffer_1);
-    swapper.client_acquire(buffer_2);
+    auto buffer_1 = swapper.compositor_acquire();
+    auto buffer_2 = swapper.client_acquire();
     swapper.client_release(buffer_2);
-    swapper.client_acquire(buffer_3);
+    auto buffer_3 = swapper.client_acquire(buffer_3);
     /* swapper is now 'empty' */
 
     EXPECT_EQ(buffer_a, buffer_1);
