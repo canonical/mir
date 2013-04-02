@@ -28,9 +28,9 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
-mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& fb_factory,
+mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
                                         std::shared_ptr<HWCFactory> const& hwc_factory)
-    : fb_factory(fb_factory),
+    : display_factory(display_factory),
       hwc_factory(hwc_factory)
 {
     const hw_module_t *hw_module;
@@ -77,10 +77,10 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     {
         //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
         auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
-        return fb_factory->create_hwc_display(hwc_device);
+        return display_factory->create_hwc_display(hwc_device);
     }
     else
     {
-        return fb_factory->create_gpu_display();
+        return display_factory->create_gpu_display();
     }
 }
