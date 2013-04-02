@@ -52,7 +52,7 @@ msh::ApplicationSession::~ApplicationSession()
 }
 
 void msh::ApplicationSession::set_event_sink(
-    std::shared_ptr<mir::EventSink> const& sink)
+    std::weak_ptr<mir::EventSink> const& sink)
 {
     (void)sink;
     // TODO: event_queue->set_sink(sink);

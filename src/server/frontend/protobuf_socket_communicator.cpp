@@ -64,9 +64,9 @@ void mf::ProtobufSocketCommunicator::start_accept()
     
     // TODO: Be less evil. This really should not be cast, but would require
     //       some interface changes first.
-    //mf::SessionMediator &sm = *static_cast<mf::SessionMediator*>(ds.get());
-    // FIXME: Crash in tests due to evil casting:
-    //sm.set_event_sink(proc);
+    mf::SessionMediator *sm = dynamic_cast<mf::SessionMediator*>(ds.get());
+    if (sm)
+        sm->set_event_sink(proc);
         
     socket_session->set_processor(proc);
 

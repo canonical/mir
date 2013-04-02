@@ -107,7 +107,7 @@ public:
                            mir::protobuf::SurfaceSetting*,
                            google::protobuf::Closure* done);
 
-    void set_event_sink(std::shared_ptr<EventSink> const& sink);
+    void set_event_sink(std::weak_ptr<EventSink> const& sink);
 
 private:
     std::shared_ptr<Shell> const shell;
@@ -123,7 +123,7 @@ private:
 
     std::shared_ptr<Session> session;
 
-    std::shared_ptr<EventSink> event_sink;
+    std::weak_ptr<EventSink> event_sink;
 };
 
 }
