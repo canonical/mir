@@ -35,7 +35,7 @@ class DisplayFactory
 public:
     virtual ~DisplayFactory() {}
 
-    virtual std::shared_ptr<Display> create_fb() const = 0;
+    virtual std::shared_ptr<Display> create_display() const = 0;
 
 protected:
     DisplayFactory() = default;

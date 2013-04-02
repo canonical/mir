@@ -40,7 +40,7 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
     auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
     auto display_allocator = std::make_shared<mga::AndroidDisplayAllocator>();
     auto display_factory = std::make_shared<mga::AndroidDisplayFactory>(display_allocator, hwc_factory);
-    return display_factory->create_fb();
+    return display_factory->create_display();
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()

@@ -104,7 +104,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
         .Times(1);
 
     mga::AndroidDisplayFactory fb_factory(mock_display_factory, mock_hwc_factory); 
-    fb_factory.create_fb();
+    fb_factory.create_display();
 }
 
 /* this case occurs when the hwc library doesn't work (error) */
@@ -135,7 +135,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
         .Times(1);
 
     mga::AndroidDisplayFactory fb_factory(mock_display_factory, mock_hwc_factory);
-    fb_factory.create_fb();
+    fb_factory.create_display();
 }
 
 // TODO: kdub support v 1.0 and 1.2. for the time being, alloc a fallback gpu display
@@ -153,7 +153,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_versio
         .Times(1);
 
     mga::AndroidDisplayFactory fb_factory(mock_display_factory, mock_hwc_factory); 
-    fb_factory.create_fb();
+    fb_factory.create_display();
 }
 
 TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_version12_not_supported)
@@ -170,5 +170,5 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_versio
         .Times(1);
 
     mga::AndroidDisplayFactory fb_factory(mock_display_factory, mock_hwc_factory); 
-    fb_factory.create_fb();
+    fb_factory.create_display();
 }

@@ -37,7 +37,7 @@ class AndroidDisplayFactory : public DisplayFactory
 public:
     AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& fb_factory, std::shared_ptr<HWCFactory> const& hwc_factory);
 
-    std::shared_ptr<Display> create_fb() const;
+    std::shared_ptr<Display> create_display() const;
 
 private:
     void setup_hwc_dev(const hw_module_t* module);

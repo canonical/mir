@@ -71,7 +71,7 @@ void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
                   });
 }
 
-std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_fb() const
+std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
 { 
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
