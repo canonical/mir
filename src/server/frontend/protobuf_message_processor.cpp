@@ -144,8 +144,14 @@ void mfd::ProtobufMessageProcessor::send_response(
 
 void mfd::ProtobufMessageProcessor::handle_event(Event const& e)
 {
-   // TODO: Send e via send_events. Should e be a sequence/list??
+   mir::protobuf::EventSequence seq;
+   mir::protobuf::Event *ev = seq.add_event();
+
+   // TODO: Interpret e to populate ev
    (void)e;
+   (void)ev;
+
+   send_events(&seq);
 }
 
 void mfd::ProtobufMessageProcessor::send_events(
