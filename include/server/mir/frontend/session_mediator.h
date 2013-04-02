@@ -117,7 +117,7 @@ private:
 
     std::shared_ptr<SessionMediatorReport> const report;
     std::shared_ptr<ResourceCache> const resource_cache;
-    std::shared_ptr<ClientBufferTracker> const client_buffers;
+    std::shared_ptr<ClientBufferTracker> const client_tracker;
 
     std::shared_ptr<Session> session;
 };

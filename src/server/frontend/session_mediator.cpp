@@ -51,7 +51,7 @@ mir::frontend::SessionMediator::SessionMediator(
     buffer_allocator(buffer_allocator),
     report(report),
     resource_cache(resource_cache),
-    client_buffers(std::make_shared<ClientBufferTracker>())
+    client_tracker(std::make_shared<ClientBufferTracker>())
 {
 }
 
@@ -129,7 +129,7 @@ void mir::frontend::SessionMediator::create_surface(
         auto buffer = response->mutable_buffer();
         buffer->set_buffer_id(id.as_uint32_t());
 
-        if (!client_buffers->client_has(id))
+        if (!client_tracker->client_has(id))
         {
             auto ipc_package = buffer_resource->get_ipc_package();
 
@@ -143,7 +143,7 @@ void mir::frontend::SessionMediator::create_surface(
 
             resource_cache->save_resource(response, ipc_package);
         }
-        client_buffers->add(id);
+        client_tracker->add(id);
     }
 
     done->Run();
@@ -167,7 +167,7 @@ void mir::frontend::SessionMediator::next_buffer(
     auto const& id = buffer_resource->id();
     response->set_buffer_id(id.as_uint32_t());
 
-    if (!client_buffers->client_has(id))
+    if (!client_tracker->client_has(id))
     {
         auto ipc_package = buffer_resource->get_ipc_package();
 
@@ -181,7 +181,7 @@ void mir::frontend::SessionMediator::next_buffer(
 
         resource_cache->save_resource(response, ipc_package);
     }
-    client_buffers->add(id);
+    client_tracker->add(id);
     done->Run();
 }
 
