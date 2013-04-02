@@ -70,7 +70,7 @@ public:
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::list<std::pair<int, std::shared_ptr<ClientBuffer>>> buffers;
-    const unsigned int max_buffers;
+    unsigned int const max_buffers;
 };
 }
 }
