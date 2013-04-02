@@ -63,6 +63,11 @@ inline static float lerp(float a, float b, float alpha) {
 
 // --- InputMessage ---
 
+InputMessage::InputMessage()
+{
+    memset(this, 0, sizeof(InputMessage));
+}
+
 bool InputMessage::isValid(size_t actualSize) const {
     if (size() == actualSize) {
         switch (header.type) {
@@ -255,7 +260,6 @@ status_t InputPublisher::publishKeyEvent(
     }
 
     InputMessage msg;
-    memset(&msg, 0, sizeof(InputMessage));
 
     msg.header.type = InputMessage::TYPE_KEY;
     msg.body.key.seq = seq;
@@ -313,7 +317,6 @@ status_t InputPublisher::publishMotionEvent(
     }
 
     InputMessage msg;
-    memset(&msg, 0, sizeof(InputMessage));
 
     msg.header.type = InputMessage::TYPE_MOTION;
     msg.body.motion.seq = seq;
@@ -838,7 +841,6 @@ status_t InputConsumer::sendFinishedSignal(uint32_t seq, bool handled) {
 
 status_t InputConsumer::sendUnchainedFinishedSignal(uint32_t seq, bool handled) {
     InputMessage msg;
-    memset(&msg, 0, sizeof(InputMessage));
 
     msg.header.type = InputMessage::TYPE_FINISHED;
     msg.body.finished.seq = seq;
