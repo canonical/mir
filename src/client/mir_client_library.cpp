@@ -125,7 +125,7 @@ mir_toolkit::MirWaitHandle* mir_toolkit::mir_surface_create(
     void* context)
 {
     if (&error_connection == connection) return 0;
-    
+
     try
     {
         return connection->create_surface(*params, delegate, callback, context);
