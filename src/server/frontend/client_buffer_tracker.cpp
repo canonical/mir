@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/frontend/client_buffer_tracker.h"
+#include "client_buffer_tracker.h"
 #include "mir/compositor/buffer_id.h"
 
 namespace mf = mir::frontend;
