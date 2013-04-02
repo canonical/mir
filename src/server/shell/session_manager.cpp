@@ -62,7 +62,7 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const
         focus_application = new_session;
     }
     focus_setter->set_focus_to(new_session);
- 
+
     return new_session;
 }
 

@@ -37,7 +37,7 @@ class AndroidFramebufferWindowQuery;
 
 class HWCDisplay : public virtual Display,
                    public virtual DisplayBuffer,
-                   private AndroidDisplay 
+                   private AndroidDisplay
 {
 public:
     HWCDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const& fb_window,

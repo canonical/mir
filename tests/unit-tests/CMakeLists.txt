@@ -44,8 +44,6 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-
-  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(unit-tests)

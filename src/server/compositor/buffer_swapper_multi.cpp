@@ -65,7 +65,7 @@ void mc::BufferSwapperMulti::client_acquire(std::shared_ptr<mc::Buffer>& buffer_
 
     dequeued_buffer = client_queue.front();
     client_queue.pop_front();
-    buffer_reference = buffers[dequeued_buffer]; 
+    buffer_reference = buffers[dequeued_buffer];
     in_use_by_client++;
 }
 
@@ -100,7 +100,7 @@ void mc::BufferSwapperMulti::compositor_acquire(std::shared_ptr<mc::Buffer>& buf
         compositor_queue.pop_front();
     }
 
-    buffer_reference = buffers[dequeued_buffer]; 
+    buffer_reference = buffers[dequeued_buffer];
 }
 
 void mc::BufferSwapperMulti::compositor_release(BufferID released_buffer)

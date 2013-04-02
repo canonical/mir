@@ -48,12 +48,12 @@ struct MockShellSession : public msh::Session
     MOCK_METHOD1(create_surface, mf::SurfaceId(mf::SurfaceCreationParameters const&));
     MOCK_METHOD1(destroy_surface, void(mf::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<mf::Surface>(mf::SurfaceId));
-    
+
     MOCK_CONST_METHOD0(default_surface, std::shared_ptr<msh::Surface>());
-    
+
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_METHOD0(shutdown, void());
-    
+
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
 
@@ -68,7 +68,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 
     MockShellSession app1, app2, app3;
     msh::SessionContainer model;
-    
+
     ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
     ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
     ON_CALL(app3, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
@@ -100,9 +100,9 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_input_focus_from_default_sur
     auto surface = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
 
     msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model), mt::fake_shared(input_focus_selector));
-    
+
     EXPECT_CALL(*session, default_surface()).Times(1).WillOnce(Return(surface));
-    
+
     EXPECT_CALL(input_focus_selector, set_input_focus_to(Eq(session), Eq(surface))).Times(1);
 
     model.insert_session(session);

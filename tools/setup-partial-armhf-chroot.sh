@@ -86,6 +86,12 @@ pushd ${1} > /dev/null
     if [ ! -f libgoogle-glog-dev_0.3.2-4ubuntu1_armhf.deb ]; then
         wget "http://launchpadlibrarian.net/134086853/libgoogle-glog-dev_0.3.2-4ubuntu1_armhf.deb"
     fi
+
+    if [ ! -f libgflags-dev_2.0-1_armhf.deb ]; then
+        wget "http://launchpadlibrarian.net/106868249/libgflags-dev_2.0-1_armhf.deb"
+    fi
+
+    dpkg -x libgflags-dev_2.0-1_armhf.deb .
     dpkg -x libgflags2_2.0-1_armhf.deb .
     dpkg -x libgoogle-glog0_0.3.2-4ubuntu1_armhf.deb .
     dpkg -x libgoogle-glog-dev_0.3.2-4ubuntu1_armhf.deb .

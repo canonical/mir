@@ -210,14 +210,14 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
         input_manager = std::make_shared<mia::InputManager>(configuration);
-        
+
         dispatcher_policy = configuration->the_mock_dispatcher_policy();
 
     }
 
-    // TODO: It would be nice if it were possible to mock the interface between 
+    // TODO: It would be nice if it were possible to mock the interface between
     // droidinput::InputChannel and droidinput::InputDispatcher rather than use
-    // valid fds to allow non-throwing construction of a real input channel.    
+    // valid fds to allow non-throwing construction of a real input channel.
     void SetUp()
     {
         test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
@@ -236,7 +236,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
     std::shared_ptr<mia::InputManager> input_manager;
-    
+
     int test_input_fd;
 };
 
@@ -262,7 +262,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(test_input_fd), _, _))
         .Times(1).WillOnce(DoAll(WakeUp(&wait_condition), Return(-1)));
-    
+
     input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface));
 
     fake_event_hub->synthesize_builtin_keyboard_added();

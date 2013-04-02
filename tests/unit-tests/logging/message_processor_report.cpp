@@ -40,6 +40,7 @@ class MockLogger : public mir::logging::Logger
 {
 public:
     MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
+    ~MockLogger() noexcept(true) {}
 };
 
 struct MessageProcessorReport : public Test

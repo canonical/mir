@@ -44,7 +44,7 @@ class InputManager : public InputChannelFactory, public shell::InputFocusSelecto
 public:
     virtual void start() = 0;
     virtual void stop() = 0;
-    
+
     virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
 
     virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& session,

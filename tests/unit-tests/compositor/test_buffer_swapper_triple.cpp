@@ -142,7 +142,7 @@ TEST_F(BufferSwapperTriple, test_compositor_gets_last_posted_in_order)
 
     swapper->compositor_acquire(buffer_ref, second_comp_buffer);
     swapper->compositor_release(second_comp_buffer);
- 
+
     swapper->compositor_acquire(buffer_ref, third_comp_buffer);
 
     EXPECT_EQ(second_comp_buffer, first_client_buffer);

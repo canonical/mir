@@ -13,40 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_
-
-#include "display_selector.h"
+#include "mir/logging/logger.h"
 
 namespace mir
 {
-namespace graphics
+namespace logging
 {
-
-class Display;
-
-namespace android
-{
-
-class FBFactory;
-
-class AndroidDisplaySelector : public DisplaySelector
+class GlogLogger : public Logger
 {
 public:
-    AndroidDisplaySelector(std::shared_ptr<FBFactory> const& factory);
-    std::shared_ptr<Display> primary_display();
+    GlogLogger(
+        char const* argv0,
+        int stderrthreshold,
+        int minloglevel,
+        std::string const& log_dir);
 
 private:
-    std::shared_ptr<FBFactory> fb_factory;
-    std::shared_ptr<Display> primary_hwc_display;
-    std::function<std::shared_ptr<Display>()> allocate_primary_fb;
+    virtual void log(
+        Severity severity,
+        const std::string& message,
+        const std::string& component);
 };
-
 }
 }
-}
-
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_ */

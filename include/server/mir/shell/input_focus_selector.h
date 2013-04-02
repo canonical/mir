@@ -36,7 +36,7 @@ class InputFocusSelector
 {
 public:
     virtual ~InputFocusSelector() {}
-    
+
     virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& focus_application,
                                     std::shared_ptr<input::SurfaceTarget> const& focus_surface) = 0;
 
