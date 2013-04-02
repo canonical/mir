@@ -27,7 +27,7 @@ namespace mc = mir::compositor;
 TEST(ClientBufferTracker, just_added_buffer_is_known_by_client)
 {
     mf::ClientBufferTracker tracker;
-    mc::BufferID id{5};
+    mc::BufferID const id{5};
 
     tracker.add(id);
     EXPECT_TRUE(tracker.client_has(id));
@@ -44,10 +44,10 @@ TEST(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 TEST(ClientBufferTracker, tracks_sequence_of_buffers)
 {
     mf::ClientBufferTracker tracker;
-    mc::BufferID one{1};
-    mc::BufferID two{2};
-    mc::BufferID three{3};
-    mc::BufferID four{4};
+    mc::BufferID const one{1};
+    mc::BufferID const two{2};
+    mc::BufferID const three{3};
+    mc::BufferID const four{4};
 
     tracker.add(one);
     tracker.add(two);
@@ -63,10 +63,10 @@ TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
 {
     mf::ClientBufferTracker tracker;
 
-    mc::BufferID one{1};
-    mc::BufferID two{2};
-    mc::BufferID three{3};
-    mc::BufferID four{4};
+    mc::BufferID const one{1};
+    mc::BufferID const two{2};
+    mc::BufferID const three{3};
+    mc::BufferID const four{4};
 
     tracker.add(one);
     tracker.add(two);
