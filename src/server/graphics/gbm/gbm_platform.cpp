@@ -86,11 +86,6 @@ void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
     drm.auth_magic(magic);
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
-{
-    return std::make_shared<mgg::GBMPlatform>(report);
-}
-
 EGLNativeDisplayType mgg::GBMPlatform::mir_native_display()
 {
     if (native_display)
@@ -98,4 +93,9 @@ EGLNativeDisplayType mgg::GBMPlatform::mir_native_display()
     native_display = mgeglm::create_native_display(this->shared_from_this());
     
     return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
+}
+
+std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
+{
+    return std::make_shared<mgg::GBMPlatform>(report);
 }
