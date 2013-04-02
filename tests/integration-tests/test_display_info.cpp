@@ -103,7 +103,10 @@ public:
     {
         return std::make_shared<mg::PlatformIPCPackage>();
     }
-
+    EGLNativeDisplayType mir_native_display()
+    {
+        return (EGLNativeDisplayType) 0;
+    }
 };
 
 void connection_callback(MirConnection* connection, void* context)

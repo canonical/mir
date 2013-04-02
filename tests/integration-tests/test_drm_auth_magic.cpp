@@ -80,6 +80,11 @@ public:
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
+    EGLNativeDisplayType mir_native_display()
+    {
+        return (EGLNativeDisplayType) 0;
+    }
+
     MOCK_METHOD1(drm_auth_magic, void(unsigned int));
 };
 

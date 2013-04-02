@@ -19,12 +19,9 @@
 #ifndef MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_
 #define MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_
 
-#include <memory>
+#include "mir_toolkit/mesa/native_display.h"
 
-namespace mir_toolkit
-{
-struct MirMesaEGLNativeDisplay;
-}
+#include <memory>
 
 namespace mir
 {
@@ -36,7 +33,7 @@ namespace egl
 {
 namespace mesa
 {
-std::shared_ptr<mir_toolkit::MirMesaEGLNativeDisplay> create_native_display(std::shared_ptr<Platform> const& platform);
+std::shared_ptr<MirMesaEGLNativeDisplay> create_native_display(std::shared_ptr<Platform> const& platform);
 }
 }
 }

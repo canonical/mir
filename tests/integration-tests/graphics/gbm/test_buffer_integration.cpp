@@ -99,6 +99,11 @@ public:
     {
         return std::shared_ptr<mg::PlatformIPCPackage>();
     }
+
+    EGLNativeDisplayType mir_native_display()
+    {
+        return (EGLNativeDisplayType) 0;
+    }
 };
 
 class GBMBufferIntegration : public ::testing::Test

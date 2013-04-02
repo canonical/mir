@@ -20,8 +20,9 @@
 #ifndef MIR_GRAPHICS_PLATFORM_H_
 #define MIR_GRAPHICS_PLATFORM_H_
 
-#include <memory>
+#include <EGL/egl.h>
 
+#include <memory>
 
 namespace mir
 {
@@ -53,6 +54,8 @@ public:
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
     virtual std::shared_ptr<Display> create_display() = 0;
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
+    
+    virtual EGLNativeDisplayType mir_native_display() = 0;
 };
 
 // Create and return a new graphics platform.
