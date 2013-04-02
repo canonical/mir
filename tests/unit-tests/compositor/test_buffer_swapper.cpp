@@ -96,7 +96,7 @@ TEST_F(BufferSwapperConstruction, error_construction)
     }, std::logic_error);
 }
 
-TEST_F(BufferSwapperConstruction, references_match_ids_double)
+TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_double)
 {
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
 
@@ -104,11 +104,11 @@ TEST_F(BufferSwapperConstruction, references_match_ids_double)
     auto buffer_2 = swapper.client_acquire();
     /* swapper is now 'empty' */
 
-    EXPECT_EQ(buffer_a, buffer_1);
-    EXPECT_EQ(buffer_b, buffer_2);
+    EXPECT_TRUE((buffer_a == buffer_1) || (buffer_b == buffer_1) );
+    EXPECT_TRUE((buffer_a == buffer_2) || (buffer_b == buffer_2) );
 }
 
-TEST_F(BufferSwapperConstruction, references_match_ids_triple)
+TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
 {
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
@@ -118,7 +118,7 @@ TEST_F(BufferSwapperConstruction, references_match_ids_triple)
     auto buffer_3 = swapper.client_acquire();
     /* swapper is now 'empty' */
 
-    EXPECT_EQ(buffer_a, buffer_1);
-    EXPECT_EQ(buffer_b, buffer_2);
-    EXPECT_EQ(buffer_c, buffer_3);
+    EXPECT_TRUE((buffer_a == buffer_1) || (buffer_b == buffer_1) || (buffer_c == buffer_1));
+    EXPECT_TRUE((buffer_a == buffer_2) || (buffer_b == buffer_2) || (buffer_c == buffer_2));
+    EXPECT_TRUE((buffer_a == buffer_3) || (buffer_b == buffer_3) || (buffer_c == buffer_3));
 }
