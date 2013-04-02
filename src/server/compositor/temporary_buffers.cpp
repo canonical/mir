@@ -24,26 +24,26 @@ namespace geom=mir::geometry;
 
 mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
 {
-    buffer_swapper->client_acquire(buffer, buffer_id);
+    buffer = buffer_swapper->client_acquire();
     allocating_swapper = buffer_swapper;
 }
 
 mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 {
     if (auto swapper = allocating_swapper.lock())
-        swapper->client_release(buffer_id);
+        swapper->client_release(buffer);
 }
 
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
 {
-    buffer_swapper->compositor_acquire(buffer, buffer_id);
+    buffer = buffer_swapper->compositor_acquire();
     allocating_swapper = buffer_swapper;
 }
 
 mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
 {
     if (auto swapper = allocating_swapper.lock())
-        swapper->compositor_release(buffer_id);
+        swapper->compositor_release(buffer);
 }
 
 geom::Size mc::TemporaryBuffer::size() const
