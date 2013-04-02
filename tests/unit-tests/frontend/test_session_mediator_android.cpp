@@ -78,6 +78,11 @@ class StubPlatform : public mg::Platform
     {
         return std::make_shared<mg::PlatformIPCPackage>();
     }
+
+    EGLNativeDisplayType mir_native_display()
+    {
+        return (EGLNativeDisplayType) 0;
+    }
 };
 
 }
