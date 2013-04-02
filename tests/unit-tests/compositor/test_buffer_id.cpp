@@ -47,7 +47,7 @@ TEST(buffer_id, equality_testable)
 
 TEST(buffer_id, less_than_testable)
 {
-    unsigned int id_as_int0 = 44; 
+    unsigned int id_as_int0 = 44;
     unsigned int id_as_int1 = 41;
 
     mc::BufferID id0{id_as_int0};

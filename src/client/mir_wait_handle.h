@@ -20,8 +20,8 @@
 #ifndef MIR_CLIENT_MIR_WAIT_HANDLE_H_
 #define MIR_CLIENT_MIR_WAIT_HANDLE_H_
 
-#include <condition_variable> 
-#include <mutex> 
+#include <condition_variable>
+#include <mutex>
 
 namespace mir_toolkit
 {

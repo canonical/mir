@@ -59,7 +59,7 @@ public:
                               std::shared_ptr<graphics::ViewableArea> const& view_area,
                               std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~DefaultInputConfiguration();
-    
+
     droidinput::sp<droidinput::EventHubInterface> the_event_hub();
     droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
     droidinput::sp<droidinput::InputReaderInterface> the_reader();
@@ -79,13 +79,13 @@ private:
     class CachedAndroidPtr
     {
         droidinput::wp<Type> cache;
-        
+
         CachedAndroidPtr(CachedAndroidPtr const&) = delete;
         CachedAndroidPtr& operator=(CachedAndroidPtr const&) = delete;
 
     public:
         CachedAndroidPtr() = default;
-        
+
         droidinput::sp<Type> operator()(std::function<droidinput::sp<Type>()> make)
         {
             auto result = cache.promote();
@@ -100,7 +100,7 @@ private:
     std::shared_ptr<EventFilterChain> const filter_chain;
     std::shared_ptr<graphics::ViewableArea> const view_area;
     std::shared_ptr<CursorListener> const cursor_listener;
-    
+
     CachedPtr<InputThread> dispatcher_thread;
     CachedPtr<InputThread> reader_thread;
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;

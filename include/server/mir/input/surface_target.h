@@ -32,11 +32,11 @@ class SurfaceTarget
 {
 public:
     virtual ~SurfaceTarget() {}
-    
+
     virtual geometry::Size size() const = 0;
     virtual std::string name() const = 0;
-    
-    virtual int server_input_fd() const = 0;    
+
+    virtual int server_input_fd() const = 0;
 
 protected:
     SurfaceTarget() = default;

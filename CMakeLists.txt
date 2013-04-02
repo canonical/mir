@@ -103,13 +103,6 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
-set (MIR_TRANSPORT
-  socket
-  CACHE
-  STRING
-  "IPC transport to build (options are 'socket' or 'binder')"
-)
-
 set (MIR_DISABLE_INPUT
   false
   CACHE
@@ -127,6 +120,7 @@ set (MIR_INPUT_USE_ANDROID_TYPES
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
+find_package(GLog REQUIRED)
 
 include_directories (${GLESv2_INCLUDE_DIRS})                                    
 include_directories (${EGL_INCLUDE_DIRS})

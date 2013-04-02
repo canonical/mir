@@ -123,7 +123,7 @@ struct StubInputChannel : public mi::InputChannel
     {
         return 0;
     }
-    
+
     int server_fd() const
     {
         return 0;
@@ -135,7 +135,7 @@ class StubInputManager : public mi::InputManager
   public:
     void start() {}
     void stop() {}
-    
+
     std::shared_ptr<mi::InputChannel> make_input_channel()
     {
         return std::make_shared<StubInputChannel>();
@@ -190,7 +190,7 @@ void mtf::TestingServerConfiguration::exec(DisplayServer* )
 {
 }
 
-void mtf::TestingServerConfiguration::on_exit(DisplayServer* )
+void mtf::TestingServerConfiguration::on_exit()
 {
 }
 

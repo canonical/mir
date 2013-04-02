@@ -60,8 +60,6 @@ public:
     void kill_client_processes();
 
 private:
-    void os_signal_handler(int signal);
-
     std::shared_ptr<Process> server_process;
     std::list<std::shared_ptr<Process>> clients;
 

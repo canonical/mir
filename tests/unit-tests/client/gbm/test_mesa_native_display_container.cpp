@@ -38,7 +38,7 @@ struct MesaNativeDisplayContainerSetup : public testing::Test
           connection(nullptr)
     {
     }
-    
+
     std::shared_ptr<mclg::MesaNativeDisplayContainer> const container;
     mir_toolkit::MirConnection* connection;
 };
@@ -48,10 +48,10 @@ struct MesaNativeDisplayContainerSetup : public testing::Test
 TEST_F(MesaNativeDisplayContainerSetup, valid_displays_come_from_factory)
 {
     using namespace ::testing;
-    
+
     auto display = container->create(connection);
     EXPECT_TRUE(container->validate(display));
-    
+
     MirEGLNativeDisplayType invalid_native_display;
     EXPECT_FALSE(container->validate(&invalid_native_display));
 }
@@ -59,7 +59,7 @@ TEST_F(MesaNativeDisplayContainerSetup, valid_displays_come_from_factory)
 TEST_F(MesaNativeDisplayContainerSetup, releasing_displays_invalidates_address)
 {
     using namespace ::testing;
-    
+
     auto display = container->create(connection);
     EXPECT_TRUE(container->validate(display));
     container->release(display);

@@ -112,7 +112,7 @@ struct ShellSurface : testing::Test
 
     ShellSurface() :
         buffer_bundle(std::make_shared<StubBufferBundle>()),
-	null_input_channel(0)
+        null_input_channel(0)
     {
         using namespace testing;
 
