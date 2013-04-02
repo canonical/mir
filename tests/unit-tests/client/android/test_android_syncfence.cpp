@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/client/android/syncfence.h"
+#include "src/shared/graphics/android/syncfence.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -166,29 +166,29 @@ struct AndroidInputManagerSetup : public testing::Test
 TEST_F(AndroidInputManagerSetup, takes_input_setup_from_configuration)
 {
     using namespace ::testing;
-    
+
     EXPECT_CALL(config, the_event_hub()).Times(1);
     EXPECT_CALL(config, the_dispatcher()).Times(1);
     EXPECT_CALL(config, the_reader_thread()).Times(1);
     EXPECT_CALL(config, the_dispatcher_thread()).Times(1);
-    
+
     mia::InputManager manager(mt::fake_shared(config));
-    
+
 }
 
 TEST_F(AndroidInputManagerSetup, start_and_stop)
 {
     using namespace ::testing;
-    
+
     EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen)).Times(1);
     EXPECT_CALL(*dispatcher, setInputFilterEnabled(true)).Times(1);
 
     EXPECT_CALL(*reader_thread, start()).Times(1);
     EXPECT_CALL(*dispatcher_thread, start()).Times(1);
-    
+
     {
         InSequence seq;
-        
+
         EXPECT_CALL(*dispatcher_thread, request_stop());
         EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen)).Times(1);
         EXPECT_CALL(*dispatcher_thread, join());
@@ -206,7 +206,7 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
 TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
 {
     mia::InputManager manager(mt::fake_shared(config));
-    
+
     auto package = manager.make_input_channel();
     EXPECT_GT(package->client_fd(), 0);
     EXPECT_GT(package->server_fd(), 0);
@@ -262,7 +262,7 @@ MATCHER(EmptyVector, "")
     return arg.size() == 0;
 }
 
-// TODO: It would be nice if it were possible to mock the interface between 
+// TODO: It would be nice if it were possible to mock the interface between
 // droidinput::InputChannel and droidinput::InputDispatcher rather than use
 // valid fds to allow non-throwing construction of a real input channel.
 struct AndroidInputManagerFdSetup : public AndroidInputManagerSetup
@@ -283,10 +283,10 @@ struct AndroidInputManagerFdSetup : public AndroidInputManagerSetup
 TEST_F(AndroidInputManagerFdSetup, set_input_focus)
 {
     using namespace ::testing;
-    
+
     auto session = std::make_shared<mtd::StubSessionTarget>();
     auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
-    
+
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
         .WillOnce(Return(droidinput::OK));
     EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);

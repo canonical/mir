@@ -30,7 +30,7 @@ class SessionTarget
 {
 public:
     virtual ~SessionTarget() {}
-  
+
     virtual std::string name() const = 0;
 
 protected:

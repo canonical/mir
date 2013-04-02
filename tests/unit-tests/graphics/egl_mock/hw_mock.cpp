@@ -28,9 +28,9 @@ namespace mtd = mir::test::doubles;
 
 mt::HardwareModuleStub::HardwareModuleStub(hw_device_t& device)
     : mock_hw_device(device)
-{ 
+{
     gr_methods.open = hw_open;
-    methods = &gr_methods; 
+    methods = &gr_methods;
 }
 
 int mt::HardwareModuleStub::hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device)

@@ -70,7 +70,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction_vector)
     EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
 
     /* just to keep ref */
-    swapper.shutdown(); 
+    swapper.shutdown();
 }
 
 TEST_F(BufferSwapperConstruction, basic_double_construction_initializer)
@@ -83,7 +83,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction_initializer)
     EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
 
     /* just to keep ref */
-    swapper.shutdown(); 
+    swapper.shutdown();
 }
 
 TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
@@ -98,7 +98,7 @@ TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
     EXPECT_EQ(buffer_c.use_count(), use_count_before_c + 1);
 
     /* just to keep ref */
-    swapper.shutdown(); 
+    swapper.shutdown();
 }
 
 TEST_F(BufferSwapperConstruction, error_construction)
@@ -120,7 +120,7 @@ TEST_F(BufferSwapperConstruction, references_match_ids_double)
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
 
     mc::BufferID test_id_1, test_id_2;
-    std::shared_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2; 
+    std::shared_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2;
     swapper.compositor_acquire(buffer_ref_1, test_id_1);
     swapper.client_acquire(buffer_ref_2, test_id_2);
     /* swapper is now 'empty' */
@@ -140,7 +140,7 @@ TEST_F(BufferSwapperConstruction, references_match_ids_triple)
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
     mc::BufferID test_id_1, test_id_2, test_id_3;
-    std::shared_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2, buffer_ref_3; 
+    std::shared_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2, buffer_ref_3;
     swapper.compositor_acquire(buffer_ref_1, test_id_1);
     swapper.client_acquire(buffer_ref_2, test_id_2);
     swapper.client_release(test_id_2);

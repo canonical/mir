@@ -35,10 +35,10 @@ class AndroidNativeDisplayContainer : public EGLNativeDisplayContainer
 public:
     AndroidNativeDisplayContainer();
     virtual ~AndroidNativeDisplayContainer();
-    
+
     MirEGLNativeDisplayType create(MirConnection* connection);
     void release(MirEGLNativeDisplayType display);
-    
+
     bool validate(MirEGLNativeDisplayType display) const;
 
 protected:

@@ -34,7 +34,7 @@ struct StubSurfaceTarget : public input::SurfaceTarget
       : input_fd(fd)
     {
     }
-    
+
     int server_input_fd() const override
     {
         return input_fd;
@@ -47,7 +47,7 @@ struct StubSurfaceTarget : public input::SurfaceTarget
     {
         return std::string();
     }
-    
+
     int input_fd;
 };
 

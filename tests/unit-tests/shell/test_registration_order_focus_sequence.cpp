@@ -45,7 +45,7 @@ struct RegistrationOrderFocusSequenceSetup : public testing::Test
     }
     std::shared_ptr<mtd::MockSurfaceFactory> factory;
     std::shared_ptr<msh::SessionContainer> container;
-    
+
     static std::string const testing_app_name1;
     static std::string const testing_app_name2;
     static std::string const testing_app_name3;
@@ -112,7 +112,7 @@ TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
     auto null_session = std::shared_ptr<msh::ApplicationSession>();
 
     msh::RegistrationOrderFocusSequence focus_sequence(container);
-    
+
     EXPECT_EQ(null_session, focus_sequence.default_focus());
     container->insert_session(app1);
     EXPECT_EQ(app1, focus_sequence.default_focus());
@@ -126,7 +126,7 @@ TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
 
     auto invalid_session = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1);
     auto null_session = std::shared_ptr<msh::ApplicationSession>();
-    
+
     msh::RegistrationOrderFocusSequence focus_sequence(container);
 
     EXPECT_THROW({

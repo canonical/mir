@@ -52,6 +52,9 @@ namespace android
 class InputThread;
 class InputConfiguration;
 
+/// Encapsulates an instance of the Android input stack, that is to say an EventHub tied
+/// to an InputReader tied to an InputDispatcher. Provides interfaces for controlling input
+/// policy and dispatch (through public API and policy objects in InputConfiguration).
 class InputManager : public mir::input::InputManager
 {
 public:
@@ -61,9 +64,9 @@ public:
 
     void start();
     void stop();
-    
+
     std::shared_ptr<InputChannel> make_input_channel();
-    
+
     void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& session, std::shared_ptr<input::SurfaceTarget> const& surface);
 
 protected:
@@ -76,7 +79,7 @@ private:
 
     std::shared_ptr<InputThread> reader_thread;
     std::shared_ptr<InputThread> dispatcher_thread;
-    
+
     droidinput::sp<droidinput::InputWindowHandle> focused_window_handle;
     droidinput::sp<droidinput::InputApplicationHandle> focused_application_handle;
 };

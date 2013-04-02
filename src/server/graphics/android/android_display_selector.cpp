@@ -25,7 +25,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mga::AndroidDisplaySelector::AndroidDisplaySelector(std::shared_ptr<mga::FBFactory> const& factory)
-    : fb_factory(factory) 
+    : fb_factory(factory)
 {
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
@@ -51,7 +51,7 @@ mga::AndroidDisplaySelector::AndroidDisplaySelector(std::shared_ptr<mga::FBFacto
         allocate_primary_fb = std::bind(&FBFactory::create_gpu_display, fb_factory);
     }
 }
- 
+
 std::shared_ptr<mg::Display> mga::AndroidDisplaySelector::primary_display()
 {
     return allocate_primary_fb();

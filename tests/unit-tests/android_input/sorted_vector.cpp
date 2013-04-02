@@ -187,7 +187,7 @@ TEST_F(AndroidInputSortedVector, count_items_at_removed_index_are_not_found)
     EXPECT_NE(android::NAME_NOT_FOUND, test_vector.indexOf(30));
 }
 
-#if defined(ANDROID_USE_STD) 
+#if defined(ANDROID_USE_STD)
 // Android utils use ALOG_ASSERT - which tends to bomb the program
 TEST_F(AndroidInputSortedVector, remove_beyond_end_fails)
 {

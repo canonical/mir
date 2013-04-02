@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_native_window.h"
-#include "android_driver_interpreter.h"
+#include "mir/graphics/android/mir_native_window.h"
+#include "mir/graphics/android/android_driver_interpreter.h"
 #include "syncfence.h"
 
 #include <unistd.h>

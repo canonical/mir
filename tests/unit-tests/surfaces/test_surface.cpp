@@ -242,7 +242,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
     surf.advance_client_buffer();
 
     auto ret_ipc = surf.client_buffer();
-    EXPECT_EQ(stub_buffer, ret_ipc); 
+    EXPECT_EQ(stub_buffer, ret_ipc);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)

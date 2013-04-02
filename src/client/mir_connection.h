@@ -22,7 +22,7 @@
 #include <memory>
 #include <unordered_set>
 
-#include <mutex> 
+#include <mutex>
 
 #include "mir_protobuf.pb.h"
 

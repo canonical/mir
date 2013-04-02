@@ -192,7 +192,7 @@ TEST(
                 render(_,Ref(*surface1.lock()))).Times(Exactly(1));
     EXPECT_CALL(renderer,
                 render(_,Ref(*surface2.lock()))).Times(Exactly(1));
-    
+
     stack.for_each_if(filter, renderable_operator);
 }
 

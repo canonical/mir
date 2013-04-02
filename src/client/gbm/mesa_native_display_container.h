@@ -38,10 +38,10 @@ class MesaNativeDisplayContainer : public EGLNativeDisplayContainer
 public:
     MesaNativeDisplayContainer();
     virtual ~MesaNativeDisplayContainer();
-    
+
     MirEGLNativeDisplayType create(MirConnection* connection);
     void release(MirEGLNativeDisplayType display);
-    
+
     bool validate(MirEGLNativeDisplayType display) const;
 
 protected:

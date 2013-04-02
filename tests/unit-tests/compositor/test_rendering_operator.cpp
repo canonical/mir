@@ -65,7 +65,7 @@ public:
                 break;
         }
     }
-    
+
     std::shared_ptr<int> resource0;
     std::shared_ptr<int> resource1;
     std::shared_ptr<int> resource2;
