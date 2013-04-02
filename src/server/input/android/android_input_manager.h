@@ -52,6 +52,9 @@ namespace android
 class InputThread;
 class InputConfiguration;
 
+/// Encapsulates an instance of the Android input stack, that is to say an EventHub tied
+/// to an InputReader tied to an InputDispatcher. Provides interfaces for controlling input
+/// policy and dispatch (through public API and policy objects in InputConfiguration).
 class InputManager : public mir::input::InputManager
 {
 public:
