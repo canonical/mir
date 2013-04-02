@@ -33,11 +33,18 @@ class BufferID;
 namespace frontend
 {
 
+/// Responsible for tracking what buffers the client library knows about for a surface.
+
+/// \sa mir::client::ClientBufferDepository for the client-side of this tracking
+/// \note Changes to the tracking algorithm of mir::client::ClientBufferDepository will need to be mirrored here
 class ClientBufferTracker
 {
 public:
 	ClientBufferTracker();
 
+	/// Add a BufferID to the list of buffers known by the client.
+	///
+	/// Typically this should be done just prior to or just after sending the buffer information
 	void add(compositor::BufferID const& id);
 	bool client_has(compositor::BufferID const& id);
 private:
