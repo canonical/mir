@@ -19,12 +19,19 @@
 #include "mir_test/hw_mock.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 
+#include <atomic>
 #include <hardware/gralloc.h>
 #include <system/window.h>
 #include <memory>
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+
+namespace
+{
+mt::HardwareAccessMock* global_hw_mock = NULL;
+std::atomic<int> open_count;
+}
 
 mt::HardwareModuleStub::HardwareModuleStub(hw_device_t& device)
     : mock_hw_device(device)
@@ -38,17 +45,30 @@ int mt::HardwareModuleStub::hw_open(const struct hw_module_t* module, const char
     auto self = static_cast<HardwareModuleStub const*>(module);
     self->mock_hw_device.close = hw_close;
     *device = static_cast<hw_device_t*>(&self->mock_hw_device);
+    open_count++;
     return 0;
 }
 
 int mt::HardwareModuleStub::hw_close(struct hw_device_t*)
 {
+    open_count--;
     return 0;
 }
 
-namespace
+mt::FailingHardwareModuleStub::FailingHardwareModuleStub()
 {
-mt::HardwareAccessMock* global_hw_mock = NULL;
+    gr_methods.open = hw_open;
+    methods = &gr_methods; 
+}
+
+int mt::FailingHardwareModuleStub::hw_open(const struct hw_module_t*, const char*, struct hw_device_t**)
+{
+    return -1;
+}
+
+int mt::FailingHardwareModuleStub::hw_close(struct hw_device_t*)
+{
+    return 0;
 }
 
 mt::HardwareAccessMock::HardwareAccessMock()
@@ -67,6 +87,13 @@ mt::HardwareAccessMock::HardwareAccessMock()
         .WillByDefault(DoAll(SetArgPointee<1>(mock_gralloc_module.get()), Return(0)));
     ON_CALL(*this, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
         .WillByDefault(DoAll(SetArgPointee<1>(mock_hwc_module.get()), Return(0)));
+
+    open_count.store(0);
+}
+
+bool mt::HardwareAccessMock::open_count_matches_close()
+{
+    return (open_count == 0);
 }
 
 mt::HardwareAccessMock::~HardwareAccessMock()
