@@ -35,26 +35,26 @@ mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBuffer
 
 void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> const& package, int id, geometry::Size size, geometry::PixelFormat pf)
 {
-    auto b = buffers.end();
+    auto existing_buffer_id_pair = buffers.end();
     for (auto pair = buffers.begin(); pair != buffers.end(); ++pair)
     {
         pair->second->increment_age();
         if (pair->first == id)
-            b = pair;
+            existing_buffer_id_pair = pair;
     }
 
     if (buffers.size() > 0)
         buffers.front().second->mark_as_submitted();
 
-    if (b == buffers.end())
+    if (existing_buffer_id_pair == buffers.end())
     {
         auto new_buffer = factory->create_buffer(package, size, pf);
         buffers.push_front(std::make_pair(id, new_buffer));
     }
     else
     {
-        buffers.push_front(*b);
-        buffers.erase(b);
+        buffers.push_front(*existing_buffer_id_pair);
+        buffers.erase(existing_buffer_id_pair);
     }
 
     if (buffers.size() > max_buffers)
