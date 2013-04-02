@@ -26,10 +26,12 @@
 
 #include <memory>
 
-namespace mir_toolkit
-{
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
 struct MirBufferPackage;
-}
+/**@}*/
 
 namespace mir
 {
@@ -58,7 +60,7 @@ public:
     virtual void mark_as_submitted() = 0;
 
     virtual MirNativeBuffer get_native_handle() = 0;
-    virtual std::shared_ptr<mir_toolkit::MirBufferPackage> get_buffer_package() const = 0;
+    virtual std::shared_ptr<MirBufferPackage> get_buffer_package() const = 0;
 };
 
 }

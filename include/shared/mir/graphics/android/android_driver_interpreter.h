@@ -16,11 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
-#define MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
+#ifndef MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
+#define MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
 
-#include "mir/graphics/android/android_driver_interpreter.h"
-#include "../mir_client_surface.h"
+#include <system/window.h>
 
 namespace mir
 {
@@ -28,23 +27,22 @@ namespace client
 {
 namespace android
 {
-
-class ClientSurfaceInterpreter : public AndroidDriverInterpreter
+class AndroidDriverInterpreter
 {
 public:
-    explicit ClientSurfaceInterpreter(ClientSurface& surface);
-
-    ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*);
-    void dispatch_driver_request_format(int format);
-    int  driver_requests_info(int key) const;
-private:
-    ClientSurface& surface;
-    int driver_pixel_format;
+    virtual ANativeWindowBuffer* driver_requests_buffer() = 0;
+    virtual void driver_returns_buffer(ANativeWindowBuffer*) = 0;
+    virtual void dispatch_driver_request_format(int format) = 0;
+    virtual int  driver_requests_info(int key) const = 0;
+protected:
+    AndroidDriverInterpreter() {};
+    virtual ~AndroidDriverInterpreter() {};
+    AndroidDriverInterpreter(AndroidDriverInterpreter const&) = delete;
+    AndroidDriverInterpreter& operator=(AndroidDriverInterpreter const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_ */

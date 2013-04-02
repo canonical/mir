@@ -16,33 +16,33 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANDROID_DRIVER_INTERPRETER_H_
-#define MIR_CLIENT_ANDROID_ANDROID_DRIVER_INTERPRETER_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_
 
-#include <system/window.h>
+#include <memory>
+#include <hardware/hwcomposer.h>
 
 namespace mir
 {
-namespace client
+namespace graphics
 {
 namespace android
 {
-class AndroidDriverInterpreter
+
+class HWCDevice;
+class HWCFactory
 {
 public:
-    virtual ANativeWindowBuffer* driver_requests_buffer() = 0;
-    virtual void driver_returns_buffer(ANativeWindowBuffer*) = 0;
-    virtual void dispatch_driver_request_format(int format) = 0;
-    virtual int  driver_requests_info(int key) const = 0;
-protected:
-    AndroidDriverInterpreter() {};
-    virtual ~AndroidDriverInterpreter() {};
-    AndroidDriverInterpreter(AndroidDriverInterpreter const&) = delete;
-    AndroidDriverInterpreter& operator=(AndroidDriverInterpreter const&) = delete;
+    HWCFactory() = default;
+    virtual ~HWCFactory() {}
+
+    virtual std::shared_ptr<HWCDevice> create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const = 0;
+private:
+    HWCFactory(HWCFactory const&) = delete;
+    HWCFactory& operator=(HWCFactory const&) = delete; 
 };
 
 }
 }
 }
-
-#endif /* MIR_CLIENT_ANDROID_ANDROID_DRIVER_INTERPRETER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_ */

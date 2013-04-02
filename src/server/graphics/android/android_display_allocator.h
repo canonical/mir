@@ -16,35 +16,27 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
-#define MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_
 
-#include "mir/graphics/android/android_driver_interpreter.h"
-#include "../mir_client_surface.h"
+#include "display_allocator.h"
 
 namespace mir
 {
-namespace client
+namespace graphics
 {
 namespace android
 {
 
-class ClientSurfaceInterpreter : public AndroidDriverInterpreter
+class AndroidDisplayAllocator : public DisplayAllocator
 {
 public:
-    explicit ClientSurfaceInterpreter(ClientSurface& surface);
+    std::shared_ptr<AndroidDisplay> create_gpu_display() const; 
+    std::shared_ptr<HWCDisplay> create_hwc_display(std::shared_ptr<HWCDevice> const&) const;
 
-    ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*);
-    void dispatch_driver_request_format(int format);
-    int  driver_requests_info(int key) const;
-private:
-    ClientSurface& surface;
-    int driver_pixel_format;
 };
 
 }
 }
 }
-
-#endif /* MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_ */

@@ -16,35 +16,26 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
-#define MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_HWC_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_HWC_FACTORY_H_
 
-#include "mir/graphics/android/android_driver_interpreter.h"
-#include "../mir_client_surface.h"
+#include "hwc_factory.h"
 
 namespace mir
 {
-namespace client
+namespace graphics
 {
 namespace android
 {
 
-class ClientSurfaceInterpreter : public AndroidDriverInterpreter
+class HWCDevice;
+class AndroidHWCFactory : public HWCFactory
 {
 public:
-    explicit ClientSurfaceInterpreter(ClientSurface& surface);
-
-    ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*);
-    void dispatch_driver_request_format(int format);
-    int  driver_requests_info(int key) const;
-private:
-    ClientSurface& surface;
-    int driver_pixel_format;
+    std::shared_ptr<HWCDevice> create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const;
 };
 
 }
 }
 }
-
-#endif /* MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_HWC_FACTORY_H_ */

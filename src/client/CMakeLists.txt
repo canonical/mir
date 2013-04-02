@@ -50,9 +50,7 @@ set(
   android/android_client_buffer_factory.cpp
   android/android_registrar.cpp
   android/android_client_platform.cpp
-  android/mir_native_window.cpp
   android/client_surface_interpreter.cpp
-  android/syncfence.cpp
   android/android_native_display_container.cpp
   ${CLIENT_SOURCES}
 )
@@ -95,7 +93,8 @@ target_link_libraries(
   mirprotobuf
 
   ${DRM_LIBRARIES}
-  ${ANDROID_STDLIB}
+  ${MIR_COMMON_PLATFORM_LIBRARIES}
+ 
   3rd_party
 )
 

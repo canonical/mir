@@ -23,6 +23,10 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
 extern "C" {
 #endif
 /* TODO: To the moon. */
@@ -94,6 +98,7 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_INPUT_EVENT_H_ */

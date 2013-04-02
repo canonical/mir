@@ -21,8 +21,10 @@
 #include "mir_toolkit/c_types.h"
 
 #ifdef __cplusplus
-namespace mir_toolkit
-{
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
 extern "C"
 {
 #endif
@@ -49,7 +51,7 @@ int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display);
 
 #ifdef __cplusplus
 } // extern "C"
-}
+/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H */
