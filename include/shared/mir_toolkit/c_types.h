@@ -22,7 +22,10 @@
 #include <mir_toolkit/input/event.h>
 
 #ifdef __cplusplus
-namespace mir_toolkit {
+/**
+ * \defgroup mir_toolkit MIR graphics tools API
+ * @{
+ */
 extern "C" {
 #endif
 
@@ -177,7 +180,7 @@ typedef struct MirEventDelegate
 
 #ifdef __cplusplus
 }
-}
+/**@}*/
 #endif
 
 #endif /* MIR_TOOLKIT_C_TYPES_H_ */

@@ -20,8 +20,6 @@
 #include <gtest/gtest.h>
 #include "src/client/mir_wait_handle.h"
 
-using namespace mir_toolkit;
-
 TEST(WaitHandle, symmetric_synchronous)
 {
     MirWaitHandle w;

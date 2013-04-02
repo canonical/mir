@@ -36,10 +36,10 @@ public:
     AndroidNativeDisplayContainer();
     virtual ~AndroidNativeDisplayContainer();
 
-    mir_toolkit::MirEGLNativeDisplayType create(mir_toolkit::MirConnection* connection);
-    void release(mir_toolkit::MirEGLNativeDisplayType display);
+    MirEGLNativeDisplayType create(MirConnection* connection);
+    void release(MirEGLNativeDisplayType display);
 
-    bool validate(mir_toolkit::MirEGLNativeDisplayType display) const;
+    bool validate(MirEGLNativeDisplayType display) const;
 
 protected:
     AndroidNativeDisplayContainer(AndroidNativeDisplayContainer const&) = delete;

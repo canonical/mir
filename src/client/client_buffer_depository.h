@@ -26,11 +26,6 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 
-namespace mir_toolkit
-{
-struct MirBufferPackage;
-}
-
 namespace mir
 {
 
@@ -53,7 +48,7 @@ public:
 
     /// This also marks the previous current buffer (if any) as being submitted to the server.
     /// \post current_buffer() will return a ClientBuffer constructed from this IPC data.
-    void deposit_package(std::shared_ptr<mir_toolkit::MirBufferPackage> const&, int id,
+    void deposit_package(std::shared_ptr<MirBufferPackage> const&, int id,
                          geometry::Size, geometry::PixelFormat);
     std::shared_ptr<ClientBuffer> current_buffer();
 
