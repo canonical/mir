@@ -37,7 +37,7 @@ public:
 
     std::shared_ptr<InputChannel> make_input_channel()
     {
-        return std::shared_ptr<InputChannel>
+        return std::shared_ptr<InputChannel>();
     }
 
     virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& /* session */,
