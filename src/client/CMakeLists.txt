@@ -1,9 +1,7 @@
-set(MIR_CLIENT_INCLUDE_DIR_SUFFIX "mir/client/")
-
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirclient")
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirclient.pc.in
@@ -38,17 +36,10 @@ set(
   ${PROTO_SRCS}
 )
 
-if (MIR_TRANSPORT STREQUAL "socket")
 list(APPEND CLIENT_SOURCES
   mir_socket_rpc_channel.cpp
   make_socket_rpc_channel.cpp
 )
-elseif (MIR_TRANSPORT STREQUAL "binder")
-list(APPEND CLIENT_SOURCES
-  mir_binder_rpc_channel.cpp
-  make_binder_rpc_channel.cpp
-)
-endif()
 
 if( MIR_PLATFORM STREQUAL "android")
 include_directories(${LIBHARDWARE_INCLUDE_DIRS})
@@ -59,9 +50,7 @@ set(
   android/android_client_buffer_factory.cpp
   android/android_registrar.cpp
   android/android_client_platform.cpp
-  android/mir_native_window.cpp
   android/client_surface_interpreter.cpp
-  android/syncfence.cpp
   android/android_native_display_container.cpp
   ${CLIENT_SOURCES}
 )
@@ -104,15 +93,9 @@ target_link_libraries(
   mirprotobuf
 
   ${DRM_LIBRARIES}
-  ${ANDROID_STDLIB}
+  ${MIR_COMMON_PLATFORM_LIBRARIES}
+ 
   3rd_party
-)
-
-set(
-  CLIENT_HEADER_DIRS
-
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit  
-  ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit
 )
 
 install(
@@ -121,9 +104,9 @@ install(
   ARCHIVE DESTINATION lib)
 
 install(
-   DIRECTORY ${CLIENT_HEADER_DIRS} DESTINATION "include/${MIR_CLIENT_INCLUDE_DIR_SUFFIX}"
-   FILES_MATCHING PATTERN "*.h")
-
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit
+  DESTINATION "include/mirclient"
+)
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc

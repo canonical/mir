@@ -16,15 +16,14 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test_framework/signal_dispatcher.h"
+#include "mir/signal_dispatcher.h"
 
-#include <boost/thread.hpp>
-
+#include <mutex>
+#include <thread>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
-namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -73,7 +72,7 @@ struct EventSocketPair
 
 }
 
-struct mtf::SignalDispatcher::Constructor
+struct mir::SignalDispatcher::Constructor
 {
     static SignalDispatcher* construct()
     {
@@ -83,12 +82,12 @@ struct mtf::SignalDispatcher::Constructor
 
 namespace
 {
-std::shared_ptr<mtf::SignalDispatcher> instance;
-boost::once_flag init_flag;
+std::shared_ptr<mir::SignalDispatcher> instance;
+std::once_flag init_flag;
 
 void init()
 {
-    instance.reset(mtf::SignalDispatcher::Constructor::construct());
+    instance.reset(mir::SignalDispatcher::Constructor::construct());
 }
 
 void signal_handler(int signal)
@@ -100,10 +99,11 @@ void signal_handler(int signal)
 
 }
 
-struct mtf::SignalDispatcher::Private
+struct mir::SignalDispatcher::Private
 {
     Private() : worker_thread(std::bind(&Private::worker, this))
     {
+        worker_thread.detach();
     }
 
     void worker()
@@ -123,31 +123,31 @@ struct mtf::SignalDispatcher::Private
         }
     }
 
-    boost::thread worker_thread;
-    mtf::SignalDispatcher::SignalType signal_channel;
+    std::thread worker_thread;
+    mir::SignalDispatcher::SignalType signal_channel;
 };
 
-std::shared_ptr<mtf::SignalDispatcher> mtf::SignalDispatcher::instance()
+std::shared_ptr<mir::SignalDispatcher> mir::SignalDispatcher::instance()
 {
-    boost::call_once(::init_flag, ::init);
+    std::call_once(::init_flag, ::init);
 
     return ::instance;
 }
 
-mtf::SignalDispatcher::SignalDispatcher() : p(new Private())
+mir::SignalDispatcher::SignalDispatcher() : p(new Private())
 {
 }
 
-mtf::SignalDispatcher::~SignalDispatcher()
+mir::SignalDispatcher::~SignalDispatcher()
 {
 }
 
-mtf::SignalDispatcher::SignalType& mtf::SignalDispatcher::signal_channel()
+mir::SignalDispatcher::SignalType& mir::SignalDispatcher::signal_channel()
 {
     return p->signal_channel;
 }
 
-void mtf::SignalDispatcher::enable_for(int signal)
+void mir::SignalDispatcher::enable_for(int signal)
 {
     struct sigaction action;
     ::memset(&action, 0, sizeof(action));

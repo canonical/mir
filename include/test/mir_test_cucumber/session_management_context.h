@@ -54,12 +54,12 @@ public:
     SessionManagementContext(ServerConfiguration& server_configuration);
 
     virtual ~SessionManagementContext() {}
-    
+
     bool open_window_consuming(std::string const& window_name);
     bool open_window_with_size(std::string const& window_name, geometry::Size const& size);
 
     geometry::Size get_window_size(std::string const& window_name);
-    
+
     void set_view_area(geometry::Rectangle const& new_view_region);
     std::shared_ptr<graphics::ViewableArea> get_view_area() const;
 

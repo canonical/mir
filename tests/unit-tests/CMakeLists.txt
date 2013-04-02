@@ -7,6 +7,7 @@ add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
 add_subdirectory(frontend/)
+add_subdirectory(logging/)
 add_subdirectory(shell/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
@@ -43,8 +44,6 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-
-  ${ANDROID_STDLIB}
 )
 
 mir_discover_tests(unit-tests)

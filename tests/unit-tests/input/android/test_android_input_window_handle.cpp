@@ -63,12 +63,12 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
                                                       geom::Height{256}};
     std::string const testing_surface_name = "Test";
     int const testing_server_fd = 2;
-    
+
     MockSurfaceTarget surface;
 
     EXPECT_CALL(surface, server_input_fd()).Times(1)
         .WillOnce(Return(testing_server_fd));
-    // For now since we are just doing keyboard input we only need surface size, 
+    // For now since we are just doing keyboard input we only need surface size,
     // for touch/pointer events we will need a position
     EXPECT_CALL(surface, size()).Times(1)
         .WillOnce(Return(default_surface_size));
@@ -77,13 +77,13 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
                                   mt::fake_shared(surface));
-    
+
     auto info = handle.getInfo();
 
     EXPECT_EQ(testing_surface_name, info->name);
 
     EXPECT_EQ(testing_server_fd, info->inputChannel->getFd());
-    
+
     EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameRight - info->frameLeft));
     EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameBottom - info->frameTop));
 }

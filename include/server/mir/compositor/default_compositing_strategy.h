@@ -20,7 +20,7 @@
 #define MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
 
 #include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/render_view.h"
+#include "mir/compositor/renderables.h"
 
 #include <memory>
 
@@ -39,13 +39,13 @@ class DefaultCompositingStrategy : public CompositingStrategy
 {
 public:
     explicit DefaultCompositingStrategy(
-        std::shared_ptr<RenderView> const& render_view,
+        std::shared_ptr<Renderables> const& renderables,
         std::shared_ptr<graphics::Renderer> const& renderer);
 
     virtual void render(graphics::DisplayBuffer& display_buffer);
 
 private:
-    std::shared_ptr<RenderView> const render_view;
+    std::shared_ptr<Renderables> const renderables;
     std::shared_ptr<graphics::Renderer> const renderer;
 };
 

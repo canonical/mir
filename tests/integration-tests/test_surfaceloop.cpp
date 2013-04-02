@@ -213,6 +213,7 @@ const int ClientConfigCommon::max_surface_count;
 }
 }
 
+using SurfaceLoop = BespokeDisplayServerTestFixture;
 using mir::SurfaceSync;
 using mir::ClientConfigCommon;
 using mir::StubDisplay;
@@ -242,7 +243,7 @@ void wait_for_surface_release(SurfaceSync* context)
 }
 }
 
-TEST_F(BespokeDisplayServerTestFixture,
+TEST_F(SurfaceLoop,
        creating_a_client_surface_allocates_buffer_swapper_on_server)
 {
 
@@ -360,7 +361,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture,
+TEST_F(SurfaceLoop,
        creating_a_client_surface_allocates_buffers_on_server)
 {
 
@@ -416,8 +417,6 @@ TEST_F(BespokeDisplayServerTestFixture,
     launch_client_process(client_config);
 }
 
-namespace mir
-{
 namespace
 {
 struct BufferCounterConfig : TestingServerConfiguration
@@ -490,14 +489,13 @@ struct BufferCounterConfig : TestingServerConfiguration
 std::atomic<int> BufferCounterConfig::CountingStubBuffer::buffers_created;
 std::atomic<int> BufferCounterConfig::CountingStubBuffer::buffers_destroyed;
 }
-}
-using mir::BufferCounterConfig;
 
-TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
+
+TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
 {
     struct ServerConfig : BufferCounterConfig
     {
-        void on_exit(mir::DisplayServer*)
+        void on_exit() override
         {
             EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
             EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
@@ -509,7 +507,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
 
     struct Client : ClientConfigCommon
     {
-        void exec()
+        void exec() override
         {
             mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 
@@ -542,11 +540,11 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed)
     launch_client_process(client_creates_surfaces);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_client_disconnects_without_releasing_surfaces)
+TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_without_releasing_surfaces)
 {
     struct ServerConfig : BufferCounterConfig
     {
-        void on_exit(mir::DisplayServer*)
+        void on_exit() override
         {
             EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
             EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
@@ -558,7 +556,7 @@ TEST_F(BespokeDisplayServerTestFixture, all_created_buffers_are_destoyed_if_clie
 
     struct Client : ClientConfigCommon
     {
-        void exec()
+        void exec() override
         {
             mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
 

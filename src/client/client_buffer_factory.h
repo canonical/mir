@@ -39,10 +39,10 @@ public:
                                                         geometry::Size size, geometry::PixelFormat pf) = 0;
 
 protected:
-	ClientBufferFactory() = default;
-	ClientBufferFactory(ClientBufferFactory const &) = delete;
-	ClientBufferFactory &operator=(ClientBufferFactory const &) = delete;	
-	virtual ~ClientBufferFactory() {}
+    ClientBufferFactory() = default;
+    ClientBufferFactory(ClientBufferFactory const &) = delete;
+    ClientBufferFactory &operator=(ClientBufferFactory const &) = delete;
+    virtual ~ClientBufferFactory() {}
 };
 
 }

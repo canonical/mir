@@ -103,6 +103,7 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::get_graphic_region_fr
 {
     native_handle_t* handle;
     handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
+    handle->version = sizeof(native_handle_t);
     handle->numInts = package->ipc_data.size();
     handle->numFds  = package->ipc_fds.size();
     int i;
@@ -119,7 +120,7 @@ std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::get_graphic_region_fr
     RegionDeleter del(module, handle);
 
     region->vaddr = (char*) vaddr;
-    region->stride = package->stride; 
+    region->stride = package->stride;
     region->width = sz.width.as_uint32_t();
     region->height = sz.height.as_uint32_t();
     region->pixel_format = mir_pixel_format_abgr_8888;

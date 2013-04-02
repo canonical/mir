@@ -47,7 +47,7 @@ bool mia::InputWindowHandle::updateInfo()
         mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"),
                                                            surface->server_input_fd());
     }
-    
+
     mInfo->frameLeft = 0;
     mInfo->frameTop = 0;
     auto surface_size = surface->size();
@@ -69,6 +69,6 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->inputFeatures = 0;
 
     // TODO: Set touchableRegion and layer for touch events.
-    
+
     return true;
 }

@@ -28,10 +28,13 @@ namespace mga=mir::graphics::android;
 
 namespace
 {
-//TODO: kdub temporary construction of a hwc device while I work on the real one 
+//TODO: kdub temporary construction of a hwc device while I work on the real one
 class EmptyHWC : public mga::HWCDevice
 {
-    void wait_for_vsync() 
+    void wait_for_vsync()
+    {
+    }
+    void commit_frame()
     {
     }
 };

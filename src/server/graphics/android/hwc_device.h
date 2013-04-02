@@ -31,9 +31,10 @@ public:
     HWCDevice() = default;
     virtual ~HWCDevice() {}
     virtual void wait_for_vsync() = 0;
+    virtual void commit_frame() = 0;
 private:
     HWCDevice(HWCDevice const&) = delete;
-    HWCDevice& operator=(HWCDevice const&) = delete; 
+    HWCDevice& operator=(HWCDevice const&) = delete;
 };
 
 }

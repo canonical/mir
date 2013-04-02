@@ -59,6 +59,6 @@ mf::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(mf::Surface
     {
         placed_parameters.size = view_area.size;
     }
-    
+
     return placed_parameters;
 }

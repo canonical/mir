@@ -70,7 +70,7 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
             eglGetConfigAttrib(egl_display, current, EGL_NATIVE_VISUAL_ID, &visual_id);
             return (visual_id == android_native_id);
         });
-    
+
     if (pegl_config == end(config_slots))
         BOOST_THROW_EXCEPTION(std::runtime_error("could not select EGL config for use with framebuffer"));
 

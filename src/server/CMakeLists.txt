@@ -20,10 +20,15 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
+MESSAGE(STATUS "GLog_LIBRARY=" ${GLog_LIBRARY})
+MESSAGE(STATUS "GLog_LIBRARY=" ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
+
 set(
   SRCS
+  run_mir.cpp
   display_server.cpp
   default_server_configuration.cpp
+  signal_dispatcher.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -36,7 +41,6 @@ add_executable(
   mirds
 
   main.cpp
-  run_mir.cpp
 )
 
 set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
@@ -56,6 +60,7 @@ list(APPEND MIRSERVER_LINKS
   mirprotobuf
   3rd_party
   ${Boost_LIBRARIES}
+  ${GLog_LIBRARY}
 )
 
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
@@ -72,12 +77,6 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   )
   install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/shared/mir DESTINATION "include/mirserver"
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit DESTINATION "include/mirserver"
   )
 else()
   target_link_libraries(mirserver

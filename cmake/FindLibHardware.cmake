@@ -19,7 +19,8 @@ find_path(LIBHARDWARE_INCLUDE_DIR
 find_library(LIBHARDWARE_LIBRARY
    NAMES         libhardware.so.1 
                  libhardware.so 
-   )
+   HINTS /usr/lib/arm-linux-gnueabihf/
+)
 
 set(LIBHARDWARE_LIBRARIES ${LIBHARDWARE_LIBRARY})
 set(LIBHARDWARE_INCLUDE_DIRS ${LIBHARDWARE_INCLUDE_DIR})

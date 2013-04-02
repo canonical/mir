@@ -21,7 +21,7 @@
 #include "mir/surfaces/buffer_bundle_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/render_view.h"
+#include "mir/compositor/renderables.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
@@ -192,7 +192,7 @@ TEST(
                 render(_,Ref(*surface1.lock()))).Times(Exactly(1));
     EXPECT_CALL(renderer,
                 render(_,Ref(*surface2.lock()))).Times(Exactly(1));
-    
+
     stack.for_each_if(filter, renderable_operator);
 }
 
@@ -234,47 +234,6 @@ TEST(
     stack.for_each_if(filter, renderable_operator);
 }
 
-TEST(
-    SurfaceStack,
-    test_restacking)
-{
-    using namespace ::testing;
-
-    MockBufferBundleFactory buffer_bundle_factory;
-    EXPECT_CALL(
-        buffer_bundle_factory,
-        create_buffer_bundle(_)).Times(AtLeast(1));
-
-    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
-
-    auto surface1 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-    auto surface2 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-    auto surface3 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
-
-    mtd::MockSurfaceRenderer renderer;
-    MockFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator(&renderer);
-
-    ON_CALL(filter, filter(_)).WillByDefault(Return(true));
-    EXPECT_CALL(renderer, render(_,_)).Times(3);
-    EXPECT_CALL(filter, filter(_)).Times(3);
-
-    stack.raise_to_top(surface2);
-
-    {
-      InSequence seq;
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface2.lock()))).Times(1);
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface3.lock()))).Times(1);
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface1.lock()))).Times(1);
-    }
-
-    stack.for_each_if(filter, renderable_operator);
-
-}
-
 TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 {
     using namespace ::testing;
@@ -296,6 +255,61 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         mf::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
+
+    stack.destroy_surface(surface);
+}
+
+namespace
+{
+
+struct StubBufferBundleFactory : public ms::BufferBundleFactory
+{
+    std::shared_ptr<ms::BufferBundle> create_buffer_bundle(mc::BufferProperties const&)
+    {
+        return std::make_shared<mc::BufferBundleSurfaces>(
+            std::unique_ptr<mc::BufferSwapper>(new NullBufferSwapper()));
+    }
+};
+
+class MockCallback
+{
+public:
+    MOCK_METHOD0(call, void());
+};
+
+}
+
+TEST(SurfaceStack, create_surface_notifies_changes)
+{
+    using namespace ::testing;
+
+    MockCallback mock_cb;
+
+    EXPECT_CALL(mock_cb, call()).Times(1);
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
+
+    std::weak_ptr<ms::Surface> surface = stack.create_surface(
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+}
+
+TEST(SurfaceStack, destroy_surface_notifies_changes)
+{
+    using namespace ::testing;
+
+    MockCallback mock_cb;
+
+    EXPECT_CALL(mock_cb, call()).Times(1);
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
+
+    std::weak_ptr<ms::Surface> surface = stack.create_surface(
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+
+    Mock::VerifyAndClearExpectations(&mock_cb);
+    EXPECT_CALL(mock_cb, call()).Times(1);
 
     stack.destroy_surface(surface);
 }

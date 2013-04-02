@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir_native_window.h"
+#include "mir/graphics/android/mir_native_window.h"
 #include "android_client_platform.h"
 #include "android_registrar_gralloc.h"
 #include "android_client_buffer_factory.h"

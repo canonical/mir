@@ -37,7 +37,7 @@ struct MockBuffer : public mcl::AgingBuffer
         ON_CALL(*this, mark_as_submitted())
             .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
 
-        // By default we expect all buffers to be destroyed.        
+        // By default we expect all buffers to be destroyed.
         EXPECT_CALL(*this, Destroy()).Times(1);
     }
 

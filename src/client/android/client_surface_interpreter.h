@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
 #define MIR_CLIENT_ANDROID_CLIENT_SURFACE_INTERPRETER_H_
 
-#include "android_driver_interpreter.h"
+#include "mir/graphics/android/android_driver_interpreter.h"
 #include "../mir_client_surface.h"
 
 namespace mir
@@ -39,7 +39,7 @@ public:
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;
 private:
-    ClientSurface& surface; 
+    ClientSurface& surface;
     int driver_pixel_format;
 };
 

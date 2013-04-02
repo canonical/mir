@@ -79,7 +79,7 @@ TEST_F(SwapperFactoryTest, create_swapper_uses_default_number_of_buffers)
 
     int default_num_of_buffers = 2;
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
-        .Times(default_num_of_buffers);  
+        .Times(default_num_of_buffers);
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
@@ -92,7 +92,7 @@ TEST_F(SwapperFactoryTest, create_swapper_with_two_makes_double_buffer)
     int num_of_buffers = 2;
     mc::SwapperFactory strategy{stub_allocator, num_of_buffers};
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
-        .Times(num_of_buffers);  
+        .Times(num_of_buffers);
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 
@@ -105,7 +105,7 @@ TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_triple_buffer)
     int num_of_buffers = 3;
     mc::SwapperFactory strategy{stub_allocator, num_of_buffers};
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
-        .Times(num_of_buffers);  
+        .Times(num_of_buffers);
     auto swapper = strategy.create_swapper(actual_properties, properties);
 }
 

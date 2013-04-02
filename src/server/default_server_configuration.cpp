@@ -46,6 +46,7 @@
 #include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
+#include "mir/logging/glog_logger.h"
 #include "mir/logging/session_mediator_report.h"
 #include "mir/logging/message_processor_report.h"
 #include "mir/logging/display_report.h"
@@ -125,6 +126,11 @@ char const* const log_app_mediator = "log-app-mediator";
 char const* const log_msg_processor = "log-msg-processor";
 char const* const log_display      = "log-display";
 
+char const* const glog                 = "glog";
+char const* const glog_stderrthreshold = "glog-stderrthreshold";
+char const* const glog_minloglevel     = "glog-minloglevel";
+char const* const glog_log_dir         = "glog-log-dir";
+
 boost::program_options::options_description program_options()
 {
     namespace po = boost::program_options;
@@ -133,13 +139,26 @@ boost::program_options::options_description program_options()
         "Command-line options.\n"
         "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
     desc.add_options()
-        ("file,f", po::value<std::string>(), "socket filename")
-        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool")
-        (log_display, po::value<bool>(), "log the Display report")
-        (log_app_mediator, po::value<bool>(), "log the ApplicationMediator report")
+        ("file,f", po::value<std::string>(),    "Socket filename")
+        (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
+        (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
         (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
-        ("tests-use-real-graphics", po::value<bool>(), "use real graphics in tests")
-        ("tests-use-real-input", po::value<bool>(), "use real input in tests");
+        (glog,                                  "Use google::GLog for logging")
+        (glog_stderrthreshold, po::value<int>(),"Copy log messages at or above this level "
+                                                "to stderr in addition to logfiles. The numbers "
+                                                "of severity levels INFO, WARNING, ERROR, and "
+                                                "FATAL are 0, 1, 2, and 3, respectively."
+                                                " [int:default=2]")
+        (glog_minloglevel, po::value<int>(),    "Log messages at or above this level. The numbers "
+                                                "of severity levels INFO, WARNING, ERROR, and "
+                                                "FATAL are 0, 1, 2, and 3, respectively."
+                                                " [int:default=0]")
+        (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
+                                                "directory instead of the default logging directory."
+                                                " [string:default=\"\"]")
+        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool. [int:default=10]")
+        ("tests-use-real-graphics", po::value<bool>(), "Use real graphics in tests. [bool:default=false]")
+        ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
 
     return desc;
 }
@@ -338,8 +357,8 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
         });
 }
 
-std::shared_ptr<mc::RenderView>
-mir::DefaultServerConfiguration::the_render_view()
+std::shared_ptr<mc::Renderables>
+mir::DefaultServerConfiguration::the_renderables()
 {
     return surface_stack(
         [this]()
@@ -374,7 +393,7 @@ mir::DefaultServerConfiguration::the_compositing_strategy()
     return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_render_view(), the_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer());
         });
 }
 
@@ -395,6 +414,7 @@ mir::DefaultServerConfiguration::the_compositor()
         [this]()
         {
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
+                                                                 the_renderables(),
                                                                  the_compositing_strategy());
         });
 }
@@ -442,7 +462,7 @@ mir::DefaultServerConfiguration::the_message_processor_report()
         {
             if (the_options()->get(log_msg_processor, false))
             {
-                return std::make_shared<ml::MessageProcessorReport>(the_logger());
+                return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_time_source());
             }
             else
             {
@@ -455,10 +475,20 @@ mir::DefaultServerConfiguration::the_message_processor_report()
 std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_logger()
 {
     return logger(
-        [this]()
+        [this]() -> std::shared_ptr<ml::Logger>
         {
-            // TODO use the_options() to configure logging
-            return std::make_shared<ml::DumbConsoleLogger>();
+            if (the_options()->is_set(glog))
+            {
+                return std::make_shared<ml::GlogLogger>(
+                    "mir",
+                    the_options()->get(glog_stderrthreshold, 2),
+                    the_options()->get(glog_minloglevel, 0),
+                    the_options()->get(glog_log_dir, ""));
+            }
+            else
+            {
+                return std::make_shared<ml::DumbConsoleLogger>();
+            }
         });
 }
 
