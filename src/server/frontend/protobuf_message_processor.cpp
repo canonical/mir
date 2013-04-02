@@ -28,18 +28,14 @@ namespace mfd = mir::frontend::detail;
 
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     MessageSender* sender,
+    std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<MessageProcessorReport> const& report) :
     sender(sender),
+    display_server(display_server),
     resource_cache(resource_cache),
     report(report)
 {
-}
-
-void mfd::ProtobufMessageProcessor::set_display_server(
-    std::shared_ptr<protobuf::DisplayServer> const& ds)
-{
-    display_server = ds;
 }
 
 template<class ResultMessage>

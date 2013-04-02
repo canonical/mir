@@ -41,8 +41,7 @@ public:
     {
     }
 
-    std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<mir::EventSink> const& = nullptr)
+    std::shared_ptr<protobuf::DisplayServer> make_ipc_server()
     {
         return server;
     }
