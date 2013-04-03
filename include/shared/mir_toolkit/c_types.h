@@ -65,7 +65,8 @@ typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client
  * Callback member of MirEventDelegate for handling of input events.
  *   \param [in] surface     The surface on which an event has occurred
  *   \param [in] event       The event to be handled
- *   \param [in,out] context context provided by client in MirEventDelegate
+ *   \param [in,out] context The context provided by client during delegate
+ *                           registration.
  */
 typedef void (*mir_event_delegate_handle_input_callback)(MirSurface* surface, MirEvent* ev, void* context);
 
