@@ -54,6 +54,7 @@ private:
     std::mutex vsync_wait_mutex;
     std::condition_variable vsync_trigger;
     bool vsync_occurred;
+    unsigned int primary_display_config;
 };
 
 }

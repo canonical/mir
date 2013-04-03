@@ -95,13 +95,13 @@ public:
     static int hook_getDisplayConfigs(struct hwc_composer_device_1* mock_hwc, int disp, uint32_t* configs, size_t* numConfigs)
     {
         MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
-        return mocker->getDisplayConfigs(mock_hwc, disp, configs, numConfigs);
+        return mocker->getDisplayConfigs_interface(mock_hwc, disp, configs, numConfigs);
     }
 
     static int hook_getDisplayAttributes(struct hwc_composer_device_1* mock_hwc, int disp, uint32_t config, const uint32_t* attributes, int32_t* values)
     {
         MockHWCComposerDevice1* mocker = static_cast<MockHWCComposerDevice1*>(mock_hwc);
-        return mocker->getDisplayAttributes(mock_hwc, disp, config, attributes, values);
+        return mocker->getDisplayAttributes_interface(mock_hwc, disp, config, attributes, values);
     }
 
     MOCK_METHOD2(registerProcs_interface, void(struct hwc_composer_device_1*, hwc_procs_t const*));

@@ -60,6 +60,10 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
     }
+
+    printf("here... %X\n", (int) hwc_device->getDisplayConfigs);
+    size_t num_configs = 1;
+    hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
 }
 
 mga::HWC11Device::~HWC11Device()

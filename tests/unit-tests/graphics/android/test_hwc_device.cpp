@@ -210,7 +210,7 @@ TEST_F(HWCDevice, test_hwc_device_display_config)
     using namespace testing;
 
     unsigned int hwc_configs = 0xA1;
-    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,Pointee(1)))
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<2>(hwc_configs), Return(0)));
 
