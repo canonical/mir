@@ -44,6 +44,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/input/input_manager.h"
+#include "mir/input/null_input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
@@ -140,6 +141,7 @@ boost::program_options::options_description program_options()
         "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
     desc.add_options()
         ("file,f", po::value<std::string>(),    "Socket filename")
+        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=false]")
         (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
         (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
         (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
@@ -316,9 +318,12 @@ std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
     return input_manager(
-        [&, this]()
+        [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            return mi::create_input_manager(the_event_filters(), the_display());
+            if (the_options()->get("enable-input", false))
+                return mi::create_input_manager(the_event_filters(), the_display());
+            else 
+                return std::make_shared<mi::NullInputManager>();
         });
 }
 

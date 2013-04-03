@@ -231,7 +231,6 @@ TEST_F(HWCDevice, test_hwc_device_display_config_failure_throws)
     }, std::runtime_error);
 }
 
-
 namespace
 {
 static int const display_width = 180;

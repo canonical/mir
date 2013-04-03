@@ -78,15 +78,15 @@ mga::HWC11Device::~HWC11Device()
 
 geom::Size mga::HWC11Device::display_size()
 {
-    static uint32_t const size_request[3] = { HWC_DISPLAY_WIDTH,
+    static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
                                               HWC_DISPLAY_HEIGHT,
                                               HWC_DISPLAY_NO_ATTRIBUTE};
 
     int size_values[2];
-    /* note: some hwc modules (adreno320) do not accept any other request list other than what surfaceflinger's is,
+    /* note: some hwc modules (adreno320) do not accept any request list other than what surfaceflinger's requests,
      * despite what the hwc header says. from what I've seen so far, this is harmless, other than a logcat msg */ 
     hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
-                                 (uint32_t*) &size_request, (int*) &size_values);
+                                 static_cast<uint32_t*> (&size_request[0]), static_cast<int*>(&size_values[0]));
 
     return geom::Size{geom::Width{size_values[0]}, geom::Height{size_values[1]}};
 }
