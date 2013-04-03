@@ -207,16 +207,29 @@ TEST_F(HWCDevice, test_hwc_display_is_deactivated_on_destroy)
 
 TEST_F(HWCDevice, test_hwc_device_display_config)
 {
-    int hwc_configs = 0xA1;
+    using namespace testing;
 
-    EXPECT_CALL(*mock_device, getDisplayConfigs(mock_device.get(),HWC_DISPLAY_PRIMARY,_,Pointee(Eq(1)))
+    unsigned int hwc_configs = 0xA1;
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
         .Times(1)
-        .WillOnce(SetArgPointee<2>(&hwc_configs));
+        .WillOnce(DoAll(SetArgPointee<2>(hwc_configs), Return(0)));
 
     mga::HWC11Device device(mock_device);
 }
 
 #if 0
+//apparently this can happen if the display is in the 'unplugged state'
+TEST_F(HWCDevice, test_hwc_device_display_config_failure_throws)
+{
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,Pointee(Eq(1)))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        mga::HWC11Device device(mock_device);
+    }, std::runtime_error);
+}
+
 TEST_F(HWCDevice, test_hwc_device_display_config)
 {
     int hwc_configs = 0xA1;
@@ -232,9 +245,9 @@ TEST_F(HWCDevice, test_hwc_device_display_config)
     int display_width = 180;
     int display_height = 1010101
     int hwc_values[2] = {display_width, display_height};
-    EXPECT_CALL(*mock_device, getDisplayAttributes(mock_device.get(), HWC_DISPLAY_PRIMARY,_,_))
+    EXPECT_CALL(*mock_device, getDisplayAttributes(mock_device.get(), HWC_DISPLAY_PRIMARY,hwc_configs,_,_))
         .Times(1)
-        .WillOnce(SaveArg<2>(disp_list), SetArg<3>(hwc_values));
+        .WillOnce(SaveArg<3>(disp_list), SetArg<4>(hwc_values));
 
     EXPECT_EQ(disp_list[0], HWC_DISPLAY_WIDTH);
     EXPECT_EQ(disp_list[1], HWC_DISPLAY_HEIGHT);
