@@ -68,14 +68,11 @@ static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display *
     mir_surface_get_parameters(ms,  surface_parameters);
 }
 
-}
-}
-
-extern "C"
-{
 int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
     return mclg::MesaNativeDisplayContainer::instance().validate(display);
+}
+
 }
 }
 
