@@ -230,33 +230,43 @@ TEST_F(HWCDevice, test_hwc_device_display_config_failure_throws)
         mga::HWC11Device device(mock_device);
     }, std::runtime_error);
 }
-#if 0
 
-TEST_F(HWCDevice, test_hwc_device_display_config)
+
+namespace
 {
-    int hwc_configs = 0xA1;
+static int const display_width = 180;
+static int const display_height = 1010101;
 
-    EXPECT_CALL(*mock_device, getDisplayConfigs(mock_device.get(),HWC_DISPLAY_PRIMARY,_,Pointee(Eq(1)))
+static int display_attribute_handler(struct hwc_composer_device_1*, int, uint32_t,
+                                     const uint32_t* attribute_list, int32_t* values)
+{
+    EXPECT_EQ(attribute_list[0], HWC_DISPLAY_WIDTH);
+    EXPECT_EQ(attribute_list[1], HWC_DISPLAY_HEIGHT);
+    EXPECT_EQ(attribute_list[2], HWC_DISPLAY_NO_ATTRIBUTE);
+
+    values[0] = display_width;
+    values[1] = display_height;
+    return 0;
+}
+
+TEST_F(HWCDevice, test_hwc_device_display_width_height)
+{
+    using namespace testing;
+
+    int hwc_configs = 0xA1;
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
         .Times(1)
-        .WillOnce(SetArgPointee<2>(&hwc_configs));
+        .WillOnce(DoAll(SetArgPointee<2>(hwc_configs), Return(0)));
 
     mga::HWC11Device device(mock_device);
-
-    int* disp_list;
-    
-    int display_width = 180;
-    int display_height = 1010101
-    int hwc_values[2] = {display_width, display_height};
-    EXPECT_CALL(*mock_device, getDisplayAttributes(mock_device.get(), HWC_DISPLAY_PRIMARY,hwc_configs,_,_))
+ 
+    EXPECT_CALL(*mock_device, getDisplayAttributes_interface(mock_device.get(), HWC_DISPLAY_PRIMARY,hwc_configs,_,_))
         .Times(1)
-        .WillOnce(SaveArg<3>(disp_list), SetArg<4>(hwc_values));
-
-    EXPECT_EQ(disp_list[0], HWC_DISPLAY_WIDTH);
-    EXPECT_EQ(disp_list[1], HWC_DISPLAY_HEIGHT);
-    EXPECT_EQ(disp_list[2], HWC_DISPLAY_NO_ATTRIBUTE);
-
+        .WillOnce(Invoke(display_attribute_handler));
+#if 0
     auto size = device.size()
     EXPECT_EQ(size.width.as_uint32_t(), display_width);
     EXPECT_EQ(size.height.as_uint32_t(), display_height);
-}
 #endif
+}
+}
