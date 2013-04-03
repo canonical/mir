@@ -12,11 +12,8 @@ set(
   test_focus_selection.cpp
 )
 
-if (NOT MIR_DISABLE_INPUT)
-  list(APPEND SOURCES
-    test_client_input.cpp)
-endif()
-
+list(APPEND SOURCES
+  test_client_input.cpp)
 
 list(APPEND SOURCES
   test_server_startup.cpp
