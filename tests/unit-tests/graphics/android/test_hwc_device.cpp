@@ -217,11 +217,12 @@ TEST_F(HWCDevice, test_hwc_device_display_config)
     mga::HWC11Device device(mock_device);
 }
 
-#if 0
 //apparently this can happen if the display is in the 'unplugged state'
 TEST_F(HWCDevice, test_hwc_device_display_config_failure_throws)
 {
-    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,Pointee(Eq(1)))
+    using namespace testing;
+
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
         .Times(1)
         .WillOnce(Return(-1));
 
@@ -229,6 +230,7 @@ TEST_F(HWCDevice, test_hwc_device_display_config_failure_throws)
         mga::HWC11Device device(mock_device);
     }, std::runtime_error);
 }
+#if 0
 
 TEST_F(HWCDevice, test_hwc_device_display_config)
 {
