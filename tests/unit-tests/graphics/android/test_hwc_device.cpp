@@ -205,3 +205,43 @@ TEST_F(HWCDevice, test_hwc_display_is_deactivated_on_destroy)
     device.reset();
 }
 
+TEST_F(HWCDevice, test_hwc_device_display_config)
+{
+    int hwc_configs = 0xA1;
+
+    EXPECT_CALL(*mock_device, getDisplayConfigs(mock_device.get(),HWC_DISPLAY_PRIMARY,_,Pointee(Eq(1)))
+        .Times(1)
+        .WillOnce(SetArgPointee<2>(&hwc_configs));
+
+    mga::HWC11Device device(mock_device);
+}
+
+#if 0
+TEST_F(HWCDevice, test_hwc_device_display_config)
+{
+    int hwc_configs = 0xA1;
+
+    EXPECT_CALL(*mock_device, getDisplayConfigs(mock_device.get(),HWC_DISPLAY_PRIMARY,_,Pointee(Eq(1)))
+        .Times(1)
+        .WillOnce(SetArgPointee<2>(&hwc_configs));
+
+    mga::HWC11Device device(mock_device);
+
+    int* disp_list;
+    
+    int display_width = 180;
+    int display_height = 1010101
+    int hwc_values[2] = {display_width, display_height};
+    EXPECT_CALL(*mock_device, getDisplayAttributes(mock_device.get(), HWC_DISPLAY_PRIMARY,_,_))
+        .Times(1)
+        .WillOnce(SaveArg<2>(disp_list), SetArg<3>(hwc_values));
+
+    EXPECT_EQ(disp_list[0], HWC_DISPLAY_WIDTH);
+    EXPECT_EQ(disp_list[1], HWC_DISPLAY_HEIGHT);
+    EXPECT_EQ(disp_list[2], HWC_DISPLAY_NO_ATTRIBUTE);
+
+    auto size = device.size()
+    EXPECT_EQ(size.width.as_uint32_t(), display_width);
+    EXPECT_EQ(size.height.as_uint32_t(), display_height);
+}
+#endif
