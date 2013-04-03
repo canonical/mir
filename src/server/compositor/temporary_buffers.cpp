@@ -22,10 +22,15 @@
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
+mc::TemporaryBuffer::TemporaryBuffer(std::shared_ptr<Buffer> const& real_buffer)
+    : buffer(real_buffer)
 {
-    buffer = buffer_swapper->client_acquire();
-    allocating_swapper = buffer_swapper;
+}
+
+mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
+    : TemporaryBuffer(buffer_swapper->client_acquire()),
+      allocating_swapper(buffer_swapper)
+{
 }
 
 mc::TemporaryClientBuffer::~TemporaryClientBuffer()
@@ -35,9 +40,9 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 }
 
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
+    : TemporaryBuffer(buffer_swapper->compositor_acquire()),
+      allocating_swapper(buffer_swapper)
 {
-    buffer = buffer_swapper->compositor_acquire();
-    allocating_swapper = buffer_swapper;
 }
 
 mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()

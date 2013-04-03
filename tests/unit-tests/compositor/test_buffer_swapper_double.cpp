@@ -56,7 +56,6 @@ TEST_F(BufferSwapperDouble, test_valid_buffer_returned)
     auto buffer = swapper->client_acquire();
 
     EXPECT_TRUE((buffer == buffer_a) || (buffer == buffer_b));
-
 }
 
 TEST_F(BufferSwapperDouble, test_valid_and_unique_with_two_acquires)

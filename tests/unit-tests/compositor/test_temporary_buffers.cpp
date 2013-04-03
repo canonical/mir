@@ -33,8 +33,8 @@ class TemporaryTestBuffer : public mc::TemporaryBuffer
 {
 public:
     TemporaryTestBuffer(const std::shared_ptr<mc::Buffer>& buf)
+        : TemporaryBuffer(buf)
     {
-        buffer = buf;
     }
 };
 

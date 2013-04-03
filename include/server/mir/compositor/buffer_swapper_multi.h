@@ -59,7 +59,7 @@ private:
     std::deque<std::shared_ptr<Buffer>> client_queue;
     std::deque<std::shared_ptr<Buffer>> compositor_queue;
     unsigned int in_use_by_client;
-    const unsigned int swapper_size;
+    unsigned int const swapper_size;
 };
 
 }
