@@ -260,7 +260,6 @@ status_t InputPublisher::publishKeyEvent(
     }
 
     InputMessage msg;
-
     msg.header.type = InputMessage::TYPE_KEY;
     msg.body.key.seq = seq;
     msg.body.key.deviceId = deviceId;
@@ -317,7 +316,6 @@ status_t InputPublisher::publishMotionEvent(
     }
 
     InputMessage msg;
-
     msg.header.type = InputMessage::TYPE_MOTION;
     msg.body.motion.seq = seq;
     msg.body.motion.deviceId = deviceId;
@@ -841,7 +839,6 @@ status_t InputConsumer::sendFinishedSignal(uint32_t seq, bool handled) {
 
 status_t InputConsumer::sendUnchainedFinishedSignal(uint32_t seq, bool handled) {
     InputMessage msg;
-
     msg.header.type = InputMessage::TYPE_FINISHED;
     msg.body.finished.seq = seq;
     msg.body.finished.handled = handled;
