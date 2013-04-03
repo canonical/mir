@@ -20,6 +20,8 @@
 
 #include "mir/shell/surface_builder.h"
 #include "mir/input/input_channel.h"
+#include "mir/event.h"
+#include "mir/event_queue.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -189,8 +191,6 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
         break;
     }
 
-    // TODO: Notify event_queue of a successful setting.
-
     return result;
 }
 
@@ -226,7 +226,23 @@ bool msh::Surface::set_state(MirSurfaceState s)
     {
         state_value = s;
         valid = true;
+
+        notify_change(mir_surface_attrib_state, s);
     }
 
     return valid;
+}
+
+void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
+{
+    Event e;
+
+    e.type = Event::Type::SURFACE;
+    e.surface.type = Event::Surface::CHANGE;
+    e.surface.id = 69; // TODO
+    e.surface.change.attrib = attrib;
+    e.surface.change.value = value;
+
+    if (event_queue)
+        event_queue->post(e);
 }

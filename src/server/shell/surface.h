@@ -86,6 +86,7 @@ public:
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
+    void notify_change(MirSurfaceAttrib attrib, int value);
 
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
