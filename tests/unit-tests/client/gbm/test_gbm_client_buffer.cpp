@@ -193,29 +193,22 @@ TEST_F(MirGBMBufferTest, prime_fd_closed_on_buffer_destruction)
     package->fd[0] = prime_fd;
     package->fd_items = 1;
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
-
-    // We don't map the buffer, so we don't need to take a GEM reference...
-    EXPECT_CALL(*drm_fd_handler, primeFDToHandle(_,_))
-        .Times(0);
-    // We haven't taken a GEM reference, so we shouldn't close it.
-    EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
-        .Times(0);
-
     EXPECT_CALL(*drm_fd_handler, close(prime_fd))
         .Times(1);
+
+    mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
 }
 
 TEST_F(MirGBMBufferTest, buffer_does_not_take_a_gem_reference_when_not_mapping)
 {
     using namespace testing;
 
-    mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
-
     // We don't map the buffer, so we don't need to take a GEM reference...
     EXPECT_CALL(*drm_fd_handler, primeFDToHandle(_,_))
         .Times(0);
     // We haven't taken a GEM reference, so we shouldn't close it.
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
         .Times(0);
+
+    mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
 }
