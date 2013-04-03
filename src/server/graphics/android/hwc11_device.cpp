@@ -22,6 +22,7 @@
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
 
 namespace
 {
@@ -61,7 +62,6 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
         BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
     }
 
-    printf("here... %X\n", (int) hwc_device->getDisplayConfigs);
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
     if (rc != 0)
@@ -74,6 +74,18 @@ mga::HWC11Device::~HWC11Device()
 {
     hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
     hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
+}
+
+geom::Size mga::HWC11Device::display_size()
+{
+    static uint32_t const size_request[3] = { HWC_DISPLAY_WIDTH,
+                                              HWC_DISPLAY_HEIGHT,
+                                              HWC_DISPLAY_NO_ATTRIBUTE };
+    int size_values[2];
+    hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
+                                 (uint32_t*) &size_request, (int*) &size_values);
+
+    return geom::Size{geom::Width{size_values[0]}, geom::Height{size_values[1]}};
 }
 
 void mga::HWC11Device::notify_vsync()

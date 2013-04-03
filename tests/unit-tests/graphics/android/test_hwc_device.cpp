@@ -263,10 +263,9 @@ TEST_F(HWCDevice, test_hwc_device_display_width_height)
     EXPECT_CALL(*mock_device, getDisplayAttributes_interface(mock_device.get(), HWC_DISPLAY_PRIMARY,hwc_configs,_,_))
         .Times(1)
         .WillOnce(Invoke(display_attribute_handler));
-#if 0
-    auto size = device.size()
-    EXPECT_EQ(size.width.as_uint32_t(), display_width);
-    EXPECT_EQ(size.height.as_uint32_t(), display_height);
-#endif
+
+    auto size = device.display_size();
+    EXPECT_EQ(size.width.as_uint32_t(),  static_cast<unsigned int>(display_width));
+    EXPECT_EQ(size.height.as_uint32_t(), static_cast<unsigned int>(display_height));
 }
 }
