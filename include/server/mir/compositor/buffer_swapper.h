@@ -27,7 +27,6 @@ namespace mir
 namespace compositor
 {
 class Buffer;
-class BufferID;
 
 class BufferSwapper
 {

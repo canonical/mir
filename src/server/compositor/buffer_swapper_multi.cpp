@@ -17,8 +17,6 @@
  */
 
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_id.h"
 #include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;

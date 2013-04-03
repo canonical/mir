@@ -35,7 +35,6 @@ namespace compositor
 {
 
 class Buffer;
-class BufferIDUniqueGenerator;
 
 class BufferSwapperMulti : public BufferSwapper
 {
