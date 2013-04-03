@@ -32,7 +32,7 @@ std::shared_ptr<mga::AndroidDisplay> mga::AndroidDisplayAllocator::create_gpu_di
     return std::make_shared<AndroidDisplay>(window);
 }
 
-std::shared_ptr<mga::HWCDisplay> mga::AndroidDisplayAllocator::create_hwc_display(std::shared_ptr<HWCDevice> const& hwc_device) const
+std::shared_ptr<mga::HWCDisplay> mga::AndroidDisplayAllocator::create_hwc_display(std::shared_ptr<HWCDevice> const& hwc_device, std::shared_ptr<ANativeWindow> const& /*anw*/) const
 {
     auto native_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (native_window);

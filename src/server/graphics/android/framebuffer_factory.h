@@ -16,10 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_INFO_PROVIDER_H_
-#define MIR_GRAPHICS_ANDROID_DISPLAY_INFO_PROVIDER_H_
+#ifndef MIR_GRAPHICS_ANDROID_FRAMEBUFFER_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_FRAMEBUFFER_FACTORY_H_
 
-#include "mir/geometry/size.h"
+#include <system/window.h>
+#include <memory>
 
 namespace mir
 {
@@ -27,22 +28,23 @@ namespace graphics
 {
 namespace android
 {
+class DisplayInfoProvider;
 
-class DisplayInfoProvider
+class FramebufferFactory
 {
 public:
-    virtual ~DisplayInfoProvider() {}
+    virtual ~FramebufferFactory() {}
 
-    virtual geometry::Size display_size() = 0; 
+    virtual std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplayInfoProvider> const&) = 0; 
 
 protected:
-    DisplayInfoProvider() = default;
-    DisplayInfoProvider& operator=(DisplayInfoProvider const&) = delete;
-    DisplayInfoProvider(DisplayInfoProvider const&) = delete;
+    FramebufferFactory() = default;
+    FramebufferFactory& operator=(FramebufferFactory const&) = delete;
+    FramebufferFactory(FramebufferFactory const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_INFO_PROVIDER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_FRAMEBUFFER_FACTORY_H_ */

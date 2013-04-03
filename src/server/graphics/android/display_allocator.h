@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_ALLOCATOR_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_ALLOCATOR_H_
 
+#include <system/window.h>
 #include <memory>
 
 namespace mir
@@ -38,7 +39,7 @@ public:
     virtual ~DisplayAllocator() {}
 
     virtual std::shared_ptr<AndroidDisplay> create_gpu_display() const = 0;
-    virtual std::shared_ptr<HWCDisplay> create_hwc_display(std::shared_ptr<HWCDevice> const&) const = 0;
+    virtual std::shared_ptr<HWCDisplay> create_hwc_display(std::shared_ptr<HWCDevice> const&, std::shared_ptr<ANativeWindow> const&) const = 0;
 
 private:
     DisplayAllocator(DisplayAllocator const&) = delete;

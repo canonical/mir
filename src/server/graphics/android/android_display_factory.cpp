@@ -77,7 +77,8 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     {
         //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
         auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
-        return display_factory->create_hwc_display(hwc_device);
+        std::shared_ptr<ANativeWindow> emptywin;
+        return display_factory->create_hwc_display(hwc_device, emptywin);
     }
     else
     {

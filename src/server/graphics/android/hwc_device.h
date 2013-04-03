@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
-#include "mir/geometry/size.h"
+#include "display_info_provider.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace graphics
 namespace android
 {
 
-class HWCDevice
+class HWCDevice : public DisplayInfoProvider 
 {
 public:
     HWCDevice() = default;
