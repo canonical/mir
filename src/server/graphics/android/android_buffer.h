@@ -55,6 +55,8 @@ public:
     geometry::PixelFormat pixel_format() const;
 
     std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
+    
+    std::shared_ptr<compositor::NativeBufferHandle> native_buffer_handle() const;
 
     void bind_to_texture();
 

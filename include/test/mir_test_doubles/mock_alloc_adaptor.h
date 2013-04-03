@@ -21,6 +21,7 @@
 
 #include "src/server/graphics/android/graphic_alloc_adaptor.h"
 #include "src/server/graphics/android/android_buffer.h"
+#include "mir/compositor/native_buffer_handle.h"
 
 #include <system/window.h>
 #include <gmock/gmock.h>
@@ -35,20 +36,24 @@ namespace doubles
 class MockBufferHandle : public graphics::android::AndroidBufferHandle
 {
 public:
-
-    MOCK_CONST_METHOD0(get_egl_client_buffer, EGLClientBuffer());
+    MockBufferHandle()
+    {
+        using namespace testing;
+        ON_CALL(*this, native_buffer_handle())
+            .WillByDefault(Return(std::make_shared<compositor::NativeBufferHandle>()));
+    }
     MOCK_CONST_METHOD0(size,   geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(usage,  graphics::android::BufferUsage());
-    MOCK_CONST_METHOD0(get_ipc_package,  std::shared_ptr<compositor::BufferIPCPackage>());
-
+    MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<compositor::BufferIPCPackage>());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<compositor::NativeBufferHandle>());
 };
 
 class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
 {
 public:
-    MockAllocAdaptor(std::shared_ptr<MockBufferHandle> mock)
+    MockAllocAdaptor(std::shared_ptr<MockBufferHandle> const& mock)
         :
         mock_handle(mock)
     {

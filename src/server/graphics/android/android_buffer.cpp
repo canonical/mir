@@ -87,9 +87,9 @@ void mga::AndroidBuffer::bind_to_texture()
     auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
-        ANativeWindowBuffer *buf = (ANativeWindowBuffer*) native_window_buffer_handle->get_egl_client_buffer();
+        auto buffer = native_window_buffer_handle->native_buffer_handle();
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  buf, image_attrs);
+                                  buffer.get(), image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error binding buffer to texture\n"));
@@ -109,4 +109,9 @@ void mga::AndroidBuffer::bind_to_texture()
 std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBuffer::get_ipc_package() const
 {
     return native_window_buffer_handle->get_ipc_package();
+}
+    
+std::shared_ptr<mc::NativeBufferHandle> mga::AndroidBuffer::native_buffer_handle() const
+{
+    return native_window_buffer_handle->native_buffer_handle();
 }

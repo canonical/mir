@@ -55,6 +55,11 @@ public:
 
     virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const { return std::make_shared<compositor::BufferIPCPackage>(); }
 
+    std::shared_ptr<compositor::NativeBufferHandle> native_buffer_handle() const
+    {
+        return std::shared_ptr<compositor::NativeBufferHandle>();
+    }
+
     virtual void bind_to_texture() {}
 
     geometry::Size const buf_size;

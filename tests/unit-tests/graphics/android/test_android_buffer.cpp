@@ -18,6 +18,7 @@
 
 #include "src/server/graphics/android/android_buffer.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir/compositor/native_buffer_handle.h"
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 
 #include <hardware/gralloc.h>
@@ -76,8 +77,8 @@ TEST_F(AndroidGraphicBufferBasic, size_query_test)
     geom::Size expected_size{geom::Width{443}, geom::Height{667}};
 
     EXPECT_CALL(*mock_buffer_handle, size())
-    .Times(Exactly(1))
-    .WillOnce(Return(expected_size));
+        .Times(Exactly(1))
+        .WillOnce(Return(expected_size));
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( size, _, _ ));
     mga::AndroidBuffer buffer(mock_alloc_device, size, pf);
 
@@ -121,6 +122,21 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
     mga::AndroidBuffer buffer(mock_alloc_device, size, pf);
 
     EXPECT_EQ(expected_ipc_package, buffer.get_ipc_package());
+}
+
+TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_native_handle)
+{
+    using namespace testing;
+
+    auto expected_anwb = std::make_shared<mc::NativeBufferHandle>();
+
+    EXPECT_CALL(*mock_buffer_handle, native_buffer_handle())
+        .Times(Exactly(1))
+        .WillOnce(Return(expected_anwb));
+
+    mga::AndroidBuffer buffer(mock_alloc_device, size, pf);
+
+    EXPECT_EQ(expected_anwb, buffer.native_buffer_handle());
 }
 
 TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
