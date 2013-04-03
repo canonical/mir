@@ -42,7 +42,7 @@ From within the armhf system:
 
        $ bzr branch lp:mir
        $ mkdir mir/build; cd mir/build
-       $ cmake -DBoost_COMPILER=-gcc -DMIR_ENABLE_DEATH_TESTS=NO -DMIR_PLATFORM=android -DMIR_DISABLE_INPUT=yes ..
+       $ cmake -DBoost_COMPILER=-gcc -DMIR_ENABLE_DEATH_TESTS=NO -DMIR_PLATFORM=android ..
 
 Cross Compile
 -------------
@@ -63,7 +63,7 @@ compile and run code, and is well suited for a development workflow.
 
         $ bzr branch lp:mir
         $ mkdir mir/build; cd mir/build
-        $ MIR_NDK_PATH=/path/to/depenendcies/chroot cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake -DBoost_COMPILER=-gcc -DMIR_ENABLE_DEATH_TESTS=NO -DMIR_PLATFORM=android -DMIR_DISABLE_INPUT=yes ..
+        $ MIR_NDK_PATH=/path/to/depenendcies/chroot cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake -DBoost_COMPILER=-gcc -DMIR_ENABLE_DEATH_TESTS=NO -DMIR_PLATFORM=android ..
         $ make
 
 N.B. The `cross-compile-android.sh` script in mir's top level directory

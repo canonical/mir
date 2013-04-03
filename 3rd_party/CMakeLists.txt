@@ -28,10 +28,8 @@ if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(android-fbtype)
 endif()
 
-if (NOT MIR_DISABLE_INPUT)
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/android-deps)
-  add_subdirectory(android-input)
-endif()
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/android-deps)
+add_subdirectory(android-input)
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES ${MIR_ANDROID_INCLUDE_DIRECTORIES} PARENT_SCOPE)
 set(
@@ -39,9 +37,7 @@ set(
   ${MIR_ANDROID_INPUT_COMPILE_FLAGS}
   PARENT_SCOPE)
   
-if (NOT MIR_DISABLE_INPUT)
 target_link_libraries(
   3rd_party
 
   android-input)
-endif()

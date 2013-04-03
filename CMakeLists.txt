@@ -103,13 +103,6 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
-set (MIR_DISABLE_INPUT
-  false
-  CACHE
-  BOOL
-  "Don't build the input subsystem"
-)
-
 set (MIR_INPUT_USE_ANDROID_TYPES
   false
   CACHE

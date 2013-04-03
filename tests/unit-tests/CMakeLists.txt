@@ -11,11 +11,8 @@ add_subdirectory(logging/)
 add_subdirectory(shell/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
-#TODO stubbed out to run tests on emulator 
-if (NOT MIR_DISABLE_INPUT)
 add_subdirectory(input/)
 add_subdirectory(android_input/)
-endif()
 add_subdirectory(surfaces/)
 add_subdirectory(draw/)
 
