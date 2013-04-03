@@ -98,10 +98,8 @@ set(
   3rd_party
 )
 
-if (NOT MIR_DISABLE_INPUT)
-  list(APPEND MIR_CLIENT_LIBRARIES
-    mirinputandroidtransport)
-endif()
+list(APPEND MIR_CLIENT_LIBRARIES
+  mirinputandroidtransport)
 
 target_link_libraries(
   mirclient
