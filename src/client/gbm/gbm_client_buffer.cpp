@@ -55,7 +55,11 @@ struct GEMHandle
 
     ~GEMHandle()
     {
-        // TODO: Do we need to GEM_CLOSE here? Do we need to close the fd?
+        struct drm_gem_close arg;
+        arg.handle = handle;
+        // TODO (@raof): Error reporting? I do not believe it should be possible for this to fail,
+        //               so if it does we should probably flag it.
+        drm_fd_handler->ioctl(DRM_IOCTL_GEM_CLOSE, &arg);
     }
 
     std::shared_ptr<mclg::DRMFDHandler> const drm_fd_handler;
@@ -127,6 +131,13 @@ mclg::GBMClientBuffer::GBMClientBuffer(
       rect({{geom::X(0), geom::Y(0)}, size}),
       buffer_pf{pf}
 {
+}
+
+mclg::GBMClientBuffer::~GBMClientBuffer()
+{
+    // TODO (@raof): Error reporting? It should not be possible for this to fail; if it does,
+    //               something's seriously wrong.
+    drm_fd_handler->close(creation_package->fd[0]);
 }
 
 std::shared_ptr<mcl::MemoryRegion> mclg::GBMClientBuffer::secure_for_cpu_write()

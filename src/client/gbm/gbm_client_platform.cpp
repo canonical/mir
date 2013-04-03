@@ -27,6 +27,7 @@
 
 #include <xf86drm.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 namespace mcl=mir::client;
 namespace mclg=mir::client::gbm;
@@ -50,6 +51,17 @@ public:
     int primeFDToHandle(int prime_fd, uint32_t *handle)
     {
         return drmPrimeFDToHandle(drm_fd, prime_fd, handle);
+    }
+
+    int close(int fd)
+    {
+        while (::close(fd) == -1)
+        {
+            // Retry on EINTR, return error on anything else
+            if (errno != EINTR)
+                return errno;
+        }
+        return 0;
     }
 
     void* map(size_t size, off_t offset)
