@@ -51,10 +51,10 @@ namespace
 class NullBufferSwapper : public mc::BufferSwapper
 {
 public:
-    virtual void client_acquire(std::shared_ptr<mc::Buffer>&, mc::BufferID&) {}
-    virtual void client_release(mc::BufferID) {}
-    virtual void compositor_acquire(std::shared_ptr<mc::Buffer>& , mc::BufferID&){};
-    virtual void compositor_release(mc::BufferID){}
+    virtual std::shared_ptr<mc::Buffer> client_acquire() { return std::shared_ptr<mc::Buffer>(); }
+    virtual void client_release(std::shared_ptr<mc::Buffer> const&) {}
+    virtual std::shared_ptr<mc::Buffer> compositor_acquire(){ return std::shared_ptr<mc::Buffer>(); };
+    virtual void compositor_release(std::shared_ptr<mc::Buffer> const&){}
     virtual void shutdown() {}
 };
 

@@ -57,7 +57,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
     .Times(1);
     EXPECT_CALL(*mock_swapper, compositor_release(_))
     .Times(1);
@@ -71,7 +71,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
     .Times(1);
     EXPECT_CALL(*mock_swapper, compositor_release(_))
     .Times(1);
@@ -86,7 +86,7 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_swapper, client_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, client_acquire())
     .Times(1);
     EXPECT_CALL(*mock_swapper, client_release(_))
     .Times(1);

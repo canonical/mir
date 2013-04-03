@@ -17,8 +17,6 @@
  */
 
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_id.h"
 #include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
@@ -33,24 +31,25 @@ void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
 
     for (auto& buffer : buffer_list)
     {
-        buffers[buffer->id()] = buffer;
-        client_queue.push_back(buffer->id());
+        client_queue.push_back(buffer);
     }
 }
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list)
- : in_use_by_client(0)
+ : in_use_by_client(0),
+   swapper_size(buffer_list.size())
 {
     initialize_queues(buffer_list);
 }
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
-    in_use_by_client(0)
+    in_use_by_client(0),
+    swapper_size(buffer_list.size())
 {
     initialize_queues(buffer_list);
 }
 
-void mc::BufferSwapperMulti::client_acquire(std::shared_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
+std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -58,18 +57,19 @@ void mc::BufferSwapperMulti::client_acquire(std::shared_ptr<mc::Buffer>& buffer_
      * Don't allow the client to acquire all the buffers, because then the
      * compositor won't have a buffer to display.
      */
-    while (client_queue.empty() || in_use_by_client == buffers.size() - 1)
+    while (client_queue.empty() || in_use_by_client == swapper_size - 1)
     {
         client_available_cv.wait(lk);
     }
 
-    dequeued_buffer = client_queue.front();
+    auto dequeued_buffer = client_queue.front();
     client_queue.pop_front();
-    buffer_reference = buffers[dequeued_buffer];
     in_use_by_client++;
+
+    return dequeued_buffer;
 }
 
-void mc::BufferSwapperMulti::client_release(BufferID queued_buffer)
+void mc::BufferSwapperMulti::client_release(std::shared_ptr<Buffer> const& queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -85,9 +85,11 @@ void mc::BufferSwapperMulti::client_release(BufferID queued_buffer)
      */
 }
 
-void mc::BufferSwapperMulti::compositor_acquire(std::shared_ptr<mc::Buffer>& buffer_reference, BufferID& dequeued_buffer)
+std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
+
+    std::shared_ptr<mc::Buffer> dequeued_buffer;
 
     if (compositor_queue.empty())
     {
@@ -100,10 +102,10 @@ void mc::BufferSwapperMulti::compositor_acquire(std::shared_ptr<mc::Buffer>& buf
         compositor_queue.pop_front();
     }
 
-    buffer_reference = buffers[dequeued_buffer];
+    return dequeued_buffer;
 }
 
-void mc::BufferSwapperMulti::compositor_release(BufferID released_buffer)
+void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     client_queue.push_back(released_buffer);
