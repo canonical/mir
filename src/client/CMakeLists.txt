@@ -89,7 +89,7 @@ set(
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
-  
+
   mirprotobuf
 
   ${DRM_LIBRARIES}
