@@ -110,7 +110,7 @@ private:
 
     std::shared_ptr<mir::client::Logger> logger;
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
-    
+
     mir::protobuf::SurfaceSetting configure_result;
 
     // Cache of latest SurfaceSettings returned from the server
