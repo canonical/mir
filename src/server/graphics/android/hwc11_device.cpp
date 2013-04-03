@@ -80,14 +80,13 @@ geom::Size mga::HWC11Device::display_size()
 {
     static uint32_t const size_request[3] = { HWC_DISPLAY_WIDTH,
                                               HWC_DISPLAY_HEIGHT,
-                                              HWC_DISPLAY_NO_ATTRIBUTE };
+                                              HWC_DISPLAY_NO_ATTRIBUTE};
+
     int size_values[2];
-    auto rc = hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
+    /* note: some hwc modules (adreno320) do not accept any other request list other than what surfaceflinger's is,
+     * despite what the hwc header says. from what I've seen so far, this is harmless, other than a logcat msg */ 
+    hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
                                  (uint32_t*) &size_request, (int*) &size_values);
-    if (rc != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display dimensions")); 
-    }
 
     return geom::Size{geom::Width{size_values[0]}, geom::Height{size_values[1]}};
 }

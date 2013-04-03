@@ -269,18 +269,3 @@ TEST_F(HWCDevice, test_hwc_device_display_width_height)
     EXPECT_EQ(size.height.as_uint32_t(), static_cast<unsigned int>(display_height));
 }
 }
-
-TEST_F(HWCDevice, test_hwc_device_display_width_height_failure)
-{
-    using namespace testing;
-
-    mga::HWC11Device device(mock_device);
- 
-    EXPECT_CALL(*mock_device, getDisplayAttributes_interface(mock_device.get(),_,_,_,_))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    EXPECT_THROW({
-        device.display_size();
-    }, std::runtime_error);
-}
