@@ -51,15 +51,10 @@ list(APPEND MIRSERVER_ARCHIVES
   mirfrontend
   mirgraphics
   mirinput
+  mirinputandroidtransport
   mirsurfaces
   mirtime
 )
-
-if (NOT MIR_DISABLE_INPUT)
-list(APPEND MIRSERVER_ARCHIVES
-  mirinputandroidtransport
-)
-endif()
 
 list(APPEND MIRSERVER_LINKS
   mirplatformgraphics

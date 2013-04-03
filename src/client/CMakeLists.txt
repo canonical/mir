@@ -91,15 +91,13 @@ set(
   ${PROTOBUF_LIBRARIES}
 
   mirprotobuf
+  mirinputandroidtransport
 
   ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}
  
   3rd_party
 )
-
-list(APPEND MIR_CLIENT_LIBRARIES
-  mirinputandroidtransport)
 
 target_link_libraries(
   mirclient
