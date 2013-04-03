@@ -19,7 +19,7 @@
 
 #include "android_buffer_handle_default.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "mir/compositor/native_buffer_handle.h"
+#include "native_buffer_handle.h"
 
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;

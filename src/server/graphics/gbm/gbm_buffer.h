@@ -28,6 +28,7 @@
 
 namespace mir
 {
+
 namespace graphics
 {
 namespace gbm
@@ -57,6 +58,7 @@ public:
 
     virtual void bind_to_texture();
 
+    virtual std::shared_ptr<compositor::NativeBufferHandle> native_buffer_handle() const;
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     std::unique_ptr<BufferTextureBinder> const texture_binder;

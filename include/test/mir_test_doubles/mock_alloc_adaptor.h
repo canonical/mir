@@ -21,7 +21,6 @@
 
 #include "src/server/graphics/android/graphic_alloc_adaptor.h"
 #include "src/server/graphics/android/android_buffer.h"
-#include "mir/compositor/native_buffer_handle.h"
 
 #include <system/window.h>
 #include <gmock/gmock.h>

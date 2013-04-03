@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/native_buffer_handle.h"
+#include "src/server/graphics/android/native_buffer_handle.h"
 #include "src/server/graphics/android/android_alloc_adaptor.h"
 
 #include "mir_test_doubles/mock_android_alloc_device.h"

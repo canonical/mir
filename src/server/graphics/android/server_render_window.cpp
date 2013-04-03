@@ -18,9 +18,9 @@
  */
 
 #include "server_render_window.h"
+#include "native_buffer_handle.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/native_buffer_handle.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

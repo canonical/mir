@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/native_buffer_handle.h"
+#include "native_buffer_handle.h"
 #include "android_alloc_adaptor.h"
 #include "android_buffer_handle_default.h"
 
