@@ -52,7 +52,7 @@ struct mir::DisplayServer::Private
 
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mc::Compositor> compositor;
-    std::shared_ptr<frontend::Shell> shell;    
+    std::shared_ptr<frontend::Shell> shell;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::mutex exit_guard;
