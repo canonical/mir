@@ -26,7 +26,7 @@ namespace mc = mir::compositor;
 
 TEST(ClientBufferTracker, just_added_buffer_is_known_by_client)
 {
-    mf::ClientBufferTracker tracker;
+    mf::ClientBufferTracker tracker(3);
     mc::BufferID const id{5};
 
     tracker.add(id);
@@ -35,7 +35,7 @@ TEST(ClientBufferTracker, just_added_buffer_is_known_by_client)
 
 TEST(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 {
-    mf::ClientBufferTracker tracker;
+    mf::ClientBufferTracker tracker(3);
 
     tracker.add(mc::BufferID{5});
     EXPECT_FALSE(tracker.client_has(mc::BufferID{6}));
@@ -43,7 +43,7 @@ TEST(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 
 TEST(ClientBufferTracker, tracks_sequence_of_buffers)
 {
-    mf::ClientBufferTracker tracker;
+    mf::ClientBufferTracker tracker(3);
     mc::BufferID const one{1};
     mc::BufferID const two{2};
     mc::BufferID const three{3};
@@ -61,7 +61,7 @@ TEST(ClientBufferTracker, tracks_sequence_of_buffers)
 
 TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
 {
-    mf::ClientBufferTracker tracker;
+    mf::ClientBufferTracker tracker(3);
 
     mc::BufferID const one{1};
     mc::BufferID const two{2};
@@ -84,4 +84,25 @@ TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
     EXPECT_TRUE(tracker.client_has(two));
     EXPECT_TRUE(tracker.client_has(three));
     EXPECT_TRUE(tracker.client_has(four));
+}
+
+TEST(ClientBufferTracker, tracks_correct_number_of_buffers)
+{
+    mc::BufferID ids[10];
+    for (unsigned int i = 0; i < 10; ++i)
+        ids[i] = mc::BufferID{i};
+
+    for (unsigned int tracker_size = 2; tracker_size < 10; ++tracker_size)
+    {
+        mf::ClientBufferTracker tracker{tracker_size};
+
+        for (unsigned int i = 0; i < tracker_size; ++i)
+            tracker.add(ids[i]);
+
+        tracker.add(ids[tracker_size]);
+
+        EXPECT_FALSE(tracker.client_has(ids[0]));
+        for (unsigned int i = 1; i <= tracker_size; ++i)
+            EXPECT_TRUE(tracker.client_has(ids[i]));
+    }
 }

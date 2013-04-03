@@ -51,7 +51,7 @@ mir::frontend::SessionMediator::SessionMediator(
     buffer_allocator(buffer_allocator),
     report(report),
     resource_cache(resource_cache),
-    client_tracker(std::make_shared<ClientBufferTracker>())
+    client_tracker(std::make_shared<ClientBufferTracker>(3))
 {
 }
 

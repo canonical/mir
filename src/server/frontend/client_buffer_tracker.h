@@ -40,7 +40,7 @@ namespace frontend
 class ClientBufferTracker
 {
 public:
-    ClientBufferTracker();
+    ClientBufferTracker(unsigned int client_cache_size);
 
     ClientBufferTracker(ClientBufferTracker const&) = delete;
     ClientBufferTracker& operator=(ClientBufferTracker const&) = delete;
@@ -57,6 +57,7 @@ private:
     std::list<uint32_t>::iterator find_buffer(compositor::BufferID const& id);
 
     std::list<uint32_t> ids;
+    unsigned int const cache_size;
 };
 
 }

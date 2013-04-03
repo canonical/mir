@@ -22,8 +22,9 @@
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 
-mf::ClientBufferTracker::ClientBufferTracker()
-    : ids()
+mf::ClientBufferTracker::ClientBufferTracker(unsigned int client_cache_size)
+    : ids(),
+      cache_size{client_cache_size}
 {
 }
 
@@ -40,7 +41,7 @@ void mf::ClientBufferTracker::add(mc::BufferID const& id)
     {
         ids.push_front(id.as_uint32_t());
     }
-    if (ids.size() > 3)
+    if (ids.size() > cache_size)
         ids.pop_back();
 }
 
