@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/graphics/android/display_info_provider.h"
 #include "src/server/graphics/android/android_display_factory.h"
 #include "src/server/graphics/android/hwc_factory.h"
 #include "src/server/graphics/android/android_display_allocator.h"
@@ -57,6 +58,12 @@ struct MockDisplayAllocator: public mga::DisplayAllocator
     MOCK_CONST_METHOD1(create_hwc_display, std::shared_ptr<mga::HWCDisplay>(std::shared_ptr<mga::HWCDevice> const&));
 };
 
+struct MockFNWFactory : public mga::FramebufferDeviceFactory
+{
+    MOCK_CONST_METHOD0(create_fb_native_window,
+                    std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplayInfoProvider> const&));
+};
+
 class AndroidDisplayFactoryTest : public ::testing::Test
 {
 public:
@@ -73,6 +80,7 @@ public:
 
     std::shared_ptr<MockDisplayAllocator> const mock_display_allocator;
     std::shared_ptr<MockHWCFactory> const mock_hwc_factory;
+    std::shared_ptr<MockFNWFactary> const mock_fnw_factory;
     mt::HardwareAccessMock hw_access_mock;
 };
 }
@@ -136,17 +144,19 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
 
     std::shared_ptr<mga::HWCDevice> mock_hwc_device;
-
+    auto stub_anativewindow = std::make_shared<ANativeWindow>();
+   
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(1)
         .WillOnce(Return(mock_hwc_device));
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(mock_hwc_device))
         .Times(1)
-        .WillOnce(Return(mock_anativewindow));
-    EXPECT_CALL(*mock_display_allocator, create_hwc_display(mock_hwc_device, mock_anativewindow))
+        .WillOnce(Return(stub_anativewindow));
+    EXPECT_CALL(*mock_display_allocator, create_hwc_display(mock_hwc_device, stub_anativewindow))
         .Times(1);
 
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory);
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator,
+                                               mock_hwc_factory, mock_fnw_factory);
     display_factory.create_display();
 }
 
