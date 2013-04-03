@@ -16,6 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include <algorithm>
+
 #include "client_buffer_tracker.h"
 #include "mir/compositor/buffer_id.h"
 
@@ -30,7 +32,7 @@ mf::ClientBufferTracker::ClientBufferTracker(unsigned int client_cache_size)
 
 void mf::ClientBufferTracker::add(mc::BufferID const& id)
 {
-    auto existing_id = find_buffer(id);
+    auto existing_id = std::find(ids.begin(), ids.end(), id);
 
     if (existing_id != ids.end())
     {
@@ -39,22 +41,13 @@ void mf::ClientBufferTracker::add(mc::BufferID const& id)
     }
     else
     {
-        ids.push_front(id.as_uint32_t());
+        ids.push_front(id);
     }
     if (ids.size() > cache_size)
         ids.pop_back();
 }
 
-bool mf::ClientBufferTracker::client_has(mc::BufferID const& id)
+bool mf::ClientBufferTracker::client_has(mc::BufferID const& id) const
 {
-    return find_buffer(id) != ids.end();
-}
-
-std::list<uint32_t>::iterator mf::ClientBufferTracker::find_buffer(compositor::BufferID const& id)
-{
-    auto iterator = ids.begin();
-
-    for (; iterator != ids.end() && *iterator != id.as_uint32_t(); ++iterator);
-
-    return iterator;
+    return std::find(ids.begin(), ids.end(), id) != ids.end();
 }

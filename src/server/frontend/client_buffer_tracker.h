@@ -49,14 +49,10 @@ public:
     ///
     /// Typically this should be done just prior to or just after sending the buffer information
     void add(compositor::BufferID const& id);
-    // This should be const, but cannot, as find_buffer cannot be const.
-    bool client_has(compositor::BufferID const& id);
+    bool client_has(compositor::BufferID const& id) const;
 private:
-    // This should be const, but cannot:
-    // libstdc++ does not yet implement C++11's list.erase(const_iterator), needed for add()
-    std::list<uint32_t>::iterator find_buffer(compositor::BufferID const& id);
 
-    std::list<uint32_t> ids;
+    std::list<compositor::BufferID> ids;
     unsigned int const cache_size;
 };
 
