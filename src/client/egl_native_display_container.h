@@ -31,10 +31,10 @@ class EGLNativeDisplayContainer
 public:
     virtual ~EGLNativeDisplayContainer() {}
 
-    virtual mir_toolkit::MirEGLNativeDisplayType create(mir_toolkit::MirConnection* connection) = 0;
-    virtual void release(mir_toolkit::MirEGLNativeDisplayType display) = 0;
+    virtual MirEGLNativeDisplayType create(MirConnection* connection) = 0;
+    virtual void release(MirEGLNativeDisplayType display) = 0;
 
-    virtual bool validate(mir_toolkit::MirEGLNativeDisplayType display) const = 0;
+    virtual bool validate(MirEGLNativeDisplayType display) const = 0;
 
     static EGLNativeDisplayContainer& instance();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,32 +16,36 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_SURFACE_H_
-#define MIR_CLIENT_CLIENT_SURFACE_H_
-
-#include "mir_toolkit/mir_client_library.h"
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_ALLOCATOR_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_ALLOCATOR_H_
 
 #include <memory>
+
 namespace mir
 {
-namespace client
+namespace graphics
 {
-class ClientBuffer;
-class ClientSurface
+namespace android
 {
-  public:
-    virtual MirSurfaceParameters get_parameters() const = 0;
-    virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
-    virtual MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context) = 0;
-  protected:
-    ClientSurface() {}
-    virtual ~ClientSurface() {}
 
-    ClientSurface(const ClientSurface&) = delete;
-    ClientSurface& operator=(const ClientSurface&) = delete;
+class AndroidDisplay;
+class HWCDevice;
+class HWCDisplay;
+class DisplayAllocator
+{
+public:
+    DisplayAllocator() = default;
+    virtual ~DisplayAllocator() {}
+
+    virtual std::shared_ptr<AndroidDisplay> create_gpu_display() const = 0;
+    virtual std::shared_ptr<HWCDisplay> create_hwc_display(std::shared_ptr<HWCDevice> const&) const = 0;
+
+private:
+    DisplayAllocator(DisplayAllocator const&) = delete;
+    DisplayAllocator& operator=(DisplayAllocator const&) = delete; 
 };
 
 }
 }
-
-#endif /* MIR_CLIENT_CLIENT_SURFACE_H_ */
+}
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_ALLOCATOR_H_ */

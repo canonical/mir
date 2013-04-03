@@ -104,7 +104,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
 
     EXPECT_CALL(
         event_filter,
-        handles(KeyDownEvent()))
+        handles(mt::KeyDownEvent()))
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
@@ -125,7 +125,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 
     EXPECT_CALL(
         event_filter,
-        handles(ButtonDownEvent()))
+        handles(mt::ButtonDownEvent()))
             .Times(1)
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
 
@@ -148,10 +148,10 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
         InSequence seq;
 
         EXPECT_CALL(event_filter,
-                    handles(MotionEvent(100, 100)))
+                    handles(mt::MotionEvent(100, 100)))
             .WillOnce(Return(false));
         EXPECT_CALL(event_filter,
-                    handles(MotionEvent(200, 100)))
+                    handles(mt::MotionEvent(200, 100)))
             .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
     }
 

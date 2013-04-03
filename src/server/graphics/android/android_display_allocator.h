@@ -13,13 +13,30 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_
 
-#ifndef MIR_ANDROID_UBUNTU_LOOPER_H_
-#define MIR_ANDROID_UBUNTU_LOOPER_H_
+#include "display_allocator.h"
 
-#include <utils/Looper.h>
+namespace mir
+{
+namespace graphics
+{
+namespace android
+{
 
-#endif /* MIR_ANDROID_UBUNTU_LOOPER_H_ */
+class AndroidDisplayAllocator : public DisplayAllocator
+{
+public:
+    std::shared_ptr<AndroidDisplay> create_gpu_display() const; 
+    std::shared_ptr<HWCDisplay> create_hwc_display(std::shared_ptr<HWCDevice> const&) const;
+
+};
+
+}
+}
+}
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_ */

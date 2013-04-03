@@ -19,7 +19,7 @@
 
 #include "mir_wait_handle.h"
 
-mir_toolkit::MirWaitHandle::MirWaitHandle() :
+MirWaitHandle::MirWaitHandle() :
     guard(),
     wait_condition(),
     expecting(0),
@@ -27,18 +27,18 @@ mir_toolkit::MirWaitHandle::MirWaitHandle() :
 {
 }
 
-mir_toolkit::MirWaitHandle::~MirWaitHandle()
+MirWaitHandle::~MirWaitHandle()
 {
 }
 
-void mir_toolkit::MirWaitHandle::expect_result()
+void MirWaitHandle::expect_result()
 {
     std::unique_lock<std::mutex> lock(guard);
 
     expecting++;
 }
 
-void mir_toolkit::MirWaitHandle::result_received()
+void MirWaitHandle::result_received()
 {
     std::unique_lock<std::mutex> lock(guard);
 
@@ -46,7 +46,7 @@ void mir_toolkit::MirWaitHandle::result_received()
     wait_condition.notify_all();
 }
 
-void mir_toolkit::MirWaitHandle::wait_for_result()
+void MirWaitHandle::wait_for_result()
 {
     std::unique_lock<std::mutex> lock(guard);
 

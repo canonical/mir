@@ -13,13 +13,15 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "android_hwc_factory.h"
+#include "hwc11_device.h"
 
-#ifndef MIR_ANDROID_UBUNTU_LOOPER_H_
-#define MIR_ANDROID_UBUNTU_LOOPER_H_
+namespace mga=mir::graphics::android;
 
-#include <utils/Looper.h>
-
-#endif /* MIR_ANDROID_UBUNTU_LOOPER_H_ */
+std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const
+{
+    return std::make_shared<mga::HWC11Device>(hwc_device);
+}

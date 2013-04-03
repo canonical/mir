@@ -13,13 +13,36 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_
 
-#ifndef MIR_ANDROID_UBUNTU_LOOPER_H_
-#define MIR_ANDROID_UBUNTU_LOOPER_H_
+#include <memory>
+#include <hardware/hwcomposer.h>
 
-#include <utils/Looper.h>
+namespace mir
+{
+namespace graphics
+{
+namespace android
+{
 
-#endif /* MIR_ANDROID_UBUNTU_LOOPER_H_ */
+class HWCDevice;
+class HWCFactory
+{
+public:
+    HWCFactory() = default;
+    virtual ~HWCFactory() {}
+
+    virtual std::shared_ptr<HWCDevice> create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const = 0;
+private:
+    HWCFactory(HWCFactory const&) = delete;
+    HWCFactory& operator=(HWCFactory const&) = delete; 
+};
+
+}
+}
+}
+#endif /* MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_ */

@@ -16,37 +16,35 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_FACTORY_H_
 
-#include "display_selector.h"
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-
 class Display;
 
 namespace android
 {
 
-class FBFactory;
-
-class AndroidDisplaySelector : public DisplaySelector
+class DisplayFactory
 {
 public:
-    AndroidDisplaySelector(std::shared_ptr<FBFactory> const& factory);
-    std::shared_ptr<Display> primary_display();
+    virtual ~DisplayFactory() {}
 
-private:
-    std::shared_ptr<FBFactory> fb_factory;
-    std::shared_ptr<Display> primary_hwc_display;
-    std::function<std::shared_ptr<Display>()> allocate_primary_fb;
+    virtual std::shared_ptr<Display> create_display() const = 0;
+
+protected:
+    DisplayFactory() = default;
+    DisplayFactory& operator=(DisplayFactory const&) = delete;
+    DisplayFactory(DisplayFactory const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_SELECTOR_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_FACTORY_H_ */

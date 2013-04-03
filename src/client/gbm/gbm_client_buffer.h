@@ -39,7 +39,7 @@ class GBMClientBuffer : public AgingBuffer
 {
 public:
     GBMClientBuffer(std::shared_ptr<DRMFDHandler> const& drm_fd_handler,
-                    std::shared_ptr<mir_toolkit::MirBufferPackage> const& buffer_package,
+                    std::shared_ptr<MirBufferPackage> const& buffer_package,
                     geometry::Size size,
                     geometry::PixelFormat pf);
 
@@ -47,14 +47,14 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    std::shared_ptr<mir_toolkit::MirBufferPackage> get_buffer_package() const;
+    std::shared_ptr<MirBufferPackage> get_buffer_package() const;
     MirNativeBuffer get_native_handle();
 
     GBMClientBuffer(const GBMClientBuffer&) = delete;
     GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;
 private:
     const std::shared_ptr<DRMFDHandler> drm_fd_handler;
-    const std::shared_ptr<mir_toolkit::MirBufferPackage> creation_package;
+    const std::shared_ptr<MirBufferPackage> creation_package;
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
 };

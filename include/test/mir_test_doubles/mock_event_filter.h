@@ -36,11 +36,7 @@ struct MockEventFilter : public mir::input::EventFilter
     MOCK_METHOD1(handles, bool(const MirEvent&));
 };
 }
-}
-}
 
-namespace
-{
 MATCHER_P(IsKeyEventWithKey, key, "")
 {
     if (arg.type != MIR_INPUT_EVENT_TYPE_KEY)
@@ -69,6 +65,7 @@ MATCHER_P2(MotionEvent, dx, dy, "")
         return false;
     auto coords = &arg.details.motion.pointer_coordinates[0];
     return (coords->x == dx) && (coords->y == dy);
+}
 }
 }
 
