@@ -42,6 +42,9 @@ class ClientBufferTracker
 public:
     ClientBufferTracker();
 
+    ClientBufferTracker(ClientBufferTracker const&) = delete;
+    ClientBufferTracker& operator=(ClientBufferTracker const&) = delete;
+
     /// Add a BufferID to the list of buffers known by the client.
     ///
     /// Typically this should be done just prior to or just after sending the buffer information
