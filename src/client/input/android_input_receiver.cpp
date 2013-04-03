@@ -79,7 +79,6 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
         handled_event = true;
     }
 
-
     // So far once we have sent an event to the client there is no chance for redispatch
     // so the client handles all events.
     
