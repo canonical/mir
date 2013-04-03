@@ -9,7 +9,7 @@ add_subdirectory(android)
 else()
 list(
   APPEND INPUT_SOURCES
-  dummy_input_manager.cpp
+  null_input_platform.cpp
 )
 endif()
 

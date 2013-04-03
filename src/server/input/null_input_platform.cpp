@@ -16,27 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/input/input_manager.h"
+#include "mir/input/null_input_manager.h"
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-
-namespace
-{
-class DummyInputManager : public mi::InputManager
-{
-    void stop() {}
-    void start() {}
-    virtual std::shared_ptr<mi::InputChannel> make_input_channel() { return std::shared_ptr<mi::InputChannel>(); }
-    void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& /* session */, std::shared_ptr<mi::SurfaceTarget> const& /* surface */)
-    {
-    }
-};
-}
 
 std::shared_ptr<mi::InputManager> mi::create_input_manager(
     const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& ,
     std::shared_ptr<mg::ViewableArea> const& )
 {
-    return std::make_shared<DummyInputManager>();
+    return std::make_shared<mi::NullInputManager>();
 }

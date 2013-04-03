@@ -23,7 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/display.h"
-#include "mir/input/input_manager.h"
+#include "mir/input/null_input_manager.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
 #include "mir/default_server_configuration.h"
@@ -380,20 +380,6 @@ std::shared_ptr<mf::Communicator> RenderSurfacesServerConfiguration::the_communi
 // Stub out input.
 std::shared_ptr<mi::InputManager> RenderSurfacesServerConfiguration::the_input_manager()
 {
-    struct NullInputManager : public mi::InputManager
-    {
-        void start() {}
-        void stop() {}
-        std::shared_ptr<mi::InputChannel> make_input_channel()
-        {
-            return std::shared_ptr<mi::InputChannel>();
-        }
-        void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& /* session */,
-                                std::shared_ptr<mi::SurfaceTarget> const& /* surface */)
-        {
-        }
-    };
-
-    return std::make_shared<NullInputManager>();
+    return std::make_shared<mi::NullInputManager>();
 }
 ///\internal [NullInputManager_tag]
