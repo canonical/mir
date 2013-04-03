@@ -33,7 +33,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
-
+#include "mir/frontend/client_constants.h"
 #include "client_buffer_tracker.h"
 
 #include <boost/throw_exception.hpp>
@@ -51,7 +51,7 @@ mir::frontend::SessionMediator::SessionMediator(
     buffer_allocator(buffer_allocator),
     report(report),
     resource_cache(resource_cache),
-    client_tracker(std::make_shared<ClientBufferTracker>(3))
+    client_tracker(std::make_shared<ClientBufferTracker>(mir::client_buffer_cache_size))
 {
 }
 
