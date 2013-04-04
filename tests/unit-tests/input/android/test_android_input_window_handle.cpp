@@ -70,6 +70,8 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     // InputWindowHandle's destructor will close() it.
     char *filename = strdup("/tmp/mir_unit_test_XXXXXX");
     int const testing_server_fd = mkstemp(filename);
+    // We don't actually need the file to exist after this test.
+    unlink(filename);
 
     MockSurfaceTarget surface;
 
@@ -94,6 +96,5 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameRight - info->frameLeft));
     EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameBottom - info->frameTop));
 
-    unlink(filename);
     free(filename);
 }
