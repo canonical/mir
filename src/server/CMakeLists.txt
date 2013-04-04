@@ -59,8 +59,6 @@ list(APPEND MIRSERVER_LINKS
   mirplatformgraphics
   mirprotobuf
   3rd_party
-  ${Boost_LIBRARIES}
-  ${GLog_LIBRARY}
 )
 
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
