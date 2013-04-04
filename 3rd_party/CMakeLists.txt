@@ -1,7 +1,6 @@
 
 # Warnings in 3rd party code are not to be considered errors. :(
 string (REPLACE " -Werror " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-#string (REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
 list(
   APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES
