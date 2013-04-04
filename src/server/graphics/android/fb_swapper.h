@@ -22,6 +22,7 @@
 
 #include "mir/compositor/buffer_swapper.h"
 
+#include <condition_variable>
 #include <queue>
 #include <vector>
 #include <mutex>
@@ -58,6 +59,8 @@ private:
     void composition_bypass_unsupported();
 
     std::mutex queue_lock;
+    std::condition_variable cv;
+
     std::queue<std::shared_ptr<compositor::Buffer>> queue;
 };
 

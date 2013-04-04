@@ -114,24 +114,35 @@ TEST_F(FBSwapperTest, client_acquires_throw)
 
 TEST_F(FBSwapperTest, synctest)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> test_buffers{buffer1, buffer2, buffer3};
+    std::vector<std::shared_ptr<mc::Buffer>> test_buffers{buffer1, buffer2};
     mga::FBSwapper fb_swapper(test_buffers);
 
     std::vector<std::shared_ptr<mc::Buffer>> blist;
-    for(auto i=0u; i < 300; ++i)
+    std::mutex mut;
+    for(auto i=0u; i < 150; ++i)
     {
-        auto buf = fb_swapper.compositor_acquire();
-        blist.push_back(buf);
+        auto buf1 = fb_swapper.compositor_acquire();
+        auto buf2 = fb_swapper.compositor_acquire();
+
         auto f = 
             std::async(std::launch::async, [&]()
             {
-                fb_swapper.compositor_release(buf);
+                /* driver will release in order */
+                fb_swapper.compositor_release(buf1);
+                fb_swapper.compositor_release(buf2);
             });
-        buf = fb_swapper.compositor_acquire();
-        blist.push_back(buf);
-        fb_swapper.compositor_release(buf);
+
+        //this line will wait if f has not run
+        auto buf3 = fb_swapper.compositor_acquire();
+        f.wait(); //make sure buf3 is released after buf2 to maintain order
+        fb_swapper.compositor_release(buf3);
+
+        blist.push_back(buf1);
+        blist.push_back(buf2);
+        blist.push_back(buf3);
     }
 
+    //This chunk of code makes sure "ABABA..." or "BABAB..." pattern was produced 
     auto modcounter = 0u;
     for(auto i : test_buffers)
     {
@@ -148,41 +159,3 @@ TEST_F(FBSwapperTest, synctest)
         modcounter++;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
