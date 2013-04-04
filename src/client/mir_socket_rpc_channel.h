@@ -22,6 +22,7 @@
 
 #include "mir_basic_rpc_channel.h"
 #include "mir_logger.h"
+#include "mir/event.h"
 
 #include <boost/asio.hpp>
 
@@ -78,6 +79,8 @@ private:
     size_t read_message_header();
 
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
+
+    mir::EventHandler *event_handler;
 };
 
 }

@@ -41,10 +41,11 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel(
     std::shared_ptr<Logger> const& log,
     mir::EventHandler *event_handler) :
     log(log),
-    pending_calls(log, event_handler),
+    pending_calls(log),
     work(io_service),
     endpoint(endpoint),
-    socket(io_service)
+    socket(io_service),
+    event_handler(event_handler)
 {
     socket.connect(endpoint);
 
@@ -252,7 +253,16 @@ void mcl::MirSocketRpcChannel::read_message()
 
         log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
 
-        pending_calls.complete_response(result);
+        if (result.id() == 0)  // It's an event
+        {
+            log->error() << __PRETTY_FUNCTION__
+                         << "TODO: implement event handling."
+                         << std::endl;
+        }
+        else
+        {
+            pending_calls.complete_response(result);
+        }
     }
     catch (std::exception const& x)
     {
