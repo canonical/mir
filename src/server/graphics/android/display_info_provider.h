@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_DISPLAY_INFO_PROVIDER_H_
 
 #include "mir/geometry/size.h"
+#include "mir/geometry/pixel_format.h"
 
 namespace mir
 {
@@ -34,6 +35,7 @@ public:
     virtual ~DisplayInfoProvider() {}
 
     virtual geometry::Size display_size() = 0; 
+    virtual geometry::PixelFormat display_format() = 0; 
 
 protected:
     DisplayInfoProvider() = default;

@@ -45,6 +45,13 @@ public:
         : mock_buffer_allocator(std::make_shared<mtd::MockAllocAdaptor>()),
           mock_display_info_provider(std::make_shared<MockDisplayInfoProvider>())
     {
+        using namespace testing;
+        ON_CALL(*mock_display_info_provider, display_format())
+            .WillByDefault(Return(geom::PixelFormat::abgr_8888));
+        ON_CALL(*mock_display_info_provider, display_size())
+            .WillByDefault(Return(geom::Size{geom::Width{2}, geom::Height{3}}));
+        ON_CALL(*mock_buffer_allocator, alloc_buffer(_,_,_))
+            .WillByDefault(Return(std::shared_ptr<mga::AndroidBufferHandle>()));
     }
 
     std::shared_ptr<mtd::MockAllocAdaptor> mock_buffer_allocator;

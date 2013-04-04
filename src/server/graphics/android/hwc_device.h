@@ -34,6 +34,7 @@ public:
     HWCDevice() = default;
     virtual ~HWCDevice() {}
     virtual geometry::Size display_size() = 0; 
+    virtual geometry::PixelFormat display_format() = 0; 
     virtual void wait_for_vsync() = 0;
     virtual void commit_frame() = 0;
 private:

@@ -45,6 +45,8 @@ public:
     ~HWC11Device();
 
     geometry::Size display_size(); 
+    geometry::PixelFormat display_format();
+ 
     void wait_for_vsync();
     void commit_frame();
     void notify_vsync();

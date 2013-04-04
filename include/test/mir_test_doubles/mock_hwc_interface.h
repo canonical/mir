@@ -36,6 +36,7 @@ public:
     MOCK_METHOD0(wait_for_vsync, void());
     MOCK_METHOD0(commit_frame, void());
     MOCK_METHOD0(display_size, geometry::Size());
+    MOCK_METHOD0(display_format, geometry::PixelFormat());
 };
 
 }

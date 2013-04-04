@@ -18,14 +18,20 @@
  */
 
 #include "default_framebuffer_factory.h"
+#include "display_info_provider.h"
+#include "graphic_alloc_adaptor.h"
 
 namespace mga=mir::graphics::android;
 
-mga::DefaultFramebufferFactory::DefaultFramebufferFactory(std::shared_ptr<GraphicAllocAdaptor> const& /*buffer_allocator*/)
+mga::DefaultFramebufferFactory::DefaultFramebufferFactory(std::shared_ptr<GraphicAllocAdaptor> const& buffer_allocator)
+    : buffer_allocator(buffer_allocator)
 {
 }
 
-std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(std::shared_ptr<DisplayInfoProvider> const&)
+std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(std::shared_ptr<DisplayInfoProvider> const& info_provider)
 {
+    auto size = info_provider->display_size();
+    auto pf = info_provider->display_format();
+    buffer_allocator->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
     return std::make_shared<ANativeWindow>();
 }

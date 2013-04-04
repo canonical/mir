@@ -91,6 +91,12 @@ geom::Size mga::HWC11Device::display_size()
     return geom::Size{geom::Width{size_values[0]}, geom::Height{size_values[1]}};
 }
 
+geom::PixelFormat mga::HWC11Device::display_format()
+{
+    //TODODODODO
+    return geom::PixelFormat::invalid;
+}
+ 
 void mga::HWC11Device::notify_vsync()
 {
     std::unique_lock<std::mutex> lk(vsync_wait_mutex);
