@@ -43,8 +43,8 @@ class FBFactory  : public ::testing::Test
 {
 public:
     FBFactory()
-        : mock_buffer_allocator(std::make_shared<mtd::MockAllocAdaptor>()),
-          mock_display_info_provider(std::make_shared<MockDisplayInfoProvider>()),
+        : mock_buffer_allocator(std::make_shared<testing::NiceMock<mtd::MockAllocAdaptor>>()),
+          mock_display_info_provider(std::make_shared<testing::NiceMock<MockDisplayInfoProvider>>()),
           fake_fb_num(2)
     {
         using namespace testing;
