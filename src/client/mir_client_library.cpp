@@ -51,6 +51,11 @@ void assign_result(void *result, void **context)
         *context = result;
 }
 
+void handle_event(mir::Event const& e)
+{
+    (void)e; // TODO
+}
+
 }
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
@@ -62,7 +67,7 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
         MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(socket_file, log),
+            mcl::make_rpc_channel(socket_file, log, handle_event),
             log,
             client_platform_factory);
 
@@ -256,7 +261,7 @@ try
     auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
     MirConnection* connection = new MirConnection(
-        mcl::make_rpc_channel(server, log),
+        mcl::make_rpc_channel(server, log, handle_event),
         log,
         client_platform_factory);
 

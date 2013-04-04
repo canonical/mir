@@ -20,6 +20,7 @@
 
 #include <memory>
 #include "mir_protobuf.pb.h"
+#include "mir/event.h"
 
 namespace mir
 {
@@ -28,7 +29,9 @@ namespace client
 class Logger;
 
 std::shared_ptr<google::protobuf::RpcChannel>
-make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log);
+make_rpc_channel(std::string const& name,
+                 std::shared_ptr<Logger> const& log,
+                 mir::EventHandler *event_handler);
 }
 }
 

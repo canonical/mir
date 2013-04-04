@@ -241,7 +241,7 @@ struct MirClientSurfaceTest : public testing::Test
         /* connect client */
         logger = std::make_shared<mcl::ConsoleLogger>();
         platform_factory = std::make_shared<mt::StubClientPlatformFactory>();
-        channel = mcl::make_rpc_channel("./test_socket_surface", logger);
+        channel = mcl::make_rpc_channel("./test_socket_surface", logger, nullptr/*TODO*/);
         connection = std::make_shared<MirConnection>(channel, logger, platform_factory);
         MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                          connected_callback, 0);
