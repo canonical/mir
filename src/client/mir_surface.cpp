@@ -22,24 +22,30 @@
 #include "client_buffer.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
+#include "input/input_receiver_thread.h"
+#include "input/input_platform.h"
 
 #include <cassert>
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
+namespace mcli = mir::client::input;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-mir_toolkit::MirSurface::MirSurface(
+MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
     std::shared_ptr<mir::client::Logger> const& logger,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    MirSurfaceParameters const& params,
+    std::shared_ptr<mcli::InputPlatform> const& input_platform,
+    MirSurfaceParameters const & params,
+    MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
+      input_platform(input_platform),
       logger(logger)
 {
     mir::protobuf::SurfaceParameters message;
@@ -48,6 +54,9 @@ mir_toolkit::MirSurface::MirSurface(
     message.set_height(params.height);
     message.set_pixel_format(params.pixel_format);
     message.set_buffer_usage(params.buffer_usage);
+    
+    if (delegate)
+        handle_event_callback = std::bind(delegate->handle_input, this, std::placeholders::_1, delegate->context);
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
@@ -56,12 +65,14 @@ mir_toolkit::MirSurface::MirSurface(
     attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
 }
 
-mir_toolkit::MirSurface::~MirSurface()
+MirSurface::~MirSurface()
 {
+    if (input_thread)
+        input_thread->stop();
     release_cpu_region();
 }
 
-mir_toolkit::MirSurfaceParameters mir_toolkit::MirSurface::get_parameters() const
+MirSurfaceParameters MirSurface::get_parameters() const
 {
     return MirSurfaceParameters {
         0,
@@ -71,7 +82,7 @@ mir_toolkit::MirSurfaceParameters mir_toolkit::MirSurface::get_parameters() cons
         static_cast<MirBufferUsage>(surface.buffer_usage())};
 }
 
-char const * mir_toolkit::MirSurface::get_error_message()
+char const * MirSurface::get_error_message()
 {
     if (surface.has_error())
     {
@@ -80,17 +91,17 @@ char const * mir_toolkit::MirSurface::get_error_message()
     return error_message.c_str();
 }
 
-int mir_toolkit::MirSurface::id() const
+int MirSurface::id() const
 {
     return surface.id().value();
 }
 
-bool mir_toolkit::MirSurface::is_valid() const
+bool MirSurface::is_valid() const
 {
     return !surface.has_error();
 }
 
-void mir_toolkit::MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
+void MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
 {
     auto buffer = buffer_depository->current_buffer();
 
@@ -104,12 +115,12 @@ void mir_toolkit::MirSurface::get_cpu_region(MirGraphicsRegion& region_out)
     region_out.vaddr = secured_region->vaddr.get();
 }
 
-void mir_toolkit::MirSurface::release_cpu_region()
+void MirSurface::release_cpu_region()
 {
     secured_region.reset();
 }
 
-mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     release_cpu_region();
 
@@ -122,21 +133,21 @@ mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::next_buffer(mir_surface_lif
     return &next_buffer_wait_handle;
 }
 
-mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::get_create_wait_handle()
+MirWaitHandle* MirSurface::get_create_wait_handle()
 {
     return &create_wait_handle;
 }
 
 /* todo: all these conversion functions are a bit of a kludge, probably
          better to have a more developed geometry::PixelFormat that can handle this */
-geom::PixelFormat mir_toolkit::MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
+geom::PixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
 {
     if (pf == mir_pixel_format_abgr_8888)
         return geom::PixelFormat::abgr_8888;
     return geom::PixelFormat::invalid;
 }
 
-void mir_toolkit::MirSurface::process_incoming_buffer()
+void MirSurface::process_incoming_buffer()
 {
     auto const& buffer = surface.buffer();
 
@@ -159,7 +170,7 @@ void mir_toolkit::MirSurface::process_incoming_buffer()
     }
 }
 
-void mir_toolkit::MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
 {
     process_incoming_buffer();
 
@@ -167,10 +178,17 @@ void mir_toolkit::MirSurface::created(mir_surface_lifecycle_callback callback, v
     accelerated_window = platform->create_egl_native_window(this);
 
     callback(this, context);
+    
+    if (surface.fd_size() > 0 && handle_event_callback)
+    {
+        input_thread = input_platform->create_input_thread(surface.fd(0), handle_event_callback);
+        input_thread->start();
+    }
+
     create_wait_handle.result_received();
 }
 
-void mir_toolkit::MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
 {
     process_incoming_buffer();
 
@@ -178,25 +196,25 @@ void mir_toolkit::MirSurface::new_buffer(mir_surface_lifecycle_callback callback
     next_buffer_wait_handle.result_received();
 }
 
-mir_toolkit::MirWaitHandle* mir_toolkit::MirSurface::release_surface(
+MirWaitHandle* MirSurface::release_surface(
         mir_surface_lifecycle_callback callback,
         void * context)
 {
     return connection->release_surface(this, callback, context);
 }
 
-std::shared_ptr<mir_toolkit::MirBufferPackage> mir_toolkit::MirSurface::get_current_buffer_package()
+std::shared_ptr<MirBufferPackage> MirSurface::get_current_buffer_package()
 {
     auto buffer = buffer_depository->current_buffer();
     return buffer->get_buffer_package();
 }
 
-std::shared_ptr<mcl::ClientBuffer> mir_toolkit::MirSurface::get_current_buffer()
+std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
 {
     return buffer_depository->current_buffer();
 }
 
-void mir_toolkit::MirSurface::populate(MirBufferPackage& buffer_package)
+void MirSurface::populate(MirBufferPackage& buffer_package)
 {
     if (is_valid() && surface.has_buffer())
     {
@@ -225,7 +243,7 @@ void mir_toolkit::MirSurface::populate(MirBufferPackage& buffer_package)
     }
 }
 
-EGLNativeWindowType mir_toolkit::MirSurface::generate_native_window()
+EGLNativeWindowType MirSurface::generate_native_window()
 {
     return *accelerated_window;
 }

@@ -40,7 +40,7 @@ struct MesaNativeDisplayContainerSetup : public testing::Test
     }
 
     std::shared_ptr<mclg::MesaNativeDisplayContainer> const container;
-    mir_toolkit::MirConnection* connection;
+    MirConnection* connection;
 };
 
 }

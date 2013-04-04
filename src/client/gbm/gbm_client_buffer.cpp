@@ -124,7 +124,7 @@ struct GBMMemoryRegion : mcl::MemoryRegion
 
 mclg::GBMClientBuffer::GBMClientBuffer(
         std::shared_ptr<mclg::DRMFDHandler> const& drm_fd_handler,
-        std::shared_ptr<mir_toolkit::MirBufferPackage> const& package,
+        std::shared_ptr<MirBufferPackage> const& package,
         geom::Size size, geom::PixelFormat pf)
     : drm_fd_handler{drm_fd_handler},
       creation_package(std::move(package)),
@@ -166,7 +166,7 @@ geom::PixelFormat mclg::GBMClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
-std::shared_ptr<mir_toolkit::MirBufferPackage> mclg::GBMClientBuffer::get_buffer_package() const
+std::shared_ptr<MirBufferPackage> mclg::GBMClientBuffer::get_buffer_package() const
 {
     creation_package->age = age();
     return creation_package;

@@ -32,27 +32,8 @@ struct BufferSwapperConstruction : testing::Test
         buffer_a = std::make_shared<mtd::StubBuffer>();
         buffer_b = std::make_shared<mtd::StubBuffer>();
         buffer_c = std::make_shared<mtd::StubBuffer>();
-
-        id1 = buffer_a->id();
-        id2 = buffer_b->id();
-        id3 = buffer_c->id();
     }
 
-    bool check_ref(std::shared_ptr<mc::Buffer> buffer, mc::BufferID id)
-    {
-        if ((id == id1) && (buffer.get() == buffer_a.get()))
-            return true;
-        if ((id == id2) && (buffer.get() == buffer_b.get()))
-            return true;
-        if ((id == id3) && (buffer.get() == buffer_c.get()))
-            return true;
-
-        return false;
-    }
-
-    mc::BufferID id1;
-    mc::BufferID id2;
-    mc::BufferID id3;
     std::shared_ptr<mc::Buffer> buffer_a;
     std::shared_ptr<mc::Buffer> buffer_b;
     std::shared_ptr<mc::Buffer> buffer_c;
@@ -115,48 +96,29 @@ TEST_F(BufferSwapperConstruction, error_construction)
     }, std::logic_error);
 }
 
-TEST_F(BufferSwapperConstruction, references_match_ids_double)
+TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_double)
 {
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
 
-    mc::BufferID test_id_1, test_id_2;
-    std::shared_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2;
-    swapper.compositor_acquire(buffer_ref_1, test_id_1);
-    swapper.client_acquire(buffer_ref_2, test_id_2);
+    auto buffer_1 = swapper.compositor_acquire();
+    auto buffer_2 = swapper.client_acquire();
     /* swapper is now 'empty' */
 
-    /* test uniqueness of ids */
-    EXPECT_TRUE((test_id_1 == id1) || (test_id_1 == id2));
-    EXPECT_TRUE((test_id_2 == id1) || (test_id_2 == id2));
-    EXPECT_NE(test_id_1, test_id_2);
-
-    /* test id's match refs */
-    EXPECT_TRUE(check_ref(buffer_ref_1, test_id_1));
-    EXPECT_TRUE(check_ref(buffer_ref_2, test_id_2));
+    EXPECT_TRUE((buffer_a == buffer_1) || (buffer_b == buffer_1) );
+    EXPECT_TRUE((buffer_a == buffer_2) || (buffer_b == buffer_2) );
 }
 
-TEST_F(BufferSwapperConstruction, references_match_ids_triple)
+TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
 {
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
-    mc::BufferID test_id_1, test_id_2, test_id_3;
-    std::shared_ptr<mc::Buffer> buffer_ref_1, buffer_ref_2, buffer_ref_3;
-    swapper.compositor_acquire(buffer_ref_1, test_id_1);
-    swapper.client_acquire(buffer_ref_2, test_id_2);
-    swapper.client_release(test_id_2);
-    swapper.client_acquire(buffer_ref_3, test_id_3);
+    auto buffer_1 = swapper.compositor_acquire();
+    auto buffer_2 = swapper.client_acquire();
+    swapper.client_release(buffer_2);
+    auto buffer_3 = swapper.client_acquire();
     /* swapper is now 'empty' */
 
-    /* test uniqueness of ids */
-    EXPECT_TRUE((test_id_1 == id1) || (test_id_1 == id2) || (test_id_1 == id3));
-    EXPECT_TRUE((test_id_2 == id1) || (test_id_2 == id2) || (test_id_2 == id3));
-    EXPECT_TRUE((test_id_3 == id1) || (test_id_3 == id2) || (test_id_3 == id3));
-    EXPECT_NE(test_id_1, test_id_2);
-    EXPECT_NE(test_id_1, test_id_3);
-    EXPECT_NE(test_id_2, test_id_3);
-
-    /* test id's match refs */
-    EXPECT_TRUE(check_ref(buffer_ref_1, test_id_1));
-    EXPECT_TRUE(check_ref(buffer_ref_2, test_id_2));
-    EXPECT_TRUE(check_ref(buffer_ref_3, test_id_3));
+    EXPECT_TRUE((buffer_a == buffer_1) || (buffer_b == buffer_1) || (buffer_c == buffer_1));
+    EXPECT_TRUE((buffer_a == buffer_2) || (buffer_b == buffer_2) || (buffer_c == buffer_2));
+    EXPECT_TRUE((buffer_a == buffer_3) || (buffer_b == buffer_3) || (buffer_c == buffer_3));
 }

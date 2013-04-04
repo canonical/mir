@@ -167,10 +167,10 @@ class LightRefBase
 {
 public:
     inline LightRefBase() : mCount(0) { }
-    inline void incStrong(const void* id) const {
+    inline void incStrong(const void* /* id */) const {
         android_atomic_inc(&mCount);
     }
-    inline void decStrong(const void* id) const {
+    inline void decStrong(const void* /* id */) const {
         if (android_atomic_dec(&mCount) == 1) {
             delete static_cast<const T*>(this);
         }
@@ -187,8 +187,8 @@ protected:
 
 private:
     friend class ReferenceMover;
-    inline static void moveReferences(void* d, void const* s, size_t n,
-            const ReferenceConverterBase& caster) { }
+    inline static void moveReferences(void* /* d */, void const* /* s */, size_t /* n */,
+            const ReferenceConverterBase& /* caster */) { }
 
 private:
     mutable android_atomic_int32_t mCount;

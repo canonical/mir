@@ -37,16 +37,16 @@ public:
     {
         using namespace testing;
 
-        ON_CALL(*this, compositor_acquire(_,_))
-        .WillByDefault(SetArgReferee<0>(default_buffer));
-        ON_CALL(*this, client_acquire(_,_))
-        .WillByDefault(SetArgReferee<0>(default_buffer));
+        ON_CALL(*this, compositor_acquire())
+            .WillByDefault(Return(default_buffer));
+        ON_CALL(*this, client_acquire())
+            .WillByDefault(Return(default_buffer));
     };
 
-    MOCK_METHOD2(client_acquire,     void(std::shared_ptr<compositor::Buffer>& buffer_reference, compositor::BufferID& dequeued_buffer));
-    MOCK_METHOD1(client_release,     void(compositor::BufferID queued_buffer));
-    MOCK_METHOD2(compositor_acquire, void(std::shared_ptr<compositor::Buffer>& buffer_reference, compositor::BufferID& dequeued_buffer));
-    MOCK_METHOD1(compositor_release, void(compositor::BufferID queued_buffer));
+    MOCK_METHOD0(client_acquire,     std::shared_ptr<compositor::Buffer>());
+    MOCK_METHOD1(client_release,     void(std::shared_ptr<compositor::Buffer> const&));
+    MOCK_METHOD0(compositor_acquire, std::shared_ptr<compositor::Buffer>());
+    MOCK_METHOD1(compositor_release, void(std::shared_ptr<compositor::Buffer> const&));
     MOCK_METHOD0(shutdown, void());
 
 private:

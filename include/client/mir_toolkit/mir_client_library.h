@@ -22,10 +22,10 @@
 #include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
-/*
- * The C client API
+/**
+ * \addtogroup mir_toolkit
+ * @{
  */
-namespace mir_toolkit {
 extern "C" {
 #endif
 
@@ -124,6 +124,7 @@ int mir_egl_native_display_is_valid(MirEGLNativeDisplayType display);
 MirWaitHandle *mir_surface_create(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
+    MirEventDelegate const *event_handler,
     mir_surface_lifecycle_callback callback,
     void *context);
 
@@ -135,7 +136,8 @@ MirWaitHandle *mir_surface_create(
  *   \return                 The resulting surface
  */
 MirSurface *mir_surface_create_sync(MirConnection *connection,
-                                    MirSurfaceParameters const *params);
+                                    MirSurfaceParameters const *params,
+                                    MirEventDelegate const *event_handler);
 
 /**
  * Get a window type that can be used for OpenGL ES 2.0 acceleration.
@@ -265,8 +267,7 @@ MirSurfaceType mir_surface_get_type(MirSurface *surface);
 
 #ifdef __cplusplus
 }
-}
-using namespace mir_toolkit;
+/**@}*/
 #endif
 
 #endif /* MIR_CLIENT_LIBRARY_H */

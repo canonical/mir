@@ -52,6 +52,7 @@ Writing client applications
 
  - \ref mir_client_library.h "Mir API Documentation"
  - \subpage demo_client.c "demo_client.c: A simple mir client"
+ - \subpage render_surfaces-example "render_surfaces.cpp: A simple program using the mir library"
 
 Working on Mir code
 -------------------

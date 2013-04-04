@@ -22,6 +22,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include <memory>
+
 namespace mir
 {
 namespace client
@@ -30,9 +31,9 @@ class ClientBuffer;
 class ClientSurface
 {
   public:
-    virtual mir_toolkit::MirSurfaceParameters get_parameters() const = 0;
+    virtual MirSurfaceParameters get_parameters() const = 0;
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
-    virtual mir_toolkit::MirWaitHandle* next_buffer(mir_toolkit::mir_surface_lifecycle_callback callback, void * context) = 0;
+    virtual MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context) = 0;
   protected:
     ClientSurface() {}
     virtual ~ClientSurface() {}

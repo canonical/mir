@@ -43,6 +43,15 @@ public:
     hw_device_t& mock_hw_device;
 };
 
+class FailingHardwareModuleStub : public hw_module
+{
+public:
+    FailingHardwareModuleStub();
+    static int hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device);
+    static int hw_close(struct hw_device_t*);
+    hw_module_methods_t gr_methods;
+};
+
 class HardwareAccessMock
 {
 public:
@@ -51,6 +60,7 @@ public:
 
     MOCK_METHOD2(hw_get_module, int(const char *id, const struct hw_module_t**));
 
+    bool open_count_matches_close();
     std::shared_ptr<alloc_device_t> mock_alloc_device;
     std::shared_ptr<hwc_composer_device_1> mock_hwc_device;
 

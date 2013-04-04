@@ -28,6 +28,8 @@ namespace shell
 {
 class Session;
 
+/// Interface used by the Shell to propagate changes in the focus model to interested views
+/// e.g. Input, or Surfaces.
 class FocusSetter
 {
 public:

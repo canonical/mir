@@ -19,9 +19,9 @@
 
 #include "android_platform.h"
 #include "android_buffer_allocator.h"
-#include "android_display.h"
-#include "android_display_selector.h"
-#include "android_fb_factory.h"
+#include "android_hwc_factory.h"
+#include "android_display_allocator.h"
+#include "android_display_factory.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 
@@ -37,9 +37,10 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
-    auto fb_factory = std::make_shared<mga::AndroidFBFactory>();
-    auto selector = std::make_shared<mga::AndroidDisplaySelector>(fb_factory);
-    return selector->primary_display();
+    auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
+    auto display_allocator = std::make_shared<mga::AndroidDisplayAllocator>();
+    auto display_factory = std::make_shared<mga::AndroidDisplayFactory>(display_allocator, hwc_factory);
+    return display_factory->create_display();
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()

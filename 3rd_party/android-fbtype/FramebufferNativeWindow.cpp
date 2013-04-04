@@ -260,8 +260,6 @@ int FramebufferNativeWindow::queueBuffer(ANativeWindow* window,
 
     if (fenceFd > 0)
     {
-        int timeout = -1;
-        ioctl(fenceFd, SYNC_IOC_WAIT, &timeout);
         close(fenceFd);
     }
 

@@ -226,7 +226,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
                 mir_buffer_usage_hardware
             };
 
-            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+            mir_wait_for(mir_surface_create(connection, &request_params, NULL, create_surface_callback, this));
 
             set_flag(focus_ready);
 

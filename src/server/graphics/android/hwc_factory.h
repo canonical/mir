@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,35 +13,36 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
- *              Daniel d'Andradra <daniel.dandrada@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_INPUT_LEXICON_H_
-#define MIR_INPUT_ANDROID_INPUT_LEXICON_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_
 
-#include "mir_toolkit/input/event.h"
-
-namespace android
-{
-class InputEvent;
-}
-
-namespace droidinput = android;
+#include <memory>
+#include <hardware/hwcomposer.h>
 
 namespace mir
 {
-namespace input
+namespace graphics
 {
 namespace android
 {
-class Lexicon
+
+class HWCDevice;
+class HWCFactory
 {
 public:
-    static void translate(const droidinput::InputEvent *android_event, MirEvent &mir_event);
-};
-}
-}
-}
+    HWCFactory() = default;
+    virtual ~HWCFactory() {}
 
-#endif // MIR_INPUT_ANDROID_INPUT_LEXICON_H_
+    virtual std::shared_ptr<HWCDevice> create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const = 0;
+private:
+    HWCFactory(HWCFactory const&) = delete;
+    HWCFactory& operator=(HWCFactory const&) = delete; 
+};
+
+}
+}
+}
+#endif /* MIR_GRAPHICS_ANDROID_HWC_FACTORY_H_ */
