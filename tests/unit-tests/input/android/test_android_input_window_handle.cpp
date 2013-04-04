@@ -27,6 +27,9 @@
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 
+#include <cstdlib>
+#include <cstring>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -55,6 +58,32 @@ struct MockSurfaceTarget : public mi::SurfaceTarget
 
 }
 
+// TODO: This might be more broadly useful, should it go into mir_testing?
+class TempFile
+{
+public:
+    TempFile()
+    {
+        filename = strdup("/tmp/mir_unit_test_XXXXXX");
+        file_fd = mkstemp(filename);
+    }
+
+    int fd() const
+    {
+        return file_fd;
+    }
+
+    ~TempFile()
+    {
+        unlink(filename);
+        free(filename);
+    }
+
+private:
+    char *filename;
+    int file_fd;
+};
+
 TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surface)
 {
     using namespace ::testing;
@@ -62,7 +91,9 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     geom::Size const default_surface_size = geom::Size{geom::Width{256},
                                                       geom::Height{256}};
     std::string const testing_surface_name = "Test";
-    int const testing_server_fd = 2;
+
+    TempFile temp_file_descriptor;
+    int const testing_server_fd = temp_file_descriptor.fd();
 
     MockSurfaceTarget surface;
 
