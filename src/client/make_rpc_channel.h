@@ -28,8 +28,7 @@ namespace client
 class Logger;
 
 std::shared_ptr<google::protobuf::RpcChannel>
-make_rpc_channel(std::string const& name,
-                 std::shared_ptr<Logger> const& log);
+make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log);
 }
 }
 

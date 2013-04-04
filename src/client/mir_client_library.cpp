@@ -40,7 +40,6 @@ namespace gp = google::protobuf;
 std::mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection*> MirConnection::valid_connections;
 
-
 namespace
 {
 MirConnection error_connection;
