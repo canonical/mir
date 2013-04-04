@@ -35,6 +35,7 @@ class MockDisplayInfoProvider : public mga::DisplayInfoProvider
 public:
     MOCK_METHOD0(display_size, geom::Size());
     MOCK_METHOD0(display_format, geom::PixelFormat());
+    MOCK_METHOD0(number_of_framebuffers_available, unsigned int());
 };
 }
 
@@ -43,19 +44,23 @@ class FBFactory  : public ::testing::Test
 public:
     FBFactory()
         : mock_buffer_allocator(std::make_shared<mtd::MockAllocAdaptor>()),
-          mock_display_info_provider(std::make_shared<MockDisplayInfoProvider>())
+          mock_display_info_provider(std::make_shared<MockDisplayInfoProvider>()),
+          fake_fb_num(2)
     {
         using namespace testing;
         ON_CALL(*mock_display_info_provider, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
         ON_CALL(*mock_display_info_provider, display_size())
             .WillByDefault(Return(geom::Size{geom::Width{2}, geom::Height{3}}));
+        ON_CALL(*mock_display_info_provider, number_of_framebuffers_available())
+            .WillByDefault(Return(fake_fb_num));
         ON_CALL(*mock_buffer_allocator, alloc_buffer(_,_,_))
             .WillByDefault(Return(std::shared_ptr<mga::AndroidBufferHandle>()));
     }
 
     std::shared_ptr<mtd::MockAllocAdaptor> mock_buffer_allocator;
     std::shared_ptr<MockDisplayInfoProvider> mock_display_info_provider;
+    unsigned int const fake_fb_num;
 };
 
 TEST_F(FBFactory, test_native_window_creation_uses_size)
@@ -72,7 +77,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_size)
         .Times(1)
         .WillOnce(Return(disp_size));
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(disp_size,_,_))
-        .Times(1);
+        .Times(fake_fb_num);
  
     factory.create_fb_native_window(mock_display_info_provider);
 } 
@@ -84,7 +89,7 @@ TEST_F(FBFactory, test_native_window_creation_specifies_buffer_type)
     mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_,_,mga::BufferUsage::use_framebuffer_gles))
-        .Times(1);
+        .Times(fake_fb_num);
  
     factory.create_fb_native_window(mock_display_info_provider);
 } 
@@ -102,7 +107,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
         .Times(1)
         .WillOnce(Return(pf));
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_,pf,_))
-        .Times(1);
+        .Times(fake_fb_num);
  
     factory.create_fb_native_window(mock_display_info_provider);
 }
