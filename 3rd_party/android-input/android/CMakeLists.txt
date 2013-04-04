@@ -49,7 +49,7 @@ endif()
 
 
 add_library(
-  android-input
+  android-input STATIC
   # The stuff that we want
   frameworks/base/services/input/EventHub.cpp
   frameworks/base/services/input/InputApplication.cpp
