@@ -29,7 +29,8 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
-                                        std::shared_ptr<HWCFactory> const& hwc_factory)
+                                                  std::shared_ptr<HWCFactory> const& hwc_factory,
+                                                  std::shared_ptr<FramebufferFactory> const& /*fb_factory*/)
     : display_factory(display_factory),
       hwc_factory(hwc_factory)
 {
