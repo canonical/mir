@@ -48,7 +48,9 @@ class MirSocketRpcChannel : public MirBasicRpcChannel
 {
 public:
     MirSocketRpcChannel();
-    MirSocketRpcChannel(const std::string& endpoint, const std::shared_ptr<Logger>& log);
+    MirSocketRpcChannel(const std::string& endpoint,
+                        const std::shared_ptr<Logger>& log,
+                        mir::EventHandler *event_handler);
     ~MirSocketRpcChannel();
 
 private:

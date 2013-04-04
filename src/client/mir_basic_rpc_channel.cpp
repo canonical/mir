@@ -28,8 +28,10 @@
 namespace mcl = mir::client;
 namespace mcld = mir::client::detail;
 
-mcld::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
-    log(log)
+mcld::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log,
+                                         mir::EventHandler *ev) :
+    log(log),
+    event_handler(ev)
 {
 }
 
@@ -49,18 +51,30 @@ void mcld::PendingCallCache::complete_response(mir::protobuf::wire::Result& resu
 {
     std::unique_lock<std::mutex> lock(mutex);
     log->debug() << "complete_response for result " << result.id() << std::endl;
-    auto call = pending_calls.find(result.id());
-    if (call == pending_calls.end())
+    if (result.id() == 0)
     {
-        log->error() << "orphaned result: " << result.ShortDebugString() << std::endl;
+        if (!event_handler)
+            log->error() << "No event_handler defined" << std::endl;
+        else
+        {
+            // TODO
+        }
     }
     else
     {
-        auto& completion = call->second;
-        log->debug() << "complete_response for result " << result.id() << " response " << completion.response << " complete " << completion.complete << std::endl;
-        completion.response->ParseFromString(result.response());
-        completion.complete->Run();
-        pending_calls.erase(call);
+        auto call = pending_calls.find(result.id());
+        if (call == pending_calls.end())
+        {
+            log->error() << "orphaned result: " << result.ShortDebugString() << std::endl;
+        }
+        else
+        {
+            auto& completion = call->second;
+            log->debug() << "complete_response for result " << result.id() << " response " << completion.response << " complete " << completion.complete << std::endl;
+            completion.response->ParseFromString(result.response());
+            completion.complete->Run();
+            pending_calls.erase(call);
+        }
     }
 }
 

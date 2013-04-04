@@ -36,8 +36,15 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel() :
 {
 }
 
-mcl::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
-    log(log), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
+mcl::MirSocketRpcChannel::MirSocketRpcChannel(
+    std::string const& endpoint,
+    std::shared_ptr<Logger> const& log,
+    mir::EventHandler *event_handler) :
+    log(log),
+    pending_calls(log, event_handler),
+    work(io_service),
+    endpoint(endpoint),
+    socket(io_service)
 {
     socket.connect(endpoint);
 

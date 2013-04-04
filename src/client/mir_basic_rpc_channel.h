@@ -21,6 +21,7 @@
 #define MIR_CLIENT_MIR_BASIC_RPC_CHANNEL_H_
 
 #include "mir_logger.h"
+#include "mir/event.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
@@ -51,7 +52,8 @@ typedef std::vector<char> SendBuffer;
 class PendingCallCache
 {
 public:
-    PendingCallCache(std::shared_ptr<Logger> const& log);
+    PendingCallCache(std::shared_ptr<Logger> const& log,
+                     mir::EventHandler *ev = nullptr);
 
     SendBuffer& save_completion_details(
         mir::protobuf::wire::Invocation& invoke,
@@ -83,6 +85,7 @@ private:
     std::mutex mutable mutex;
     std::map<int, PendingCall> pending_calls;
     std::shared_ptr<Logger> const log;
+    mir::EventHandler *event_handler;
 };
 }
 

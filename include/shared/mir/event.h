@@ -59,6 +59,8 @@ struct Event
     };
 };
 
+typedef void (EventHandler)(Event const& e);
+
 } // namespace mir
 
 #endif
