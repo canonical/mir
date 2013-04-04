@@ -51,6 +51,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirfrontend
   mirgraphics
   mirinput
+  mirinputandroidtransport
   mirsurfaces
   mirtime
 )

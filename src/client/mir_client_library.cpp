@@ -27,15 +27,11 @@
 #include "mir_logger.h"
 #include "make_rpc_channel.h"
 
-#include "mir_protobuf.pb.h"
-
 #include <set>
 #include <unordered_set>
 #include <cstddef>
 
 namespace mcl = mir::client;
-namespace mp = mir::protobuf;
-namespace gp = google::protobuf;
 
 std::mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection*> MirConnection::valid_connections;
@@ -118,16 +114,17 @@ int mir_egl_native_display_is_valid(MirEGLNativeDisplayType egl_display)
 }
 
 MirWaitHandle* mir_surface_create(
-    MirConnection * connection,
-    MirSurfaceParameters const * params,
+    MirConnection* connection,
+    MirSurfaceParameters const* params,
+    MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback,
-    void * context)
+    void* context)
 {
     if (&error_connection == connection) return 0;
 
     try
     {
-        return connection->create_surface(*params, callback, context);
+        return connection->create_surface(*params, delegate, callback, context);
     }
     catch (std::exception const&)
     {
@@ -137,12 +134,15 @@ MirWaitHandle* mir_surface_create(
 
 }
 
-MirSurface *mir_surface_create_sync(
-    MirConnection *connection, MirSurfaceParameters const *params)
+MirSurface* mir_surface_create_sync(
+    MirConnection* connection, 
+    MirSurfaceParameters const* params,
+    MirEventDelegate const* delegate)
 {
     MirSurface *surface = nullptr;
 
     mir_wait_for(mir_surface_create(connection, params,
+                                    delegate,
         reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
         &surface));
 

@@ -95,16 +95,15 @@ class FakeEventHubSetup : public testing::Test
 }
 
 using mir::FakeEventHubSetup;
-using mir::WaitCondition;
 
 TEST_F(FakeEventHubSetup, fake_event_hub_dispatches_to_filter)
 {
     using namespace ::testing;
 
-    mir::WaitCondition wait_condition;
+    mt::WaitCondition wait_condition;
 
     EXPECT_CALL(event_filter, handles(mt::KeyDownEvent())).Times(1)
-        .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+        .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
 
     event_hub->synthesize_builtin_keyboard_added();
     event_hub->synthesize_device_scan_complete();

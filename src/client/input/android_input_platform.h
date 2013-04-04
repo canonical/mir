@@ -16,43 +16,37 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_INPUT_APPLICATION_HANDLE_H_
-#define MIR_INPUT_ANDROID_INPUT_APPLICATION_HANDLE_H_
+#ifndef MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
+#define MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
 
-#include <InputApplication.h>
-
-#include <memory>
-
-namespace droidinput = android;
+#include "input_platform.h"
 
 namespace mir
 {
-
+namespace client
+{
 namespace input
 {
-class SessionTarget;
-
 namespace android
 {
 
-class InputApplicationHandle : public droidinput::InputApplicationHandle
+/// Implementation of client input machinery for android input stack wire protocol.
+class AndroidInputPlatform : public InputPlatform
 {
 public:
-    InputApplicationHandle(std::shared_ptr<input::SessionTarget> const& surface);
-    ~InputApplicationHandle() {}
+    AndroidInputPlatform();
+    virtual ~AndroidInputPlatform();  
 
-    bool updateInfo();
+    std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> const& callback);
 
 protected:
-    InputApplicationHandle(InputApplicationHandle const&) = delete;
-    InputApplicationHandle& operator=(InputApplicationHandle const&) = delete;
-
-private:
-    std::weak_ptr<input::SessionTarget> weak_session;
+    AndroidInputPlatform(const AndroidInputPlatform&) = delete;
+    AndroidInputPlatform& operator=(const AndroidInputPlatform&) = delete;
 };
 
 }
 }
+}
 } // namespace mir
 
-#endif // MIR_INPUT_ANDROID_INPUT_APPLICATION_HANDLE_H_
+#endif // MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
