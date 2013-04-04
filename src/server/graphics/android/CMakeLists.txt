@@ -20,6 +20,7 @@ add_library(
   android_display_factory.cpp
   android_alloc_adaptor.cpp
   server_render_window.cpp
+  default_framebuffer_factory.cpp
 )
 
 target_link_libraries(

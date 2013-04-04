@@ -28,6 +28,8 @@ namespace graphics
 namespace android
 {
 
+class GraphicAllocAdaptor;
+
 class DefaultFramebufferFactory : public FramebufferFactory
 {
 public:
