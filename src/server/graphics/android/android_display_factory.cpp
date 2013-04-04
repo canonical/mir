@@ -34,6 +34,7 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
     : display_factory(display_factory),
       hwc_factory(hwc_factory)
 {
+    printf("here...\n");
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
     if ((rc != 0) || (hw_module == nullptr))

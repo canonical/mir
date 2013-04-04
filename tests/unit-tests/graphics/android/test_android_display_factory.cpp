@@ -61,8 +61,8 @@ struct MockDisplayAllocator: public mga::DisplayAllocator
 };
 
 struct MockFNWFactory : public mga::FramebufferFactory
-{
-    MOCK_CONST_METHOD1(create_fb_native_window,
+{ 
+    MOCK_METHOD1(create_fb_native_window,
                     std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplayInfoProvider> const&));
 };
 
@@ -71,7 +71,8 @@ class AndroidDisplayFactoryTest : public ::testing::Test
 public:
     AndroidDisplayFactoryTest()
         : mock_display_allocator(std::make_shared<MockDisplayAllocator>()),
-          mock_hwc_factory(std::make_shared<MockHWCFactory>())
+          mock_hwc_factory(std::make_shared<MockHWCFactory>()),
+          mock_fnw_factory(std::make_shared<MockFNWFactory>())
     {
     }
 
@@ -148,7 +149,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
     std::shared_ptr<mga::HWCDevice> mock_hwc_device;
     std::shared_ptr<mga::DisplayInfoProvider> xxxa;// = mock_hwc_device;
     auto stub_anativewindow = std::make_shared<ANativeWindow>();
-   
+  
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
         .Times(1)
         .WillOnce(Return(mock_hwc_device));
