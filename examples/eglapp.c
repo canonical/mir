@@ -85,6 +85,14 @@ void mir_eglapp_swap_buffers(void)
     }
 }
 
+static void mir_eglapp_handle_input(MirSurface* surface, MirEvent* ev, void* context)
+{
+    (void) surface;
+    (void) context;
+    if (ev->details.key.key_code == 45) /* Q */
+        running = 0;
+}
+
 mir_eglapp_bool mir_eglapp_init(int *width, int *height)
 {
     EGLint attribs[] =
@@ -105,6 +113,11 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
         256, 256,
         mir_pixel_format_xbgr_8888,
         mir_buffer_usage_hardware
+    };
+    MirEventDelegate delegate = 
+    {
+        mir_eglapp_handle_input,
+        NULL
     };
     MirDisplayInfo dinfo;
     MirSurface *surface;
@@ -127,7 +140,7 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
     surfaceparm.pixel_format = dinfo.supported_pixel_format[0];
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
 
-    surface = mir_surface_create_sync(connection, &surfaceparm);
+    surface = mir_surface_create_sync(connection, &surfaceparm, &delegate);
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
     egldisplay = eglGetDisplay(

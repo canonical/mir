@@ -16,32 +16,33 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "android_input_application_handle.h"
+#ifndef MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#define MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
 
-#include "mir/input/session_target.h"
-
-#include <limits.h>
-
-namespace mi = mir::input;
-namespace mia = mi::android;
-
-mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::SessionTarget> const& session)
-  : weak_session(session)
+namespace mir
 {
-    updateInfo();
-}
-
-bool mia::InputApplicationHandle::updateInfo()
+namespace client
 {
-    if (mInfo == NULL)
-        mInfo = new droidinput::InputApplicationInfo;
-    
-    auto session = weak_session.lock();
-    if (!session)
-        return false;
+namespace input
+{
 
-    mInfo->dispatchingTimeout = INT_MAX;
-    mInfo->name = droidinput::String8(session->name().c_str());
+class InputReceiverThread
+{
+public:
+    virtual ~InputReceiverThread() {};
 
-    return true;
+    virtual void start() = 0;
+    virtual void stop() = 0;
+    virtual void join() = 0;
+
+protected:
+    InputReceiverThread() = default;
+    InputReceiverThread(const InputReceiverThread&) = delete;
+    InputReceiverThread& operator=(const InputReceiverThread&) = delete;
+};
+
 }
+}
+} // namespace mir
+
+#endif // MIR_CLIENT_INPUT_RECEIVER_THREAD_H_

@@ -20,8 +20,6 @@
 
 #include "mir/input/session_target.h"
 
-#include "mir_test/fake_shared.h"
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -29,7 +27,6 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace mt = mir::test;
 
 namespace
 {
@@ -44,15 +41,30 @@ TEST(AndroidInputApplicationHandle, takes_name_from_session_and_specifies_max_ti
 {
     using namespace ::testing;
     std::string const testing_session_name = "Cats";
-    MockSessionHandle session;
+    auto session = std::make_shared<MockSessionHandle>();
 
-    EXPECT_CALL(session, name()).Times(AtLeast(1))
+    EXPECT_CALL(*session, name()).Times(AtLeast(1))
         .WillRepeatedly(Return(testing_session_name));
-    mia::InputApplicationHandle application_handle(mt::fake_shared(session));
+    mia::InputApplicationHandle application_handle(session);
     EXPECT_TRUE(application_handle.updateInfo());
     auto info = application_handle.getInfo();
     EXPECT_EQ(INT_MAX, info->dispatchingTimeout);
     EXPECT_EQ(droidinput::String8(testing_session_name.c_str()), info->name);
 }
 
+TEST(AndroidInputApplicationHandle, does_not_own_session)
+{
+    using namespace ::testing;
+    std::string const testing_session_name = "Let it Grow";
+    
+    auto session = std::make_shared<MockSessionHandle>();
+    EXPECT_CALL(*session, name()).Times(AtLeast(1))
+        .WillRepeatedly(Return(testing_session_name));
+    
+    mia::InputApplicationHandle application_handle(session);
+    EXPECT_TRUE(application_handle.updateInfo());
+    session.reset();
+    EXPECT_FALSE(application_handle.updateInfo());
+
+}
 

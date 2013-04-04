@@ -44,7 +44,6 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 using mtd::MockEventFilter;
-using mir::WaitCondition;
 
 namespace
 {
@@ -100,7 +99,7 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 {
     using namespace ::testing;
 
-    auto wait_condition = std::make_shared<WaitCondition>();
+    auto wait_condition = std::make_shared<mt::WaitCondition>();
 
     static const float x = 100.f;
     static const float y = 100.f;
@@ -109,7 +108,7 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
 
     // The stack doesn't like shutting down while events are still moving through
     EXPECT_CALL(event_filter, handles(_))
-            .WillOnce(ReturnFalseAndWakeUp(wait_condition));
+            .WillOnce(mt::ReturnFalseAndWakeUp(wait_condition));
 
     fake_event_hub->synthesize_builtin_cursor_added();
     fake_event_hub->synthesize_device_scan_complete();
