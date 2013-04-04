@@ -73,7 +73,7 @@ bool mcld::PendingCallCache::empty() const
 
 
 mcl::MirBasicRpcChannel::MirBasicRpcChannel() :
-    next_message_id(0)
+    next_message_id(1)
 {
 }
 
@@ -101,6 +101,7 @@ mir::protobuf::wire::Invocation mcl::MirBasicRpcChannel::invocation_for(
 int mcl::MirBasicRpcChannel::next_id()
 {
     int id = next_message_id.load();
-    while (!next_message_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
+    while (!next_message_id.compare_exchange_weak(id, id + 1) || id == 0)
+        std::this_thread::yield();
     return id;
 }
