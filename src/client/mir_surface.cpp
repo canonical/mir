@@ -39,7 +39,7 @@ mir_toolkit::MirSurface::MirSurface(
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
-      buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::client_buffer_cache_size)),
+      buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       logger(logger)
 {
     mir::protobuf::SurfaceParameters message;

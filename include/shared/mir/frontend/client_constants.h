@@ -16,17 +16,20 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CONSTANTS_H_
-#define MIR_CLIENT_CONSTANTS_H_
+#ifndef MIR_FRONTEND_CLIENT_CONSTANTS_H_
+#define MIR_FRONTEND_CLIENT_CONSTANTS_H_
 
 namespace mir
 {
 
+namespace frontend
+{
 /// Number of buffers the client library will keep.
 
 /// mir::client::ClientBufferDepository and mir::frontend::ClientBufferTracker need to use the same value
 unsigned int const client_buffer_cache_size = 3;
 
+}
 }
 
 #endif
