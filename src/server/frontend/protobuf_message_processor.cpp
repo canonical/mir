@@ -145,35 +145,35 @@ void mfd::ProtobufMessageProcessor::send_response(
 
 void mfd::ProtobufMessageProcessor::handle_event(Event const& e)
 {
-   mir::protobuf::EventSequence seq;
-   mir::protobuf::Event *ev = seq.add_event();
+    mir::protobuf::EventSequence seq;
+    mir::protobuf::Event *ev = seq.add_event();
 
-   switch (e.type)
-   {
-   case Event::SURFACE:
-       switch (e.surface.type)
-       {
-       case Event::Surface::CHANGE:
-           {
-               ::mir::protobuf::SurfaceSetting *change =
-                   ev->mutable_surface_changed();
-               change->mutable_surfaceid()->set_value(e.surface.id);
-               change->set_attrib(e.surface.change.attrib);
-               change->set_ivalue(e.surface.change.value);
-           }
-           break;
-       default:
-           assert(false);
-           break;
-       }
-       break;
-   default:
-       assert(false);
-       break;
-   }
+    switch (e.type)
+    {
+    case Event::SURFACE:
+        switch (e.surface.type)
+        {
+        case Event::Surface::CHANGE:
+            {
+                ::mir::protobuf::SurfaceSetting *change =
+                    ev->mutable_surface_changed();
+                change->mutable_surfaceid()->set_value(e.surface.id);
+                change->set_attrib(e.surface.change.attrib);
+                change->set_ivalue(e.surface.change.value);
+            }
+            break;
+        default:
+            assert(false);
+            break;
+        }
+        break;
+    default:
+        assert(false);
+        break;
+    }
 
-   // id zero is reserved for events. Zero will never be used for invocations.
-   send_response(0, &seq);
+    // id zero is reserved for events. Zero will never be used for invocations.
+    send_response(0, &seq);
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
