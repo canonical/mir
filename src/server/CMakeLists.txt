@@ -65,7 +65,6 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
       ${MIRSERVER_ARCHIVES}
       -Wl,-no-whole-archive
     LINK_PUBLIC
-      -Wl,-zdefs
       ${MIRSERVER_LINKS}
   )
   install(TARGETS mirserver

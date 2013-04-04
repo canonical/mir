@@ -85,8 +85,6 @@ set_target_properties(
 target_link_libraries(
   mirclient
 
-  -Wl,-zdefs
-
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
