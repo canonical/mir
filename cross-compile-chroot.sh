@@ -26,7 +26,6 @@ pushd ${BUILD_DIR} > /dev/null
       -DBoost_COMPILER=-gcc \
       -DMIR_ENABLE_DEATH_TESTS=NO \
       -DMIR_PLATFORM=android \
-      -DMIR_DISABLE_INPUT=true \
       .. 
 
     cmake --build .

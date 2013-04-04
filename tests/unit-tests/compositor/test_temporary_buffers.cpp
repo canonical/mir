@@ -33,8 +33,8 @@ class TemporaryTestBuffer : public mc::TemporaryBuffer
 {
 public:
     TemporaryTestBuffer(const std::shared_ptr<mc::Buffer>& buf)
+        : TemporaryBuffer(buf)
     {
-        buffer = buf;
     }
 };
 
@@ -51,10 +51,10 @@ public:
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(buffer_size, buffer_stride, buffer_pixel_format);
         mock_swapper = std::make_shared<NiceMock<mtd::MockSwapper>>(mock_buffer);
 
-        ON_CALL(*mock_swapper, client_acquire(_,_))
-            .WillByDefault(SetArgReferee<0>(mock_buffer));
-        ON_CALL(*mock_swapper, compositor_acquire(_,_))
-            .WillByDefault(SetArgReferee<0>(mock_buffer));
+        ON_CALL(*mock_swapper, client_acquire())
+            .WillByDefault(Return(mock_buffer));
+        ON_CALL(*mock_swapper, compositor_acquire())
+            .WillByDefault(Return(mock_buffer));
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
@@ -68,7 +68,7 @@ public:
 TEST_F(TemporaryBuffersTest, client_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_swapper, client_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, client_acquire())
         .Times(1);
     EXPECT_CALL(*mock_swapper, client_release(_))
         .Times(1);
@@ -79,7 +79,7 @@ TEST_F(TemporaryBuffersTest, client_buffer_acquires_and_releases)
 TEST_F(TemporaryBuffersTest, client_buffer_handles_swapper_destruction)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_swapper, client_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, client_acquire())
         .Times(1);
 
     mc::TemporaryClientBuffer proxy_buffer(mock_swapper);
@@ -89,7 +89,7 @@ TEST_F(TemporaryBuffersTest, client_buffer_handles_swapper_destruction)
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1);
     EXPECT_CALL(*mock_swapper, compositor_release(_))
         .Times(1);
@@ -100,7 +100,7 @@ TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 TEST_F(TemporaryBuffersTest, compositor_buffer_handles_swapper_destruction)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1);
 
     mc::TemporaryCompositorBuffer proxy_buffer(mock_swapper);

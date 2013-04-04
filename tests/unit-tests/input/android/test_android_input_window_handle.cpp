@@ -27,6 +27,9 @@
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 
+#include <cstdlib>
+#include <cstring>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -62,7 +65,13 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     geom::Size const default_surface_size = geom::Size{geom::Width{256},
                                                       geom::Height{256}};
     std::string const testing_surface_name = "Test";
-    int const testing_server_fd = 2;
+
+    // We need a real open fd, as InputWindowHandle's constructor will fcntl() it, and
+    // InputWindowHandle's destructor will close() it.
+    char *filename = strdup("/tmp/mir_unit_test_XXXXXX");
+    int const testing_server_fd = mkstemp(filename);
+    // We don't actually need the file to exist after this test.
+    unlink(filename);
 
     MockSurfaceTarget surface;
 
@@ -86,4 +95,6 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameRight - info->frameLeft));
     EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameBottom - info->frameTop));
+
+    free(filename);
 }
