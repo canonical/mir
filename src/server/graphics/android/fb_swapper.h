@@ -22,7 +22,9 @@
 
 #include "mir/compositor/buffer_swapper.h"
 
+#include <queue>
 #include <vector>
+#include <mutex>
 
 namespace mir
 {
@@ -54,6 +56,9 @@ private:
     void initialize_queues(T);
 
     void composition_bypass_unsupported();
+
+    std::mutex queue_lock;
+    std::queue<std::shared_ptr<compositor::Buffer>> queue;
 };
 
 }

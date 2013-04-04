@@ -26,24 +26,36 @@ namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
 template<class T>
-void mga::FBSwapper::initialize_queues(T /* buffer_list */)
+void mga::FBSwapper::initialize_queues(T buffer_list)
 {
+    for (auto& buffer : buffer_list)
+    {
+        queue.push(buffer);
+    }
 }
 
-mga::FBSwapper::FBSwapper(std::initializer_list<std::shared_ptr<mc::Buffer>> /* buffer_list*/)
+mga::FBSwapper::FBSwapper(std::initializer_list<std::shared_ptr<mc::Buffer>> buffer_list)
 {
+    initialize_queues(buffer_list);
 }
-mga::FBSwapper::FBSwapper(std::vector<std::shared_ptr<mc::Buffer>> /*buffer_list*/)
+mga::FBSwapper::FBSwapper(std::vector<std::shared_ptr<mc::Buffer>> buffer_list)
 {
+    initialize_queues(buffer_list);
 }
 
 std::shared_ptr<mc::Buffer> mga::FBSwapper::compositor_acquire()
 {
-    return std::shared_ptr<mc::Buffer>(); 
+    std::unique_lock<std::mutex> lk(queue_lock);
+    
+    auto buffer = queue.front();
+    queue.pop();
+    return buffer;
 }
 
-void mga::FBSwapper::compositor_release(std::shared_ptr<mc::Buffer> const& /*released_buffer*/)
+void mga::FBSwapper::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
+    std::unique_lock<std::mutex> lk(queue_lock);
+    queue.push(released_buffer);
 }
 
 void mga::FBSwapper::shutdown()
