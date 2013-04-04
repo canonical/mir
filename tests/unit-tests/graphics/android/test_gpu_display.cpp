@@ -34,10 +34,13 @@ protected:
         using namespace testing;
         native_win = std::make_shared<NiceMock<mtd::MockAndroidFramebufferWindow>>();
         mock_egl.silence_uninteresting();
+        width = 435;
+        height = 477;
     }
 
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
     mir::EglMock mock_egl;
+    int width, height;
 };
 
 TEST_F(GPUFramebuffer, display_post_calls_swapbuffers_once)
@@ -69,7 +72,7 @@ TEST_F(GPUFramebuffer, display_post_failure)
     using namespace testing;
     std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
 
-    EXPECT_CALL(this->mock_egl, eglSwapBuffers(_,_))
+    EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
     .Times(Exactly(1))
     .WillOnce(Return(EGL_FALSE));
 
@@ -77,4 +80,27 @@ TEST_F(GPUFramebuffer, display_post_failure)
     {
         EXPECT_FALSE(buffer.post_update());
     });
+}
+
+TEST_F(GPUFramebuffer, framebuffer_correct_view_area)
+{
+    using namespace testing;
+    auto display = std::make_shared<mga::AndroidDisplay>(native_win);
+
+    EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display,mock_egl.fake_egl_surface,EGL_WIDTH,_))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<3>(width),
+                        Return(EGL_TRUE)));
+
+    EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display,mock_egl.fake_egl_surface,EGL_HEIGHT,_))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<3>(height),
+                        Return(EGL_TRUE)));
+
+    auto area = display->view_area();
+
+    EXPECT_EQ(area.top_left.x.as_uint32_t(), 0u);
+    EXPECT_EQ(area.top_left.y.as_uint32_t(), 0u);
+    EXPECT_EQ(area.size.width.as_uint32_t(), static_cast<uint32_t>(width));
+    EXPECT_EQ(area.size.height.as_uint32_t(), static_cast<uint32_t>(height));
 }
