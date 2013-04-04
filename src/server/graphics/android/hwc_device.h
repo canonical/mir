@@ -18,6 +18,9 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
+
+#include "mir/geometry/size.h"
+
 namespace mir
 {
 namespace graphics
@@ -30,6 +33,7 @@ class HWCDevice
 public:
     HWCDevice() = default;
     virtual ~HWCDevice() {}
+    virtual geometry::Size display_size() = 0; 
     virtual void wait_for_vsync() = 0;
     virtual void commit_frame() = 0;
 private:

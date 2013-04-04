@@ -24,6 +24,7 @@
 
 #include <memory>
 
+namespace geom=mir::geometry;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
@@ -85,4 +86,21 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_failure)
     {
         EXPECT_FALSE(buffer.post_update());
     });
+}
+
+TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
+{
+    using namespace testing;
+
+    geom::Size fake_display_size{geom::Width{223}, geom::Height{332}};
+    EXPECT_CALL(*mock_hwc_device, display_size())
+        .Times(1)
+        .WillOnce(Return(fake_display_size)); 
+    mga::HWCDisplay display(native_win, mock_hwc_device);
+    
+    auto view_area = display.view_area();
+
+    geom::Point origin_pt{geom::X{0}, geom::Y{0}};
+    EXPECT_EQ(view_area.size, fake_display_size);
+    EXPECT_EQ(view_area.top_left, origin_pt);
 }
