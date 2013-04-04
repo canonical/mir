@@ -27,15 +27,11 @@
 #include "mir_logger.h"
 #include "make_rpc_channel.h"
 
-#include "mir_protobuf.pb.h"
-
 #include <set>
 #include <unordered_set>
 #include <cstddef>
 
 namespace mcl = mir::client;
-namespace mp = mir::protobuf;
-namespace gp = google::protobuf;
 
 std::mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection*> MirConnection::valid_connections;
