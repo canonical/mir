@@ -37,7 +37,9 @@ public:
         using namespace testing;
 
         mock_buffer_handle = std::make_shared<mtd::MockBufferHandle>();
-        mock_alloc_dev = std::make_shared<mtd::MockAllocAdaptor>(mock_buffer_handle);
+        mock_alloc_dev = std::make_shared<mtd::MockAllocAdaptor>();
+        ON_CALL(*mock_alloc_dev, alloc_buffer(_,_,_))
+            .WillByDefault(Return(mock_buffer_handle));
 
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::abgr_8888;

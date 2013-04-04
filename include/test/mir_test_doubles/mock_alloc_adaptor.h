@@ -52,21 +52,11 @@ public:
 class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
 {
 public:
-    MockAllocAdaptor(std::shared_ptr<MockBufferHandle> const& mock)
-        :
-        mock_handle(mock)
+    MockAllocAdaptor()
     {
-        using namespace testing;
-
-        ON_CALL(*this, alloc_buffer(_,_,_))
-        .WillByDefault(Return(mock_handle));
     }
 
     MOCK_METHOD3(alloc_buffer, std::shared_ptr<graphics::android::AndroidBufferHandle>(geometry::Size, geometry::PixelFormat, graphics::android::BufferUsage));
-    MOCK_METHOD2(inspect_buffer, bool(char*, int));
-
-    std::shared_ptr<graphics::android::AndroidBufferHandle> mock_handle;
-
 };
 
 }

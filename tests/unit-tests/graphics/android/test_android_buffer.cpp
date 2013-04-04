@@ -39,8 +39,10 @@ protected:
     {
         using namespace testing;
         mock_buffer_handle = std::make_shared<NiceMock<mtd::MockBufferHandle>>();
-        mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>(mock_buffer_handle);
-
+        mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
+        ON_CALL(*mock_alloc_device, alloc_buffer(_,_,_))
+            .WillByDefault(Return(mock_buffer_handle));
+ 
         pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{300}, geom::Height{200}};
     }
