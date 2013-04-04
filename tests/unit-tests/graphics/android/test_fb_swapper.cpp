@@ -19,6 +19,8 @@
 #include "src/server/graphics/android/fb_swapper.h"
 #include "mir_test_doubles/mock_buffer.h"
 
+#include <future>
+#include <thread>
 #include <stdexcept>
 #include <gtest/gtest.h>
 
@@ -109,3 +111,78 @@ TEST_F(FBSwapperTest, client_acquires_throw)
         fb_swapper.client_release(empty);
     }, std::runtime_error);
 }
+
+TEST_F(FBSwapperTest, synctest)
+{
+    std::vector<std::shared_ptr<mc::Buffer>> test_buffers{buffer1, buffer2, buffer3};
+    mga::FBSwapper fb_swapper(test_buffers);
+
+    std::vector<std::shared_ptr<mc::Buffer>> blist;
+    for(auto i=0u; i < 300; ++i)
+    {
+        auto buf = fb_swapper.compositor_acquire();
+        blist.push_back(buf);
+        auto f = 
+            std::async(std::launch::async, [&]()
+            {
+                fb_swapper.compositor_release(buf);
+            });
+        buf = fb_swapper.compositor_acquire();
+        blist.push_back(buf);
+        fb_swapper.compositor_release(buf);
+    }
+
+    auto modcounter = 0u;
+    for(auto i : test_buffers)
+    {
+        if (blist[0] == i)
+        {
+            break;
+        }
+        modcounter++;
+    }
+
+    for(auto i : blist)
+    {
+        EXPECT_EQ(test_buffers[(modcounter % test_buffers.size())], i);
+        modcounter++;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

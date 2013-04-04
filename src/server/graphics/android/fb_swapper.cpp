@@ -45,8 +45,7 @@ mga::FBSwapper::FBSwapper(std::vector<std::shared_ptr<mc::Buffer>> buffer_list)
 
 std::shared_ptr<mc::Buffer> mga::FBSwapper::compositor_acquire()
 {
-    std::unique_lock<std::mutex> lk(queue_lock);
-    
+    std::unique_lock<std::mutex> lk(queue_lock); 
     auto buffer = queue.front();
     queue.pop();
     return buffer;
@@ -63,6 +62,7 @@ void mga::FBSwapper::shutdown()
 }
 
 /* the client_{acquire,release} functions are how we will hand out framebuffers to the clients.
+ * and facilitate the handout between an internal composition renderloop and one that is in the client.
  * they are unsupported at this time */
 void mga::FBSwapper::composition_bypass_unsupported()
 {
