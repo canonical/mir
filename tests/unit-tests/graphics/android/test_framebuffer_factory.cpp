@@ -63,6 +63,20 @@ public:
     unsigned int const fake_fb_num;
 };
 
+TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
+{
+    using namespace testing;
+
+    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+ 
+    EXPECT_CALL(*mock_display_info_provider, number_of_framebuffers_available())
+        .Times(1);
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_,_,_))
+        .Times(fake_fb_num);
+ 
+    factory.create_fb_native_window(mock_display_info_provider);
+}
+
 TEST_F(FBFactory, test_native_window_creation_uses_size)
 {
     using namespace testing;
