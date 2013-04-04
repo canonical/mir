@@ -92,12 +92,11 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
 {
     using namespace testing;
 
-    mga::HWCDisplay display(native_win, mock_hwc_device);
-
     geom::Size fake_display_size{geom::Width{223}, geom::Height{332}};
     EXPECT_CALL(*mock_hwc_device, display_size())
         .Times(1)
         .WillOnce(Return(fake_display_size)); 
+    mga::HWCDisplay display(native_win, mock_hwc_device);
     
     auto view_area = display.view_area();
 
