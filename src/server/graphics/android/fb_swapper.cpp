@@ -19,6 +19,9 @@
 
 #include "fb_swapper.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
@@ -34,15 +37,6 @@ mga::FBSwapper::FBSwapper(std::vector<std::shared_ptr<mc::Buffer>> /*buffer_list
 {
 }
 
-std::shared_ptr<mc::Buffer> mga::FBSwapper::client_acquire()
-{
-    return std::shared_ptr<mc::Buffer>(); 
-}
-
-void mga::FBSwapper::client_release(std::shared_ptr<mc::Buffer> const& /*queued_buffer*/)
-{
-}
-
 std::shared_ptr<mc::Buffer> mga::FBSwapper::compositor_acquire()
 {
     return std::shared_ptr<mc::Buffer>(); 
@@ -54,5 +48,22 @@ void mga::FBSwapper::compositor_release(std::shared_ptr<mc::Buffer> const& /*rel
 
 void mga::FBSwapper::shutdown()
 {
+}
+
+/* the client_{acquire,release} functions are how we will hand out framebuffers to the clients.
+ * they are unsupported at this time */
+void mga::FBSwapper::composition_bypass_unsupported()
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("composition bypass is unsupported"));
+}
+std::shared_ptr<mc::Buffer> mga::FBSwapper::client_acquire()
+{
+    composition_bypass_unsupported();
+    return std::shared_ptr<mc::Buffer>(); 
+}
+
+void mga::FBSwapper::client_release(std::shared_ptr<mc::Buffer> const& /*queued_buffer*/)
+{
+    composition_bypass_unsupported();
 }
 

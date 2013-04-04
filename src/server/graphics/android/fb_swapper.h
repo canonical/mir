@@ -52,6 +52,8 @@ public:
 private:
     template<class T>
     void initialize_queues(T);
+
+    void composition_bypass_unsupported();
 };
 
 }
