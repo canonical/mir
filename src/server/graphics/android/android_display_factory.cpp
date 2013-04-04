@@ -18,6 +18,7 @@
 
 #include "android_display_factory.h"
 #include "hwc_factory.h"
+#include "framebuffer_factory.h"
 #include "display_allocator.h"
 #include "android_display.h"
 #include "hwc_display.h"
@@ -30,11 +31,11 @@ namespace mga=mir::graphics::android;
 
 mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
                                                   std::shared_ptr<HWCFactory> const& hwc_factory,
-                                                  std::shared_ptr<FramebufferFactory> const& /*fb_factory*/)
+                                                  std::shared_ptr<FramebufferFactory> const& fb_factory)
     : display_factory(display_factory),
-      hwc_factory(hwc_factory)
+      hwc_factory(hwc_factory),
+      fb_factory(fb_factory)
 {
-    printf("here...\n");
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
     if ((rc != 0) || (hw_module == nullptr))
@@ -79,8 +80,8 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     {
         //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
         auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
-        std::shared_ptr<ANativeWindow> emptywin;
-        return display_factory->create_hwc_display(hwc_device, emptywin);
+        auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
+        return display_factory->create_hwc_display(hwc_device, fb_native_win);
     }
     else
     {
