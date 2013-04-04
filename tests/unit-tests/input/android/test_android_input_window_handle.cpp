@@ -58,32 +58,6 @@ struct MockSurfaceTarget : public mi::SurfaceTarget
 
 }
 
-// TODO: This might be more broadly useful, should it go into mir_testing?
-class TempFile
-{
-public:
-    TempFile()
-    {
-        filename = strdup("/tmp/mir_unit_test_XXXXXX");
-        file_fd = mkstemp(filename);
-    }
-
-    int fd() const
-    {
-        return file_fd;
-    }
-
-    ~TempFile()
-    {
-        unlink(filename);
-        free(filename);
-    }
-
-private:
-    char *filename;
-    int file_fd;
-};
-
 TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surface)
 {
     using namespace ::testing;
@@ -92,8 +66,10 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
                                                       geom::Height{256}};
     std::string const testing_surface_name = "Test";
 
-    TempFile temp_file_descriptor;
-    int const testing_server_fd = temp_file_descriptor.fd();
+    // We need a real open fd, as InputWindowHandle's constructor will fcntl() it, and
+    // InputWindowHandle's destructor will close() it.
+    char *filename = strdup("/tmp/mir_unit_test_XXXXXX");
+    int const testing_server_fd = mkstemp(filename);
 
     MockSurfaceTarget surface;
 
@@ -117,4 +93,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameRight - info->frameLeft));
     EXPECT_EQ(default_surface_size.height.as_uint32_t(), (uint32_t)(info->frameBottom - info->frameTop));
+
+    unlink(filename);
+    free(filename);
 }
