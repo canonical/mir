@@ -23,6 +23,7 @@
 #include "mir_basic_rpc_channel.h"
 #include "mir_logger.h"
 #include "mir/event.h"
+#include "event_handler.h"
 
 #include <boost/asio.hpp>
 
@@ -50,9 +51,10 @@ class MirSocketRpcChannel : public MirBasicRpcChannel
 public:
     MirSocketRpcChannel();
     MirSocketRpcChannel(const std::string& endpoint,
-                        const std::shared_ptr<Logger>& log,
-                        mir::EventHandler *event_handler);
+                        const std::shared_ptr<Logger>& log);
     ~MirSocketRpcChannel();
+
+    void set_event_handler(EventHandler *eh); // TODO: Move to Basic?
 
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
@@ -80,7 +82,7 @@ private:
 
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
 
-    mir::EventHandler *event_handler;
+    EventHandler *event_handler;
 };
 
 }

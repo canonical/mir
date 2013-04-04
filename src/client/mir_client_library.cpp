@@ -25,14 +25,13 @@
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
 #include "mir_logger.h"
-#include "make_rpc_channel.h"
+#include "mir_socket_rpc_channel.h"
 
 #include "mir_protobuf.pb.h"
 
 #include <set>
 #include <unordered_set>
 #include <cstddef>
-#include <iostream>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -40,6 +39,7 @@ namespace gp = google::protobuf;
 
 std::mutex MirConnection::connection_guard;
 std::unordered_set<MirConnection*> MirConnection::valid_connections;
+
 
 namespace
 {
@@ -52,12 +52,6 @@ void assign_result(void *result, void **context)
         *context = result;
 }
 
-void handle_event(mir::Event const& e)
-{
-    (void)e; // TODO
-    std::cerr << "TODO: handle event type " << e.type << " \n";
-}
-
 }
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
@@ -68,10 +62,12 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         auto log = std::make_shared<mcl::ConsoleLogger>();
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-        MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(socket_file, log, handle_event),
-            log,
-            client_platform_factory);
+        auto rpc = std::make_shared<mcl::MirSocketRpcChannel>(socket_file, log);
+
+        MirConnection* connection = new MirConnection(rpc, log,
+                                                      client_platform_factory);
+        
+        rpc->set_event_handler(connection);
 
         return connection->connect(name, callback, context);
     }
@@ -262,10 +258,12 @@ try
     auto log = std::make_shared<mcl::ConsoleLogger>();
     auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-    MirConnection* connection = new MirConnection(
-        mcl::make_rpc_channel(server, log, handle_event),
-        log,
-        client_platform_factory);
+    auto rpc = std::make_shared<mcl::MirSocketRpcChannel>(server, log);
+
+    MirConnection* connection = new MirConnection(rpc, log,
+                                                  client_platform_factory);
+
+    rpc->set_event_handler(connection);
 
     return connection->connect(lightdm_id, app_name, callback, client_context);
 }

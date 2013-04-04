@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,24 +13,33 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
-#ifndef MIR_CLIENT_MAKE_RPC_CHANNEL_H_
-#define MIR_CLIENT_MAKE_RPC_CHANNEL_H_
 
-#include <memory>
-#include "mir_protobuf.pb.h"
+#ifndef MIR_CLIENT_EVENT_HANDLER_
+#define MIR_CLIENT_EVENT_HANDLER_
+
+#include "mir/event.h"
 
 namespace mir
 {
 namespace client
 {
-class Logger;
 
-std::shared_ptr<google::protobuf::RpcChannel>
-make_rpc_channel(std::string const& name,
-                 std::shared_ptr<Logger> const& log);
-}
-}
+class EventHandler
+{
+public:
+    virtual ~EventHandler() {}
+    virtual void handle_event(mir::Event const& e) = 0;
+};
 
-#endif /* MIR_CLIENT_MAKE_RPC_CHANNEL_H_ */
+class NullEventHandler : public EventHandler
+{
+public:
+    void handle_event(mir::Event const &) {}
+};
+
+} // namespace client
+} // namespace mir
+
+#endif

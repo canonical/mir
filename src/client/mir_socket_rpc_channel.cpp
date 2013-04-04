@@ -38,14 +38,13 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel() :
 
 mcl::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
-    std::shared_ptr<Logger> const& log,
-    mir::EventHandler *event_handler) :
+    std::shared_ptr<Logger> const& log) :
     log(log),
     pending_calls(log),
     work(io_service),
     endpoint(endpoint),
     socket(io_service),
-    event_handler(event_handler)
+    event_handler(nullptr)
 {
     socket.connect(endpoint);
 
@@ -283,7 +282,7 @@ void mcl::MirSocketRpcChannel::read_message()
                     {
                         mir::Event e;
                         decode_event(seq.event(i), e);
-                        event_handler(e);
+                        event_handler->handle_event(e);
                     }
                 } // else protobuf will log an error
             } // else ignore incoming events
@@ -320,4 +319,9 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     mir::protobuf::wire::Result result;
     result.ParseFromIstream(&in);
     return result;
+}
+
+void mcl::MirSocketRpcChannel::set_event_handler(mcl::EventHandler *eh)
+{
+    event_handler = eh;
 }

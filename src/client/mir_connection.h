@@ -31,7 +31,7 @@
 
 #include "client_platform.h"
 #include "client_context.h"
-
+#include "event_handler.h"
 #include "mir_wait_handle.h"
 
 namespace mir
@@ -45,7 +45,8 @@ class ClientPlatformFactory;
 }
 }
 
-struct MirConnection : public mir::client::ClientContext
+struct MirConnection : public mir::client::ClientContext,
+                       public mir::client::EventHandler
 {
 public:
     MirConnection();
@@ -99,6 +100,8 @@ public:
     MirConnection* mir_connection();
 
     EGLNativeDisplayType egl_native_display();
+
+    void handle_event(mir::Event const&);
 
 private:
     std::shared_ptr<google::protobuf::RpcChannel> channel;
