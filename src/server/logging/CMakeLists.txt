@@ -13,3 +13,9 @@ add_library(
 
   ${LOGGING_SOURCES}
 )
+
+target_link_libraries(
+  mirlogging
+
+  ${GLog_LIBRARY}
+)
