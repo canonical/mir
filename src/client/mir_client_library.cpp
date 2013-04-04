@@ -32,6 +32,7 @@
 #include <set>
 #include <unordered_set>
 #include <cstddef>
+#include <iostream>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -54,6 +55,7 @@ void assign_result(void *result, void **context)
 void handle_event(mir::Event const& e)
 {
     (void)e; // TODO
+    std::cerr << "TODO: handle event type " << e.type << " \n";
 }
 
 }

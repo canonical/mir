@@ -29,6 +29,7 @@ struct Event
 {
     typedef enum
     {
+        UNKNOWN,
         SURFACE
     } Type;
     Type type;

@@ -239,6 +239,24 @@ void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& e
             boost::asio::placeholders::error));
 }
 
+static void decode_event(mir::protobuf::Event const& p, mir::Event &e)
+{
+    using namespace mir;
+
+    e.type = Event::UNKNOWN;
+
+    if (p.has_surface_changed())
+    {
+        e.type = Event::SURFACE;
+        e.surface.type = Event::Surface::CHANGE;
+        
+        mir::protobuf::SurfaceSetting const& change = p.surface_changed();
+        e.surface.id = change.surfaceid().value();
+        e.surface.change.attrib =
+            static_cast<MirSurfaceAttrib>(change.attrib());
+        e.surface.change.value = change.ivalue();
+    }
+}
 
 void mcl::MirSocketRpcChannel::read_message()
 {
@@ -253,11 +271,22 @@ void mcl::MirSocketRpcChannel::read_message()
 
         log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
 
-        if (result.id() == 0)  // It's an event
+        if (result.id() == 0)  // It's an event sequence
         {
-            log->error() << __PRETTY_FUNCTION__
-                         << "TODO: implement event handling."
-                         << std::endl;
+            if (event_handler)
+            {
+                mir::protobuf::EventSequence seq;
+                if (seq.ParseFromString(result.response()))
+                {
+                    const int nevents = seq.event_size();
+                    for (int i = 0; i < nevents; i++)
+                    {
+                        mir::Event e;
+                        decode_event(seq.event(i), e);
+                        event_handler(e);
+                    }
+                } // else protobuf will log an error
+            } // else ignore incoming events
         }
         else
         {
