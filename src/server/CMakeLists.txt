@@ -20,9 +20,6 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
-MESSAGE(STATUS "GLog_LIBRARY=" ${GLog_LIBRARY})
-MESSAGE(STATUS "GLog_LIBRARY=" ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
-
 set(
   SRCS
   run_mir.cpp
