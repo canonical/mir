@@ -36,6 +36,7 @@ public:
 
     virtual geometry::Size display_size() = 0; 
     virtual geometry::PixelFormat display_format() = 0; 
+    virtual unsigned int number_of_framebuffers_available() = 0;
 
 protected:
     DisplayInfoProvider() = default;

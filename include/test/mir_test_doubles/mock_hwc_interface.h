@@ -37,6 +37,7 @@ public:
     MOCK_METHOD0(commit_frame, void());
     MOCK_METHOD0(display_size, geometry::Size());
     MOCK_METHOD0(display_format, geometry::PixelFormat());
+    MOCK_METHOD0(number_of_framebuffers_available, unsigned int());
 };
 
 }

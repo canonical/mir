@@ -96,6 +96,11 @@ geom::PixelFormat mga::HWC11Device::display_format()
     //TODODODODO
     return geom::PixelFormat::invalid;
 }
+
+unsigned int mga::HWC11Device::number_of_framebuffers_available()
+{
+    return 344u; //TODO IMPLEMENT
+}
  
 void mga::HWC11Device::notify_vsync()
 {
