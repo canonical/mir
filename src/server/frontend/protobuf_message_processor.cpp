@@ -172,22 +172,8 @@ void mfd::ProtobufMessageProcessor::handle_event(Event const& e)
        break;
    }
 
-   send_events(&seq);
-}
-
-void mfd::ProtobufMessageProcessor::send_events(
-    mir::protobuf::EventSequence *seq)
-{
-    std::ostringstream buffer1;
-    seq->SerializeToOstream(&buffer1);
-
-    mir::protobuf::wire::RawEvents raw;
-    raw.set_seq(buffer1.str());
-
-    std::ostringstream buffer2;
-    raw.SerializeToOstream(&buffer2);
-
-    sender->send(buffer2);
+   // id zero is reserved for events. Zero will never be used for invocations.
+   send_response(0, &seq);
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)

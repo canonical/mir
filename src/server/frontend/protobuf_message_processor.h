@@ -75,7 +75,6 @@ private:
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response);
 
     void handle_event(mir::Event const& e);
-    void send_events(mir::protobuf::EventSequence *seq);
 
     template<class Response>
     std::vector<int32_t> extract_fds_from(Response* response);
