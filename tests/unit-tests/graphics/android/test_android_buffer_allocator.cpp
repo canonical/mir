@@ -102,3 +102,14 @@ TEST_F(AndroidBufferAllocatorTest, alloc_buffer_calls_initializer)
 
     allocator.alloc_buffer(properties);
 }
+
+TEST_F(AndroidBufferAllocatorTest, buffer_usage_converter)
+{
+    auto buffer_initializer = std::make_shared<mtd::MockBufferInitializer>();
+    mga::AndroidBufferAllocator allocator{buffer_initializer};
+
+    EXPECT_EQ(mga::BufferUsage::use_hardware,
+              allocator.convert_from_compositor_usage(mc::BufferUsage::hardware);
+    EXPECT_EQ(mga::BufferUsage::use_software,
+              allocator.convert_from_compositor_usage(mc::BufferUsage::software);
+}
