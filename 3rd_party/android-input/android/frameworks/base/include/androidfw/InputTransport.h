@@ -43,6 +43,8 @@ namespace android {
  * Intermediate representation used to send input events and related signals.
  */
 struct InputMessage {
+    InputMessage();
+
     enum {
         TYPE_KEY = 1,
         TYPE_MOTION = 2,

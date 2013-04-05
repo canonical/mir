@@ -41,7 +41,7 @@ extern "C" {
         MIR_INPUT_EVENT_TYPE_HW_SWITCH
     } MirEventType;
 
-    struct MirEvent
+    typedef struct MirEvent
     {
         /* Generic event properties */
         MirEventType type;
@@ -94,7 +94,7 @@ extern "C" {
                 } pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
             } motion;
         } details;
-    };
+    } MirEvent;
 
 #ifdef __cplusplus
 }

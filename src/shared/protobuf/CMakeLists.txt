@@ -30,6 +30,7 @@ target_link_libraries(
   mirprotobuf
 
   ${PROTOBUF_LIBRARIES}
+  -lpthread
 )
 
 # Export the include directories

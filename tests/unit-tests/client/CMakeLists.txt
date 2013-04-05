@@ -16,4 +16,8 @@ if(MIR_PLATFORM STREQUAL "gbm")
   add_subdirectory("gbm")
 endif()
 
+if (NOT MIR_DISABLE_INPUT)
+add_subdirectory("input")
+endif()
+
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

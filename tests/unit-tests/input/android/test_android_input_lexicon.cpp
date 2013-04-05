@@ -15,8 +15,8 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#include "src/server/input/android/android_input_lexicon.h"
-// Is this the right place for this header? Will eventually be included by clients.
+
+#include "mir/input/android/android_input_lexicon.h"
 #include "mir_toolkit/input/event.h"
 
 #include <androidfw/Input.h>
@@ -25,7 +25,7 @@
 #include <gmock/gmock.h>
 
 namespace mi = mir::input;
-namespace mia = mir::input::android;
+namespace miat = mir::input::android::transport;
 
 TEST(AndroidInputLexicon, translates_key_events)
 {
@@ -48,7 +48,7 @@ TEST(AndroidInputLexicon, translates_key_events)
                                down_time, event_time);
 
     MirEvent mir_ev;
-    mia::Lexicon::translate(android_key_ev, mir_ev);
+    miat::Lexicon::translate(android_key_ev, mir_ev);
 
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.device_id);
@@ -121,7 +121,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
                                   event_time, pointer_count, &pointer_properties, &pointer_coords);
 
     MirEvent mir_ev;
-    mia::Lexicon::translate(android_motion_ev, mir_ev);
+    miat::Lexicon::translate(android_motion_ev, mir_ev);
 
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.device_id);

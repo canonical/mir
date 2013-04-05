@@ -30,12 +30,19 @@
 #include "client_platform.h"
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {
 namespace client
 {
 class ClientBuffer;
+namespace input
+{
+class InputPlatform;
+class InputReceiverThread;
+}
+
 struct MemoryRegion;
 }
 }
@@ -51,7 +58,9 @@ public:
         mir::protobuf::DisplayServer::Stub & server,
         std::shared_ptr<mir::client::Logger> const& logger,
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
+        std::shared_ptr<mir::client::input::InputPlatform> const& input_platform,
         MirSurfaceParameters const& params,
+        MirEventDelegate const* delegate,
         mir_surface_lifecycle_callback callback, void * context);
 
     ~MirSurface();
@@ -97,6 +106,7 @@ private:
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
+    std::shared_ptr<mir::client::input::InputPlatform> const input_platform;
 
     std::shared_ptr<mir::client::Logger> logger;
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
@@ -105,6 +115,9 @@ private:
 
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attrib_arraysize_];
+
+    std::function<void(MirEvent*)> handle_event_callback;
+    std::shared_ptr<mir::client::input::InputReceiverThread> input_thread;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

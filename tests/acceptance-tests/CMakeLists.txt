@@ -13,6 +13,9 @@ set(
 )
 
 list(APPEND SOURCES
+  test_client_input.cpp)
+
+list(APPEND SOURCES
   test_server_startup.cpp
 )
 
@@ -21,6 +24,7 @@ add_executable(
 
   ${SOURCES}
 )
+uses_android_input(acceptance-tests)
 
 
 target_link_libraries(
