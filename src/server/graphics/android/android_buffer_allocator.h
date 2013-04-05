@@ -23,6 +23,7 @@
 #include <hardware/hardware.h>
 
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_properties.h"
 #include "graphic_alloc_adaptor.h"
 
 namespace mir
@@ -49,6 +50,8 @@ public:
         compositor::BufferProperties const& buffer_properties);
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();
+
+    BufferUsage convert_from_compositor_usage(compositor::BufferUsage usage);
 
 private:
     const hw_module_t    *hw_module;

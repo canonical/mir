@@ -109,7 +109,7 @@ TEST_F(AndroidBufferAllocatorTest, buffer_usage_converter)
     mga::AndroidBufferAllocator allocator{buffer_initializer};
 
     EXPECT_EQ(mga::BufferUsage::use_hardware,
-              allocator.convert_from_compositor_usage(mc::BufferUsage::hardware);
+              allocator.convert_from_compositor_usage(mc::BufferUsage::hardware));
     EXPECT_EQ(mga::BufferUsage::use_software,
-              allocator.convert_from_compositor_usage(mc::BufferUsage::software);
+              allocator.convert_from_compositor_usage(mc::BufferUsage::software));
 }
