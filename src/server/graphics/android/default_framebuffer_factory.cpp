@@ -17,14 +17,18 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/mir_native_window.h"
 #include "default_framebuffer_factory.h"
 #include "display_info_provider.h"
 #include "graphic_buffer_allocator.h"
+#include "server_render_window.h"
+#include "fb_swapper.h"
 
 #include <vector>
 
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
+namespace mcla=mir::client::android;
 
 mga::DefaultFramebufferFactory::DefaultFramebufferFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
     : buffer_allocator(buffer_allocator)
@@ -42,5 +46,8 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     {
         buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
     }
-    return std::make_shared<ANativeWindow>();
+
+    auto swapper = std::make_shared<mga::FBSwapper>(buffers);
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper);
+    return std::make_shared<mcla::MirNativeWindow>(interpreter); 
 }
