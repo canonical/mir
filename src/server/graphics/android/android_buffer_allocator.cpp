@@ -92,7 +92,14 @@ std::vector<geom::PixelFormat> mga::AndroidBufferAllocator::supported_pixel_form
     return pixel_formats;
 }
 
-mga::BufferUsage mga::AndroidBufferAllocator::convert_from_compositor_usage(mc::BufferUsage /*usage*/)
+mga::BufferUsage mga::AndroidBufferAllocator::convert_from_compositor_usage(mc::BufferUsage usage)
 {
-    return mga::BufferUsage::use_hardware;
+    switch (usage)
+    {
+        case mc::BufferUsage::software:
+            return mga::BufferUsage::use_software;
+        case mc::BufferUsage::hardware:
+        default:
+            return mga::BufferUsage::use_hardware;
+    } 
 }
