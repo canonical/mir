@@ -146,7 +146,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_native_handle)
         .Times(Exactly(1))
         .WillOnce(Return(expected_anwb));
 
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf);
+    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, default_use);
 
     EXPECT_EQ(expected_anwb, buffer.native_buffer_handle());
 }
