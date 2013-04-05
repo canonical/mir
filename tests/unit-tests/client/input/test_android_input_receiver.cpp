@@ -17,7 +17,7 @@
  */
 
 #include "src/client/input/android_input_receiver.h"
-#include "mir_toolkit/input/event.h"
+#include "mir_toolkit/event.h"
 
 #include <androidfw/InputTransport.h>
 

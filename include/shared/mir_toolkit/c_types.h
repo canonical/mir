@@ -19,7 +19,7 @@
 #ifndef MIR_TOOLKIT_C_TYPES_H_
 #define MIR_TOOLKIT_C_TYPES_H_
 
-#include <mir_toolkit/input/event.h>
+#include <mir_toolkit/event.h>
 
 #ifdef __cplusplus
 /**

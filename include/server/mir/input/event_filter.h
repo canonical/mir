@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_EVENT_FILTER_H_
 #define MIR_INPUT_EVENT_FILTER_H_
 
-#include "mir_toolkit/input/event.h"
+#include "mir_toolkit/event.h"
 
 #include <memory>
 

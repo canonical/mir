@@ -17,7 +17,7 @@
  */
 
 #include "mir/input/android/android_input_lexicon.h"
-#include "mir_toolkit/input/event.h"
+#include "mir_toolkit/event.h"
 
 #include <androidfw/Input.h>
 
