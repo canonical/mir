@@ -36,9 +36,9 @@ extern "C" {
 
     typedef enum
     {
-        MIR_INPUT_EVENT_TYPE_KEY,
-        MIR_INPUT_EVENT_TYPE_MOTION,
-        MIR_INPUT_EVENT_TYPE_HW_SWITCH
+        mir_event_type_key,
+        mir_event_type_motion,
+        mir_event_type_hw_switch
     } MirEventType;
 
     typedef struct MirEvent
