@@ -71,13 +71,17 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator(
 std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
-    auto buffer = std::make_shared<AndroidBuffer>(alloc_device,
-                                                  buffer_properties.size,
-                                                  buffer_properties.format,
-                                                  mga::BufferUsage::use_hardware);
+    auto usage = convert_from_compositor_usage(buffer_properties.usage);
+    return alloc_buffer_platform(buffer_properties.size,
+                                          buffer_properties.format,
+                                          usage);
+}
 
+std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer_platform(
+    geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
+{
+    auto buffer = std::make_shared<AndroidBuffer>(alloc_device, sz, pf, use);
     (*buffer_initializer)(*buffer);
-
     return buffer;
 }
 
