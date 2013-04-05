@@ -37,6 +37,10 @@ namespace doubles
 struct MockBuffer : public compositor::Buffer
 {
  public:
+    MockBuffer()
+    {
+    }
+
     MockBuffer(geometry::Size size,
                geometry::Stride s,
                geometry::PixelFormat pf)
