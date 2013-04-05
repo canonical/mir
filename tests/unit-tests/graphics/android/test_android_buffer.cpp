@@ -67,16 +67,16 @@ TEST_F(AndroidGraphicBufferBasic, usage_type_passes_through)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_hardware));
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_hardware);
-    Mock::VerifyAndClearExpectations(mock_alloc_device);
+    mga::AndroidBuffer hw_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_hardware);
+    Mock::VerifyAndClearExpectations(mock_alloc_device.get());
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_software));
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_software);
-    Mock::VerifyAndClearExpectations(mock_alloc_device);
+    mga::AndroidBuffer sw_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_software);
+    Mock::VerifyAndClearExpectations(mock_alloc_device.get());
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_framebuffer_gles));
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_framebuffer_gles);
-    Mock::VerifyAndClearExpectations(mock_alloc_device);
+    mga::AndroidBuffer fb_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_framebuffer_gles);
+    Mock::VerifyAndClearExpectations(mock_alloc_device.get());
 }
 
 TEST_F(AndroidGraphicBufferBasic, size_query_test)

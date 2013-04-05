@@ -31,16 +31,14 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::AndroidBuffer::AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
-                                  geom::Size size, geom::PixelFormat pf)
+                                  geom::Size size, geom::PixelFormat pf, mga::BufferUsage use)
     :
     alloc_device(alloc_dev)
 {
-    BufferUsage usage = mga::BufferUsage::use_hardware;
-
     if (!alloc_device)
         BOOST_THROW_EXCEPTION(std::runtime_error("No allocation device for graphics buffer"));
 
-    native_window_buffer_handle = alloc_device->alloc_buffer(size, pf, usage);
+    native_window_buffer_handle = alloc_device->alloc_buffer(size, pf, use);
 
     if (!native_window_buffer_handle.get())
         BOOST_THROW_EXCEPTION(std::runtime_error("Graphics buffer allocation failed"));
