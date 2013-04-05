@@ -47,7 +47,6 @@ mga::FBSwapper::FBSwapper(std::vector<std::shared_ptr<mc::Buffer>> buffer_list)
 std::shared_ptr<mc::Buffer> mga::FBSwapper::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
-
     while (queue.empty())
     {
         cv.wait(lk);

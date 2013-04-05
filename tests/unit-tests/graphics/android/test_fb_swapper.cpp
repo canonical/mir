@@ -124,13 +124,13 @@ TEST_F(FBSwapperTest, synctest)
         auto buf1 = fb_swapper.compositor_acquire();
         auto buf2 = fb_swapper.compositor_acquire();
 
-        auto f = 
-            std::async(std::launch::async, [&]()
-            {
-                /* driver will release in order */
-                fb_swapper.compositor_release(buf1);
-                fb_swapper.compositor_release(buf2);
-            });
+        auto f = std::async(std::launch::async,
+                            [&]()
+                            {
+                                /* driver will release in order */
+                                fb_swapper.compositor_release(buf1);
+                                fb_swapper.compositor_release(buf2);
+                            });
 
         //this line will wait if f has not run
         auto buf3 = fb_swapper.compositor_acquire();
