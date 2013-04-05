@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_INPUT_EVENT_H_
-#define MIR_TOOLKIT_INPUT_EVENT_H_
+#ifndef MIR_TOOLKIT_EVENT_H_
+#define MIR_TOOLKIT_EVENT_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -101,4 +101,4 @@ extern "C" {
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_INPUT_EVENT_H_ */
+#endif /* MIR_TOOLKIT_EVENT_H_ */
