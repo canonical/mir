@@ -93,15 +93,14 @@ geom::Size mga::HWC11Device::display_size()
 
 geom::PixelFormat mga::HWC11Device::display_format()
 {
-    //TODODODODO
-    return geom::PixelFormat::invalid;
+    return geom::PixelFormat::abgr_8888;
 }
 
 unsigned int mga::HWC11Device::number_of_framebuffers_available()
 {
     //note: the default for hwc devices is 2 framebuffers. However, the api allows for the hwc can give us a hint
     //      to triple buffer. Taking this hint is currently not supported
-    return 344u; //TODO IMPLEMENT
+    return 2u;
 }
  
 void mga::HWC11Device::notify_vsync()
