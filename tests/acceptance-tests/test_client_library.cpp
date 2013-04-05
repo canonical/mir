@@ -298,7 +298,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_states)
                 mir_buffer_usage_hardware
             };
 
-            surface = mir_surface_create_sync(connection, &request_params);
+            surface = mir_surface_create_sync(connection, &request_params, NULL);
             ASSERT_TRUE(surface != NULL);
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");

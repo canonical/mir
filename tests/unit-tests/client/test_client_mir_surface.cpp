@@ -548,9 +548,11 @@ TEST_F(MirClientSurfaceTest, default_surface_state)
                                                  *client_comm_channel,
                                                  logger,
                                                  mock_buffer_factory,
+                                                 input_platform,
                                                  params,
+                                                 nullptr,
                                                  &empty_callback,
-                                                 (void*) NULL);
+                                                 nullptr);
     surface->get_create_wait_handle()->wait_for_result();
 
     /*
