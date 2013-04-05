@@ -37,6 +37,7 @@ public:
     AdaptorICSTest()
      : fb_usage_flags(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB),
        hw_usage_flags(GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER)
+       sw_usage_flags(GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN)
     {}
 
     virtual void SetUp()
@@ -168,13 +169,22 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_dimension_conversion)
     alloc_adaptor->alloc_buffer(size, pf, usage );
 }
 
-TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
+TEST_F(AdaptorICSTest, adaptor_gralloc_hw_usage_conversion)
 {
     using namespace testing;
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, hw_usage_flags, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     alloc_adaptor->alloc_buffer(size, pf, usage );
+}
+
+TEST_F(AdaptorICSTest, adaptor_gralloc_sw_usage_conversion)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, sw_usage_flags, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+
+    alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::software );
 }
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles)
