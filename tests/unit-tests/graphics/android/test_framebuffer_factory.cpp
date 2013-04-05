@@ -16,16 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "src/server/graphics/android/default_framebuffer_factory.h"
 #include "src/server/graphics/android/android_buffer_handle.h"
 #include "src/server/graphics/android/native_buffer_handle.h"
 #include "src/server/graphics/android/display_info_provider.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
-namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
 namespace
@@ -37,13 +36,20 @@ public:
     MOCK_METHOD0(display_format, geom::PixelFormat());
     MOCK_METHOD0(number_of_framebuffers_available, unsigned int());
 };
+
+class MockAndroidGraphicBufferAllocator : public mga::AndroidGraphicBufferAllocator
+{
+    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&)); 
+    MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mc::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
+    MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
+};
 }
 
 class FBFactory  : public ::testing::Test
 {
 public:
     FBFactory()
-        : mock_buffer_allocator(std::make_shared<testing::NiceMock<mtd::MockAllocAdaptor>>()),
+        : mock_buffer_allocator(std::make_shared<testing::NiceMock<MockAndroidGraphicBufferAllocator>>()),
           mock_display_info_provider(std::make_shared<testing::NiceMock<MockDisplayInfoProvider>>()),
           fake_fb_num(2)
     {
@@ -55,10 +61,10 @@ public:
         ON_CALL(*mock_display_info_provider, number_of_framebuffers_available())
             .WillByDefault(Return(fake_fb_num));
         ON_CALL(*mock_buffer_allocator, alloc_buffer(_,_,_))
-            .WillByDefault(Return(std::shared_ptr<mga::AndroidBufferHandle>()));
+            .WillByDefault(Return(std::shared_ptr<mc::Buffer>()));
     }
 
-    std::shared_ptr<mtd::MockAllocAdaptor> mock_buffer_allocator;
+    std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
     std::shared_ptr<MockDisplayInfoProvider> mock_display_info_provider;
     unsigned int const fake_fb_num;
 };
