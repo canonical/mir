@@ -99,7 +99,7 @@ TEST_F(AndroidBufferAllocatorTest, alloc_buffer_calls_initializer)
     EXPECT_CALL(*buffer_initializer, operator_call(_))
         .Times(1);
 
-    allocator.alloc_buffer(size, pf, mga::BufferUsage::use_hardware);
+    allocator.alloc_buffer(properties);
 }
 
 TEST_F(AndroidBufferAllocatorTest, alloc_buffer_platform_calls_initializer)
@@ -109,7 +109,7 @@ TEST_F(AndroidBufferAllocatorTest, alloc_buffer_platform_calls_initializer)
     auto buffer_initializer = std::make_shared<mtd::MockBufferInitializer>();
 
     mga::AndroidBufferAllocator allocator{buffer_initializer};
-    auto size = geom::Size{geom::Width{2}, geom::Height{2};
+    auto size = geom::Size{geom::Width{2}, geom::Height{2}};
     auto pf = geom::PixelFormat::abgr_8888;
 
     EXPECT_CALL(*buffer_initializer, operator_call(_))

@@ -49,6 +49,8 @@ public:
     std::shared_ptr<compositor::Buffer> alloc_buffer(
         compositor::BufferProperties const& buffer_properties);
 
+    std::shared_ptr<compositor::Buffer> alloc_buffer_platform(
+        geometry::Size sz, geometry::PixelFormat pf, BufferUsage use);
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();
 
