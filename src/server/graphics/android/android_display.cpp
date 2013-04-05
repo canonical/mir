@@ -61,6 +61,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
       egl_context_shared{EGL_NO_CONTEXT},
       egl_surface_dummy{EGL_NO_SURFACE}
 {
+    printf("EGL INIT\n");
     EGLint major, minor;
 
     egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);

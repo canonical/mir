@@ -59,9 +59,12 @@ int main(int, char**)
 
     mir::draw::glAnimationBasic gl_animation;
 
+    printf("tomato\n");
     display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
     {
+    printf("carrot\n");
         buffer.make_current();
+    printf("rutabaga\n");
         gl_animation.init_gl();
     });
 
@@ -69,11 +72,15 @@ int main(int, char**)
     {
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
+      //      printf("trout\n");
             buffer.make_current();
+    //        printf("bass\n");
             buffer.clear();
 
+  //          printf("reefshark\n");
             gl_animation.render_gl();
 
+//            printf("ray\n");
             buffer.post_update();
         });
 

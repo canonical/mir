@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include <iostream>
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "syncfence.h"
@@ -91,6 +92,7 @@ int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
+    printf("DEQUEUE!\n");
     *fence_fd = -1;
     auto self = static_cast<mcla::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
@@ -108,6 +110,7 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
+    printf("QUEUE!\n");
     auto self = static_cast<mcla::MirNativeWindow*>(window);
     auto ioctl_control = std::make_shared<IoctlControl>();
     auto fence = std::make_shared<mcla::SyncFence>(fence_fd, ioctl_control);
@@ -177,12 +180,14 @@ int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::
 
 int mcla::MirNativeWindow::query(int key, int* value ) const
 {
+    printf("QUERYQUERY!\n");
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }
 
 int mcla::MirNativeWindow::perform(int key, va_list arg_list )
 {
+    printf("PERFPERF\n");
     int ret = 0;
     va_list args;
     va_copy(args, arg_list);
