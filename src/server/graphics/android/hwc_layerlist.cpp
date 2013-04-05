@@ -16,44 +16,20 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
-#define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
+#include "hwc_layerlist.h"
 
-#include <hardware/hwcomposer.h>
-#include <memory>
-#include <vector>
+namespace mga=mir::graphics::android;
 
-namespace mir
+mga::HWCLayerList::HWCLayerList()
 {
-namespace compositor
-{
-class Buffer;
-}
-namespace graphics
-{
-namespace android
-{
-
-class LayerListManager
-{
-    //interface
-};
-
-typedef struct std::vector<std::shared_ptr<hwc_layer_1_t>> LayerList; 
-class HWCLayerList : public LayerListManager
-{
-public:
-    HWCLayerList();
-    LayerList native_list() const;
-
-    void set_fb_target(std::shared_ptr<compositor::Buffer> const&);
-
-private:
-    LayerList layer_list;
-};
 
 }
-}
+
+mga::LayerList mga::HWCLayerList::native_list() const
+{
+    return layer_list;
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_ */
+void mga::HWCLayerList::set_fb_target(std::shared_ptr<compositor::Buffer> const&)
+{
+} 
