@@ -19,13 +19,14 @@
 
 #include "default_framebuffer_factory.h"
 #include "display_info_provider.h"
-#include "graphic_alloc_adaptor.h"
+#include "graphic_buffer_allocator.h"
 
 #include <vector>
 
 namespace mga=mir::graphics::android;
+namespace mc=mir::compositor;
 
-mga::DefaultFramebufferFactory::DefaultFramebufferFactory(std::shared_ptr<GraphicAllocAdaptor> const& buffer_allocator)
+mga::DefaultFramebufferFactory::DefaultFramebufferFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
     : buffer_allocator(buffer_allocator)
 {
 }
@@ -36,10 +37,10 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     auto pf = info_provider->display_format();
     auto num_framebuffers = info_provider->number_of_framebuffers_available();
     
-    std::vector<std::shared_ptr<mga::AndroidBufferHandle>> buffers; 
+    std::vector<std::shared_ptr<mc::Buffer>> buffers; 
     for( auto i = 0u; i < num_framebuffers; ++i)
     {
-        buffers.push_back(buffer_allocator->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles));
+        buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
     }
     return std::make_shared<ANativeWindow>();
 }

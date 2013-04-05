@@ -20,7 +20,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_properties.h"
-#include "android_buffer_allocator.h"
+#include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
 #include "android_buffer.h"
 
@@ -45,7 +45,7 @@ struct AllocDevDeleter
 };
 }
 
-mga::AndroidBufferAllocator::AndroidBufferAllocator(
+mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer)
     : buffer_initializer{buffer_initializer}
 {
@@ -68,7 +68,7 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator(
     alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
 }
 
-std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
+std::shared_ptr<mc::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
     auto usage = convert_from_compositor_usage(buffer_properties.usage);
@@ -77,7 +77,7 @@ std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
                                           usage);
 }
 
-std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer_platform(
+std::shared_ptr<mc::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
     geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
 {
     auto buffer = std::make_shared<AndroidBuffer>(alloc_device, sz, pf, use);
@@ -85,7 +85,7 @@ std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer_platform(
     return buffer;
 }
 
-std::vector<geom::PixelFormat> mga::AndroidBufferAllocator::supported_pixel_formats()
+std::vector<geom::PixelFormat> mga::AndroidGraphicBufferAllocator::supported_pixel_formats()
 {
     static std::vector<geom::PixelFormat> const pixel_formats{
         geom::PixelFormat::abgr_8888,
@@ -96,7 +96,7 @@ std::vector<geom::PixelFormat> mga::AndroidBufferAllocator::supported_pixel_form
     return pixel_formats;
 }
 
-mga::BufferUsage mga::AndroidBufferAllocator::convert_from_compositor_usage(mc::BufferUsage usage)
+mga::BufferUsage mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mc::BufferUsage usage)
 {
     switch (usage)
     {

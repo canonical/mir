@@ -22,16 +22,11 @@
 
 #include <hardware/hardware.h>
 
-#include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_properties.h"
-#include "graphic_alloc_adaptor.h"
+#include "graphic_buffer_allocator.h"
 
 namespace mir
 {
-namespace compositor
-{
-class BufferIDUniqueGenerator;
-}
 namespace graphics
 {
 
@@ -40,10 +35,12 @@ class BufferInitializer;
 namespace android
 {
 
-class AndroidBufferAllocator: public compositor::GraphicBufferAllocator
+class GraphicAllocAdaptor;
+
+class AndroidGraphicBufferAllocator: public GraphicBufferAllocator
 {
 public:
-    AndroidBufferAllocator(
+    AndroidGraphicBufferAllocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer);
 
     std::shared_ptr<compositor::Buffer> alloc_buffer(

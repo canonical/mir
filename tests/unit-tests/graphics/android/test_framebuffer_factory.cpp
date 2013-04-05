@@ -20,12 +20,15 @@
 #include "src/server/graphics/android/android_buffer_handle.h"
 #include "src/server/graphics/android/native_buffer_handle.h"
 #include "src/server/graphics/android/display_info_provider.h"
+#include "src/server/graphics/android/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_properties.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
+namespace mc=mir::compositor;
 
 namespace
 {
@@ -37,8 +40,9 @@ public:
     MOCK_METHOD0(number_of_framebuffers_available, unsigned int());
 };
 
-class MockAndroidGraphicBufferAllocator : public mga::AndroidGraphicBufferAllocator
+class MockAndroidGraphicBufferAllocator : public mga::GraphicBufferAllocator
 {
+public:
     MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&)); 
     MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mc::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
@@ -60,7 +64,7 @@ public:
             .WillByDefault(Return(geom::Size{geom::Width{2}, geom::Height{3}}));
         ON_CALL(*mock_display_info_provider, number_of_framebuffers_available())
             .WillByDefault(Return(fake_fb_num));
-        ON_CALL(*mock_buffer_allocator, alloc_buffer(_,_,_))
+        ON_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
             .WillByDefault(Return(std::shared_ptr<mc::Buffer>()));
     }
 
@@ -77,7 +81,7 @@ TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
  
     EXPECT_CALL(*mock_display_info_provider, number_of_framebuffers_available())
         .Times(1);
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_,_,_))
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))
         .Times(fake_fb_num);
  
     factory.create_fb_native_window(mock_display_info_provider);
@@ -96,7 +100,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_size)
     EXPECT_CALL(*mock_display_info_provider, display_size())
         .Times(1)
         .WillOnce(Return(disp_size));
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(disp_size,_,_))
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(disp_size,_,_))
         .Times(fake_fb_num);
  
     factory.create_fb_native_window(mock_display_info_provider);
@@ -108,7 +112,7 @@ TEST_F(FBFactory, test_native_window_creation_specifies_buffer_type)
 
     mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
 
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_,_,mga::BufferUsage::use_framebuffer_gles))
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,mga::BufferUsage::use_framebuffer_gles))
         .Times(fake_fb_num);
  
     factory.create_fb_native_window(mock_display_info_provider);
@@ -126,7 +130,7 @@ TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
     EXPECT_CALL(*mock_display_info_provider, display_format())
         .Times(1)
         .WillOnce(Return(pf));
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_,pf,_))
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,pf,_))
         .Times(fake_fb_num);
  
     factory.create_fb_native_window(mock_display_info_provider);
