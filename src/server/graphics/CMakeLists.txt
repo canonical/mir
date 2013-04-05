@@ -23,6 +23,6 @@ target_link_libraries(
   mirgraphics
 
   mirlogging
-
+  mirsharedandroid
   ${GLESv2_LIBRARIES}
 )
