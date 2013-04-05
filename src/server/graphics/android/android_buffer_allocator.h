@@ -46,8 +46,9 @@ public:
     AndroidBufferAllocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer);
 
-    virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
+    std::shared_ptr<compositor::Buffer> alloc_buffer(
         compositor::BufferProperties const& buffer_properties);
+
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();
 
