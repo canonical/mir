@@ -19,6 +19,8 @@
 #ifndef MIR_TOOLKIT_C_TYPES_H_
 #define MIR_TOOLKIT_C_TYPES_H_
 
+#include <mir_toolkit/input/event.h>
+
 #ifdef __cplusplus
 /**
  * \defgroup mir_toolkit MIR graphics tools API
@@ -58,6 +60,15 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
  *                                   mir_connect
  */
 typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
+
+/**
+ * Callback member of MirEventDelegate for handling of input events.
+ *   \param [in] surface     The surface on which an event has occurred
+ *   \param [in] event       The event to be handled
+ *   \param [in,out] context The context provided by client during delegate
+ *                           registration.
+ */
+typedef void (*mir_event_delegate_handle_input_callback)(MirSurface* surface, MirEvent* ev, void* context);
 
 /**
  * The order of components in a format enum matches the
@@ -157,6 +168,16 @@ typedef struct MirDisplayInfo
     int supported_pixel_format_items;
     MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
+
+/**
+ *  MirEventDelegate may be used to specify (at surface creation time) callbacks for
+ *  handling of input events
+ */
+typedef struct MirEventDelegate
+{
+    mir_event_delegate_handle_input_callback handle_input;
+    void *context;
+} MirEventDelegate;
 
 #ifdef __cplusplus
 }

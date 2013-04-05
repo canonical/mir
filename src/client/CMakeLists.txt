@@ -35,6 +35,7 @@ set(
   mir_basic_rpc_channel.cpp
   ${PROTO_SRCS}
 )
+add_subdirectory(input)
 
 list(APPEND CLIENT_SOURCES
   mir_socket_rpc_channel.cpp
@@ -82,20 +83,26 @@ set_target_properties(
   SOVERSION ${MIR_VERSION_MAJOR}
 )
 
-target_link_libraries(
-  mirclient
-
+set(
+  MIR_CLIENT_LIBRARIES
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${LIBHARDWARE_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
 
   mirprotobuf
+  mirinputandroidtransport
 
   ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}
  
   3rd_party
+)
+
+target_link_libraries(
+  mirclient
+
+  ${MIR_CLIENT_LIBRARIES}
 )
 
 install(

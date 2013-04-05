@@ -44,6 +44,7 @@ public:
     explicit HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
     ~HWC11Device();
 
+    geometry::Size display_size(); 
     void wait_for_vsync();
     void commit_frame();
     void notify_vsync();
@@ -54,6 +55,7 @@ private:
     std::mutex vsync_wait_mutex;
     std::condition_variable vsync_trigger;
     bool vsync_occurred;
+    unsigned int primary_display_config;
 };
 
 }

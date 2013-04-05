@@ -35,11 +35,18 @@ namespace input
 {
 namespace android
 {
+namespace transport
+{
+
+/// The Lexicon translates droidinput event types to MirEvent types prior to 
+/// shell or client handling.
 class Lexicon
 {
 public:
     static void translate(const droidinput::InputEvent *android_event, MirEvent &mir_event);
 };
+
+}
 }
 }
 }

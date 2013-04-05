@@ -89,7 +89,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     auto info = handle.getInfo();
 
-    EXPECT_EQ(testing_surface_name, info->name);
+    EXPECT_EQ(droidinput::String8(testing_surface_name.c_str()), info->name);
 
     EXPECT_EQ(testing_server_fd, info->inputChannel->getFd());
 
