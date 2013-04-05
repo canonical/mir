@@ -212,8 +212,6 @@ private:
         status_t parseCharacterLiteral(char16_t* outCharacter);
     };
 
-    static sp<KeyCharacterMap> sEmpty;
-
     KeyedVector<int32_t, Key*> mKeys;
     int mType;
 
