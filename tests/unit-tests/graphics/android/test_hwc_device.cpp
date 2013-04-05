@@ -27,6 +27,7 @@
 
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
 
 class HWCDevice : public ::testing::Test
 {
@@ -267,4 +268,16 @@ TEST_F(HWCDevice, test_hwc_device_display_width_height)
     EXPECT_EQ(size.width.as_uint32_t(),  static_cast<unsigned int>(display_width));
     EXPECT_EQ(size.height.as_uint32_t(), static_cast<unsigned int>(display_height));
 }
+}
+
+TEST_F(HWCDevice, hwc_device_reports_2_fbs_available_by_default)
+{
+    mga::HWC11Device device(mock_device);
+    EXPECT_EQ(2u, device.number_of_framebuffers_available());
+}
+
+TEST_F(HWCDevice, hwc_device_reports_abgr_8888_by_default)
+{
+    mga::HWC11Device device(mock_device);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, device.display_format());
 }

@@ -99,6 +99,8 @@ geom::PixelFormat mga::HWC11Device::display_format()
 
 unsigned int mga::HWC11Device::number_of_framebuffers_available()
 {
+    //note: the default for hwc devices is 2 framebuffers. However, the api allows for the hwc can give us a hint
+    //      to triple buffer. Taking this hint is currently not supported
     return 344u; //TODO IMPLEMENT
 }
  
