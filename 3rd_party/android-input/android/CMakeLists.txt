@@ -49,7 +49,7 @@ endif()
 
 
 add_library(
-  android-input SHARED
+  android-input STATIC
   # The stuff that we want
   frameworks/base/services/input/EventHub.cpp
   frameworks/base/services/input/InputApplication.cpp
@@ -97,7 +97,3 @@ set_target_properties(
   PROPERTIES
   COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
 )
-
-install(
-  TARGETS android-input
-  LIBRARY DESTINATION lib)
