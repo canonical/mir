@@ -21,6 +21,7 @@
 #define MIR_SHELL_SURFACE_H_
 
 #include "mir/frontend/surface.h"
+#include "mir/frontend/surface_id.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/surface_target.h"
 
@@ -81,7 +82,8 @@ public:
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
-    void set_event_queue(std::shared_ptr<EventQueue> & q);
+    void set_event_target(std::shared_ptr<EventQueue> & q,
+                          frontend::SurfaceId i);
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
@@ -93,6 +95,7 @@ private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
     std::shared_ptr<EventQueue> event_queue;
 
+    frontend::SurfaceId id;
     MirSurfaceType type_value;
     MirSurfaceState state_value;
 };

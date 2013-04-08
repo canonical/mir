@@ -38,6 +38,7 @@ msh::Surface::Surface(
   : builder(builder),
     input_channel(input_channel),
     surface(builder->create_surface(params)),
+    id(0),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored)
 {
@@ -51,9 +52,11 @@ msh::Surface::~Surface()
     }
 }
 
-void msh::Surface::set_event_queue(std::shared_ptr<EventQueue> & evq)
+void msh::Surface::set_event_target(std::shared_ptr<EventQueue> & q,
+                                    mir::frontend::SurfaceId i)
 {
-    event_queue = evq;
+    event_queue = q;
+    id = i;
 }
 
 void msh::Surface::hide()
@@ -235,13 +238,15 @@ bool msh::Surface::set_state(MirSurfaceState s)
 
 void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 {
-    MirEvent e;
-
-    e.type = mir_event_type_surface_change;
-    e.details.surface_change.id = 69; // TODO
-    e.details.surface_change.attrib = attrib;
-    e.details.surface_change.value = value;
-
     if (event_queue)
+    {
+        MirEvent e;
+
+        e.type = mir_event_type_surface_change;
+        e.details.surface_change.id = id.as_value();
+        e.details.surface_change.attrib = attrib;
+        e.details.surface_change.value = value;
+
         event_queue->post(e);
+    }
 }

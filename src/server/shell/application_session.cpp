@@ -68,7 +68,7 @@ mf::SurfaceId msh::ApplicationSession::create_surface(const mf::SurfaceCreationP
     auto const id = next_id();
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    surf->set_event_queue(event_queue);
+    surf->set_event_target(event_queue, id);
     surfaces[id] = surf;
     return id;
 }
