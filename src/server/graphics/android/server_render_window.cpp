@@ -19,6 +19,7 @@
 
 #include "server_render_window.h"
 #include "native_buffer_handle.h"
+#include "display_info_provider.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer.h"
 
@@ -27,6 +28,7 @@
 
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
 
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mc::BufferSwapper> const& swapper,
                                             std::shared_ptr<mga::DisplayInfoProvider> const& display_poster)
@@ -62,15 +64,18 @@ void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)
 
 int mga::ServerRenderWindow::driver_requests_info(int key) const
 {
+    geom::Size size;
     switch(key)
     {
-        case 6: //width, 768 for nex4
-            return 768;
-        case 7: //height, 768 for nex4
-            return 1280;
-        case 2:
-        default:
-            //figure me out!
+        case NATIVE_WINDOW_WIDTH:
+            size = poster->display_size();
+            return size.width.as_uint32_t();
+        case NATIVE_WINDOW_HEIGHT:
+            size = poster->display_size();
+            return size.height.as_uint32_t();
+        case NATIVE_WINDOW_FORMAT:
             return 2;
+        default:
+            return -1;
     }
 }
