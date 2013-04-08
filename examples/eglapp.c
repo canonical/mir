@@ -85,7 +85,7 @@ void mir_eglapp_swap_buffers(void)
     }
 }
 
-static void mir_eglapp_handle_input(MirSurface* surface, MirEvent* ev, void* context)
+static void mir_eglapp_handle_input(MirSurface* surface, MirEvent const* ev, void* context)
 {
     (void) surface;
     (void) context;
