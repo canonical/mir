@@ -149,9 +149,7 @@ MirSurface* mir_surface_create_sync(
 void mir_surface_set_event_handler(MirSurface *surface,
                                    MirEventDelegate const *event_handler)
 {
-    // TODO
-    (void)surface;
-    (void)event_handler;
+    surface->set_event_handler(event_handler);
 }
 
 MirWaitHandle* mir_surface_release(
