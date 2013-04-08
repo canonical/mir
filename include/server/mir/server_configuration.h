@@ -41,6 +41,8 @@ class InputManager;
 class EventFilter;
 }
 
+class MainLoop;
+
 class ServerConfiguration
 {
 public:
@@ -49,6 +51,7 @@ public:
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
+    virtual std::shared_ptr<MainLoop> the_main_loop() = 0;
 
 protected:
     ServerConfiguration() = default;
