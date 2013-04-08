@@ -37,12 +37,16 @@ namespace android
 {
 
 class HWCLayer;
+typedef struct std::vector<std::shared_ptr<HWCLayer>> LayerList;
+ 
 class HWCLayerOrganizer
 {
-    //interface
+public:
+    ~HWCLayerOrganizer() {}
+    virtual const LayerList& native_list() const = 0;
+    virtual void set_fb_target(std::shared_ptr<compositor::Buffer> const&) = 0;
 };
 
-typedef struct std::vector<std::shared_ptr<HWCLayer>> LayerList; 
 class HWCLayerList : public HWCLayerOrganizer
 {
 public:

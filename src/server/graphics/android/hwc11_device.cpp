@@ -18,6 +18,7 @@
  */
 
 #include "hwc11_device.h"
+#include "hwc_layerlist.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -122,9 +123,9 @@ void mga::HWC11Device::wait_for_vsync()
     }
 }
 
-void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& /*buffer*/)
+void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer)
 {
-
+    layer_organizer->set_fb_target(buffer);
 }
 void mga::HWC11Device::commit_frame()
 {
