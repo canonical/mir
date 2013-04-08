@@ -39,7 +39,6 @@ MirSurface::MirSurface(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     std::shared_ptr<mcli::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
-    MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
@@ -54,8 +53,11 @@ MirSurface::MirSurface(
     message.set_pixel_format(params.pixel_format);
     message.set_buffer_usage(params.buffer_usage);
     
+    #if 0
+    // TODO
     if (delegate)
         handle_event_callback = std::bind(delegate->callback, this, std::placeholders::_1, delegate->context);
+    #endif
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 

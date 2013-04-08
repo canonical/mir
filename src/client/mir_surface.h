@@ -60,7 +60,6 @@ public:
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<mir::client::input::InputPlatform> const& input_platform,
         MirSurfaceParameters const& params,
-        MirEventDelegate const* delegate,
         mir_surface_lifecycle_callback callback, void * context);
 
     ~MirSurface();
