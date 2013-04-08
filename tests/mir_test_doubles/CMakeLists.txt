@@ -10,12 +10,10 @@ set(
   event_factory.cpp
 )
 
-if (NOT MIR_DISABLE_INPUT)
 list(APPEND TEST_UTILS_SRCS
   fake_event_hub.cpp
   fake_event_hub_input_configuration.cpp
 )
-endif()
 
 list(APPEND TEST_UTILS_SRCS
   test_protobuf_socket_server.cpp

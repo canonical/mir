@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -34,22 +34,18 @@ struct BufferSwapperTriple : testing::Test
 {
     BufferSwapperTriple()
     {
-        auto buffer_a = std::make_shared<mtd::StubBuffer>();
-        auto buffer_b = std::make_shared<mtd::StubBuffer>();
-        auto buffer_c = std::make_shared<mtd::StubBuffer>();
-
-        buffer_a_addr = buffer_a.get();
-        buffer_b_addr = buffer_b.get();
-        buffer_c_addr = buffer_c.get();
+        buffer_a = std::make_shared<mtd::StubBuffer>();
+        buffer_b = std::make_shared<mtd::StubBuffer>();
+        buffer_c = std::make_shared<mtd::StubBuffer>();
 
         auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
         swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list);
 
     }
 
-    mc::Buffer* buffer_a_addr;
-    mc::Buffer* buffer_b_addr;
-    mc::Buffer* buffer_c_addr;
+    std::shared_ptr<mc::Buffer> buffer_a;
+    std::shared_ptr<mc::Buffer> buffer_b;
+    std::shared_ptr<mc::Buffer> buffer_c;
 
     std::shared_ptr<mc::BufferSwapper> swapper;
 };
@@ -58,92 +54,70 @@ struct BufferSwapperTriple : testing::Test
 
 TEST_F(BufferSwapperTriple, test_valid_buffer_returned)
 {
-    std::shared_ptr<mc::Buffer> buffer_ref;
-    mc::BufferID buf_tmp;
+    auto buf = swapper->client_acquire();
 
-    swapper->client_acquire(buffer_ref, buf_tmp);
-    swapper->client_release(buf_tmp);
-
-    auto addr = buffer_ref.get();
-    EXPECT_TRUE((addr == buffer_a_addr) || (addr == buffer_b_addr) || (addr = buffer_c_addr));
+    EXPECT_TRUE((buf == buffer_a) || (buf == buffer_b) || (buf = buffer_c));
 }
 
 TEST_F(BufferSwapperTriple, test_valid_and_unique_with_two_acquires)
 {
-    std::shared_ptr<mc::Buffer> buffer_ref;
-    mc::BufferID buf_tmp_a;
-    mc::BufferID buf_tmp_b;
-    mc::BufferID buf_tmp_c;
+    auto buffer_1 = swapper->client_acquire();
+    swapper->client_release(buffer_1);
 
-    swapper->client_acquire(buffer_ref, buf_tmp_a);
-    swapper->client_release(buf_tmp_a);
+    //just so one thread operation is ok
+    auto buffer_tmp = swapper->compositor_acquire();
+    swapper->compositor_release(buffer_tmp);
 
-    swapper->compositor_acquire(buffer_ref, buf_tmp_b);
-    swapper->compositor_release(buf_tmp_b);
+    auto buffer_2 = swapper->client_acquire();
+    swapper->client_release(buffer_2);
 
-    swapper->client_acquire(buffer_ref, buf_tmp_b);
-    swapper->client_release(buf_tmp_b);
+    auto buffer_3 = swapper->client_acquire();
+    swapper->client_release(buffer_3);
 
-    swapper->client_acquire(buffer_ref, buf_tmp_c);
-    swapper->client_release(buf_tmp_c);
-
-    EXPECT_NE(buf_tmp_a, buf_tmp_b);
-    EXPECT_NE(buf_tmp_a, buf_tmp_c);
-    EXPECT_NE(buf_tmp_b, buf_tmp_c);
+    EXPECT_NE(buffer_1, buffer_2);
+    EXPECT_NE(buffer_1, buffer_3);
+    EXPECT_NE(buffer_2, buffer_3);
 }
 
-TEST_F(BufferSwapperTriple, test_compositor_gets_valid)
+TEST_F(BufferSwapperTriple, test_compositor_gets_clients_last_buffer)
 {
-    std::shared_ptr<mc::Buffer> buffer_ref;
-    mc::BufferID buf_tmp_a;
-    mc::BufferID buf_tmp_b;
+    auto buffer_a = swapper->client_acquire();
+    swapper->client_release(buffer_a);
 
-    swapper->client_acquire(buffer_ref, buf_tmp_b);
-    swapper->client_release(buf_tmp_b);
-
-    swapper->compositor_acquire(buffer_ref, buf_tmp_a);
+    auto comp_buffer = swapper->compositor_acquire();
+    EXPECT_EQ(buffer_a, comp_buffer);
 }
 
 /* this would stall a double buffer */
-TEST_F(BufferSwapperTriple, test_client_can_get_two_buffers_without_compositor)
+TEST_F(BufferSwapperTriple, test_client_can_get_two_buffers_without_compositor_consuming_two_buffers)
 {
-    std::shared_ptr<mc::Buffer> buffer_ref;
-    mc::BufferID buf_tmp;
+    auto buffer_1 = swapper->compositor_acquire();
 
-    swapper->compositor_acquire(buffer_ref, buf_tmp);
+    auto buffer_2 = swapper->client_acquire();
+    swapper->client_release(buffer_2);
 
-    swapper->client_acquire(buffer_ref, buf_tmp);
-    swapper->client_release(buf_tmp);
+    auto buffer_3 = swapper->client_acquire();
+    swapper->client_release(buffer_3);
 
-    swapper->client_acquire(buffer_ref, buf_tmp);
-    swapper->client_release(buf_tmp);
-
-    SUCCEED();
+    EXPECT_NE(buffer_2, buffer_3);
 }
 
 TEST_F(BufferSwapperTriple, test_compositor_gets_last_posted_in_order)
 {
-    std::shared_ptr<mc::Buffer> buffer_ref;
-    mc::BufferID first_comp_buffer;
-    mc::BufferID first_client_buffer;
-    mc::BufferID second_comp_buffer;
-    mc::BufferID second_client_buffer;
-    mc::BufferID third_comp_buffer;
+    auto first_comp_buffer = swapper->compositor_acquire();
 
-    swapper->compositor_acquire(buffer_ref, first_comp_buffer);
-
-    swapper->client_acquire(buffer_ref, first_client_buffer);
+    auto first_client_buffer = swapper->client_acquire();
     swapper->client_release(first_client_buffer);
 
-    swapper->client_acquire(buffer_ref, second_client_buffer);
+    auto second_client_buffer = swapper->client_acquire();
     swapper->client_release(second_client_buffer);
 
     swapper->compositor_release(first_comp_buffer);
 
-    swapper->compositor_acquire(buffer_ref, second_comp_buffer);
+    auto second_comp_buffer = swapper->compositor_acquire();
     swapper->compositor_release(second_comp_buffer);
 
-    swapper->compositor_acquire(buffer_ref, third_comp_buffer);
+    auto third_comp_buffer = swapper->compositor_acquire();
 
     EXPECT_EQ(second_comp_buffer, first_client_buffer);
     EXPECT_EQ(third_comp_buffer, second_client_buffer);

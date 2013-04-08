@@ -26,7 +26,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 
 mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::SessionTarget> const& session)
-  : session(session)
+  : weak_session(session)
 {
     updateInfo();
 }
@@ -35,6 +35,11 @@ bool mia::InputApplicationHandle::updateInfo()
 {
     if (mInfo == NULL)
         mInfo = new droidinput::InputApplicationInfo;
+    
+    auto session = weak_session.lock();
+    if (!session)
+        return false;
+
     mInfo->dispatchingTimeout = INT_MAX;
     mInfo->name = droidinput::String8(session->name().c_str());
 

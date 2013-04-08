@@ -15,7 +15,6 @@ endif
 
 COMMON_CONFIGURE_OPTIONS = \
   -DMIR_DISABLE_EPOLL_REACTOR=YES \
-  -DMIR_DISABLE_INPUT=YES \
   -DBUILD_DOXYGEN=YES
 
 # We need to rely on the select-based reactor to fix the ppa builds.

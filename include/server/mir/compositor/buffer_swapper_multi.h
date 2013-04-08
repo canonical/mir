@@ -35,7 +35,6 @@ namespace compositor
 {
 
 class Buffer;
-class BufferIDUniqueGenerator;
 
 class BufferSwapperMulti : public BufferSwapper
 {
@@ -43,24 +42,24 @@ public:
     explicit BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list);
     explicit BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list);
 
-    void client_acquire(std::shared_ptr<Buffer>& buffer_reference, BufferID& dequeued_buffer);
-    void client_release(BufferID queued_buffer);
-    void compositor_acquire(std::shared_ptr<Buffer>& buffer_reference, BufferID& acquired_buffer);
-    void compositor_release(BufferID released_buffer);
+    std::shared_ptr<Buffer> client_acquire();
+    void client_release(std::shared_ptr<Buffer> const& queued_buffer);
+    std::shared_ptr<Buffer> compositor_acquire();
+    void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
+
     void shutdown();
 
 private:
     template<class T>
     void initialize_queues(T);
 
-    std::map<BufferID, std::shared_ptr<Buffer>> buffers;
-
     std::mutex swapper_mutex;
-
     std::condition_variable client_available_cv;
-    std::deque<BufferID> client_queue;
-    std::deque<BufferID> compositor_queue;
+
+    std::deque<std::shared_ptr<Buffer>> client_queue;
+    std::deque<std::shared_ptr<Buffer>> compositor_queue;
     unsigned int in_use_by_client;
+    unsigned int const swapper_size;
 };
 
 }

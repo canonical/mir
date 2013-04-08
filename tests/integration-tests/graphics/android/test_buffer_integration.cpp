@@ -100,8 +100,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
     mc::BufferProperties actual;
     mc::BufferID id{34};
     auto swapper = strategy->create_swapper(actual, buffer_properties);
-    std::shared_ptr<mc::Buffer> returned_buffer;
-    swapper->client_acquire(returned_buffer, id);
+    auto returned_buffer = swapper->client_acquire();
 
     EXPECT_NE(nullptr, returned_buffer);
 }

@@ -108,7 +108,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
 }
 
 /* this case occurs when the hwc library doesn't work (error) */
-TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_throws)
+TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
 {
     using namespace testing;
 
@@ -117,9 +117,15 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_throws)
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
 
-    EXPECT_THROW({
-        mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory); 
-    }, std::runtime_error);
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
+        .Times(0);
+    EXPECT_CALL(*mock_display_allocator, create_hwc_display(_))
+        .Times(0);
+    EXPECT_CALL(*mock_display_allocator, create_gpu_display())
+        .Times(1);
+
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory); 
+    display_factory.create_display();
 }
 
 /* this is normal operation on hwc capable device */

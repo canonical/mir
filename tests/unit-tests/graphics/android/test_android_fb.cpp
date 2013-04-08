@@ -502,28 +502,3 @@ TYPED_TEST(AndroidTestFramebufferInit, eglDisplay_is_terminated)
 
     auto display = make_display_buffer<TypeParam>(this->native_win);
 }
-
-TYPED_TEST(AndroidTestFramebufferInit, framebuffer_correct_view_area)
-{
-    using namespace testing;
-    auto display = make_display_buffer<TypeParam>(this->native_win);
-
-    EXPECT_CALL(this->mock_egl, eglQuerySurface(this->mock_egl.fake_egl_display, this->mock_egl.fake_egl_surface,
-                                          EGL_WIDTH, _ ))
-        .Times(1)
-        .WillOnce(DoAll(SetArgPointee<3>((EGLint) this->width),
-                        Return(EGL_TRUE)));
-
-    EXPECT_CALL(this->mock_egl, eglQuerySurface(this->mock_egl.fake_egl_display, this->mock_egl.fake_egl_surface,
-                                          EGL_HEIGHT, _ ))
-        .Times(1)
-        .WillOnce(DoAll(SetArgPointee<3>((EGLint) this->height),
-                        Return(EGL_TRUE)));
-
-    auto area = display->view_area();
-
-    EXPECT_EQ((int)area.top_left.x.as_uint32_t() , 0);
-    EXPECT_EQ((int)area.top_left.y.as_uint32_t() , 0);
-    EXPECT_EQ((int)area.size.width.as_uint32_t() , this->width);
-    EXPECT_EQ((int)area.size.height.as_uint32_t(), this->height);
-}

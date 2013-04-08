@@ -27,7 +27,6 @@ namespace mir
 namespace compositor
 {
 class Buffer;
-class BufferID;
 
 class BufferSwapper
 {
@@ -35,18 +34,18 @@ public:
     /* callers of client_acquire are returned a pointer to the
       currently usable buffer. This call may potentially wait for a
       buffer to become available */
-    virtual void client_acquire(std::shared_ptr<Buffer>& buffer_reference, BufferID& dequeued_buffer) = 0;
+    virtual std::shared_ptr<Buffer> client_acquire() = 0;
 
     /* once a client is done with the finished buffer, it must queue
        it. This modifies the buffer the compositor posts to the screen */
-    virtual void client_release(BufferID queued_buffer) = 0;
+    virtual void client_release(std::shared_ptr<Buffer> const& queued_buffer) = 0;
 
     /* caller of compositor_acquire buffer should get no-wait access to the
         last posted buffer. However, the client will potentially stall
         until control of the buffer is returned via compositor_release() */
-    virtual void compositor_acquire(std::shared_ptr<Buffer>& buffer_reference, BufferID& acquired_buffer) = 0;
+    virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
 
-    virtual void compositor_release(BufferID released_buffer) = 0;
+    virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
 
     virtual void shutdown() = 0;
 

@@ -172,13 +172,13 @@ TEST_F(DefaultDisplayServerTestFixture, creates_surface_of_correct_size)
                 mir_buffer_usage_hardware
             };
 
-            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
+            mir_surface_create(connection, &request_params, NULL, create_surface_callback, ssync);
             wait_for_surface_create(ssync);
 
             request_params.width = 1600;
             request_params.height = 1200;
 
-            mir_surface_create(connection, &request_params, create_surface_callback, ssync+1);
+            mir_surface_create(connection, &request_params, NULL, create_surface_callback, ssync+1);
             wait_for_surface_create(ssync+1);
 
             MirSurfaceParameters response_params;
@@ -225,13 +225,13 @@ TEST_F(DefaultDisplayServerTestFixture, surfaces_have_distinct_ids)
                 mir_buffer_usage_hardware
             };
 
-            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
+            mir_surface_create(connection, &request_params, NULL, create_surface_callback, ssync);
             wait_for_surface_create(ssync);
 
             request_params.width = 1600;
             request_params.height = 1200;
 
-            mir_surface_create(connection, &request_params, create_surface_callback, ssync+1);
+            mir_surface_create(connection, &request_params, NULL, create_surface_callback, ssync+1);
             wait_for_surface_create(ssync+1);
 
             EXPECT_NE(
@@ -270,7 +270,7 @@ TEST_F(DefaultDisplayServerTestFixture, creates_multiple_surfaces_async)
             };
 
             for (int i = 0; i != max_surface_count; ++i)
-                mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
+                mir_surface_create(connection, &request_params, NULL, create_surface_callback, ssync+i);
 
             for (int i = 0; i != max_surface_count; ++i)
                 wait_for_surface_create(ssync+i);

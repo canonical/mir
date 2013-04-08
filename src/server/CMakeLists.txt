@@ -20,9 +20,6 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
-MESSAGE(STATUS "GLog_LIBRARY=" ${GLog_LIBRARY})
-MESSAGE(STATUS "GLog_LIBRARY=" ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
-
 set(
   SRCS
   run_mir.cpp
@@ -51,6 +48,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirfrontend
   mirgraphics
   mirinput
+  mirinputandroidtransport
   mirsurfaces
   mirtime
 )
@@ -59,8 +57,6 @@ list(APPEND MIRSERVER_LINKS
   mirplatformgraphics
   mirprotobuf
   3rd_party
-  ${Boost_LIBRARIES}
-  ${GLog_LIBRARY}
 )
 
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
