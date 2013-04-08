@@ -163,7 +163,6 @@ TEST_F(ServerRenderWindowTest, throw_if_driver_returns_weird_buffer)
     }, std::runtime_error); 
 }
 
-
 TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
 {
     using namespace testing;
@@ -184,18 +183,31 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
     auto handle1 = render_window.driver_requests_buffer();
     render_window.driver_returns_buffer(handle1);
 }
-#if 0
+
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
 {
-    EXPECT_CALL(mock_buffer1_swapper, compositor_acquire)
-        .Times(1)
-        .WillOnce(Return( buffer));
-    EXPECT_CALL(buffer, format())
+    auto test_pf = geom::PixelFormat::abgr_8888;
+    EXPECT_CALL(*mock_display_poster, display_format())
         .Times(1)
         .WillOnce(Return(test_pf));
 
-    mga::ServerRenderWindow render_window(mock_buffer1_swapper);
-    rc_format = render_window.driver_requests_info(format);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+
+    rc_format = render_window.driver_requests_info(NATIVE_WINDOW_FORMAT);
     EXPECT_EQ(test_pf, rc_format); 
 }
-#endif 
+
+TEST_F(ServerRenderWindowTest, driver_inquires_about_size)
+{
+    auto test_size = geom::Size{geom::Width{4}, geom::Height{5}};
+    EXPECT_CALL(*mock_display_poster, display_size())
+        .Times(1)
+        .WillOnce(Return(test_size));
+
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+
+    auto rc_width = render_window.driver_requests_info(NATIVE_WINDOW_WIDTH);
+    auto rc_height = render_window.driver_requests_info(NATIVE_WINDOW_HEIGHT);
+    EXPECT_EQ(test_size.width.as_uint32_t(), rc_width); 
+    EXPECT_EQ(test_size.height.as_uint32_t(), rc_height); 
+}
