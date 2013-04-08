@@ -17,19 +17,23 @@
  */
 
 #include "android_input_receiver.h"
+#include "xkb_mapper.h"
+
 #include "mir/input/android/android_input_lexicon.h"
 
 #include <androidfw/InputTransport.h>
 #include <utils/Looper.h>
 
-namespace mclia = mir::client::input::android;
+namespace mcli = mir::client::input;
+namespace mclia = mcli::android;
 namespace miat = mir::input::android::transport;
 
 mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
   : input_channel(input_channel),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
-    fd_added(false)
+    fd_added(false),
+    xkb_mapper(std::make_shared<mcli::XKBMapper>())
 {
 }
 
@@ -37,7 +41,8 @@ mclia::InputReceiver::InputReceiver(int fd)
   : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)), 
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
-    fd_added(false)
+    fd_added(false),
+    xkb_mapper(std::make_shared<mcli::XKBMapper>())
 {
 }
 
@@ -48,6 +53,23 @@ mclia::InputReceiver::~InputReceiver()
 int mclia::InputReceiver::fd() const
 {
     return input_channel->getFd();
+}
+
+namespace
+{
+
+static void map_key_event(std::shared_ptr<mcli::XKBMapper> const& xkb_mapper, MirEvent &ev)
+{
+    if (ev.type != MIR_INPUT_EVENT_TYPE_KEY)
+        return;
+    
+    if (ev.action == 1)
+        ev.details.key.key_code = xkb_mapper->release_and_map_key(ev.details.key.scan_code);
+    else 
+        ev.details.key.key_code = xkb_mapper->press_and_map_key(ev.details.key.scan_code);
+        
+}
+
 }
 
 // TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
@@ -75,6 +97,9 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
         -1, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
     {
         miat::Lexicon::translate(android_event, ev);
+
+        map_key_event(xkb_mapper, ev);
+
         input_consumer->sendFinishedSignal(event_sequence_id, true);
         handled_event = true;
     }
