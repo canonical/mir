@@ -18,25 +18,64 @@
 
 #include "xkb_mapper.h"
 
+#include <string.h>
+
 namespace mcli = mir::client::input;
 
 
 mcli::XKBMapper::XKBMapper()
 {
+    // TODO: Fix leak ~racarr
+    xkb_rule_names names;
+    names.rules = strdup("evdev");
+    names.model = strdup("pc105");
+    names.layout = strdup("us");
+    names.variant = strdup("");
+    names.options = strdup("");
+
+    context = xkb_context_new(xkb_context_flags(0));
+    map = xkb_map_new_from_names(context, &names,
+                                     xkb_map_compile_flags(0));
+    state = xkb_state_new(map);
 }
 
 mcli::XKBMapper::~XKBMapper()
 {
+    xkb_state_unref(state);
+    xkb_map_unref(map);
+    xkb_context_unref(context);
+}
+
+namespace
+{
+
+static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_code)
+{
+    const xkb_keysym_t *syms;
+    uint32_t num_syms = xkb_key_get_syms(state, xkb_scan_code, &syms);
+    
+    if (num_syms == 1)
+    {
+        return syms[0];
+    }
+
+    return XKB_KEY_NoSymbol;    
+}
+
 }
 
 xkb_keysym_t mcli::XKBMapper::press_and_map_key(int scan_code)
 {
-    // TODO
-    return (xkb_keysym_t) scan_code;
+    uint32_t xkb_scan_code = scan_code + 8;
+    xkb_state_update_key(state, xkb_scan_code, XKB_KEY_DOWN);
+    
+    return keysym_for_scan_code(state, xkb_scan_code);
 }
 
 xkb_keysym_t mcli::XKBMapper::release_and_map_key(int scan_code)
 {
-    // TODO
-    return (xkb_keysym_t) scan_code;
+    uint32_t xkb_scan_code = scan_code + 8;
+    xkb_state_update_key(state, xkb_scan_code, XKB_KEY_UP);
+    
+    return keysym_for_scan_code(state, xkb_scan_code);
 }

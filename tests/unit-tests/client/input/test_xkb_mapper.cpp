@@ -35,6 +35,6 @@ TEST(XKBMapper, maps_generic_us_english_keys)
     EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_Shift_L), mapper.press_and_map_key(KEY_LEFTSHIFT));
     EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_dollar), mapper.press_and_map_key(KEY_4));
     EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_dollar), mapper.release_and_map_key(KEY_4));
-    EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_Shift_L), mapper.press_and_map_key(KEY_LEFTSHIFT));
+    EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_Shift_L), mapper.release_and_map_key(KEY_LEFTSHIFT));
     EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_4), mapper.press_and_map_key(KEY_4));
 }

@@ -40,6 +40,11 @@ public:
 protected:
     XKBMapper(XKBMapper const&) = delete;
     XKBMapper& operator=(XKBMapper const&) = delete;
+
+private:
+    xkb_context *context;
+    xkb_keymap *map;
+    xkb_state *state;
 };
 
 }
