@@ -44,7 +44,7 @@ class HWCLayerList : public LayerListManager
 {
 public:
     HWCLayerList();
-    LayerList native_list() const;
+    const LayerList& native_list() const;
 
     void set_fb_target(std::shared_ptr<compositor::Buffer> const&);
 

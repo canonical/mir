@@ -25,7 +25,7 @@ mga::HWCLayerList::HWCLayerList()
 
 }
 
-mga::LayerList mga::HWCLayerList::native_list() const
+const mga::LayerList& mga::HWCLayerList::native_list() const
 {
     return layer_list;
 }
