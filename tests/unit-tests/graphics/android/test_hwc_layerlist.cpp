@@ -22,6 +22,7 @@
 
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
 //MATCHER
 
 
@@ -37,6 +38,14 @@ public:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
+void PrintTo(const hwc_rect_t& rect, ::std::ostream* os)
+{
+    *os << "( left: "  << rect.left
+        << ", top: "   << rect.top
+        << ", right "  << rect.right
+        << ", bottom: "<< rect.bottom << ")";
+}
+
 void PrintTo(const hwc_layer_1& layer , ::std::ostream* os)
 {
   *os << "compositionType: " << layer.compositionType << std::endl
@@ -45,15 +54,12 @@ void PrintTo(const hwc_layer_1& layer , ::std::ostream* os)
     << "\thandle: " << layer.handle << std::endl
     << "\ttransform: " << layer.transform << std::endl
     << "\tblending: " << layer.blending << std::endl
-    << "\tsourceCrop: (" << "left: "  << layer.sourceCrop.left
-                           << " top: "   << layer.sourceCrop.top
-                           << " right "  << layer.sourceCrop.right
-                           << " bottom: "<< layer.sourceCrop.bottom << ")" << std::endl
-    << "\tdisplayFrame: ("<<"left: "  << layer.displayFrame.left
-                           << " top: "   << layer.displayFrame.top
-                           << " right "  << layer.displayFrame.right
-                           << " bottom: "<< layer.displayFrame.bottom << ")" << std::endl
-    << "\tvisibleRegionScreen.numRects: " << layer.visibleRegionScreen.numRects << std::endl
+    << "\tsourceCrop:  ";
+    PrintTo(layer.sourceCrop, os);
+    *os << std::endl << "\tdisplayFrame:";
+    PrintTo(layer.displayFrame, os);
+    *os << std::endl;
+    *os << "\tvisibleRegionScreen.numRects: " << layer.visibleRegionScreen.numRects << std::endl
     << "\tacquireFenceFd: " << layer.acquireFenceFd << std::endl
     << "\treleaseFenceFd: " << layer.releaseFenceFd << std::endl;
 }
@@ -63,6 +69,16 @@ MATCHER_P2(MatchesMember, value, str,
 {
     return arg == value;
 }
+
+MATCHER_P2(MatchesRect, value, str,
+          std::string("rectangle " + std::string(str) + " should be: " + testing::PrintToString(value)))
+{
+    return ((arg.left == value.left) &&
+            (arg.top == value.top) &&
+            (arg.right == value.right) &&
+            (arg.bottom == value.bottom));
+}
+
 MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
 {
     auto layer = arg; //makes for nicer printing
@@ -72,14 +88,8 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     EXPECT_THAT(layer.handle, MatchesMember(value.handle, "backgroundColor.handle"));
     EXPECT_THAT(layer.transform, MatchesMember(value.transform, "backgroundColor.transform"));
     EXPECT_THAT(layer.blending, MatchesMember(value.blending, "backgroundColor.blending"));
-    EXPECT_THAT(layer.sourceCrop.left, MatchesMember(value.sourceCrop.left, "sourceCrop.left"));
-    EXPECT_THAT(layer.sourceCrop.top, MatchesMember(value.sourceCrop.top, "sourceCrop.top"));
-    EXPECT_THAT(layer.sourceCrop.right, MatchesMember(value.sourceCrop.right, "sourceCrop.right"));
-    EXPECT_THAT(layer.sourceCrop.bottom, MatchesMember(value.sourceCrop.bottom, "sourceCrop.bottom"));
-    EXPECT_THAT(layer.displayFrame.left, MatchesMember(value.displayFrame.left, "displayFrame.left"));
-    EXPECT_THAT(layer.displayFrame.top, MatchesMember(value.displayFrame.top, "displayFrame.top"));
-    EXPECT_THAT(layer.displayFrame.right, MatchesMember(value.displayFrame.right, "displayFrame.right"));
-    EXPECT_THAT(layer.displayFrame.bottom, MatchesMember(value.displayFrame.bottom, "displayFrame.bottom"));
+    EXPECT_THAT(layer.sourceCrop, MatchesRect(value.sourceCrop, "sourceCrop"));
+    EXPECT_THAT(layer.displayFrame, MatchesRect(value.displayFrame, "displayFrame"));
     EXPECT_THAT(layer.visibleRegionScreen.numRects, MatchesMember(value.visibleRegionScreen.numRects, "visibleRegionScreen.numRects"));
     EXPECT_THAT(layer.acquireFenceFd, MatchesMember(value.acquireFenceFd, "acquireFenceFd"));
     EXPECT_THAT(layer.releaseFenceFd, MatchesMember(value.releaseFenceFd, "releaseFenceFd"));
@@ -109,6 +119,7 @@ TEST_F(HWCLayerListTest, empty_list)
     EXPECT_EQ(0u, list.size());
 }
 
+//construction is a bit funny because hwc_layer_1 has unions
 struct HWCLayer : public hwc_layer_1
 {
     HWCLayer(
@@ -141,23 +152,30 @@ struct HWCLayer : public hwc_layer_1
 TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
 {
     using namespace testing;
-
-    mga::HWCLayerList layerlist;
-
+   
+    int width = 432; 
+    int height = 876; 
+    geom::Size default_size{geom::Width{width},
+                            geom::Height{height}};
+    hwc_rect_t expected_sc, expected_df, expected_visible;
+    expected_sc = {0, 0, width, height};
+    expected_df = expected_visible = expected_sc;
     EXPECT_CALL(*mock_buffer, size())
         .Times(1)
         .WillOnce(Return(default_size));
 
+    mga::HWCLayerList layerlist;
     layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list(); 
     ASSERT_EQ(1u, list.size());
-    ASSERT_EQ(1u, *list[0].visibleRegionScreen.numRects); 
-    ASSERT_NE(nullptr, *list[0].visibleRegionScreen.rects); 
+    auto target_layer = list[0];
+    EXPECT_THAT(target_layer->sourceCrop, MatchesRect( expected_sc, "sourceCrop"));
+    EXPECT_THAT(target_layer->displayFrame, MatchesRect( expected_df, "displayFrame"));
 
-    EXPECT_THAT(*list[0].sourceCrop, MatchesRect( expected_sc ));
-    EXPECT_THAT(*list[0].displayFrame, MatchesRect( expected_df ));
-    EXPECT_THAT(*(*list[0].visibleScreenRegion).rects, MatchesRect( expected_visible ));
+    ASSERT_EQ(1u, target_layer->visibleRegionScreen.numRects); 
+    ASSERT_NE(nullptr, target_layer->visibleRegionScreen.rects); 
+    EXPECT_THAT(target_layer->visibleRegionScreen.rects[0], MatchesRect( expected_visible, "visible"));
 }
 
 TEST_F(HWCLayerListTest, set_fb_target_gets_fb_handle)
@@ -200,7 +218,7 @@ TEST_F(HWCDevice, set_fb_target_2x)
     EXPECT_EQ(dummy_handle_2, *list_second[0].handle); 
 }
 
-
+#if 0
 TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
 {
     using namespace testing;
@@ -231,3 +249,4 @@ TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
 
     EXPECT_THAT(*list[0], MatchesLayer( expected_layer ));
 }
+#endif
