@@ -28,8 +28,10 @@
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 
-mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<compositor::BufferSwapper> const& swapper)
-    : swapper(swapper)
+mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mc::BufferSwapper> const& swapper,
+                                            std::shared_ptr<mga::DisplayInfoProvider> const& display_poster)
+    : swapper(swapper),
+      poster(display_poster)
 {
 }
 

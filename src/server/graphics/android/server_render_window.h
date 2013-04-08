@@ -41,10 +41,12 @@ namespace graphics
 namespace android
 {
 
+class DisplayInfoProvider;
 class ServerRenderWindow : public client::android::AndroidDriverInterpreter 
 {
 public:
-    ServerRenderWindow(std::shared_ptr<compositor::BufferSwapper> const& swapper);
+    ServerRenderWindow(std::shared_ptr<compositor::BufferSwapper> const& swapper,
+                       std::shared_ptr<DisplayInfoProvider> const& display_poster);
 
     ANativeWindowBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*);
@@ -53,6 +55,7 @@ public:
 
 private:
     std::shared_ptr<compositor::BufferSwapper> swapper;
+    std::shared_ptr<DisplayInfoProvider> poster;
 
     std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver; 
 }; 

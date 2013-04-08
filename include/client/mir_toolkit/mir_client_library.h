@@ -115,7 +115,7 @@ int mir_egl_native_display_is_valid(MirEGLNativeDisplayType display);
  * released.
  *   \param [in] connection          The connection
  *   \param [in] surface_parameters  Request surface parameters
- *   \param [in] event_handler       Callback to be invoked when input is
+ *   \param [in] event_handler       Callback to be invoked when an event is
  *                                   received
  *   \param [in] callback            Callback function to be invoked when
  *                                   request completes
@@ -135,7 +135,7 @@ MirWaitHandle *mir_surface_create(
  * to complete and return the resulting surface.
  *   \param [in] connection  The connection
  *   \param [in] params      Parameters describing the desired surface
- *   \param [in] event_handler Callback to be invoked when input is received
+ *   \param [in] event_handler Callback to be invoked when an event is received
  *   \return                 The resulting surface
  */
 MirSurface *mir_surface_create_sync(MirConnection *connection,

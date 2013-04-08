@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_INPUT_PLATFORM_H_
 #define MIR_CLIENT_INPUT_PLATFORM_H_
 
-#include "mir_toolkit/input/event.h"
+#include "mir_toolkit/event.h"
 
 #include <memory>
 #include <functional>

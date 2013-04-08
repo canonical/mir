@@ -14,6 +14,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_framebuffer_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_swapper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_layerlist.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_server_interpreter.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

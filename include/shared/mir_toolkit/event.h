@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_INPUT_EVENT_H_
-#define MIR_TOOLKIT_INPUT_EVENT_H_
+#ifndef MIR_TOOLKIT_EVENT_H_
+#define MIR_TOOLKIT_EVENT_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -36,9 +36,9 @@ extern "C" {
 
     typedef enum
     {
-        MIR_INPUT_EVENT_TYPE_KEY,
-        MIR_INPUT_EVENT_TYPE_MOTION,
-        MIR_INPUT_EVENT_TYPE_HW_SWITCH
+        mir_event_type_key,
+        mir_event_type_motion,
+        mir_event_type_hw_switch
     } MirEventType;
 
     typedef struct MirEvent
@@ -101,4 +101,4 @@ extern "C" {
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_INPUT_EVENT_H_ */
+#endif /* MIR_TOOLKIT_EVENT_H_ */

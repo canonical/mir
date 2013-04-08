@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/native_buffer_handle.h"
+#include "src/server/graphics/android/native_buffer_handle.h"
 
 #include "src/server/graphics/android/server_render_window.h"
 
@@ -36,14 +36,6 @@ namespace mc=mir::compositor;
 namespace
 {
 
-#if 0
-struct MockFBHardware : public FBHardwarePoster 
-{
-    MOCK_METHOD0(composition_complete());
-    MOCK_METHOD1(post_buffer, void(std::shared_ptr<mc::Buffer>));
-};
-#endif
-
 struct ServerRenderWindowTest : public ::testing::Test
 {
     virtual void SetUp()
@@ -62,7 +54,7 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer2;
     std::shared_ptr<mtd::MockBuffer> mock_buffer3;
     std::shared_ptr<mtd::MockSwapper> mock_swapper;
-    std::shared_ptr<mtd::MockDisplayInfoProvider> mock_display_info_provider;
+    std::shared_ptr<mtd::MockDisplayInfoProvider> mock_display_poster;
 };
 }
 
@@ -73,7 +65,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 
     auto stub_anw = std::make_shared<mc::NativeBufferHandle>();
 
-    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1);
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
@@ -91,28 +83,22 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 
     auto stub_anw = std::make_shared<mc::NativeBufferHandle>();
 
-    mc::BufferID id{442}, returned_id;
-
-    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
-        .WillOnce(DoAll(SetArgReferee<0>(mock_buffer1),SetArgReferee<1>(id)));
+        .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
         .WillOnce(Return(stub_anw));
-    EXPECT_CALL(*mock_buffer1, id())
-        .Times(1)
-        .WillOnce(Return(id));
 
     render_window.driver_requests_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
-    EXPECT_CALL(*mock_swapper, compositor_release(_))
-        .Times(1)
-        .WillOnce(SaveArg<0>(&returned_id));
+    std::shared_ptr<mc::Buffer> buf = mock_buffer1;
+    EXPECT_CALL(*mock_swapper, compositor_release(buf))
+        .Times(1);
+
     render_window.driver_returns_buffer(stub_anw.get());
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
-
-    EXPECT_EQ(id, returned_id);
 }
 
 /* note: in real usage, sync is enforced by the swapper class. we make use of the mock's non-blocking 
@@ -127,42 +113,34 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_few_buffer_)
     auto stub_anw2 = std::make_shared<mc::NativeBufferHandle>();
     auto stub_anw3 = std::make_shared<mc::NativeBufferHandle>();
 
-    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(3)
-        .WillOnce(DoAll(SetArgReferee<0>(mock_buffer1),SetArgReferee<1>(id2)))
-        .WillOnce(DoAll(SetArgReferee<0>(mock_buffer2),SetArgReferee<1>(id3)))
-        .WillOnce(DoAll(SetArgReferee<0>(mock_buffer3),SetArgReferee<1>(id1)));
+        .WillOnce(Return(mock_buffer2))
+        .WillOnce(Return(mock_buffer3))
+        .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
         .WillOnce(Return(stub_anw1));
-    EXPECT_CALL(*mock_buffer1, id())
-        .Times(1)
-        .WillOnce(Return(id1));
-
     EXPECT_CALL(*mock_buffer2, native_buffer_handle())
         .Times(1)
         .WillOnce(Return(stub_anw2));
-    EXPECT_CALL(*mock_buffer2, id())
-        .Times(1)
-        .WillOnce(Return(id2));
-
     EXPECT_CALL(*mock_buffer3, native_buffer_handle())
         .Times(1)
         .WillOnce(Return(stub_anw3));
-    EXPECT_CALL(*mock_buffer3, id())
-        .Times(1)
-        .WillOnce(Return(id3));
 
     auto handle1 = render_window.driver_requests_buffer();
     auto handle2 = render_window.driver_requests_buffer();
     auto handle3 = render_window.driver_requests_buffer();
 
     testing::InSequence sequence_enforcer;
-    EXPECT_CALL(*mock_swapper, compositor_release(id2))
+    std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
+    std::shared_ptr<mc::Buffer> buf2 = mock_buffer2;
+    std::shared_ptr<mc::Buffer> buf3 = mock_buffer3;
+    EXPECT_CALL(*mock_swapper, compositor_release(buf2))
         .Times(1);
-    EXPECT_CALL(*mock_swapper, compositor_release(id3))
+    EXPECT_CALL(*mock_swapper, compositor_release(buf3))
         .Times(1);
-    EXPECT_CALL(*mock_swapper, compositor_release(id1))
+    EXPECT_CALL(*mock_swapper, compositor_release(buf1))
         .Times(1);
 
     render_window.driver_returns_buffer(handle2); 
@@ -186,7 +164,6 @@ TEST_F(ServerRenderWindowTest, throw_if_driver_returns_weird_buffer)
 }
 
 
-#if 0
 TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
 {
     using namespace testing;
@@ -195,18 +172,19 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
     auto stub_anw = std::make_shared<mc::NativeBufferHandle>();
 
     mc::BufferID id{442}, returned_id;
-    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+    EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
-        .WillOnce(DoAll(SetArgReferee<0>(mock_buffer1),SetArgReferee<1>(id)));
+        .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_swapper, compositor_release(_))
         .Times(1);
-    EXPECT_CALL(*mock_display_poster, (mock_buffer1))
+    std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
+    EXPECT_CALL(*mock_display_poster, set_next_frontbuffer(buf1))
         .Times(1);
 
-    EXPECT_THROW({
-        render_window.driver_returns_buffer(nullptr);
-    }, std::runtime_error); 
+    auto handle1 = render_window.driver_requests_buffer();
+    render_window.driver_returns_buffer(handle1);
 }
+#if 0
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
 {
     EXPECT_CALL(mock_buffer1_swapper, compositor_acquire)
