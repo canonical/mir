@@ -84,6 +84,8 @@ public:
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
     int attrib(MirSurfaceAttrib a) const;
 
+    void set_event_handler(MirEventDelegate const* delegate);
+
 private:
     void on_configured();
     void process_incoming_buffer();
