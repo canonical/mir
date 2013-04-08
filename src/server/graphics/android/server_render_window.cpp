@@ -67,26 +67,19 @@ void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)
 int mga::ServerRenderWindow::driver_requests_info(int key) const
 {
 //    geom::Size size;
-    geom::PixelFormat pf;
+//    geom::PixelFormat pf;
     switch(key)
     {
-        case NATIVE_WINDOW_WIDTH:
+        case 6:
             return 768;
             //size = poster->display_size();
             //return size.width.as_uint32_t();
-        case NATIVE_WINDOW_HEIGHT:
+        case 7:
             return 1280;
             //size = poster->display_size();
             //return size.height.as_uint32_t();
-        case NATIVE_WINDOW_FORMAT:
-            pf = poster->display_format();
-            if (pf == geom::PixelFormat::abgr_8888)
-            {
-//                return HAL_PIXEL_FORMAT_RGBX_8888;
-            }
-            printf("RETURN pf\n");
-            return 2;
+        case 2:
         default:
-            return -1;
+            return 2;
     }
 }
