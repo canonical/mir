@@ -17,12 +17,57 @@
  */
 
 #include "hwc_layerlist.h"
+#include "native_buffer_handle.h"
+#include "mir/compositor/buffer.h"
 
 namespace mga=mir::graphics::android;
+namespace mc=mir::compositor;
+namespace geom=mir::geometry;
+
+//construction is a bit funny because hwc_layer_1 has unions
+mga::HWCRect::HWCRect()
+{
+}
+
+mga::HWCRect::HWCRect(geom::Rectangle& rect)
+{
+    top = rect.top_left.y.as_uint32_t();
+    left = rect.top_left.x.as_uint32_t();
+
+    bottom= rect.size.height.as_uint32_t();
+    right = rect.size.width.as_uint32_t();
+}
+
+mga::HWCLayer::HWCLayer(
+        std::shared_ptr<mc::NativeBufferHandle> const& native_buf,
+        HWCRect& source_crop_rect,
+        HWCRect& display_frame_rect,
+        HWCRect& visible_rect)
+{
+    /* we fix these for now */
+    compositionType = HWC_FRAMEBUFFER_TARGET;
+    hints = 0;
+    flags = 0;
+    transform = 0;
+    blending = HWC_BLENDING_NONE;
+    acquireFenceFd = -1;
+    releaseFenceFd = -1;
+
+    /* we just need one of these for now*/
+    visibleRegionScreen.numRects=1u;
+    visibleRegionScreen.rects = &visible_screen_rect; 
+
+    /* we need this information from constructor*/
+    handle = native_buf->handle;
+    sourceCrop = source_crop_rect;
+    displayFrame = display_frame_rect;
+    visible_screen_rect = visible_rect;
+}
+
 
 mga::HWCLayerList::HWCLayerList()
+    : framebuffer_position(0)
 {
-
 }
 
 const mga::LayerList& mga::HWCLayerList::native_list() const
@@ -30,6 +75,24 @@ const mga::LayerList& mga::HWCLayerList::native_list() const
     return layer_list;
 }
 
-void mga::HWCLayerList::set_fb_target(std::shared_ptr<compositor::Buffer> const&)
+void mga::HWCLayerList::set_fb_target(std::shared_ptr<compositor::Buffer> const& buffer)
 {
+    auto handle = buffer->native_buffer_handle();
+
+    geom::Point pt{geom::X{0}, geom::Y{0}};
+    geom::Rectangle rect{pt, buffer->size()};
+    HWCRect display_rect(rect);
+
+    auto fb_layer = std::make_shared<HWCLayer>(handle,
+                                               display_rect,
+                                               display_rect,
+                                               display_rect);
+    if (layer_list.empty())
+    {
+        layer_list.push_back(fb_layer);
+    }
+    else
+    {
+        layer_list[framebuffer_position] = fb_layer;
+    }
 } 

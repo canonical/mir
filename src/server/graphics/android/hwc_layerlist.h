@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
+#include "mir/geometry/rectangle.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
@@ -28,18 +29,20 @@ namespace mir
 namespace compositor
 {
 class Buffer;
+class NativeBufferHandle;
 }
 namespace graphics
 {
 namespace android
 {
 
+class HWCLayer;
 class LayerListManager
 {
     //interface
 };
 
-typedef struct std::vector<std::shared_ptr<hwc_layer_1_t>> LayerList; 
+typedef struct std::vector<std::shared_ptr<HWCLayer>> LayerList; 
 class HWCLayerList : public LayerListManager
 {
 public:
@@ -50,8 +53,39 @@ public:
 
 private:
     LayerList layer_list;
+    unsigned int const framebuffer_position;
 };
 
+}
+}
+}
+
+
+namespace mir
+{
+namespace graphics
+{
+namespace android
+{
+//construction is a bit funny because hwc_layer_1 has unions
+struct HWCRect : public hwc_rect_t
+{
+    HWCRect(); 
+    HWCRect(geometry::Rectangle& rect);
+};
+
+struct HWCLayer : public hwc_layer_1
+{
+    HWCLayer(
+        std::shared_ptr<compositor::NativeBufferHandle> const& native_buf,
+        HWCRect& source_crop_rect,
+        HWCRect& display_frame_rect,
+        HWCRect& visible_rect);
+
+private:
+    HWCRect visible_screen_rect;
+    //remember to disallow copy/assign
+};
 }
 }
 }
