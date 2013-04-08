@@ -37,13 +37,13 @@ namespace android
 {
 
 class HWCLayer;
-class LayerListManager
+class HWCLayerOrganizer
 {
     //interface
 };
 
 typedef struct std::vector<std::shared_ptr<HWCLayer>> LayerList; 
-class HWCLayerList : public LayerListManager
+class HWCLayerList : public HWCLayerOrganizer
 {
 public:
     HWCLayerList();
