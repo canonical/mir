@@ -451,7 +451,6 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
 }
 
 
-#if 0
 
 namespace
 {
@@ -477,20 +476,20 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_
 
     {
         auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger,
-            mock_buffer_factory, mock_input_platform, params, &delegate, &empty_callback, nullptr);
+            mock_buffer_factory, mock_input_platform, params, &empty_callback, nullptr);
         auto wait_handle = surface->get_create_wait_handle();
         wait_handle->wait_for_result();
+        surface->set_event_handler(&delegate);
     }
 
     {
         // This surface should not trigger a call to the input platform as no input delegate is specified.
         auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger,
-            mock_buffer_factory, mock_input_platform, params, nullptr, &empty_callback, nullptr);
+            mock_buffer_factory, mock_input_platform, params, &empty_callback, nullptr);
         auto wait_handle = surface->get_create_wait_handle();
         wait_handle->wait_for_result();
     }
 }
-#endif
 
 TEST_F(MirClientSurfaceTest, get_buffer_returns_last_received_buffer_package)
 {
