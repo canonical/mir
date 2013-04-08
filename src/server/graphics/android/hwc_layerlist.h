@@ -53,7 +53,6 @@ public:
 
 private:
     LayerList layer_list;
-    unsigned int const framebuffer_position;
 };
 
 }

@@ -66,7 +66,6 @@ mga::HWCLayer::HWCLayer(
 
 
 mga::HWCLayerList::HWCLayerList()
-    : framebuffer_position(0)
 {
 }
 
@@ -93,6 +92,6 @@ void mga::HWCLayerList::set_fb_target(std::shared_ptr<compositor::Buffer> const&
     }
     else
     {
-        layer_list[framebuffer_position] = fb_layer;
+        layer_list[0] = fb_layer;
     }
 } 

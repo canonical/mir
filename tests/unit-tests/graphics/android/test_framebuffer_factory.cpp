@@ -22,23 +22,18 @@
 #include "src/server/graphics/android/display_info_provider.h"
 #include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir_test_doubles/mock_display_poster.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
+namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 namespace mc=mir::compositor;
 
 namespace
 {
-class MockDisplayInfoProvider : public mga::DisplayInfoProvider
-{
-public:
-    MOCK_METHOD0(display_size, geom::Size());
-    MOCK_METHOD0(display_format, geom::PixelFormat());
-    MOCK_METHOD0(number_of_framebuffers_available, unsigned int());
-};
 
 class MockAndroidGraphicBufferAllocator : public mga::GraphicBufferAllocator
 {
@@ -54,7 +49,7 @@ class FBFactory  : public ::testing::Test
 public:
     FBFactory()
         : mock_buffer_allocator(std::make_shared<testing::NiceMock<MockAndroidGraphicBufferAllocator>>()),
-          mock_display_info_provider(std::make_shared<testing::NiceMock<MockDisplayInfoProvider>>()),
+          mock_display_info_provider(std::make_shared<testing::NiceMock<mtd::MockDisplayInfoProvider>>()),
           fake_fb_num(2)
     {
         using namespace testing;
@@ -69,7 +64,7 @@ public:
     }
 
     std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
-    std::shared_ptr<MockDisplayInfoProvider> mock_display_info_provider;
+    std::shared_ptr<mtd::MockDisplayInfoProvider> mock_display_info_provider;
     unsigned int const fake_fb_num;
 };
 
