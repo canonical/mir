@@ -147,6 +147,8 @@ else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
 endif()
 
+pkg_check_modules( XKBCOMMON REQUIRED xkbcommon )
+
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
