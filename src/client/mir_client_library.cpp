@@ -316,9 +316,6 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
 
     if (surf)
     {
-        surf->configure(mir_surface_attrib_state,
-                        mir_surface_state_unknown)->wait_for_result();
-
         int s = surf->attrib(mir_surface_attrib_state);
         state = static_cast<MirSurfaceState>(s);
     }
