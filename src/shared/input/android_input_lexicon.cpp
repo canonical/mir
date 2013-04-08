@@ -21,9 +21,9 @@
 
 #include <androidfw/Input.h>
 
-namespace miat = mir::input::android::transport;
+namespace mia = mir::input::android;
 
-void miat::Lexicon::translate(const droidinput::InputEvent *android_event, MirEvent &mir_event)
+void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEvent &mir_event)
 {
     switch(android_event->getType())
     {
