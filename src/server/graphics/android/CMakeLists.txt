@@ -19,6 +19,7 @@ add_library(
   android_framebuffer_window.cpp
   android_display_factory.cpp
   android_alloc_adaptor.cpp
+  fb_swapper.cpp
 )
 
 target_link_libraries(

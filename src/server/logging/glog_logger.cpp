@@ -19,9 +19,38 @@
 #include "mir/logging/glog_logger.h"
 
 #include <glog/logging.h>
+#include <gflags/gflags.h>
 
 #include <mutex>
 #include <cstdlib>
+
+namespace
+{
+std::once_flag init_flag;
+std::once_flag shutdown_flag;
+
+struct google_glog_guard_t
+{
+    google_glog_guard_t(const char* argv0)
+    {
+        std::call_once(init_flag, google::InitGoogleLogging, argv0);
+    }
+
+    ~google_glog_guard_t()
+    {
+        std::call_once(shutdown_flag, google::ShutdownGoogleLogging);
+    }
+};
+
+struct google_gflag_guard_t
+{
+    ~google_gflag_guard_t()
+    {
+        google::ShutDownCommandLineFlags();
+    }
+} google_gflag_guard;
+}
+
 
 mir::logging::GlogLogger::GlogLogger(
     const char* argv0,
@@ -33,9 +62,7 @@ mir::logging::GlogLogger::GlogLogger(
     FLAGS_minloglevel     = minloglevel;
     FLAGS_log_dir         = log_dir;
 
-    static std::once_flag init_flag;
-
-    std::call_once(init_flag, [=]() { google::InitGoogleLogging(argv0); });
+    static google_glog_guard_t guard(argv0);
 }
 
 void mir::logging::GlogLogger::log(Severity severity, const std::string& message, const std::string& component)
