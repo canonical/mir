@@ -123,8 +123,7 @@ message SurfaceSetting {
 }
 
 message Event {
-  optional SurfaceSetting surface_changed = 1;
-  // Feel free to add more (optional) event types.
+  optional bytes raw = 1;  // MirEvent structure
 }
 
 message EventSequence {

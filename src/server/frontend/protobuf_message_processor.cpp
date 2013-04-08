@@ -153,13 +153,7 @@ void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
     switch (e.type)
     {
     case mir_event_type_surface_change:
-        {
-            ::mir::protobuf::SurfaceSetting *change =
-                ev->mutable_surface_changed();
-            change->mutable_surfaceid()->set_value(e.details.surface_change.id);
-            change->set_attrib(e.details.surface_change.attrib);
-            change->set_ivalue(e.details.surface_change.value);
-        }
+        ev->set_raw(&e, sizeof(MirEvent));
         break;
     default:
         assert(false);

@@ -238,22 +238,6 @@ void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& e
             boost::asio::placeholders::error));
 }
 
-static void decode_event(mir::protobuf::Event const& p, MirEvent &e)
-{
-    using namespace mir;
-
-    if (p.has_surface_changed())
-    {
-        e.type = mir_event_type_surface_change;
-        
-        mir::protobuf::SurfaceSetting const& change = p.surface_changed();
-        e.details.surface_change.id = change.surfaceid().value();
-        e.details.surface_change.attrib =
-            static_cast<MirSurfaceAttrib>(change.attrib());
-        e.details.surface_change.value = change.ivalue();
-    }
-}
-
 void mcl::MirSocketRpcChannel::read_message()
 {
     try
@@ -277,9 +261,12 @@ void mcl::MirSocketRpcChannel::read_message()
                     const int nevents = seq.event_size();
                     for (int i = 0; i < nevents; i++)
                     {
-                        MirEvent e;
-                        decode_event(seq.event(i), e);
-                        event_handler->handle_event(e);
+                        mir::protobuf::Event const& pe = seq.event(i);
+                        if (pe.has_raw())
+                        {
+                            event_handler->handle_event(
+                                *(MirEvent const*)pe.raw().data());
+                        }
                     }
                 } // else protobuf will log an error
             } // else ignore incoming events
