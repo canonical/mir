@@ -129,7 +129,7 @@ void demo_client(const char* server, int buffer_swap_count)
     /// \snippet demo_client.c surface_create_tag
     ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.
-    mir_wait_for(mir_surface_create(mcd.connection, &request_params, surface_create_callback, &mcd));
+    mir_wait_for(mir_surface_create(mcd.connection, &request_params, NULL, surface_create_callback, &mcd));
     puts("Surface created");
     ///\internal [surface_create_tag]
 

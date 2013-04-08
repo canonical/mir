@@ -1,36 +1,36 @@
 /*
  * Copyright © 2012 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  *              Robert Carr <robert.carr@canonical.com>
  */
 
-#include "android_input_lexicon.h"
+#include "mir/input/android/android_input_lexicon.h"
 
 #include <androidfw/Input.h>
 
-namespace mia = mir::input::android;
+namespace miat = mir::input::android::transport;
 
-void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEvent &mir_event)
+void miat::Lexicon::translate(const droidinput::InputEvent *android_event, MirEvent &mir_event)
 {
     switch(android_event->getType())
     {
         case AINPUT_EVENT_TYPE_KEY:
         {
             const droidinput::KeyEvent* kev = static_cast<const droidinput::KeyEvent*>(android_event);
-            mir_event.type = MIR_INPUT_EVENT_TYPE_KEY;
+            mir_event.type = mir_event_type_key;
             mir_event.device_id = android_event->getDeviceId();
             mir_event.source_id = android_event->getSource();
             mir_event.action = kev->getAction();
@@ -47,7 +47,7 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
         case AINPUT_EVENT_TYPE_MOTION:
         {
             const droidinput::MotionEvent* mev = static_cast<const droidinput::MotionEvent*>(android_event);
-            mir_event.type = MIR_INPUT_EVENT_TYPE_MOTION;
+            mir_event.type = mir_event_type_motion;
             mir_event.device_id = android_event->getDeviceId();
             mir_event.source_id = android_event->getSource();
             mir_event.action = mev->getAction();

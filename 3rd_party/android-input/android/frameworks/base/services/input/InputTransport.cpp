@@ -63,6 +63,11 @@ inline static float lerp(float a, float b, float alpha) {
 
 // --- InputMessage ---
 
+InputMessage::InputMessage()
+{
+    memset(this, 0, sizeof(InputMessage));
+}
+
 bool InputMessage::isValid(size_t actualSize) const {
     if (size() == actualSize) {
         switch (header.type) {

@@ -73,12 +73,14 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
-    const auto& fd = response->has_buffer() ?
+    auto const& surface_fd = extract_fds_from(response);
+    const auto& buffer_fd = response->has_buffer() ?
         extract_fds_from(response->mutable_buffer()) :
         std::vector<int32_t>();
 
     send_response(id, static_cast<google::protobuf::Message*>(response));
-    sender->send_fds(fd);
+    sender->send_fds(surface_fd);
+    sender->send_fds(buffer_fd);
     resource_cache->free_resource(response);
 }
 

@@ -19,11 +19,15 @@
 #ifndef MIR_TEST_WAIT_CONDITION_H_
 #define MIR_TEST_WAIT_CONDITION_H_
 
+#include <gmock/gmock.h>
+
 #include <chrono>
 #include <mutex>
 #include <condition_variable>
 
 namespace mir
+{
+namespace test
 {
 struct WaitCondition
 {
@@ -46,10 +50,7 @@ struct WaitCondition
     std::condition_variable condition;
     bool woken;
 };
-}
 
-namespace
-{
 ACTION_P(ReturnFalseAndWakeUp, wait_condition)
 {
     wait_condition->wake_up_everyone();
@@ -58,6 +59,7 @@ ACTION_P(ReturnFalseAndWakeUp, wait_condition)
 ACTION_P(WakeUp, wait_condition)
 {
     wait_condition->wake_up_everyone();
+}
 }
 }
 

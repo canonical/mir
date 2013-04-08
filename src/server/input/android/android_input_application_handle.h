@@ -48,7 +48,7 @@ protected:
     InputApplicationHandle& operator=(InputApplicationHandle const&) = delete;
 
 private:
-    std::shared_ptr<input::SessionTarget> session;
+    std::weak_ptr<input::SessionTarget> weak_session;
 };
 
 }
