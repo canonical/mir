@@ -21,7 +21,7 @@
 
 #include "input_receiver_thread.h"
 
-#include "mir_toolkit/input/event.h"
+#include "mir_toolkit/event.h"
 
 #include <functional>
 #include <memory>

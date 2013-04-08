@@ -55,7 +55,7 @@ MirSurface::MirSurface(
     message.set_buffer_usage(params.buffer_usage);
     
     if (delegate)
-        handle_event_callback = std::bind(delegate->handle_input, this, std::placeholders::_1, delegate->context);
+        handle_event_callback = std::bind(delegate->callback, this, std::placeholders::_1, delegate->context);
 
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
