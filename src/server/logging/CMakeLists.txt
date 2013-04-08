@@ -18,5 +18,5 @@ target_link_libraries(
   mirlogging
 
   ${GLog_LIBRARY}
-  gflags
+  ${GFlags_LIBRARY}
 )
