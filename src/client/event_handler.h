@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_EVENT_HANDLER_
 #define MIR_CLIENT_EVENT_HANDLER_
 
-#include "mir/event.h"
+#include "mir_toolkit/event.h"
 
 namespace mir
 {
@@ -30,13 +30,13 @@ class EventHandler
 {
 public:
     virtual ~EventHandler() {}
-    virtual void handle_event(mir::Event const& e) = 0;
+    virtual void handle_event(MirEvent const& e) = 0;
 };
 
 class NullEventHandler : public EventHandler
 {
 public:
-    void handle_event(mir::Event const &) {}
+    void handle_event(MirEvent const &) {}
 };
 
 } // namespace client

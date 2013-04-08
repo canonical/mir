@@ -20,7 +20,7 @@
 
 #include "mir/shell/surface_builder.h"
 #include "mir/input/input_channel.h"
-#include "mir/event.h"
+#include "mir_toolkit/event.h"
 #include "mir/event_queue.h"
 
 #include <boost/throw_exception.hpp>
@@ -235,13 +235,12 @@ bool msh::Surface::set_state(MirSurfaceState s)
 
 void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 {
-    Event e;
+    MirEvent e;
 
-    e.type = Event::Type::SURFACE;
-    e.surface.type = Event::Surface::CHANGE;
-    e.surface.id = 69; // TODO
-    e.surface.change.attrib = attrib;
-    e.surface.change.value = value;
+    e.type = mir_event_type_surface_change;
+    e.details.surface_change.id = 69; // TODO
+    e.details.surface_change.attrib = attrib;
+    e.details.surface_change.value = value;
 
     if (event_queue)
         event_queue->post(e);

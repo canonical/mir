@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/event.h"
+#include "mir_toolkit/event.h"
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
@@ -145,28 +145,20 @@ void mfd::ProtobufMessageProcessor::send_response(
     sender->send(buffer2);
 }
 
-void mfd::ProtobufMessageProcessor::handle_event(Event const& e)
+void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
 {
     mir::protobuf::EventSequence seq;
     mir::protobuf::Event *ev = seq.add_event();
 
     switch (e.type)
     {
-    case Event::SURFACE:
-        switch (e.surface.type)
+    case mir_event_type_surface_change:
         {
-        case Event::Surface::CHANGE:
-            {
-                ::mir::protobuf::SurfaceSetting *change =
-                    ev->mutable_surface_changed();
-                change->mutable_surfaceid()->set_value(e.surface.id);
-                change->set_attrib(e.surface.change.attrib);
-                change->set_ivalue(e.surface.change.value);
-            }
-            break;
-        default:
-            assert(false);
-            break;
+            ::mir::protobuf::SurfaceSetting *change =
+                ev->mutable_surface_changed();
+            change->mutable_surfaceid()->set_value(e.details.surface_change.id);
+            change->set_attrib(e.details.surface_change.attrib);
+            change->set_ivalue(e.details.surface_change.value);
         }
         break;
     default:

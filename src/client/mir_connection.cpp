@@ -314,7 +314,7 @@ EGLNativeDisplayType MirConnection::egl_native_display()
     return *native_display;
 }
 
-void MirConnection::handle_event(mir::Event const& e)
+void MirConnection::handle_event(MirEvent const& e)
 {
     log->error() << __PRETTY_FUNCTION__
                  << " TODO: handle event type "

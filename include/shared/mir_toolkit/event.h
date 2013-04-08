@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "mir_toolkit/common.h"
 
 #ifdef __cplusplus
 /**
@@ -38,7 +39,8 @@ extern "C" {
     {
         mir_event_type_key,
         mir_event_type_motion,
-        mir_event_type_hw_switch
+        mir_event_type_hw_switch,
+        mir_event_type_surface_change
     } MirEventType;
 
     typedef struct MirEvent
@@ -93,6 +95,12 @@ extern "C" {
                     float orientation;
                 } pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
             } motion;
+            struct
+            {
+                int id;
+                MirSurfaceAttrib attrib;
+                int value;
+            } surface_change;
         } details;
     } MirEvent;
 

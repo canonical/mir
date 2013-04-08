@@ -74,7 +74,7 @@ private:
     // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response);
 
-    void handle_event(mir::Event const& e);
+    void handle_event(MirEvent const& e);
 
     template<class Response>
     std::vector<int32_t> extract_fds_from(Response* response);

@@ -22,7 +22,6 @@
 
 #include "mir_basic_rpc_channel.h"
 #include "mir_logger.h"
-#include "mir/event.h"
 #include "event_handler.h"
 
 #include <boost/asio.hpp>

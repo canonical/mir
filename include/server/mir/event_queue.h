@@ -19,18 +19,18 @@
 #ifndef MIR_EVENT_QUEUE_H_
 #define MIR_EVENT_QUEUE_H_
 
+#include "mir_toolkit/event.h"
 #include <memory>
 
 namespace mir
 {
-struct Event;
 class EventSink;
 
 class EventQueue
 {
 public:
     void set_sink(std::weak_ptr<EventSink> const& s);
-    void post(Event const& e);
+    void post(MirEvent const& e);
 
 private:
     std::weak_ptr<EventSink> sink;

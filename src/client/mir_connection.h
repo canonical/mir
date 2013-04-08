@@ -106,7 +106,7 @@ public:
 
     EGLNativeDisplayType egl_native_display();
 
-    void handle_event(mir::Event const&);
+    void handle_event(MirEvent const&);
 
 private:
     std::shared_ptr<google::protobuf::RpcChannel> channel;

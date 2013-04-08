@@ -19,14 +19,15 @@
 #ifndef MIR_EVENT_SINK_H_
 #define MIR_EVENT_SINK_H_
 
+#include "mir_toolkit/event.h"
+
 namespace mir
 {
-struct Event;
 
 class EventSink
 {
 public:
-    virtual void handle_event(Event const& e) = 0;
+    virtual void handle_event(MirEvent const& e) = 0;
 };
 
 } // namespace mir
