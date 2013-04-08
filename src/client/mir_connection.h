@@ -31,8 +31,9 @@
 
 #include "client_platform.h"
 #include "client_context.h"
-#include "event_handler.h"
+
 #include "mir_wait_handle.h"
+#include "event_handler.h"
 
 namespace mir
 {
