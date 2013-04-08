@@ -21,10 +21,8 @@
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
 
-#include <atomic>
 #include <csignal>
 #include <cassert>
-#include <iostream>
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
