@@ -32,6 +32,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <xkbcommon/xkbcommon.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
+
 #include <thread>
 #include <functional>
 
@@ -172,9 +175,11 @@ struct MockInputHandler
 
 struct InputReceivingClient : ClientConfigCommon
 {
-    InputReceivingClient()
-      : events_received(0)
+    InputReceivingClient(int events_to_receive)
+      : events_to_receive(events_to_receive),
+        events_received(0)
     {
+        assert(events_to_receive <= max_events_to_receive);
     }
 
     static void handle_input(MirSurface* /* surface */, MirEvent* ev, void* context)
@@ -214,9 +219,9 @@ struct InputReceivingClient : ClientConfigCommon
          };
          mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
 
-         event_received[0].wait_for_at_most_seconds(5);
-         event_received[1].wait_for_at_most_seconds(5);
-         event_received[2].wait_for_at_most_seconds(5);
+
+         for (int i = 0; i < events_to_receive; i++)
+             event_received[i].wait_for_at_most_seconds(5);
 
          mir_surface_release_sync(surface);
          
@@ -228,7 +233,10 @@ struct InputReceivingClient : ClientConfigCommon
     }
     
     std::shared_ptr<MockInputHandler> handler;
-    mt::WaitCondition event_received[3];
+    static int const max_events_to_receive = 3;
+    mt::WaitCondition event_received[max_events_to_receive];
+    
+    int events_to_receive;
     int events_received;
 };
 
@@ -257,10 +265,53 @@ TEST_F(TestClientInput, clients_receive_key_input)
     
     struct KeyReceivingClient : InputReceivingClient
     {
+        KeyReceivingClient() : InputReceivingClient(num_events_produced) {}
         void expect_input()
         {
             using namespace ::testing;
             EXPECT_CALL(*handler, handle_input(_)).Times(num_events_produced);
+        }
+    } client_config;
+    launch_client_process(client_config);
+}
+
+namespace
+{
+MATCHER_P(KeyOfSymbol, keysym, "")
+{
+    if (static_cast<xkb_keysym_t>(arg->details.key.key_code) == (uint)keysym)
+        return true;
+    return false;
+}
+}
+
+TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
+{
+    using namespace ::testing;
+    
+    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    {
+        void inject_input()
+        {
+            fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                             .of_scancode(KEY_LEFTSHIFT));
+            fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                             .of_scancode(KEY_4));
+        }
+    } server_config;
+    launch_server_process(server_config);
+    
+    struct KeyReceivingClient : InputReceivingClient
+    {
+        KeyReceivingClient() : InputReceivingClient(2) {}
+
+        void expect_input()
+        {
+            using namespace ::testing;
+
+            InSequence seq;
+            EXPECT_CALL(*handler, handle_input(KeyOfSymbol(XKB_KEY_Shift_L))).Times(1);
+            EXPECT_CALL(*handler, handle_input(KeyOfSymbol(XKB_KEY_dollar))).Times(1);
         }
     } client_config;
     launch_client_process(client_config);
