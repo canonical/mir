@@ -67,7 +67,7 @@ mir::AsioMainLoop::AsioMainLoop()
 {
 }
 
-mir::AsioMainLoop::~AsioMainLoop()
+mir::AsioMainLoop::~AsioMainLoop() noexcept(true)
 {
 }
 

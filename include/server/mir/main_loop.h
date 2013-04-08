@@ -28,7 +28,7 @@ namespace mir
 class MainLoop
 {
 public:
-    virtual ~MainLoop() {}
+    virtual ~MainLoop() = default;
 
     virtual void run() = 0;
     virtual void stop() = 0;

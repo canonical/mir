@@ -32,7 +32,7 @@ class AsioMainLoop : public MainLoop
 {
 public:
     AsioMainLoop();
-    ~AsioMainLoop();
+    ~AsioMainLoop() noexcept(true);
 
     void run();
     void stop();
