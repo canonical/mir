@@ -65,6 +65,7 @@ void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)
 int mga::ServerRenderWindow::driver_requests_info(int key) const
 {
     geom::Size size;
+    geom::PixelFormat pf;
     switch(key)
     {
         case NATIVE_WINDOW_WIDTH:
@@ -74,7 +75,11 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             size = poster->display_size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
-            return 2;
+            pf = poster->display_format();
+            if (pf == geom::PixelFormat::abgr_8888)
+            {
+                return HAL_PIXEL_FORMAT_RGBA_8888;
+            }
         default:
             return -1;
     }
