@@ -40,14 +40,15 @@ struct ServerRenderWindowTest : public ::testing::Test
 {
     virtual void SetUp()
     {
-        mock_buffer1 = std::make_shared<mtd::MockBuffer>(geom::Size{geom::Width{3}, geom::Height{3}},
+        using namespace testing;
+        mock_buffer1 = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size{geom::Width{3}, geom::Height{3}},
                                                         geom::Stride{34}, geom::PixelFormat::argb_8888);
-        mock_buffer2 = std::make_shared<mtd::MockBuffer>(geom::Size{geom::Width{3}, geom::Height{3}},
+        mock_buffer2 = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size{geom::Width{3}, geom::Height{3}},
                                                         geom::Stride{34}, geom::PixelFormat::argb_8888);
-        mock_buffer3 = std::make_shared<mtd::MockBuffer>(geom::Size{geom::Width{3}, geom::Height{3}},
+        mock_buffer3 = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size{geom::Width{3}, geom::Height{3}},
                                                         geom::Stride{34}, geom::PixelFormat::argb_8888);
         mock_swapper = std::make_shared<mtd::MockSwapper>(mock_buffer1);
-        mock_display_poster = std::make_shared<mtd::MockDisplayInfoProvider>();
+        mock_display_poster = std::make_shared<NiceMock<mtd::MockDisplayInfoProvider>>();
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer1;
