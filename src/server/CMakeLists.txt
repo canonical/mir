@@ -25,7 +25,6 @@ set(
   run_mir.cpp
   display_server.cpp
   default_server_configuration.cpp
-  signal_dispatcher.cpp
   asio_main_loop.cpp
 )
 
