@@ -141,35 +141,6 @@ TEST_F(HWCLayerListTest, empty_list)
     EXPECT_EQ(0u, list.size());
 }
 
-//construction is a bit funny because hwc_layer_1 has unions
-struct HWCLayer : public hwc_layer_1
-{
-    HWCLayer(
-        int32_t compositionType,
-        uint32_t hints,
-        uint32_t flags,
-        buffer_handle_t handle,
-        uint32_t transform,
-        int32_t blending,
-        hwc_rect_t sourceCrop,
-        hwc_rect_t displayFrame,
-        hwc_region_t visibleRegionScreen,
-        int acquireFenceFd,
-        int releaseFenceFd)
-    {
-        compositionType = compositionType;
-        hints = hints;
-        flags = flags;
-        handle = handle;
-        transform = transform;
-        blending = blending;
-        sourceCrop = sourceCrop;
-        displayFrame = displayFrame;
-        visibleRegionScreen = visibleRegionScreen;
-        acquireFenceFd = acquireFenceFd;
-        releaseFenceFd = releaseFenceFd;
-    }
-};
 
 TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
 {
@@ -237,33 +208,60 @@ TEST_F(HWCLayerListTest, set_fb_target_2x)
     EXPECT_EQ(stub_handle_2->handle, list[0]->handle); 
 }
 
+//construction is a bit funny because hwc_layer_1 has unions
+struct TestingHWCLayer : public hwc_layer_1
+{
+    TestingHWCLayer(
+        int32_t compositionType,
+        uint32_t hints,
+        uint32_t flags,
+        buffer_handle_t handle,
+        uint32_t transform,
+        int32_t blending,
+        hwc_rect_t sourceCrop,
+        hwc_rect_t displayFrame,
+        hwc_region_t visibleRegionScreen,
+        int acquireFenceFd,
+        int releaseFenceFd)
+    {
+        hwc_layer_1::compositionType = compositionType;
+        hwc_layer_1::hints = hints;
+        hwc_layer_1::flags = flags;
+        hwc_layer_1::handle = handle;
+        hwc_layer_1::transform = transform;
+        hwc_layer_1::blending = blending;
+        hwc_layer_1::sourceCrop = sourceCrop;
+        hwc_layer_1::displayFrame = displayFrame;
+        hwc_layer_1::visibleRegionScreen = visibleRegionScreen;
+        hwc_layer_1::acquireFenceFd = acquireFenceFd;
+        hwc_layer_1::releaseFenceFd = releaseFenceFd;
+    }
+};
+
 TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
 {
     using namespace testing;
 
     mga::HWCLayerList layerlist;
-
     layerlist.set_fb_target(mock_buffer);
 
-    auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-
-    buffer_handle_t stub_handle = (buffer_handle_t) 0x4838333;
-
-    hwc_rect_t source_region = {0,0,422,223};
-    hwc_rect_t target_region = {0,0,422,223};
-    HWCLayer expected_layer{
+    hwc_rect_t source_region = {0,0,width, height};
+    hwc_rect_t target_region = source_region;
+    TestingHWCLayer expected_layer{
                            HWC_FRAMEBUFFER_TARGET, //compositionType
                            0,            //hints
                            0,            //flags
-                           stub_handle, //handle
+                           stub_handle_1->handle, //handle
                            0,            //transform
                            HWC_BLENDING_NONE,      //blending
                            source_region, //source rect
                            target_region, //display position
-                           {0,0},      //list of visible regions
+                           {1,0},      //list of visible regions
                            -1,         //acquireFenceFd
                            -1};        //releaseFenceFd
 
-    EXPECT_THAT(*list[0], MatchesLayer( expected_layer ));
+    auto list = layerlist.native_list(); 
+    ASSERT_EQ(1u, list.size());
+    auto target_layer = list[0];
+    EXPECT_THAT(*target_layer, MatchesLayer( expected_layer ));
 }
