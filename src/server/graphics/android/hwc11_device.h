@@ -63,6 +63,9 @@ private:
     std::condition_variable vsync_trigger;
     bool vsync_occurred;
     unsigned int primary_display_config;
+
+
+    hwc_display_contents_1_t* hwc_display;
 };
 
 }

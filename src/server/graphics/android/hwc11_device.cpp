@@ -129,14 +129,26 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<compositor::Buffer> 
 }
 void mga::HWC11Device::commit_frame()
 {
-    /* gles only for now */
-    hwc_display_contents_1_t displays;
-    hwc_display_contents_1_t* disp;
-    displays.numHwLayers = 0;
-    displays.retireFenceFd = -1;
-    disp = &displays;
+    auto& list = layer_organizer->native_list();
 
-    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &disp);
+    hwc_display = (hwc_display_contents_1_t*) malloc(sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*list.size()); 
+
+
+    auto i = 0u;
+    for( auto& layer : list)
+    {
+        hwc_display->hwLayers[i++] = *layer;
+    }
+    /* gles only for now */
+//    hwc_display_contents_1_t displays;
+//    displays.hwLayers[0] = list[0];
+    //hwc_display->numHwLayers = list.size();
+    hwc_display->numHwLayers = 0;
+    hwc_display->retireFenceFd = -1;
+
+ //   hwc_display_contents_1_t* disp = &displays;
+
+    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display);
     if (rc != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
