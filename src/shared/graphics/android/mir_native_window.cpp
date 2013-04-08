@@ -85,6 +85,7 @@ int perform_static(ANativeWindow* window, int key, ...)
 int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
+    printf("DEQUEUE!\n");
     auto self = static_cast<mcla::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
@@ -92,7 +93,6 @@ int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
-    printf("DEQUEUE!\n");
     *fence_fd = -1;
     auto self = static_cast<mcla::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
@@ -171,16 +171,16 @@ int mcla::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to
     return 0;
 }
 
-int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mcla::AndroidFence> const& fence)
+int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mcla::AndroidFence> const& /*fence*/)
 {
-    fence->wait();
+    //fence->wait();
     driver_interpreter->driver_returns_buffer(buffer);
     return 0;
 }
 
 int mcla::MirNativeWindow::query(int key, int* value ) const
 {
-    printf("QUERYQUERY!\n");
+    printf("QUERY %i!\n", key);
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }

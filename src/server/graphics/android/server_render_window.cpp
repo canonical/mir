@@ -58,7 +58,17 @@ void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)
 {
 }
 
-int mga::ServerRenderWindow::driver_requests_info(int /*key*/) const
+int mga::ServerRenderWindow::driver_requests_info(int key) const
 {
-    return 8;
+    switch(key)
+    {
+        case 6: //width, 768 for nex4
+            return 768;
+        case 7: //height, 768 for nex4
+            return 1280;
+        case 2:
+        default:
+            //figure me out!
+            return 2;
+    }
 }
