@@ -292,3 +292,16 @@ int MirSurface::attrib(MirSurfaceAttrib at) const
 {
     return attrib_cache[at];
 }
+
+void MirSurface::handle_event(MirEvent const& e)
+{
+    if (e.type == mir_event_type_surface_change)
+    {
+        MirSurfaceAttrib a = e.details.surface_change.attrib;
+        if (a < mir_surface_attrib_arraysize_)
+            attrib_cache[a] = e.details.surface_change.value;
+    }
+
+    if (handle_event_callback)
+        handle_event_callback((MirEvent*)&e); // FIXME in another proposal
+}

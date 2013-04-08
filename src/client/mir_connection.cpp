@@ -74,6 +74,9 @@ MirWaitHandle* MirConnection::create_surface(
     auto null_log = std::make_shared<mir::client::NullLogger>();
     auto surface = new MirSurface(this, server, null_log, platform->create_buffer_factory(), input_platform, params, delegate, callback, context);
 
+    if (surface)
+        valid_surfaces[surface->id()] = surface;
+
     return surface->get_create_wait_handle();
 }
 
@@ -120,6 +123,8 @@ MirWaitHandle* MirConnection::release_surface(
     auto new_wait_handle = new MirWaitHandle;
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
+
+    valid_surfaces.erase(surface->id());
 
     mir::protobuf::SurfaceId message;
     message.set_value(surface->id());
@@ -316,8 +321,32 @@ EGLNativeDisplayType MirConnection::egl_native_display()
 
 void MirConnection::handle_event(MirEvent const& e)
 {
-    log->error() << __PRETTY_FUNCTION__
-                 << " TODO: handle event type "
-                 << e.type
-                 << "\n";
+    switch (e.type)
+    {
+    case mir_event_type_surface_change:
+        {
+            int id = e.details.surface_change.id;
+            SurfaceMap::iterator it = valid_surfaces.find(id);
+            if (it != valid_surfaces.end())
+            {
+                MirSurface *surface = it->second;
+                surface->handle_event(e);
+            }
+            else
+            {
+                log->error() << __PRETTY_FUNCTION__
+                             << ": mir_event_type_surface_change "
+                             << "received for non-existent surface ID "
+                             << id
+                             << ".\n";
+            }
+        }
+        break;
+    default:
+        log->error() << __PRETTY_FUNCTION__
+                     << ": Unsupported event type " 
+                     << e.type
+                     << "received from server.\n";
+        break;
+    }
 }

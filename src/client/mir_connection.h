@@ -21,6 +21,7 @@
 #include <string>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 
 #include <mutex>
 
@@ -136,6 +137,9 @@ private:
 
     static std::mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
+
+    typedef std::unordered_map<int, MirSurface*> SurfaceMap;
+    SurfaceMap valid_surfaces;
 
     struct SurfaceRelease;
 
