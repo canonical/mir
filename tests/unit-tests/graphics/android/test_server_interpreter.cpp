@@ -22,6 +22,7 @@
 
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_swapper.h"
+#include "mir_test_doubles/mock_display_poster.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -54,19 +55,21 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_buffer3 = std::make_shared<mtd::MockBuffer>(geom::Size{geom::Width{3}, geom::Height{3}},
                                                         geom::Stride{34}, geom::PixelFormat::argb_8888);
         mock_swapper = std::make_shared<mtd::MockSwapper>(mock_buffer1);
+        mock_display_poster = std::make_shared<mtd::MockDisplayInfoProvider>();
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer1;
     std::shared_ptr<mtd::MockBuffer> mock_buffer2;
     std::shared_ptr<mtd::MockBuffer> mock_buffer3;
     std::shared_ptr<mtd::MockSwapper> mock_swapper;
+    std::shared_ptr<mtd::MockDisplayInfoProvider> mock_display_info_provider;
 };
 }
 
 TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 {
     using namespace testing;
-    mga::ServerRenderWindow render_window(mock_swapper);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
     auto stub_anw = std::make_shared<mc::NativeBufferHandle>();
 
@@ -84,7 +87,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 {
     using namespace testing;
-    mga::ServerRenderWindow render_window(mock_swapper);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
     auto stub_anw = std::make_shared<mc::NativeBufferHandle>();
 
@@ -118,7 +121,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_few_buffer_)
 {
     using namespace testing;
     mc::BufferID id1{4}, id2{5}, id3{6};
-    mga::ServerRenderWindow render_window(mock_swapper);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
     auto stub_anw1 = std::make_shared<mc::NativeBufferHandle>();
     auto stub_anw2 = std::make_shared<mc::NativeBufferHandle>();
@@ -170,12 +173,33 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_few_buffer_)
 TEST_F(ServerRenderWindowTest, throw_if_driver_returns_weird_buffer)
 {
     using namespace testing;
-    mga::ServerRenderWindow render_window(mock_swapper);
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
     auto stub_anw = std::make_shared<mc::NativeBufferHandle>();
 
     EXPECT_CALL(*mock_swapper, compositor_release(_))
         .Times(0);
+
+    EXPECT_THROW({
+        render_window.driver_returns_buffer(nullptr);
+    }, std::runtime_error); 
+}
+
+TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
+{
+    using namespace testing;
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+
+    auto stub_anw = std::make_shared<mc::NativeBufferHandle>();
+
+    mc::BufferID id{442}, returned_id;
+    EXPECT_CALL(*mock_swapper, compositor_acquire(_,_))
+        .Times(1)
+        .WillOnce(DoAll(SetArgReferee<0>(mock_buffer1),SetArgReferee<1>(id)));
+    EXPECT_CALL(*mock_swapper, compositor_release(_))
+        .Times(1);
+    EXPECT_CALL(*mock_display_poster, (mock_buffer1))
+        .Times(1);
 
     EXPECT_THROW({
         render_window.driver_returns_buffer(nullptr);
