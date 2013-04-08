@@ -103,24 +103,23 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 
 /* note: in real usage, sync is enforced by the swapper class. we make use of the mock's non-blocking 
          to do the tests. */
-TEST_F(ServerRenderWindowTest, driver_wants_a_few_buffer_)
+TEST_F(ServerRenderWindowTest, driver_is_done_with_a_few_buffers_properly)
 {
     using namespace testing;
-    mc::BufferID id1{4}, id2{5}, id3{6};
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
-    auto stub_anw1 = std::make_shared<mc::NativeBufferHandle>();
+    auto stub_anw = std::make_shared<mc::NativeBufferHandle>();
     auto stub_anw2 = std::make_shared<mc::NativeBufferHandle>();
     auto stub_anw3 = std::make_shared<mc::NativeBufferHandle>();
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(3)
+        .WillOnce(Return(mock_buffer1))
         .WillOnce(Return(mock_buffer2))
-        .WillOnce(Return(mock_buffer3))
-        .WillOnce(Return(mock_buffer1));
+        .WillOnce(Return(mock_buffer3));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
-        .WillOnce(Return(stub_anw1));
+        .WillOnce(Return(stub_anw));
     EXPECT_CALL(*mock_buffer2, native_buffer_handle())
         .Times(1)
         .WillOnce(Return(stub_anw2));
@@ -131,21 +130,22 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_few_buffer_)
     auto handle1 = render_window.driver_requests_buffer();
     auto handle2 = render_window.driver_requests_buffer();
     auto handle3 = render_window.driver_requests_buffer();
+    testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
-    testing::InSequence sequence_enforcer;
     std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
     std::shared_ptr<mc::Buffer> buf2 = mock_buffer2;
     std::shared_ptr<mc::Buffer> buf3 = mock_buffer3;
+    EXPECT_CALL(*mock_swapper, compositor_release(buf1))
+        .Times(1);
     EXPECT_CALL(*mock_swapper, compositor_release(buf2))
         .Times(1);
     EXPECT_CALL(*mock_swapper, compositor_release(buf3))
         .Times(1);
-    EXPECT_CALL(*mock_swapper, compositor_release(buf1))
-        .Times(1);
 
-    render_window.driver_returns_buffer(handle2); 
-    render_window.driver_returns_buffer(handle3); 
     render_window.driver_returns_buffer(handle1);
+    render_window.driver_returns_buffer(handle2);
+    render_window.driver_returns_buffer(handle3);
+    testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 }
 
 TEST_F(ServerRenderWindowTest, throw_if_driver_returns_weird_buffer)
