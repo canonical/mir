@@ -120,6 +120,10 @@ void mga::HWC11Device::wait_for_vsync()
     }
 }
 
+void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& /*buffer*/)
+{
+
+}
 void mga::HWC11Device::commit_frame()
 {
     /* gles only for now */

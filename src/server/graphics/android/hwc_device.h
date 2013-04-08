@@ -38,6 +38,7 @@ public:
     virtual geometry::Size display_size() = 0; 
     virtual geometry::PixelFormat display_format() = 0; 
     virtual unsigned int number_of_framebuffers_available() = 0;
+    virtual void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
 
     virtual void wait_for_vsync() = 0;
     virtual void commit_frame() = 0;

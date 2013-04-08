@@ -56,9 +56,8 @@ void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returne
 
     auto buffer = buffer_it->second;
     buffers_in_driver.erase(buffer_it);
-    printf("returnin 0x%X\n", (int)returned_handle);
+    poster->set_next_frontbuffer(buffer);
     swapper->compositor_release(buffer);
-    printf("returnin 0x%X\n", (int)returned_handle);
 }
 
 void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)

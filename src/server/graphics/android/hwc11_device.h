@@ -47,6 +47,7 @@ public:
     geometry::Size display_size(); 
     geometry::PixelFormat display_format();
     unsigned int number_of_framebuffers_available();
+    void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
  
     void wait_for_vsync();
     void commit_frame();
