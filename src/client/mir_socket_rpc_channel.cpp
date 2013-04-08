@@ -238,6 +238,7 @@ void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& e
             boost::asio::placeholders::error));
 }
 
+
 void mcl::MirSocketRpcChannel::read_message()
 {
     try
