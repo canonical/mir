@@ -18,7 +18,9 @@
 
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
+#include "mir/compositor/buffer_basic.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
+#include "mir_test_doubles/stub_buffer.h"
 
 #include <thread>
 #include <chrono>
@@ -159,7 +161,7 @@ TEST_F(HWCDevice, test_hwc_gles_set_empty_layerlist)
     mga::LayerList empty_list;
     EXPECT_CALL(*mock_organizer, native_list())
         .Times(1)
-        .WillOnce(Return(empty_list));
+        .WillOnce(ReturnRef(empty_list));
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
         .Times(1);
 
@@ -177,16 +179,16 @@ TEST_F(HWCDevice, test_hwc_gles_set_gets_layerlist)
     mga::HWC11Device device(mock_device, mock_organizer);
 
     mga::LayerList fb_list;
-    fb_list.push_back(std::make_shared<mga::HWCLayer>());
+    fb_list.push_back(std::shared_ptr<mga::HWCLayer>());
     EXPECT_CALL(*mock_organizer, native_list())
         .Times(1)
-        .WillOnce(Return(fb_list));
+        .WillOnce(ReturnRef(fb_list));
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
         .Times(1);
 
     device.commit_frame();
 
-    EXPECT_EQ(list.size(), mock_device->display0_content.numHwLayers);
+    EXPECT_EQ(fb_list.size(), mock_device->display0_content.numHwLayers);
 }
 
 TEST_F(HWCDevice, test_hwc_gles_set_error)
@@ -319,7 +321,8 @@ TEST_F(HWCDevice, hwc_device_reports_abgr_8888_by_default)
 TEST_F(HWCDevice, hwc_device_set_next_frontbuffer_adds_to_layerlist)
 {
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(*mock_organizer, set_fb_target(stub_buffer))
+    std::shared_ptr<mc::Buffer> buf = stub_buffer;
+    EXPECT_CALL(*mock_organizer, set_fb_target(buf))
         .Times(1);
  
     mga::HWC11Device device(mock_device, mock_organizer);
