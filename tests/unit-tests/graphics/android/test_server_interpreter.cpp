@@ -185,6 +185,8 @@ TEST_F(ServerRenderWindowTest, throw_if_driver_returns_weird_buffer)
     }, std::runtime_error); 
 }
 
+
+#if 0
 TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
 {
     using namespace testing;
@@ -205,8 +207,6 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
         render_window.driver_returns_buffer(nullptr);
     }, std::runtime_error); 
 }
-
-#if 0
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
 {
     EXPECT_CALL(mock_buffer1_swapper, compositor_acquire)
