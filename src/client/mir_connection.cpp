@@ -343,6 +343,10 @@ void MirConnection::handle_event(MirEvent const& e)
         }
         break;
     default:
+        // Don't worry. This function only gets called for events from the
+        // RPC channel (not input). So you will never see this error unless
+        // you make a mistake.
+
         log->error() << __PRETTY_FUNCTION__
                      << ": Unsupported event type " 
                      << e.type
