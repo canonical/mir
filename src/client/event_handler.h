@@ -36,7 +36,7 @@ public:
 class NullEventHandler : public EventHandler
 {
 public:
-    void handle_event(MirEvent const &) {}
+    void handle_event(MirEvent const&) {}
 };
 
 } // namespace client
