@@ -33,12 +33,6 @@ public:
     virtual void handle_event(MirEvent const& e) = 0;
 };
 
-class NullEventHandler : public EventHandler
-{
-public:
-    void handle_event(MirEvent const&) {}
-};
-
 } // namespace client
 } // namespace mir
 
