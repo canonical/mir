@@ -108,11 +108,6 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
     return connection->egl_native_display();
 }
 
-int mir_egl_native_display_is_valid(MirEGLNativeDisplayType egl_display)
-{
-    return mcl::EGLNativeDisplayContainer::instance().validate(egl_display);
-}
-
 MirWaitHandle* mir_surface_create(
     MirConnection* connection,
     MirSurfaceParameters const* params,

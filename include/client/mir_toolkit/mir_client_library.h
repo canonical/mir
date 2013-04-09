@@ -103,13 +103,6 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection);
 
 /**
- * Validate an EGL native display
- *   \param [in] display the display
- *   \return             whether the display is valid for use with EGL
-  */
-int mir_egl_native_display_is_valid(MirEGLNativeDisplayType display);
-
-/**
  * Request a new Mir surface on the supplied connection with the supplied
  * parameters. The returned handle remains valid until the surface has been
  * released.
