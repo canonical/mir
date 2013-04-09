@@ -36,9 +36,36 @@ namespace graphics
 namespace android
 {
 
-class HWCLayer;
-typedef struct std::vector<std::shared_ptr<HWCLayer>> LayerList;
+class HWCLayerBase;
+typedef struct std::vector<std::shared_ptr<HWCLayerBase>> LayerList;
  
+//construction is a bit funny because hwc_layer_1 has unions
+struct HWCRect : public hwc_rect_t
+{
+    HWCRect(); 
+    HWCRect(geometry::Rectangle& rect);
+};
+
+struct HWCLayerBase : public hwc_layer_1
+{
+protected:
+    HWCLayerBase();
+
+    HWCRect visible_screen_rect;
+    //remember to disallow copy/assign
+};
+
+struct HWCFBLayer : public HWCLayerBase
+{
+    HWCFBLayer(std::shared_ptr<compositor::NativeBufferHandle> const& native_buf,
+               HWCRect& display_frame_rect);
+};
+
+struct HWCDummyLayer : public HWCLayerBase
+{
+    HWCDummyLayer();
+};
+
 class HWCLayerOrganizer
 {
 public:
@@ -59,37 +86,6 @@ private:
     LayerList layer_list;
 };
 
-}
-}
-}
-
-
-namespace mir
-{
-namespace graphics
-{
-namespace android
-{
-//construction is a bit funny because hwc_layer_1 has unions
-struct HWCRect : public hwc_rect_t
-{
-    HWCRect(); 
-    HWCRect(geometry::Rectangle& rect);
-};
-
-struct HWCLayer : public hwc_layer_1
-{
-    HWCLayer() {}
-    HWCLayer(
-        std::shared_ptr<compositor::NativeBufferHandle> const& native_buf,
-        HWCRect& source_crop_rect,
-        HWCRect& display_frame_rect,
-        HWCRect& visible_rect);
-
-private:
-    HWCRect visible_screen_rect;
-    //remember to disallow copy/assign
-};
 }
 }
 }

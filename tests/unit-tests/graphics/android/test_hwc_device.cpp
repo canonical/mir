@@ -179,7 +179,7 @@ TEST_F(HWCDevice, test_hwc_gles_set_gets_layerlist)
     mga::HWC11Device device(mock_device, mock_organizer);
 
     mga::LayerList fb_list;
-    fb_list.push_back(std::make_shared<mga::HWCLayer>());
+    fb_list.push_back(std::make_shared<mga::HWCDummyLayer>());
 
     EXPECT_CALL(*mock_organizer, native_list())
         .Times(1)
@@ -198,7 +198,7 @@ TEST_F(HWCDevice, test_hwc_gles_set_error)
 
     mga::HWC11Device device(mock_device, mock_organizer);
     mga::LayerList fb_list;
-    fb_list.push_back(std::make_shared<mga::HWCLayer>());
+    fb_list.push_back(std::make_shared<mga::HWCDummyLayer>());
 
     EXPECT_CALL(*mock_organizer, native_list())
         .Times(1)

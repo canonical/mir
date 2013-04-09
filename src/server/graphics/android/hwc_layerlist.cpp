@@ -38,14 +38,10 @@ mga::HWCRect::HWCRect(geom::Rectangle& rect)
     right = rect.size.width.as_uint32_t();
 }
 
-mga::HWCLayer::HWCLayer(
-        std::shared_ptr<mc::NativeBufferHandle> const& native_buf,
-        HWCRect& source_crop_rect,
-        HWCRect& display_frame_rect,
-        HWCRect& visible_rect)
+mga::HWCLayerBase::HWCLayerBase()
 {
-    /* we fix these for now */
-    compositionType = HWC_FRAMEBUFFER_TARGET;
+    /* default values.*/
+    compositionType = HWC_FRAMEBUFFER;
     hints = 0;
     flags = 0;
     transform = 0;
@@ -53,31 +49,39 @@ mga::HWCLayer::HWCLayer(
     acquireFenceFd = -1;
     releaseFenceFd = -1;
 
-    /* we just need one of these for now*/
+    HWCRect emptyrect;
+    visible_screen_rect = emptyrect;
+    sourceCrop = emptyrect;
+    displayFrame = emptyrect;
+    visible_screen_rect = emptyrect;
     visibleRegionScreen.numRects=1u;
     visibleRegionScreen.rects = &visible_screen_rect; 
-
-    /* we need this information from constructor*/
-    if (native_buf)
-    handle = native_buf->handle;
-    sourceCrop = source_crop_rect;
-    displayFrame = display_frame_rect;
-    visible_screen_rect = visible_rect;
 }
 
+mga::HWCFBLayer::HWCFBLayer(
+        std::shared_ptr<compositor::NativeBufferHandle> const& native_buf,
+        HWCRect& display_frame_rect)
+    : HWCLayerBase()
+{
+    compositionType = HWC_FRAMEBUFFER_TARGET;
+    handle = native_buf->handle;
+
+    visible_screen_rect = display_frame_rect;
+    sourceCrop = display_frame_rect;
+    displayFrame = display_frame_rect;
+    visible_screen_rect =  display_frame_rect; 
+}
+
+mga::HWCDummyLayer::HWCDummyLayer()
+    : HWCLayerBase()
+{
+    compositionType = HWC_FRAMEBUFFER;
+    hints = HWC_SKIP_LAYER;
+}
 
 mga::HWCLayerList::HWCLayerList()
 {
-    geom::Point pt{geom::X{0}, geom::Y{0}};
-    geom::Rectangle rect{pt, geom::Size{geom::Width{0}, geom::Height{0}}};
-    HWCRect display_rect(rect);
-    auto fb_layer = std::make_shared<HWCLayer>(nullptr,
-                                               display_rect,
-                                               display_rect,
-                                               display_rect);
-
-    fb_layer->compositionType = HWC_FRAMEBUFFER;
-    fb_layer->hints = HWC_SKIP_LAYER;
+    auto fb_layer = std::make_shared<HWCDummyLayer>();
     layer_list.push_back(fb_layer);
 }
 
@@ -94,10 +98,7 @@ void mga::HWCLayerList::set_fb_target(std::shared_ptr<compositor::Buffer> const&
     geom::Rectangle rect{pt, buffer->size()};
     HWCRect display_rect(rect);
 
-    auto fb_layer = std::make_shared<HWCLayer>(handle,
-                                               display_rect,
-                                               display_rect,
-                                               display_rect);
+    auto fb_layer = std::make_shared<HWCFBLayer>(handle, display_rect);
     if (layer_list.size() == 1)
     {
         layer_list.push_back(fb_layer);
