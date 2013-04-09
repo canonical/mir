@@ -35,7 +35,7 @@ struct XKBKeymapDeleter
 {
     void operator()(xkb_keymap *k)
     {
-        xkb_keymap_unref(k);
+        xkb_map_unref(k);
     }
 };
 struct XKBStateDeleter
