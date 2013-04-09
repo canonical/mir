@@ -92,7 +92,7 @@ set(
   ${XKBCOMMON_LIBRARIES}
 
   mirprotobuf
-  mirinputandroidtransport
+  mirsharedinput
 
   ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}

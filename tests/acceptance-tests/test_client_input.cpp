@@ -217,7 +217,9 @@ struct InputReceivingClient : ClientConfigCommon
              handle_input,
              this
          };
-         mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
+         mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+
+         mir_surface_set_event_handler(surface, &event_delegate);
 
 
          for (int i = 0; i < events_to_receive; i++)

@@ -5,6 +5,9 @@ add_subdirectory(protobuf/)
 if (MIR_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
+
+add_subdirectory(input)
+
 set(
   MIR_COMMON_PLATFORM_LIBRARIES
   ${MIR_COMMON_PLATFORM_LIBRARIES}

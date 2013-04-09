@@ -26,7 +26,6 @@
 
 namespace mcli = mir::client::input;
 namespace mclia = mcli::android;
-namespace miat = mir::input::android::transport;
 
 mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
   : input_channel(input_channel),
@@ -98,7 +97,7 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
     if(input_consumer->consume(&event_factory, true,
         -1, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
     {
-        miat::Lexicon::translate(android_event, ev);
+        mia::Lexicon::translate(android_event, ev);
 
         map_key_event(xkb_mapper, ev);
 
