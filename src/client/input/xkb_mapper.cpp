@@ -22,7 +22,6 @@
 
 namespace mcli = mir::client::input;
 
-
 mcli::XKBMapper::XKBMapper()
 {
     xkb_rule_names names;
