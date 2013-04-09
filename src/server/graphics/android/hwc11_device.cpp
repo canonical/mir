@@ -131,26 +131,47 @@ void mga::HWC11Device::commit_frame()
 {
     auto& list = layer_organizer->native_list();
 
-    hwc_display = (hwc_display_contents_1_t*) malloc(sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*list.size()); 
+    printf("LIST size %i\n", list.size()); 
+    hwc_display = (hwc_display_contents_1_t*) malloc(sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size() +1)); 
 
+//    auto i = 0u;
+//    for( auto& layer : list)
+//    {
+        hwc_display->hwLayers[0] = *list[0];
+        hwc_display->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
+        hwc_display->hwLayers[0].flags = HWC_SKIP_LAYER;
+        
 
-    auto i = 0u;
-    for( auto& layer : list)
-    {
-        hwc_display->hwLayers[i++] = *layer;
-    }
+        hwc_display->hwLayers[1] = *list[0];
+//    }
     /* gles only for now */
 //    hwc_display_contents_1_t displays;
 //    displays.hwLayers[0] = list[0];
     //hwc_display->numHwLayers = list.size();
-    hwc_display->numHwLayers = 0;
+    hwc_display->numHwLayers = 2;
     hwc_display->retireFenceFd = -1;
-
+    hwc_display->flags = HWC_GEOMETRY_CHANGED;
  //   hwc_display_contents_1_t* disp = &displays;
 
-    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display);
+    printf("layer->handle 0X%X\n", (int) hwc_display->hwLayers[0].compositionType);
+    printf("layer->handle 0X%X\n", (int) hwc_display->hwLayers[0].handle);
+
+    hwc_display_contents_1_t** dpy = &hwc_display;
+    hwc_display_contents_1_t*  primary = dpy[0];
+    printf("primary: 0X%X\n", (int) primary);
+    printf("primary handl: 0x%X\n", (int) primary->hwLayers[0].handle);
+    //dpy[0]
+//    hwc_device->prepare(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display);
+
+//    hwc_display_contents_1_t** dpy = &hwc_display;
+
+    auto rc = hwc_device->prepare(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display);
+    rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display);
     if (rc != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
+
+    if (primary->retireFenceFd > 0)
+    close(primary->retireFenceFd);
 }

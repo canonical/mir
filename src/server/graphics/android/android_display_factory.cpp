@@ -36,10 +36,12 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
       hwc_factory(hwc_factory),
       fb_factory(fb_factory)
 {
+    printf("here!\n");
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
     if ((rc != 0) || (hw_module == nullptr))
     {
+    printf("but something was wrong!\n");
         return;
     }
 
@@ -48,12 +50,14 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
         setup_hwc_dev(hw_module);
     } catch (std::runtime_error &e)
     {
+        printf("error here\n");
         /* TODO: log error. this is nonfatal, we'll just create the backup display */
     }
 }
 
 void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
 {
+    printf("trying here...\n");
     if ((!module->methods) || !(module->methods->open))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
@@ -67,6 +71,7 @@ void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
         BOOST_THROW_EXCEPTION(std::runtime_error("display hwc module unusable"));
     }
 
+    printf("got here\n");
     hwc_dev = std::shared_ptr<hwc_composer_device_1>(hwc_device_raw,
                   [](hwc_composer_device_1* device)
                   {
@@ -78,6 +83,7 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
 { 
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
+    printf("HWC!\n");
         //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
         auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
         auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
@@ -85,6 +91,7 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     }
     else
     {
+    printf("GPU\n");
         return display_factory->create_gpu_display();
     }
 }
