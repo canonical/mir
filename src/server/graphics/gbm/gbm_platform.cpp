@@ -86,7 +86,7 @@ void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
     drm.auth_magic(magic);
 }
 
-EGLNativeDisplayType mgg::GBMPlatform::mir_native_display()
+EGLNativeDisplayType mgg::GBMPlatform::shell_egl_display()
 {
     if (native_display)
         return reinterpret_cast<EGLNativeDisplayType>(native_display.get());

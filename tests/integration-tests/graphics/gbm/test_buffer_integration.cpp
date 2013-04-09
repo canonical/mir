@@ -100,7 +100,7 @@ public:
         return std::shared_ptr<mg::PlatformIPCPackage>();
     }
 
-    EGLNativeDisplayType mir_native_display()
+    EGLNativeDisplayType shell_egl_display()
     {
         return (EGLNativeDisplayType) 0;
     }

@@ -48,7 +48,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-EGLNativeDisplayType mga::AndroidPlatform::mir_native_display()
+EGLNativeDisplayType mga::AndroidPlatform::shell_egl_display()
 {
     // TODO: Implement
     return (EGLNativeDisplayType) 0;

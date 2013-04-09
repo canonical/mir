@@ -37,7 +37,7 @@ public:
     std::shared_ptr<Display> create_display();
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     
-    EGLNativeDisplayType mir_native_display();
+    EGLNativeDisplayType shell_egl_display();
 };
 
 }
