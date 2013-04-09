@@ -15,17 +15,17 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
 set(
-  ANDROID_TRANSPORT_SOURCES
+  ANDROID_SHARED_INPUT_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_lexicon.cpp
 )
 
 add_library(
-  mirinputandroidtransport STATIC
-  ${ANDROID_TRANSPORT_SOURCES}
+  mirsharedinput STATIC
+  ${ANDROID_SHARED_INPUT_SOURCES}
 )
 
 target_link_libraries(
-  mirinputandroidtransport
+  mirsharedinput
   
   android-input
 )
