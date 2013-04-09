@@ -555,12 +555,8 @@ TEST_F(MirClientSurfaceTest, default_surface_state)
                                                  nullptr);
     surface->get_create_wait_handle()->wait_for_result();
 
-    /*
-     * Most surface state changes will come from the server/shell.
-     * Once the surface exists on the server-side, it will have a real state
-     * and this will be sent to the client. However in this test, there is
-     * no server-side surface. So the default state remains "unknown".
-     */
+    // Test the default cached state value. It is always unknown until we
+    // get a real answer from the server.
     EXPECT_EQ(mir_surface_state_unknown,
               surface->attrib(mir_surface_attrib_state));
 }
