@@ -59,14 +59,17 @@ public:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
 };
 
-TEST_F(HWCLayerListTest, empty_list)
+TEST_F(HWCLayerListTest, default_list)
 {
     using namespace testing;
 
     mga::HWCLayerList layerlist;
 
     auto list = layerlist.native_list(); 
-    EXPECT_EQ(0u, list.size());
+    ASSERT_EQ(1u, list.size());
+    auto dummy_layer = list[0];
+    EXPECT_EQ(HWC_FRAMEBUFFER, dummy_layer->compositionType);
+    EXPECT_EQ(HWC_SKIP_LAYER, dummy_layer->hints); 
 }
 
 
@@ -85,8 +88,8 @@ TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
     layerlist.set_fb_target(mock_buffer);
 
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-    auto target_layer = list[0];
+    ASSERT_EQ(2u, list.size());
+    auto target_layer = list[1];
     EXPECT_THAT(target_layer->sourceCrop, MatchesRect( expected_sc, "sourceCrop"));
     EXPECT_THAT(target_layer->displayFrame, MatchesRect( expected_df, "displayFrame"));
 
@@ -107,8 +110,8 @@ TEST_F(HWCLayerListTest, set_fb_target_gets_fb_handle)
 
     layerlist.set_fb_target(mock_buffer);
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-    auto target_layer = list[0];
+    ASSERT_EQ(2u, list.size());
+    auto target_layer = list[1];
     EXPECT_EQ(stub_handle_1->handle, target_layer->handle); 
 }
 
@@ -125,14 +128,14 @@ TEST_F(HWCLayerListTest, set_fb_target_2x)
 
     layerlist.set_fb_target(mock_buffer);
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-    auto target_layer = list[0];
+    ASSERT_EQ(2u, list.size());
+    auto target_layer = list[1];
     EXPECT_EQ(stub_handle_1->handle, list[0]->handle); 
 
     layerlist.set_fb_target(mock_buffer);
     auto list_second = layerlist.native_list();
-    ASSERT_EQ(1u, list_second.size());
-    target_layer = list[0];
+    ASSERT_EQ(2u, list_second.size());
+    target_layer = list[1];
     EXPECT_EQ(stub_handle_2->handle, list[0]->handle); 
 }
 
@@ -189,7 +192,7 @@ TEST_F(HWCLayerListTest, set_fb_target_programs_other_struct_members_correctly)
                            -1};        //releaseFenceFd
 
     auto list = layerlist.native_list(); 
-    ASSERT_EQ(1u, list.size());
-    auto target_layer = list[0];
+    ASSERT_EQ(2u, list.size());
+    auto target_layer = list[1];
     EXPECT_THAT(*target_layer, MatchesLayer( expected_layer ));
 }
