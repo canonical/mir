@@ -118,7 +118,7 @@ private:
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attrib_arraysize_];
 
-    std::function<void(MirEvent*)> handle_event_callback;
+    std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::client::input::InputReceiverThread> input_thread;
 };
 

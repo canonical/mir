@@ -454,7 +454,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
 
 namespace
 {
-static void null_event_callback(MirSurface*, MirEvent*, void*)
+static void null_event_callback(MirSurface*, MirEvent const*, void*)
 {
 }
 }

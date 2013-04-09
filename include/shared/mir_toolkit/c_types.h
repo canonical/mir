@@ -69,7 +69,7 @@ typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client
  *                           registration.
  */
 typedef void (*mir_event_delegate_callback)(
-    MirSurface* surface, MirEvent* event, void* context);
+    MirSurface* surface, MirEvent const* event, void* context);
 
 /**
  * The order of components in a format enum matches the
