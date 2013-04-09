@@ -32,6 +32,7 @@ namespace shell
 {
 class InputFocusSelector;
 class SurfaceFactory;
+class PlacementStrategy;
 
 class DefaultShellConfiguration : public ShellConfiguration
 {
@@ -46,6 +47,8 @@ public:
     std::shared_ptr<FocusSequence> the_focus_sequence();
     std::shared_ptr<FocusSetter> the_focus_setter();
 
+    std::shared_ptr<PlacementStrategy> the_placement_strategy();
+
 protected:
     DefaultShellConfiguration(DefaultShellConfiguration const&) = delete;
     DefaultShellConfiguration& operator=(DefaultShellConfiguration const&) = delete;
@@ -59,6 +62,7 @@ private:
     CachedPtr<SessionContainer> session_container;
     CachedPtr<FocusSequence> focus_sequence;
     CachedPtr<FocusSetter> focus_setter;
+    CachedPtr<PlacementStrategy> placement_strategy;
 };
 
 }

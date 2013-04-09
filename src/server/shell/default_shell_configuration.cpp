@@ -38,12 +38,10 @@ msh::DefaultShellConfiguration::DefaultShellConfiguration(std::shared_ptr<mg::Vi
 
 std::shared_ptr<msh::SurfaceFactory> msh::DefaultShellConfiguration::the_surface_factory()
 {
-    // TODO: Factor out placement strategy
     return surface_factory(
         [this]() -> std::shared_ptr<msh::SurfaceFactory>
         {
-            auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(view_area);
-            return std::make_shared<msh::OrganisingSurfaceFactory>(underlying_surface_factory, placement_strategy);
+            return std::make_shared<msh::OrganisingSurfaceFactory>(underlying_surface_factory, the_placement_strategy());
         });
 }
 
@@ -71,5 +69,14 @@ std::shared_ptr<msh::FocusSetter> msh::DefaultShellConfiguration::the_focus_sett
         [this]()
         {
             return std::make_shared<msh::SingleVisibilityFocusMechanism>(the_session_container(), input_focus_selector);
+        });
+}
+
+std::shared_ptr<msh::PlacementStrategy> msh::DefaultShellConfiguration::the_placement_strategy()
+{
+    return placement_strategy(
+        [this]()
+        {
+            return std::make_shared<msh::ConsumingPlacementStrategy>(view_area);
         });
 }
