@@ -60,8 +60,8 @@ namespace
 
 static void map_key_event(std::shared_ptr<mcli::XKBMapper> const& xkb_mapper, MirEvent &ev)
 {
-    // TODO: As XKBMapper is used to track modifier state we need a seperate instance
-    //       of XKBMapper per device id
+    // TODO: As XKBMapper is used to track modifier state we need to use a seperate instance
+    // of XKBMapper per device id (or modify XKBMapper semantics)
     if (ev.type != mir_event_type_key)
         return;
     

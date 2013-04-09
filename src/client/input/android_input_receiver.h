@@ -74,7 +74,7 @@ private:
     std::shared_ptr<droidinput::InputConsumer> input_consumer;
     droidinput::PreallocatedInputEventFactory event_factory;
     droidinput::sp<droidinput::Looper> looper;
-    
+
     bool fd_added;
 
     std::shared_ptr<XKBMapper> xkb_mapper;
