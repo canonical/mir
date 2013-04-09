@@ -116,7 +116,6 @@ int mir_egl_native_display_is_valid(MirEGLNativeDisplayType egl_display)
 MirWaitHandle* mir_surface_create(
     MirConnection* connection,
     MirSurfaceParameters const* params,
-    MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback,
     void* context)
 {
@@ -124,7 +123,7 @@ MirWaitHandle* mir_surface_create(
 
     try
     {
-        return connection->create_surface(*params, delegate, callback, context);
+        return connection->create_surface(*params, callback, context);
     }
     catch (std::exception const&)
     {
@@ -136,17 +135,21 @@ MirWaitHandle* mir_surface_create(
 
 MirSurface* mir_surface_create_sync(
     MirConnection* connection, 
-    MirSurfaceParameters const* params,
-    MirEventDelegate const* delegate)
+    MirSurfaceParameters const* params)
 {
     MirSurface *surface = nullptr;
 
     mir_wait_for(mir_surface_create(connection, params,
-                                    delegate,
         reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
         &surface));
 
     return surface;
+}
+
+void mir_surface_set_event_handler(MirSurface *surface,
+                                   MirEventDelegate const *event_handler)
+{
+    surface->set_event_handler(event_handler);
 }
 
 MirWaitHandle* mir_surface_release(

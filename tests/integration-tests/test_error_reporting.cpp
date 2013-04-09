@@ -238,7 +238,7 @@ TEST_F(ErrorReporting, c_api_returns_error)
                 mir_buffer_usage_hardware
             };
 
-            mir_surface_create(connection, &request_params, NULL, create_surface_callback, ssync);
+            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
 
             wait_for_surface_create(ssync);
 
