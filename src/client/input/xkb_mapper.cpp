@@ -22,6 +22,31 @@
 
 namespace mcli = mir::client::input;
 
+namespace
+{
+struct XKBContextDeleter
+{
+    void operator()(xkb_context *c)
+    {
+        xkb_context_unref(c);
+    }
+};
+struct XKBKeymapDeleter
+{
+    void operator()(xkb_keymap *k)
+    {
+        xkb_keymap_unref(k);
+    }
+};
+struct XKBStateDeleter
+{
+    void operator()(xkb_state *s)
+    {
+        xkb_state_unref(s);
+    }
+};
+}
+
 mcli::XKBMapper::XKBMapper()
 {
     xkb_rule_names names;
@@ -31,17 +56,9 @@ mcli::XKBMapper::XKBMapper()
     names.variant = "";
     names.options = "";
 
-    context = xkb_context_new(xkb_context_flags(0));
-    map = xkb_map_new_from_names(context, &names,
-                                     xkb_map_compile_flags(0));
-    state = xkb_state_new(map);
-}
-
-mcli::XKBMapper::~XKBMapper()
-{
-    xkb_state_unref(state);
-    xkb_map_unref(map);
-    xkb_context_unref(context);
+    context = std::shared_ptr<xkb_context>(xkb_context_new(xkb_context_flags(0)), XKBContextDeleter());
+    map = std::shared_ptr<xkb_keymap>(xkb_map_new_from_names(context.get(), &names, xkb_map_compile_flags(0)), XKBKeymapDeleter());
+    state = std::shared_ptr<xkb_state>(xkb_state_new(map.get()), XKBStateDeleter());
 }
 
 namespace
@@ -68,15 +85,15 @@ static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_cod
 xkb_keysym_t mcli::XKBMapper::press_and_map_key(int scan_code)
 {
     uint32_t xkb_scan_code = scan_code + xkb_scancode_offset_from_evdev;
-    xkb_state_update_key(state, xkb_scan_code, XKB_KEY_DOWN);
+    xkb_state_update_key(state.get(), xkb_scan_code, XKB_KEY_DOWN);
     
-    return keysym_for_scan_code(state, xkb_scan_code);
+    return keysym_for_scan_code(state.get(), xkb_scan_code);
 }
 
 xkb_keysym_t mcli::XKBMapper::release_and_map_key(int scan_code)
 {
     uint32_t xkb_scan_code = scan_code + xkb_scancode_offset_from_evdev;
-    xkb_state_update_key(state, xkb_scan_code, XKB_KEY_UP);
+    xkb_state_update_key(state.get(), xkb_scan_code, XKB_KEY_UP);
     
-    return keysym_for_scan_code(state, xkb_scan_code);
+    return keysym_for_scan_code(state.get(), xkb_scan_code);
 }

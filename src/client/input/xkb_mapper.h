@@ -21,6 +21,8 @@
 
 #include <xkbcommon/xkbcommon.h>
 
+#include <memory>
+
 namespace mir
 {
 namespace client
@@ -32,7 +34,7 @@ class XKBMapper
 {
 public:
     XKBMapper();
-    virtual ~XKBMapper();
+    virtual ~XKBMapper() = default;
     
     xkb_keysym_t press_and_map_key(int scan_code);
     xkb_keysym_t release_and_map_key(int scan_code);
@@ -42,9 +44,9 @@ protected:
     XKBMapper& operator=(XKBMapper const&) = delete;
 
 private:
-    xkb_context *context;
-    xkb_keymap *map;
-    xkb_state *state;
+    std::shared_ptr<xkb_context> context;
+    std::shared_ptr<xkb_keymap> map;
+    std::shared_ptr<xkb_state> state;
 };
 
 }
