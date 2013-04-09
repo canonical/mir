@@ -3,7 +3,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_tex_bind.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_fb.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_framebuffer_selector.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_display_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_framebuffer_window.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_alloc_adaptor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_alloc_adaptor_native_win.cpp
@@ -11,6 +11,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_device.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gpu_display.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_swapper.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

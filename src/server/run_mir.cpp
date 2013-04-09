@@ -18,34 +18,27 @@
 
 #include "mir/run_mir.h"
 #include "mir/display_server.h"
-#include "mir/signal_dispatcher.h"
+#include "mir/main_loop.h"
+#include "mir/server_configuration.h"
 
-#include <atomic>
-#include <thread>
 #include <csignal>
-
-namespace
-{
-std::atomic<mir::DisplayServer*> signal_display_server;
-
-void signal_terminate(int)
-{
-    while (!signal_display_server.load())
-        std::this_thread::yield();
-
-    signal_display_server.load()->stop();
-}
-}
+#include <cassert>
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
-    auto const sdp = SignalDispatcher::instance();
-    sdp->enable_for(SIGINT);
-    sdp->enable_for(SIGTERM);
-    sdp->signal_channel().connect(&signal_terminate);
+    DisplayServer* server_ptr{nullptr};
+    auto main_loop = config.the_main_loop();
+
+    main_loop->register_signal_handler(
+        {SIGINT, SIGTERM},
+        [&server_ptr](int)
+        {
+            assert(server_ptr);
+            server_ptr->stop();
+        });
 
     DisplayServer server(config);
-    signal_display_server.store(&server);
+    server_ptr = &server;
 
     init(server);
     server.run();

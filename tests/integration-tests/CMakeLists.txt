@@ -5,6 +5,7 @@ set(
   test_surfaceloop.cpp
   test_error_reporting.cpp
   test_display_info.cpp
+  test_display_server_main_loop_events.cpp
 )
 
 add_subdirectory(client/)
@@ -12,9 +13,7 @@ add_subdirectory(compositor/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
 add_subdirectory(process/)
-if (NOT MIR_DISABLE_INPUT)
 add_subdirectory(input/)
-endif()
 
 if (MIR_PLATFORM STREQUAL "android")
   include_directories(${PROJECT_SOURCE_DIR}/include/accessory)

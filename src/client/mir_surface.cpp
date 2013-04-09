@@ -21,11 +21,14 @@
 #include "client_buffer.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
+#include "input/input_receiver_thread.h"
+#include "input/input_platform.h"
 
 #include <cassert>
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
+namespace mcli = mir::client::input;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -34,11 +37,13 @@ MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
     std::shared_ptr<mir::client::Logger> const& logger,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    MirSurfaceParameters const& params,
+    std::shared_ptr<mcli::InputPlatform> const& input_platform,
+    MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, 3)),
+      input_platform(input_platform),
       logger(logger)
 {
     mir::protobuf::SurfaceParameters message;
@@ -47,7 +52,7 @@ MirSurface::MirSurface(
     message.set_height(params.height);
     message.set_pixel_format(params.pixel_format);
     message.set_buffer_usage(params.buffer_usage);
-
+    
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
     for (int i = 0; i < mir_surface_attrib_arraysize_; i++)
@@ -57,6 +62,11 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
+    if (input_thread)
+    {
+        input_thread->stop();
+        input_thread->join();
+    }
     release_cpu_region();
 }
 
@@ -166,6 +176,7 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
     accelerated_window = platform->create_egl_native_window(this);
 
     callback(this, context);
+    
     create_wait_handle.result_received();
 }
 
@@ -270,4 +281,28 @@ void MirSurface::on_configured()
 int MirSurface::attrib(MirSurfaceAttrib at) const
 {
     return attrib_cache[at];
+}
+
+void MirSurface::set_event_handler(MirEventDelegate const* delegate)
+{
+    if (input_thread)
+    {
+        input_thread->stop();
+        input_thread->join();
+        input_thread = nullptr;
+    }
+
+    if (delegate)
+    {
+        handle_event_callback = std::bind(delegate->callback, this,
+                                          std::placeholders::_1,
+                                          delegate->context);
+
+        if (surface.fd_size() > 0 && handle_event_callback)
+        {
+            input_thread = input_platform->create_input_thread(surface.fd(0),
+                                                        handle_event_callback);
+            input_thread->start();
+        }
+    }
 }

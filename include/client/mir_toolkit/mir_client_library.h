@@ -138,6 +138,14 @@ MirSurface *mir_surface_create_sync(MirConnection *connection,
                                     MirSurfaceParameters const *params);
 
 /**
+ * Set the event handler to be called when events arrive for a surface.
+ *   \param [in] surface        The surface
+ *   \param [in] event_handler  The event handler to call
+ */
+void mir_surface_set_event_handler(MirSurface *surface,
+                                   MirEventDelegate const *event_handler);
+
+/**
  * Get a window type that can be used for OpenGL ES 2.0 acceleration.
  *   \param [in] surface  The surface
  *   \return              An EGLNativeWindowType that the client can use

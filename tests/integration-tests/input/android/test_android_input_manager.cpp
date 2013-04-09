@@ -22,7 +22,6 @@
 
 #include "src/server/input/android/default_android_input_configuration.h"
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/dummy_input_dispatcher_policy.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/fake_shared.h"
@@ -53,7 +52,6 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 using mtd::MockEventFilter;
-using mir::WaitCondition;
 
 namespace
 {
@@ -100,13 +98,13 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
 {
     using namespace ::testing;
 
-    WaitCondition wait_condition;
+    mt::WaitCondition wait_condition;
 
     EXPECT_CALL(
         event_filter,
-        handles(KeyDownEvent()))
+        handles(mt::KeyDownEvent()))
             .Times(1)
-            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+            .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
@@ -121,13 +119,13 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 {
     using namespace ::testing;
 
-    WaitCondition wait_condition;
+    mt::WaitCondition wait_condition;
 
     EXPECT_CALL(
         event_filter,
-        handles(ButtonDownEvent()))
+        handles(mt::ButtonDownEvent()))
             .Times(1)
-            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+            .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
 
     fake_event_hub->synthesize_builtin_cursor_added();
     fake_event_hub->synthesize_device_scan_complete();
@@ -141,18 +139,18 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
 {
     using namespace ::testing;
 
-    WaitCondition wait_condition;
+    mt::WaitCondition wait_condition;
 
     // We get absolute motion events since we have a pointer controller.
     {
         InSequence seq;
 
         EXPECT_CALL(event_filter,
-                    handles(MotionEvent(100, 100)))
+                    handles(mt::MotionEvent(100, 100)))
             .WillOnce(Return(false));
         EXPECT_CALL(event_filter,
-                    handles(MotionEvent(200, 100)))
-            .WillOnce(ReturnFalseAndWakeUp(&wait_condition));
+                    handles(mt::MotionEvent(200, 100)))
+            .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
 
     fake_event_hub->synthesize_builtin_cursor_added();
@@ -253,7 +251,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
 {
     using namespace ::testing;
 
-    WaitCondition wait_condition;
+    mt::WaitCondition wait_condition;
 
     mtd::StubSessionTarget session;
     mtd::StubSurfaceTarget surface(test_input_fd);
@@ -261,7 +259,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(test_input_fd), _, _))
-        .Times(1).WillOnce(DoAll(WakeUp(&wait_condition), Return(-1)));
+        .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
     input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface));
 

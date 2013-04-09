@@ -27,6 +27,7 @@ namespace mir
 namespace compositor
 {
 
+class BufferID;
 class BufferSwapper;
 
 class TemporaryBuffer : public Buffer
@@ -35,14 +36,13 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    void bind_to_texture();
-
-    std::shared_ptr<BufferIPCPackage> get_ipc_package() const;
     BufferID id() const;
+    void bind_to_texture();
+    std::shared_ptr<BufferIPCPackage> get_ipc_package() const;
 
 protected:
-    TemporaryBuffer() = default;
-    std::shared_ptr<Buffer> buffer;
+    explicit TemporaryBuffer(std::shared_ptr<Buffer> const& real_buffer);
+    std::shared_ptr<Buffer> const buffer;
 };
 
 class TemporaryClientBuffer : public TemporaryBuffer
@@ -52,8 +52,7 @@ public:
     ~TemporaryClientBuffer();
 
 private:
-    BufferID buffer_id;
-    std::weak_ptr<BufferSwapper> allocating_swapper;
+    std::weak_ptr<BufferSwapper> const allocating_swapper;
 };
 
 class TemporaryCompositorBuffer : public TemporaryBuffer
@@ -63,8 +62,7 @@ public:
     ~TemporaryCompositorBuffer();
 
 private:
-    BufferID buffer_id;
-    std::weak_ptr<BufferSwapper> allocating_swapper;
+    std::weak_ptr<BufferSwapper> const allocating_swapper;
 };
 
 }

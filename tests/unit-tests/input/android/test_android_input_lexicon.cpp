@@ -15,9 +15,9 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
-#include "src/server/input/android/android_input_lexicon.h"
-// Is this the right place for this header? Will eventually be included by clients.
-#include "mir_toolkit/input/event.h"
+
+#include "mir/input/android/android_input_lexicon.h"
+#include "mir_toolkit/event.h"
 
 #include <androidfw/Input.h>
 
@@ -59,7 +59,7 @@ TEST(AndroidInputLexicon, translates_key_events)
 
     auto mir_key_ev = &mir_ev.details.key;
     // Key event specific properties
-    EXPECT_EQ(mir_ev.type, MIR_INPUT_EVENT_TYPE_KEY);
+    EXPECT_EQ(mir_ev.type, mir_event_type_key);
     EXPECT_EQ(mir_key_ev->key_code, key_code);
     EXPECT_EQ(mir_key_ev->scan_code, scan_code);
     EXPECT_EQ(mir_key_ev->repeat_count, repeat_count);
@@ -131,7 +131,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(meta_state, mir_ev.meta_state);
 
     // Motion event specific properties
-    EXPECT_EQ(mir_ev.type, MIR_INPUT_EVENT_TYPE_MOTION);
+    EXPECT_EQ(mir_ev.type, mir_event_type_motion);
 
     auto mir_motion_ev = &mir_ev.details.motion;
 

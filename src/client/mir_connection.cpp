@@ -25,10 +25,13 @@
 #include "client_buffer_depository.h"
 #include "make_rpc_channel.h"
 
+#include "input/input_platform.h"
+
 #include <thread>
 #include <cstddef>
 
 namespace mcl = mir::client;
+namespace mcli = mcl::input;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -46,7 +49,8 @@ MirConnection::MirConnection(
         channel(channel),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         log(log),
-        client_platform_factory(client_platform_factory)
+        client_platform_factory(client_platform_factory),
+        input_platform(mcli::InputPlatform::create())
 {
     {
         std::lock_guard<std::mutex> lock(connection_guard);
@@ -67,7 +71,8 @@ MirWaitHandle* MirConnection::create_surface(
     void * context)
 {
     auto null_log = std::make_shared<mir::client::NullLogger>();
-    auto surface = new MirSurface(this, server, null_log, platform->create_buffer_factory(), params, callback, context);
+    auto surface = new MirSurface(this, server, null_log, platform->create_buffer_factory(), input_platform, params, callback, context);
+
     return surface->get_create_wait_handle();
 }
 

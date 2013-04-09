@@ -13,37 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_SELECTOR_H_
-#define MIR_GRAPHICS_ANDROID_DISPLAY_SELECTOR_H_
-
-#include <memory>
+#ifndef MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#define MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
 
 namespace mir
 {
-namespace graphics
+namespace client
+{
+namespace input
 {
 
-class Display;
-namespace android
-{
-
-class DisplaySelector
+class InputReceiverThread
 {
 public:
-    virtual std::shared_ptr<Display> primary_display() = 0;
-    virtual ~DisplaySelector() {}
+    virtual ~InputReceiverThread() {};
+
+    virtual void start() = 0;
+    virtual void stop() = 0;
+    virtual void join() = 0;
 
 protected:
-    DisplaySelector() = default;
-    DisplaySelector& operator=(DisplaySelector const&) = delete;
-    DisplaySelector(DisplaySelector const&) = delete;
+    InputReceiverThread() = default;
+    InputReceiverThread(const InputReceiverThread&) = delete;
+    InputReceiverThread& operator=(const InputReceiverThread&) = delete;
 };
 
 }
 }
-}
+} // namespace mir
 
-#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_SELECTOR_H_ */
+#endif // MIR_CLIENT_INPUT_RECEIVER_THREAD_H_

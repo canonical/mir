@@ -14,10 +14,12 @@ add_library(
   android_display.cpp
   hwc_display.cpp
   hwc11_device.cpp
-  android_display_selector.cpp
+  android_hwc_factory.cpp
+  android_display_allocator.cpp
   android_framebuffer_window.cpp
-  android_fb_factory.cpp
+  android_display_factory.cpp
   android_alloc_adaptor.cpp
+  fb_swapper.cpp
 )
 
 target_link_libraries(

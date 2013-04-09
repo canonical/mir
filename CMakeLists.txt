@@ -57,6 +57,7 @@ include (cmake/PrePush.cmake)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov
@@ -103,13 +104,6 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
-set (MIR_DISABLE_INPUT
-  false
-  CACHE
-  BOOL
-  "Don't build the input subsystem"
-)
-
 set (MIR_INPUT_USE_ANDROID_TYPES
   false
   CACHE
@@ -121,6 +115,7 @@ find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
+find_package(GFlags REQUIRED)
 
 include_directories (${GLESv2_INCLUDE_DIRS})                                    
 include_directories (${EGL_INCLUDE_DIRS})
