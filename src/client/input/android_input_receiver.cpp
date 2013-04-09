@@ -27,6 +27,8 @@
 namespace mcli = mir::client::input;
 namespace mclia = mcli::android;
 
+namespace mia = mir::input::android;
+
 mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
   : input_channel(input_channel),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
