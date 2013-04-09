@@ -50,7 +50,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirfrontend
   mirgraphics
   mirinput
-  mirinputandroidtransport
+  mirsharedinput
   mirsurfaces
   mirtime
   mireventqueue

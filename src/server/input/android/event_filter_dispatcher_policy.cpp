@@ -20,7 +20,6 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace miat = mia::transport;
 
 mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter) :
   event_filter(event_filter)
@@ -53,7 +52,7 @@ bool mia::EventFilterDispatcherPolicy::isKeyRepeatEnabled()
 bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
     MirEvent mir_ev;
-    miat::Lexicon::translate(input_event, mir_ev);
+    mia::Lexicon::translate(input_event, mir_ev);
 
     if (event_filter->handles(mir_ev))
         return false; /* Do not pass the event on */

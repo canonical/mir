@@ -17,4 +17,3 @@ set(
   PARENT_SCOPE
 )
 
-add_subdirectory(transport)
