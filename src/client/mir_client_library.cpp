@@ -322,9 +322,9 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
         {
             surf->configure(mir_surface_attrib_state,
                             mir_surface_state_unknown)->wait_for_result();
+            s = surf->attrib(mir_surface_attrib_state);
         }
 
-        s = surf->attrib(mir_surface_attrib_state);
         state = static_cast<MirSurfaceState>(s);
     }
 
