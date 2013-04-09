@@ -303,8 +303,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_states)
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
-            // TODO: Should we force a round-trip update initially?
-            EXPECT_EQ(mir_surface_state_unknown,
+            EXPECT_EQ(mir_surface_state_restored,
                       mir_surface_get_state(surface));
 
             mir_wait_for(mir_surface_set_state(surface,
