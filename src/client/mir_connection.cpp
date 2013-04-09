@@ -67,12 +67,11 @@ MirConnection::~MirConnection()
 
 MirWaitHandle* MirConnection::create_surface(
     MirSurfaceParameters const & params,
-    MirEventDelegate const* delegate,
     mir_surface_lifecycle_callback callback,
     void * context)
 {
     auto null_log = std::make_shared<mir::client::NullLogger>();
-    auto surface = new MirSurface(this, server, null_log, platform->create_buffer_factory(), input_platform, params, delegate, callback, context);
+    auto surface = new MirSurface(this, server, null_log, platform->create_buffer_factory(), input_platform, params, callback, context);
 
     if (surface)
         valid_surfaces[surface->id()] = surface;

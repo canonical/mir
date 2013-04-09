@@ -165,7 +165,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
                 mir_buffer_usage_hardware
             };
 
-            mir_wait_for(mir_surface_create(connection, &request_params, NULL, create_surface_callback, this));
+            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
 
             ASSERT_TRUE(surface != NULL);
             EXPECT_TRUE(mir_surface_is_valid(surface));
@@ -183,7 +183,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
 
             ASSERT_TRUE(surface == NULL);
 
-            surface = mir_surface_create_sync(connection, &request_params, NULL);
+            surface = mir_surface_create_sync(connection, &request_params);
 
             ASSERT_TRUE(surface != NULL);
             EXPECT_TRUE(mir_surface_is_valid(surface));
@@ -227,7 +227,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
                 mir_buffer_usage_hardware
             };
 
-            mir_wait_for(mir_surface_create(connection, &request_params, NULL, create_surface_callback, this));
+            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
 
             ASSERT_TRUE(surface != NULL);
             EXPECT_TRUE(mir_surface_is_valid(surface));
@@ -299,7 +299,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_states)
                 mir_buffer_usage_hardware
             };
 
-            surface = mir_surface_create_sync(connection, &request_params, NULL);
+            surface = mir_surface_create_sync(connection, &request_params);
             ASSERT_TRUE(surface != NULL);
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
@@ -345,7 +345,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_states)
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, client_receives_events)
+TEST_F(DefaultDisplayServerTestFixture, surface_change_events)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -375,10 +375,11 @@ TEST_F(DefaultDisplayServerTestFixture, client_receives_events)
             last_event_surface = nullptr;
 
             MirEventDelegate delegate{&event_callback, this};
-            surface = mir_surface_create_sync(connection, &request_params,
-                                              &delegate);
+            surface = mir_surface_create_sync(connection, &request_params);
             ASSERT_TRUE(surface != NULL);
             ASSERT_TRUE(mir_surface_is_valid(surface));
+
+            mir_surface_set_event_handler(surface, &delegate);
 
             int surface_id = mir_debug_surface_id(surface);
 
@@ -501,7 +502,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
                     mir_buffer_usage_hardware
                 };
 
-                mir_wait_for(mir_surface_create(connection, &request_params, NULL, create_surface_callback, this));
+                mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
 
                 ASSERT_EQ(old_surface_count + 1, current_surface_count());
             }
@@ -549,7 +550,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
                 mir_buffer_usage_hardware
             };
 
-            mir_wait_for(mir_surface_create(connection, &request_params, NULL, create_surface_callback, this));
+            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
             ASSERT_TRUE(surface != NULL);
 
             buffers = 0;
@@ -588,7 +589,7 @@ TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
                 mir_buffer_usage_software
             };
 
-            surface = mir_surface_create_sync(connection, &request_params, NULL);
+            surface = mir_surface_create_sync(connection, &request_params);
             ASSERT_TRUE(surface != NULL);
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
@@ -696,7 +697,7 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
                 mir_buffer_usage_hardware
             };
 
-            mir_wait_for(mir_surface_create(connection, &request_params, NULL, create_surface_callback, this));
+            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
 // TODO surface_create needs to fail safe too. After that is done we should add the following:
 // TODO    mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
 // TODO    mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
