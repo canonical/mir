@@ -18,8 +18,16 @@
 #ifndef MIR_EVENT_FILTER_DISPATCHER_POLICY_H_
 #define MIR_EVENT_FILTER_DISPATCHER_POLICY_H_
 
-#include "dummy_input_dispatcher_policy.h"
 #include "mir/input/event_filter.h"
+
+#include <InputDispatcher.h>
+
+namespace android
+{
+class InputEvent;
+}
+
+namespace droidinput = android;
 
 namespace mir
 {
@@ -29,16 +37,35 @@ namespace android
 {
 //class EventFilter;
 
-class EventFilterDispatcherPolicy : public DummyInputDispatcherPolicy
+class EventFilterDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
 {
 public:
     EventFilterDispatcherPolicy(std::shared_ptr<EventFilter> const& event_filter);
     virtual ~EventFilterDispatcherPolicy() {}
 
-    virtual bool filterInputEvent(const droidinput::InputEvent* input_event,
-                          uint32_t policy_flags);
-    virtual void interceptKeyBeforeQueueing(const droidinput::KeyEvent* key_event,
-                                    uint32_t& policy_flags);
+    void notifyConfigurationChanged(nsecs_t when);
+    nsecs_t notifyANR(droidinput::sp<droidinput::InputApplicationHandle> const& inputApplicationHandle,
+        droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle);
+    void notifyInputChannelBroken(droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle);
+    bool filterInputEvent(const droidinput::InputEvent* input_event,
+        uint32_t policy_flags);
+    void interceptKeyBeforeQueueing(const droidinput::KeyEvent* key_event,
+        uint32_t& policy_flags);
+    void getDispatcherConfiguration(droidinput::InputDispatcherConfiguration* outConfig);
+    bool isKeyRepeatEnabled();
+    void interceptMotionBeforeQueueing(nsecs_t when, uint32_t& policyFlags);
+
+    nsecs_t interceptKeyBeforeDispatching(droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle,
+        droidinput::KeyEvent const* keyEvent, uint32_t policyFlags);
+
+    bool dispatchUnhandledKey(droidinput::sp<droidinput::InputWindowHandle> const& inputWindowHandle,
+                              droidinput::KeyEvent const* keyEvent, uint32_t policyFlags,
+                              droidinput::KeyEvent* outFallbackKeyEvent);
+
+    void notifySwitch(nsecs_t when, int32_t switchCode, int32_t switchValue, uint32_t policyFlags);
+    void pokeUserActivity(nsecs_t eventTime, int32_t eventType);
+    bool checkInjectEventsPermissionNonReentrant(int32_t injectorPid, int32_t injectorUid);
+
 protected:
     EventFilterDispatcherPolicy(const EventFilterDispatcherPolicy&) = delete;
     EventFilterDispatcherPolicy& operator=(const EventFilterDispatcherPolicy&) = delete;
