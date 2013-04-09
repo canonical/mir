@@ -47,6 +47,7 @@ me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& 
     surface_factory(surface_factory),
     client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this)
 {
+    client_thread.detach();
 }
 
 void me::InprocessEGLClient::thread_loop()
