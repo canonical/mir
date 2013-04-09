@@ -1,6 +1,7 @@
 set(
   SHELL_SOURCES
 
+  default_shell_configuration.cpp
   application_session.cpp
   session_container.cpp
   session_manager.cpp
