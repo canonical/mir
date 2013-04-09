@@ -58,8 +58,8 @@ void mfd::SocketSession::send_fds(std::vector<int32_t> const& fd)
 
 void mfd::SocketSession::read_next_message()
 {
-    boost::asio::async_read(socket,
-        boost::asio::buffer(message_header_bytes),
+    ba::async_read(socket,
+        ba::buffer(message_header_bytes),
         boost::bind(&mfd::SocketSession::on_read_size,
                     this, ba::placeholders::error));
 }
@@ -73,7 +73,7 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
         ba::async_read(
              socket,
              message,
-             boost::asio::transfer_exactly(body_size),
+             ba::transfer_exactly(body_size),
              boost::bind(&mfd::SocketSession::on_new_message,
                          this, ba::placeholders::error));
     }
