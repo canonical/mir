@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,8 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
- *              Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
 #include "mir/frontend/communicator.h"
@@ -23,7 +22,6 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir_test_doubles/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_protobuf_server.h"
