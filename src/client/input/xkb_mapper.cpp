@@ -25,13 +25,12 @@ namespace mcli = mir::client::input;
 
 mcli::XKBMapper::XKBMapper()
 {
-    // TODO: Fix leak ~racarr
     xkb_rule_names names;
-    names.rules = strdup("evdev");
-    names.model = strdup("pc105");
-    names.layout = strdup("us");
-    names.variant = strdup("");
-    names.options = strdup("");
+    names.rules = "evdev";
+    names.model = "pc105";
+    names.layout = "us";
+    names.variant = "";
+    names.options = "";
 
     context = xkb_context_new(xkb_context_flags(0));
     map = xkb_map_new_from_names(context, &names,
