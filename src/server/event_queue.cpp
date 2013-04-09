@@ -28,7 +28,7 @@ void EventQueue::set_sink(std::weak_ptr<EventSink> const &s)
 
 void EventQueue::post(MirEvent const &e)
 {
-    // In future, post might put in on a queue and wait for some background
+    // In future, post might put e on a queue and wait for some background
     // thread to push it through to sink. But that's not required right now.
 
     std::shared_ptr<EventSink> target = sink.lock();

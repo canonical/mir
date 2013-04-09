@@ -303,5 +303,5 @@ void MirSurface::handle_event(MirEvent const& e)
     }
 
     if (handle_event_callback)
-        handle_event_callback((MirEvent*)&e); // FIXME in another proposal
+        handle_event_callback(&e);
 }

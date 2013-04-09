@@ -53,7 +53,7 @@ public:
                         const std::shared_ptr<Logger>& log);
     ~MirSocketRpcChannel();
 
-    void set_event_handler(EventHandler *eh); // TODO: Move to Basic?
+    void set_event_handler(EventHandler *eh);
 
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,

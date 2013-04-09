@@ -62,8 +62,8 @@ void mf::ProtobufSocketCommunicator::start_accept()
         ipc_factory->resource_cache(),
         ipc_factory->report());
     
-    // TODO: Be less evil. This really should not be cast, but would require
-    //       some interface changes first.
+    // A dynamic cast is not ideal. But the alternatives all seem to require
+    // non-trivial architectural changes. Another day...
     mf::SessionMediator *sm = dynamic_cast<mf::SessionMediator*>(ds.get());
     if (sm)
         sm->set_event_sink(proc);
