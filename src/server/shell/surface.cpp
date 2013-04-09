@@ -52,11 +52,14 @@ msh::Surface::~Surface()
     }
 }
 
-void msh::Surface::set_event_target(std::shared_ptr<EventQueue> & q,
-                                    mir::frontend::SurfaceId i)
+void msh::Surface::set_id(mir::frontend::SurfaceId i)
+{
+    id = i;
+}
+
+void msh::Surface::set_event_target(std::shared_ptr<EventQueue>& q)
 {
     event_queue = q;
-    id = i;
 }
 
 void msh::Surface::hide()
