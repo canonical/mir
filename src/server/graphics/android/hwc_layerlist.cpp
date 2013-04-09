@@ -58,6 +58,7 @@ mga::HWCLayer::HWCLayer(
     visibleRegionScreen.rects = &visible_screen_rect; 
 
     /* we need this information from constructor*/
+    if (native_buf)
     handle = native_buf->handle;
     sourceCrop = source_crop_rect;
     displayFrame = display_frame_rect;
@@ -67,6 +68,17 @@ mga::HWCLayer::HWCLayer(
 
 mga::HWCLayerList::HWCLayerList()
 {
+    geom::Point pt{geom::X{0}, geom::Y{0}};
+    geom::Rectangle rect{pt, geom::Size{geom::Width{0}, geom::Height{0}}};
+    HWCRect display_rect(rect);
+    auto fb_layer = std::make_shared<HWCLayer>(nullptr,
+                                               display_rect,
+                                               display_rect,
+                                               display_rect);
+
+    fb_layer->compositionType = HWC_FRAMEBUFFER;
+    fb_layer->hints = HWC_SKIP_LAYER;
+    layer_list.push_back(fb_layer);
 }
 
 const mga::LayerList& mga::HWCLayerList::native_list() const
@@ -86,12 +98,12 @@ void mga::HWCLayerList::set_fb_target(std::shared_ptr<compositor::Buffer> const&
                                                display_rect,
                                                display_rect,
                                                display_rect);
-    if (layer_list.empty())
+    if (layer_list.size() == 1)
     {
         layer_list.push_back(fb_layer);
     }
     else
     {
-        layer_list[0] = fb_layer;
+        layer_list[1] = fb_layer;
     }
 } 

@@ -60,26 +60,27 @@ void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returne
     poster->set_next_frontbuffer(buffer);
 }
 
-void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)
+void mga::ServerRenderWindow::dispatch_driver_request_format(int format)
 {
+    printf("request format %i\n", format);
 }
 
 int mga::ServerRenderWindow::driver_requests_info(int key) const
 {
-//    geom::Size size;
+    geom::Size size;
 //    geom::PixelFormat pf;
     switch(key)
     {
-        case 6:
-            return 768;
-            //size = poster->display_size();
-            //return size.width.as_uint32_t();
-        case 7:
-            return 1280;
-            //size = poster->display_size();
-            //return size.height.as_uint32_t();
-        case 2:
-        default:
+        case NATIVE_WINDOW_DEFAULT_WIDTH:
+            size = poster->display_size();
+            return size.width.as_uint32_t();
+        case NATIVE_WINDOW_DEFAULT_HEIGHT:
+            size = poster->display_size();
+            return size.height.as_uint32_t();
+        case NATIVE_WINDOW_FORMAT:
             return 2;
+        default:
+            BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
+            return -1;
     }
 }
