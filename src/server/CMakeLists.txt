@@ -15,6 +15,8 @@ set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirserver")
 
+add_library(mireventqueue STATIC event_queue.cpp)
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
@@ -33,9 +35,6 @@ set(MIRSERVER_LINKAGE SHARED)
 add_library(mirserver ${MIRSERVER_LINKAGE}
   ${SRCS}
 )
-
-# TODO: Move eventqueue to a subdir. "event/" ?
-add_library(mireventqueue STATIC event_queue.cpp)
 
 add_executable(
   mirds
