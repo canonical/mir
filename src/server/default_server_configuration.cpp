@@ -18,6 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
+#include "mir/asio_main_loop.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
@@ -513,5 +514,14 @@ std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time
         []()
         {
             return std::make_shared<mir::time::HighResolutionClock>();
+        });
+}
+
+std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
+{
+    return main_loop(
+        []()
+        {
+            return std::make_shared<mir::AsioMainLoop>();
         });
 }
