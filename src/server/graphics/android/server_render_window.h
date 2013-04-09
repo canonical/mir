@@ -56,6 +56,7 @@ public:
 private:
     std::shared_ptr<compositor::BufferSwapper> swapper;
     std::shared_ptr<DisplayInfoProvider> poster;
+    unsigned int native_format;
 
     std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver; 
 }; 

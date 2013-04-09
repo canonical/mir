@@ -185,21 +185,18 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
     render_window.driver_returns_buffer(handle1);
 }
 
-TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
+/* todo: service driver requests for format. for now just return compatible type */
+TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
 {
     using namespace testing;
-    auto test_pf = geom::PixelFormat::abgr_8888;
-    EXPECT_CALL(*mock_display_poster, display_format())
-        .Times(1)
-        .WillOnce(Return(test_pf));
 
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
     auto rc_format = render_window.driver_requests_info(NATIVE_WINDOW_FORMAT);
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format); 
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, rc_format); 
 }
 
-TEST_F(ServerRenderWindowTest, driver_inquires_about_size)
+TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_set)
 {
     using namespace testing;
     auto test_size = geom::Size{geom::Width{4}, geom::Height{5}};
@@ -210,8 +207,18 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_size)
 
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
-    unsigned int rc_width = render_window.driver_requests_info(NATIVE_WINDOW_WIDTH);
-    unsigned int rc_height = render_window.driver_requests_info(NATIVE_WINDOW_HEIGHT);
+    unsigned int rc_width = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_WIDTH);
+    unsigned int rc_height = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_HEIGHT);
     EXPECT_EQ(test_size.width.as_uint32_t(), rc_width); 
     EXPECT_EQ(test_size.height.as_uint32_t(), rc_height); 
+}
+
+TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
+{
+    using namespace testing;
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+
+    EXPECT_THROW({
+        render_window.driver_requests_info(NATIVE_WINDOW_TRANSFORM_HINT);
+    }, std::runtime_error);
 }

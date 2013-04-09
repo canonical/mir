@@ -127,6 +127,7 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<compositor::Buffer> 
 {
     layer_organizer->set_fb_target(buffer);
 }
+
 void mga::HWC11Device::commit_frame()
 {
     auto& list = layer_organizer->native_list();

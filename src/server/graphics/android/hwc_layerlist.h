@@ -79,6 +79,7 @@ struct HWCRect : public hwc_rect_t
 
 struct HWCLayer : public hwc_layer_1
 {
+    HWCLayer() {}
     HWCLayer(
         std::shared_ptr<compositor::NativeBufferHandle> const& native_buf,
         HWCRect& source_crop_rect,

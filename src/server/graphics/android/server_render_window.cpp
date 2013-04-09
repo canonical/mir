@@ -33,7 +33,8 @@ namespace geom=mir::geometry;
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mc::BufferSwapper> const& swapper,
                                             std::shared_ptr<mga::DisplayInfoProvider> const& display_poster)
     : swapper(swapper),
-      poster(display_poster)
+      poster(display_poster),
+      native_format(0)
 {
 }
 
@@ -60,15 +61,13 @@ void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returne
     poster->set_next_frontbuffer(buffer);
 }
 
-void mga::ServerRenderWindow::dispatch_driver_request_format(int format)
+void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)
 {
-    printf("request format %i\n", format);
 }
 
 int mga::ServerRenderWindow::driver_requests_info(int key) const
 {
     geom::Size size;
-//    geom::PixelFormat pf;
     switch(key)
     {
         case NATIVE_WINDOW_DEFAULT_WIDTH:
@@ -78,7 +77,7 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             size = poster->display_size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
-            return 2;
+            return HAL_PIXEL_FORMAT_RGBX_8888 ;
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
             return -1;
