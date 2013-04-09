@@ -72,7 +72,6 @@ TEST_F(HWCLayerListTest, default_list)
     EXPECT_EQ(HWC_SKIP_LAYER, dummy_layer->hints); 
 }
 
-
 TEST_F(HWCLayerListTest, set_fb_target_figures_out_buffer_size)
 {
     using namespace testing;

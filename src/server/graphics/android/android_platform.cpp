@@ -39,20 +39,13 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
-    printf("display.1..\n");
     auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
-    printf("display.2..\n");
     auto display_allocator = std::make_shared<mga::AndroidDisplayAllocator>();
 
-    printf("display.3..\n");
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    printf("display.4..\n");
     auto buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-    printf("display.5..\n");
     auto fb_factory = std::make_shared<mga::DefaultFramebufferFactory>(buffer_allocator);
-    printf("display.6..\n");
     auto display_factory = std::make_shared<mga::AndroidDisplayFactory>(display_allocator, hwc_factory, fb_factory);
-    printf("display.7..\n");
     return display_factory->create_display();
 }
 
