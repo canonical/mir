@@ -100,11 +100,13 @@ mir::protobuf::wire::Invocation mcl::MirBasicRpcChannel::invocation_for(
 
 int mcl::MirBasicRpcChannel::next_id()
 {
-    int id = next_message_id.load();
+    int id;
 
     // Allocate a non-zero unique ID. We reserve zero for special use.
-    while (!next_message_id.compare_exchange_weak(id, id + 1) || id == 0)
-        std::this_thread::yield();
+    do
+    {
+        id = next_message_id.fetch_add(1);
+    } while (id == 0);
 
     return id;
 }
