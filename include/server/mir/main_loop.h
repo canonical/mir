@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,42 +13,36 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_H_
-#define MIR_INPUT_EVENT_FILTER_H_
+#ifndef MIR_MAIN_LOOP_H_
+#define MIR_MAIN_LOOP_H_
 
-#include "mir_toolkit/event.h"
-
-#include <memory>
-
-namespace android
-{
-class InputEvent;
-}
-
-namespace droidinput = android;
+#include <functional>
+#include <initializer_list>
 
 namespace mir
 {
-namespace input
-{
 
-class EventFilter
+class MainLoop
 {
 public:
-    virtual ~EventFilter() {}
+    virtual ~MainLoop() = default;
 
-    virtual bool handles(const MirEvent& event) = 0;
+    virtual void run() = 0;
+    virtual void stop() = 0;
+
+    virtual void register_signal_handler(
+        std::initializer_list<int> signals,
+        std::function<void(int)> const& handler) = 0;
 
 protected:
-    EventFilter() = default;
-    EventFilter(const EventFilter&) = delete;
-    EventFilter& operator=(const EventFilter&) = delete;
+    MainLoop() = default;
+    MainLoop(MainLoop const&) = delete;
+    MainLoop& operator=(MainLoop const&) = delete;
 };
 
 }
-}
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+#endif /* MIR_MAIN_LOOP_H_ */

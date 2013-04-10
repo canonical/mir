@@ -1,7 +1,12 @@
 add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 
-set(UNIT_TEST_SOURCES test_gmock_fixes.cpp)
+set(
+  UNIT_TEST_SOURCES
+
+  test_gmock_fixes.cpp
+  test_asio_main_loop.cpp
+)
 
 add_subdirectory(options/)
 add_subdirectory(client/)

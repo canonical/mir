@@ -167,7 +167,7 @@ struct ClientConfigCommon : TestingClientConfiguration
 
 struct MockInputHandler
 {
-    MOCK_METHOD1(handle_input, void(MirEvent *));
+    MOCK_METHOD1(handle_input, void(MirEvent const*));
 };
 
 struct InputReceivingClient : ClientConfigCommon
@@ -177,7 +177,7 @@ struct InputReceivingClient : ClientConfigCommon
     {
     }
 
-    static void handle_input(MirSurface* /* surface */, MirEvent* ev, void* context)
+    static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
         client->handler->handle_input(ev);
@@ -212,7 +212,9 @@ struct InputReceivingClient : ClientConfigCommon
              handle_input,
              this
          };
-         mir_wait_for(mir_surface_create(connection, &request_params, &event_delegate, create_surface_callback, this));
+         mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+
+         mir_surface_set_event_handler(surface, &event_delegate);
 
          event_received[0].wait_for_at_most_seconds(5);
          event_received[1].wait_for_at_most_seconds(5);

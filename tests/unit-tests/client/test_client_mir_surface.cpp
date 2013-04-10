@@ -327,7 +327,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation)
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, nullptr, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
@@ -345,7 +345,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer)
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, nullptr, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
@@ -381,7 +381,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
         .WillOnce(DoAll(SaveArg<0>(&submitted_package),
                         Return(mock_buffer_factory->emptybuffer)));
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, nullptr, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
@@ -402,7 +402,7 @@ TEST_F(MirClientSurfaceTest, message_width_used_in_buffer_creation )
         .WillOnce(DoAll(SaveArg<1>(&sz),
                         Return(mock_buffer_factory->emptybuffer)));
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, nullptr, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
@@ -422,7 +422,7 @@ TEST_F(MirClientSurfaceTest, message_height_used_in_buffer_creation )
         .WillOnce(DoAll(SaveArg<1>(&sz),
                         Return(mock_buffer_factory->emptybuffer)));
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, nullptr, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
@@ -442,7 +442,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
         .WillOnce(DoAll(SaveArg<2>(&pf),
                         Return(mock_buffer_factory->emptybuffer)));
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, nullptr, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
@@ -454,7 +454,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
 
 namespace
 {
-static void null_event_callback(MirSurface*, MirEvent*, void*)
+static void null_event_callback(MirSurface*, MirEvent const*, void*)
 {
 }
 }
@@ -476,15 +476,16 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_
 
     {
         auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger,
-            mock_buffer_factory, mock_input_platform, params, &delegate, &empty_callback, nullptr);
+            mock_buffer_factory, mock_input_platform, params, &empty_callback, nullptr);
         auto wait_handle = surface->get_create_wait_handle();
         wait_handle->wait_for_result();
+        surface->set_event_handler(&delegate);
     }
 
     {
         // This surface should not trigger a call to the input platform as no input delegate is specified.
         auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, logger,
-            mock_buffer_factory, mock_input_platform, params, nullptr, &empty_callback, nullptr);
+            mock_buffer_factory, mock_input_platform, params, &empty_callback, nullptr);
         auto wait_handle = surface->get_create_wait_handle();
         wait_handle->wait_for_result();
     }
@@ -503,7 +504,6 @@ TEST_F(MirClientSurfaceTest, get_buffer_returns_last_received_buffer_package)
                                                  mock_buffer_factory,
                                                  input_platform,
                                                  params,
-                                                 nullptr,
                                                  &empty_callback,
                                                  nullptr);
     auto wait_handle = surface->get_create_wait_handle();
@@ -533,7 +533,6 @@ TEST_F(MirClientSurfaceTest, default_surface_type)
                                                  mock_buffer_factory,
                                                  input_platform,
                                                  params,
-                                                 nullptr,
                                                  &empty_callback,
                                                  nullptr);
     surface->get_create_wait_handle()->wait_for_result();

@@ -17,7 +17,7 @@
  */
 
 #include "src/client/input/android_input_receiver.h"
-#include "mir_toolkit/input/event.h"
+#include "mir_toolkit/event.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -157,7 +157,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
     
     MirEvent ev;
     EXPECT_EQ(true, receiver.next_event(next_event_timeout, ev));
-    EXPECT_EQ(MIR_INPUT_EVENT_TYPE_KEY, ev.type);
+    EXPECT_EQ(mir_event_type_key, ev.type);
     EXPECT_EQ(producer.testing_key_event_key_code, ev.details.key.key_code);
 }
 
