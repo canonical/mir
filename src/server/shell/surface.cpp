@@ -26,6 +26,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
+#include <cstring>
 
 namespace msh = mir::shell;
 namespace mc = mir::compositor;
@@ -244,6 +245,11 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
     if (event_queue)
     {
         MirEvent e;
+
+        // This memset is not really required. However it does avoid some
+        // harmless uninitialized memory reads that valgrind will complain
+        // about.
+        memset(&e, 0, sizeof e);
 
         e.type = mir_event_type_surface_change;
         e.details.surface_change.id = id.as_value();
