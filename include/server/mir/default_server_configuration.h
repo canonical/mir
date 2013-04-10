@@ -123,6 +123,8 @@ public:
     virtual std::shared_ptr<shell::SurfaceBuilder> the_surface_builder();
     virtual std::shared_ptr<time::TimeSource> the_time_source();
 
+    virtual std::shared_ptr<MainLoop> the_main_loop();
+
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
@@ -149,6 +151,7 @@ protected:
     CachedPtr<graphics::DisplayReport> display_report;
     CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<time::TimeSource> time_source;
+    CachedPtr<MainLoop> main_loop;
 
 private:
     std::shared_ptr<options::Option> options;

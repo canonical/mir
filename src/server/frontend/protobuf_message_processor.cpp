@@ -132,17 +132,16 @@ void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
-    std::ostringstream buffer1;
-    response->SerializeToOstream(&buffer1);
+    std::string buffer;
+    response->SerializeToString(&buffer);
 
     mir::protobuf::wire::Result result;
     result.set_id(id);
-    result.set_response(buffer1.str());
+    result.set_response(buffer);
 
-    std::ostringstream buffer2;
-    result.SerializeToOstream(&buffer2);
+    result.SerializeToString(&buffer);
 
-    sender->send(buffer2);
+    sender->send(buffer);
 }
 
 void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
