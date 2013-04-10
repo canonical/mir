@@ -81,8 +81,6 @@ mga::HWCDummyLayer::HWCDummyLayer()
 
 mga::HWCLayerList::HWCLayerList()
 {
-    auto fb_layer = std::make_shared<HWCDummyLayer>();
-    layer_list.push_back(fb_layer);
 }
 
 const mga::LayerList& mga::HWCLayerList::native_list() const
@@ -99,12 +97,12 @@ void mga::HWCLayerList::set_fb_target(std::shared_ptr<compositor::Buffer> const&
     HWCRect display_rect(rect);
 
     auto fb_layer = std::make_shared<HWCFBLayer>(handle, display_rect);
-    if (layer_list.size() == 1)
+    if (layer_list.empty())
     {
         layer_list.push_back(fb_layer);
     }
     else
     {
-        layer_list[1] = fb_layer;
+        layer_list[0] = fb_layer;
     }
 } 

@@ -154,7 +154,6 @@ void mga::HWC11Device::commit_frame()
 
     hwc_display = (hwc_display_contents_1_t*) malloc(sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size())); 
 
-#if 0
     auto i = 0u;
     for( auto& layer : list)
     {
@@ -163,12 +162,6 @@ void mga::HWC11Device::commit_frame()
 
     hwc_display->numHwLayers = list.size();
     hwc_display->retireFenceFd = -1;
-#else
-    hwc_display->hwLayers[0] = *(list[1]);
-    hwc_display->numHwLayers = 1;
-    hwc_display->retireFenceFd = -1;
-#endif
-
 
     auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display);
     if (rc != 0)
