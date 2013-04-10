@@ -89,16 +89,20 @@ public:
 };
 }
 
-TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_device)
+TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_devices_ok)
 {
     using namespace testing;
 
+    //sgx hardware doesn't like any other order than this! 
+    InSequence sequene_enforcer;
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1);
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory); 
 }
 
-TEST_F(AndroidDisplayFactoryTest, fbdev_unavailable_is_fatal)
+TEST_F(AndroidDisplayFactoryTest, fbdev_unavailable_is_fatal_and_does_not_try_to_open_hwc)
 {
     using namespace testing;
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
@@ -110,21 +114,13 @@ TEST_F(AndroidDisplayFactoryTest, fbdev_unavailable_is_fatal)
     }, std::runtime_error);
 }
 
-TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_hwc_device)
-{
-    using namespace testing;
-
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
-        .Times(1);
-
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory); 
-}
-
 /* this case occurs when the system cannot find the hwc library. it is a nonfatal error because we have a backup to try */
 TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_display)
 {
     using namespace testing;
 
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1);
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1)
         .WillOnce(Return(-1));
@@ -146,6 +142,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
     using namespace testing;
 
     mt::FailingHardwareModuleStub failing_hwc_module_stub;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1);
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));

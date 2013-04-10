@@ -39,10 +39,20 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
 
     hw_module_t const* module;
     framebuffer_device_t* fbdev_raw;
-    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
-        framebuffer_open(module, &fbdev_raw);
+    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) != 0) 
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
+    }   
+    if(framebuffer_open(module, &fbdev_raw) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
     }
-    fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw, [](framebuffer_device_t*){});
+
+    fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
+                  [](struct framebuffer_device_t* fbdevice)
+                  {
+                     fbdevice->common.close((hw_device_t*) fbdevice);
+                  });
 
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
