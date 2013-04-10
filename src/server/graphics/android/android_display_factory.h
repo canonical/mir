@@ -21,6 +21,8 @@
 
 #include "display_factory.h"
 #include <hardware/hwcomposer.h>
+#include <hardware/fb.h>
+#include <hardware/gralloc.h>
 
 namespace mir
 {
@@ -49,6 +51,7 @@ private:
     std::shared_ptr<HWCFactory> hwc_factory;
     std::shared_ptr<FramebufferFactory> fb_factory;
     std::shared_ptr<hwc_composer_device_1> hwc_dev;
+    std::shared_ptr<framebuffer_device_t> fb_dev;
 };
 
 }

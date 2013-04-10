@@ -23,16 +23,9 @@
 
 namespace mga=mir::graphics::android;
 
-std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const
+std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device,std::shared_ptr<framebuffer_device_t> const& fb_device) const
 {
     auto layer_list = std::make_shared<mga::HWCLayerList>();
-
-    hw_module_t const* module;
-    framebuffer_device_t* fbdev_raw;
-    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
-        framebuffer_open(module, &fbdev_raw);
-    }
-    std::shared_ptr<framebuffer_device_t> fbdev(fbdev_raw, [](framebuffer_device_t*){});
-    auto fb = std::make_shared<mga::DefaultFBDevice>(fbdev);
+    auto fb = std::make_shared<mga::DefaultFBDevice>(fb_device);
     return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fb);
 }

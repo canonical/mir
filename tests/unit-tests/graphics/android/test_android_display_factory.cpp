@@ -89,7 +89,7 @@ public:
 };
 }
 
-TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_hwc_device)
+TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_device)
 {
     using namespace testing;
 
@@ -100,6 +100,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_hwc_device)
 
 TEST_F(AndroidDisplayFactoryTest, fbdev_unavailable_is_fatal)
 {
+    using namespace testing;
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1)
         .WillOnce(Return(-1));
@@ -128,7 +129,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
         .Times(1)
         .WillOnce(Return(-1));
 
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
         .Times(0);
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(_,_))
         .Times(0);
@@ -149,7 +150,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
 
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
         .Times(0);
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(_,_))
         .Times(0);
@@ -171,7 +172,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
     std::shared_ptr<mga::DisplayInfoProvider> xxxa;// = mock_hwc_device;
     auto stub_anativewindow = std::make_shared<ANativeWindow>();
   
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
         .Times(1)
         .WillOnce(Return(mock_hwc_device));
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(xxxa))
@@ -192,7 +193,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_versio
 
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
 
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
         .Times(0);
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(_,_))
         .Times(0);
@@ -209,7 +210,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_versio
 
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_2;
 
-    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_))
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
         .Times(0);
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(_,_))
         .Times(0);
