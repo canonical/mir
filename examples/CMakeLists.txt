@@ -111,10 +111,21 @@ target_link_libraries(
     ${Boost_LIBRARIES}
 )
 
+add_executable(mir_demo_input_filter
+  demo_input_filter.cpp
+)
+
+target_link_libraries(
+  mir_demo_input_filter
+  
+  mirserver
+)
+
 set (DEMO_CLIENTS
   mir_demo_client
   mir_demo_client_unaccelerated
   mir_demo_client_accelerated
+  mir_demo_input_filter
   mir_eglflash
   mir_egltriangle
   mir_eglplasma
