@@ -103,7 +103,7 @@ struct TestClient
         surface_parameters.height = test_height;
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
         mir_wait_for(mir_surface_create(connection, &surface_parameters,
-                                        NULL, &create_callback, &surface));
+                                        &create_callback, &surface));
 
         auto graphics_region = std::make_shared<MirGraphicsRegion>();
         /* grab a buffer*/
@@ -144,7 +144,7 @@ struct TestClient
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
         mir_wait_for(mir_surface_create(connection, &surface_parameters,
-                                        NULL, &create_callback, &surface));
+                                        &create_callback, &surface));
 
         auto graphics_region = std::make_shared<MirGraphicsRegion>();
         mir_surface_get_graphics_region( surface, graphics_region.get());
@@ -188,7 +188,7 @@ struct TestClient
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
         mir_wait_for(mir_surface_create(connection, &surface_parameters,
-                                        NULL, &create_callback, &surface));
+                                        &create_callback, &surface));
 
         int major, minor, n;
         EGLDisplay disp;
@@ -250,7 +250,7 @@ struct TestClient
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
         mir_wait_for(mir_surface_create(connection, &surface_parameters,
-                                        NULL, &create_callback, &surface));
+                                        &create_callback, &surface));
 
         int major, minor, n;
         EGLDisplay disp;

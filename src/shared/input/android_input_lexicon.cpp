@@ -21,16 +21,16 @@
 
 #include <androidfw/Input.h>
 
-namespace miat = mir::input::android::transport;
+namespace mia = mir::input::android;
 
-void miat::Lexicon::translate(const droidinput::InputEvent *android_event, MirEvent &mir_event)
+void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEvent &mir_event)
 {
     switch(android_event->getType())
     {
         case AINPUT_EVENT_TYPE_KEY:
         {
             const droidinput::KeyEvent* kev = static_cast<const droidinput::KeyEvent*>(android_event);
-            mir_event.type = MIR_INPUT_EVENT_TYPE_KEY;
+            mir_event.type = mir_event_type_key;
             mir_event.device_id = android_event->getDeviceId();
             mir_event.source_id = android_event->getSource();
             mir_event.action = kev->getAction();
@@ -47,7 +47,7 @@ void miat::Lexicon::translate(const droidinput::InputEvent *android_event, MirEv
         case AINPUT_EVENT_TYPE_MOTION:
         {
             const droidinput::MotionEvent* mev = static_cast<const droidinput::MotionEvent*>(android_event);
-            mir_event.type = MIR_INPUT_EVENT_TYPE_MOTION;
+            mir_event.type = mir_event_type_motion;
             mir_event.device_id = android_event->getDeviceId();
             mir_event.source_id = android_event->getSource();
             mir_event.action = mev->getAction();

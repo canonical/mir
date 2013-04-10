@@ -83,8 +83,6 @@ static String8 toString(const char16_t* chars, size_t numChars) {
 
 // --- KeyCharacterMap ---
 
-sp<KeyCharacterMap> KeyCharacterMap::sEmpty = new KeyCharacterMap();
-
 KeyCharacterMap::KeyCharacterMap() :
     mType(KEYBOARD_TYPE_UNKNOWN) {
 }
@@ -195,6 +193,7 @@ sp<KeyCharacterMap> KeyCharacterMap::combine(const sp<KeyCharacterMap>& base,
 }
 
 sp<KeyCharacterMap> KeyCharacterMap::empty() {
+    static sp<KeyCharacterMap> sEmpty = new KeyCharacterMap();
     return sEmpty;
 }
 

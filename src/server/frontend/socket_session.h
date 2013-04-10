@@ -58,7 +58,7 @@ struct SocketSession : public MessageSender
     }
 
 private:
-    void send(const std::ostringstream& buffer2);
+    void send(std::string const& body);
     void send_fds(std::vector<int32_t> const& fd);
 
     void on_response_sent(boost::system::error_code const& error, std::size_t);

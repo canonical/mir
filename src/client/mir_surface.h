@@ -60,7 +60,6 @@ public:
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<mir::client::input::InputPlatform> const& input_platform,
         MirSurfaceParameters const& params,
-        MirEventDelegate const* delegate,
         mir_surface_lifecycle_callback callback, void * context);
 
     ~MirSurface();
@@ -84,6 +83,8 @@ public:
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
     int attrib(MirSurfaceAttrib a) const;
+
+    void set_event_handler(MirEventDelegate const* delegate);
 
 private:
     void on_configured();
@@ -116,7 +117,7 @@ private:
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attrib_arraysize_];
 
-    std::function<void(MirEvent*)> handle_event_callback;
+    std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::client::input::InputReceiverThread> input_thread;
 };
 

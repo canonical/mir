@@ -23,7 +23,7 @@
 #include <utils/Looper.h>
 
 namespace mclia = mir::client::input::android;
-namespace miat = mir::input::android::transport;
+namespace mia = mir::input::android;
 
 mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
   : input_channel(input_channel),
@@ -74,7 +74,7 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
     if(input_consumer->consume(&event_factory, true,
         -1, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
     {
-        miat::Lexicon::translate(android_event, ev);
+        mia::Lexicon::translate(android_event, ev);
         input_consumer->sendFinishedSignal(event_sequence_id, true);
         handled_event = true;
     }
