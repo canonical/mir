@@ -45,7 +45,7 @@ class HWC11Device : public HWCDevice
 public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<HWCLayerOrganizer> const& organizer,
-                std::shared_ptr<FBDevice> const& /*fbdev*/);
+                std::shared_ptr<FBDevice> const& fbdev);
     ~HWC11Device();
 
     geometry::Size display_size(); 
@@ -61,6 +61,7 @@ private:
     HWCCallbacks callbacks;
     std::shared_ptr<hwc_composer_device_1> hwc_device;
     std::shared_ptr<HWCLayerOrganizer> layer_organizer;
+    std::shared_ptr<FBDevice> fb_device;
     std::mutex vsync_wait_mutex;
     std::condition_variable vsync_trigger;
     bool vsync_occurred;
