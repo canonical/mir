@@ -39,12 +39,45 @@ std::set<MirMesaEGLNativeDisplay*> valid_displays;
 
 namespace
 {
-class MesaNativeDisplayImpl
+struct ShellMesaEGLNativeDisplay : MirMesaEGLNativeDisplay
 {
 public:
-    MesaNativeDisplayImpl(std::shared_ptr<mg::Platform> const& graphics_platform)
+    ShellMesaEGLNativeDisplay(std::shared_ptr<mg::Platform> const& graphics_platform)
         : graphics_platform(graphics_platform)
     {
+        context = this;
+    }
+
+    static void native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package)
+    {
+        auto native_disp = static_cast<ShellMesaEGLNativeDisplay*>(display);
+        native_disp->populate_platform_package(package);
+    }
+    
+    static void native_display_surface_get_current_buffer(MirMesaEGLNativeDisplay* display, 
+                                                          MirEGLNativeWindowType surface,
+                                                          MirBufferPackage* buffer_package)
+    {
+        auto native_disp = static_cast<ShellMesaEGLNativeDisplay*>(display);
+        auto mir_surface = static_cast<mf::Surface*>(surface);
+        native_disp->surface_get_current_buffer(mir_surface, buffer_package);
+    }
+
+    static void native_display_surface_get_parameters(MirMesaEGLNativeDisplay* display, 
+                                                      MirEGLNativeWindowType surface,
+                                                      MirSurfaceParameters* parameters)
+    {
+        auto native_disp = static_cast<ShellMesaEGLNativeDisplay*>(display);
+        auto mir_surface = static_cast<mf::Surface*>(surface);
+        native_disp->surface_get_parameters(mir_surface, parameters);
+    }
+
+    static void native_display_surface_advance_buffer(MirMesaEGLNativeDisplay* display, 
+                                                      MirEGLNativeWindowType surface)
+    {
+        auto native_disp = static_cast<ShellMesaEGLNativeDisplay*>(display);
+        auto mir_surface = static_cast<mf::Surface*>(surface);
+        native_disp->surface_advance_buffer(mir_surface);
     }
     
     void populate_platform_package(MirPlatformPackage* package)
@@ -92,48 +125,11 @@ public:
         parameters->pixel_format = static_cast<MirPixelFormat>(surface->pixel_format());
         parameters->buffer_usage = mir_buffer_usage_hardware;
     }
-    
-    static MesaNativeDisplayImpl* impl(MirMesaEGLNativeDisplay* display)
-    {
-        return static_cast<MesaNativeDisplayImpl*>(display->context);
-    }
 
 private:
     std::shared_ptr<mg::Platform> graphics_platform;
     std::shared_ptr<mg::PlatformIPCPackage> platform_package;
 };
-
-static void native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package)
-{
-    auto impl = MesaNativeDisplayImpl::impl(display);
-    impl->populate_platform_package(package);
-}
-
-static void native_display_surface_get_current_buffer(MirMesaEGLNativeDisplay* display, 
-                                                      MirEGLNativeWindowType surface,
-                                                      MirBufferPackage* buffer_package)
-{
-    auto impl = MesaNativeDisplayImpl::impl(display);
-    auto mir_surface = static_cast<mf::Surface*>(surface);
-    impl->surface_get_current_buffer(mir_surface, buffer_package);
-}
-
-static void native_display_surface_get_parameters(MirMesaEGLNativeDisplay* display, 
-                                                  MirEGLNativeWindowType surface,
-                                                  MirSurfaceParameters* parameters)
-{
-    auto impl = MesaNativeDisplayImpl::impl(display);
-    auto mir_surface = static_cast<mf::Surface*>(surface);
-    impl->surface_get_parameters(mir_surface, parameters);
-}
-
-static void native_display_surface_advance_buffer(MirMesaEGLNativeDisplay* display, 
-                                                  MirEGLNativeWindowType surface)
-{
-    auto impl = MesaNativeDisplayImpl::impl(display);
-    auto mir_surface = static_cast<mf::Surface*>(surface);
-    impl->surface_advance_buffer(mir_surface);
-}
 
 struct NativeDisplayDeleter
 {
@@ -141,9 +137,8 @@ struct NativeDisplayDeleter
     {
         std::unique_lock<std::mutex> lg(valid_displays_guard);
         valid_displays.erase(display);
-        auto impl = static_cast<MesaNativeDisplayImpl*>(display->context);
-        delete impl;
-        delete display;
+        auto disp = static_cast<ShellMesaEGLNativeDisplay*>(display->context);
+        delete disp;
     }
 };
 
@@ -160,16 +155,8 @@ int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
 
 std::shared_ptr<MirMesaEGLNativeDisplay> mgeglm::create_native_display(std::shared_ptr<mg::Platform> const& platform)
 {
-    auto impl = new MesaNativeDisplayImpl(platform);
-
-    auto native_display = std::shared_ptr<MirMesaEGLNativeDisplay>(new MirMesaEGLNativeDisplay, 
-                                                                   NativeDisplayDeleter());
-    native_display->context = static_cast<void*>(impl);
-    native_display->display_get_platform = native_display_get_platform;
-    native_display->surface_get_current_buffer = native_display_surface_get_current_buffer;
-    native_display->surface_get_parameters = native_display_surface_get_parameters;
-    native_display->surface_advance_buffer = native_display_surface_advance_buffer;
-    
+    auto native_display = std::shared_ptr<ShellMesaEGLNativeDisplay>(new ShellMesaEGLNativeDisplay(platform), 
+                                                                     NativeDisplayDeleter());
     std::unique_lock<std::mutex> lg(valid_displays_guard);
     valid_displays.insert(native_display.get());
     
