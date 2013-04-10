@@ -23,6 +23,7 @@ add_library(
   server_render_window.cpp
   default_framebuffer_factory.cpp
   fb_swapper.cpp
+  default_fb_device.cpp
 )
 
 target_link_libraries(

@@ -16,35 +16,30 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_DEFAULT_FB_DEVICE_H_
+#define MIR_GRAPHICS_ANDROID_DEFAULT_FB_DEVICE_H_
 
-#include <memory>
+#include "fb_device.h"
+#include <hardware/gralloc.h>
+#include <hardware/fb.h>
+ 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
 namespace graphics
 {
 namespace android
 {
 
-class FBDevice
+class DefaultFBDevice : public FBDevice
 {
 public:
-    FBDevice() = default;
-    virtual ~FBDevice() {}
+    DefaultFBDevice(std::shared_ptr<framebuffer_device_t> const&);
 
-    virtual void post(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
+    void post(std::shared_ptr<compositor::Buffer> const& buffer);
 
-private:
-    FBDevice(FBDevice const&) = delete;
-    FBDevice& operator=(FBDevice const&) = delete;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DEFAULT_FB_DEVICE_H_ */

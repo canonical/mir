@@ -16,35 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#include "default_fb_device.h"
 
-#include <memory>
-namespace mir
+namespace mga=mir::graphics::android;
+ 
+mga::DefaultFBDevice::DefaultFBDevice(std::shared_ptr<framebuffer_device_t> const&)
 {
-namespace compositor
-{
-class Buffer;
 }
-namespace graphics
+
+void mga::DefaultFBDevice::post(std::shared_ptr<mir::compositor::Buffer> const& /*buffer*/)
 {
-namespace android
-{
-
-class FBDevice
-{
-public:
-    FBDevice() = default;
-    virtual ~FBDevice() {}
-
-    virtual void post(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
-
-private:
-    FBDevice(FBDevice const&) = delete;
-    FBDevice& operator=(FBDevice const&) = delete;
-};
-
 }
-}
-}
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
