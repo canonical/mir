@@ -98,13 +98,3 @@ void mia::InputManager::set_input_focus_to(std::shared_ptr<mi::SessionTarget> co
     }
     dispatcher->setInputWindows(windows);
 }
-
-std::shared_ptr<mi::InputManager> mi::create_input_manager(
-    const std::initializer_list<std::shared_ptr<mi::EventFilter> const>& event_filters,
-    std::shared_ptr<mg::ViewableArea> const& view_area)
-{
-    static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-    auto config = std::make_shared<mia::DefaultInputConfiguration>(event_filters, view_area, null_cursor_listener);
-
-    return std::make_shared<mia::InputManager>(config);
-}

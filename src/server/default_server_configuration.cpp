@@ -44,9 +44,9 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
-#include "mir/input/input_manager.h"
 #include "mir/input/null_input_manager.h"
 #include "input/android/default_android_input_configuration.h"
+#include "input/android/android_input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
@@ -336,7 +336,7 @@ mir::DefaultServerConfiguration::the_input_manager()
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
             if (the_options()->get("enable-input", false))
-                return mi::create_input_manager(the_event_filters(), the_display());
+                return std::make_shared<mia::InputManager>(the_input_configuration());
             else 
                 return std::make_shared<mi::NullInputManager>();
         });
