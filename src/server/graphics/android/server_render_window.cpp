@@ -49,7 +49,7 @@ ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
     return handle;
 }
 
-void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returned_handle)
+void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returned_handle, std::shared_ptr<SyncObject> const&)
 {
     printf("return buffer\n");
     auto buffer_it = buffers_in_driver.find(returned_handle); 

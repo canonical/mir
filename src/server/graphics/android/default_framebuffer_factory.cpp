@@ -28,7 +28,6 @@
 
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
-namespace mcla=mir::client::android;
 
 mga::DefaultFramebufferFactory::DefaultFramebufferFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
     : buffer_allocator(buffer_allocator)
@@ -49,5 +48,5 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
 
     auto swapper = std::make_shared<mga::FBSwapper>(buffers);
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, info_provider);
-    return std::make_shared<mcla::MirNativeWindow>(interpreter); 
+    return std::make_shared<mga::MirNativeWindow>(interpreter); 
 }

@@ -45,14 +45,14 @@ namespace android
 {
 
 class DisplayInfoProvider;
-class ServerRenderWindow : public client::android::AndroidDriverInterpreter 
+class ServerRenderWindow : public AndroidDriverInterpreter 
 {
 public:
     ServerRenderWindow(std::shared_ptr<compositor::BufferSwapper> const& swapper,
                        std::shared_ptr<DisplayInfoProvider> const& display_poster);
 
     ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*);
+    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
     void dispatch_driver_request_format(int format);
     int driver_requests_info(int key) const;
 

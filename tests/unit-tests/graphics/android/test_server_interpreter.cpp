@@ -36,6 +36,10 @@ namespace mc=mir::compositor;
 namespace
 {
 
+struct MockSyncFence : public mga::SyncObject
+{
+    MOCK_METHOD0(wait, void());
+};
 struct ServerRenderWindowTest : public ::testing::Test
 {
     virtual void SetUp()
@@ -49,6 +53,7 @@ struct ServerRenderWindowTest : public ::testing::Test
                                                         geom::Stride{34}, geom::PixelFormat::argb_8888);
         mock_swapper = std::make_shared<mtd::MockSwapper>(mock_buffer1);
         mock_display_poster = std::make_shared<NiceMock<mtd::MockDisplayInfoProvider>>();
+        stub_sync = std::make_shared<MockSyncFence>();
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer1;
@@ -56,6 +61,7 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer3;
     std::shared_ptr<mtd::MockSwapper> mock_swapper;
     std::shared_ptr<mtd::MockDisplayInfoProvider> mock_display_poster;
+    std::shared_ptr<MockSyncFence> stub_sync;
 };
 }
 
@@ -97,8 +103,10 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     std::shared_ptr<mc::Buffer> buf = mock_buffer1;
     EXPECT_CALL(*mock_swapper, compositor_release(buf))
         .Times(1);
+    EXPECT_CALL(*stub_sync, wait())
+        .Times(0);
 
-    render_window.driver_returns_buffer(stub_anw.get());
+    render_window.driver_returns_buffer(stub_anw.get(), stub_sync);
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 }
 
@@ -143,9 +151,9 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_few_buffers_properly)
     EXPECT_CALL(*mock_swapper, compositor_release(buf3))
         .Times(1);
 
-    render_window.driver_returns_buffer(handle1);
-    render_window.driver_returns_buffer(handle2);
-    render_window.driver_returns_buffer(handle3);
+    render_window.driver_returns_buffer(handle1, stub_sync);
+    render_window.driver_returns_buffer(handle2, stub_sync);
+    render_window.driver_returns_buffer(handle3, stub_sync);
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 }
 
@@ -160,7 +168,7 @@ TEST_F(ServerRenderWindowTest, throw_if_driver_returns_weird_buffer)
         .Times(0);
 
     EXPECT_THROW({
-        render_window.driver_returns_buffer(nullptr);
+        render_window.driver_returns_buffer(nullptr, stub_sync);
     }, std::runtime_error); 
 }
 
@@ -182,7 +190,7 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
         .Times(1);
 
     auto handle1 = render_window.driver_requests_buffer();
-    render_window.driver_returns_buffer(handle1);
+    render_window.driver_returns_buffer(handle1, stub_sync);
 }
 
 /* todo: service driver requests for format. for now just return compatible type */

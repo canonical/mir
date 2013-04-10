@@ -21,11 +21,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mcla = mir::client::android;
+namespace mga = mir::graphics::android;
 
 namespace
 {
-class MockIoctlWrapper : public mcla::IoctlWrapper
+class MockIoctlWrapper : public mga::IoctlWrapper
 {
 public:
     MOCK_CONST_METHOD3(ioctl, int(int, unsigned long int, int*));
@@ -52,7 +52,7 @@ TEST_F(SyncFenceTest, test_valid_fd_wait)
     using namespace testing;
 
     int timeout_val;
-    mcla::SyncFence fence(dummyfd, ioctl_mock);
+    mga::SyncFence fence(dummyfd, ioctl_mock);
     EXPECT_CALL(*ioctl_mock, ioctl(dummyfd, SYNC_IOC_WAIT, _))
         .Times(1)
         .WillOnce(DoAll(SaveArgPointee<2>(&timeout_val),
@@ -67,14 +67,14 @@ TEST_F(SyncFenceTest, test_valid_fd_destruction_closes_fd)
     EXPECT_CALL(*ioctl_mock, close(dummyfd))
         .Times(1);
 
-    mcla::SyncFence fence(dummyfd, ioctl_mock);
+    mga::SyncFence fence(dummyfd, ioctl_mock);
 }
 
 TEST_F(SyncFenceTest, test_invalid_fd_does_not_call_ioctl_on_wait)
 {
     using namespace testing;
 
-    mcla::SyncFence fence(invalid_fd, ioctl_mock);
+    mga::SyncFence fence(invalid_fd, ioctl_mock);
     EXPECT_CALL(*ioctl_mock, ioctl(_, _, _))
         .Times(0);
 
@@ -87,5 +87,5 @@ TEST_F(SyncFenceTest, test_invalid_fd_destruction_does_not_close_fd)
     EXPECT_CALL(*ioctl_mock, close(_))
         .Times(0);
 
-    mcla::SyncFence fence(invalid_fd, ioctl_mock);
+    mga::SyncFence fence(invalid_fd, ioctl_mock);
 }

@@ -18,15 +18,15 @@
 
 #include "syncfence.h"
 
-namespace mcla = mir::client::android;
+namespace mga = mir::graphics::android;
 
-mcla::SyncFence::SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper)
+mga::SyncFence::SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper)
  : ioctl_wrapper(wrapper),
    fence_fd(fd)
 {
 }
 
-mcla::SyncFence::~SyncFence()
+mga::SyncFence::~SyncFence()
 {
     if (fence_fd > 0)
     {
@@ -34,7 +34,7 @@ mcla::SyncFence::~SyncFence()
     }
 }
 
-void mcla::SyncFence::wait()
+void mga::SyncFence::wait()
 {
     if (fence_fd > 0)
     {
