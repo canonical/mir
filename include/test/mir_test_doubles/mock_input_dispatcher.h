@@ -56,6 +56,6 @@ struct MockInputDispatcher : public droidinput::InputDispatcherInterface
 
 }
 }
-}
+} // namespace mir
 
 #endif // MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_

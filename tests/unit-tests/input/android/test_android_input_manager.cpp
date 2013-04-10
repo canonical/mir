@@ -28,6 +28,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
+#include "mir_test_doubles/mock_input_configuration.h"
 #include "mir_test_doubles/stub_session_target.h"
 #include "mir_test_doubles/stub_surface_target.h"
 
@@ -56,14 +57,6 @@ namespace mtd = mt::doubles;
 // Mock objects
 namespace
 {
-
-struct MockInputConfiguration : public mia::InputConfiguration
-{
-    MOCK_METHOD0(the_event_hub, droidinput::sp<droidinput::EventHubInterface>());
-    MOCK_METHOD0(the_dispatcher, droidinput::sp<droidinput::InputDispatcherInterface>());
-    MOCK_METHOD0(the_dispatcher_thread, std::shared_ptr<mia::InputThread>());
-    MOCK_METHOD0(the_reader_thread, std::shared_ptr<mia::InputThread>());
-};
 
 struct MockEventHub : public droidinput::EventHubInterface
 {
@@ -135,7 +128,7 @@ struct AndroidInputManagerSetup : public testing::Test
     }
     mtd::MockViewableArea view_area;
 
-    testing::NiceMock<MockInputConfiguration> config;
+    testing::NiceMock<mtd::MockInputConfiguration> config;
     droidinput::sp<MockEventHub> event_hub;
     droidinput::sp<mtd::MockInputDispatcher> dispatcher;
     std::shared_ptr<MockInputThread> dispatcher_thread;
