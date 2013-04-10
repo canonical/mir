@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
 #define MIR_CLIENT_PRIVATE_MIR_CLIENT_BUFFER_DEPOSITORY_H_
 
-#include <map>
+#include <list>
 #include <memory>
 
 #include "mir/geometry/pixel_format.h"
@@ -39,9 +39,19 @@ class ClientBufferFactory;
 /// The ClientBufferDepository is responsible for taking the IPC buffer data and converting it into
 /// the more digestible form of a ClientBuffer. It maintains the client-side state necessary to
 /// construct a ClientBuffer.
+/// \sa mir::frontend::ClientBufferTracker for the server-side analogue.
+/// \note Changes to the tracking algorithm will need associated server-side changes to mir::frontend::ClientBufferTracker
 class ClientBufferDepository
 {
 public:
+    /// Constructor
+
+    /// \param factory is the ClientBufferFactory that will be used to convert IPC data to ClientBuffers
+    /// \param max_buffers is the number of buffers the depository will cache. After the client has received
+    /// its initial buffers the ClientBufferDepository will always have the last \ref max_buffers buffers
+    /// cached.
+    /// \note The server relies on the depository caching \ref max_buffers buffers to optimise away buffer
+    /// passing. As such, this number needs to be shared between the server and client libraries.
     ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const& factory, int max_buffers);
 
     /// Construct a ClientBuffer from the IPC data, and use it as the current buffer.
@@ -54,10 +64,8 @@ public:
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
-    typedef std::map<int, std::shared_ptr<ClientBuffer>> BufferMap;
-    BufferMap buffers;
-    BufferMap::iterator current_buffer_iter;
-    const unsigned max_age;
+    std::list<std::pair<int, std::shared_ptr<ClientBuffer>>> buffers;
+    unsigned int const max_buffers;
 };
 }
 }

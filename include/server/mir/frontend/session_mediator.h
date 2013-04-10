@@ -47,6 +47,7 @@ class Shell;
 class Session;
 class ResourceCache;
 class SessionMediatorReport;
+class ClientBufferTracker;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
@@ -116,6 +117,7 @@ private:
 
     std::shared_ptr<SessionMediatorReport> const report;
     std::shared_ptr<ResourceCache> const resource_cache;
+    std::shared_ptr<ClientBufferTracker> const client_tracker;
 
     std::shared_ptr<Session> session;
 };

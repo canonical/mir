@@ -369,3 +369,36 @@ TEST_F(MirBufferDepositoryTest, depository_creates_new_buffer_for_different_id)
     depository.deposit_package(package1, 8, size, pf);
     depository.deposit_package(package2, 9, size, pf);
 }
+
+TEST_F(MirBufferDepositoryTest, depository_keeps_last_2_buffers_regardless_of_age)
+{
+    using namespace testing;
+
+    mcl::ClientBufferDepository depository{mock_factory, 2};
+
+    EXPECT_CALL(*mock_factory, create_buffer(_,_,_)).Times(2);
+
+    depository.deposit_package(package, 8, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 8, size, pf);
+}
+
+TEST_F(MirBufferDepositoryTest, depository_keeps_last_3_buffers_regardless_of_age)
+{
+    using namespace testing;
+
+    mcl::ClientBufferDepository depository{mock_factory, 3};
+
+    EXPECT_CALL(*mock_factory, create_buffer(_,_,_)).Times(3);
+
+    depository.deposit_package(package, 8, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.deposit_package(package, 9, size, pf);
+    depository.deposit_package(package, 10, size, pf);
+    depository.deposit_package(package, 8, size, pf);
+}
