@@ -36,7 +36,8 @@ public:
     DefaultFBDevice(std::shared_ptr<framebuffer_device_t> const&);
 
     void post(std::shared_ptr<compositor::Buffer> const& buffer);
-
+private:
+    std::shared_ptr<framebuffer_device_t> fb_device;
 };
 
 }
