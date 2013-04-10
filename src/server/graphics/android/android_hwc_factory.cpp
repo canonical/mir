@@ -19,6 +19,7 @@
 #include "android_hwc_factory.h"
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
+#include "default_fb_device.h"
 
 //todo reevaluate
 #include "fb_device.h"
@@ -32,11 +33,6 @@ namespace
     {
         NullFBDev()
         {
-            hw_module_t const* module;
-
-            if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
-                framebuffer_open(module, &fbDev);
-            }
         }
 
         void post(std::shared_ptr<mir::compositor::Buffer> const& returned_handle)
@@ -51,6 +47,13 @@ std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(std::shar
 {
     auto layer_list = std::make_shared<mga::HWCLayerList>();
 
-    auto fbdev = std::make_shared<NullFBDev>();
-    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fbdev);
+    hw_module_t const* module;
+    framebuffer_device_t* fbdev_raw;
+    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
+        framebuffer_open(module, &fbdev_raw);
+    }
+    std::shared_ptr<framebuffer_device_t> fbdev(fbdev_raw, [](framebuffer_device_t*){});
+    auto fb = std::make_shared<mga::DefaultFBDevice>(fbdev);
+//    auto fbdev = std::make_shared<NullFBDev>();
+    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fb);
 }
