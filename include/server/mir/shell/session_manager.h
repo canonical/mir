@@ -77,7 +77,7 @@ private:
     typedef std::vector<std::pair<int, std::shared_ptr<frontend::Session>>> Tags;
     Tags tags;
 
-    void set_focus_to(std::shared_ptr<frontend::Session> const& next_focus);
+    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<frontend::Session> const& next_focus);
 };
 
 }

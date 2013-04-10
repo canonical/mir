@@ -25,7 +25,7 @@ set(
   run_mir.cpp
   display_server.cpp
   default_server_configuration.cpp
-  signal_dispatcher.cpp
+  asio_main_loop.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -48,7 +48,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirfrontend
   mirgraphics
   mirinput
-  mirinputandroidtransport
+  mirsharedinput
   mirsurfaces
   mirtime
 )

@@ -5,6 +5,7 @@ set(
   test_surfaceloop.cpp
   test_error_reporting.cpp
   test_display_info.cpp
+  test_display_server_main_loop_events.cpp
 )
 
 add_subdirectory(client/)

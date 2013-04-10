@@ -13,33 +13,41 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/run_mir.h"
-#include "mir/display_server.h"
+#ifndef MIR_ASIO_MAIN_LOOP_H_
+#define MIR_ASIO_MAIN_LOOP_H_
+
 #include "mir/main_loop.h"
-#include "mir/server_configuration.h"
 
-#include <csignal>
-#include <cassert>
+#include <boost/asio.hpp>
+#include <memory>
+#include <vector>
 
-void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
+namespace mir
 {
-    DisplayServer* server_ptr{nullptr};
-    auto main_loop = config.the_main_loop();
 
-    main_loop->register_signal_handler(
-        {SIGINT, SIGTERM},
-        [&server_ptr](int)
-        {
-            assert(server_ptr);
-            server_ptr->stop();
-        });
+class AsioMainLoop : public MainLoop
+{
+public:
+    AsioMainLoop();
+    ~AsioMainLoop() noexcept(true);
 
-    DisplayServer server(config);
-    server_ptr = &server;
+    void run();
+    void stop();
 
-    init(server);
-    server.run();
+    void register_signal_handler(
+        std::initializer_list<int> signals,
+        std::function<void(int)> const& handler);
+
+private:
+    class SignalHandler;
+
+    boost::asio::io_service io;
+    std::vector<std::unique_ptr<SignalHandler>> signal_handlers;
+};
+
 }
+
+#endif /* MIR_ASIO_MAIN_LOOP_H */

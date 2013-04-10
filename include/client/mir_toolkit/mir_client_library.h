@@ -108,8 +108,6 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
  * released.
  *   \param [in] connection          The connection
  *   \param [in] surface_parameters  Request surface parameters
- *   \param [in] event_handler       Callback to be invoked when an event is
- *                                   received
  *   \param [in] callback            Callback function to be invoked when
  *                                   request completes
  *   \param [in,out] context         User data passed to the callback function
@@ -119,7 +117,6 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 MirWaitHandle *mir_surface_create(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
-    MirEventDelegate const *event_handler,
     mir_surface_lifecycle_callback callback,
     void *context);
 
@@ -128,12 +125,18 @@ MirWaitHandle *mir_surface_create(
  * to complete and return the resulting surface.
  *   \param [in] connection  The connection
  *   \param [in] params      Parameters describing the desired surface
- *   \param [in] event_handler Callback to be invoked when an event is received
  *   \return                 The resulting surface
  */
 MirSurface *mir_surface_create_sync(MirConnection *connection,
-                                    MirSurfaceParameters const *params,
-                                    MirEventDelegate const *event_handler);
+                                    MirSurfaceParameters const *params);
+
+/**
+ * Set the event handler to be called when events arrive for a surface.
+ *   \param [in] surface        The surface
+ *   \param [in] event_handler  The event handler to call
+ */
+void mir_surface_set_event_handler(MirSurface *surface,
+                                   MirEventDelegate const *event_handler);
 
 /**
  * Get a window type that can be used for OpenGL ES 2.0 acceleration.
