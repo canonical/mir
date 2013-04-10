@@ -124,7 +124,7 @@ class StubPlatform : public mg::Platform
     
     EGLNativeDisplayType shell_egl_display()
     {
-        return (EGLNativeDisplayType) 0;
+        return static_cast<EGLNativeDisplayType>(0);
     }
 };
 

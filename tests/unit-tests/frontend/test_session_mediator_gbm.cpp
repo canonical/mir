@@ -84,7 +84,7 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
 
     EGLNativeDisplayType shell_egl_display()
     {
-        return (EGLNativeDisplayType) 0;
+        return static_cast<EGLNativeDisplayType>(0);
     }
 
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));

@@ -72,13 +72,13 @@ struct MirServerMesaEGLNativeDisplaySetup : public testing::Test
 
 MATCHER_P(PackageMatches, package, "")
 {
-    if (arg.data_items != (int)package.ipc_data.size())
+    if (arg.data_items != static_cast<int>(package.ipc_data.size()))
         return false;
     for (uint i = 0; i < package.ipc_data.size(); i++)
     {
         if (arg.data[i] != package.ipc_data[i]) return false;
     }
-    if (arg.fd_items != (int)package.ipc_fds.size())
+    if (arg.fd_items != static_cast<int>(package.ipc_fds.size()))
         return false;
     for (uint i = 0; i < package.ipc_fds.size(); i++)
     {
@@ -98,9 +98,9 @@ MATCHER_P(StrideMatches, package, "")
 
 MATCHER_P(ParametersHaveSize, size, "")
 {
-    if ((uint32_t)arg.width != size.width.as_uint32_t())
+    if (static_cast<uint32_t>(arg.width) != size.width.as_uint32_t())
         return false;
-    if ((uint32_t)arg.height != size.height.as_uint32_t())
+    if (static_cast<uint32_t>(arg.height) != size.height.as_uint32_t())
         return false;
     return true;
 }
