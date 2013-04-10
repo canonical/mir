@@ -22,15 +22,28 @@
 
 //todo reevaluate
 #include "fb_device.h"
+#include "mir/compositor/buffer.h"
+#include "native_buffer_handle.h"
 namespace mga=mir::graphics::android;
 
 namespace 
 {
     struct NullFBDev : public mga::FBDevice
     {
-        void post(std::shared_ptr<mir::compositor::Buffer> const&)
+        NullFBDev()
         {
+            hw_module_t const* module;
+
+            if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
+                framebuffer_open(module, &fbDev);
+            }
         }
+
+        void post(std::shared_ptr<mir::compositor::Buffer> const& returned_handle)
+        {
+            fbDev->post(fbDev, returned_handle->native_buffer_handle()->handle);
+        }
+        framebuffer_device_t* fbDev;
     };
 }
 std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const

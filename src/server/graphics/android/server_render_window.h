@@ -61,7 +61,6 @@ private:
     std::shared_ptr<DisplayInfoProvider> poster;
     unsigned int native_format;
 
-    framebuffer_device_t* fbDev;
     std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver; 
 }; 
 
