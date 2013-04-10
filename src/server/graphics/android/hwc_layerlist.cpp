@@ -76,7 +76,7 @@ mga::HWCDummyLayer::HWCDummyLayer()
     : HWCLayerBase()
 {
     compositionType = HWC_FRAMEBUFFER;
-    hints = HWC_SKIP_LAYER;
+    flags = HWC_SKIP_LAYER;
 }
 
 mga::HWCLayerList::HWCLayerList()

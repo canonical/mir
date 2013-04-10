@@ -166,6 +166,7 @@ mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter>
 int mcla::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
     *buffer_to_driver = driver_interpreter->driver_requests_buffer();
+    printf("dequeuing done! 0x%X...\n", (int) *buffer_to_driver);
     return 0;
 }
 
@@ -196,6 +197,7 @@ int mcla::MirNativeWindow::perform(int key, va_list arg_list )
             driver_interpreter->dispatch_driver_request_format(driver_format);
             break;
         default:
+            printf("unknown... %i\n", key);
             break;
     }
 

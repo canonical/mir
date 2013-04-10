@@ -114,6 +114,7 @@ void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& r
 
 void mc::BufferSwapperMulti::shutdown()
 {
+#if 0
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
     if (client_queue.empty())
@@ -124,4 +125,5 @@ void mc::BufferSwapperMulti::shutdown()
     }
 
     client_available_cv.notify_all();
+#endif
 }
