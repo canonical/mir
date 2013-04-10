@@ -116,6 +116,7 @@ find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
+find_package(XKBCOMMON REQUIRED)
 
 include_directories (${GLESv2_INCLUDE_DIRS})                                    
 include_directories (${EGL_INCLUDE_DIRS})
@@ -147,8 +148,6 @@ elseif (MIR_PLATFORM STREQUAL "gbm")
 else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
 endif()
-
-pkg_check_modules( XKBCOMMON REQUIRED xkbcommon )
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
