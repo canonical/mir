@@ -73,9 +73,6 @@ MirWaitHandle* MirConnection::create_surface(
     auto null_log = std::make_shared<mir::client::NullLogger>();
     auto surface = new MirSurface(this, server, null_log, platform->create_buffer_factory(), input_platform, params, callback, context);
 
-    if (surface)
-        valid_surfaces[surface->id()] = surface;
-
     return surface->get_create_wait_handle();
 }
 
@@ -316,6 +313,11 @@ MirConnection* MirConnection::mir_connection()
 EGLNativeDisplayType MirConnection::egl_native_display()
 {
     return *native_display;
+}
+
+void MirConnection::on_surface_created(int id, MirSurface* surface)
+{
+    valid_surfaces[id] = surface;
 }
 
 void MirConnection::handle_event(MirEvent const& e)

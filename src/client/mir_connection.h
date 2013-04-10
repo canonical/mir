@@ -107,6 +107,7 @@ public:
 
     EGLNativeDisplayType egl_native_display();
 
+    void on_surface_created(int id, MirSurface* surface);
     void handle_event(MirEvent const&);
 
 private:
