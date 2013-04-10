@@ -26,6 +26,8 @@
 namespace android
 {
 class InputDispatcherInterface;
+class InputWindowHandle;
+class InputApplicationHandle;
 }
 
 namespace droidinput = android;
@@ -52,6 +54,9 @@ protected:
 
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
+
+    droidinput::sp<droidinput::InputWindowHandle> focused_window_handle;
+    droidinput::sp<droidinput::InputApplicationHandle> focused_application_handle;
 };
 
 }
