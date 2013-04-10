@@ -39,16 +39,13 @@ class InputChannel;
 class SessionTarget;
 class SurfaceTarget;
 
-class InputManager : public InputChannelFactory, public shell::InputFocusSelector
+class InputManager : public InputChannelFactory
 {
 public:
     virtual void start() = 0;
     virtual void stop() = 0;
 
     virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
-
-    virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& session,
-                                    std::shared_ptr<input::SurfaceTarget> const& surface) = 0;
 
 protected:
     InputManager() {};
