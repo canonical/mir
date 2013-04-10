@@ -170,9 +170,9 @@ int mcla::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to
     return 0;
 }
 
-int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mcla::AndroidFence> const& /*fence*/)
+int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mcla::AndroidFence> const& fence)
 {
-    //fence->wait();
+    fence->wait();
     driver_interpreter->driver_returns_buffer(buffer);
     return 0;
 }
