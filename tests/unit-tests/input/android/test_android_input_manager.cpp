@@ -27,6 +27,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_viewable_area.h"
+#include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test_doubles/stub_session_target.h"
 #include "mir_test_doubles/stub_surface_target.h"
 
@@ -62,29 +63,6 @@ struct MockInputConfiguration : public mia::InputConfiguration
     MOCK_METHOD0(the_dispatcher, droidinput::sp<droidinput::InputDispatcherInterface>());
     MOCK_METHOD0(the_dispatcher_thread, std::shared_ptr<mia::InputThread>());
     MOCK_METHOD0(the_reader_thread, std::shared_ptr<mia::InputThread>());
-};
-
-struct MockInputDispatcher : public droidinput::InputDispatcherInterface
-{
-    // droidinput::InputDispatcher interface
-    MOCK_METHOD1(dump, void(droidinput::String8&));
-    MOCK_METHOD0(monitor, void());
-    MOCK_METHOD0(dispatchOnce, void());
-    MOCK_METHOD6(injectInputEvent, int32_t(droidinput::InputEvent const*, int32_t, int32_t, int32_t, int32_t, uint32_t));
-    MOCK_METHOD1(setInputWindows, void(droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> const&));
-    MOCK_METHOD1(setFocusedApplication, void(droidinput::sp<droidinput::InputApplicationHandle> const&));
-    MOCK_METHOD2(setInputDispatchMode, void(bool, bool));
-    MOCK_METHOD1(setInputFilterEnabled, void(bool));
-    MOCK_METHOD2(transferTouchFocus, bool(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputChannel> const&));
-    MOCK_METHOD3(registerInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputWindowHandle> const&, bool));
-    MOCK_METHOD1(unregisterInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&));
-
-    // droidinput::InputListener interface
-    MOCK_METHOD1(notifyConfigurationChanged, void(droidinput::NotifyConfigurationChangedArgs const*));
-    MOCK_METHOD1(notifyKey, void(droidinput::NotifyKeyArgs const*));
-    MOCK_METHOD1(notifyMotion, void(droidinput::NotifyMotionArgs const*));
-    MOCK_METHOD1(notifySwitch, void(droidinput::NotifySwitchArgs const*));
-    MOCK_METHOD1(notifyDeviceReset, void(droidinput::NotifyDeviceResetArgs const*));
 };
 
 struct MockEventHub : public droidinput::EventHubInterface
@@ -146,7 +124,7 @@ struct AndroidInputManagerSetup : public testing::Test
             .WillByDefault(Return(default_view_area));
 
         event_hub = new MockEventHub();
-        dispatcher = new MockInputDispatcher();
+        dispatcher = new mtd::MockInputDispatcher();
         dispatcher_thread = std::make_shared<MockInputThread>();
         reader_thread = std::make_shared<MockInputThread>();
 
@@ -159,7 +137,7 @@ struct AndroidInputManagerSetup : public testing::Test
 
     testing::NiceMock<MockInputConfiguration> config;
     droidinput::sp<MockEventHub> event_hub;
-    droidinput::sp<MockInputDispatcher> dispatcher;
+    droidinput::sp<mtd::MockInputDispatcher> dispatcher;
     std::shared_ptr<MockInputThread> dispatcher_thread;
     std::shared_ptr<MockInputThread> reader_thread;
 };
