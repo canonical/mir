@@ -170,7 +170,7 @@ struct ClientConfigCommon : TestingClientConfiguration
 
 struct MockInputHandler
 {
-    MOCK_METHOD1(handle_input, void(MirEvent const*));
+    MOCK_METHOD1(handle_key_down, void(MirEvent const*));
 };
 
 struct InputReceivingClient : ClientConfigCommon
@@ -185,9 +185,12 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
-        client->handler->handle_input(ev);
-        client->event_received[client->events_received].wake_up_everyone();
-        client->events_received++;
+        if (ev->action == 0)
+        {
+            client->handler->handle_key_down(ev);
+            client->event_received[client->events_received].wake_up_everyone();
+            client->events_received++;
+        }
     }
     virtual void expect_input()
     {
@@ -271,7 +274,7 @@ TEST_F(TestClientInput, clients_receive_key_input)
         void expect_input()
         {
             using namespace ::testing;
-            EXPECT_CALL(*handler, handle_input(_)).Times(num_events_produced);
+            EXPECT_CALL(*handler, handle_key_down(_)).Times(num_events_produced);
         }
     } client_config;
     launch_client_process(client_config);
@@ -299,6 +302,13 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
                                              .of_scancode(KEY_LEFTSHIFT));
             fake_event_hub->synthesize_event(mis::a_key_down_event()
                                              .of_scancode(KEY_4));
+
+            // Release the keys so we don't get repeat events.
+            fake_event_hub->synthesize_event(mis::a_key_up_event()
+                                             .of_scancode(KEY_4));
+            fake_event_hub->synthesize_event(mis::a_key_up_event()
+                                             .of_scancode(KEY_LEFTSHIFT));
+
         }
     } server_config;
     launch_server_process(server_config);
@@ -312,8 +322,8 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             using namespace ::testing;
 
             InSequence seq;
-            EXPECT_CALL(*handler, handle_input(KeyOfSymbol(XKB_KEY_Shift_L))).Times(1);
-            EXPECT_CALL(*handler, handle_input(KeyOfSymbol(XKB_KEY_dollar))).Times(1);
+            EXPECT_CALL(*handler, handle_key_down(KeyOfSymbol(XKB_KEY_Shift_L))).Times(1);
+            EXPECT_CALL(*handler, handle_key_down(KeyOfSymbol(XKB_KEY_dollar))).Times(1);
         }
     } client_config;
     launch_client_process(client_config);

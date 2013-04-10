@@ -49,6 +49,11 @@ mis::KeyParameters mis::a_key_down_event()
     return mis::KeyParameters().with_action(mis::EventAction::Down);
 }
 
+mis::KeyParameters mis::a_key_up_event()
+{
+    return mis::KeyParameters().with_action(mis::EventAction::Up);
+}
+
 mis::ButtonParameters::ButtonParameters() :
     device_id(0),
     button(0),
