@@ -52,7 +52,8 @@ struct DemoServerConfiguration : public mir::DefaultServerConfiguration
     
     std::initializer_list<std::shared_ptr<mi::EventFilter> const> the_event_filters() override
     {
-        return { event_filter };
+        static std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list = { event_filter };
+        return filter_list;
     }
 
     std::shared_ptr<PrintingEventFilter> event_filter;
