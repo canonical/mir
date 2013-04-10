@@ -28,9 +28,8 @@ namespace bs = boost::system;
 namespace mfd = mir::frontend::detail;
 
 
-void mfd::SocketSession::send(const std::ostringstream& buffer2)
+void mfd::SocketSession::send(std::string const& body)
 {
-    const std::string& body = buffer2.str();
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
     {
