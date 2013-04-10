@@ -20,6 +20,7 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "src/server/graphics/android/hwc_display.h"
+#include "src/server/graphics/android/fb_device.h"
 
 #include "mir/draw/graphics.h"
 #include "mir_test/draw/android_graphics.h"
@@ -136,7 +137,8 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
-    auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist);
+    auto fbdev = std::shared_ptr<mga::FBDevice>(); 
+    auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fbdev);
     auto display = std::make_shared<mga::HWCDisplay>(window, hwc);
 
     gl_animation.init_gl();

@@ -32,6 +32,7 @@ namespace android
 {
 class HWC11Device;
 class HWCLayerOrganizer;
+class FBDevice;
 
 struct HWCCallbacks
 {
@@ -43,7 +44,8 @@ class HWC11Device : public HWCDevice
 {
 public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                std::shared_ptr<HWCLayerOrganizer> const& organizer);
+                std::shared_ptr<HWCLayerOrganizer> const& organizer,
+                std::shared_ptr<FBDevice> const& /*fbdev*/);
     ~HWC11Device();
 
     geometry::Size display_size(); 

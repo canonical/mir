@@ -20,10 +20,23 @@
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
 
+//todo reevaluate
+#include "fb_device.h"
 namespace mga=mir::graphics::android;
 
+namespace 
+{
+    struct NullFBDev : public mga::FBDevice
+    {
+        void post(std::shared_ptr<mir::compositor::Buffer> const&)
+        {
+        }
+    };
+}
 std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const
 {
     auto layer_list = std::make_shared<mga::HWCLayerList>();
-    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list);
+
+    auto fbdev = std::make_shared<NullFBDev>();
+    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fbdev);
 }

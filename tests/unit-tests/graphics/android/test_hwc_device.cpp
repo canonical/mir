@@ -18,6 +18,7 @@
 
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
+#include "src/server/graphics/android/fb_device.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -39,18 +40,24 @@ struct MockHWCOrganizer : public mga::HWCLayerOrganizer
     MOCK_METHOD1(set_fb_target, void(std::shared_ptr<mc::Buffer> const&));
 };
 
+struct MockFBDevice : public mga::FBDevice
+{
+    MOCK_METHOD1(post, void(std::shared_ptr<mc::Buffer> const&));
+};
+
 class HWCDevice : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
+        mock_fbdev = std::make_shared<testing::NiceMock<MockFBDevice>>();
         mock_organizer = std::make_shared<testing::NiceMock<MockHWCOrganizer>>();
     }
 
     std::shared_ptr<MockHWCOrganizer> mock_organizer;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_fbdev;
+    std::shared_ptr<MockFBDevice> mock_fbdev;
 };
 
 TEST_F(HWCDevice, test_proc_registration)
@@ -93,7 +100,7 @@ TEST_F(HWCDevice, test_vsync_activation_failure_throws)
         .WillOnce(Return(-EINVAL));
 
     EXPECT_THROW({
-        mga::HWC11Device device(mock_device, mock_organizer);
+        mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     }, std::runtime_error);
 }
 
