@@ -38,10 +38,11 @@ struct MockHWCFactory: public mga::HWCFactory
     MockHWCFactory()
     {
         using namespace testing;
-        ON_CALL(*this, create_hwc_1_1(_))
+        ON_CALL(*this, create_hwc_1_1(_,_))
             .WillByDefault(Return(std::shared_ptr<mga::HWCDevice>()));
     }
-    MOCK_CONST_METHOD1(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>(std::shared_ptr<hwc_composer_device_1> const&));
+    MOCK_CONST_METHOD2(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>(std::shared_ptr<hwc_composer_device_1> const&,
+                                                                       std::shared_ptr<framebuffer_device_t> const&));
 };
 
 struct MockDisplayAllocator: public mga::DisplayAllocator
@@ -86,6 +87,26 @@ public:
     std::shared_ptr<MockFNWFactory> const mock_fnw_factory;
     mt::HardwareAccessMock hw_access_mock;
 };
+}
+
+TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_hwc_device)
+{
+    using namespace testing;
+
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1);
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory); 
+}
+
+TEST_F(AndroidDisplayFactoryTest, fbdev_unavailable_is_fatal)
+{
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory);
+    }, std::runtime_error);
 }
 
 TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_hwc_device)

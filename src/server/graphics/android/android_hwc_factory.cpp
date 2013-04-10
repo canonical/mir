@@ -21,27 +21,7 @@
 #include "hwc_layerlist.h"
 #include "default_fb_device.h"
 
-//todo reevaluate
-#include "fb_device.h"
-#include "mir/compositor/buffer.h"
-#include "native_buffer_handle.h"
 namespace mga=mir::graphics::android;
-
-namespace 
-{
-    struct NullFBDev : public mga::FBDevice
-    {
-        NullFBDev()
-        {
-        }
-
-        void post(std::shared_ptr<mir::compositor::Buffer> const& returned_handle)
-        {
-            fbDev->post(fbDev, returned_handle->native_buffer_handle()->handle);
-        }
-        framebuffer_device_t* fbDev;
-    };
-}
 
 std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(std::shared_ptr<hwc_composer_device_1> const& hwc_device) const
 {
@@ -54,6 +34,5 @@ std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(std::shar
     }
     std::shared_ptr<framebuffer_device_t> fbdev(fbdev_raw, [](framebuffer_device_t*){});
     auto fb = std::make_shared<mga::DefaultFBDevice>(fbdev);
-//    auto fbdev = std::make_shared<NullFBDev>();
     return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fb);
 }
