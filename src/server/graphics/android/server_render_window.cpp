@@ -36,6 +36,11 @@ mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mc::BufferSwapper> c
       poster(display_poster),
       native_format(0)
 {
+    hw_module_t const* module;
+
+    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
+        framebuffer_open(module, &fbDev);
+    }
 }
 
 ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
@@ -60,8 +65,9 @@ void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returne
 
     auto buffer = buffer_it->second;
     buffers_in_driver.erase(buffer_it);
-    swapper->compositor_release(buffer);
+    fbDev->post(fbDev, returned_handle->handle);
     poster->set_next_frontbuffer(buffer);
+    swapper->compositor_release(buffer);
 }
 
 void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)

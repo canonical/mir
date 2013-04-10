@@ -23,6 +23,9 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/compositor/buffer_id.h"
 
+#include <hardware/fb.h>
+#include <hardware/hwcomposer.h>
+
 #include <memory>
 #include <unordered_map>
 
@@ -58,6 +61,7 @@ private:
     std::shared_ptr<DisplayInfoProvider> poster;
     unsigned int native_format;
 
+    framebuffer_device_t* fbDev;
     std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver; 
 }; 
 

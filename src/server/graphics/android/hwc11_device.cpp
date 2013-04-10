@@ -55,15 +55,16 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
 
+    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
+    }
+    
     if (hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
     }
 
-    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
-    }
 
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
@@ -75,8 +76,8 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 
 mga::HWC11Device::~HWC11Device()
 {
-    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
     hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
+    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
 
 geom::Size mga::HWC11Device::display_size()
