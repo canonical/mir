@@ -87,7 +87,9 @@ FramebufferNativeWindow::FramebufferNativeWindow()
     if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
         int err;
         int i;
+    printf("probably hanging here...\n");
         err = framebuffer_open(module, &fbDev);
+    printf(" checkprobably hanging here...\n");
         
         err = gralloc_open(module, &grDev);
 

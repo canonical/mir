@@ -21,13 +21,10 @@
 #include "hwc_display.h"
 #include "android_framebuffer_window.h"
 
-#include <ui/FramebufferNativeWindow.h>
-
 namespace mga=mir::graphics::android;
 
-std::shared_ptr<mga::AndroidDisplay> mga::AndroidDisplayAllocator::create_gpu_display() const
+std::shared_ptr<mga::AndroidDisplay> mga::AndroidDisplayAllocator::create_gpu_display(std::shared_ptr<ANativeWindow> const& native_window ) const
 {
-    auto native_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (native_window);
     return std::make_shared<AndroidDisplay>(window);
 }

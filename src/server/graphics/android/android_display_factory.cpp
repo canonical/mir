@@ -23,6 +23,8 @@
 #include "android_display.h"
 #include "hwc_display.h"
 
+#include <ui/FramebufferNativeWindow.h>
+
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -37,6 +39,7 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
       fb_factory(fb_factory)
 {
 
+#if 0
     hw_module_t const* module;
     framebuffer_device_t* fbdev_raw;
     if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) != 0) 
@@ -53,7 +56,7 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
                   {
                      fbdevice->common.close((hw_device_t*) fbdevice);
                   });
-
+#endif
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
     if ((rc != 0) || (hw_module == nullptr))
@@ -103,6 +106,7 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     }
     else
     {
-        return display_factory->create_gpu_display();
+        auto native_window = std::make_shared< ::android::FramebufferNativeWindow>();
+        return display_factory->create_gpu_display(native_window);
     }
 }

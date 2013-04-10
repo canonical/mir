@@ -38,7 +38,7 @@ public:
     DisplayAllocator() = default;
     virtual ~DisplayAllocator() {}
 
-    virtual std::shared_ptr<AndroidDisplay> create_gpu_display() const = 0;
+    virtual std::shared_ptr<AndroidDisplay> create_gpu_display(std::shared_ptr<ANativeWindow> const&) const = 0;
     virtual std::shared_ptr<HWCDisplay> create_hwc_display(std::shared_ptr<HWCDevice> const&, std::shared_ptr<ANativeWindow> const&) const = 0;
 
 private:
