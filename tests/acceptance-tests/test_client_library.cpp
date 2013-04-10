@@ -375,6 +375,12 @@ TEST_F(DefaultDisplayServerTestFixture, surface_change_events)
             last_event_surface = nullptr;
 
             MirEventDelegate delegate{&event_callback, this};
+            MirSurface* other_surface =
+                mir_surface_create_sync(connection, &request_params);
+            ASSERT_TRUE(other_surface != NULL);
+            ASSERT_TRUE(mir_surface_is_valid(other_surface));
+            mir_surface_set_event_handler(other_surface, nullptr);
+
             surface = mir_surface_create_sync(connection, &request_params);
             ASSERT_TRUE(surface != NULL);
             ASSERT_TRUE(mir_surface_is_valid(surface));
@@ -385,6 +391,8 @@ TEST_F(DefaultDisplayServerTestFixture, surface_change_events)
 
             mir_wait_for(mir_surface_set_state(surface,
                                                mir_surface_state_fullscreen));
+            mir_wait_for(mir_surface_set_state(other_surface,
+                                               mir_surface_state_minimized));
             EXPECT_EQ(surface,
                       last_event_surface);
             EXPECT_EQ(mir_event_type_surface_change,
@@ -430,6 +438,8 @@ TEST_F(DefaultDisplayServerTestFixture, surface_change_events)
 
             mir_wait_for(mir_surface_set_state(surface,
                                            static_cast<MirSurfaceState>(777)));
+            mir_wait_for(mir_surface_set_state(other_surface,
+                                               mir_surface_state_maximized));
             EXPECT_EQ(0,
                       last_event_surface);
             EXPECT_EQ(0,
@@ -442,6 +452,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_change_events)
                       last_event.details.surface_change.value);
 
             mir_surface_release_sync(surface);
+            mir_surface_release_sync(other_surface);
             mir_connection_release(connection);
         }
 
