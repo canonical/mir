@@ -138,6 +138,7 @@ protected:
     CachedPtr<frontend::Shell> session_manager;
     CachedPtr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<shell::InputFocusSelector> input_focus_selector;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;

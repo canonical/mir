@@ -47,6 +47,7 @@
 #include "mir/input/null_input_manager.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
+#include "input/android/android_dispatcher_controller.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
@@ -519,7 +520,11 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
 
 std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
 {
-    return the_input_manager();
+    return input_focus_selector(
+        [&]()
+        {
+            return std::make_shared<mia::DispatcherController>(the_input_configuration());
+        });
 }
 
 std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time_source()

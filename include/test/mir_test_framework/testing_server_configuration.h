@@ -48,7 +48,8 @@ public:
     // We override the_input_manager in the default server configuration
     // to avoid starting and stopping the full android input stack for tests
     // which do not leverage input.
-    virtual std::shared_ptr<input::InputManager> the_input_manager();
+    std::shared_ptr<input::InputManager> the_input_manager();
+    std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
 
     virtual std::string the_socket_file() const;
     using DefaultServerConfiguration::the_options;

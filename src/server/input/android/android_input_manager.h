@@ -23,6 +23,7 @@
 #include "mir/input/input_manager.h"
 
 #include <utils/StrongPointer.h>
+#include <InputDispatcher.h>
 
 #include <initializer_list>
 
