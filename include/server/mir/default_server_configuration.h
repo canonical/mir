@@ -79,6 +79,10 @@ namespace input
 class InputManager;
 class EventFilter;
 class InputChannelFactory;
+namespace android
+{
+class InputConfiguration;
+}
 }
 
 namespace logging
@@ -116,6 +120,7 @@ public:
 
     virtual std::shared_ptr<logging::Logger> the_logger();
 
+    virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<input::InputManager> the_input_manager();
     virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
@@ -131,6 +136,7 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<frontend::Shell> session_manager;
+    CachedPtr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;

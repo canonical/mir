@@ -46,6 +46,7 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/null_input_manager.h"
+#include "input/android/default_android_input_configuration.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
@@ -65,6 +66,7 @@ namespace ml = mir::logging;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
+namespace mia = mi::android;
 
 namespace
 {
@@ -313,6 +315,18 @@ std::initializer_list<std::shared_ptr<mi::EventFilter> const>
 mir::DefaultServerConfiguration::the_event_filters()
 {
     return empty_filter_list;
+}
+
+std::shared_ptr<mia::InputConfiguration>
+mir::DefaultServerConfiguration::the_input_configuration()
+{
+    static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
+
+    return input_configuration(
+        [&, this]()
+        {
+            return std::make_shared<mia::DefaultInputConfiguration>(the_event_filters(), the_display(), null_cursor_listener);
+        });
 }
 
 std::shared_ptr<mi::InputManager>

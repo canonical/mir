@@ -17,13 +17,13 @@
  */
 
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_input_configuration.h"
 #include "src/server/input/android/android_input_thread.h"
 #include "src/server/input/android/android_input_constants.h"
 
 #include "mir/input/input_channel.h"
 #include "mir/input/session_target.h"
 #include "mir/input/surface_target.h"
+#include "mir/input/android/android_input_configuration.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_viewable_area.h"

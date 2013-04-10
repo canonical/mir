@@ -23,7 +23,6 @@
 
 #include "android_input_manager.h"
 #include "android_input_constants.h"
-#include "android_input_configuration.h"
 #include "android_input_thread.h"
 #include "android_input_channel.h"
 #include "android_input_window_handle.h"
