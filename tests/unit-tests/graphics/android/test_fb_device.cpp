@@ -16,24 +16,33 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_test_doubles/mock_fb_device.h"
+#include "mir_test_doubles/stub_buffer.h"
+#include "src/server/graphics/android/default_fb_device.h"
 
-class FBDevice : public ::testing::Test
+#include <gtest/gtest.h>
+#include <stdexcept>
+
+namespace mtd=mir::test::doubles;
+namespace mga=mir::graphics::android;
+
+struct FBDevice : public ::testing::Test
 {
-protected:
     virtual void SetUp()
     {
         fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(); 
     }
 
-    std::shared_ptr<mtd::MockFBHalDevice>() fb_hal_mock;
+    std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
 };
 
 TEST_F(FBDevice, post_ok)
 {
-    mga::DefaultFBDevice fddev(fb_hal_mock);
+    using namespace testing;
+    mga::DefaultFBDevice fbdev(fb_hal_mock);
 
-    stub_buffer = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(fb_hal_mock, post(stub_buffer))
+    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
+    EXPECT_CALL(*fb_hal_mock, post_interface(_,_))
         .Times(1);
 
     fbdev.post(stub_buffer); 
@@ -41,14 +50,15 @@ TEST_F(FBDevice, post_ok)
 
 TEST_F(FBDevice, post_fail)
 {
-    mga::DefaultFBDevice fddev(fb_hal_mock);
+    using namespace testing;
+    mga::DefaultFBDevice fbdev(fb_hal_mock);
 
-    stub_buffer = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(fb_hal_mock, post(stub_buffer))
+    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
+    EXPECT_CALL(*fb_hal_mock, post_interface(_,_))
         .Times(1)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
         fbdev.post(stub_buffer);
-    }); 
+    }, std::runtime_error); 
 }

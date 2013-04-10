@@ -46,4 +46,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */

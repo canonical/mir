@@ -44,10 +44,10 @@ public:
         post = hook_post;
     }
 
-    static void hook_post(struct framebuffer_device_t* dev, buffer_handle_t handle)
+    static int hook_post(struct framebuffer_device_t* mock_fb, buffer_handle_t handle)
     {
-        MockFBHalDevice* mocker = static_cast<MockFBHalDevice*>(mock_hwc);
-        return mocker->post_interface(mock_hwc, procs);
+        MockFBHalDevice* mocker = static_cast<MockFBHalDevice*>(mock_fb);
+        return mocker->post_interface(mock_fb, handle);
     }
 
     MOCK_METHOD2(post_interface, int(struct framebuffer_device_t*, buffer_handle_t));
