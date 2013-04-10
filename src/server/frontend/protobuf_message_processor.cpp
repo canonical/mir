@@ -159,7 +159,7 @@ void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
         break;
     }
 
-    // id zero is reserved for events. Zero will never be used for invocations.
+    // ID zero is reserved for events. Zero will never be used for invocations.
     send_response(0, &seq);
 }
 
