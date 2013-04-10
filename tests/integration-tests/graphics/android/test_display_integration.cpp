@@ -137,6 +137,7 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
     auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
+
     auto fbdev = std::shared_ptr<mga::FBDevice>(); 
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fbdev);
     auto display = std::make_shared<mga::HWCDisplay>(window, hwc);

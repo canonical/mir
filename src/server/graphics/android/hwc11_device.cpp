@@ -125,25 +125,6 @@ void mga::HWC11Device::wait_for_vsync()
     {
         vsync_trigger.wait(lk);
     }
-
-#if 0 
-    printf("preparing...\n");
-    auto& list = layer_organizer->native_list();
-
-    hwc_display = (hwc_display_contents_1_t*) malloc(sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size())); 
-
-    //auto i = 0u;
-    //for( auto& layer : list)
-   // {
-    //    hwc_display->hwLayers[i++] = *layer;
-   // }
-    hwc_display->hwLayers[0] = *(list[1]);
-
-    hwc_display->numHwLayers = 1; //list.size();
-    hwc_display->retireFenceFd = -1;
-
-    hwc_device->prepare(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display);
-#endif
 }
 
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer)
@@ -156,14 +137,15 @@ void mga::HWC11Device::commit_frame()
 {
     auto& list = layer_organizer->native_list();
 
-    hwc_display = (hwc_display_contents_1_t*) malloc(sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size())); 
+    //c-style malloc because of a hwLayers[0] at the end of the struct
+    auto hwc_display = (hwc_display_contents_1_t*) malloc(
+        sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size())); 
 
     auto i = 0u;
     for( auto& layer : list)
     {
         hwc_display->hwLayers[i++] = *layer;
     }
-
     hwc_display->numHwLayers = list.size();
     hwc_display->retireFenceFd = -1;
 
@@ -175,4 +157,6 @@ void mga::HWC11Device::commit_frame()
 
     if (hwc_display->retireFenceFd > 0)
         close(hwc_display->retireFenceFd);
+
+    free(hwc_display);
 }

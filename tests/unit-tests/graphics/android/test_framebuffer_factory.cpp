@@ -19,10 +19,9 @@
 #include "src/server/graphics/android/default_framebuffer_factory.h"
 #include "src/server/graphics/android/android_buffer_handle.h"
 #include "src/server/graphics/android/native_buffer_handle.h"
-#include "src/server/graphics/android/display_info_provider.h"
 #include "src/server/graphics/android/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir_test_doubles/mock_display_poster.h"
+#include "mir_test_doubles/mock_display_support_provider.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -49,7 +48,7 @@ class FBFactory  : public ::testing::Test
 public:
     FBFactory()
         : mock_buffer_allocator(std::make_shared<testing::NiceMock<MockAndroidGraphicBufferAllocator>>()),
-          mock_display_info_provider(std::make_shared<testing::NiceMock<mtd::MockDisplayInfoProvider>>()),
+          mock_display_info_provider(std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>()),
           fake_fb_num(2)
     {
         using namespace testing;
@@ -64,7 +63,7 @@ public:
     }
 
     std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
-    std::shared_ptr<mtd::MockDisplayInfoProvider> mock_display_info_provider;
+    std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_info_provider;
     unsigned int const fake_fb_num;
 };
 

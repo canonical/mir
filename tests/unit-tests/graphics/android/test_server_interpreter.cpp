@@ -22,7 +22,7 @@
 
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_swapper.h"
-#include "mir_test_doubles/mock_display_poster.h"
+#include "mir_test_doubles/mock_display_support_provider.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -52,7 +52,7 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_buffer3 = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size{geom::Width{3}, geom::Height{3}},
                                                         geom::Stride{34}, geom::PixelFormat::argb_8888);
         mock_swapper = std::make_shared<mtd::MockSwapper>(mock_buffer1);
-        mock_display_poster = std::make_shared<NiceMock<mtd::MockDisplayInfoProvider>>();
+        mock_display_poster = std::make_shared<NiceMock<mtd::MockDisplaySupportProvider>>();
         stub_sync = std::make_shared<MockSyncFence>();
     }
 
@@ -60,7 +60,7 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer2;
     std::shared_ptr<mtd::MockBuffer> mock_buffer3;
     std::shared_ptr<mtd::MockSwapper> mock_swapper;
-    std::shared_ptr<mtd::MockDisplayInfoProvider> mock_display_poster;
+    std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_poster;
     std::shared_ptr<MockSyncFence> stub_sync;
 };
 }

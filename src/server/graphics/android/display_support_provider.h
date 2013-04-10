@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_INFO_PROVIDER_H_
-#define MIR_GRAPHICS_ANDROID_DISPLAY_INFO_PROVIDER_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
@@ -34,10 +34,10 @@ namespace graphics
 namespace android
 {
 
-class DisplayInfoProvider
+class DisplaySupportProvider
 {
 public:
-    virtual ~DisplayInfoProvider() {}
+    virtual ~DisplaySupportProvider() {}
 
     virtual geometry::Size display_size() = 0; 
     virtual geometry::PixelFormat display_format() = 0; 
@@ -45,13 +45,13 @@ public:
     virtual void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
 
 protected:
-    DisplayInfoProvider() = default;
-    DisplayInfoProvider& operator=(DisplayInfoProvider const&) = delete;
-    DisplayInfoProvider(DisplayInfoProvider const&) = delete;
+    DisplaySupportProvider() = default;
+    DisplaySupportProvider& operator=(DisplaySupportProvider const&) = delete;
+    DisplaySupportProvider(DisplaySupportProvider const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_INFO_PROVIDER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_SUPPORT_PROVIDER_H_ */

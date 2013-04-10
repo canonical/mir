@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_POSTER_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_POSTER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_SUPPORT_PROVIDER_H_
+#define MIR_TEST_DOUBLES_MOCK_DISPLAY_SUPPORT_PROVIDER_H_
 
-#include "src/server/graphics/android/display_info_provider.h"
+#include "src/server/graphics/android/display_support_provider.h"
 #include <gmock/gmock.h>
  
 namespace mir
@@ -28,7 +28,7 @@ namespace test
 {
 namespace doubles
 {
-class MockDisplayInfoProvider : public graphics::android::DisplayInfoProvider
+class MockDisplaySupportProvider : public graphics::android::DisplaySupportProvider
 {
 public:
     MOCK_METHOD0(display_size, geometry::Size());
@@ -39,4 +39,4 @@ public:
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_POSTER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_SUPPORT_PROVIDER_H_ */

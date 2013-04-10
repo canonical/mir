@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/display_info_provider.h"
+#include "src/server/graphics/android/display_support_provider.h"
 #include "src/server/graphics/android/android_display_factory.h"
 #include "src/server/graphics/android/hwc_factory.h"
 #include "src/server/graphics/android/android_display_allocator.h"
@@ -64,7 +64,7 @@ struct MockDisplayAllocator: public mga::DisplayAllocator
 struct MockFNWFactory : public mga::FramebufferFactory
 { 
     MOCK_METHOD1(create_fb_native_window,
-                    std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplayInfoProvider> const&));
+                    std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplaySupportProvider> const&));
 };
 
 class AndroidDisplayFactoryTest : public ::testing::Test
@@ -167,7 +167,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
 
     std::shared_ptr<mga::HWCDevice> mock_hwc_device;
-    std::shared_ptr<mga::DisplayInfoProvider> xxxa;// = mock_hwc_device;
+    std::shared_ptr<mga::DisplaySupportProvider> xxxa;// = mock_hwc_device;
     auto stub_anativewindow = std::make_shared<ANativeWindow>();
   
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))

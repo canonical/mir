@@ -19,7 +19,7 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "default_framebuffer_factory.h"
-#include "display_info_provider.h"
+#include "display_support_provider.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
 #include "fb_swapper.h"
@@ -34,7 +34,7 @@ mga::DefaultFramebufferFactory::DefaultFramebufferFactory(std::shared_ptr<Graphi
 {
 }
 
-std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(std::shared_ptr<DisplayInfoProvider> const& info_provider)
+std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const& info_provider)
 {
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();

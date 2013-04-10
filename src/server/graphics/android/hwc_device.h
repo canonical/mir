@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
-#include "display_info_provider.h"
+#include "display_support_provider.h"
 
 namespace mir
 {
@@ -28,13 +28,13 @@ namespace graphics
 namespace android
 {
 
-class HWCDevice : public DisplayInfoProvider 
+class HWCDevice : public DisplaySupportProvider 
 {
 public:
     HWCDevice() = default;
     virtual ~HWCDevice() {}
 
-    /* from DisplayInfoProvider */
+    /* from DisplaySupportProvider */
     virtual geometry::Size display_size() = 0; 
     virtual geometry::PixelFormat display_format() = 0; 
     virtual unsigned int number_of_framebuffers_available() = 0;
