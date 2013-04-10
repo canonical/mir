@@ -46,59 +46,37 @@ public:
         : graphics_platform(graphics_platform)
     {
         context = this;
+        this->display_get_platform = &ShellMesaEGLNativeDisplay::native_display_get_platform;
+        this->surface_get_current_buffer = &ShellMesaEGLNativeDisplay::native_display_surface_get_current_buffer;
+        this->surface_get_parameters = &ShellMesaEGLNativeDisplay::native_display_surface_get_parameters;
+        this->surface_advance_buffer = &ShellMesaEGLNativeDisplay::native_display_surface_advance_buffer;
     }
 
     static void native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package)
     {
         auto native_disp = static_cast<ShellMesaEGLNativeDisplay*>(display);
-        native_disp->populate_platform_package(package);
-    }
-    
-    static void native_display_surface_get_current_buffer(MirMesaEGLNativeDisplay* display, 
-                                                          MirEGLNativeWindowType surface,
-                                                          MirBufferPackage* buffer_package)
-    {
-        auto native_disp = static_cast<ShellMesaEGLNativeDisplay*>(display);
-        auto mir_surface = static_cast<mf::Surface*>(surface);
-        native_disp->surface_get_current_buffer(mir_surface, buffer_package);
-    }
-
-    static void native_display_surface_get_parameters(MirMesaEGLNativeDisplay* display, 
-                                                      MirEGLNativeWindowType surface,
-                                                      MirSurfaceParameters* parameters)
-    {
-        auto native_disp = static_cast<ShellMesaEGLNativeDisplay*>(display);
-        auto mir_surface = static_cast<mf::Surface*>(surface);
-        native_disp->surface_get_parameters(mir_surface, parameters);
-    }
-
-    static void native_display_surface_advance_buffer(MirMesaEGLNativeDisplay* display, 
-                                                      MirEGLNativeWindowType surface)
-    {
-        auto native_disp = static_cast<ShellMesaEGLNativeDisplay*>(display);
-        auto mir_surface = static_cast<mf::Surface*>(surface);
-        native_disp->surface_advance_buffer(mir_surface);
-    }
-    
-    void populate_platform_package(MirPlatformPackage* package)
-    {
-        if (!platform_package)
-            platform_package = graphics_platform->get_ipc_package();
-        package->data_items = platform_package->ipc_data.size();
+        if (!native_disp->platform_package)
+            native_disp->platform_package = native_disp->graphics_platform->get_ipc_package();
+        package->data_items = native_disp->platform_package->ipc_data.size();
         for (int i = 0; i < package->data_items; i++)
         {
-            package->data[i] = platform_package->ipc_data[i];
+            package->data[i] = native_disp->platform_package->ipc_data[i];
         }
-        package->fd_items = platform_package->ipc_fds.size();
+        package->fd_items = native_disp->platform_package->ipc_fds.size();
         for (int i = 0; i < package->fd_items; i++)
         {
-            package->fd[i] = platform_package->ipc_fds[i];
+            package->fd[i] = native_disp->platform_package->ipc_fds[i];
         }
+
     }
     
-    void surface_get_current_buffer(mf::Surface* surface, MirBufferPackage* package)
+    static void native_display_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* display */, 
+                                                          MirEGLNativeWindowType surface,
+                                                          MirBufferPackage* package)
     {
-        auto buffer = surface->client_buffer();
+        auto mir_surface = static_cast<mf::Surface*>(surface);
+
+        auto buffer = mir_surface->client_buffer();
         auto buffer_package = buffer->get_ipc_package();
         package->data_items = buffer_package->ipc_data.size();
         for (int i = 0; i < package->data_items; i++)
@@ -112,18 +90,24 @@ public:
         }
         package->stride = buffer_package->stride;
     }
-    
-    void surface_advance_buffer(mf::Surface* surface)
+
+    static void native_display_surface_get_parameters(MirMesaEGLNativeDisplay* /* display  */, 
+                                                      MirEGLNativeWindowType surface,
+                                                      MirSurfaceParameters* parameters)
     {
-        surface->advance_client_buffer();
-    }
-    
-    void surface_get_parameters(mf::Surface* surface, MirSurfaceParameters* parameters)
-    {
-        parameters->width = surface->size().width.as_uint32_t();
-        parameters->height = surface->size().height.as_uint32_t();
-        parameters->pixel_format = static_cast<MirPixelFormat>(surface->pixel_format());
+        auto mir_surface = static_cast<mf::Surface*>(surface);
+
+        parameters->width = mir_surface->size().width.as_uint32_t();
+        parameters->height = mir_surface->size().height.as_uint32_t();
+        parameters->pixel_format = static_cast<MirPixelFormat>(mir_surface->pixel_format());
         parameters->buffer_usage = mir_buffer_usage_hardware;
+    }
+
+    static void native_display_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display */, 
+                                                      MirEGLNativeWindowType surface)
+    {
+        auto mir_surface = static_cast<mf::Surface*>(surface);
+        mir_surface->advance_client_buffer();
     }
 
 private:
