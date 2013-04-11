@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/application_session.h"
-#include "surface.h"
+#include "mir/shell/surface.h"
 
 #include "mir/shell/surface_factory.h"
 

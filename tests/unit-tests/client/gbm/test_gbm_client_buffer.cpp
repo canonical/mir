@@ -97,7 +97,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_maps_drm_buffer)
     using namespace testing;
     void *map_addr{reinterpret_cast<void*>(0xabcdef)};
 
-    EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_OPEN,_))
+    EXPECT_CALL(*drm_fd_handler, primeFDToHandle(_,_))
         .WillOnce(Return(0));
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_MODE_MAP_DUMB,_))
         .WillOnce(Return(0));
@@ -106,7 +106,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_maps_drm_buffer)
     EXPECT_CALL(*drm_fd_handler, unmap(_,_))
         .Times(1);
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
-        .WillOnce(Return(0));
+        .Times(1);
 
     mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
 
@@ -118,12 +118,12 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_maps_drm_buffer)
     ASSERT_EQ(pf, mem_region->format);
 }
 
-TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_gem_open_failure)
+TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_prime_handle_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_OPEN,_))
-        .WillOnce(Return(1));
+    EXPECT_CALL(*drm_fd_handler, primeFDToHandle(_,_))
+        .WillOnce(Return(-1));
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_MODE_MAP_DUMB,_))
         .Times(0);
     EXPECT_CALL(*drm_fd_handler, map(_,_))
@@ -144,7 +144,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_dumb_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_OPEN,_))
+    EXPECT_CALL(*drm_fd_handler, primeFDToHandle(_,_))
         .WillOnce(Return(0));
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_MODE_MAP_DUMB,_))
         .WillOnce(Return(1));
@@ -153,7 +153,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_dumb_failure)
     EXPECT_CALL(*drm_fd_handler, unmap(_,_))
         .Times(0);
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
-        .WillOnce(Return(0));
+        .Times(1);
 
     mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
 
@@ -166,7 +166,7 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_failure)
 {
     using namespace testing;
 
-    EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_OPEN,_))
+    EXPECT_CALL(*drm_fd_handler, primeFDToHandle(_,_))
         .WillOnce(Return(0));
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_MODE_MAP_DUMB,_))
         .WillOnce(Return(0));
@@ -175,11 +175,40 @@ TEST_F(MirGBMBufferTest, secure_for_cpu_write_throws_on_map_failure)
     EXPECT_CALL(*drm_fd_handler, unmap(_,_))
         .Times(0);
     EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
-        .WillOnce(Return(0));
+        .Times(1);
 
     mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
 
     EXPECT_THROW({
         auto mem_region = buffer.secure_for_cpu_write();
     }, std::runtime_error);
+}
+
+TEST_F(MirGBMBufferTest, prime_fd_closed_on_buffer_destruction)
+{
+    using namespace testing;
+
+    int const prime_fd{42};
+
+    package->fd[0] = prime_fd;
+    package->fd_items = 1;
+
+    EXPECT_CALL(*drm_fd_handler, close(prime_fd))
+        .Times(1);
+
+    mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
+}
+
+TEST_F(MirGBMBufferTest, buffer_does_not_take_a_gem_reference_when_not_mapping)
+{
+    using namespace testing;
+
+    // We don't map the buffer, so we don't need to take a GEM reference...
+    EXPECT_CALL(*drm_fd_handler, primeFDToHandle(_,_))
+        .Times(0);
+    // We haven't taken a GEM reference, so we shouldn't close it.
+    EXPECT_CALL(*drm_fd_handler, ioctl(DRM_IOCTL_GEM_CLOSE,_))
+        .Times(0);
+
+    mclg::GBMClientBuffer buffer(drm_fd_handler, package, size, pf);
 }

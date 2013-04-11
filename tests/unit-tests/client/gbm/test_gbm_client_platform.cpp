@@ -21,6 +21,8 @@
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
+#include "mir_toolkit/mesa/native_display.h"
+
 #include <gtest/gtest.h>
 
 namespace mcl = mir::client;
@@ -44,12 +46,12 @@ TEST(GBMClientPlatformTest, egl_native_display_is_valid_until_released)
     mcl::NativeClientPlatformFactory factory;
     auto platform = factory.create_client_platform(&context);
 
-    EGLNativeDisplayType nd;
+    MirMesaEGLNativeDisplay* nd;
     {
         std::shared_ptr<EGLNativeDisplayType> native_display = platform->create_egl_native_display();
 
-        nd = *native_display;
-        EXPECT_TRUE(mir_egl_native_display_is_valid(nd));
+        nd = reinterpret_cast<MirMesaEGLNativeDisplay*>(*native_display);
+        EXPECT_TRUE(mir_egl_mesa_display_is_valid(nd));
     }
-    EXPECT_FALSE(mir_egl_native_display_is_valid(nd));
+    EXPECT_FALSE(mir_egl_mesa_display_is_valid(nd));
 }

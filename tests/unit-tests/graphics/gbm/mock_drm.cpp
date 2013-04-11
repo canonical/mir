@@ -341,3 +341,13 @@ int drmAuthMagic(int fd, drm_magic_t magic)
 {
     return global_mock->drmAuthMagic(fd, magic);
 }
+
+int drmPrimeHandleToFD(int fd, uint32_t handle, uint32_t flags, int *prime_fd)
+{
+    return global_mock->drmPrimeHandleToFD(fd, handle, flags, prime_fd);
+}
+
+int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle)
+{
+    return global_mock->drmPrimeFDToHandle(fd, prime_fd, handle);
+}

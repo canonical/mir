@@ -23,6 +23,8 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "gbm_display_helpers.h"
 
+#include "mir_toolkit/mesa/native_display.h"
+
 namespace mir
 {
 namespace graphics
@@ -42,6 +44,8 @@ public:
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
     std::shared_ptr<Display> create_display();
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    
+    EGLNativeDisplayType shell_egl_display();
 
     /* From DRMAuthenticator */
     void drm_auth_magic(drm_magic_t magic);
@@ -50,6 +54,8 @@ public:
     helpers::GBMHelper gbm;
 
     std::shared_ptr<DisplayReport> listener;
+private:
+    std::shared_ptr<MirMesaEGLNativeDisplay> native_display;
 };
 
 }

@@ -78,6 +78,11 @@ class StubPlatform : public mg::Platform
     {
         return std::make_shared<mg::PlatformIPCPackage>();
     }
+
+    EGLNativeDisplayType shell_egl_display()
+    {
+        return static_cast<EGLNativeDisplayType>(0);
+    }
 };
 
 }

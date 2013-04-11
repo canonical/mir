@@ -17,6 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir/frontend/client_constants.h"
 #include "mir_logger.h"
 #include "client_buffer.h"
 #include "mir_surface.h"
@@ -42,7 +43,7 @@ MirSurface::MirSurface(
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
-      buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, 3)),
+      buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform),
       logger(logger)
 {
