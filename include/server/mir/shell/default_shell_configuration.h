@@ -40,7 +40,7 @@ public:
     DefaultShellConfiguration(std::shared_ptr<graphics::ViewableArea> const& view_area,
                               std::shared_ptr<InputFocusSelector> const& focus_selector,
                               std::shared_ptr<SurfaceFactory> const& surface_factory);
-    virtual ~DefaultShellConfiguration() = default;
+    virtual ~DefaultShellConfiguration() noexcept(true) = default;
 
     std::shared_ptr<SurfaceFactory> the_surface_factory();
     std::shared_ptr<SessionContainer> the_session_container();

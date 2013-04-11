@@ -33,7 +33,7 @@ class FocusSetter;
 class ShellConfiguration
 {
 public:
-    virtual ~ShellConfiguration() {}
+    virtual ~ShellConfiguration() = default;
 
     virtual std::shared_ptr<SurfaceFactory> the_surface_factory() = 0;
     virtual std::shared_ptr<SessionContainer> the_session_container() = 0;

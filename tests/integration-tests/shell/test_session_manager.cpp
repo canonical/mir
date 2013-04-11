@@ -48,6 +48,7 @@ struct TestingShellConfiguration : public msh::ShellConfiguration
       : sequence(mt::fake_shared(container))
     {
     }
+    ~TestingShellConfiguration() noexcept(true) {}
 
     std::shared_ptr<msh::SurfaceFactory> the_surface_factory()
     {

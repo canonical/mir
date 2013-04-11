@@ -67,6 +67,7 @@ struct MockFocusSequence: public msh::FocusSequence
 struct TestingShellConfiguration : public msh::ShellConfiguration
 {
     TestingShellConfiguration() {}
+    ~TestingShellConfiguration() noexcept(true) {}
 
     std::shared_ptr<msh::SurfaceFactory> the_surface_factory()
     {

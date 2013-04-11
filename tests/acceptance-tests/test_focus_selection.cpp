@@ -59,6 +59,8 @@ struct MockFocusShellConfiguration : public msh::DefaultShellConfiguration
     {
     }
     
+    ~MockFocusShellConfiguration() noexcept(true) {}
+    
     std::shared_ptr<msh::FocusSetter> the_focus_setter() override
     {
         return mt::fake_shared(mock_focus_setter);
