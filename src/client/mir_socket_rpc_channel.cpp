@@ -262,11 +262,22 @@ void mcl::MirSocketRpcChannel::read_message()
                     const int nevents = seq.event_size();
                     for (int i = 0; i < nevents; i++)
                     {
-                        mir::protobuf::Event const& pe = seq.event(i);
-                        if (pe.has_raw())
+                        mir::protobuf::Event const& event = seq.event(i);
+                        if (event.has_raw())
                         {
-                            event_handler->handle_event(
-                                *(MirEvent const*)pe.raw().data());
+                            std::string const& raw_event = event.raw();
+                            if (raw_event.size() == sizeof(MirEvent))
+                            {
+                                event_handler->handle_event(
+                                    *(MirEvent const*)raw_event.data());
+                            }
+                            else
+                            {
+                                log->error() << __PRETTY_FUNCTION__
+                                             << " Received MirEvent of an"
+                                                " unexpected size."
+                                             << std::endl;
+                            }
                         }
                     }
                 } // else protobuf will log an error
