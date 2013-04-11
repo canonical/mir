@@ -80,3 +80,4 @@ std::shared_ptr<mc::BufferIPCPackage> mc::TemporaryBuffer::get_ipc_package() con
 {
     return buffer->get_ipc_package();
 }
+

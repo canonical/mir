@@ -57,7 +57,6 @@ struct MockBuffer : public compositor::Buffer
 
         ON_CALL(*this, get_ipc_package())
                 .WillByDefault(Return(empty_package));
-                
         ON_CALL(*this, id())
                 .WillByDefault(Return(compositor::BufferID{4}));
     }
