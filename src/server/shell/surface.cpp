@@ -250,10 +250,10 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
         // about.
         memset(&e, 0, sizeof e);
 
-        e.type = mir_event_type_surface_change;
-        e.details.surface_change.id = id.as_value();
-        e.details.surface_change.attrib = attrib;
-        e.details.surface_change.value = value;
+        e.type = mir_event_type_surface;
+        e.surface.id = id.as_value();
+        e.surface.attrib = attrib;
+        e.surface.value = value;
 
         event_queue->post(e);
     }

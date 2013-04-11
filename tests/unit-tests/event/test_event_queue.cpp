@@ -33,10 +33,7 @@ TEST(EventQueue, no_sink)
         e.type = mir_event_type_motion;
         q.post(e);
 
-        e.type = mir_event_type_hw_switch;
-        q.post(e);
-
-        e.type = mir_event_type_surface_change;
+        e.type = mir_event_type_surface;
         q.post(e);
     });
 }
@@ -84,13 +81,9 @@ TEST(EventQueue, events_get_handled)
     q.post(e);
     EXPECT_EQ(mir_event_type_motion, s->last_event_handled().type);
 
-    e.type = mir_event_type_hw_switch;
+    e.type = mir_event_type_surface;
     q.post(e);
-    EXPECT_EQ(mir_event_type_hw_switch, s->last_event_handled().type);
-
-    e.type = mir_event_type_surface_change;
-    q.post(e);
-    EXPECT_EQ(mir_event_type_surface_change, s->last_event_handled().type);
+    EXPECT_EQ(mir_event_type_surface, s->last_event_handled().type);
 }
 
 TEST(EventQueue, sink_is_changeable)
@@ -108,19 +101,15 @@ TEST(EventQueue, sink_is_changeable)
     q.post(e);
     EXPECT_EQ(mir_event_type_motion, a->last_event_handled().type);
 
-    e.type = mir_event_type_hw_switch;
-    q.post(e);
-    EXPECT_EQ(mir_event_type_hw_switch, a->last_event_handled().type);
-
     q.set_sink(b);
 
-    e.type = mir_event_type_surface_change;
+    e.type = mir_event_type_surface;
     q.post(e);
-    EXPECT_EQ(mir_event_type_surface_change, b->last_event_handled().type);
-    EXPECT_EQ(mir_event_type_hw_switch, a->last_event_handled().type);
+    EXPECT_EQ(mir_event_type_surface, b->last_event_handled().type);
+    EXPECT_EQ(mir_event_type_motion, a->last_event_handled().type);
 
     e.type = mir_event_type_key;
     q.post(e);
     EXPECT_EQ(mir_event_type_key, b->last_event_handled().type);
-    EXPECT_EQ(mir_event_type_hw_switch, a->last_event_handled().type);
+    EXPECT_EQ(mir_event_type_motion, a->last_event_handled().type);
 }

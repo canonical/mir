@@ -314,11 +314,11 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
 
 void MirSurface::handle_event(MirEvent const& e)
 {
-    if (e.type == mir_event_type_surface_change)
+    if (e.type == mir_event_type_surface)
     {
-        MirSurfaceAttrib a = e.details.surface_change.attrib;
+        MirSurfaceAttrib a = e.surface.attrib;
         if (a < mir_surface_attrib_arraysize_)
-            attrib_cache[a] = e.details.surface_change.value;
+            attrib_cache[a] = e.surface.value;
     }
 
     if (handle_event_callback)

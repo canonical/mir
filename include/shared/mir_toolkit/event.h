@@ -39,7 +39,7 @@ typedef enum
 {
     mir_event_type_key,
     mir_event_type_motion,
-    mir_event_type_surface_change
+    mir_event_type_surface
 } MirEventType;
 
 typedef struct
@@ -95,6 +95,8 @@ typedef struct
 
 typedef struct
 {
+    MirEventType type;
+
     int id;
     MirSurfaceAttrib attrib;
     int value;

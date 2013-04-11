@@ -345,7 +345,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_states)
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, surface_change_events)
+TEST_F(DefaultDisplayServerTestFixture, surface_events)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -393,45 +393,30 @@ TEST_F(DefaultDisplayServerTestFixture, surface_change_events)
                                                mir_surface_state_fullscreen));
             mir_wait_for(mir_surface_set_state(other_surface,
                                                mir_surface_state_minimized));
-            EXPECT_EQ(surface,
-                      last_event_surface);
-            EXPECT_EQ(mir_event_type_surface_change,
-                      last_event.type);
-            EXPECT_EQ(surface_id,
-                      last_event.details.surface_change.id);
-            EXPECT_EQ(mir_surface_attrib_state,
-                      last_event.details.surface_change.attrib);
-            EXPECT_EQ(mir_surface_state_fullscreen,
-                      last_event.details.surface_change.value);
+            EXPECT_EQ(surface, last_event_surface);
+            EXPECT_EQ(mir_event_type_surface, last_event.type);
+            EXPECT_EQ(surface_id, last_event.surface.id);
+            EXPECT_EQ(mir_surface_attrib_state, last_event.surface.attrib);
+            EXPECT_EQ(mir_surface_state_fullscreen, last_event.surface.value);
 
             mir_wait_for(mir_surface_set_state(surface,
                                            static_cast<MirSurfaceState>(999)));
-            EXPECT_EQ(surface,
-                      last_event_surface);
-            EXPECT_EQ(mir_event_type_surface_change,
-                      last_event.type);
-            EXPECT_EQ(surface_id,
-                      last_event.details.surface_change.id);
-            EXPECT_EQ(mir_surface_attrib_state,
-                      last_event.details.surface_change.attrib);
-            EXPECT_EQ(mir_surface_state_fullscreen,
-                      last_event.details.surface_change.value);
+            EXPECT_EQ(surface, last_event_surface);
+            EXPECT_EQ(mir_event_type_surface, last_event.type);
+            EXPECT_EQ(surface_id, last_event.surface.id);
+            EXPECT_EQ(mir_surface_attrib_state, last_event.surface.attrib);
+            EXPECT_EQ(mir_surface_state_fullscreen, last_event.surface.value);
 
             memset(&last_event, 0, sizeof last_event);
             last_event_surface = nullptr;
 
             mir_wait_for(mir_surface_set_state(surface,
                                                mir_surface_state_minimized));
-            EXPECT_EQ(surface,
-                      last_event_surface);
-            EXPECT_EQ(mir_event_type_surface_change,
-                      last_event.type);
-            EXPECT_EQ(surface_id,
-                      last_event.details.surface_change.id);
-            EXPECT_EQ(mir_surface_attrib_state,
-                      last_event.details.surface_change.attrib);
-            EXPECT_EQ(mir_surface_state_minimized,
-                      last_event.details.surface_change.value);
+            EXPECT_EQ(surface, last_event_surface);
+            EXPECT_EQ(mir_event_type_surface, last_event.type);
+            EXPECT_EQ(surface_id, last_event.surface.id);
+            EXPECT_EQ(mir_surface_attrib_state, last_event.surface.attrib);
+            EXPECT_EQ(mir_surface_state_minimized, last_event.surface.value);
 
             memset(&last_event, 0, sizeof last_event);
             last_event_surface = nullptr;
@@ -440,16 +425,11 @@ TEST_F(DefaultDisplayServerTestFixture, surface_change_events)
                                            static_cast<MirSurfaceState>(777)));
             mir_wait_for(mir_surface_set_state(other_surface,
                                                mir_surface_state_maximized));
-            EXPECT_EQ(0,
-                      last_event_surface);
-            EXPECT_EQ(0,
-                      last_event.type);
-            EXPECT_EQ(0,
-                      last_event.details.surface_change.id);
-            EXPECT_EQ(0,
-                      last_event.details.surface_change.attrib);
-            EXPECT_EQ(0,
-                      last_event.details.surface_change.value);
+            EXPECT_EQ(0, last_event_surface);
+            EXPECT_EQ(0, last_event.type);
+            EXPECT_EQ(0, last_event.surface.id);
+            EXPECT_EQ(0, last_event.surface.attrib);
+            EXPECT_EQ(0, last_event.surface.value);
 
             mir_surface_release_sync(surface);
             mir_surface_release_sync(other_surface);

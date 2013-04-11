@@ -146,21 +146,16 @@ void mfd::ProtobufMessageProcessor::send_response(
 
 void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
 {
-    mir::protobuf::EventSequence seq;
-    mir::protobuf::Event *ev = seq.add_event();
-
-    switch (e.type)
+    // Limit the types of events we wish to send over protobuf, for now.
+    if (e.type == mir_event_type_surface)
     {
-    case mir_event_type_surface_change:
+        mir::protobuf::EventSequence seq;
+        mir::protobuf::Event *ev = seq.add_event();
         ev->set_raw(&e, sizeof(MirEvent));
-        break;
-    default:
-        assert(false);
-        break;
-    }
 
-    // ID zero is reserved for events. Zero will never be used for invocations.
-    send_response(0, &seq);
+        // ID zero is reserved for events
+        send_response(0, &seq);
+    }
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)

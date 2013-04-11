@@ -324,9 +324,9 @@ void MirConnection::handle_event(MirEvent const& e)
 {
     switch (e.type)
     {
-    case mir_event_type_surface_change:
+    case mir_event_type_surface:
         {
-            int id = e.details.surface_change.id;
+            int id = e.surface.id;
             SurfaceMap::iterator it = valid_surfaces.find(id);
             if (it != valid_surfaces.end())
             {
@@ -336,7 +336,7 @@ void MirConnection::handle_event(MirEvent const& e)
             else
             {
                 log->error() << __PRETTY_FUNCTION__
-                             << ": mir_event_type_surface_change "
+                             << ": mir_event_type_surface "
                              << "received for non-existent surface ID "
                              << id
                              << ".\n";
@@ -351,7 +351,7 @@ void MirConnection::handle_event(MirEvent const& e)
         log->error() << __PRETTY_FUNCTION__
                      << ": Unsupported event type " 
                      << e.type
-                     << "received from server.\n";
+                     << " received from server.\n";
         break;
     }
 }
