@@ -320,12 +320,12 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     return result;
 }
 
-void mcl::MirSocketRpcChannel::set_event_handler(mcl::EventHandler *h)
+void mcl::MirSocketRpcChannel::set_event_handler(mir::EventSink *sink)
 {
     /*
      * Yes, these have to be regular pointers. Because ownership of the object
      * (which is actually a MirConnection) is the responsibility of the calling
      * client. So out of our control.
      */
-    event_handler = h;
+    event_handler = sink;
 }
