@@ -187,8 +187,7 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
     case mir_surface_attrib_state:
         if (value != mir_surface_state_unknown &&
             !set_state(static_cast<MirSurfaceState>(value)))
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                                   "state."));
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
         result = state();
         break;
     default:
@@ -247,7 +246,7 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 
         // This memset is not really required. However it does avoid some
         // harmless uninitialized memory reads that valgrind will complain
-        // about.
+        // about, due to gaps in MirEvent.
         memset(&e, 0, sizeof e);
 
         e.type = mir_event_type_surface;
