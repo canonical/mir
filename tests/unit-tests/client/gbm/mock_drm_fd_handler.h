@@ -34,6 +34,8 @@ class MockDRMFDHandler : public DRMFDHandler
 {
 public:
     MOCK_METHOD2(ioctl, int(unsigned long request, void* arg));
+    MOCK_METHOD2(primeFDToHandle, int(int prime_fd, uint32_t *handle));
+    MOCK_METHOD1(close, int(int fd));
     MOCK_METHOD2(map, void*(size_t size, off_t offset));
     MOCK_METHOD2(unmap, void(void* addr, size_t size));
 };

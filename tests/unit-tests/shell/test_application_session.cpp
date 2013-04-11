@@ -25,7 +25,7 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface.h"
 
-#include "src/server/shell/surface.h"
+#include "mir/shell/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

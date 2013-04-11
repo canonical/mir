@@ -35,7 +35,9 @@ extern "C"
 static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay* display,
                                          MirPlatformPackage* package)
 {
-    mir_connection_get_platform(display->context, package);
+    auto connection = static_cast<MirConnection*>(display->context);
+
+    mir_connection_get_platform(connection, package);
 }
 
 static void gbm_egl_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* display */,
@@ -64,6 +66,11 @@ static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display *
 {
     MirSurface* ms = static_cast<MirSurface*>(surface);
     mir_surface_get_parameters(ms,  surface_parameters);
+}
+
+int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
+{
+    return mcl::EGLNativeDisplayContainer::instance().validate(display);
 }
 
 }
