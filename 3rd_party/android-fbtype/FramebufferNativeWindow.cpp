@@ -79,17 +79,12 @@ public:
  * 
  */
 
-FramebufferNativeWindow::FramebufferNativeWindow() 
-    :/* BASE(), */ fbDev(0), grDev(0), mUpdateOnDemand(false)
+FramebufferNativeWindow::FramebufferNativeWindow(hw_module_t const* module, std::shared_ptr<framebuffer_device_t> const& fb)
+    :/* BASE(), */ fbDev(fb), grDev(0), mUpdateOnDemand(false)
 {
-    hw_module_t const* module;
 
-    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) == 0) {
         int err;
         int i;
-    printf("probably hanging here...\n");
-        err = framebuffer_open(module, &fbDev);
-    printf(" checkprobably hanging here...\n");
         
         err = gralloc_open(module, &grDev);
 
@@ -133,7 +128,6 @@ FramebufferNativeWindow::FramebufferNativeWindow()
             fbDev->minSwapInterval;
         const_cast<int&>(ANativeWindow::maxSwapInterval) = 
             fbDev->maxSwapInterval;
-    }
 
     common.incRef = incRef;
     common.decRef = incRef; 
@@ -161,9 +155,9 @@ FramebufferNativeWindow::~FramebufferNativeWindow()
         gralloc_close(grDev);
     }
 
-    if (fbDev) {
-        framebuffer_close(fbDev);
-    }
+  //  if (fbDev) {
+//        framebuffer_close(fbDev.get());
+ //   }
 }
 
 status_t FramebufferNativeWindow::setUpdateRectangle(const Rect& r) 
@@ -171,13 +165,13 @@ status_t FramebufferNativeWindow::setUpdateRectangle(const Rect& r)
     if (!mUpdateOnDemand) {
         return INVALID_OPERATION;
     }
-    return fbDev->setUpdateRect(fbDev, r.left, r.top, r.width(), r.height());
+    return fbDev->setUpdateRect(fbDev.get(), r.left, r.top, r.width(), r.height());
 }
 
 status_t FramebufferNativeWindow::compositionComplete()
 {
     if (fbDev->compositionComplete) {
-        return fbDev->compositionComplete(fbDev);
+        return fbDev->compositionComplete(fbDev.get());
     }
     return INVALID_OPERATION;
 }
@@ -185,7 +179,7 @@ status_t FramebufferNativeWindow::compositionComplete()
 int FramebufferNativeWindow::setSwapInterval(
         ANativeWindow* window, int interval) 
 {
-    framebuffer_device_t* fb =  static_cast<FramebufferNativeWindow*>(window)->fbDev;
+    framebuffer_device_t* fb =  static_cast<FramebufferNativeWindow*>(window)->fbDev.get();
     return fb->setSwapInterval(fb, interval);
 }
 
@@ -194,7 +188,7 @@ void FramebufferNativeWindow::dump(String8& result) {
         const size_t SIZE = 4096;
         char buffer[SIZE];
 
-        fbDev->dump(fbDev, buffer, SIZE);
+        fbDev->dump(fbDev.get(), buffer, SIZE);
         result.append(buffer);
     }
 }
@@ -223,7 +217,7 @@ int FramebufferNativeWindow::dequeueBuffer(ANativeWindow* window,
         self->mCondition.wait(lk);
     }
 
-    framebuffer_device_t* fb = self->fbDev;
+    framebuffer_device_t* fb = self->fbDev.get();
 
     int index = self->mBufferHead++;
     if (self->mBufferHead >= self->mNumBuffers)
@@ -257,7 +251,7 @@ int FramebufferNativeWindow::queueBuffer(ANativeWindow* window,
     FramebufferNativeWindow* self = static_cast<FramebufferNativeWindow*>(window);
     std::unique_lock<std::mutex> lk(self->mutex);
 
-    framebuffer_device_t* fb = self->fbDev;
+    framebuffer_device_t* fb = self->fbDev.get();
     buffer_handle_t handle = static_cast<NativeBuffer*>(buffer)->handle;
 
     if (fenceFd > 0)
@@ -279,7 +273,7 @@ int FramebufferNativeWindow::query(const ANativeWindow* window,
     FramebufferNativeWindow* self = static_cast<FramebufferNativeWindow*>(fbwin);
     std::unique_lock<std::mutex> lk(self->mutex);
 
-    framebuffer_device_t* fb = self->fbDev;
+    framebuffer_device_t* fb = self->fbDev.get();
     switch (what) {
         case NATIVE_WINDOW_WIDTH:
             *value = fb->width;

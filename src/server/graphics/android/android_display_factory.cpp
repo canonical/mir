@@ -57,6 +57,7 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
                      fbdevice->common.close((hw_device_t*) fbdevice);
                   });
 #endif
+
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
     if ((rc != 0) || (hw_module == nullptr))
@@ -97,6 +98,19 @@ void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
 
 std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
 { 
+    hw_module_t const* module;
+    hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
+    framebuffer_device_t* fbdev_raw;
+    if(framebuffer_open(module, &fbdev_raw) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
+    }
+    auto fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
+                  [](struct framebuffer_device_t* fbdevice)
+                  {
+                     fbdevice->common.close((hw_device_t*) fbdevice);
+                  });
+
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
         //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
@@ -106,7 +120,7 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
     }
     else
     {
-        auto native_window = std::make_shared< ::android::FramebufferNativeWindow>();
+        auto native_window = std::make_shared< ::android::FramebufferNativeWindow>(module, fb_dev);
         return display_factory->create_gpu_display(native_window);
     }
 }

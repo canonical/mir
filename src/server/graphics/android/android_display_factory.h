@@ -51,7 +51,8 @@ private:
     std::shared_ptr<HWCFactory> hwc_factory;
     std::shared_ptr<FramebufferFactory> fb_factory;
     std::shared_ptr<hwc_composer_device_1> hwc_dev;
-    std::shared_ptr<framebuffer_device_t> fb_dev;
+//    std::shared_ptr<framebuffer_device_t> fb_dev;
+
 };
 
 }
