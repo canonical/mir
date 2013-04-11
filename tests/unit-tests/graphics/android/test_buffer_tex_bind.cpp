@@ -16,10 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/graphics/android/buffer.h"
+
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test/egl_mock.h"
 
+#include <stdexcept>
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;

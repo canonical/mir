@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
-#include "android_buffer.h"
+#include "buffer.h"
 
 #include <boost/throw_exception.hpp>
 

@@ -32,6 +32,7 @@
 #include <gmock/gmock.h>
 #include <thread>
 #include <hardware/gralloc.h>
+#include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
 namespace mtf = mir_test_framework;

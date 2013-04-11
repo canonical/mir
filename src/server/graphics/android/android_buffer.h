@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012,2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -21,19 +21,9 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_H_
 
 #include "mir/compositor/buffer_basic.h"
-#include "graphic_alloc_adaptor.h"
-#include "android_buffer_handle.h"
 
 #include <system/window.h>
-#include <map>
-#include <stdexcept>
 #include <memory>
-
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 
 namespace mir
 {
@@ -52,34 +42,6 @@ protected:
     AndroidBuffer(AndroidBuffer const&) = delete;
     AndroidBuffer& operator=(AndroidBuffer const&) = delete;
 
-};
-
-class Buffer: public AndroidBuffer 
-{
-public:
-    Buffer(const std::shared_ptr<GraphicAllocAdaptor>& device,
-                  geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
-    ~Buffer();
-
-    /* from BufferBasic */
-    geometry::Size size() const;
-
-    geometry::Stride stride() const;
-
-    geometry::PixelFormat pixel_format() const;
-
-    std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
-    
-    void bind_to_texture();
-
-    /* android-specific */
-    std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
-private:
-    const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-
-    std::map<EGLDisplay,EGLImageKHR> egl_image_map;
-
-    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
 };
 
 }

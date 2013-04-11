@@ -17,13 +17,14 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "android_buffer.h"
+#include "buffer.h"
+#include "graphic_alloc_adaptor.h"
 
 #include <system/window.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
