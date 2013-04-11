@@ -22,6 +22,7 @@
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
+#include "virtual_terminal.h"
 
 #include "mir/geometry/rectangle.h"
 
@@ -36,6 +37,8 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)}
 {
+    platform->vt->set_graphics_mode();
+
     shared_egl.setup(platform->gbm);
 
     configure(configuration());
