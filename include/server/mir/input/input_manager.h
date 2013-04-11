@@ -34,10 +34,7 @@ class ViewableArea;
 
 namespace input
 {
-class EventFilter;
 class InputChannel;
-class SessionTarget;
-class SurfaceTarget;
 
 class InputManager : public InputChannelFactory
 {
