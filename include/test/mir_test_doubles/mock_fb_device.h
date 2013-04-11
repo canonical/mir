@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_HWC_COMPOSER_DEVICE_1_H_
-#define MIR_TEST_DOUBLES_MOCK_HWC_COMPOSER_DEVICE_1_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
+#define MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
 
 #include <hardware/hwcomposer.h>
 #include <gmock/gmock.h>
@@ -56,5 +56,4 @@ public:
 }
 }
 }
-
-#endif /* MIR_TEST_DOUBLES_MOCK_HWC_COMPOSER_DEVICE_1_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_ */

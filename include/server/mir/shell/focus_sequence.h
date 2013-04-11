@@ -42,8 +42,8 @@ public:
 
 protected:
     FocusSequence() = default;
-    FocusSequence(const FocusSequence&) = delete;
-    FocusSequence& operator=(const FocusSequence&) = delete;
+    FocusSequence(FocusSequence const&) = delete;
+    FocusSequence& operator=(FocusSequence const&) = delete;
 };
 
 }

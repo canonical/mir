@@ -39,9 +39,9 @@ class DisplaySupportProvider
 public:
     virtual ~DisplaySupportProvider() {}
 
-    virtual geometry::Size display_size() = 0; 
-    virtual geometry::PixelFormat display_format() = 0; 
-    virtual unsigned int number_of_framebuffers_available() = 0;
+    virtual geometry::Size display_size() const = 0; 
+    virtual geometry::PixelFormat display_format() const = 0; 
+    virtual unsigned int number_of_framebuffers_available() const = 0;
     virtual void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
 
 protected:

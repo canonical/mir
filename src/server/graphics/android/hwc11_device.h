@@ -48,9 +48,9 @@ public:
                 std::shared_ptr<FBDevice> const& fbdev);
     ~HWC11Device();
 
-    geometry::Size display_size(); 
-    geometry::PixelFormat display_format();
-    unsigned int number_of_framebuffers_available();
+    geometry::Size display_size() const; 
+    geometry::PixelFormat display_format() const;
+    unsigned int number_of_framebuffers_available() const;
     void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
  
     void wait_for_vsync();

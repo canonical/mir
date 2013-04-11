@@ -22,7 +22,7 @@
 #include "mir/shell/input_focus_selector.h"
 
 #include "mir/shell/session.h"
-#include "surface.h" // TODO: Cleanup headers ~racarr
+#include "mir/shell/surface.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;

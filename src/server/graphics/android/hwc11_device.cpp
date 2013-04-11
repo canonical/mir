@@ -83,7 +83,7 @@ mga::HWC11Device::~HWC11Device()
     hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
 
-geom::Size mga::HWC11Device::display_size()
+geom::Size mga::HWC11Device::display_size() const
 {
     static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
                                         HWC_DISPLAY_HEIGHT,
@@ -98,12 +98,12 @@ geom::Size mga::HWC11Device::display_size()
     return geom::Size{geom::Width{size_values[0]}, geom::Height{size_values[1]}};
 }
 
-geom::PixelFormat mga::HWC11Device::display_format()
+geom::PixelFormat mga::HWC11Device::display_format() const
 {
     return geom::PixelFormat::abgr_8888;
 }
 
-unsigned int mga::HWC11Device::number_of_framebuffers_available()
+unsigned int mga::HWC11Device::number_of_framebuffers_available() const
 {
     //note: the default for hwc devices is 2 framebuffers. However, the api allows for the hwc can give us a hint
     //      to triple buffer. Taking this hint is currently not supported
