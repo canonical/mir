@@ -36,11 +36,11 @@ struct PrintingEventFilter : public mi::EventFilter
     {
         // TODO: Enhance printing
         if (ev.type == mir_event_type_key)
-            std::cout << "Handling key event (time, scancode, keycode): " << ev.details.key.event_time << " " 
-                << ev.details.key.scan_code << " " << ev.details.key.key_code << std::endl;
+            std::cout << "Handling key event (time, scancode, keycode): " << ev.key.event_time << " " 
+                << ev.key.scan_code << " " << ev.key.key_code << std::endl;
         else if (ev.type == mir_event_type_motion)
-            std::cout << "Handling motion event (time, pointer0_x, pointer0_y): " << ev.details.motion.event_time << " "
-                << ev.details.motion.pointer_coordinates[0].x << " " << ev.details.motion.pointer_coordinates[0].y << std::endl;
+            std::cout << "Handling motion event (time, pointer0_x, pointer0_y): " << ev.motion.event_time << " "
+                << ev.motion.pointer_coordinates[0].x << " " << ev.motion.pointer_coordinates[0].y << std::endl;
 
         return true;
     }
