@@ -193,13 +193,27 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
     render_window.driver_returns_buffer(handle1, stub_sync);
 }
 
-/* todo: service driver requests for format. for now just return compatible type */
+TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
+{
+    using namespace testing;
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+   
+    EXPECT_CALL(*mock_display_poster, display_format())
+        .Times(1)
+        .WillOnce(Return(geom::PixelFormat::abgr_8888));
+
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, render_window.driver_requests_info(NATIVE_WINDOW_FORMAT)); 
+}
+
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
 {
     using namespace testing;
 
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+    EXPECT_CALL(*mock_display_poster, display_format())
+        .Times(0);
 
+    render_window.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
     auto rc_format = render_window.driver_requests_info(NATIVE_WINDOW_FORMAT);
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, rc_format); 
 }

@@ -135,7 +135,6 @@ TEST_F(HWCLayerListTest, set_fb_target_2x)
     EXPECT_EQ(stub_handle_2->handle, list[0]->handle); 
 }
 
-//construction is a bit funny because hwc_layer_1 has unions
 struct TestingHWCLayer : public hwc_layer_1
 {
     TestingHWCLayer(
