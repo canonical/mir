@@ -48,6 +48,7 @@ class MessageProcessorReport;
 
 namespace shell
 {
+class ShellConfiguration;
 class SessionManager;
 class SurfaceFactory;
 class SurfaceSource;
@@ -108,6 +109,7 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport> the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
 
+    virtual std::shared_ptr<shell::ShellConfiguration> the_shell_configuration();
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
     virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
 
@@ -130,13 +132,14 @@ protected:
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
 
     CachedPtr<frontend::Communicator> communicator;
+    CachedPtr<shell::ShellConfiguration> shell_configuration;
     CachedPtr<frontend::Shell> session_manager;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
-
+    
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;

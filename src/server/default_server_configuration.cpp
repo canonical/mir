@@ -288,15 +288,24 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
         });
 }
 
+std::shared_ptr<msh::ShellConfiguration>
+mir::DefaultServerConfiguration::the_shell_configuration()
+{
+    return shell_configuration(
+        [this]()
+        {
+            return std::make_shared<msh::DefaultShellConfiguration>(the_display(), the_input_focus_selector(),
+                                                                    the_surface_factory());
+        });
+}
+
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
 {
     return session_manager(
-        [this]() -> std::shared_ptr<msh::SessionManager>
+        [this]()
         {
-            auto configuration = std::make_shared<msh::DefaultShellConfiguration>(the_display(), the_input_focus_selector(),
-                                                                                  the_surface_factory());
-            return std::make_shared<msh::SessionManager>(configuration);
+            return std::make_shared<msh::SessionManager>(the_shell_configuration());
         });
 }
 
