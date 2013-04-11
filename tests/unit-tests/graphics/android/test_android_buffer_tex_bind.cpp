@@ -35,15 +35,16 @@ public:
     {
         using namespace testing;
 
-        mock_buffer_handle = std::make_shared<mtd::MockBufferHandle>();
-        mock_alloc_dev = std::make_shared<mtd::MockAllocAdaptor>();
+        mock_buffer_handle = std::make_shared<NiceMock<mtd::MockBufferHandle>>();
+        ON_CALL(*mock_buffer_handle, native_buffer_handle())
+            .WillByDefault(Return(stub_buffer)); 
+        mock_alloc_dev = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
         ON_CALL(*mock_alloc_dev, alloc_buffer(_,_,_))
             .WillByDefault(Return(mock_buffer_handle));
 
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::abgr_8888;
-        buffer = std::shared_ptr<mc::Buffer>(
-                     new mga::Buffer(mock_alloc_dev, size, pf, mga::BufferUsage::use_hardware));
+        buffer = std::make_shared<mga::Buffer>(mock_alloc_dev, size, pf, mga::BufferUsage::use_hardware);
 
         egl_mock.silence_uninteresting();
         gl_mock.silence_uninteresting();
@@ -51,16 +52,17 @@ public:
     virtual void TearDown()
     {
         buffer.reset();
-    };
+    }
 
     geom::Size size;
     geom::PixelFormat pf;
 
-    std::shared_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mga::Buffer> buffer;
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;
     std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_dev;
     std::shared_ptr<mtd::MockBufferHandle> mock_buffer_handle;
+    std::shared_ptr<ANativeWindowBuffer> stub_buffer;
 };
 
 TEST_F(AndroidBufferBinding, buffer_queries_for_display)

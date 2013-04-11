@@ -41,6 +41,9 @@ struct MockSyncFence : public mga::SyncObject
 
 struct MockFBSwapper : public mga::FBSwapper
 {
+    MockFBSwapper()
+    {
+    }
     MOCK_METHOD0(compositor_acquire, std::shared_ptr<mga::AndroidBuffer>());
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<mga::AndroidBuffer> const& released_buffer));
 }; 
@@ -76,7 +79,8 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
     auto stub_anw = std::make_shared<ANativeWindowBuffer>();
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
-        .Times(1);
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
         .WillOnce(Return(stub_anw));

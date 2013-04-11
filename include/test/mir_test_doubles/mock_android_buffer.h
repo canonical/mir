@@ -13,17 +13,15 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
-#define MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_BUFFER_H_
+#define MIR_TEST_DOUBLES_MOCK_ANDROID_BUFFER_H_
 
-#include "src/server/graphics/android/graphic_alloc_adaptor.h"
 #include "src/server/graphics/android/android_buffer.h"
-
-#include <system/window.h>
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 namespace mir
 {
@@ -32,32 +30,28 @@ namespace test
 namespace doubles
 {
 
-class MockBufferHandle : public graphics::android::AndroidBufferHandle
+struct MockAndroidBuffer : public mir::graphics::android::AndroidBuffer
 {
-public:
-    MockBufferHandle()
+ public:
+    MockAndroidBuffer()
     {
+        using namespace testing;
+        ON_CALL(*this, native_buffer_handle())
+            .WillByDefault(Return(std::make_shared<ANativeWindowBuffer>()));
     }
-    MOCK_CONST_METHOD0(size,   geometry::Size());
+
+    MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
-    MOCK_CONST_METHOD0(format, geometry::PixelFormat());
-    MOCK_CONST_METHOD0(usage,  graphics::android::BufferUsage());
+    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<compositor::BufferIPCPackage>());
+
+    MOCK_METHOD0(bind_to_texture, void());
+    MOCK_CONST_METHOD0(id, compositor::BufferID());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<ANativeWindowBuffer>());
 };
 
-class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
-{
-public:
-    MockAllocAdaptor()
-    {
-    }
-
-    MOCK_METHOD3(alloc_buffer, std::shared_ptr<graphics::android::AndroidBufferHandle>(geometry::Size, geometry::PixelFormat, graphics::android::BufferUsage));
-};
-
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_ */
+#endif // MIR_TEST_DOUBLES_MOCK_ANDROID_BUFFER_H_
