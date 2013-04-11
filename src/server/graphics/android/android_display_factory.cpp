@@ -38,26 +38,6 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
       hwc_factory(hwc_factory),
       fb_factory(fb_factory)
 {
-
-#if 0
-    hw_module_t const* module;
-    framebuffer_device_t* fbdev_raw;
-    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module) != 0) 
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
-    }   
-    if(framebuffer_open(module, &fbdev_raw) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
-    }
-
-    fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
-                  [](struct framebuffer_device_t* fbdevice)
-                  {
-                     fbdevice->common.close((hw_device_t*) fbdevice);
-                  });
-#endif
-
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
     if ((rc != 0) || (hw_module == nullptr))
@@ -97,7 +77,8 @@ void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
 }
 
 std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
-{ 
+{
+    /* todo: move to constructor after transitioning 100% from FramebufferNativeWindow */
     hw_module_t const* module;
     hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
     framebuffer_device_t* fbdev_raw;
@@ -106,10 +87,10 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
         BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
     }
     auto fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
-                  [](struct framebuffer_device_t* fbdevice)
-                  {
-                     fbdevice->common.close((hw_device_t*) fbdevice);
-                  });
+                      [](struct framebuffer_device_t* fbdevice)
+                      {
+                         fbdevice->common.close((hw_device_t*) fbdevice);
+                      });
 
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {

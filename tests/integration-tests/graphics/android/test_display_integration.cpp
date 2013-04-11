@@ -20,7 +20,7 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "src/server/graphics/android/hwc_display.h"
-#include "src/server/graphics/android/fb_device.h"
+#include "src/server/graphics/android/default_fb_device.h"
 
 #include "mir/draw/graphics.h"
 #include "mir_test/draw/android_graphics.h"
@@ -49,12 +49,17 @@ protected:
         /* this is an important precondition for acquiring the display! */
         ASSERT_FALSE(mtd::is_surface_flinger_running());
 
-        /* note about android_window: OMAP4 drivers seem to only be able to open fb once
-           per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
-           figure out why, we can remove android_window in the test fixture */
-        android_window = std::make_shared< ::android::FramebufferNativeWindow>();
 
         /* determine hwc11 capable devices so we can skip the hwc11 tests on non supported tests */
+        hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &gr_module);
+        framebuffer_device_t* fbdev_raw;
+        framebuffer_open(gr_module, &fbdev_raw);
+        auto fb_device = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
+                          [](struct framebuffer_device_t* fbdevice)
+                          {
+                             fbdevice->common.close((hw_device_t*) fbdevice);
+                          });
+
         run_hwc11_tests = false;
         const hw_module_t *hw_module;
         int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
@@ -71,6 +76,12 @@ protected:
                 }
             }
         }
+
+        /* note about android_window: OMAP4 drivers seem to only be able to open fb once
+           per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
+           figure out why, we can remove android_window in the test fixture */
+        android_window = std::make_shared< ::android::FramebufferNativeWindow>(gr_module, fb_device);
+
     }
 
     md::glAnimationBasic gl_animation;
@@ -84,10 +95,14 @@ protected:
     static bool run_hwc11_tests;
     static std::shared_ptr< ::android::FramebufferNativeWindow> android_window;
     static std::shared_ptr<hwc_composer_device_1> hwc_device;
+    static std::shared_ptr<framebuffer_device_t> fb_device;
+    static hw_module_t const* gr_module;
 };
 
 std::shared_ptr< ::android::FramebufferNativeWindow> AndroidGPUDisplay::android_window;
 std::shared_ptr<hwc_composer_device_1> AndroidGPUDisplay::hwc_device;
+std::shared_ptr<framebuffer_device_t> AndroidGPUDisplay::fb_device;
+hw_module_t const* AndroidGPUDisplay::gr_module;
 bool AndroidGPUDisplay::run_hwc11_tests;
 
 }
@@ -134,11 +149,10 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 
     using namespace testing;
 
-    auto android_window = std::make_shared< ::android::FramebufferNativeWindow>();
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (android_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
-    auto fbdev = std::shared_ptr<mga::FBDevice>(); 
+    auto fbdev = std::make_shared<mga::DefaultFBDevice>(fb_device); 
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fbdev);
     auto display = std::make_shared<mga::HWCDisplay>(window, hwc);
 
