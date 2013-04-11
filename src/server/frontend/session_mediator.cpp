@@ -33,6 +33,8 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/frontend/client_constants.h"
+#include "client_buffer_tracker.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -48,7 +50,8 @@ mir::frontend::SessionMediator::SessionMediator(
     viewable_area(viewable_area),
     buffer_allocator(buffer_allocator),
     report(report),
-    resource_cache(resource_cache)
+    resource_cache(resource_cache),
+    client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size))
 {
 }
 
@@ -122,20 +125,25 @@ void mir::frontend::SessionMediator::create_surface(
         auto const& buffer_resource = surface->client_buffer();
 
         auto const& id = buffer_resource->id();
-        auto ipc_package = buffer_resource->get_ipc_package();
-        auto buffer = response->mutable_buffer();
 
+        auto buffer = response->mutable_buffer();
         buffer->set_buffer_id(id.as_uint32_t());
 
-        for (auto& data : ipc_package->ipc_data)
-            buffer->add_data(data);
+        if (!client_tracker->client_has(id))
+        {
+            auto ipc_package = buffer_resource->get_ipc_package();
 
-        for (auto& ipc_fds : ipc_package->ipc_fds)
-            buffer->add_fd(ipc_fds);
+            for (auto& data : ipc_package->ipc_data)
+                buffer->add_data(data);
 
-        buffer->set_stride(ipc_package->stride);
+            for (auto& ipc_fds : ipc_package->ipc_fds)
+                buffer->add_fd(ipc_fds);
 
-        resource_cache->save_resource(response, ipc_package);
+            buffer->set_stride(ipc_package->stride);
+
+            resource_cache->save_resource(response, ipc_package);
+        }
+        client_tracker->add(id);
     }
 
     done->Run();
@@ -157,18 +165,23 @@ void mir::frontend::SessionMediator::next_buffer(
     surface->advance_client_buffer();
     auto const& buffer_resource = surface->client_buffer();
     auto const& id = buffer_resource->id();
-    auto ipc_package = buffer_resource->get_ipc_package();
-
     response->set_buffer_id(id.as_uint32_t());
-    for (auto& data : ipc_package->ipc_data)
-        response->add_data(data);
 
-    for (auto& ipc_fds : ipc_package->ipc_fds)
-        response->add_fd(ipc_fds);
+    if (!client_tracker->client_has(id))
+    {
+        auto ipc_package = buffer_resource->get_ipc_package();
 
-    response->set_stride(ipc_package->stride);
+        for (auto& data : ipc_package->ipc_data)
+            response->add_data(data);
 
-    resource_cache->save_resource(response, ipc_package);
+        for (auto& ipc_fds : ipc_package->ipc_fds)
+            response->add_fd(ipc_fds);
+
+        response->set_stride(ipc_package->stride);
+
+        resource_cache->save_resource(response, ipc_package);
+    }
+    client_tracker->add(id);
     done->Run();
 }
 

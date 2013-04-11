@@ -85,7 +85,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     {
     }
     
-    void exec(mir::DisplayServer* /* display_server */) override
+    void exec() override
     {
         input_injection_thread = std::thread([this]() -> void
         {

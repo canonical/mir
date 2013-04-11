@@ -35,7 +35,7 @@ TEST_F(BespokeDisplayServerTestFixture, DISABLED_failing_server_side_test)
 {
     struct Server : TestingServerConfiguration
     {
-        void exec(mir::DisplayServer* )
+        void exec()
         {
             using namespace testing;
             FAIL() << "Proving a test can fail";

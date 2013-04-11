@@ -38,8 +38,6 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 
-namespace mir
-{
 struct ProtobufCommunicator : public ::testing::Test
 {
     static void SetUpTestCase()
@@ -258,5 +256,4 @@ TEST_F(ProtobufCommunicator, drm_auth_magic_is_processed_by_the_server)
     client->wait_for_drm_auth_magic_done();
 
     EXPECT_EQ(magic.magic(), stub_server_tool->drm_magic);
-}
 }

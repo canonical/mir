@@ -37,7 +37,7 @@ public:
     TestingServerConfiguration();
 
     // Code to run in server process
-    virtual void exec(DisplayServer* display_server);
+    virtual void exec();
 
     // Code to run in server process after server exits
     virtual void on_exit();
