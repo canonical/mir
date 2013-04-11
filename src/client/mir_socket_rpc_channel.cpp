@@ -266,6 +266,9 @@ void mcl::MirSocketRpcChannel::read_message()
                         if (event.has_raw())
                         {
                             std::string const& raw_event = event.raw();
+
+                            // In future, events might be compressed where
+                            // possible. But that's a job for later...
                             if (raw_event.size() == sizeof(MirEvent))
                             {
                                 event_handler->handle_event(
