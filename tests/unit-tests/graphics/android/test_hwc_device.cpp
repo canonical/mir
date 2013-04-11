@@ -34,6 +34,8 @@ namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
+namespace
+{
 struct MockHWCOrganizer : public mga::HWCLayerOrganizer
 {
     MOCK_CONST_METHOD0(native_list, mga::LayerList const&());
@@ -44,6 +46,12 @@ struct MockFBDevice : public mga::FBDevice
 {
     MOCK_METHOD1(post, void(std::shared_ptr<mc::Buffer> const&));
 };
+
+struct HWCDummyLayer : public mga::HWCLayerBase
+{
+    HWCDummyLayer() = default;
+};
+}
 
 class HWCDevice : public ::testing::Test
 {
@@ -187,7 +195,7 @@ TEST_F(HWCDevice, test_hwc_gles_set_gets_layerlist)
     mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
 
     mga::LayerList fb_list;
-    fb_list.push_back(std::make_shared<mga::HWCDummyLayer>());
+    fb_list.push_back(std::make_shared<HWCDummyLayer>());
 
     EXPECT_CALL(*mock_organizer, native_list())
         .Times(1)
@@ -206,7 +214,7 @@ TEST_F(HWCDevice, test_hwc_gles_set_error)
 
     mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     mga::LayerList fb_list;
-    fb_list.push_back(std::make_shared<mga::HWCDummyLayer>());
+    fb_list.push_back(std::make_shared<HWCDummyLayer>());
 
     EXPECT_CALL(*mock_organizer, native_list())
         .Times(1)

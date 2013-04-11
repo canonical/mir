@@ -29,12 +29,14 @@
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
-mga::DefaultFramebufferFactory::DefaultFramebufferFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
+mga::DefaultFramebufferFactory::DefaultFramebufferFactory(
+    std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator)
     : buffer_allocator(buffer_allocator)
 {
 }
 
-std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const& info_provider)
+std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(
+    std::shared_ptr<DisplaySupportProvider> const& info_provider)
 {
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();

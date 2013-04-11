@@ -24,20 +24,23 @@ namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-//construction is a bit funny because hwc_layer_1 has unions
 mga::HWCRect::HWCRect()
 {
+    top = 0;
+    left = 0;
+    bottom = 0;
+    right = 0;
 }
 
 mga::HWCRect::HWCRect(geom::Rectangle& rect)
 {
     top = rect.top_left.y.as_uint32_t();
     left = rect.top_left.x.as_uint32_t();
-
     bottom= rect.size.height.as_uint32_t();
     right = rect.size.width.as_uint32_t();
 }
 
+//construction is a bit funny because hwc_layer_1 has unions
 mga::HWCLayerBase::HWCLayerBase()
 {
     /* default values.*/
@@ -70,13 +73,6 @@ mga::HWCFBLayer::HWCFBLayer(
     sourceCrop = display_frame_rect;
     displayFrame = display_frame_rect;
     visible_screen_rect =  display_frame_rect; 
-}
-
-mga::HWCDummyLayer::HWCDummyLayer()
-    : HWCLayerBase()
-{
-    compositionType = HWC_FRAMEBUFFER;
-    flags = HWC_SKIP_LAYER;
 }
 
 mga::HWCLayerList::HWCLayerList()

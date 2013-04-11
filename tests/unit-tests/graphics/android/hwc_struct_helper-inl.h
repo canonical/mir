@@ -61,33 +61,17 @@ MATCHER_P2(MatchesRect, value, str,
 
 MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
 {
-    auto layer = arg; //makes for nicer printing
-    EXPECT_THAT(layer.compositionType, MatchesMember(value.compositionType, "compositionType"));
-    EXPECT_THAT(layer.hints, MatchesMember(value.hints, "hints"));
-    EXPECT_THAT(layer.flags, MatchesMember(value.flags, "flags"));
-    EXPECT_THAT(layer.handle, MatchesMember(value.handle, "backgroundColor.handle"));
-    EXPECT_THAT(layer.transform, MatchesMember(value.transform, "backgroundColor.transform"));
-    EXPECT_THAT(layer.blending, MatchesMember(value.blending, "backgroundColor.blending"));
-    EXPECT_THAT(layer.sourceCrop, MatchesRect(value.sourceCrop, "sourceCrop"));
-    EXPECT_THAT(layer.displayFrame, MatchesRect(value.displayFrame, "displayFrame"));
-    EXPECT_THAT(layer.visibleRegionScreen.numRects, MatchesMember(value.visibleRegionScreen.numRects, "visibleRegionScreen.numRects"));
-    EXPECT_THAT(layer.acquireFenceFd, MatchesMember(value.acquireFenceFd, "acquireFenceFd"));
-    EXPECT_THAT(layer.releaseFenceFd, MatchesMember(value.releaseFenceFd, "releaseFenceFd"));
+    EXPECT_THAT(arg.compositionType, MatchesMember(value.compositionType, "compositionType"));
+    EXPECT_THAT(arg.hints, MatchesMember(value.hints, "hints"));
+    EXPECT_THAT(arg.flags, MatchesMember(value.flags, "flags"));
+    EXPECT_THAT(arg.handle, MatchesMember(value.handle, "backgroundColor.handle"));
+    EXPECT_THAT(arg.transform, MatchesMember(value.transform, "backgroundColor.transform"));
+    EXPECT_THAT(arg.blending, MatchesMember(value.blending, "backgroundColor.blending"));
+    EXPECT_THAT(arg.sourceCrop, MatchesRect(value.sourceCrop, "sourceCrop"));
+    EXPECT_THAT(arg.displayFrame, MatchesRect(value.displayFrame, "displayFrame"));
+    EXPECT_THAT(arg.visibleRegionScreen.numRects, MatchesMember(value.visibleRegionScreen.numRects, "visibleRegionScreen.numRects"));
+    EXPECT_THAT(arg.acquireFenceFd, MatchesMember(value.acquireFenceFd, "acquireFenceFd"));
+    EXPECT_THAT(arg.releaseFenceFd, MatchesMember(value.releaseFenceFd, "releaseFenceFd"));
 
     return !(::testing::Test::HasFailure());
 }
-
-#if 0
-TEST_F(HWCLayerListTest, matcher)
-{
-    hwc_layer_1_t good_layer;
-    memset(&good_layer, 0, sizeof(hwc_layer_1_t));
-    good_layer.compositionType = 2;
-
-    hwc_layer_1_t layer;
-    memset(&layer, 0, sizeof(hwc_layer_1_t));
-    layer.compositionType = 3;
-    EXPECT_THAT(layer, MatchesLayer( good_layer ));
-}
-#endif
-

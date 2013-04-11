@@ -39,7 +39,6 @@ namespace android
 class HWCLayerBase;
 typedef struct std::vector<std::shared_ptr<HWCLayerBase>> LayerList;
  
-//construction is a bit funny because hwc_layer_1 has unions
 struct HWCRect : public hwc_rect_t
 {
     HWCRect(); 
@@ -52,7 +51,9 @@ protected:
     HWCLayerBase();
 
     HWCRect visible_screen_rect;
-    //remember to disallow copy/assign
+
+    HWCLayerBase& operator=(HWCLayerBase const&) = delete;
+    HWCLayerBase(HWCLayerBase const&) = delete;
 };
 
 struct HWCFBLayer : public HWCLayerBase
@@ -61,17 +62,18 @@ struct HWCFBLayer : public HWCLayerBase
                HWCRect& display_frame_rect);
 };
 
-struct HWCDummyLayer : public HWCLayerBase
-{
-    HWCDummyLayer();
-};
-
 class HWCLayerOrganizer
 {
 public:
-    ~HWCLayerOrganizer() {}
+    virtual ~HWCLayerOrganizer() {}
     virtual const LayerList& native_list() const = 0;
     virtual void set_fb_target(std::shared_ptr<compositor::Buffer> const&) = 0;
+
+protected:
+    HWCLayerOrganizer() = default;
+    HWCLayerOrganizer& operator=(HWCLayerOrganizer const&) = delete;
+    HWCLayerOrganizer(HWCLayerOrganizer const&) = delete;
+
 };
 
 class HWCLayerList : public HWCLayerOrganizer

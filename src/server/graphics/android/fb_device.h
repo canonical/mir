@@ -34,12 +34,12 @@ namespace android
 class FBDevice
 {
 public:
-    FBDevice() = default;
     virtual ~FBDevice() {}
 
     virtual void post(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
 
-private:
+protected:
+    FBDevice() = default;
     FBDevice(FBDevice const&) = delete;
     FBDevice& operator=(FBDevice const&) = delete;
 };
