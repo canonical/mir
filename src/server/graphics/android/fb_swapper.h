@@ -35,23 +35,32 @@ namespace android
 {
 
 class AndroidBuffer;
-class FBSwapper // : public compositor::BufferSwapper
+
+class FBSwapper // (todo: for composition bypass) : public compositor::BufferSwapper
 {
 public:
-    explicit FBSwapper(std::initializer_list<std::shared_ptr<AndroidBuffer>> buffer_list);
-    explicit FBSwapper(std::vector<std::shared_ptr<AndroidBuffer>> buffer_list);
+    virtual ~FBSwapper() {}
 
-    std::shared_ptr<AndroidBuffer> client_acquire();
-    void client_release(std::shared_ptr<AndroidBuffer> const& queued_buffer);
+    virtual std::shared_ptr<AndroidBuffer> compositor_acquire() = 0;
+    virtual void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer) = 0;
+protected:
+    FBSwapper() = default;
+    FBSwapper(FBSwapper const&) = delete;
+    FBSwapper& operator=(FBSwapper const&) = delete;
+};
+
+class FBSimpleSwapper : public FBSwapper
+{
+public:
+    explicit FBSimpleSwapper(std::initializer_list<std::shared_ptr<AndroidBuffer>> buffer_list);
+    explicit FBSimpleSwapper(std::vector<std::shared_ptr<AndroidBuffer>> buffer_list);
+
     std::shared_ptr<AndroidBuffer> compositor_acquire();
     void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer);
-    void shutdown();
 
 private:
     template<class T>
     void initialize_queues(T);
-
-    void composition_bypass_unsupported();
 
     std::mutex queue_lock;
     std::condition_variable cv;

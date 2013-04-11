@@ -17,8 +17,7 @@
  */
 
 #include "src/server/graphics/android/hwc_layerlist.h"
-#include "src/server/graphics/android/native_buffer_handle.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_android_buffer.h"
 #include "hwc_struct_helper-inl.h"
 #include <gtest/gtest.h>
 
@@ -39,10 +38,10 @@ public:
         default_size = geom::Size{geom::Width{width},
                        geom::Height{height}};
 
-        stub_handle_1 = std::make_shared<mc::NativeBufferHandle>();
-        stub_handle_2 = std::make_shared<mc::NativeBufferHandle>();
+        stub_handle_1 = std::make_shared<ANativeWindowBuffer>();
+        stub_handle_2 = std::make_shared<ANativeWindowBuffer>();
 
-        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(stub_handle_1));
         ON_CALL(*mock_buffer, size())
@@ -54,9 +53,9 @@ public:
     int height; 
     geom::Size default_size;
 
-    std::shared_ptr<mc::NativeBufferHandle> stub_handle_1;
-    std::shared_ptr<mc::NativeBufferHandle> stub_handle_2;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<ANativeWindowBuffer> stub_handle_1;
+    std::shared_ptr<ANativeWindowBuffer> stub_handle_2;
+    std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer;
 };
 
 TEST_F(HWCLayerListTest, default_list)

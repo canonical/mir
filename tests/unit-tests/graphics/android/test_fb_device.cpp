@@ -17,9 +17,8 @@
  */
 
 #include "mir_test_doubles/mock_fb_device.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_android_buffer.h"
 #include "src/server/graphics/android/default_fb_device.h"
-#include "src/server/graphics/android/native_buffer_handle.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -34,17 +33,17 @@ struct FBDevice : public ::testing::Test
     {
         using namespace testing;
         fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(); 
-        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
 
-        dummy_buffer = std::make_shared<mc::NativeBufferHandle>();
+        dummy_buffer = std::make_shared<ANativeWindowBuffer>();
         dummy_buffer->handle = (buffer_handle_t) 0x4893;
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(dummy_buffer));
     }
 
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    std::shared_ptr<mc::NativeBufferHandle> dummy_buffer;
+    std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer;
+    std::shared_ptr<ANativeWindowBuffer> dummy_buffer;
 };
 
 TEST_F(FBDevice, post_ok)

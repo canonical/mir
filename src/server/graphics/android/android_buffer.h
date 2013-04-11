@@ -42,24 +42,24 @@ namespace graphics
 namespace android
 {
 
-class AndroidSpecificBuffer : public compositor::BufferBasic
+class AndroidBuffer : public compositor::BufferBasic
 {
 public:
-    virtual ~AndroidSpecificBuffer() {}
+    virtual ~AndroidBuffer() {}
     virtual std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const = 0;
 protected:
-    AndroidSpecificBuffer() = default;
-    AndroidSpecificBuffer(AndroidSpecificBuffer const&) = delete;
-    AndroidSpecificBuffer& operator=(AndroidSpecificBuffer const&) = delete;
+    AndroidBuffer() = default;
+    AndroidBuffer(AndroidBuffer const&) = delete;
+    AndroidBuffer& operator=(AndroidBuffer const&) = delete;
 
 };
 
-class AndroidBuffer: public compositor::BufferBasic
+class Buffer: public AndroidBuffer 
 {
 public:
-    AndroidBuffer(const std::shared_ptr<GraphicAllocAdaptor>& device,
+    Buffer(const std::shared_ptr<GraphicAllocAdaptor>& device,
                   geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
-    ~AndroidBuffer();
+    ~Buffer();
 
     /* from BufferBasic */
     geometry::Size size() const;

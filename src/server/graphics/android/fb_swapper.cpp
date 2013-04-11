@@ -26,7 +26,7 @@ namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
 template<class T>
-void mga::FBSwapper::initialize_queues(T buffer_list)
+void mga::FBSimpleSwapper::initialize_queues(T buffer_list)
 {
     for (auto& buffer : buffer_list)
     {
@@ -34,17 +34,17 @@ void mga::FBSwapper::initialize_queues(T buffer_list)
     }
 }
 
-mga::FBSwapper::FBSwapper(std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
+mga::FBSimpleSwapper::FBSimpleSwapper(std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
 {
     initialize_queues(buffer_list);
 }
 
-mga::FBSwapper::FBSwapper(std::vector<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
+mga::FBSimpleSwapper::FBSimpleSwapper(std::vector<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
 {
     initialize_queues(buffer_list);
 }
 
-std::shared_ptr<mga::AndroidBuffer> mga::FBSwapper::compositor_acquire()
+std::shared_ptr<mga::AndroidBuffer> mga::FBSimpleSwapper::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
     while (queue.empty())
@@ -57,33 +57,10 @@ std::shared_ptr<mga::AndroidBuffer> mga::FBSwapper::compositor_acquire()
     return buffer;
 }
 
-void mga::FBSwapper::compositor_release(std::shared_ptr<mga::AndroidBuffer> const& released_buffer)
+void mga::FBSimpleSwapper::compositor_release(std::shared_ptr<mga::AndroidBuffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lk(queue_lock);
 
     queue.push(released_buffer);
     cv.notify_all();
 }
-
-void mga::FBSwapper::shutdown()
-{
-}
-
-/* the client_{acquire,release} functions are how we will hand out framebuffers to the clients.
- * and facilitate the handout between an internal composition renderloop and one that is in the client.
- * they are unsupported at this time */
-void mga::FBSwapper::composition_bypass_unsupported()
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("composition bypass is unsupported"));
-}
-std::shared_ptr<mga::AndroidBuffer> mga::FBSwapper::client_acquire()
-{
-    composition_bypass_unsupported();
-    return std::shared_ptr<mga::AndroidBuffer>(); 
-}
-
-void mga::FBSwapper::client_release(std::shared_ptr<mga::AndroidBuffer> const& /*queued_buffer*/)
-{
-    composition_bypass_unsupported();
-}
-

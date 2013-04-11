@@ -61,7 +61,7 @@ TEST_F(AndroidGraphicBufferBasic, basic_allocation_uses_alloc_device)
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _));
 
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 }
 
 TEST_F(AndroidGraphicBufferBasic, usage_type_passes_through)
@@ -69,15 +69,15 @@ TEST_F(AndroidGraphicBufferBasic, usage_type_passes_through)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_hardware));
-    mga::AndroidBuffer hw_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_hardware);
+    mga::Buffer hw_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_hardware);
     Mock::VerifyAndClearExpectations(mock_alloc_device.get());
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_software));
-    mga::AndroidBuffer sw_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_software);
+    mga::Buffer sw_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_software);
     Mock::VerifyAndClearExpectations(mock_alloc_device.get());
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_framebuffer_gles));
-    mga::AndroidBuffer fb_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_framebuffer_gles);
+    mga::Buffer fb_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_framebuffer_gles);
     Mock::VerifyAndClearExpectations(mock_alloc_device.get());
 }
 
@@ -91,7 +91,7 @@ TEST_F(AndroidGraphicBufferBasic, size_query_test)
         .Times(Exactly(1))
         .WillOnce(Return(expected_size));
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( size, _, _ ));
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 
     EXPECT_EQ(expected_size, buffer.size());
 }
@@ -101,7 +101,7 @@ TEST_F(AndroidGraphicBufferBasic, format_passthrough_test)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, pf, _ ));
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 }
 
 TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
@@ -115,7 +115,7 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
     .WillOnce(Return(expected_pf));
     EXPECT_CALL(*mock_alloc_device, alloc_buffer( _ , _, _ ));
 
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 
     EXPECT_EQ(expected_pf, buffer.pixel_format());
 }
@@ -130,7 +130,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
         .Times(Exactly(1))
         .WillOnce(Return(expected_ipc_package));
 
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 
     EXPECT_EQ(expected_ipc_package, buffer.get_ipc_package());
 }
@@ -145,7 +145,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_native_handle)
         .Times(Exactly(1))
         .WillOnce(Return(expected_anwb));
 
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 
     EXPECT_EQ(expected_anwb, buffer.native_buffer_handle());
 }
@@ -159,7 +159,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
         .Times(Exactly(1))
         .WillOnce(Return(expected_stride));
 
-    mga::AndroidBuffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 
     EXPECT_EQ(expected_stride, buffer.stride());
 }
