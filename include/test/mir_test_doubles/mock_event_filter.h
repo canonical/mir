@@ -42,28 +42,28 @@ MATCHER_P(IsKeyEventWithKey, key, "")
     if (arg.type != mir_event_type_key)
         return false;
 
-    return arg.details.key.key_code == key;
+    return arg.key.key_code == key;
 }
 MATCHER(KeyDownEvent, "")
 {
     if (arg.type != mir_event_type_key)
         return false;
 
-    return arg.action == AKEY_EVENT_ACTION_DOWN;
+    return arg.key.action == AKEY_EVENT_ACTION_DOWN;
 }
 MATCHER(ButtonDownEvent, "")
 {
     if (arg.type != mir_event_type_motion)
         return false;
-    if (arg.details.motion.button_state == 0)
+    if (arg.motion.button_state == 0)
         return false;
-    return arg.action == AKEY_EVENT_ACTION_DOWN;
+    return arg.motion.action == AKEY_EVENT_ACTION_DOWN;
 }
 MATCHER_P2(MotionEvent, dx, dy, "")
 {
     if (arg.type != mir_event_type_motion)
         return false;
-    auto coords = &arg.details.motion.pointer_coordinates[0];
+    auto coords = &arg.motion.pointer_coordinates[0];
     return (coords->x == dx) && (coords->y == dy);
 }
 }

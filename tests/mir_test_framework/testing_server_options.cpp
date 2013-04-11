@@ -110,6 +110,11 @@ class StubGraphicPlatform : public mg::Platform
     {
         return std::make_shared<mg::PlatformIPCPackage>();
     }
+    
+    EGLNativeDisplayType shell_egl_display()
+    {
+        return (EGLNativeDisplayType) 0;
+    }
 };
 
 class StubRenderer : public mg::Renderer
@@ -206,7 +211,7 @@ std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
             });
 }
 
-void mtf::TestingServerConfiguration::exec(DisplayServer* )
+void mtf::TestingServerConfiguration::exec()
 {
 }
 

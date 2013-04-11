@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_H_
 
-#include "src/server/shell/surface.h"
+#include "mir/shell/surface.h"
 
 #include "mir/frontend/surface_creation_parameters.h"
 

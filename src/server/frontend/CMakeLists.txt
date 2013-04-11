@@ -1,6 +1,7 @@
 set(
   FRONTEND_SOURCES
 
+  client_buffer_tracker.cpp
   session_mediator.cpp
   null_session_mediator_report.cpp
   null_message_processor_report.cpp

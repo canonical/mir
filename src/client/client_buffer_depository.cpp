@@ -29,49 +29,39 @@ namespace mcl=mir::client;
 
 mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const& factory, int max_buffers)
     : factory(factory),
-      current_buffer_iter(buffers.end()),
-      max_age(max_buffers - 1)
+      max_buffers(max_buffers)
 {
 }
 
 void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage> const& package, int id, geometry::Size size, geometry::PixelFormat pf)
 {
-    for (auto next = buffers.begin(); next != buffers.end();)
+    auto existing_buffer_id_pair = buffers.end();
+    for (auto pair = buffers.begin(); pair != buffers.end(); ++pair)
     {
-        // C++ guarantees that buffers.erase() will only invalidate the iterator we
-        // erase. Move to the next buffer before we potentially invalidate our iterator.
-        auto current = next;
-        next++;
-
-        if (current != current_buffer_iter &&
-            current->first != id &&
-            current->second->age() >= max_age)
-        {
-            buffers.erase(current);
-        }
+        pair->second->increment_age();
+        if (pair->first == id)
+            existing_buffer_id_pair = pair;
     }
 
-    for (auto& current : buffers)
-    {
-        current.second->increment_age();
-    }
+    if (buffers.size() > 0)
+        buffers.front().second->mark_as_submitted();
 
-    if (current_buffer_iter != buffers.end())
-    {
-        current_buffer_iter->second->mark_as_submitted();
-    }
-
-    current_buffer_iter = buffers.find(id);
-
-    if (current_buffer_iter == buffers.end())
+    if (existing_buffer_id_pair == buffers.end())
     {
         auto new_buffer = factory->create_buffer(package, size, pf);
-
-        current_buffer_iter = buffers.insert(current_buffer_iter, std::make_pair(id, new_buffer));
+        buffers.push_front(std::make_pair(id, new_buffer));
     }
+    else
+    {
+        buffers.push_front(*existing_buffer_id_pair);
+        buffers.erase(existing_buffer_id_pair);
+    }
+
+    if (buffers.size() > max_buffers)
+        buffers.pop_back();
 }
 
 std::shared_ptr<mcl::ClientBuffer> mcl::ClientBufferDepository::current_buffer()
 {
-    return current_buffer_iter->second;
+    return buffers.front().second;
 }

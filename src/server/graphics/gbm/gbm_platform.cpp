@@ -22,6 +22,7 @@
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/egl/mesa_native_display.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 
@@ -29,10 +30,11 @@
 
 #include <stdexcept>
 
-namespace mgg=mir::graphics::gbm;
-namespace mg=mir::graphics;
-namespace ml=mir::logging;
-namespace mc=mir::compositor;
+namespace mg = mir::graphics;
+namespace mgg = mg::gbm;
+namespace mgeglm = mg::egl::mesa;
+namespace ml = mir::logging;
+namespace mc = mir::compositor;
 
 namespace
 {
@@ -53,7 +55,8 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 }
 
 mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener) :
-    listener(listener)
+    listener(listener),
+    native_display(0)
 {
     drm.setup();
     gbm.setup(drm);
@@ -81,6 +84,15 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
 void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
 {
     drm.auth_magic(magic);
+}
+
+EGLNativeDisplayType mgg::GBMPlatform::shell_egl_display()
+{
+    if (native_display)
+        return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
+    native_display = mgeglm::create_native_display(this->shared_from_this());
+    
+    return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)

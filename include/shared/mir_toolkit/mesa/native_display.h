@@ -44,8 +44,10 @@ struct MirMesaEGLNativeDisplay
     void (*surface_advance_buffer)(MirMesaEGLNativeDisplay* display,
                                    MirEGLNativeWindowType surface);
 
-    MirConnection* context;
+    void *context;
 };
+
+int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display);
 
 #ifdef __cplusplus
 } // extern "C"
