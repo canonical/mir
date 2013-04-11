@@ -99,6 +99,11 @@ public:
     {
         return std::shared_ptr<mg::PlatformIPCPackage>();
     }
+
+    EGLNativeDisplayType shell_egl_display()
+    {
+        return static_cast<EGLNativeDisplayType>(0);
+    }
 };
 
 class GBMBufferIntegration : public ::testing::Test

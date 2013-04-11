@@ -26,24 +26,6 @@
 /// All things Mir
 namespace mir
 {
-namespace compositor
-{
-
-class BufferAllocationStrategy;
-class BufferBundleFactory;
-
-}
-namespace frontend
-{
-
-class Communicator;
-
-}
-namespace graphics
-{
-class Display;
-}
-
 class ServerConfiguration;
 
 class DisplayServer

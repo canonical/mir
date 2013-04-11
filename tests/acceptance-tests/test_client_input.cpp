@@ -88,7 +88,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     {
     }
     
-    void exec(mir::DisplayServer* /* display_server */) override
+    void exec() override
     {
         input_injection_thread = std::thread([this]() -> void
         {
@@ -185,7 +185,7 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
-        if (ev->action == 0)
+        if (ev->key.action == 0)
         {
             client->handler->handle_key_down(ev);
             client->event_received[client->events_received].wake_up_everyone();
@@ -284,7 +284,7 @@ namespace
 {
 MATCHER_P(KeyOfSymbol, keysym, "")
 {
-    if (static_cast<xkb_keysym_t>(arg->details.key.key_code) == (uint)keysym)
+    if (static_cast<xkb_keysym_t>(arg->key.key_code) == (uint)keysym)
         return true;
     return false;
 }

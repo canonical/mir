@@ -159,7 +159,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
     EXPECT_EQ(true, receiver.next_event(next_event_timeout, ev));
 
     EXPECT_EQ(mir_event_type_key, ev.type);
-    EXPECT_EQ(producer.testing_key_event_scan_code, ev.details.key.scan_code);
+    EXPECT_EQ(producer.testing_key_event_scan_code, ev.key.scan_code);
 }
 
 TEST_F(AndroidInputReceiverSetup, receiver_handles_events)

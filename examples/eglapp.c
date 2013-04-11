@@ -91,7 +91,7 @@ static void mir_eglapp_handle_input(MirSurface* surface, MirEvent const* ev, voi
 {
     (void) surface;
     (void) context;
-    if (ev->details.key.key_code == XKB_KEY_q)
+    if (ev->key.key_code == XKB_KEY_q)
         running = 0;
 }
 
