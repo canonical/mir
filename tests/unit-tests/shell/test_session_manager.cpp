@@ -32,7 +32,7 @@
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 
-#include "src/server/shell/surface.h"
+#include "mir/shell/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

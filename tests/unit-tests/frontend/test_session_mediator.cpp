@@ -35,7 +35,7 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test/fake_shared.h"
 
-#include "src/server/shell/surface.h"
+#include "mir/shell/surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -121,6 +121,11 @@ class StubPlatform : public mg::Platform
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
     {
         return std::make_shared<mg::PlatformIPCPackage>();
+    }
+    
+    EGLNativeDisplayType shell_egl_display()
+    {
+        return static_cast<EGLNativeDisplayType>(0);
     }
 };
 

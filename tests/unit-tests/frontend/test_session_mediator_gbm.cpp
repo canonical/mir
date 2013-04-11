@@ -82,6 +82,11 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
+    EGLNativeDisplayType shell_egl_display()
+    {
+        return static_cast<EGLNativeDisplayType>(0);
+    }
+
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 

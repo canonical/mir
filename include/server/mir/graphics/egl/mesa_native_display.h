@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,40 +13,30 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Alan Griffiths <alan@octopull.co.uk>
- *   Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_DISPLAY_SERVER_H_
-#define MIR_DISPLAY_SERVER_H_
+#ifndef MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_
+#define MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_
+
+#include "mir_toolkit/mesa/native_display.h"
 
 #include <memory>
 
-/// All things Mir
 namespace mir
 {
-class ServerConfiguration;
-
-class DisplayServer
+namespace graphics
 {
-public:
-    explicit DisplayServer(ServerConfiguration& config);
+class Platform;
 
-    ~DisplayServer();
-
-    void run();
-    void stop();
-
-private:
-    struct Private;
-    std::unique_ptr<Private> p;
-
-    DisplayServer() = delete;
-    DisplayServer(const DisplayServer&) = delete;
-    DisplayServer& operator=(const DisplayServer&) = delete;
-};
-
+namespace egl
+{
+namespace mesa
+{
+std::shared_ptr<MirMesaEGLNativeDisplay> create_native_display(std::shared_ptr<Platform> const& platform);
 }
+}
+}
+} // namespace mir
 
-#endif /* MIR_DISPLAY_SERVER_H_ */
+#endif // MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_

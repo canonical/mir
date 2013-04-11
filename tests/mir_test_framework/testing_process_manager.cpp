@@ -64,7 +64,7 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
         // We're in the server process, so create a display server
         SCOPED_TRACE("Server");
 
-        mir::run_mir(config, [&](mir::DisplayServer& server) { config.exec(&server); });
+        mir::run_mir(config, [&](mir::DisplayServer&) { config.exec(); });
 
         config.on_exit();
     }
