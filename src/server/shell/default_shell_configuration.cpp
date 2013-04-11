@@ -29,8 +29,8 @@ namespace mg = mir::graphics;
 
 msh::DefaultShellConfiguration::DefaultShellConfiguration(std::shared_ptr<mg::ViewableArea> const& view_area,
                                                           std::shared_ptr<msh::InputFocusSelector> const& focus_selector,
-                                                          std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
-  : view_area(view_area),
+                                                          std::shared_ptr<msh::SurfaceFactory> const& surface_factory) :
+    view_area(view_area),
     input_focus_selector(focus_selector),
     underlying_surface_factory(surface_factory)
 {

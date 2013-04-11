@@ -32,8 +32,8 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-msh::SessionManager::SessionManager(std::shared_ptr<msh::ShellConfiguration> const& config)
-  : surface_factory(config->the_surface_factory()),
+msh::SessionManager::SessionManager(std::shared_ptr<msh::ShellConfiguration> const& config) :
+    surface_factory(config->the_surface_factory()),
     app_container(config->the_session_container()),
     focus_sequence(config->the_focus_sequence()),
     focus_setter(config->the_focus_setter())

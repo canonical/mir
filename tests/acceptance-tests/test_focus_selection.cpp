@@ -54,8 +54,8 @@ struct MockFocusShellConfiguration : public msh::DefaultShellConfiguration
 {
     MockFocusShellConfiguration(std::shared_ptr<mg::ViewableArea> const& view_area,
                                 std::shared_ptr<msh::InputFocusSelector> const& input_selector,
-                                std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
-      : DefaultShellConfiguration(view_area, input_selector, surface_factory)
+                                std::shared_ptr<msh::SurfaceFactory> const& surface_factory) :
+        DefaultShellConfiguration(view_area, input_selector, surface_factory)
     {
     }
     

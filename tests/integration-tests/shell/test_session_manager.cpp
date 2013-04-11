@@ -44,8 +44,8 @@ namespace mtd = mir::test::doubles;
 
 struct TestingShellConfiguration : public msh::ShellConfiguration
 {
-    TestingShellConfiguration()
-      : sequence(mt::fake_shared(container))
+    TestingShellConfiguration() :
+        sequence(mt::fake_shared(container))
     {
     }
     ~TestingShellConfiguration() noexcept(true) {}

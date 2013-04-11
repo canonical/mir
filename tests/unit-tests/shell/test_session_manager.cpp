@@ -94,8 +94,8 @@ struct TestingShellConfiguration : public msh::ShellConfiguration
 
 struct SessionManagerSetup : public testing::Test
 {
-    SessionManagerSetup()
-      : session_manager(mt::fake_shared(config))
+    SessionManagerSetup() :
+        session_manager(mt::fake_shared(config))
     {
     }
 
