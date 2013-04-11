@@ -32,24 +32,18 @@
 
 namespace mir
 {
-
-namespace compositor
-{
-class BufferSwapper;
-class Buffer;
-class NativeBufferHandle;
-}
-
 namespace graphics
 {
 namespace android
 {
 
+class FBSwapper;
 class DisplaySupportProvider;
+class AndroidBuffer;
 class ServerRenderWindow : public AndroidDriverInterpreter 
 {
 public:
-    ServerRenderWindow(std::shared_ptr<compositor::BufferSwapper> const& swapper,
+    ServerRenderWindow(std::shared_ptr<FBSwapper> const& swapper,
                        std::shared_ptr<DisplaySupportProvider> const& display_poster);
 
     ANativeWindowBuffer* driver_requests_buffer();
@@ -58,10 +52,10 @@ public:
     int driver_requests_info(int key) const;
 
 private:
-    std::shared_ptr<compositor::BufferSwapper> swapper;
+    std::shared_ptr<FBSwapper> swapper;
     std::shared_ptr<DisplaySupportProvider> poster;
 
-    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
+    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<AndroidBuffer>> buffers_in_driver;
 
     int to_android_format(geometry::PixelFormat format);
     int format;

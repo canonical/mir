@@ -18,7 +18,6 @@
 
 #include "src/server/graphics/android/android_buffer_handle_default.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "src/server/graphics/android/native_buffer_handle.h"
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "mir_test_doubles/mock_android_alloc_device.h"
 
@@ -45,7 +44,7 @@ protected:
         usage = mga::BufferUsage::use_hardware;
         stride = geom::Stride(300*4);
 
-        anwb = std::make_shared<mc::NativeBufferHandle>();
+        anwb = std::make_shared<ANativeWindowBuffer>();
         anwb->height = (int) size.height.as_uint32_t();
         anwb->width = (int) size.width.as_uint32_t();
         anwb->stride = (int) stride.as_uint32_t();
@@ -53,7 +52,7 @@ protected:
 
     }
 
-    std::shared_ptr<mc::NativeBufferHandle> anwb;
+    std::shared_ptr<ANativeWindowBuffer> anwb;
 
     std::shared_ptr<mga::AndroidBufferHandleDefault> buffer_handle;
     std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;

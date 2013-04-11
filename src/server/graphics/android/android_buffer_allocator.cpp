@@ -77,7 +77,7 @@ std::shared_ptr<mc::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
                                           usage);
 }
 
-std::shared_ptr<mc::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
+std::shared_ptr<mga::AndroidBuffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
     geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
 {
     auto buffer = std::make_shared<AndroidBuffer>(alloc_device, sz, pf, use);

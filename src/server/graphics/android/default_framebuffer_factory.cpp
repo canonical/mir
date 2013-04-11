@@ -42,7 +42,7 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     auto pf = info_provider->display_format();
     auto num_framebuffers = info_provider->number_of_framebuffers_available();
     
-    std::vector<std::shared_ptr<mc::Buffer>> buffers; 
+    std::vector<std::shared_ptr<mga::AndroidBuffer>> buffers; 
     for( auto i = 0u; i < num_framebuffers; ++i)
     {
         buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));

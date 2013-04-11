@@ -22,21 +22,18 @@
 #include <memory>
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
 namespace graphics
 {
 namespace android
 {
 
+class AndroidBuffer;
 class FBDevice
 {
 public:
     virtual ~FBDevice() {}
 
-    virtual void post(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
+    virtual void post(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
 
 protected:
     FBDevice() = default;

@@ -17,9 +17,9 @@
  */
 
 #include "mir/compositor/buffer.h"
-#include "native_buffer_handle.h"
 
 #include "default_fb_device.h"
+#include "android_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -31,7 +31,7 @@ mga::DefaultFBDevice::DefaultFBDevice(std::shared_ptr<framebuffer_device_t> cons
 {
 }
 
-void mga::DefaultFBDevice::post(std::shared_ptr<mir::compositor::Buffer> const& buffer)
+void mga::DefaultFBDevice::post(std::shared_ptr<mga::AndroidBuffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
     if (fb_device->post(fb_device.get(), handle->handle) != 0)

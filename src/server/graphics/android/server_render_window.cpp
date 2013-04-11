@@ -18,9 +18,9 @@
  */
 
 #include "server_render_window.h"
-#include "native_buffer_handle.h"
 #include "display_support_provider.h"
-#include "mir/compositor/buffer_swapper.h"
+#include "fb_swapper.h"
+#include "android_buffer.h"
 #include "mir/compositor/buffer.h"
 
 #include <boost/throw_exception.hpp>
@@ -30,7 +30,7 @@ namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mc::BufferSwapper> const& swapper,
+mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> const& swapper,
                                             std::shared_ptr<mga::DisplaySupportProvider> const& display_poster)
     : swapper(swapper),
       poster(display_poster),

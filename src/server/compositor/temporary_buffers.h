@@ -39,7 +39,6 @@ public:
     BufferID id() const;
     void bind_to_texture();
     std::shared_ptr<BufferIPCPackage> get_ipc_package() const;
-    std::shared_ptr<NativeBufferHandle> native_buffer_handle() const;
 
 protected:
     explicit TemporaryBuffer(std::shared_ptr<Buffer> const& real_buffer);

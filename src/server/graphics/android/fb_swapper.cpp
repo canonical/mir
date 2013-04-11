@@ -34,17 +34,17 @@ void mga::FBSwapper::initialize_queues(T buffer_list)
     }
 }
 
-mga::FBSwapper::FBSwapper(std::initializer_list<std::shared_ptr<mc::Buffer>> buffer_list)
+mga::FBSwapper::FBSwapper(std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
 {
     initialize_queues(buffer_list);
 }
 
-mga::FBSwapper::FBSwapper(std::vector<std::shared_ptr<mc::Buffer>> buffer_list)
+mga::FBSwapper::FBSwapper(std::vector<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
 {
     initialize_queues(buffer_list);
 }
 
-std::shared_ptr<mc::Buffer> mga::FBSwapper::compositor_acquire()
+std::shared_ptr<mga::AndroidBuffer> mga::FBSwapper::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
     while (queue.empty())
@@ -57,7 +57,7 @@ std::shared_ptr<mc::Buffer> mga::FBSwapper::compositor_acquire()
     return buffer;
 }
 
-void mga::FBSwapper::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
+void mga::FBSwapper::compositor_release(std::shared_ptr<mga::AndroidBuffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lk(queue_lock);
 
@@ -76,13 +76,13 @@ void mga::FBSwapper::composition_bypass_unsupported()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("composition bypass is unsupported"));
 }
-std::shared_ptr<mc::Buffer> mga::FBSwapper::client_acquire()
+std::shared_ptr<mga::AndroidBuffer> mga::FBSwapper::client_acquire()
 {
     composition_bypass_unsupported();
-    return std::shared_ptr<mc::Buffer>(); 
+    return std::shared_ptr<mga::AndroidBuffer>(); 
 }
 
-void mga::FBSwapper::client_release(std::shared_ptr<mc::Buffer> const& /*queued_buffer*/)
+void mga::FBSwapper::client_release(std::shared_ptr<mga::AndroidBuffer> const& /*queued_buffer*/)
 {
     composition_bypass_unsupported();
 }

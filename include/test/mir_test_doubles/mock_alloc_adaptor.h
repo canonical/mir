@@ -38,15 +38,13 @@ public:
     MockBufferHandle()
     {
         using namespace testing;
-        ON_CALL(*this, native_buffer_handle())
-            .WillByDefault(Return(std::make_shared<compositor::NativeBufferHandle>()));
     }
     MOCK_CONST_METHOD0(size,   geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(usage,  graphics::android::BufferUsage());
     MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<compositor::BufferIPCPackage>());
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<compositor::NativeBufferHandle>());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<ANativeWindowBuffer>());
 };
 
 class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor

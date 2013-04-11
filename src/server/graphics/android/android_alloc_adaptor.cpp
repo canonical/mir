@@ -17,7 +17,6 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "native_buffer_handle.h"
 #include "android_alloc_adaptor.h"
 #include "android_buffer_handle_default.h"
 
@@ -82,7 +81,7 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
         return std::shared_ptr<mga::AndroidBufferHandle>(null_handle, empty_del);
 
     /* pack ANativeWindow buffer for the handle */
-    auto buffer = std::make_shared<mc::NativeBufferHandle>();
+    auto buffer = std::make_shared<ANativeWindowBuffer>();
     buffer->width = (int) size.width.as_uint32_t();
     buffer->height = (int) size.height.as_uint32_t();
     buffer->stride = stride_as_int;

@@ -109,7 +109,7 @@ std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBuffer::get_ipc_package() cons
     return native_window_buffer_handle->get_ipc_package();
 }
     
-std::shared_ptr<mc::NativeBufferHandle> mga::AndroidBuffer::native_buffer_handle() const
+std::shared_ptr<ANativeWindowBuffer> mga::AndroidBuffer::native_buffer_handle() const
 {
     return native_window_buffer_handle->native_buffer_handle();
 }

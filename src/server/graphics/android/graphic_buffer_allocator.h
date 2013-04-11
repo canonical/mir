@@ -30,6 +30,7 @@ namespace graphics
 namespace android
 {
 
+class AndroidBuffer;
 class GraphicBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
@@ -38,7 +39,7 @@ public:
 
     virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
         compositor::BufferProperties const& buffer_properties) = 0;
-    virtual std::shared_ptr<compositor::Buffer> alloc_buffer_platform(
+    virtual std::shared_ptr<AndroidBuffer> alloc_buffer_platform(
         geometry::Size sz, geometry::PixelFormat pf, BufferUsage use) = 0;
     virtual std::vector<geometry::PixelFormat> supported_pixel_formats() = 0;
 

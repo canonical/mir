@@ -21,8 +21,6 @@
 
 #include "android_buffer_handle.h"
 
-#include <system/window.h>
-
 namespace mir
 {
 namespace graphics
@@ -33,7 +31,7 @@ namespace android
 class AndroidBufferHandleDefault: public AndroidBufferHandle
 {
 public:
-    AndroidBufferHandleDefault(std::shared_ptr<compositor::NativeBufferHandle> const& buf, geometry::PixelFormat pf, BufferUsage use);
+    AndroidBufferHandleDefault(std::shared_ptr<ANativeWindowBuffer> const& buf, geometry::PixelFormat pf, BufferUsage use);
 
     geometry::Size size() const;
     geometry::Stride stride() const;
@@ -41,12 +39,12 @@ public:
     BufferUsage usage() const;
 
     std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
-    std::shared_ptr<compositor::NativeBufferHandle> native_buffer_handle() const;
+    std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
 
 private:
     void pack_ipc_package();
 
-    std::shared_ptr<compositor::NativeBufferHandle> anw_buffer;
+    std::shared_ptr<ANativeWindowBuffer> anw_buffer;
     std::shared_ptr<compositor::BufferIPCPackage> ipc_package;
 
     /* we save these so that when other parts of the system query for the mir

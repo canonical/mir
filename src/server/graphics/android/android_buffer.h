@@ -24,6 +24,7 @@
 #include "graphic_alloc_adaptor.h"
 #include "android_buffer_handle.h"
 
+#include <system/window.h>
 #include <map>
 #include <stdexcept>
 #include <memory>
@@ -41,6 +42,18 @@ namespace graphics
 namespace android
 {
 
+class AndroidSpecificBuffer : public compositor::BufferBasic
+{
+public:
+    virtual ~AndroidSpecificBuffer() {}
+    virtual std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const = 0;
+protected:
+    AndroidSpecificBuffer() = default;
+    AndroidSpecificBuffer(AndroidSpecificBuffer const&) = delete;
+    AndroidSpecificBuffer& operator=(AndroidSpecificBuffer const&) = delete;
+
+};
+
 class AndroidBuffer: public compositor::BufferBasic
 {
 public:
@@ -48,6 +61,7 @@ public:
                   geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
     ~AndroidBuffer();
 
+    /* from BufferBasic */
     geometry::Size size() const;
 
     geometry::Stride stride() const;
@@ -56,10 +70,10 @@ public:
 
     std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
     
-    std::shared_ptr<compositor::NativeBufferHandle> native_buffer_handle() const;
-
     void bind_to_texture();
 
+    /* android-specific */
+    std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
 private:
     const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
 

@@ -26,16 +26,12 @@
 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-class NativeBufferHandle;
-}
 namespace graphics
 {
 namespace android
 {
 
+class AndroidBuffer;
 class HWCLayerBase;
 typedef struct std::vector<std::shared_ptr<HWCLayerBase>> LayerList;
  
@@ -58,7 +54,7 @@ protected:
 
 struct HWCFBLayer : public HWCLayerBase
 {
-    HWCFBLayer(std::shared_ptr<compositor::NativeBufferHandle> const& native_buf,
+    HWCFBLayer(std::shared_ptr<ANativeWindowBuffer> const& native_buf,
                HWCRect& display_frame_rect);
 };
 
@@ -67,7 +63,7 @@ class HWCLayerOrganizer
 public:
     virtual ~HWCLayerOrganizer() {}
     virtual const LayerList& native_list() const = 0;
-    virtual void set_fb_target(std::shared_ptr<compositor::Buffer> const&) = 0;
+    virtual void set_fb_target(std::shared_ptr<AndroidBuffer> const&) = 0;
 
 protected:
     HWCLayerOrganizer() = default;
@@ -82,7 +78,7 @@ public:
     HWCLayerList();
     const LayerList& native_list() const;
 
-    void set_fb_target(std::shared_ptr<compositor::Buffer> const&);
+    void set_fb_target(std::shared_ptr<AndroidBuffer> const&);
 
 private:
     LayerList layer_list;

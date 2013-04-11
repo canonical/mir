@@ -17,7 +17,6 @@
  */
 
 #include "mir_test_doubles/mock_alloc_adaptor.h"
-#include "src/server/graphics/android/native_buffer_handle.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test/egl_mock.h"
 
@@ -200,7 +199,7 @@ TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
 TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
 {
     using namespace testing;
-    auto fake_native_handle = std::make_shared<mc::NativeBufferHandle>();
+    auto fake_native_handle = std::make_shared<ANativeWindowBuffer>();
 
     EXPECT_CALL(*mock_buffer_handle, native_buffer_handle())
         .Times(Exactly(1))

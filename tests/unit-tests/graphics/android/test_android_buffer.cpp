@@ -17,7 +17,6 @@
  */
 
 #include "src/server/graphics/android/android_buffer.h"
-#include "src/server/graphics/android/native_buffer_handle.h"
 #include "mir/compositor/buffer_ipc_package.h"
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 
@@ -140,7 +139,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_native_handle)
 {
     using namespace testing;
 
-    auto expected_anwb = std::make_shared<mc::NativeBufferHandle>();
+    auto expected_anwb = std::make_shared<ANativeWindowBuffer>();
 
     EXPECT_CALL(*mock_buffer_handle, native_buffer_handle())
         .Times(Exactly(1))

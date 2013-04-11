@@ -17,7 +17,7 @@
  */
 
 #include "src/server/graphics/android/fb_swapper.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_android_buffer.h"
 
 #include <future>
 #include <thread>
@@ -33,9 +33,9 @@ class FBSwapperTest : public ::testing::Test
 public:
     virtual void SetUp()
     {
-        buffer1 = std::make_shared<mtd::MockBuffer>();
-        buffer2 = std::make_shared<mtd::MockBuffer>();
-        buffer3 = std::make_shared<mtd::MockBuffer>();
+        buffer1 = std::make_shared<mtd::MockAndroidBuffer>();
+        buffer2 = std::make_shared<mtd::MockAndroidBuffer>();
+        buffer3 = std::make_shared<mtd::MockAndroidBuffer>();
     }
 
     std::shared_ptr<mc::Buffer> buffer1;

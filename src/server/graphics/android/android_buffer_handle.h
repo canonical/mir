@@ -25,12 +25,13 @@
 
 #include <memory>
 
+struct ANativeWindowBuffer;
+
 namespace mir
 {
 namespace compositor
 {
 class BufferIPCPackage;
-class NativeBufferHandle;
 }
 
 namespace graphics
@@ -57,7 +58,7 @@ public:
     virtual BufferUsage usage() const = 0;
 
     virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const = 0;
-    virtual std::shared_ptr<compositor::NativeBufferHandle> native_buffer_handle() const = 0;
+    virtual std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const = 0;
 
 protected:
     AndroidBufferHandle() = default;

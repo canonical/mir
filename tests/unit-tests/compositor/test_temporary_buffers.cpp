@@ -166,12 +166,3 @@ TEST_F(TemporaryBuffersTest, base_test_id)
 
     proxy_buffer.id();
 }
-
-TEST_F(TemporaryBuffersTest, base_test_handle)
-{
-    TemporaryTestBuffer proxy_buffer(mock_buffer);
-    EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .Times(1);
-
-    proxy_buffer.native_buffer_handle();
-}

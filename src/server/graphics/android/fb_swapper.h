@@ -29,27 +29,22 @@
 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
-
 namespace graphics
 {
 namespace android
 {
-class Buffer;
 
-class FBSwapper : public compositor::BufferSwapper
+class AndroidBuffer;
+class FBSwapper // : public compositor::BufferSwapper
 {
 public:
-    explicit FBSwapper(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list);
-    explicit FBSwapper(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list);
+    explicit FBSwapper(std::initializer_list<std::shared_ptr<AndroidBuffer>> buffer_list);
+    explicit FBSwapper(std::vector<std::shared_ptr<AndroidBuffer>> buffer_list);
 
-    std::shared_ptr<compositor::Buffer> client_acquire();
-    void client_release(std::shared_ptr<compositor::Buffer> const& queued_buffer);
-    std::shared_ptr<compositor::Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<compositor::Buffer> const& released_buffer);
+    std::shared_ptr<AndroidBuffer> client_acquire();
+    void client_release(std::shared_ptr<AndroidBuffer> const& queued_buffer);
+    std::shared_ptr<AndroidBuffer> compositor_acquire();
+    void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer);
     void shutdown();
 
 private:
@@ -61,7 +56,7 @@ private:
     std::mutex queue_lock;
     std::condition_variable cv;
 
-    std::queue<std::shared_ptr<compositor::Buffer>> queue;
+    std::queue<std::shared_ptr<AndroidBuffer>> queue;
 };
 
 }

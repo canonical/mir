@@ -19,13 +19,13 @@
 
 #include "android_buffer_handle_default.h"
 #include "mir/compositor/buffer_ipc_package.h"
-#include "native_buffer_handle.h"
+#include <system/window.h>
 
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
-mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(std::shared_ptr<mc::NativeBufferHandle> const& buf, geom::PixelFormat pf, BufferUsage use)
+mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(std::shared_ptr<ANativeWindowBuffer> const& buf, geom::PixelFormat pf, BufferUsage use)
     : anw_buffer(buf),
       pixel_format(pf),
       buffer_usage(use)
@@ -86,7 +86,7 @@ std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBufferHandleDefault::get_ipc_p
     return ipc_package;
 }
 
-std::shared_ptr<mc::NativeBufferHandle> mga::AndroidBufferHandleDefault::native_buffer_handle() const
+std::shared_ptr<ANativeWindowBuffer> mga::AndroidBufferHandleDefault::native_buffer_handle() const
 {
     return anw_buffer;
 }

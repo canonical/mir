@@ -17,11 +17,9 @@
  */
 
 #include "hwc_layerlist.h"
-#include "native_buffer_handle.h"
-#include "mir/compositor/buffer.h"
+#include "android_buffer.h"
 
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 mga::HWCRect::HWCRect()
@@ -62,7 +60,7 @@ mga::HWCLayerBase::HWCLayerBase()
 }
 
 mga::HWCFBLayer::HWCFBLayer(
-        std::shared_ptr<compositor::NativeBufferHandle> const& native_buf,
+        std::shared_ptr<ANativeWindowBuffer> const& native_buf,
         HWCRect& display_frame_rect)
     : HWCLayerBase()
 {
@@ -84,7 +82,7 @@ const mga::LayerList& mga::HWCLayerList::native_list() const
     return layer_list;
 }
 
-void mga::HWCLayerList::set_fb_target(std::shared_ptr<compositor::Buffer> const& buffer)
+void mga::HWCLayerList::set_fb_target(std::shared_ptr<mga::AndroidBuffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
 
