@@ -80,9 +80,10 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
 {
     /* todo: move to constructor after transitioning 100% from FramebufferNativeWindow */
     hw_module_t const* module;
-    hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
     framebuffer_device_t* fbdev_raw;
-    if(framebuffer_open(module, &fbdev_raw) != 0)
+
+    auto rc = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
+    if ((rc != 0) || (module == nullptr) || (framebuffer_open(module, &fbdev_raw) != 0) )
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
     }

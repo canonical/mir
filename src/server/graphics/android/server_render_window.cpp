@@ -33,8 +33,7 @@ namespace geom=mir::geometry;
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mc::BufferSwapper> const& swapper,
                                             std::shared_ptr<mga::DisplaySupportProvider> const& display_poster)
     : swapper(swapper),
-      poster(display_poster),
-      native_format(0)
+      poster(display_poster)
 {
 }
 
@@ -47,6 +46,7 @@ ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
     return handle;
 }
 
+//sync object could be passed to hwc. we don't need to that yet though
 void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returned_handle, std::shared_ptr<SyncObject> const&)
 {
     auto buffer_it = buffers_in_driver.find(returned_handle); 
@@ -77,7 +77,7 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             size = poster->display_size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
-            return HAL_PIXEL_FORMAT_RGBX_8888 ;
+            return HAL_PIXEL_FORMAT_RGBX_8888;
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
             return -1;

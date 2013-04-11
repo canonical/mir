@@ -93,10 +93,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_devices_ok)
 {
     using namespace testing;
 
-    //sgx hardware doesn't like any other order than this! 
-    InSequence sequene_enforcer;
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
-        .Times(1);
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory); 
@@ -105,12 +101,15 @@ TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_devices_ok)
 TEST_F(AndroidDisplayFactoryTest, fbdev_unavailable_is_fatal_and_does_not_try_to_open_hwc)
 {
     using namespace testing;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
+        .Times(1);
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1)
         .WillOnce(Return(-1));
 
+    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory);
     EXPECT_THROW({
-        mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory);
+        display_factory.create_display();
     }, std::runtime_error);
 }
 

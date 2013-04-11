@@ -28,7 +28,6 @@
 
 namespace mir
 {
-
 namespace graphics
 {
 namespace gbm
