@@ -21,6 +21,8 @@
 #include "src/server/graphics/gbm/virtual_terminal.h"
 #include "mir/logging/display_report.h"
 #include "mir/logging/logger.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/main_loop.h"
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
@@ -56,6 +58,10 @@ public:
     ~MockVirtualTerminal() noexcept(true) {}
 
     MOCK_METHOD0(set_graphics_mode, void());
+    MOCK_METHOD3(register_switch_handlers,
+                 void(mir::MainLoop&,
+                      std::function<void()> const&,
+                      std::function<void()> const&));
 };
 
 class GBMDisplayTest : public ::testing::Test
@@ -629,4 +635,52 @@ TEST_F(GBMDisplayTest, constructor_sets_vt_graphics_mode)
     auto platform = std::make_shared<mgg::GBMPlatform>(null_report, mock_vt);
 
     auto display = std::make_shared<mgg::GBMDisplay>(platform, null_report);
+}
+
+TEST_F(GBMDisplayTest, pause_drops_drm_master)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
+        .Times(1);
+
+    auto platform = create_platform();
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, null_report);
+
+    display->pause();
+}
+
+TEST_F(GBMDisplayTest, resume_sets_drm_master)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_drm, drmSetMaster(mock_drm.fake_drm.fd()))
+        .Times(1);
+
+    auto platform = create_platform();
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, null_report);
+
+    display->resume();
+}
+
+TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_drm, drmDropMaster(_))
+        .WillOnce(Return(-1));
+
+    EXPECT_CALL(mock_drm, drmSetMaster(_))
+        .WillOnce(Return(-1));
+
+    auto platform = create_platform();
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, null_report);
+
+    EXPECT_THROW({
+        display->pause();
+    }, std::runtime_error);
+
+    EXPECT_THROW({
+        display->resume();
+    }, std::runtime_error);
 }

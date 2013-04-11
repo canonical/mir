@@ -21,6 +21,7 @@
 
 #include "virtual_terminal.h"
 
+#include <linux/vt.h>
 #include <unistd.h>
 
 namespace mir
@@ -37,6 +38,10 @@ public:
     ~LinuxVirtualTerminal() noexcept(true);
 
     void set_graphics_mode();
+    void register_switch_handlers(
+        MainLoop& main_loop,
+        std::function<void()> const& switch_away,
+        std::function<void()> const& switch_back);
 
 private:
     class FDWrapper
@@ -50,7 +55,9 @@ private:
     };
 
     FDWrapper const vt_fd;
-    int prev_mode;
+    int prev_kd_mode;
+    struct vt_mode prev_vt_mode;
+    bool active;
 };
 
 }

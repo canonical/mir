@@ -351,3 +351,13 @@ int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle)
 {
     return global_mock->drmPrimeFDToHandle(fd, prime_fd, handle);
 }
+
+int drmSetMaster(int fd)
+{
+    return global_mock->drmSetMaster(fd);
+}
+
+int drmDropMaster(int fd)
+{
+    return global_mock->drmDropMaster(fd);
+}

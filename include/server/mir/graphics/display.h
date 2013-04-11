@@ -26,6 +26,9 @@
 
 namespace mir
 {
+
+class MainLoop;
+
 namespace graphics
 {
 
@@ -39,6 +42,14 @@ public:
     virtual void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) = 0;
 
     virtual std::shared_ptr<DisplayConfiguration> configuration() = 0;
+
+    virtual void register_pause_resume_handlers(
+        MainLoop& main_loop,
+        std::function<void()> const& pause_handler,
+        std::function<void()> const& resume_handler) = 0;
+
+    virtual void pause() = 0;
+    virtual void resume() = 0;
 
 protected:
     Display() = default;

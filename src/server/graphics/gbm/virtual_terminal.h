@@ -19,8 +19,13 @@
 #ifndef MIR_GRAPHICS_GBM_VIRTUAL_TERMINAL_H_
 #define MIR_GRAPHICS_GBM_VIRTUAL_TERMINAL_H_
 
+#include <functional>
+
 namespace mir
 {
+
+class MainLoop;
+
 namespace graphics
 {
 namespace gbm
@@ -32,6 +37,10 @@ public:
     virtual ~VirtualTerminal() = default;
 
     virtual void set_graphics_mode() = 0;
+    virtual void register_switch_handlers(
+        MainLoop& main_loop,
+        std::function<void()> const& switch_away,
+        std::function<void()> const& switch_back) = 0;
 
 protected:
     VirtualTerminal() = default;

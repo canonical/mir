@@ -105,7 +105,8 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
       drm(platform->drm),
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
-      size(size)
+      size(size),
+      needs_set_crtc{false}
 {
     egl.setup(platform->gbm, surface_gbm.get(), shared_context);
 
@@ -180,10 +181,19 @@ bool mgg::GBMDisplayBuffer::post_update()
      * If the flip fails, release the buffer object to make it available
      * for future rendering.
      */
-    if (!schedule_and_wait_for_page_flip(bufobj))
+    if (!needs_set_crtc && !schedule_and_wait_for_page_flip(bufobj))
     {
         bufobj->release();
         return false;
+    }
+    else if (needs_set_crtc)
+    {
+        for (auto& output : outputs)
+        {
+            if (!output->set_crtc(bufobj->get_drm_fb_id()))
+                BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
+        }
+        needs_set_crtc = false;
     }
 
     /*
@@ -264,4 +274,9 @@ void mgg::GBMDisplayBuffer::make_current()
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
     }
+}
+
+void mgg::GBMDisplayBuffer::schedule_set_crtc()
+{
+    needs_set_crtc = true;
 }
