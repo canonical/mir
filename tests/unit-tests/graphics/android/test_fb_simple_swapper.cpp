@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/fb_swapper.h"
+#include "src/server/graphics/android/fb_simple_swapper.h"
 #include "mir_test_doubles/mock_android_buffer.h"
 
 #include <future>

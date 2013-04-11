@@ -22,7 +22,7 @@
 #include "display_support_provider.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
-#include "fb_swapper.h"
+#include "fb_simple_swapper.h"
 
 #include <vector>
 

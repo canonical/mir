@@ -20,12 +20,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_FB_SWAPPER_H_
 #define MIR_GRAPHICS_ANDROID_FB_SWAPPER_H_
 
-#include "mir/compositor/buffer_swapper.h"
-
-#include <condition_variable>
-#include <queue>
-#include <vector>
-#include <mutex>
+#include <memory>
 
 namespace mir
 {
@@ -47,25 +42,6 @@ protected:
     FBSwapper() = default;
     FBSwapper(FBSwapper const&) = delete;
     FBSwapper& operator=(FBSwapper const&) = delete;
-};
-
-class FBSimpleSwapper : public FBSwapper
-{
-public:
-    explicit FBSimpleSwapper(std::initializer_list<std::shared_ptr<AndroidBuffer>> buffer_list);
-    explicit FBSimpleSwapper(std::vector<std::shared_ptr<AndroidBuffer>> buffer_list);
-
-    std::shared_ptr<AndroidBuffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer);
-
-private:
-    template<class T>
-    void initialize_queues(T);
-
-    std::mutex queue_lock;
-    std::condition_variable cv;
-
-    std::queue<std::shared_ptr<AndroidBuffer>> queue;
 };
 
 }

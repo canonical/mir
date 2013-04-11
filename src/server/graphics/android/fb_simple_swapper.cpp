@@ -17,13 +17,12 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "fb_swapper.h"
+#include "fb_simple_swapper.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 
 template<class T>
 void mga::FBSimpleSwapper::initialize_queues(T buffer_list)
