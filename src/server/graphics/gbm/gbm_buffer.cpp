@@ -127,8 +127,3 @@ void mgg::GBMBuffer::bind_to_texture()
 {
     texture_binder->bind_to_texture();
 }
-
-std::shared_ptr<mc::NativeBufferHandle> mgg::GBMBuffer::native_buffer_handle() const
-{
-    return std::shared_ptr<mc::NativeBufferHandle>();
- }
