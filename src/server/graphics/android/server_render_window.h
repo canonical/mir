@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_ANDROID_SERVER_RENDER_WINDOW_H_
 
 #include "mir/graphics/android/android_driver_interpreter.h"
+#include "mir/geometry/pixel_format.h"
 #include "mir/compositor/buffer_id.h"
 
 #include <hardware/fb.h>
@@ -60,7 +61,10 @@ private:
     std::shared_ptr<compositor::BufferSwapper> swapper;
     std::shared_ptr<DisplaySupportProvider> poster;
 
-    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver; 
+    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
+
+    int to_android_format(geometry::PixelFormat format);
+    int format;
 }; 
 
 }

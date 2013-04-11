@@ -122,8 +122,8 @@ TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
     geom::PixelFormat pf = geom::PixelFormat::abgr_8888; 
  
     EXPECT_CALL(*mock_display_info_provider, display_format())
-        .Times(1)
-        .WillOnce(Return(pf));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(pf));
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,pf,_))
         .Times(fake_fb_num);
  

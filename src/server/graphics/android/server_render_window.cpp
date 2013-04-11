@@ -33,7 +33,8 @@ namespace geom=mir::geometry;
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mc::BufferSwapper> const& swapper,
                                             std::shared_ptr<mga::DisplaySupportProvider> const& display_poster)
     : swapper(swapper),
-      poster(display_poster)
+      poster(display_poster),
+      format(to_android_format(poster->display_format()))
 {
 }
 
@@ -61,8 +62,9 @@ void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returne
     swapper->compositor_release(buffer);
 }
 
-void mga::ServerRenderWindow::dispatch_driver_request_format(int /*format*/)
+void mga::ServerRenderWindow::dispatch_driver_request_format(int request_format)
 {
+    format = request_format;
 }
 
 int mga::ServerRenderWindow::driver_requests_info(int key) const
@@ -77,9 +79,22 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             size = poster->display_size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
-            return HAL_PIXEL_FORMAT_RGBX_8888;
+            return format; 
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
             return -1;
+    }
+}
+
+int mga::ServerRenderWindow::to_android_format(geom::PixelFormat format)
+{
+    switch (format)
+    {
+        case geom::PixelFormat::abgr_8888:
+            return HAL_PIXEL_FORMAT_RGBA_8888;
+        default:
+            BOOST_THROW_EXCEPTION(std::runtime_error("pixel format of fb is unknown!"));
+            return -1;
+
     }
 }
