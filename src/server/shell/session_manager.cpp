@@ -108,33 +108,6 @@ void msh::SessionManager::shutdown()
     });
 }
 
-void msh::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<mf::Session> const& session, int id)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    typedef Tags::value_type Pair;
-
-    auto remove = std::remove_if(tags.begin(), tags.end(),
-        [&](Pair const& v) { return v.first == id || v.second == session;});
-
-    tags.erase(remove, tags.end());
-
-    tags.push_back(Pair(id, session));
-}
-
-void msh::SessionManager::focus_session_with_lightdm_id(int id)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    typedef Tags::value_type Pair;
-
-    auto match = std::find_if(tags.begin(), tags.end(),
-        [&](Pair const& v) { return v.first == id; });
-
-    if (tags.end() != match)
-    {
-        set_focus_to_locked(lock, match->second);
-    }
-}
-
 mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
     mf::SurfaceCreationParameters const& params)
 {

@@ -138,35 +138,6 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
     EXPECT_EQ(session, new_session);
 }
 
-TEST_F(SessionManagerSetup, apps_selected_by_id_receive_focus)
-{
-    using namespace ::testing;
-
-    auto session1 = session_manager.open_session("Visual Basic Studio");
-    auto session2 = session_manager.open_session("IntelliJ IDEA");
-
-    session_manager.tag_session_with_lightdm_id(session1, 1);
-
-    EXPECT_CALL(focus_setter, set_focus_to(Eq(session1)));
-    session_manager.focus_session_with_lightdm_id(1);
-}
-
-TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
-{
-    using namespace ::testing;
-
-    auto session1 = session_manager.open_session("Visual Basic Studio");
-    auto session2 = session_manager.open_session("IntelliJ IDEA");
-
-    session_manager.tag_session_with_lightdm_id(session1, 1);
-    session_manager.focus_session_with_lightdm_id(1);
-
-    EXPECT_CALL(sequence, default_focus()).WillOnce(Return(session2));
-    EXPECT_CALL(focus_setter, set_focus_to(Eq(session2)));
-
-    session_manager.close_session(session1);
-}
-
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
     using namespace ::testing;

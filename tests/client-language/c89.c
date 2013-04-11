@@ -22,7 +22,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
-#include "mir_toolkit/mir_client_library_lightdm.h"
 #include "mir_toolkit/event.h"
 
 int main()

@@ -85,9 +85,6 @@ void mir::frontend::SessionMediator::connect(
 
     resource_cache->save_resource(response, ipc_package);
 
-    if (request->has_lightdm_id())
-        shell->tag_session_with_lightdm_id(session, request->lightdm_id());
-
     done->Run();
 }
 
@@ -182,20 +179,6 @@ void mir::frontend::SessionMediator::next_buffer(
         resource_cache->save_resource(response, ipc_package);
     }
     client_tracker->add(id);
-    done->Run();
-}
-
-void mir::frontend::SessionMediator::select_focus_by_lightdm_id(
-    google::protobuf::RpcController*,// controller,
-    mir::protobuf::LightdmId const* request,
-    mir::protobuf::Void*,// response,
-    google::protobuf::Closure* done)
-{
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    shell->focus_session_with_lightdm_id(request->value());
-
     done->Run();
 }
 
