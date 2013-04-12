@@ -42,7 +42,7 @@ ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = swapper->compositor_acquire();
     auto handle = buffer->native_buffer_handle().get();
-    buffers_in_driver[(ANativeWindowBuffer*) handle] = buffer;
+    buffers_in_driver[handle] = buffer;
 
     return handle;
 }

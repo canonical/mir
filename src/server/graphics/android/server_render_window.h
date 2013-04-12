@@ -52,8 +52,8 @@ public:
     int driver_requests_info(int key) const;
 
 private:
-    std::shared_ptr<FBSwapper> swapper;
-    std::shared_ptr<DisplaySupportProvider> poster;
+    std::shared_ptr<FBSwapper> const swapper;
+    std::shared_ptr<DisplaySupportProvider> const poster;
 
     std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<AndroidBuffer>> buffers_in_driver;
 
