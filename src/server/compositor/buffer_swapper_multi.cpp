@@ -116,12 +116,15 @@ void mc::BufferSwapperMulti::shutdown()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
+    if ((compositor_queue.empty()) && (client_queue.empty()))
+    {
+        //client is using its buffers and not waiting. we can just return
+        return;
+    }
+
     if (client_queue.empty())
     {
-        if (compositor_queue.empty())
-        {
-            return;
-        }
+        //client is waiting. hijack compositor's buffer and unblock client
         auto dequeued_buffer = compositor_queue.front();
         compositor_queue.pop_front();
         client_queue.push_back(dequeued_buffer);
