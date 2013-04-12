@@ -25,6 +25,7 @@
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir_test_doubles/null_virtual_terminal.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
@@ -37,6 +38,7 @@
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -59,8 +61,7 @@ mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode
 class GBMDisplayConfigurationTest : public ::testing::Test
 {
 public:
-    GBMDisplayConfigurationTest() :
-        null_listener{std::make_shared<mg::NullDisplayReport>()}
+    GBMDisplayConfigurationTest()
     {
         using namespace testing;
 
@@ -81,6 +82,13 @@ public:
         setup_sample_modes();
     }
 
+    std::shared_ptr<mgg::GBMPlatform> create_platform()
+    {
+        return std::make_shared<mgg::GBMPlatform>(
+            std::make_shared<mg::NullDisplayReport>(),
+            std::make_shared<mtd::NullVirtualTerminal>());
+    }
+
     void setup_sample_modes()
     {
         /* Add DRM modes */
@@ -98,7 +106,6 @@ public:
     ::testing::NiceMock<mir::GLMock> mock_gl;
     ::testing::NiceMock<mgg::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
-    std::shared_ptr<mg::DisplayReport> const null_listener;
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<mg::DisplayConfigurationMode> conf_modes0;
@@ -176,7 +183,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     };
 
     /* Test body */
-    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto platform = create_platform();
     auto display = platform->create_display();
 
     auto conf = display->configuration();
@@ -214,7 +221,7 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
     resources.prepare();
 
     /* Test body */
-    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto platform = create_platform();
     auto display = platform->create_display();
 
     auto conf = display->configuration();
@@ -253,7 +260,7 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
     resources.prepare();
 
     /* Test body */
-    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto platform = create_platform();
     auto display = platform->create_display();
 
     auto conf = display->configuration();

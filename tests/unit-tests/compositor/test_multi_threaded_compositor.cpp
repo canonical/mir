@@ -53,6 +53,13 @@ class StubDisplay : public mg::Display
     {
         return std::shared_ptr<mg::DisplayConfiguration>();
     }
+    void register_pause_resume_handlers(mir::MainLoop&,
+                                        std::function<void()> const&,
+                                        std::function<void()> const&)
+    {
+    }
+    void pause() {}
+    void resume() {}
 
 private:
     std::vector<mtd::NullDisplayBuffer> buffers;

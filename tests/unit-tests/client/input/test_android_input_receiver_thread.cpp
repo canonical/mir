@@ -146,7 +146,12 @@ TEST_F(AndroidInputReceiverThreadSetup, input_callback_invoked_from_thread)
     }
 
     input_thread.start();
-    while (handled == false) { } // We would block forever here were delivery not threaded
+
+    // We would block forever here were delivery not threaded.
+    // Yield to improve the run-time under valgrind.
+    while (handled == false)
+        std::this_thread::yield();
+
     input_thread.join();
 }
 
