@@ -96,6 +96,46 @@ void mggh::DRMHelper::auth_magic(drm_magic_t magic) const
     }
 }
 
+void mggh::DRMHelper::drop_master() const
+{
+    /* We must have our own device fd first, so that it has become the DRM master */
+    if (fd < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Tried to drop DRM master without a DRM device"));
+    }
+
+    int ret = drmDropMaster(fd);
+
+    if (ret < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to drop DRM master"))
+                    << boost::errinfo_errno(ret));
+    }
+}
+
+void mggh::DRMHelper::set_master() const
+{
+    /* We must have our own device fd first, so that it has become the DRM master */
+    if (fd < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Tried to set DRM master without a DRM device"));
+    }
+
+    int ret = drmSetMaster(fd);
+
+    if (ret < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to set DRM master"))
+                    << boost::errinfo_errno(ret));
+    }
+}
+
 int mggh::DRMHelper::open_drm_device()
 {
     static const char *drivers[] = {

@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
 #include "kms_output_container.h"
 #include "gbm_display_helpers.h"
 
@@ -36,23 +35,34 @@ namespace graphics
 {
 
 class DisplayReport;
+class DisplayBuffer;
 
 namespace gbm
 {
 
 class GBMPlatform;
 class KMSOutput;
+class GBMDisplayBuffer;
 
 class GBMDisplay : public Display
 {
 public:
     GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                std::shared_ptr<DisplayReport> const& listener);
+    ~GBMDisplay();
 
     geometry::Rectangle view_area() const;
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
+
+    void register_pause_resume_handlers(
+        MainLoop& main_loop,
+        std::function<void()> const& pause_handler,
+        std::function<void()> const& resume_handler);
+
+    void pause();
+    void resume();
 
 private:
     void configure(std::shared_ptr<DisplayConfiguration> const& conf);
@@ -60,7 +70,7 @@ private:
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     helpers::EGLHelper shared_egl;
-    std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
+    std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;
     KMSOutputContainer output_container;
 };
 
