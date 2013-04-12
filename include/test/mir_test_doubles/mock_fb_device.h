@@ -29,13 +29,7 @@ namespace test
 namespace doubles
 {
 
-class ICSFBInterface
-{
-public:
-    virtual int post_interface(struct framebuffer_device_t* dev, buffer_handle_t handle) = 0;
-};
-
-class MockFBHalDevice : public framebuffer_device_t, public ICSFBInterface
+class MockFBHalDevice : public framebuffer_device_t
 {
 public:
     MockFBHalDevice()

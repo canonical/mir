@@ -35,9 +35,6 @@ namespace doubles
 class MockBufferHandle : public graphics::android::AndroidBufferHandle
 {
 public:
-    MockBufferHandle()
-    {
-    }
     MOCK_CONST_METHOD0(size,   geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, geometry::PixelFormat());
@@ -49,10 +46,6 @@ public:
 class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
 {
 public:
-    MockAllocAdaptor()
-    {
-    }
-
     MOCK_METHOD3(alloc_buffer, std::shared_ptr<graphics::android::AndroidBufferHandle>(geometry::Size, geometry::PixelFormat, graphics::android::BufferUsage));
 };
 
