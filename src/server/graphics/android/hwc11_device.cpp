@@ -137,9 +137,9 @@ void mga::HWC11Device::commit_frame()
 {
     auto& list = layer_organizer->native_list();
 
-    //c-style malloc because of a hwLayers[0] at the end of the struct
-    auto hwc_display = (hwc_display_contents_1_t*) malloc(
-        sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size())); 
+    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size());
+    auto hwc_display_raw = static_cast<hwc_display_contents_1_t*>( ::operator new( struct_size));
+    auto hwc_display = std::unique_ptr<hwc_display_contents_1_t>(hwc_display_raw); 
 
     auto i = 0u;
     for( auto& layer : list)
@@ -149,7 +149,7 @@ void mga::HWC11Device::commit_frame()
     hwc_display->numHwLayers = list.size();
     hwc_display->retireFenceFd = -1;
 
-    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display);
+    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display_raw);
     if (rc != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
@@ -157,6 +157,4 @@ void mga::HWC11Device::commit_frame()
 
     if (hwc_display->retireFenceFd > 0)
         close(hwc_display->retireFenceFd);
-
-    free(hwc_display);
 }
