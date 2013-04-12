@@ -31,6 +31,7 @@ namespace doubles
 class MockDisplaySupportProvider : public graphics::android::DisplaySupportProvider
 {
 public:
+    ~MockDisplaySupportProvider() noexcept {}
     MOCK_CONST_METHOD0(display_size, geometry::Size());
     MOCK_CONST_METHOD0(display_format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());

@@ -36,12 +36,14 @@ namespace
 {
 struct MockHWCOrganizer : public mga::HWCLayerOrganizer
 {
+    ~MockHWCOrganizer() noexcept {}
     MOCK_CONST_METHOD0(native_list, mga::LayerList const&());
     MOCK_METHOD1(set_fb_target, void(std::shared_ptr<mga::AndroidBuffer> const&));
 };
 
 struct MockFBDevice : public mga::FBDevice
 {
+    ~MockFBDevice() noexcept {}
     MOCK_METHOD1(post, void(std::shared_ptr<mga::AndroidBuffer> const&));
 };
 
@@ -57,8 +59,8 @@ protected:
     virtual void SetUp()
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<testing::NiceMock<MockFBDevice>>();
-        mock_organizer = std::make_shared<testing::NiceMock<MockHWCOrganizer>>();
+        mock_fbdev = std::make_shared<MockFBDevice>();
+        mock_organizer = std::make_shared<MockHWCOrganizer>();
     }
 
     std::shared_ptr<MockHWCOrganizer> mock_organizer;

@@ -77,7 +77,7 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
     }
 }
 
-mga::HWC11Device::~HWC11Device()
+mga::HWC11Device::~HWC11Device() noexcept
 {
     hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
     hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);

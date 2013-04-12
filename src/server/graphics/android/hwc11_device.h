@@ -46,7 +46,7 @@ public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<HWCLayerOrganizer> const& organizer,
                 std::shared_ptr<FBDevice> const& fbdev);
-    ~HWC11Device();
+    ~HWC11Device() noexcept;
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const;

@@ -47,7 +47,7 @@ class SyncFence : public SyncObject
 {
 public:
     SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper);
-    ~SyncFence();
+    ~SyncFence() noexcept;
 
     void wait();
 

@@ -31,7 +31,7 @@ class AndroidBuffer;
 class FBDevice
 {
 public:
-    virtual ~FBDevice() {}
+    virtual ~FBDevice() = default;
 
     virtual void post(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
 

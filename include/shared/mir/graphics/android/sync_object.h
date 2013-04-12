@@ -29,7 +29,7 @@ namespace android
 class SyncObject
 {
 public:
-    virtual ~SyncObject() {}
+    virtual ~SyncObject() = default;
     virtual void wait() = 0;
 
 protected:

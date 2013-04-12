@@ -24,7 +24,7 @@
 namespace mga=mir::graphics::android;
 
 std::shared_ptr<mga::AndroidDisplay> mga::AndroidDisplayAllocator::create_gpu_display(
-    std::shared_ptr<ANativeWindow> const& native_window ) const
+    std::shared_ptr<ANativeWindow> const& native_window) const
 {
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (native_window);
     return std::make_shared<AndroidDisplay>(window);

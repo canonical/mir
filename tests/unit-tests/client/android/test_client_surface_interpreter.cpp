@@ -32,6 +32,7 @@ namespace
 {
 struct MockSyncFence : public mga::SyncObject
 {
+    ~MockSyncFence() noexcept {}
     MOCK_METHOD0(wait, void());
 };
 struct MockClientBuffer : public mcl::ClientBuffer
@@ -90,7 +91,7 @@ protected:
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
         mock_client_buffer = std::make_shared<NiceMock<MockClientBuffer>>();
-        mock_sync = std::make_shared<NiceMock<MockSyncFence>>();
+        mock_sync = std::make_shared<MockSyncFence>();
     }
 
     MirSurfaceParameters surf_params;

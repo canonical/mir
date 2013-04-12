@@ -31,6 +31,7 @@ namespace
 
 struct MockSyncFence : public mga::SyncObject
 {
+    ~MockSyncFence() noexcept {}
     MOCK_METHOD0(wait, void());
 };
 

@@ -27,13 +27,8 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-//#include <cutils/log.h>
-//#include <cutils/atomic.h>
-//#include <utils/threads.h>
 #include <utils/RefBase.h>
 
-//#include <ui/ANativeObjectBase.h>
-//#include <ui/Fence.h>
 #include <ui/FramebufferNativeWindow.h>
 #include <ui/Rect.h>
 
@@ -83,51 +78,51 @@ FramebufferNativeWindow::FramebufferNativeWindow(hw_module_t const* module, std:
     :/* BASE(), */ fbDev(fb), grDev(0), mUpdateOnDemand(false)
 {
 
-        int err;
-        int i;
-        
-        err = gralloc_open(module, &grDev);
+    int err;
+    int i;
+    
+    err = gralloc_open(module, &grDev);
 
-        // bail out if we can't initialize the modules
-        if (!fbDev || !grDev)
-            return;
-        
-        mUpdateOnDemand = (fbDev->setUpdateRect != 0);
-        
-        mNumBuffers = 2; //fbDev->numFramebuffers;
+    // bail out if we can't initialize the modules
+    if (!fbDev || !grDev)
+        return;
+    
+    mUpdateOnDemand = (fbDev->setUpdateRect != 0);
+    
+    mNumBuffers = 2; //fbDev->numFramebuffers;
 
-        mNumFreeBuffers = mNumBuffers;
-        mBufferHead = mNumBuffers-1;
+    mNumFreeBuffers = mNumBuffers;
+    mBufferHead = mNumBuffers-1;
 
-        for (i = 0; i < mNumBuffers; i++)
-        {
-                buffers[i] = new NativeBuffer(
-                        fbDev->width, fbDev->height, fbDev->format, GRALLOC_USAGE_HW_FB);
-        }
+    for (i = 0; i < mNumBuffers; i++)
+    {
+            buffers[i] = new NativeBuffer(
+                    fbDev->width, fbDev->height, fbDev->format, GRALLOC_USAGE_HW_FB);
+    }
 
-        for (i = 0; i < mNumBuffers; i++)
-        {
-                err = grDev->alloc(grDev,
-                        fbDev->width, fbDev->height, fbDev->format,
-                        GRALLOC_USAGE_HW_FB, &buffers[i]->handle, &buffers[i]->stride);
+    for (i = 0; i < mNumBuffers; i++)
+    {
+            err = grDev->alloc(grDev,
+                    fbDev->width, fbDev->height, fbDev->format,
+                    GRALLOC_USAGE_HW_FB, &buffers[i]->handle, &buffers[i]->stride);
 
 
-                if (err)
-                {
-                        mNumBuffers = i;
-                        mNumFreeBuffers = i;
-                        mBufferHead = mNumBuffers-1;
-                        break;
-                }
-        }
+            if (err)
+            {
+                    mNumBuffers = i;
+                    mNumFreeBuffers = i;
+                    mBufferHead = mNumBuffers-1;
+                    break;
+            }
+    }
 
-        const_cast<uint32_t&>(ANativeWindow::flags) = fbDev->flags; 
-        const_cast<float&>(ANativeWindow::xdpi) = fbDev->xdpi;
-        const_cast<float&>(ANativeWindow::ydpi) = fbDev->ydpi;
-        const_cast<int&>(ANativeWindow::minSwapInterval) = 
-            fbDev->minSwapInterval;
-        const_cast<int&>(ANativeWindow::maxSwapInterval) = 
-            fbDev->maxSwapInterval;
+    const_cast<uint32_t&>(ANativeWindow::flags) = fbDev->flags; 
+    const_cast<float&>(ANativeWindow::xdpi) = fbDev->xdpi;
+    const_cast<float&>(ANativeWindow::ydpi) = fbDev->ydpi;
+    const_cast<int&>(ANativeWindow::minSwapInterval) = 
+        fbDev->minSwapInterval;
+    const_cast<int&>(ANativeWindow::maxSwapInterval) = 
+        fbDev->maxSwapInterval;
 
     common.incRef = incRef;
     common.decRef = incRef; 
@@ -154,10 +149,6 @@ FramebufferNativeWindow::~FramebufferNativeWindow()
         }
         gralloc_close(grDev);
     }
-
-  //  if (fbDev) {
-//        framebuffer_close(fbDev.get());
- //   }
 }
 
 status_t FramebufferNativeWindow::setUpdateRectangle(const Rect& r) 

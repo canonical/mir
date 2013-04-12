@@ -34,7 +34,7 @@ class AndroidBuffer;
 class DisplaySupportProvider
 {
 public:
-    virtual ~DisplaySupportProvider() {}
+    virtual ~DisplaySupportProvider() = default;
 
     virtual geometry::Size display_size() const = 0; 
     virtual geometry::PixelFormat display_format() const = 0; 

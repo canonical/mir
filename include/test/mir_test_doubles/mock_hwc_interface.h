@@ -33,6 +33,7 @@ namespace doubles
 class MockHWCInterface : public graphics::android::HWCDevice
 {
 public:
+    ~MockHWCInterface() noexcept {}
     MOCK_METHOD0(wait_for_vsync, void());
     MOCK_METHOD0(commit_frame, void());
     MOCK_CONST_METHOD0(display_size, geometry::Size());

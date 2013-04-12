@@ -26,7 +26,7 @@ mga::SyncFence::SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper)
 {
 }
 
-mga::SyncFence::~SyncFence()
+mga::SyncFence::~SyncFence() noexcept
 {
     if (fence_fd > 0)
     {

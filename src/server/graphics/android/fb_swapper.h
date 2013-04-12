@@ -31,10 +31,10 @@ namespace android
 
 class AndroidBuffer;
 
-class FBSwapper // (todo: for composition bypass) : public compositor::BufferSwapper
+class FBSwapper // (todo: for composition bypass, inherit from mc::BufferSwapper)
 {
 public:
-    virtual ~FBSwapper() {}
+    virtual ~FBSwapper() = default;
 
     virtual std::shared_ptr<AndroidBuffer> compositor_acquire() = 0;
     virtual void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer) = 0;

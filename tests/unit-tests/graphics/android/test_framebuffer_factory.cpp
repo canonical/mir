@@ -47,7 +47,7 @@ class FBFactory  : public ::testing::Test
 public:
     FBFactory()
         : mock_buffer_allocator(std::make_shared<testing::NiceMock<MockAndroidGraphicBufferAllocator>>()),
-          mock_display_info_provider(std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>()),
+          mock_display_info_provider(std::make_shared<mtd::MockDisplaySupportProvider>()),
           fake_fb_num(2)
     {
         using namespace testing;

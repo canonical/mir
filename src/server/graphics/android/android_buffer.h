@@ -35,7 +35,7 @@ namespace android
 class AndroidBuffer : public compositor::BufferBasic
 {
 public:
-    virtual ~AndroidBuffer() {}
+    virtual ~AndroidBuffer() = default;
     virtual std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const = 0;
 protected:
     AndroidBuffer() = default;

@@ -35,6 +35,7 @@ namespace
 {
 struct MockHWCFactory: public mga::HWCFactory
 {
+    ~MockHWCFactory() noexcept {}
     MockHWCFactory()
     {
         using namespace testing;
@@ -62,7 +63,8 @@ struct MockDisplayAllocator: public mga::DisplayAllocator
 };
 
 struct MockFNWFactory : public mga::FramebufferFactory
-{ 
+{
+    ~MockFNWFactory () noexcept {} 
     MOCK_METHOD1(create_fb_native_window,
                     std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplaySupportProvider> const&));
 };

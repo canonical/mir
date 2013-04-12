@@ -72,9 +72,7 @@ std::shared_ptr<mc::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
     auto usage = convert_from_compositor_usage(buffer_properties.usage);
-    return alloc_buffer_platform(buffer_properties.size,
-                                          buffer_properties.format,
-                                          usage);
+    return alloc_buffer_platform(buffer_properties.size, buffer_properties.format, usage);
 }
 
 std::shared_ptr<mga::AndroidBuffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(

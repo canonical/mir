@@ -33,7 +33,7 @@ class DisplaySupportProvider;
 class FramebufferFactory
 {
 public:
-    virtual ~FramebufferFactory() {}
+    virtual ~FramebufferFactory() = default;
 
     virtual std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const&) = 0; 
 

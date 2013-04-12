@@ -32,7 +32,7 @@ class HWCDevice : public DisplaySupportProvider
 {
 public:
     HWCDevice() = default;
-    virtual ~HWCDevice() {}
+    virtual ~HWCDevice() noexcept = default;
 
     /* from DisplaySupportProvider */
     virtual geometry::Size display_size() const = 0; 

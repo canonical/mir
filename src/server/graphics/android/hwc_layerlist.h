@@ -61,7 +61,7 @@ struct HWCFBLayer : public HWCLayerBase
 class HWCLayerOrganizer
 {
 public:
-    virtual ~HWCLayerOrganizer() {}
+    virtual ~HWCLayerOrganizer() = default;
     virtual const LayerList& native_list() const = 0;
     virtual void set_fb_target(std::shared_ptr<AndroidBuffer> const&) = 0;
 

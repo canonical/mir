@@ -34,16 +34,15 @@ namespace mc=mir::compositor;
 namespace
 {
 
-struct MockSyncFence : public mga::SyncObject
+struct StubFence : public mga::SyncObject
 {
+    virtual ~StubFence() noexcept {}
     MOCK_METHOD0(wait, void());
 };
 
 struct MockFBSwapper : public mga::FBSwapper
 {
-    MockFBSwapper()
-    {
-    }
+    ~MockFBSwapper() noexcept {}
     MOCK_METHOD0(compositor_acquire, std::shared_ptr<mga::AndroidBuffer>());
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<mga::AndroidBuffer> const& released_buffer));
 }; 
@@ -56,10 +55,10 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_buffer2 = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
         mock_buffer3 = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
         mock_swapper = std::make_shared<MockFBSwapper>();
-        mock_display_poster = std::make_shared<NiceMock<mtd::MockDisplaySupportProvider>>();
+        mock_display_poster = std::make_shared<mtd::MockDisplaySupportProvider>();
         ON_CALL(*mock_display_poster, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        stub_sync = std::make_shared<MockSyncFence>();
+        stub_sync = std::make_shared<StubFence>();
     }
 
     std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer1;
@@ -67,7 +66,7 @@ struct ServerRenderWindowTest : public ::testing::Test
     std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer3;
     std::shared_ptr<MockFBSwapper> mock_swapper;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_poster;
-    std::shared_ptr<MockSyncFence> stub_sync;
+    std::shared_ptr<StubFence> stub_sync;
 };
 }
 
