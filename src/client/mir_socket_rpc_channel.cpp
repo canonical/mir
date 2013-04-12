@@ -27,6 +27,7 @@
 #include "ancillary.h"
 
 #include <boost/bind.hpp>
+#include <cstring>
 
 namespace mcl = mir::client;
 namespace mcld = mir::client::detail;
@@ -271,8 +272,13 @@ void mcl::MirSocketRpcChannel::read_message()
                             // possible. But that's a job for later...
                             if (raw_event.size() == sizeof(MirEvent))
                             {
-                                event_handler->handle_event(
-                                    *(MirEvent const*)raw_event.data());
+                                MirEvent e;
+
+                                // Make a copy to ensure integer fields get
+                                // correct memory alignment, which is critical
+                                // on many non-x86 architectures.
+                                memcpy(&e, raw_event.data(), sizeof e);
+                                event_handler->handle_event(e);
                             }
                             else
                             {
