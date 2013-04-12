@@ -55,7 +55,7 @@ public:
     /* android-specific */
     std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
 private:
-    const std::shared_ptr<GraphicAllocAdaptor> alloc_device;
+    std::shared_ptr<GraphicAllocAdaptor> const alloc_device;
 
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 

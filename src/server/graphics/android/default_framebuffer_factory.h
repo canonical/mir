@@ -36,7 +36,7 @@ public:
     explicit DefaultFramebufferFactory(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator);
     std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const&);
 private:
-    std::shared_ptr<GraphicBufferAllocator> buffer_allocator;
+    std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
 };
 
 }
