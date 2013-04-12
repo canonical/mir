@@ -118,6 +118,10 @@ void mc::BufferSwapperMulti::shutdown()
 
     if (client_queue.empty())
     {
+        if (compositor_queue.empty())
+        {
+            return;
+        }
         auto dequeued_buffer = compositor_queue.front();
         compositor_queue.pop_front();
         client_queue.push_back(dequeued_buffer);
