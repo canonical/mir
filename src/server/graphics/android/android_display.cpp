@@ -142,6 +142,21 @@ std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
     return std::make_shared<NullDisplayConfiguration>();
 }
 
+void mga::AndroidDisplay::register_pause_resume_handlers(
+    MainLoop& /*main_loop*/,
+    std::function<void()> const& /*pause_handler*/,
+    std::function<void()> const& /*resume_handler*/)
+{
+}
+
+void mga::AndroidDisplay::pause()
+{
+}
+
+void mga::AndroidDisplay::resume()
+{
+}
+
 void mga::AndroidDisplay::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)

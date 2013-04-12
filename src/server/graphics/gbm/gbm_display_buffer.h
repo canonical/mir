@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
@@ -55,6 +56,8 @@ public:
     void clear();
     bool post_update();
 
+    void schedule_set_crtc();
+
 private:
     BufferObject* get_front_buffer_object();
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
@@ -68,6 +71,7 @@ private:
     GBMSurfaceUPtr surface_gbm;
     helpers::EGLHelper egl;
     geometry::Size size;
+    std::atomic<bool> needs_set_crtc;
 };
 
 }

@@ -35,6 +35,11 @@ public:
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
     MOCK_METHOD1(for_each_display_buffer, void (std::function<void(graphics::DisplayBuffer&)> const&));
     MOCK_METHOD0(configuration, std::shared_ptr<graphics::DisplayConfiguration>());
+    MOCK_METHOD3(register_pause_resume_handlers, void(MainLoop&,
+                                                      std::function<void()> const&,
+                                                      std::function<void()> const&));
+    MOCK_METHOD0(pause, void());
+    MOCK_METHOD0(resume, void());
 };
 
 }
