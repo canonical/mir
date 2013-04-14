@@ -21,17 +21,20 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
+#include "mir/shell/input_listener.h"
 #include "mir/shell/shell_configuration.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_input_listener.h"
 
 #include "mir/shell/surface.h"
 
@@ -57,7 +60,7 @@ struct MockSessionContainer : public msh::SessionContainer
     MOCK_METHOD0(unlock, void());
 };
 
-struct MockFocusSequence: public msh::FocusSequence
+struct MockFocusSequence : public msh::FocusSequence
 {
     MOCK_CONST_METHOD1(successor_of, std::shared_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
     MOCK_CONST_METHOD1(predecessor_of, std::shared_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
@@ -67,7 +70,7 @@ struct MockFocusSequence: public msh::FocusSequence
 struct TestingShellConfiguration : public msh::ShellConfiguration
 {
     TestingShellConfiguration() {}
-    ~TestingShellConfiguration() noexcept(true) {}
+    virtual ~TestingShellConfiguration() noexcept(true) {}
 
     std::shared_ptr<msh::SurfaceFactory> the_surface_factory()
     {
@@ -85,10 +88,15 @@ struct TestingShellConfiguration : public msh::ShellConfiguration
     {
         return mt::fake_shared(focus_setter);
     }
+    std::shared_ptr<msh::InputListener> the_input_listener()
+    {
+        return mt::fake_shared(input_listener);
+    }
 
     mtd::MockSurfaceFactory surface_factory;
     MockSessionContainer container;
     MockFocusSequence focus_sequence;
+    mtd::StubInputListener input_listener;
     ::testing::NiceMock<mtd::MockFocusSetter> focus_setter;
 };
 
@@ -211,4 +219,3 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     auto session1 = session_manager.open_session("Weather Report");
     session_manager.create_surface_for(session1, mf::a_surface());
 }
-

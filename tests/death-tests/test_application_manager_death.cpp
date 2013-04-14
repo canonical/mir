@@ -43,6 +43,10 @@ struct NullShellConfiguration : public msh::ShellConfiguration
     {
         return std::shared_ptr<msh::FocusSetter>();
     }
+    std::shared_ptr<msh::InputListener> the_input_listener()
+    {
+        return std::shared_ptr<msh::InputListener>();
+    }
 };
 }
 

@@ -35,10 +35,10 @@ namespace shell
 class InputListener
 {
 public:
-    virtual ~InputListener() {}
-
-    virtual void input_application_opened(std::shared_ptr<input::SessionTarget> const& application);
-    virtual void input_application_closed(std::shared_ptr<input::SessionTarget> const& application);
+    virtual ~InputListener() = default;
+    
+    virtual void input_application_opened(std::shared_ptr<input::SessionTarget> const& application) = 0;
+    virtual void input_application_closed(std::shared_ptr<input::SessionTarget> const& application) = 0;
 
     virtual void input_surface_opened(std::shared_ptr<input::SessionTarget> const& application,
                                       std::shared_ptr<input::SurfaceTarget> const& opened_surface) = 0;

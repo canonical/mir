@@ -29,6 +29,7 @@ class SurfaceFactory;
 class SessionContainer;
 class FocusSequence;
 class FocusSetter;
+class InputListener;
 
 class ShellConfiguration
 {
@@ -39,6 +40,7 @@ public:
     virtual std::shared_ptr<SessionContainer> the_session_container() = 0;
     virtual std::shared_ptr<FocusSequence> the_focus_sequence() = 0;
     virtual std::shared_ptr<FocusSetter> the_focus_setter() = 0;
+    virtual std::shared_ptr<InputListener> the_input_listener() = 0;
 
 protected:
     ShellConfiguration() = default;
