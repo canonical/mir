@@ -218,13 +218,20 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     // valid fds to allow non-throwing construction of a real input channel.
     void SetUp()
     {
-        test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
         input_manager->start();
     }
     void TearDown()
     {
         input_manager->stop();
-        close(test_input_fd);
+        for (auto fd : test_input_fds)
+            close(fd);
+    }
+    
+    int test_fd()
+    {
+        int fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+        test_input_fds.push_back(fd);
+        return fd;
     }
 
     MockEventFilter event_filter;
@@ -235,7 +242,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
     std::shared_ptr<mia::InputManager> input_manager;
 
-    int test_input_fd;
+    std::vector<int> test_input_fds;
 };
 
 MATCHER_P(WindowHandleWithInputFd, input_fd, "")
@@ -254,11 +261,13 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     mt::WaitCondition wait_condition;
 
     mtd::StubSessionTarget session;
-    mtd::StubSurfaceTarget surface(test_input_fd);
+    
+    auto input_fd = test_fd();
+    mtd::StubSurfaceTarget surface(input_fd);
 
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
-    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(test_input_fd), _, _))
+    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
     input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface));
@@ -269,4 +278,47 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
                                 .of_scancode(KEY_ENTER));
 
     wait_condition.wait_for_at_most_seconds(1);
+}
+
+TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event_recipient)
+{
+    using namespace ::testing;
+
+    mt::WaitCondition wait1, wait2, wait3;
+
+    mtd::StubSessionTarget session;
+    
+    auto input_fd_1 = test_fd();
+    mtd::StubSurfaceTarget surface1(input_fd_1);
+    auto input_fd_2 = test_fd();
+    mtd::StubSurfaceTarget surface2(input_fd_2);
+
+    EXPECT_CALL(event_filter, handles(_)).Times(3).WillRepeatedly(Return(false));
+
+    {
+        EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd_1), _, _))
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait1), Return(-1)));
+        EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd_2), _, _))
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait2), Return(-1)));
+        EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd_1), _, _))
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait3), Return(-1)));
+    }
+
+    fake_event_hub->synthesize_builtin_keyboard_added();
+    fake_event_hub->synthesize_device_scan_complete();
+
+    input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface1));
+    fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                .of_scancode(KEY_ENTER));
+    wait1.wait_for_at_most_seconds(1);
+
+    input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface2));
+    fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                .of_scancode(KEY_ENTER));
+    wait2.wait_for_at_most_seconds(1);
+
+    input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface1));
+    fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                .of_scancode(KEY_ENTER));
+    wait3.wait_for_at_most_seconds(1);
 }
