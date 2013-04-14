@@ -17,6 +17,7 @@
  */
 
 #include "mir/shell/session_manager.h"
+#include "mir/shell/shell_configuration.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/surface_factory.h"
@@ -31,19 +32,15 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-msh::SessionManager::SessionManager(
-    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
-    std::shared_ptr<msh::SessionContainer> const& container,
-    std::shared_ptr<msh::FocusSequence> const& sequence,
-    std::shared_ptr<msh::FocusSetter> const& focus_setter) :
-    surface_factory(surface_factory),
-    app_container(container),
-    focus_sequence(sequence),
-    focus_setter(focus_setter)
+msh::SessionManager::SessionManager(std::shared_ptr<msh::ShellConfiguration> const& config) :
+    surface_factory(config->the_surface_factory()),
+    app_container(config->the_session_container()),
+    focus_sequence(config->the_focus_sequence()),
+    focus_setter(config->the_focus_setter())
 {
     assert(surface_factory);
-    assert(sequence);
-    assert(container);
+    assert(focus_sequence);
+    assert(app_container);
     assert(focus_setter);
 }
 

@@ -36,6 +36,7 @@ struct SurfaceCreationParameters;
 /// Management of sessions and surfaces
 namespace shell
 {
+class ShellConfiguration;
 class SurfaceFactory;
 class SessionContainer;
 class FocusSequence;
@@ -44,10 +45,7 @@ class FocusSetter;
 class SessionManager : public frontend::Shell
 {
 public:
-    explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
-                            std::shared_ptr<SessionContainer> const& session_container,
-                            std::shared_ptr<FocusSequence> const& focus_sequence,
-                            std::shared_ptr<FocusSetter> const& focus_setter);
+    explicit SessionManager(std::shared_ptr<ShellConfiguration> const& configuration);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);

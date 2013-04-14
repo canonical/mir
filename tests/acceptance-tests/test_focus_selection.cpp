@@ -23,12 +23,14 @@
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
+#include "mir/shell/default_shell_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/input_focus_selector.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_input_focus_selector.h"
+#include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,7 +38,9 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mi = mir::input;
-namespace mtd = mir::test::doubles;
+namespace mg = mir::graphics;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -46,6 +50,25 @@ namespace
 
 namespace
 {
+struct MockFocusShellConfiguration : public msh::DefaultShellConfiguration
+{
+    MockFocusShellConfiguration(std::shared_ptr<mg::ViewableArea> const& view_area,
+                                std::shared_ptr<msh::InputFocusSelector> const& input_selector,
+                                std::shared_ptr<msh::SurfaceFactory> const& surface_factory) :
+        DefaultShellConfiguration(view_area, input_selector, surface_factory)
+    {
+    }
+    
+    ~MockFocusShellConfiguration() noexcept(true) {}
+    
+    std::shared_ptr<msh::FocusSetter> the_focus_setter() override
+    {
+        return mt::fake_shared(mock_focus_setter);
+    }
+    
+    mtd::MockFocusSetter mock_focus_setter;
+};
+
 struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon() :
@@ -139,31 +162,29 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 {
     struct ServerConfig : TestingServerConfiguration
     {
+        std::shared_ptr<MockFocusShellConfiguration> shell_config;
+        
         std::shared_ptr<mf::Shell>
         the_frontend_shell()
         {
+            if (!shell_config)
+                shell_config = std::make_shared<MockFocusShellConfiguration>(the_display(),
+                                                                             the_input_focus_selector(),
+                                                                             the_surface_factory());
             return session_manager(
             [this]() -> std::shared_ptr<msh::SessionManager>
             {
                 using namespace ::testing;
-
-                auto session_container = std::make_shared<msh::SessionContainer>();
-                auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
-                auto focus_selection_strategy = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
-
-                auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
-                auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
-
                 {
                     InSequence seq;
                     // Once on application registration and once on surface creation
-                    EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
+                    EXPECT_CALL(shell_config->mock_focus_setter, set_focus_to(NonNullSession())).Times(2);
                     // Focus is cleared when the session is closed
-                    EXPECT_CALL(*focus_setter, set_focus_to(_)).Times(1);
+                    EXPECT_CALL(shell_config->mock_focus_setter, set_focus_to(_)).Times(1);
                 }
                 // TODO: Counterexample ~racarr
 
-                return std::make_shared<msh::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_setter);
+                return std::make_shared<msh::SessionManager>(shell_config);
             });
         }
     } server_config;

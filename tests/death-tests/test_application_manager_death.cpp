@@ -17,10 +17,34 @@
  */
 
 #include "mir/shell/session_manager.h"
+#include "mir/shell/shell_configuration.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace msh = mir::shell;
+
+namespace
+{
+struct NullShellConfiguration : public msh::ShellConfiguration
+{
+    std::shared_ptr<msh::SurfaceFactory> the_surface_factory()
+    {
+        return std::shared_ptr<msh::SurfaceFactory>();
+    }
+    std::shared_ptr<msh::SessionContainer> the_session_container()
+    {
+        return std::shared_ptr<msh::SessionContainer>();
+    }
+    std::shared_ptr<msh::FocusSequence> the_focus_sequence()
+    {
+        return std::shared_ptr<msh::FocusSequence>();
+    }
+    std::shared_ptr<msh::FocusSetter> the_focus_setter()
+    {
+        return std::shared_ptr<msh::FocusSetter>();
+    }
+};
+}
 
 TEST(SessionManagerDeathTest, DISABLED_class_invariants_not_satisfied_triggers_assertion)
 {
@@ -30,11 +54,7 @@ TEST(SessionManagerDeathTest, DISABLED_class_invariants_not_satisfied_triggers_a
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
     EXPECT_EXIT(
-                std::shared_ptr<msh::SurfaceFactory> factory;
-                mir::shell::SessionManager app(factory,
-                                               std::shared_ptr<msh::SessionContainer>(),
-                                               std::shared_ptr<msh::FocusSequence>(),
-                                               std::shared_ptr<msh::FocusSetter>()),
+                mir::shell::SessionManager app(std::make_shared<NullShellConfiguration>()),
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");
 }
