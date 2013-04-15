@@ -36,12 +36,14 @@ msh::SessionManager::SessionManager(std::shared_ptr<msh::ShellConfiguration> con
     surface_factory(config->the_surface_factory()),
     app_container(config->the_session_container()),
     focus_sequence(config->the_focus_sequence()),
-    focus_setter(config->the_focus_setter())
+    focus_setter(config->the_focus_setter()),
+    input_target_listener(config->the_input_target_listener())
 {
     assert(surface_factory);
     assert(focus_sequence);
     assert(app_container);
     assert(focus_setter);
+    assert(input_target_listener);
 }
 
 msh::SessionManager::~SessionManager()
@@ -50,7 +52,7 @@ msh::SessionManager::~SessionManager()
 
 std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const& name)
 {
-    auto new_session = std::make_shared<msh::ApplicationSession>(surface_factory, name);
+    auto new_session = std::make_shared<msh::ApplicationSession>(surface_factory, input_target_listener, name);
 
     app_container->insert_session(new_session);
 

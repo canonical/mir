@@ -22,6 +22,7 @@
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/stub_input_target_listener.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 
 #include <gmock/gmock.h>
@@ -38,8 +39,10 @@ TEST(SessionContainer, for_each)
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msh::SessionContainer container;
 
-    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 7"));
-    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 8"));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), 
+        "Visual Studio 7"));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), 
+        "Visual Studio 8"));
 
     struct local
     {
@@ -64,8 +67,8 @@ TEST(SessionContainer, invalid_session_throw_behavior)
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msh::SessionContainer container;
 
-    auto session = std::make_shared<msh::ApplicationSession>(factory,
-                                                               "Visual Studio 7");
+    auto session = std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), 
+        "Visual Studio 7");
     EXPECT_THROW({
         container.remove_session(session);
     }, std::logic_error);

@@ -219,3 +219,98 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     auto session1 = session_manager.open_session("Weather Report");
     session_manager.create_surface_for(session1, mf::a_surface());
 }
+
+namespace
+{
+
+struct MockInputTargetListener : public msh::InputTargetListener
+{
+    virtual ~MockInputTargetListener() noexcept(true) {}
+
+    MOCK_METHOD1(input_application_opened, void(std::shared_ptr<mi::SessionTarget> const&));
+    MOCK_METHOD1(input_application_closed, void(std::shared_ptr<mi::SessionTarget> const&));
+    MOCK_METHOD2(input_surface_opened, void(std::shared_ptr<mi::SessionTarget> const&, std::shared_ptr<mi::SurfaceTarget> const&));
+    MOCK_METHOD2(input_surface_closed, void(std::shared_ptr<mi::SessionTarget> const&, std::shared_ptr<mi::SurfaceTarget> const&));
+
+    MOCK_METHOD2(focus_changed, void(std::shared_ptr<mi::SessionTarget> const&, std::shared_ptr<mi::SurfaceTarget> const&));
+    MOCK_METHOD0(focus_cleared, void());
+};
+
+struct MockInputTargetListenerShellConfiguration : public msh::ShellConfiguration
+{
+    MockInputTargetListenerShellConfiguration() {}
+    virtual ~MockInputTargetListenerShellConfiguration() noexcept(true) {}
+
+    std::shared_ptr<msh::SurfaceFactory> the_surface_factory()
+    {
+        return mt::fake_shared(surface_factory);
+    }
+    std::shared_ptr<msh::SessionContainer> the_session_container()
+    {
+        return mt::fake_shared(container);
+    }
+    std::shared_ptr<msh::FocusSequence> the_focus_sequence()
+    {
+        return mt::fake_shared(focus_sequence);
+    }
+    std::shared_ptr<msh::FocusSetter> the_focus_setter()
+    {
+        return mt::fake_shared(focus_setter);
+    }
+    std::shared_ptr<msh::InputTargetListener> the_input_target_listener()
+    {
+        return mt::fake_shared(input_listener);
+    }
+
+    MockInputTargetListener input_listener;
+    ::testing::NiceMock<mtd::MockSurfaceFactory> surface_factory;
+    ::testing::NiceMock<MockSessionContainer> container;
+    ::testing::NiceMock<MockFocusSequence> focus_sequence;
+    ::testing::NiceMock<mtd::MockFocusSetter> focus_setter;
+};
+
+struct SessionManagerInputTargetListenerSetup : public testing::Test
+{
+    SessionManagerInputTargetListenerSetup() :
+        session_manager(mt::fake_shared(config))
+    {
+    }
+
+    mtd::StubSurfaceBuilder surface_builder;
+    MockInputTargetListenerShellConfiguration config;
+    msh::SessionManager session_manager;
+};
+
+}
+
+TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_and_surfacelifecycle)
+{
+    using namespace ::testing;
+
+    std::shared_ptr<mi::InputChannel> null_input_channel;
+    ON_CALL(config.surface_factory, create_surface(_)).WillByDefault(
+       Return(std::make_shared<msh::Surface>(
+           mt::fake_shared(surface_builder),
+           mf::a_surface(),
+           null_input_channel)));
+
+    EXPECT_CALL(config.focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
+    {
+        InSequence seq;
+
+        EXPECT_CALL(config.input_listener, input_application_opened(_))
+            .Times(1);
+        EXPECT_CALL(config.input_listener, input_surface_opened(_, _)).Times(1);
+        EXPECT_CALL(config.input_listener, focus_changed(_, _)).Times(1);
+        EXPECT_CALL(config.input_listener, input_surface_closed(_, _)).Times(1);
+        EXPECT_CALL(config.input_listener, focus_cleared()).Times(1);
+        EXPECT_CALL(config.input_listener, input_application_closed(_))
+            .Times(1);
+    }
+
+    {
+        auto session = session_manager.open_session("test");
+        session_manager.create_surface_for(session, mf::a_surface());
+        session_manager.close_session(session);
+    }
+}

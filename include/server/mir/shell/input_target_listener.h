@@ -47,6 +47,7 @@ public:
 
     virtual void focus_changed(std::shared_ptr<input::SessionTarget> const& focus_application,
                                std::shared_ptr<input::SurfaceTarget> const& focus_surface) = 0;
+    virtual void focus_cleared() = 0;
 
 protected:
     InputTargetListener() = default;

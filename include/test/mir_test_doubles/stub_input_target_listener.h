@@ -48,6 +48,10 @@ struct StubInputTargetListener : public shell::InputTargetListener
                        std::shared_ptr<input::SurfaceTarget> const&)
     {
     }
+    
+    void focus_cleared()
+    {
+    }
 };
 
 }
