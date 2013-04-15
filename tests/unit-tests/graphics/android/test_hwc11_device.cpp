@@ -16,7 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/graphics/android/hwc11_device.h"
+#include "mir_test_doubles/mock_fb_device.h"
+#include "mir_test_doubles/mock_hwc_composer_device_1.h"
+#include "mir_test_doubles/mock_hwc_organizer.h"
 #include <gtest/gtest.h>
+
+namespace mga=mir::graphics::android;
+namespace mtd=mir::test::doubles;
 
 class HWC11Device : public ::testing::Test
 {
@@ -24,14 +31,22 @@ protected:
     virtual void SetUp()
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<MockFBDevice>();
-        mock_organizer = std::make_shared<MockHWCOrganizer>();
+        mock_fbdev = std::make_shared<mtd::MockFBDevice>();
+        mock_organizer = std::make_shared<mtd::MockHWCOrganizer>();
     }
 
     std::shared_ptr<mtd::MockHWCOrganizer> mock_organizer;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<MockFBDevice> mock_fbdev;
+    std::shared_ptr<mtd::MockFBDevice> mock_fbdev;
 };
+
+namespace
+{
+struct HWCDummyLayer : public mga::HWCLayerBase
+{
+    HWCDummyLayer() = default;
+};
+}
 
 TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
 {
