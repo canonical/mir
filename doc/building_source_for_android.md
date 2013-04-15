@@ -52,12 +52,17 @@ ubuntu package) to produce armhf code. This is typically the quickest way to
 compile and run code, and is well suited for a development workflow.
 
 1. Be sure that the cross compiler that you are using matches the target
-   environment. (eg, make sure you're using the quantal toolchain if you're
-   targeting a quantal phablet image)
+   environment. (eg, make sure you're using the raring toolchain if you're
+   targeting a raring phablet image) You can specify the toolchain version
+   thusly:
+
+    $ apt-get install g++-4.7-arm-linux-gnueabihf/raring
 
 2. Set up a chroot with the mir dependencies installed. At the moment, you
-   can look at the script and instructions in lp:mir as an
-   example of how to set up a partial chroot you can build mir against.
+   can look at the script in tools/setup-partial-armhf-chroot.sh for one way
+   that you could setup a partial armhf chroot with the mir dependencies 
+   to build against. The script requires that you are able to download armhf
+   packages from the repository with apt-get.
 
 3. There are a few ways to do this, but here is an example of how to build mir for android
 
