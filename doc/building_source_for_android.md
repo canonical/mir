@@ -56,7 +56,7 @@ compile and run code, and is well suited for a development workflow.
    targeting a raring phablet image) You can specify the toolchain version
    thusly:
 
-    $ apt-get install g++-4.7-arm-linux-gnueabihf/raring
+        $ apt-get install g++-4.7-arm-linux-gnueabihf/raring
 
 2. Set up a chroot with the mir dependencies installed. At the moment, you
    can look at the script in tools/setup-partial-armhf-chroot.sh for one way
@@ -72,7 +72,7 @@ compile and run code, and is well suited for a development workflow.
         $ make
 
 N.B. The `cross-compile-android.sh` script in mir's top level directory
-provides a scripting example of how to cross compile.
+provides a full, scripted example of how to cross compile.
 The 'setup-partial-armhf-chroot.sh' will attempt to download all the arm
 dependencies you need. You have to have your APT sources.list files pointed at
 arm repositories.
