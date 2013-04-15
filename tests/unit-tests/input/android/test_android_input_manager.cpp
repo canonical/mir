@@ -79,7 +79,7 @@ struct MockInputDispatcher : public droidinput::InputDispatcherInterface
     MOCK_METHOD3(registerInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputWindowHandle> const&, bool));
     MOCK_METHOD1(unregisterInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&));
 
-    // droidinput::InputListener interface
+    // droidinput::InputTargetListener interface
     MOCK_METHOD1(notifyConfigurationChanged, void(droidinput::NotifyConfigurationChangedArgs const*));
     MOCK_METHOD1(notifyKey, void(droidinput::NotifyKeyArgs const*));
     MOCK_METHOD1(notifyMotion, void(droidinput::NotifyMotionArgs const*));

@@ -32,10 +32,10 @@ class SurfaceTarget;
 namespace shell
 {
 
-class InputListener
+class InputTargetListener
 {
 public:
-    virtual ~InputListener() = default;
+    virtual ~InputTargetListener() = default;
     
     virtual void input_application_opened(std::shared_ptr<input::SessionTarget> const& application) = 0;
     virtual void input_application_closed(std::shared_ptr<input::SessionTarget> const& application) = 0;
@@ -49,9 +49,9 @@ public:
                                std::shared_ptr<input::SurfaceTarget> const& focus_surface) = 0;
 
 protected:
-    InputListener() = default;
-    InputListener(InputListener const&) = delete;
-    InputListener& operator=(InputListener const&) = delete;
+    InputTargetListener() = default;
+    InputTargetListener(InputTargetListener const&) = delete;
+    InputTargetListener& operator=(InputTargetListener const&) = delete;
 };
 
 }

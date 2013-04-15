@@ -72,10 +72,10 @@ std::shared_ptr<msh::FocusSetter> msh::DefaultShellConfiguration::the_focus_sett
         });
 }
 
-std::shared_ptr<msh::InputListener> msh::DefaultShellConfiguration::the_input_listener()
+std::shared_ptr<msh::InputTargetListener> msh::DefaultShellConfiguration::the_input_target_listener()
 {
     // TODO: Implement ~racarr
-    return std::shared_ptr<msh::InputListener>();
+    return std::shared_ptr<msh::InputTargetListener>();
 }
 
 std::shared_ptr<msh::PlacementStrategy> msh::DefaultShellConfiguration::the_placement_strategy()

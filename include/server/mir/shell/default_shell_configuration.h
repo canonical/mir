@@ -46,7 +46,7 @@ public:
     std::shared_ptr<SessionContainer> the_session_container();
     std::shared_ptr<FocusSequence> the_focus_sequence();
     std::shared_ptr<FocusSetter> the_focus_setter();
-    std::shared_ptr<InputListener> the_input_listener();
+    std::shared_ptr<InputTargetListener> the_input_target_listener();
 
     std::shared_ptr<PlacementStrategy> the_placement_strategy();
 
@@ -63,7 +63,7 @@ private:
     CachedPtr<SessionContainer> session_container;
     CachedPtr<FocusSequence> focus_sequence;
     CachedPtr<FocusSetter> focus_setter;
-    CachedPtr<InputListener> input_listener;
+    CachedPtr<InputTargetListener> input_listener;
     CachedPtr<PlacementStrategy> placement_strategy;
 };
 

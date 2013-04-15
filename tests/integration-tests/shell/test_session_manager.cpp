@@ -34,7 +34,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/stub_input_listener.h"
+#include "mir_test_doubles/stub_input_target_listener.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -67,7 +67,7 @@ struct TestingShellConfiguration : public msh::ShellConfiguration
     {
         return mt::fake_shared(focus_setter);
     }
-    std::shared_ptr<msh::InputListener> the_input_listener()
+    std::shared_ptr<msh::InputTargetListener> the_input_target_listener()
     {
         return mt::fake_shared(input_listener);
     }
@@ -76,7 +76,7 @@ struct TestingShellConfiguration : public msh::ShellConfiguration
     msh::SessionContainer container;
     msh::RegistrationOrderFocusSequence sequence;
     mtd::MockFocusSetter focus_setter;
-    mtd::StubInputListener input_listener;
+    mtd::StubInputTargetListener input_listener;
 };
 
 TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
