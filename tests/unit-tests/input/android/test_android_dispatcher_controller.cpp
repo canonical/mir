@@ -115,13 +115,17 @@ TEST_F(AndroidDispatcherControllerFdSetup, set_input_focus)
 
     auto session = std::make_shared<mtd::StubSessionTarget>();
     auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
-    
-    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
-        .WillOnce(Return(droidinput::OK));
-    EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);
-    EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
-    EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
-    EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
+
+    {
+        InSequence seq;
+
+        EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
+            .WillOnce(Return(droidinput::OK));
+        EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);
+        EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
+        EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
+        EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
+    }
 
     mia::DispatcherController controller(mt::fake_shared(config));
 
