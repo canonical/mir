@@ -65,16 +65,18 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const
     return new_session;
 }
 
-inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<mf::Session> const& next_focus)
+inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&,
+    std::shared_ptr<mf::Session> const& next_focus)
 {
     auto shell_session = std::dynamic_pointer_cast<msh::Session>(next_focus);
+    auto old_focus = focus_application.lock();
 
     focus_application = shell_session;
     focus_setter->set_focus_to(shell_session);
-    
+
     if (shell_session && shell_session->default_surface())
         input_target_listener->focus_changed(shell_session, shell_session->default_surface());
-    else
+    else if (shell_session == old_focus)
         input_target_listener->focus_cleared();
 }
 

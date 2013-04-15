@@ -310,7 +310,8 @@ TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_a
 
     {
         auto session = session_manager.open_session("test");
-        session_manager.create_surface_for(session, mf::a_surface());
+        auto surf = session_manager.create_surface_for(session, mf::a_surface());
+        session->destroy_surface(surf);
         session_manager.close_session(session);
     }
 }
