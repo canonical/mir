@@ -280,7 +280,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, surface_states)
+TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
 {
     struct ClientConfig : ClientConfigCommon
     {
@@ -345,7 +345,7 @@ TEST_F(DefaultDisplayServerTestFixture, surface_states)
     launch_client_process(client_config);
 }
 
-TEST_F(DefaultDisplayServerTestFixture, surface_events)
+TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_state_events)
 {
     struct ClientConfig : ClientConfigCommon
     {
