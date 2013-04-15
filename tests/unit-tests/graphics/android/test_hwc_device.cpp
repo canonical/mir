@@ -59,7 +59,6 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC11Device>(
 
 namespace
 {
-
 struct HWCDummyLayer : public mga::HWCLayerBase
 {
     HWCDummyLayer() = default;
