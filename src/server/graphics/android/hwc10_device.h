@@ -16,12 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
+#define MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
 #include "hwc_common_device.h"
-#include <mutex>
-#include <condition_variable>
-#include <memory>
 
 namespace mir
 {
@@ -29,23 +26,16 @@ namespace graphics
 {
 namespace android
 {
-class HWC11Device;
 class HWCLayerOrganizer;
 class FBDevice;
 
-struct HWCCallbacks
-{
-    hwc_procs_t hooks;
-    HWC11Device* self;
-};
-
-class HWC11Device : public HWCCommonDevice
+class HWC10Device : public HWCCommonDevice
 {
 public:
-    HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<HWCLayerOrganizer> const& organizer,
                 std::shared_ptr<FBDevice> const& fbdev);
-    ~HWC11Device() noexcept;
+    ~HWC10Device() noexcept;
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const;
@@ -55,20 +45,10 @@ public:
     void wait_for_vsync();
     void commit_frame();
     void notify_vsync();
-
-private:
-    HWCCallbacks callbacks;
-    std::shared_ptr<hwc_composer_device_1> const hwc_device;
-    std::shared_ptr<HWCLayerOrganizer> const layer_organizer;
-    std::shared_ptr<FBDevice> const fb_device;
-    std::mutex vsync_wait_mutex;
-    std::condition_variable vsync_trigger;
-    bool vsync_occurred;
-    unsigned int primary_display_config;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_ */
