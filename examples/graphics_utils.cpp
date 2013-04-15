@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/draw/graphics.h"
-#include "mir/draw/mir_image.h"
+#include "graphics.h"
+#include "mir_image.h"
 
 #include <cmath>
 #include <chrono>

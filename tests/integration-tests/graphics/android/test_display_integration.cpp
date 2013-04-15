@@ -20,7 +20,7 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_display.h"
 
-#include "mir/draw/graphics.h"
+#include "graphics.h"
 #include "mir_test/draw/android_graphics.h"
 
 #include <gtest/gtest.h>

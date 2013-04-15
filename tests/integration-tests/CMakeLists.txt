@@ -16,7 +16,7 @@ add_subdirectory(process/)
 add_subdirectory(input/)
 
 if (MIR_PLATFORM STREQUAL "android")
-  include_directories(${PROJECT_SOURCE_DIR}/include/accessory)
+  include_directories(${PROJECT_SOURCE_DIR}/examples)
 
   add_subdirectory(graphics/android)
 endif()
