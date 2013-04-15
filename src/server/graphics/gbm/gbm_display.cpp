@@ -22,6 +22,7 @@
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
+#include "virtual_terminal.h"
 
 #include "mir/geometry/rectangle.h"
 
@@ -36,11 +37,17 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)}
 {
+    platform->vt->set_graphics_mode();
+
     shared_egl.setup(platform->gbm);
 
     configure(configuration());
 
     shared_egl.make_current();
+}
+
+mgg::GBMDisplay::~GBMDisplay()
+{
 }
 
 geom::Rectangle mgg::GBMDisplay::view_area() const
@@ -92,8 +99,29 @@ void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const&
                                                         max_size.height.as_uint32_t());
 
     /* Create a single DisplayBuffer that displays the surface on all the outputs */
-    std::unique_ptr<DisplayBuffer> db{new GBMDisplayBuffer{platform, listener, enabled_outputs,
-                                                           std::move(surface), max_size,
-                                                           shared_egl.context()}};
+    std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener, enabled_outputs,
+                                                              std::move(surface), max_size,
+                                                              shared_egl.context()}};
     display_buffers.push_back(std::move(db));
+}
+
+void mgg::GBMDisplay::register_pause_resume_handlers(
+    MainLoop& main_loop,
+    std::function<void()> const& pause_handler,
+    std::function<void()> const& resume_handler)
+{
+    platform->vt->register_switch_handlers(main_loop, pause_handler, resume_handler);
+}
+
+void mgg::GBMDisplay::pause()
+{
+    platform->drm.drop_master();
+}
+
+void mgg::GBMDisplay::resume()
+{
+    platform->drm.set_master();
+
+    for (auto& db_ptr : display_buffers)
+        db_ptr->schedule_set_crtc();
 }

@@ -44,6 +44,18 @@ struct mir::DisplayServer::Private
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()}
     {
+        display->register_pause_resume_handlers(
+            *main_loop,
+            [this]
+            {
+                compositor->stop();
+                display->pause();
+            },
+            [this]
+            {
+                display->resume();
+                compositor->start();
+            });
     }
 
     std::shared_ptr<mg::Display> display;

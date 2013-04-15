@@ -23,6 +23,7 @@
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir_test_doubles/null_virtual_terminal.h"
 
 #include "mock_drm.h"
 #include "mock_gbm.h"
@@ -33,6 +34,7 @@
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -41,7 +43,6 @@ class GBMDisplayMultiMonitorTest : public ::testing::Test
 {
 public:
     GBMDisplayMultiMonitorTest()
-        : null_listener{std::make_shared<mg::NullDisplayReport>()}
     {
         using namespace testing;
 
@@ -67,6 +68,13 @@ public:
             .Times(AtLeast(0));
         EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
             .Times(AtLeast(0));
+    }
+
+    std::shared_ptr<mgg::GBMPlatform> create_platform()
+    {
+        return std::make_shared<mgg::GBMPlatform>(
+            std::make_shared<mg::NullDisplayReport>(),
+            std::make_shared<mtd::NullVirtualTerminal>());
     }
 
     void setup_outputs(int n)
@@ -117,7 +125,6 @@ public:
     testing::NiceMock<mir::GLMock> mock_gl;
     testing::NiceMock<mgg::MockDRM> mock_drm;
     testing::NiceMock<mgg::MockGBM> mock_gbm;
-    std::shared_ptr<mg::DisplayReport> const null_listener;
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<drmModeModeInfo> modes_empty;
@@ -168,7 +175,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
             .After(crtc_setups);
     }
 
-    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto platform = create_platform();
     auto display = platform->create_display();
 }
 
@@ -201,7 +208,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
             .Times(1);
     }
 
-    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto platform = create_platform();
     auto display = platform->create_display();
 }
 
@@ -254,7 +261,7 @@ TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)));
 
-    auto platform = std::make_shared<mgg::GBMPlatform>(null_listener);
+    auto platform = create_platform();
     auto display = platform->create_display();
 
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)

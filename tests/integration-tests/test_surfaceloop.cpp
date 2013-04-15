@@ -133,6 +133,13 @@ public:
         auto null_configuration = std::shared_ptr<mg::DisplayConfiguration>();
         return null_configuration;
     }
+    void register_pause_resume_handlers(mir::MainLoop&,
+                                        std::function<void()> const&,
+                                        std::function<void()> const&)
+    {
+    }
+    void pause() {}
+    void resume() {}
 };
 
 struct SurfaceSync
