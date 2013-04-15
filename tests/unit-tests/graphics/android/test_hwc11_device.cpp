@@ -1,3 +1,37 @@
+/*
+ * Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ */
+
+#include <gtest/gtest.h>
+
+class HWC11Device : public ::testing::Test
+{
+protected:
+    virtual void SetUp()
+    {
+        mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
+        mock_fbdev = std::make_shared<MockFBDevice>();
+        mock_organizer = std::make_shared<MockHWCOrganizer>();
+    }
+
+    std::shared_ptr<mtd::MockHWCOrganizer> mock_organizer;
+    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
+    std::shared_ptr<MockFBDevice> mock_fbdev;
+};
 
 TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
 {

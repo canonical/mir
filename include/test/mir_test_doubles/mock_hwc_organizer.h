@@ -16,10 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
-#define MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
 
-#include "src/server/graphics/android/fb_device.h"
+#include "src/server/graphics/android/hwc_layerlist.h"
+
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,13 +30,14 @@ namespace test
 namespace doubles
 {
 
-struct MockFBDevice : public graphics::android::FBDevice
+struct MockHWCOrganizer : public graphics::android::HWCLayerOrganizer
 {
-    ~MockFBDevice() noexcept {}
-    MOCK_METHOD1(post, void(std::shared_ptr<graphics::android::AndroidBuffer> const&));
+    ~MockHWCOrganizer() noexcept {}
+    MOCK_CONST_METHOD0(native_list, graphics::android::LayerList const&());
+    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::android::AndroidBuffer> const&));
 };
 
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_ */

@@ -19,9 +19,10 @@
 #include "src/server/graphics/android/hwc10_device.h"
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
-#include "src/server/graphics/android/fb_device.h"
+#include "mir_test_doubles/mock_fb_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test_doubles/mock_hwc_organizer.h"
 
 #include <thread>
 #include <chrono>
@@ -58,18 +59,6 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC11Device>(
 
 namespace
 {
-struct MockHWCOrganizer : public mga::HWCLayerOrganizer
-{
-    ~MockHWCOrganizer() noexcept {}
-    MOCK_CONST_METHOD0(native_list, mga::LayerList const&());
-    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<mga::AndroidBuffer> const&));
-};
-
-struct MockFBDevice : public mga::FBDevice
-{
-    ~MockFBDevice() noexcept {}
-    MOCK_METHOD1(post, void(std::shared_ptr<mga::AndroidBuffer> const&));
-};
 
 struct HWCDummyLayer : public mga::HWCLayerBase
 {
@@ -84,13 +73,13 @@ protected:
     virtual void SetUp()
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<MockFBDevice>();
-        mock_organizer = std::make_shared<MockHWCOrganizer>();
+        mock_fbdev = std::make_shared<mtd::MockFBDevice>();
+        mock_organizer = std::make_shared<mtd::MockHWCOrganizer>();
     }
 
-    std::shared_ptr<MockHWCOrganizer> mock_organizer;
+    std::shared_ptr<mtd::MockHWCOrganizer> mock_organizer;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<MockFBDevice> mock_fbdev;
+    std::shared_ptr<mtd::MockFBDevice> mock_fbdev;
 };
 
 typedef ::testing::Types<mga::HWC10Device, mga::HWC11Device> HWCDeviceTestTypes;

@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
-#define MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_FB_HAL_DEVICE_H_
+#define MIR_TEST_DOUBLES_MOCK_FB_HAL_DEVICE_H_
 
-#include "src/server/graphics/android/fb_device.h"
+#include <hardware/hwcomposer.h>
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,13 +29,25 @@ namespace test
 namespace doubles
 {
 
-struct MockFBDevice : public graphics::android::FBDevice
+class MockFBHalDevice : public framebuffer_device_t
 {
-    ~MockFBDevice() noexcept {}
-    MOCK_METHOD1(post, void(std::shared_ptr<graphics::android::AndroidBuffer> const&));
+public:
+    MockFBHalDevice()
+    {
+        using namespace testing;
+        post = hook_post;
+    }
+
+    static int hook_post(struct framebuffer_device_t* mock_fb, buffer_handle_t handle)
+    {
+        MockFBHalDevice* mocker = static_cast<MockFBHalDevice*>(mock_fb);
+        return mocker->post_interface(mock_fb, handle);
+    }
+
+    MOCK_METHOD2(post_interface, int(struct framebuffer_device_t*, buffer_handle_t));
 };
 
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_FB_HAL_DEVICE_H_ */
