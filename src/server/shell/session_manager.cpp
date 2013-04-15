@@ -76,7 +76,7 @@ inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex
 
     if (shell_session && shell_session->default_surface())
         input_target_listener->focus_changed(shell_session, shell_session->default_surface());
-    else if (shell_session == old_focus)
+    else if (shell_session == old_focus || !shell_session)
         input_target_listener->focus_cleared();
 }
 

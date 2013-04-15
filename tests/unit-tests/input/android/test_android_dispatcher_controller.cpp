@@ -31,6 +31,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <stdexcept>
+
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mt = mir::test;
@@ -47,12 +49,16 @@ struct AndroidDispatcherControllerFdSetup : public testing::Test
     void SetUp() override
     {
         test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+        
+        dispatcher = new mtd::MockInputDispatcher();
     }
     void TearDown() override
     {
         close(test_input_fd);
     }
     int test_input_fd;
+    droidinput::sp<mtd::MockInputDispatcher> dispatcher;
+    mtd::MockInputConfiguration config;
 };
 
 static bool
@@ -104,12 +110,93 @@ MATCHER(EmptyVector, "")
 
 }
 
-TEST_F(AndroidDispatcherControllerFdSetup, set_input_focus)
+TEST_F(AndroidDispatcherControllerFdSetup, input_application_opened_behavior)
+{    
+    using namespace ::testing;
+
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+    mia::DispatcherController controller(mt::fake_shared(config));
+    
+    auto session = std::make_shared<mtd::StubSessionTarget>();
+    controller.input_application_opened(session);
+    EXPECT_THROW({
+            // An application can not be opened twice!
+            controller.input_application_opened(session);
+    }, std::logic_error);
+}
+
+TEST_F(AndroidDispatcherControllerFdSetup, input_application_closed_behavior)
+{    
+    using namespace ::testing;
+
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+    mia::DispatcherController controller(mt::fake_shared(config));
+    
+    auto session = std::make_shared<mtd::StubSessionTarget>();
+    EXPECT_THROW({
+            // We can't close an application which is not open
+            controller.input_application_closed(session);
+    }, std::logic_error);
+    controller.input_application_opened(session);
+    controller.input_application_closed(session);
+    EXPECT_THROW({
+            // Nor can we close an application twice
+            controller.input_application_closed(session);
+    }, std::logic_error);
+}
+
+TEST_F(AndroidDispatcherControllerFdSetup, input_surface_opened_behavior)
+{    
+    using namespace ::testing;
+
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+    mia::DispatcherController controller(mt::fake_shared(config));
+    
+    auto session = std::make_shared<mtd::StubSessionTarget>();
+    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+    EXPECT_THROW({
+            // We can't open a surface with an unopened session!
+            controller.input_surface_opened(session, surface);
+     }, std::logic_error);
+     controller.input_application_opened(session);
+     controller.input_surface_opened(session, surface);
+     EXPECT_THROW({
+             // We can't open a surface twice
+             controller.input_surface_opened(session, surface);
+     }, std::logic_error);
+}
+
+TEST_F(AndroidDispatcherControllerFdSetup, input_surface_closed_behavior)
+{
+    using namespace ::testing;
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+    mia::DispatcherController controller(mt::fake_shared(config));
+    
+    auto session = std::make_shared<mtd::StubSessionTarget>();
+    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+
+    controller.input_application_opened(session);
+
+    EXPECT_THROW({
+            // We can't close a surface which hasn't been opened
+            controller.input_surface_closed(surface);
+    }, std::logic_error);
+    controller.input_surface_opened(session, surface);
+    controller.input_surface_closed(surface);
+    EXPECT_THROW({
+            // Nor can we close a surface twice
+            controller.input_surface_closed(surface);
+    }, std::logic_error);
+}
+
+TEST_F(AndroidDispatcherControllerFdSetup, focus_changed)
 {
     using namespace ::testing;
 
-    auto dispatcher = new mtd::MockInputDispatcher(); // We need droidinput::sp
-    mtd::MockInputConfiguration config;
     EXPECT_CALL(config, the_dispatcher()).Times(1)
         .WillOnce(Return(dispatcher));
 

@@ -225,7 +225,6 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
                 {
                     InSequence seq;
-                    // TODO: Silence warnings ~racarr
                     EXPECT_CALL(*target_listener, focus_changed(NonNullSessionTarget(), NonNullSurfaceTarget())).Times(1);
                     expected = true;
                 }

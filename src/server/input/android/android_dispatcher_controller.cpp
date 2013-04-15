@@ -25,6 +25,9 @@
 
 #include <InputDispatcher.h>
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mi = mir::input;
 namespace mia = mi::android;
 
@@ -37,28 +40,35 @@ mia::DispatcherController::DispatcherController(std::shared_ptr<mia::InputConfig
 
 void mia::DispatcherController::input_application_opened(std::shared_ptr<mi::SessionTarget> const& session)
 {
-    // TODO: Implement ~racarr
-    (void) session;
+    if (application_handles.find(session) != application_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("An application was opened twice"));
+    application_handles[session] = new mia::InputApplicationHandle(session);
 }
 
 void mia::DispatcherController::input_application_closed(std::shared_ptr<mi::SessionTarget> const& session)
 {
-    // TODO: Implement ~racarr
-    (void) session;
+    if (application_handles.find(session) == application_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("An application was closed twice"));
+    application_handles.erase(session);
 }
 
 void mia::DispatcherController::input_surface_opened(std::shared_ptr<mi::SessionTarget> const& session,
                                                      std::shared_ptr<input::SurfaceTarget> const& opened_surface)
 {
-    // TODO: Implement ~racarr
-    (void) session;
-    (void) opened_surface;
+    auto application_handle = application_handles.find(session);
+    if (application_handle == application_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened for an unopened application"));
+    if (window_handles.find(opened_surface) != window_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened twice"));
+
+    window_handles[opened_surface] = new mia::InputWindowHandle(application_handle->second, opened_surface);
 }
 
 void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
 {
-    // TODO: Implement ~racarr
-    (void) closed_surface;
+    if (window_handles.find(closed_surface) == window_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("A surface was closed twice"));
+    window_handles.erase(closed_surface);
 }
 
 void mia::DispatcherController::focus_cleared()

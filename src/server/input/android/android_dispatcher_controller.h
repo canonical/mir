@@ -23,6 +23,8 @@
 
 #include <utils/StrongPointer.h>
 
+#include <map>
+
 namespace android
 {
 class InputDispatcherInterface;
@@ -63,6 +65,9 @@ protected:
 
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
+
+    std::map<std::shared_ptr<input::SessionTarget>, droidinput::sp<droidinput::InputApplicationHandle>> application_handles;
+    std::map<std::shared_ptr<input::SurfaceTarget>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
 
     droidinput::sp<droidinput::InputWindowHandle> focused_window_handle;
     droidinput::sp<droidinput::InputApplicationHandle> focused_application_handle;
