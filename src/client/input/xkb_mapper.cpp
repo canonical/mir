@@ -64,8 +64,11 @@ mcli::XKBMapper::XKBMapper()
 namespace
 {
 
-// xkb scancodes are offset by 8 from evdev scancodes for compatibility with X protocol.
-static uint32_t const xkb_scancode_offset_from_evdev = 8;
+static uint32_t to_xkb_scan_code(uint32_t evdev_scan_code)
+{
+    // xkb scancodes are offset by 8 from evdev scancodes for compatibility with X protocol.
+    return evdev_scan_code + 8;
+}
 
 static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_code)
 {
@@ -84,7 +87,7 @@ static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_cod
 
 xkb_keysym_t mcli::XKBMapper::press_and_map_key(int scan_code)
 {
-    uint32_t xkb_scan_code = scan_code + xkb_scancode_offset_from_evdev;
+    uint32_t xkb_scan_code = to_xkb_scan_code(scan_code);
     xkb_state_update_key(state.get(), xkb_scan_code, XKB_KEY_DOWN);
     
     return keysym_for_scan_code(state.get(), xkb_scan_code);
@@ -92,7 +95,7 @@ xkb_keysym_t mcli::XKBMapper::press_and_map_key(int scan_code)
 
 xkb_keysym_t mcli::XKBMapper::release_and_map_key(int scan_code)
 {
-    uint32_t xkb_scan_code = scan_code + xkb_scancode_offset_from_evdev;
+    uint32_t xkb_scan_code = to_xkb_scan_code(scan_code);
     xkb_state_update_key(state.get(), xkb_scan_code, XKB_KEY_UP);
     
     return keysym_for_scan_code(state.get(), xkb_scan_code);
