@@ -202,7 +202,22 @@ TEST_F(AndroidDispatcherControllerFdSetup, input_surface_closed_behavior)
     }, std::logic_error);
 }
 
-TEST_F(AndroidDispatcherControllerFdSetup, focus_changed)
+TEST_F(AndroidDispatcherControllerFdSetup, on_focus_cleared)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+
+    EXPECT_CALL(*dispatcher, setFocusedApplication(droidinput::sp<droidinput::InputApplicationHandle>(0))).Times(1);
+    EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
+
+    mia::DispatcherController controller(mt::fake_shared(config));
+    
+    controller.focus_cleared();
+}
+
+TEST_F(AndroidDispatcherControllerFdSetup, on_focus_changed)
 {
     using namespace ::testing;
 
@@ -215,15 +230,31 @@ TEST_F(AndroidDispatcherControllerFdSetup, focus_changed)
     {
         InSequence seq;
         EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);
-        EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
-            .WillOnce(Return(droidinput::OK));
         EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
-        EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
-        EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
     }
 
     mia::DispatcherController controller(mt::fake_shared(config));
+    
+    controller.input_application_opened(session);
+    controller.input_surface_opened(session, surface);
 
     controller.focus_changed(session, surface);
-    controller.focus_changed(session, std::shared_ptr<mi::SurfaceTarget>());
+}
+
+TEST_F(AndroidDispatcherControllerFdSetup, on_focus_changed_throw_behavior)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+
+    auto session = std::make_shared<mtd::StubSessionTarget>();
+    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+
+    mia::DispatcherController controller(mt::fake_shared(config));
+
+    EXPECT_THROW({
+            // We can't focus sessions and surfaces which never opened
+            controller.focus_changed(session, surface);
+    }, std::logic_error);
 }

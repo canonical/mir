@@ -81,27 +81,26 @@ void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::Surf
 void mia::DispatcherController::focus_cleared()
 {
     // TODO: Implement ~racarr
+    droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> empty_windows;
+    droidinput::sp<droidinput::InputApplicationHandle> null_application = nullptr;
+    
+    input_dispatcher->setFocusedApplication(null_application);
+    input_dispatcher->setInputWindows(empty_windows);
 }
 
 void mia::DispatcherController::focus_changed(std::shared_ptr<mi::SessionTarget> const& session,
     std::shared_ptr<mi::SurfaceTarget> const& surface)
 {
-    if (focused_window_handle.get())
-    {
-        input_dispatcher->unregisterInputChannel(focused_window_handle->getInfo()->inputChannel);
-        focused_window_handle.clear();
-        focused_application_handle.clear();
-    }
+    auto application_handle = application_handles[session];
+    auto window_handle = window_handles[surface];
+    
+    if (!application_handle.get() || !window_handle.get())
+        BOOST_THROW_EXCEPTION(std::logic_error("Focus changed to an unopened surface"));
+
+    input_dispatcher->setFocusedApplication(application_handle);
 
     droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> windows;
-    if (surface)
-    {
-        focused_application_handle = new mia::InputApplicationHandle(session);
-        focused_window_handle = new mia::InputWindowHandle(focused_application_handle, surface);
-        input_dispatcher->setFocusedApplication(focused_application_handle);
+    windows.push_back(window_handle);
 
-        input_dispatcher->registerInputChannel(focused_window_handle->getInfo()->inputChannel, focused_window_handle, false);
-        windows.push_back(focused_window_handle);
-    }
     input_dispatcher->setInputWindows(windows);
 }
