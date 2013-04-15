@@ -31,6 +31,7 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
+// TODO: Needs locking
 mia::DispatcherController::DispatcherController(std::shared_ptr<mia::InputConfiguration> const& config) :
     input_dispatcher(config->the_dispatcher()),
     focused_window_handle(0),
@@ -61,14 +62,20 @@ void mia::DispatcherController::input_surface_opened(std::shared_ptr<mi::Session
     if (window_handles.find(opened_surface) != window_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened twice"));
 
-    window_handles[opened_surface] = new mia::InputWindowHandle(application_handle->second, opened_surface);
+    droidinput::sp<droidinput::InputWindowHandle> window_handle = new mia::InputWindowHandle(application_handle->second, opened_surface);
+    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
+    
+    window_handles[opened_surface] = window_handle;
 }
 
 void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
 {
-    if (window_handles.find(closed_surface) == window_handles.end())
+    auto it = window_handles.find(closed_surface);
+    if (it == window_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("A surface was closed twice"));
-    window_handles.erase(closed_surface);
+
+    input_dispatcher->unregisterInputChannel(it->second->getInfo()->inputChannel);
+    window_handles.erase(it);
 }
 
 void mia::DispatcherController::focus_cleared()

@@ -44,6 +44,7 @@ namespace
 // TODO: It would be nice if it were possible to mock the interface between
 // droidinput::InputChannel and droidinput::InputDispatcher rather than use
 // valid fds to allow non-throwing construction of a real input channel.
+// TODO: ~racarr why does this have fds?
 struct AndroidDispatcherControllerFdSetup : public testing::Test
 {
     void SetUp() override
@@ -151,12 +152,16 @@ TEST_F(AndroidDispatcherControllerFdSetup, input_surface_opened_behavior)
 {    
     using namespace ::testing;
 
-    EXPECT_CALL(config, the_dispatcher()).Times(1)
-        .WillOnce(Return(dispatcher));
-    mia::DispatcherController controller(mt::fake_shared(config));
-    
     auto session = std::make_shared<mtd::StubSessionTarget>();
     auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
+        .WillOnce(Return(droidinput::OK));
+
+    mia::DispatcherController controller(mt::fake_shared(config));
+    
     EXPECT_THROW({
             // We can't open a surface with an unopened session!
             controller.input_surface_opened(session, surface);
@@ -172,13 +177,17 @@ TEST_F(AndroidDispatcherControllerFdSetup, input_surface_opened_behavior)
 TEST_F(AndroidDispatcherControllerFdSetup, input_surface_closed_behavior)
 {
     using namespace ::testing;
-    EXPECT_CALL(config, the_dispatcher()).Times(1)
-        .WillOnce(Return(dispatcher));
-    mia::DispatcherController controller(mt::fake_shared(config));
-    
+
     auto session = std::make_shared<mtd::StubSessionTarget>();
     auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
 
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
+        .WillOnce(Return(droidinput::OK));
+    EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
+    mia::DispatcherController controller(mt::fake_shared(config));
+    
     controller.input_application_opened(session);
 
     EXPECT_THROW({
