@@ -297,7 +297,7 @@ mir::DefaultServerConfiguration::the_shell_configuration()
     return shell_configuration(
         [this]()
         {
-            return std::make_shared<msh::DefaultShellConfiguration>(the_display(), the_input_focus_selector(),
+            return std::make_shared<msh::DefaultShellConfiguration>(the_display(), the_input_target_listener(),
                                                                     the_surface_factory());
         });
 }
@@ -517,9 +517,9 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_manager();
 }
 
-std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
+std::shared_ptr<msh::InputTargetListener> mir::DefaultServerConfiguration::the_input_target_listener()
 {
-    return input_focus_selector(
+    return input_target_listener(
         [&]()
         {
             return std::make_shared<mia::DispatcherController>(the_input_configuration());

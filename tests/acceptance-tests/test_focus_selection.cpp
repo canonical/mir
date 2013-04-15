@@ -25,11 +25,11 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/default_shell_configuration.h"
 #include "mir/graphics/display.h"
-#include "mir/shell/input_focus_selector.h"
+#include "mir/shell/input_target_listener.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/mock_input_focus_selector.h"
+#include "mir_test_doubles/mock_input_target_listener.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -53,7 +53,7 @@ namespace
 struct MockFocusShellConfiguration : public msh::DefaultShellConfiguration
 {
     MockFocusShellConfiguration(std::shared_ptr<mg::ViewableArea> const& view_area,
-                                std::shared_ptr<msh::InputFocusSelector> const& input_selector,
+                                std::shared_ptr<msh::InputTargetListener> const& input_selector,
                                 std::shared_ptr<msh::SurfaceFactory> const& surface_factory) :
         DefaultShellConfiguration(view_area, input_selector, surface_factory)
     {
@@ -169,7 +169,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
         {
             if (!shell_config)
                 shell_config = std::make_shared<MockFocusShellConfiguration>(the_display(),
-                                                                             the_input_focus_selector(),
+                                                                             the_input_target_listener(),
                                                                              the_surface_factory());
             return session_manager(
             [this]() -> std::shared_ptr<msh::SessionManager>
@@ -200,30 +200,32 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mtd::MockInputFocusSelector> focus_selector;
+        std::shared_ptr<mtd::MockInputTargetListener> target_listener;
         bool expected;
 
         ServerConfig()
-          : focus_selector(std::make_shared<mtd::MockInputFocusSelector>()),
+          : target_listener(std::make_shared<mtd::MockInputTargetListener>()),
             expected(false)
         {
         }
 
-        std::shared_ptr<msh::InputFocusSelector>
-        the_input_focus_selector() override
+        std::shared_ptr<msh::InputTargetListener>
+        the_input_target_listener() override
         {
             using namespace ::testing;
 
             if (!expected)
             {
                 InSequence seq;
+                
+                // TODO: Silence warnings ~racarr
 
-                EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSessionTarget(), NullSurfaceTarget())).Times(1);
-                EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSessionTarget(), NonNullSurfaceTarget())).Times(1);
+                EXPECT_CALL(*target_listener, focus_changed(NonNullSessionTarget(), NullSurfaceTarget())).Times(1);
+                EXPECT_CALL(*target_listener, focus_changed(NonNullSessionTarget(), NonNullSurfaceTarget())).Times(1);
                 expected = true;
             }
 
-            return focus_selector;
+            return target_listener;
         }
     } server_config;
 

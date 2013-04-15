@@ -19,7 +19,6 @@
 #include "mir/shell/session_container.h"
 #include "mir/frontend/session.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
-#include "mir/shell/input_focus_selector.h"
 
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
@@ -27,10 +26,8 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container,
-    std::shared_ptr<msh::InputFocusSelector> const& input_selector)
-  : app_container(app_container),
-    input_selector(input_selector)
+msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container)
+  : app_container(app_container)
 {
 }
 
@@ -41,8 +38,6 @@ void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msh::Sess
         if (session == focus_session)
         {
             session->show();
-
-            input_selector->set_input_focus_to(focus_session, focus_session->default_surface());
         }
         else
         {

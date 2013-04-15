@@ -128,6 +128,6 @@ TEST_F(AndroidDispatcherControllerFdSetup, set_input_focus)
 
     mia::DispatcherController controller(mt::fake_shared(config));
 
-    controller.set_input_focus_to(session, surface);
-    controller.set_input_focus_to(session, std::shared_ptr<mi::SurfaceTarget>());
+    controller.focus_changed(session, surface);
+    controller.focus_changed(session, std::shared_ptr<mi::SurfaceTarget>());
 }

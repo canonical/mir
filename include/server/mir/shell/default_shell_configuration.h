@@ -30,7 +30,7 @@ class ViewableArea;
 }
 namespace shell
 {
-class InputFocusSelector;
+class InputTargetListener;
 class SurfaceFactory;
 class PlacementStrategy;
 
@@ -38,7 +38,7 @@ class DefaultShellConfiguration : public ShellConfiguration
 {
 public:
     DefaultShellConfiguration(std::shared_ptr<graphics::ViewableArea> const& view_area,
-                              std::shared_ptr<InputFocusSelector> const& focus_selector,
+                              std::shared_ptr<InputTargetListener> const& target_listener,
                               std::shared_ptr<SurfaceFactory> const& surface_factory);
     virtual ~DefaultShellConfiguration() noexcept(true) = default;
 
@@ -56,7 +56,7 @@ protected:
 
 private:
     std::shared_ptr<graphics::ViewableArea> const view_area;
-    std::shared_ptr<InputFocusSelector> const input_focus_selector;
+    std::shared_ptr<InputTargetListener> const input_target_listener;
     std::shared_ptr<SurfaceFactory> const underlying_surface_factory;
 
     CachedPtr<SurfaceFactory> surface_factory;

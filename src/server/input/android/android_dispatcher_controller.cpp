@@ -35,7 +35,38 @@ mia::DispatcherController::DispatcherController(std::shared_ptr<mia::InputConfig
 {
 }
 
-void mia::DispatcherController::set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& session,
+void mia::DispatcherController::input_application_opened(std::shared_ptr<mi::SessionTarget> const& session)
+{
+    // TODO: Implement ~racarr
+    (void) session;
+}
+
+void mia::DispatcherController::input_application_closed(std::shared_ptr<mi::SessionTarget> const& session)
+{
+    // TODO: Implement ~racarr
+    (void) session;
+}
+
+void mia::DispatcherController::input_surface_opened(std::shared_ptr<mi::SessionTarget> const& session,
+                                                     std::shared_ptr<input::SurfaceTarget> const& opened_surface)
+{
+    // TODO: Implement ~racarr
+    (void) session;
+    (void) opened_surface;
+}
+
+void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
+{
+    // TODO: Implement ~racarr
+    (void) closed_surface;
+}
+
+void mia::DispatcherController::focus_cleared()
+{
+    // TODO: Implement ~racarr
+}
+
+void mia::DispatcherController::focus_changed(std::shared_ptr<mi::SessionTarget> const& session,
     std::shared_ptr<mi::SurfaceTarget> const& surface)
 {
     if (focused_window_handle.get())

@@ -211,7 +211,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
         input_manager = std::make_shared<mia::InputManager>(configuration);
-        input_focus_selector = std::make_shared<mia::DispatcherController>(configuration);
+        input_target_listener = std::make_shared<mia::DispatcherController>(configuration);
 
         dispatcher_policy = configuration->the_mock_dispatcher_policy();
 
@@ -245,7 +245,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
     std::shared_ptr<mia::InputManager> input_manager;
-    std::shared_ptr<msh::InputFocusSelector> input_focus_selector;
+    std::shared_ptr<msh::InputTargetListener> input_target_listener;
 
     std::vector<int> test_input_fds;
 };
@@ -275,7 +275,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
-    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface));
+    input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
@@ -312,18 +312,18 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
 
-    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface1));
+    input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
     wait1.wait_for_at_most_seconds(1);
 
-    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface2));
+    input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface2));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
     wait2.wait_for_at_most_seconds(1);
 
-    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface1));
+    input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
     wait3.wait_for_at_most_seconds(1);
-}
+} 

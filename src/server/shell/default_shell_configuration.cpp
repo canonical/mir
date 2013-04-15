@@ -28,10 +28,10 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 
 msh::DefaultShellConfiguration::DefaultShellConfiguration(std::shared_ptr<mg::ViewableArea> const& view_area,
-                                                          std::shared_ptr<msh::InputFocusSelector> const& focus_selector,
+                                                          std::shared_ptr<msh::InputTargetListener> const& input_listener,
                                                           std::shared_ptr<msh::SurfaceFactory> const& surface_factory) :
     view_area(view_area),
-    input_focus_selector(focus_selector),
+    input_target_listener(input_listener),
     underlying_surface_factory(surface_factory)
 {
 }
@@ -68,14 +68,13 @@ std::shared_ptr<msh::FocusSetter> msh::DefaultShellConfiguration::the_focus_sett
     return focus_setter(
         [this]()
         {
-            return std::make_shared<msh::SingleVisibilityFocusMechanism>(the_session_container(), input_focus_selector);
+            return std::make_shared<msh::SingleVisibilityFocusMechanism>(the_session_container());
         });
 }
 
 std::shared_ptr<msh::InputTargetListener> msh::DefaultShellConfiguration::the_input_target_listener()
 {
-    // TODO: Implement ~racarr
-    return std::shared_ptr<msh::InputTargetListener>();
+    return input_target_listener;
 }
 
 std::shared_ptr<msh::PlacementStrategy> msh::DefaultShellConfiguration::the_placement_strategy()
