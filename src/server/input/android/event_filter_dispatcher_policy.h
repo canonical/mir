@@ -40,7 +40,7 @@ namespace android
 class EventFilterDispatcherPolicy : public droidinput::InputDispatcherPolicyInterface
 {
 public:
-    EventFilterDispatcherPolicy(std::shared_ptr<EventFilter> const& event_filter);
+    EventFilterDispatcherPolicy(std::shared_ptr<EventFilter> const& event_filter, bool key_repeat_enabled);
     virtual ~EventFilterDispatcherPolicy() {}
 
     void notifyConfigurationChanged(nsecs_t when);
@@ -71,6 +71,7 @@ protected:
     EventFilterDispatcherPolicy& operator=(const EventFilterDispatcherPolicy&) = delete;
 private:
     std::shared_ptr<EventFilter> event_filter;
+    bool key_repeat_enabled;
 };
 
 }

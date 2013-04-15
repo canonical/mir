@@ -171,7 +171,7 @@ namespace
 struct MockDispatcherPolicy : public mia::EventFilterDispatcherPolicy
 {
     MockDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& filter)
-      : EventFilterDispatcherPolicy(filter)
+      : EventFilterDispatcherPolicy(filter, false)
     {
     }
     MOCK_METHOD3(interceptKeyBeforeDispatching, nsecs_t(droidinput::sp<droidinput::InputWindowHandle> const&,
