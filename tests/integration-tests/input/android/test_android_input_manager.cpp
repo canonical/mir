@@ -19,9 +19,11 @@
 
 #include "mir/input/event_filter.h"
 #include "mir/frontend/surface_creation_parameters.h"
+#include "mir/input/android/android_input_configuration.h"
 
 #include "src/server/input/android/default_android_input_configuration.h"
 #include "src/server/input/android/android_input_manager.h"
+#include "src/server/input/android/android_dispatcher_controller.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/fake_shared.h"
@@ -47,6 +49,7 @@ namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 namespace mg = mir::graphics;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -208,6 +211,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
         input_manager = std::make_shared<mia::InputManager>(configuration);
+        input_focus_selector = std::make_shared<mia::DispatcherController>(configuration);
 
         dispatcher_policy = configuration->the_mock_dispatcher_policy();
 
@@ -241,6 +245,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
     std::shared_ptr<mia::InputManager> input_manager;
+    std::shared_ptr<msh::InputFocusSelector> input_focus_selector;
 
     std::vector<int> test_input_fds;
 };
@@ -270,7 +275,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
-    input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface));
+    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
@@ -307,17 +312,17 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
 
-    input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface1));
+    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
     wait1.wait_for_at_most_seconds(1);
 
-    input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface2));
+    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface2));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
     wait2.wait_for_at_most_seconds(1);
 
-    input_manager->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface1));
+    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_ENTER));
     wait3.wait_for_at_most_seconds(1);

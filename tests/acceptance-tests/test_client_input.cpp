@@ -19,6 +19,7 @@
 #include "mir/graphics/display.h"
 
 #include "src/server/input/android/android_input_manager.h"
+#include "src/server/input/android/android_dispatcher_controller.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -38,6 +39,7 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
+namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
@@ -50,11 +52,11 @@ namespace
 namespace
 {
 
-struct FocusNotifyingInputManager : public mia::InputManager
+struct FocusNotifyingDispatcherController : public mia::DispatcherController
 {
-    FocusNotifyingInputManager(std::shared_ptr<mia::InputConfiguration> const& configuration,
-                               mt::WaitCondition &wait_condition)
-      : InputManager(configuration),
+    FocusNotifyingDispatcherController(std::shared_ptr<mia::InputConfiguration> const& configuration,
+                                       mt::WaitCondition &wait_condition)
+      : DispatcherController(configuration),
         on_focus_set(wait_condition)
     {
 
@@ -63,7 +65,7 @@ struct FocusNotifyingInputManager : public mia::InputManager
     void set_input_focus_to(
         std::shared_ptr<mi::SessionTarget> const& session, std::shared_ptr<mi::SurfaceTarget> const& surface) override
     {
-        InputManager::set_input_focus_to(session, surface);
+        DispatcherController::set_input_focus_to(session, surface);
         
         // We need a synchronization primitive inorder to halt test event injection
         // until after a surface has taken focus (lest the events be discarded).
@@ -100,17 +102,31 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     {
         input_injection_thread.join();
     }
-
-    std::shared_ptr<mi::InputManager>
-    the_input_manager() override
+    
+    std::shared_ptr<mia::InputConfiguration> the_input_configuration() override
     {
         fake_event_hub = input_config.the_fake_event_hub();
-
+        return mt::fake_shared(input_config);
+    }
+    
+    std::shared_ptr<mi::InputManager> the_input_manager() override
+    {
         return input_manager(
-        [this]() -> std::shared_ptr<mi::InputManager>
-        {
-            return std::make_shared<FocusNotifyingInputManager>(mt::fake_shared(input_config), on_focus_set);
-        });
+            [&]()
+            {
+                // Force usage of real input even in case of tests-use-real-input = false.
+                return std::make_shared<mia::InputManager>(the_input_configuration());
+            });
+    }
+
+    std::shared_ptr<msh::InputFocusSelector>
+    the_input_focus_selector() override
+    {
+        return input_focus_selector(
+            [this]()
+            {
+                return std::make_shared<FocusNotifyingDispatcherController>(mt::fake_shared(input_config), on_focus_set);
+            });
     }
 
     mtd::FakeEventHubInputConfiguration input_config;
