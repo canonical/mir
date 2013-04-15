@@ -216,13 +216,19 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
             if (!expected)
             {
-                InSequence seq;
                 
-                // TODO: Silence warnings ~racarr
+                EXPECT_CALL(*target_listener, input_application_opened(_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, input_application_closed(_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, input_surface_opened(_,_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, input_surface_closed(_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, focus_cleared()).Times(AtLeast(0));
 
-                EXPECT_CALL(*target_listener, focus_changed(NonNullSessionTarget(), NullSurfaceTarget())).Times(1);
-                EXPECT_CALL(*target_listener, focus_changed(NonNullSessionTarget(), NonNullSurfaceTarget())).Times(1);
-                expected = true;
+                {
+                    InSequence seq;
+                    // TODO: Silence warnings ~racarr
+                    EXPECT_CALL(*target_listener, focus_changed(NonNullSessionTarget(), NonNullSurfaceTarget())).Times(1);
+                    expected = true;
+                }
             }
 
             return target_listener;
