@@ -40,8 +40,7 @@ struct StubInputTargetListener : public shell::InputTargetListener
                               std::shared_ptr<input::SurfaceTarget> const&)
     {
     }
-    void input_surface_closed(std::shared_ptr<input::SessionTarget> const&,
-                              std::shared_ptr<input::SurfaceTarget> const&)
+    void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)
     {
     }
     void focus_changed(std::shared_ptr<input::SessionTarget> const&,

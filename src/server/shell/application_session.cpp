@@ -18,8 +18,8 @@
 
 #include "mir/shell/application_session.h"
 #include "mir/shell/surface.h"
-
 #include "mir/shell/surface_factory.h"
+#include "mir/shell/input_target_listener.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -48,6 +48,7 @@ msh::ApplicationSession::~ApplicationSession()
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto const& pair_id_surface : surfaces)
     {
+        input_target_listener->input_surface_closed(pair_id_surface.second);
         pair_id_surface.second->destroy();
     }
 }
@@ -97,6 +98,7 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
 
+    input_target_listener->input_surface_closed(p->second);
     p->second->destroy();
     surfaces.erase(p);
 }

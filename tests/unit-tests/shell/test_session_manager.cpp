@@ -230,7 +230,7 @@ struct MockInputTargetListener : public msh::InputTargetListener
     MOCK_METHOD1(input_application_opened, void(std::shared_ptr<mi::SessionTarget> const&));
     MOCK_METHOD1(input_application_closed, void(std::shared_ptr<mi::SessionTarget> const&));
     MOCK_METHOD2(input_surface_opened, void(std::shared_ptr<mi::SessionTarget> const&, std::shared_ptr<mi::SurfaceTarget> const&));
-    MOCK_METHOD2(input_surface_closed, void(std::shared_ptr<mi::SessionTarget> const&, std::shared_ptr<mi::SurfaceTarget> const&));
+    MOCK_METHOD1(input_surface_closed, void(std::shared_ptr<mi::SurfaceTarget> const&));
 
     MOCK_METHOD2(focus_changed, void(std::shared_ptr<mi::SessionTarget> const&, std::shared_ptr<mi::SurfaceTarget> const&));
     MOCK_METHOD0(focus_cleared, void());
@@ -302,10 +302,10 @@ TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_a
             .Times(1);
         EXPECT_CALL(config.input_listener, input_surface_opened(_, _)).Times(1);
         EXPECT_CALL(config.input_listener, focus_changed(_, _)).Times(1);
-        EXPECT_CALL(config.input_listener, input_surface_closed(_, _)).Times(1);
-        EXPECT_CALL(config.input_listener, focus_cleared()).Times(1);
+        EXPECT_CALL(config.input_listener, input_surface_closed(_)).Times(1);
         EXPECT_CALL(config.input_listener, input_application_closed(_))
             .Times(1);
+        EXPECT_CALL(config.input_listener, focus_cleared()).Times(1);
     }
 
     {
