@@ -100,6 +100,13 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
         auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
         return display_factory->create_hwc_display(hwc_device, fb_native_win);
     }
+    else if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
+    {
+        //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
+        auto hwc_device = hwc_factory->create_hwc_1_0(hwc_dev, fb_dev);
+        auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
+        return display_factory->create_hwc_display(hwc_device, fb_native_win);
+    }
     else
     {
         auto native_window = std::make_shared< ::android::FramebufferNativeWindow>(module, fb_dev);

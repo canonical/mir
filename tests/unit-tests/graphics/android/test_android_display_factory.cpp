@@ -41,8 +41,12 @@ struct MockHWCFactory: public mga::HWCFactory
         using namespace testing;
         ON_CALL(*this, create_hwc_1_1(_,_))
             .WillByDefault(Return(std::shared_ptr<mga::HWCDevice>()));
+        ON_CALL(*this, create_hwc_1_0(_,_))
+            .WillByDefault(Return(std::shared_ptr<mga::HWCDevice>()));
     }
     MOCK_CONST_METHOD2(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>(std::shared_ptr<hwc_composer_device_1> const&,
+                                                                       std::shared_ptr<framebuffer_device_t> const&));
+    MOCK_CONST_METHOD2(create_hwc_1_0, std::shared_ptr<mga::HWCDevice>(std::shared_ptr<hwc_composer_device_1> const&,
                                                                        std::shared_ptr<framebuffer_device_t> const&));
 };
 
@@ -214,8 +218,10 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_failure_because_hwc_versio
 {
     using namespace testing;
 
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_2;
 
+    EXPECT_CALL(*mock_hwc_factory, create_hwc_1_0(_,_))
+        .Times(0);
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
         .Times(0);
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(_,_))

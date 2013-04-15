@@ -31,3 +31,10 @@ std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(
     auto fb = std::make_shared<mga::DefaultFBDevice>(fb_device);
     return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fb);
 }
+
+std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_0(
+    std::shared_ptr<hwc_composer_device_1> const& /* hwc_device */,
+    std::shared_ptr<framebuffer_device_t> const& /* fb_device */) const
+{
+    return std::shared_ptr<mga::HWCDevice>();
+}
