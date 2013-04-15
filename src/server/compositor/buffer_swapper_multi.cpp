@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -116,15 +116,8 @@ void mc::BufferSwapperMulti::shutdown()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    if ((compositor_queue.empty()) && (client_queue.empty()))
-    {
-        //client is using its buffers and not waiting. we can just return
-        return;
-    }
-
     if (client_queue.empty())
     {
-        //client is waiting. hijack compositor's buffer and unblock client
         auto dequeued_buffer = compositor_queue.front();
         compositor_queue.pop_front();
         client_queue.push_back(dequeued_buffer);

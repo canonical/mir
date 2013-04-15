@@ -122,14 +122,3 @@ TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
     EXPECT_TRUE((buffer_a == buffer_2) || (buffer_b == buffer_2) || (buffer_c == buffer_2));
     EXPECT_TRUE((buffer_a == buffer_3) || (buffer_b == buffer_3) || (buffer_c == buffer_3));
 }
-
-TEST_F(BufferSwapperConstruction, shutdown_on_empty_swapper)
-{
-    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b};
-
-    mc::BufferSwapperMulti swapper(buffers);
-    auto buffer_1 = swapper.compositor_acquire();
-    auto buffer_2 = swapper.client_acquire();
-
-    swapper.shutdown();
-}
