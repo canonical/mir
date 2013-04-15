@@ -118,10 +118,9 @@ TEST_F(AndroidDispatcherControllerFdSetup, set_input_focus)
 
     {
         InSequence seq;
-
+        EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);
         EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
             .WillOnce(Return(droidinput::OK));
-        EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(session))).Times(1);
         EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(session, surface))).Times(1);
         EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
         EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
