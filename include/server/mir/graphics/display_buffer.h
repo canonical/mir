@@ -33,6 +33,7 @@ public:
 
     virtual geometry::Rectangle view_area() const = 0;
     virtual void make_current() = 0;
+    virtual void release_current() = 0;
     virtual void clear() = 0;
     virtual bool post_update() = 0;
 
