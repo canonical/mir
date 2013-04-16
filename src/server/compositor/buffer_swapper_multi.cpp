@@ -37,14 +37,16 @@ void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list)
  : in_use_by_client(0),
-   swapper_size(buffer_list.size())
+   swapper_size(buffer_list.size()),
+   clients_trying_to_acquire(0)
 {
     initialize_queues(buffer_list);
 }
 
 mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
     in_use_by_client(0),
-    swapper_size(buffer_list.size())
+    swapper_size(buffer_list.size()),
+    clients_trying_to_acquire(0)
 {
     initialize_queues(buffer_list);
 }
@@ -52,6 +54,8 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr
 std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
+
+    clients_trying_to_acquire++;
 
     /*
      * Don't allow the client to acquire all the buffers, because then the
@@ -65,6 +69,8 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
     auto dequeued_buffer = client_queue.front();
     client_queue.pop_front();
     in_use_by_client++;
+
+    clients_trying_to_acquire--;
 
     return dequeued_buffer;
 }
@@ -116,8 +122,22 @@ void mc::BufferSwapperMulti::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
+    if (in_use_by_client == swapper_size - 1 && clients_trying_to_acquire > 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("BufferSwapperMulti is not able to force requests to complete:"
+                             " the client is trying to acquire all buffers"));
+    }
+
     if (client_queue.empty())
     {
+        if (compositor_queue.empty())
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("BufferSwapperMulti is not able to force requests to complete:"
+                                 " all buffers are acquired"));
+        }
+
         auto dequeued_buffer = compositor_queue.front();
         compositor_queue.pop_front();
         client_queue.push_back(dequeued_buffer);

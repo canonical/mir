@@ -25,6 +25,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <future>
+#include <thread>
+
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -118,4 +121,43 @@ TEST_F(BufferSwapperDouble, test_client_and_compositor_advance_buffers_in_serial
 
     EXPECT_NE(buffer_1, buffer_3);
     EXPECT_NE(buffer_2, buffer_4);
+}
+
+TEST_F(BufferSwapperDouble, force_requests_to_complete_works)
+{
+    auto client_buffer = swapper->client_acquire();
+    swapper->client_release(client_buffer);
+
+    client_buffer = swapper->client_acquire();
+    swapper->client_release(client_buffer);
+
+    /*
+     * Unblock the the upcoming client_acquire() call. There is no guarantee
+     * that force_requests_to_complete will run after client_acquire() is
+     * blocked, but it doesn't matter. As long as the client uses only one
+     * buffer at a time, BufferSwapperMulti::force_requests_to_complete() ensures
+     * that either a currently blocked request will unblock, or the next
+     * request will not block.
+     */
+    auto f = std::async(std::launch::async,
+                [this]
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds{10});
+                    swapper->force_requests_to_complete();
+                });
+
+    client_buffer = swapper->client_acquire();
+}
+
+TEST_F(BufferSwapperDouble, force_requests_to_complete_throws_if_all_buffers_are_acquired)
+{
+    auto client_buffer = swapper->client_acquire();
+    swapper->client_release(client_buffer);
+
+    client_buffer = swapper->client_acquire();
+    auto comp_buffer = swapper->compositor_acquire();
+
+    EXPECT_THROW({
+        swapper->force_requests_to_complete();
+    }, std::logic_error);
 }
