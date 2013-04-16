@@ -21,7 +21,6 @@
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_fb_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
-#include "mir_test_doubles/mock_android_buffer.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
 
 #include <thread>
@@ -134,7 +133,6 @@ static mga::HWCDevice *global_device;
 void* waiting_device(void*)
 {
     global_device->wait_for_vsync();
-    printf("boom.\n");
     return NULL;
 }
 }
@@ -232,24 +230,4 @@ TYPED_TEST(HWCCommon, hwc_device_reports_abgr_8888_by_default)
 {
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
     EXPECT_EQ(geom::PixelFormat::abgr_8888, device->display_format());
-}
-
-TYPED_TEST(HWCCommon, hwc_device_set_next_frontbuffer_adds_to_layerlist)
-{
-    std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
-    EXPECT_CALL(*this->mock_organizer, set_fb_target(mock_buffer))
-        .Times(1);
- 
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
-    device->set_next_frontbuffer(mock_buffer);
-}
-
-TYPED_TEST(HWCCommon, hwc_device_set_next_frontbuffer_posts)
-{
-    std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
-    EXPECT_CALL(*this->mock_fbdev, post(mock_buffer))
-        .Times(1);
-
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
-    device->set_next_frontbuffer(mock_buffer);
 }

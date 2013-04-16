@@ -20,6 +20,7 @@
 #include "mir_test_doubles/mock_fb_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
+#include "mir_test_doubles/mock_android_buffer.h"
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
@@ -172,3 +173,22 @@ TEST_F(HWC11Device, test_hwc_device_display_width_height)
 }
 }
 
+TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_adds_to_layerlist)
+{
+    std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    EXPECT_CALL(*this->mock_organizer, set_fb_target(mock_buffer))
+        .Times(1);
+ 
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+    device.set_next_frontbuffer(mock_buffer);
+}
+
+TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_posts)
+{
+    std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    EXPECT_CALL(*this->mock_fbdev, post(mock_buffer))
+        .Times(1);
+
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+    device.set_next_frontbuffer(mock_buffer);
+}

@@ -42,9 +42,7 @@ public:
     unsigned int number_of_framebuffers_available() const;
     void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
  
-    void wait_for_vsync();
     void commit_frame();
-    void notify_vsync();
 };
 
 }
