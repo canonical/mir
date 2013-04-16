@@ -53,6 +53,7 @@ public:
 
     geometry::Rectangle view_area() const;
     void make_current();
+    void release_current();
     void clear();
     bool post_update();
 
