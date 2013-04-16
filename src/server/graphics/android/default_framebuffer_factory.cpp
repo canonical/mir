@@ -35,8 +35,8 @@ mga::DefaultFramebufferFactory::DefaultFramebufferFactory(
 {
 }
 
-std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(
-    std::shared_ptr<DisplaySupportProvider> const& info_provider)
+std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window (
+    std::shared_ptr<DisplaySupportProvider> const& info_provider) const
 {
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();
@@ -52,3 +52,8 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, info_provider);
     return std::make_shared<mga::MirNativeWindow>(interpreter); 
 }
+
+std::shared_ptr<mga::FBDevice> mga::DefaultFramebufferFactory::create_fb_device() const
+{
+    return std::shared_ptr<mga::FBDevice>();
+} 

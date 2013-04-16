@@ -29,13 +29,15 @@ namespace graphics
 namespace android
 {
 class DisplaySupportProvider;
+class FBDevice;
 
 class FramebufferFactory
 {
 public:
     virtual ~FramebufferFactory() = default;
 
-    virtual std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const&) = 0; 
+    virtual std::shared_ptr<ANativeWindow> create_fb_native_window(std::shared_ptr<DisplaySupportProvider> const&) const = 0;
+    virtual std::shared_ptr<FBDevice> create_fb_device() const = 0; 
 
 protected:
     FramebufferFactory() = default;
