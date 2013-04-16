@@ -54,6 +54,8 @@ bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputE
 {
     MirEvent mir_ev;
     mia::Lexicon::translate(input_event, mir_ev);
+    
+    // TODO: Use XKBMapper
 
     if (event_filter->handles(mir_ev))
         return false; /* Do not pass the event on */

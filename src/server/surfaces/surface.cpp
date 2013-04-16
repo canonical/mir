@@ -52,7 +52,6 @@ void ms::Surface::shutdown()
 
 ms::Surface::~Surface()
 {
-    shutdown();
 }
 
 std::string const& ms::Surface::name() const

@@ -68,6 +68,12 @@ public:
                 lock.lock();
             }
         }
+
+        /*
+         * Release the display buffer from this thread, so that it can be
+         * made current in another thread.
+         */
+        buffer.release_current();
     }
 
     void schedule_compositing()

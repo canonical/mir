@@ -26,7 +26,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/platform.h"
 
-#include "mir/draw/graphics.h"
+#include "graphics.h"
 
 #include <EGL/egl.h>
 
