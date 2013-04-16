@@ -20,6 +20,7 @@
 #include "mir_test_doubles/mock_android_buffer.h"
 
 #include <future>
+#include <initializer_list>
 #include <thread>
 #include <stdexcept>
 #include <gtest/gtest.h>
@@ -45,7 +46,8 @@ public:
 
 TEST_F(FBSimpleSwapperTest, simple_swaps_returns_valid)
 {
-    mga::FBSimpleSwapper fb_swapper({buffer1, buffer2});
+    std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> double_list{buffer1, buffer2};
+    mga::FBSimpleSwapper fb_swapper(double_list);
 
     auto test_buffer = fb_swapper.compositor_acquire();
 
@@ -54,7 +56,8 @@ TEST_F(FBSimpleSwapperTest, simple_swaps_returns_valid)
 
 TEST_F(FBSimpleSwapperTest, simple_swaps_return_aba_pattern)
 {
-    mga::FBSimpleSwapper fb_swapper({buffer1, buffer2});
+    std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> double_list{buffer1, buffer2};
+    mga::FBSimpleSwapper fb_swapper(double_list);
 
     auto test_buffer_1 = fb_swapper.compositor_acquire();
     fb_swapper.compositor_release(test_buffer_1);
@@ -71,7 +74,8 @@ TEST_F(FBSimpleSwapperTest, simple_swaps_return_aba_pattern)
 
 TEST_F(FBSimpleSwapperTest, triple_swaps_return_abcab_pattern)
 {
-    mga::FBSimpleSwapper fb_swapper({buffer1, buffer2, buffer3});
+    std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> triple_list{buffer1, buffer2, buffer3};
+    mga::FBSimpleSwapper fb_swapper(triple_list);
 
     auto test_buffer_1 = fb_swapper.compositor_acquire();
     fb_swapper.compositor_release(test_buffer_1);

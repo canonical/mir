@@ -37,16 +37,19 @@ namespace android
 class FBSimpleSwapper : public FBSwapper
 {
 public:
-    explicit FBSimpleSwapper(std::initializer_list<std::shared_ptr<AndroidBuffer>> buffer_list);
-    explicit FBSimpleSwapper(std::vector<std::shared_ptr<AndroidBuffer>> buffer_list);
+    template<typename AndroidBufferPtrContainer>
+    explicit FBSimpleSwapper(AndroidBufferPtrContainer const& buffer_list)
+    {
+        for (auto& buffer : buffer_list)
+        {
+            queue.push(buffer);
+        }
+    }
 
     std::shared_ptr<AndroidBuffer> compositor_acquire();
     void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer);
 
 private:
-    template<class T>
-    void initialize_queues(T);
-
     std::mutex queue_lock;
     std::condition_variable cv;
 

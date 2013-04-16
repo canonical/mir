@@ -24,25 +24,6 @@
 
 namespace mga=mir::graphics::android;
 
-template<class T>
-void mga::FBSimpleSwapper::initialize_queues(T buffer_list)
-{
-    for (auto& buffer : buffer_list)
-    {
-        queue.push(buffer);
-    }
-}
-
-mga::FBSimpleSwapper::FBSimpleSwapper(std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
-{
-    initialize_queues(buffer_list);
-}
-
-mga::FBSimpleSwapper::FBSimpleSwapper(std::vector<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
-{
-    initialize_queues(buffer_list);
-}
-
 std::shared_ptr<mga::AndroidBuffer> mga::FBSimpleSwapper::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
