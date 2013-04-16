@@ -24,8 +24,6 @@
 #include "hwc_display.h"
 #include "fb_device.h"
 
-#include <ui/FramebufferNativeWindow.h>
-
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 

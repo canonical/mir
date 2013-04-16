@@ -30,8 +30,6 @@ target_link_libraries(
   mirplatformgraphics
   mircompositor
 
-  3rd_party_fbtype
-
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
