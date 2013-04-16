@@ -42,7 +42,7 @@ bool me::ApplicationSwitcher::handles(MirEvent const& event)
         return false;
     if (event.key.type != mir_event_type_key)
         return false;
-    if (event.key.action != 0) // Key down
+    if (event.key.action == 1) // Key release
         return false;
     if (event.key.scan_code != KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
         return false;
