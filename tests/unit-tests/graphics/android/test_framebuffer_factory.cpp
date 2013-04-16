@@ -22,11 +22,15 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
 
+#include "mir_test/hw_mock.h"
+
+#include <stdexcept>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace mt=mir::test;
 namespace geom=mir::geometry;
 namespace mc=mir::compositor;
 
@@ -64,6 +68,7 @@ public:
     std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_info_provider;
     unsigned int const fake_fb_num;
+    mt::HardwareAccessMock hw_access_mock;
 };
 
 TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
@@ -127,4 +132,37 @@ TEST_F(FBFactory, test_native_window_creation_uses_rgba8888)
         .Times(fake_fb_num);
  
     factory.create_fb_native_window(mock_display_info_provider);
+}
+
+TEST_F(FBFactory, test_device_creation_accesses_gralloc)
+{
+    using namespace testing;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1);
+
+    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    factory.create_fb_device();
+}
+
+TEST_F(FBFactory, test_device_creation_throws_on_failure)
+{
+    using namespace testing;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+
+    EXPECT_THROW({
+        factory.create_fb_device();
+    }, std::runtime_error);
+}
+
+TEST_F(FBFactory, test_device_creation_resource_has_fb_close_on_destruct)
+{
+    using namespace testing;
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1);
+
+    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
 }

@@ -55,5 +55,22 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
 
 std::shared_ptr<mga::FBDevice> mga::DefaultFramebufferFactory::create_fb_device() const
 {
+    /* todo: move to constructor after transitioning 100% from FramebufferNativeWindow */
+/* 
+    hw_module_t const* module;
+    framebuffer_device_t* fbdev_raw;
+
+    auto rc = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
+    if ((rc != 0) || (module == nullptr) || (framebuffer_open(module, &fbdev_raw) != 0) )
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
+    }
+
+    auto fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
+                      [](struct framebuffer_device_t* fbdevice)
+                      {
+                         fbdevice->common.close((hw_device_t*) fbdevice);
+                      });
+*/
     return std::shared_ptr<mga::FBDevice>();
 } 

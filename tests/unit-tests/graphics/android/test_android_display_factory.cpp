@@ -115,24 +115,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_devices_ok)
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory); 
 }
 
-#if 0
-this should go in factory test!
-TEST_F(AndroidDisplayFactoryTest, fbdev_unavailable_is_fatal_and_does_not_try_to_open_hwc)
-{
-    using namespace testing;
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
-        .Times(1);
-    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory);
-    EXPECT_THROW({
-        display_factory.create_display();
-    }, std::runtime_error);
-}
-#endif
-
 /* this case occurs when the system cannot find the hwc library. it is a nonfatal error because we have a backup to try */
 TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_display)
 {
