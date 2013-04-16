@@ -147,15 +147,26 @@ TEST_F(FBFactory, test_device_creation_accesses_gralloc)
 TEST_F(FBFactory, test_device_creation_throws_on_failure)
 {
     using namespace testing;
+    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+
+    /* failure because of rc */
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1)
         .WillOnce(Return(-1));
 
-    mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    EXPECT_THROW({
+        factory.create_fb_device();
+    }, std::runtime_error);
+
+    /* failure because of nullptr returned */
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
+        .Times(1)
+        .WillOnce(DoAll(SetArgPointee<1>(nullptr),Return(-1)));
 
     EXPECT_THROW({
         factory.create_fb_device();
     }, std::runtime_error);
+
 }
 
 TEST_F(FBFactory, test_device_creation_resource_has_fb_close_on_destruct)
@@ -165,4 +176,7 @@ TEST_F(FBFactory, test_device_creation_resource_has_fb_close_on_destruct)
         .Times(1);
 
     mga::DefaultFramebufferFactory factory(mock_buffer_allocator);
+    factory.create_fb_device();
+
+    EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }

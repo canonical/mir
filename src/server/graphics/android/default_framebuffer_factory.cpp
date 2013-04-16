@@ -19,11 +19,14 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "default_framebuffer_factory.h"
+#include "default_fb_device.h"
 #include "display_support_provider.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
 #include "fb_simple_swapper.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 #include <vector>
 
 namespace mga=mir::graphics::android;
@@ -55,8 +58,6 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
 
 std::shared_ptr<mga::FBDevice> mga::DefaultFramebufferFactory::create_fb_device() const
 {
-    /* todo: move to constructor after transitioning 100% from FramebufferNativeWindow */
-/* 
     hw_module_t const* module;
     framebuffer_device_t* fbdev_raw;
 
@@ -71,6 +72,6 @@ std::shared_ptr<mga::FBDevice> mga::DefaultFramebufferFactory::create_fb_device(
                       {
                          fbdevice->common.close((hw_device_t*) fbdevice);
                       });
-*/
-    return std::shared_ptr<mga::FBDevice>();
+
+    return std::make_shared<mga::DefaultFBDevice>(fb_dev);
 } 
