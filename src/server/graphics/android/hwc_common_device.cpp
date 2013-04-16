@@ -18,6 +18,9 @@
 
 #include "hwc_common_device.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -48,10 +51,22 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
     callbacks.self = this;
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
+
+    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
+    }
+    
+    if (hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
+    }
 }
 
 mga::HWCCommonDevice::~HWCCommonDevice() noexcept
 {
+    hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
+    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
 
 geom::PixelFormat mga::HWCCommonDevice::display_format() const

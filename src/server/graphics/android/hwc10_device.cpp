@@ -30,21 +30,10 @@ mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<FBDevice> const& /*fbdev*/)
     : HWCCommonDevice(hwc_device)
 {
-    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
-    }
-    
-    if (hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
-    }
 }
 
 mga::HWC10Device::~HWC10Device() noexcept
 {
-    hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
-    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
 
 geom::Size mga::HWC10Device::display_size() const
