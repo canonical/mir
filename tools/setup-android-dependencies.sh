@@ -24,7 +24,8 @@ pushd /tmp > /dev/null
         apt-get install libprotobuf7 \
                         libboost-system1.49.0 \
                         libboost-program-options1.49.0 \
-                        libboost-thread1.49.0;
+                        libboost-thread1.49.0; \
+                        libxkbcommon0
 
             exit;
             exit" | adb shell
