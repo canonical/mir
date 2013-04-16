@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -44,8 +44,10 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
-#include "mir/input/input_manager.h"
 #include "mir/input/null_input_manager.h"
+#include "input/android/default_android_input_configuration.h"
+#include "input/android/android_input_manager.h"
+#include "input/android/android_dispatcher_controller.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
@@ -65,6 +67,7 @@ namespace ml = mir::logging;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
+namespace mia = mi::android;
 
 namespace
 {
@@ -315,6 +318,17 @@ mir::DefaultServerConfiguration::the_event_filters()
     return empty_filter_list;
 }
 
+std::shared_ptr<mia::InputConfiguration>
+mir::DefaultServerConfiguration::the_input_configuration()
+{
+    return input_configuration(
+        [this]()
+        {
+            const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
+            return std::make_shared<mia::DefaultInputConfiguration>(the_event_filters(), the_display(), null_cursor_listener);
+        });
+}
+
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
@@ -322,7 +336,7 @@ mir::DefaultServerConfiguration::the_input_manager()
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
             if (the_options()->get("enable-input", false))
-                return mi::create_input_manager(the_event_filters(), the_display());
+                return std::make_shared<mia::InputManager>(the_input_configuration());
             else 
                 return std::make_shared<mi::NullInputManager>();
         });
@@ -505,7 +519,11 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
 
 std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
 {
-    return the_input_manager();
+    return input_focus_selector(
+        [&]()
+        {
+            return std::make_shared<mia::DispatcherController>(the_input_configuration());
+        });
 }
 
 std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time_source()

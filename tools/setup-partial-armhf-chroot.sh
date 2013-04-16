@@ -42,6 +42,8 @@ pushd ${1} > /dev/null
         libprotobuf-dev
         libegl1-mesa-dev
         libgles2-mesa-dev
+        libxkbcommon0
+        libxkbcommon-dev
         zlib1g)
 
     #cleanup

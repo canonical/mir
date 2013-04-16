@@ -22,7 +22,7 @@
 #include "src/server/graphics/android/hwc_display.h"
 #include "src/server/graphics/android/default_fb_device.h"
 
-#include "mir/draw/graphics.h"
+#include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
 
 #include <gtest/gtest.h>
