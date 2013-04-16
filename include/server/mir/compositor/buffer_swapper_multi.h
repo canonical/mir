@@ -47,7 +47,7 @@ public:
     std::shared_ptr<Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
 
-    void shutdown();
+    void force_requests_to_complete();
 
 private:
     template<class T>

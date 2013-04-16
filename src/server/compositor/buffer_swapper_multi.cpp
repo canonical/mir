@@ -112,7 +112,7 @@ void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& r
     client_available_cv.notify_one();
 }
 
-void mc::BufferSwapperMulti::shutdown()
+void mc::BufferSwapperMulti::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 

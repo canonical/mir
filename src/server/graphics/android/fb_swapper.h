@@ -50,7 +50,7 @@ public:
     void client_release(std::shared_ptr<compositor::Buffer> const& queued_buffer);
     std::shared_ptr<compositor::Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<compositor::Buffer> const& released_buffer);
-    void shutdown();
+    void force_requests_to_complete();
 
 private:
     template<class T>

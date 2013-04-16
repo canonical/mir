@@ -65,7 +65,7 @@ void mga::FBSwapper::compositor_release(std::shared_ptr<mc::Buffer> const& relea
     cv.notify_all();
 }
 
-void mga::FBSwapper::shutdown()
+void mga::FBSwapper::force_requests_to_complete()
 {
 }
 

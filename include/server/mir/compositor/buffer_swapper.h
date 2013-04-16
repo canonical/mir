@@ -47,7 +47,7 @@ public:
 
     virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
 
-    virtual void shutdown() = 0;
+    virtual void force_requests_to_complete() = 0;
 
     virtual ~BufferSwapper() {}
 
