@@ -32,8 +32,12 @@
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/shell/default_shell_configuration.h"
 #include "mir/shell/session_manager.h"
+#include "mir/shell/registration_order_focus_sequence.h"
+#include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/consuming_placement_strategy.h"
+#include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
@@ -291,24 +295,22 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
         });
 }
 
-std::shared_ptr<msh::ShellConfiguration>
-mir::DefaultServerConfiguration::the_shell_configuration()
-{
-    return shell_configuration(
-        [this]()
-        {
-            return std::make_shared<msh::DefaultShellConfiguration>(the_display(), the_input_target_listener(),
-                                                                    the_surface_factory());
-        });
-}
-
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
 {
     return session_manager(
-        [this]()
+        [this]() -> std::shared_ptr<msh::SessionManager>
         {
-            return std::make_shared<msh::SessionManager>(the_shell_configuration());
+            auto session_container = std::make_shared<msh::SessionContainer>();
+            auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container);
+            auto focus_sequence = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
+            auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
+            auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(),
+                                                                                      placement_strategy);
+            
+            return std::make_shared<msh::SessionManager>(organising_factory, session_container,
+                                                         focus_sequence, focus_mechanism,
+                                                         the_input_target_listener());
         });
 }
 
