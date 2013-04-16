@@ -26,21 +26,21 @@
 #include <InputDispatcher.h>
 
 #include <boost/throw_exception.hpp>
+
 #include <stdexcept>
+#include <mutex>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-// TODO: Needs locking
 mia::DispatcherController::DispatcherController(std::shared_ptr<mia::InputConfiguration> const& config) :
-    input_dispatcher(config->the_dispatcher()),
-    focused_window_handle(0),
-    focused_application_handle(0)
+    input_dispatcher(config->the_dispatcher())
 {
 }
 
 void mia::DispatcherController::input_application_opened(std::shared_ptr<mi::SessionTarget> const& session)
 {
+    std::unique_lock<std::mutex> lock(handles_mutex);
     if (application_handles.find(session) != application_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("An application was opened twice"));
     application_handles[session] = new mia::InputApplicationHandle(session);
@@ -48,6 +48,7 @@ void mia::DispatcherController::input_application_opened(std::shared_ptr<mi::Ses
 
 void mia::DispatcherController::input_application_closed(std::shared_ptr<mi::SessionTarget> const& session)
 {
+    std::unique_lock<std::mutex> lock(handles_mutex);
     if (application_handles.find(session) == application_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("An application was closed twice"));
     application_handles.erase(session);
@@ -56,6 +57,7 @@ void mia::DispatcherController::input_application_closed(std::shared_ptr<mi::Ses
 void mia::DispatcherController::input_surface_opened(std::shared_ptr<mi::SessionTarget> const& session,
                                                      std::shared_ptr<input::SurfaceTarget> const& opened_surface)
 {
+    std::unique_lock<std::mutex> lock(handles_mutex);
     auto application_handle = application_handles.find(session);
     if (application_handle == application_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened for an unopened application"));
@@ -70,6 +72,7 @@ void mia::DispatcherController::input_surface_opened(std::shared_ptr<mi::Session
 
 void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
 {
+    std::unique_lock<std::mutex> lock(handles_mutex);
     auto it = window_handles.find(closed_surface);
     if (it == window_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("A surface was closed twice"));
@@ -80,7 +83,6 @@ void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::Surf
 
 void mia::DispatcherController::focus_cleared()
 {
-    // TODO: Implement ~racarr
     droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> empty_windows;
     droidinput::sp<droidinput::InputApplicationHandle> null_application = nullptr;
     
@@ -90,6 +92,8 @@ void mia::DispatcherController::focus_cleared()
 
 void mia::DispatcherController::focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface)
 {
+    std::unique_lock<std::mutex> lock(handles_mutex);
+
     auto window_handle = window_handles[surface];
     auto application_handle = window_handle->inputApplicationHandle;
     

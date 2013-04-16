@@ -44,7 +44,6 @@ namespace
 // TODO: It would be nice if it were possible to mock the interface between
 // droidinput::InputChannel and droidinput::InputDispatcher rather than use
 // valid fds to allow non-throwing construction of a real input channel.
-// TODO: ~racarr why does this have fds?
 struct AndroidDispatcherControllerFdSetup : public testing::Test
 {
     void SetUp() override
@@ -254,7 +253,7 @@ TEST_F(AndroidDispatcherControllerFdSetup, on_focus_changed_throw_behavior)
     mia::DispatcherController controller(mt::fake_shared(config));
 
     EXPECT_THROW({
-            // We can't surfaces which never opened
+            // We can't focus surfaces which never opened
             controller.focus_changed(surface);
     }, std::logic_error);
 }
