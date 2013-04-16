@@ -28,13 +28,13 @@ TEST(EventQueue, no_sink)
         MirEvent e;
 
         e.type = mir_event_type_key;
-        q.post(e);
+        q.handle_event(e);
 
         e.type = mir_event_type_motion;
-        q.post(e);
+        q.handle_event(e);
 
         e.type = mir_event_type_surface;
-        q.post(e);
+        q.handle_event(e);
     });
 }
 
@@ -68,21 +68,21 @@ TEST(EventQueue, events_get_handled)
     mir::EventQueue q;
     std::shared_ptr<TestSink> s(new TestSink);
 
-    q.set_sink(s);
+    q.set_target(s);
 
     MirEvent e;
     memset(&e, 0, sizeof e);
 
     e.type = mir_event_type_key;
-    q.post(e);
+    q.handle_event(e);
     EXPECT_EQ(mir_event_type_key, s->last_event_handled().type);
 
     e.type = mir_event_type_motion;
-    q.post(e);
+    q.handle_event(e);
     EXPECT_EQ(mir_event_type_motion, s->last_event_handled().type);
 
     e.type = mir_event_type_surface;
-    q.post(e);
+    q.handle_event(e);
     EXPECT_EQ(mir_event_type_surface, s->last_event_handled().type);
 }
 
@@ -92,24 +92,24 @@ TEST(EventQueue, sink_is_changeable)
     std::shared_ptr<TestSink> a(new TestSink);
     std::shared_ptr<TestSink> b(new TestSink);
 
-    q.set_sink(a);
+    q.set_target(a);
 
     MirEvent e;
     memset(&e, 0, sizeof e);
 
     e.type = mir_event_type_motion;
-    q.post(e);
+    q.handle_event(e);
     EXPECT_EQ(mir_event_type_motion, a->last_event_handled().type);
 
-    q.set_sink(b);
+    q.set_target(b);
 
     e.type = mir_event_type_surface;
-    q.post(e);
+    q.handle_event(e);
     EXPECT_EQ(mir_event_type_surface, b->last_event_handled().type);
     EXPECT_EQ(mir_event_type_motion, a->last_event_handled().type);
 
     e.type = mir_event_type_key;
-    q.post(e);
+    q.handle_event(e);
     EXPECT_EQ(mir_event_type_key, b->last_event_handled().type);
     EXPECT_EQ(mir_event_type_motion, a->last_event_handled().type);
 }

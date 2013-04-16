@@ -20,20 +20,19 @@
 #define MIR_EVENT_QUEUE_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/event_sink.h"
 #include <memory>
 
 namespace mir
 {
-class EventSink;
-
-class EventQueue
+class EventQueue : public EventSink
 {
 public:
-    void set_sink(std::weak_ptr<EventSink> const& s);
-    void post(MirEvent const& e);
+    void set_target(std::weak_ptr<EventSink> const& s);
+    void handle_event(MirEvent const& e) override;
 
 private:
-    std::weak_ptr<EventSink> sink;
+    std::weak_ptr<EventSink> target;
 };
 
 } // namespace mir

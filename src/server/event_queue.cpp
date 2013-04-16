@@ -21,17 +21,17 @@
 
 using namespace mir;
 
-void EventQueue::set_sink(std::weak_ptr<EventSink> const& s)
+void EventQueue::set_target(std::weak_ptr<EventSink> const& s)
 {
-    sink = s;
+    target = s;
 }
 
-void EventQueue::post(MirEvent const& e)
+void EventQueue::handle_event(MirEvent const& e)
 {
     // In future, post might put e on a queue and wait for some background
     // thread to push it through to sink. But that's not required right now.
 
-    std::shared_ptr<EventSink> target = sink.lock();
-    if (target)
-        target->handle_event(e);
+    std::shared_ptr<EventSink> p = target.lock();
+    if (p)
+        p->handle_event(e);
 }

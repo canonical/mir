@@ -57,9 +57,9 @@ void msh::Surface::set_id(mir::frontend::SurfaceId i)
     id = i;
 }
 
-void msh::Surface::set_event_target(std::shared_ptr<EventQueue>& q)
+void msh::Surface::set_event_target(std::shared_ptr<EventSink> const& sink)
 {
-    event_queue = q;
+    event_sink = sink;
 }
 
 void msh::Surface::hide()
@@ -240,7 +240,7 @@ bool msh::Surface::set_state(MirSurfaceState s)
 
 void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 {
-    if (event_queue)
+    if (event_sink)
     {
         MirEvent e;
 
@@ -254,6 +254,6 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
         e.surface.attrib = attrib;
         e.surface.value = value;
 
-        event_queue->post(e);
+        event_sink->handle_event(e);
     }
 }

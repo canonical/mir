@@ -32,7 +32,7 @@
 namespace mir
 {
 
-class EventQueue;
+class EventSink;
 
 namespace frontend
 {
@@ -83,7 +83,7 @@ public:
     virtual MirSurfaceState state() const;
 
     void set_id(frontend::SurfaceId i);
-    void set_event_target(std::shared_ptr<EventQueue>& q);
+    void set_event_target(std::shared_ptr<EventSink> const& sink);
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
@@ -94,7 +94,7 @@ private:
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
-    std::shared_ptr<EventQueue> event_queue;
+    std::shared_ptr<EventSink> event_sink;
     frontend::SurfaceId id;
 
     MirSurfaceType type_value;
