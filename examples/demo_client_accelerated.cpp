@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/draw/graphics.h"
+#include "graphics.h"
 
 #include <assert.h>
 #include <signal.h>
