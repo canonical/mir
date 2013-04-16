@@ -23,54 +23,59 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::HWCRect::HWCRect()
+    : self{0,0,0,0}
 {
-    top = 0;
-    left = 0;
-    bottom = 0;
-    right = 0;
 }
 
 mga::HWCRect::HWCRect(geom::Rectangle& rect)
 {
-    top = rect.top_left.y.as_uint32_t();
-    left = rect.top_left.x.as_uint32_t();
-    bottom= rect.size.height.as_uint32_t();
-    right = rect.size.width.as_uint32_t();
+    self.top = rect.top_left.y.as_uint32_t();
+    self.left = rect.top_left.x.as_uint32_t();
+    self.bottom= rect.size.height.as_uint32_t();
+    self.right = rect.size.width.as_uint32_t();
 }
 
 //construction is a bit funny because hwc_layer_1 has unions
-mga::HWCLayerBase::HWCLayerBase()
+mga::HWCDefaultLayer::HWCDefaultLayer(std::initializer_list<mga::HWCRect> list)
 {
     /* default values.*/
-    compositionType = HWC_FRAMEBUFFER;
-    hints = 0;
-    flags = 0;
-    transform = 0;
-    blending = HWC_BLENDING_NONE;
-    acquireFenceFd = -1;
-    releaseFenceFd = -1;
+    self.compositionType = HWC_FRAMEBUFFER;
+    self.hints = 0;
+    self.flags = 0;
+    self.transform = 0;
+    self.blending = HWC_BLENDING_NONE;
+    self.acquireFenceFd = -1;
+    self.releaseFenceFd = -1;
 
     HWCRect emptyrect;
-    visible_screen_rect = emptyrect;
-    sourceCrop = emptyrect;
-    displayFrame = emptyrect;
-    visible_screen_rect = emptyrect;
-    visibleRegionScreen.numRects=1u;
-    visibleRegionScreen.rects = &visible_screen_rect; 
+    self.sourceCrop = emptyrect;
+    self.displayFrame = emptyrect;
+    self.visibleRegionScreen.numRects=list.size();
+    auto rect_array = new hwc_rect_t[list.size()];
+    auto i = 0u;
+    for( auto& rect : list )
+    {
+        rect_array[i++] = rect; 
+    }
+    self.visibleRegionScreen.rects = rect_array;
+}
+
+mga::HWCDefaultLayer::~HWCDefaultLayer()
+{
+    if (self.visibleRegionScreen.rects)
+        delete self.visibleRegionScreen.rects;
 }
 
 mga::HWCFBLayer::HWCFBLayer(
         std::shared_ptr<ANativeWindowBuffer> const& native_buf,
         HWCRect& display_frame_rect)
-    : HWCLayerBase()
+    : HWCDefaultLayer{display_frame_rect}
 {
-    compositionType = HWC_FRAMEBUFFER_TARGET;
-    handle = native_buf->handle;
+    self.compositionType = HWC_FRAMEBUFFER_TARGET;
+    self.handle = native_buf->handle;
 
-    visible_screen_rect = display_frame_rect;
-    sourceCrop = display_frame_rect;
-    displayFrame = display_frame_rect;
-    visible_screen_rect =  display_frame_rect; 
+    self.sourceCrop = display_frame_rect;
+    self.displayFrame = display_frame_rect;
 }
 
 mga::HWCLayerList::HWCLayerList()

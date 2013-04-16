@@ -47,9 +47,12 @@ struct MockFBDevice : public mga::FBDevice
     MOCK_METHOD1(post, void(std::shared_ptr<mga::AndroidBuffer> const&));
 };
 
-struct HWCDummyLayer : public mga::HWCLayerBase
+struct HWCDummyLayer : public mga::HWCDefaultLayer
 {
-    HWCDummyLayer() = default;
+    HWCDummyLayer()
+     : HWCDefaultLayer({})
+    {
+    }
 };
 }
 

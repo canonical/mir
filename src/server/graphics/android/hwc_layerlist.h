@@ -23,7 +23,7 @@
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
-
+#include <initializer_list>
 namespace mir
 {
 namespace graphics
@@ -32,27 +32,37 @@ namespace android
 {
 
 class AndroidBuffer;
-class HWCLayerBase;
-typedef struct std::vector<std::shared_ptr<HWCLayerBase>> LayerList;
+class HWCDefaultLayer;
+typedef struct std::vector<std::shared_ptr<HWCDefaultLayer>> LayerList;
  
-struct HWCRect : public hwc_rect_t
+struct HWCRect
 {
     HWCRect(); 
     HWCRect(geometry::Rectangle& rect);
+
+    operator hwc_rect_t const& () const { return self; }
+    operator hwc_rect_t& () { return self; }
+private:
+    hwc_rect_t self;
 };
 
-struct HWCLayerBase : public hwc_layer_1
+struct HWCDefaultLayer
 {
+    HWCDefaultLayer(std::initializer_list<HWCRect> list);
+    ~HWCDefaultLayer();
+
+    operator hwc_layer_1 const& () const { return self; }
+    operator hwc_layer_1& () { return self; }
+
 protected:
-    HWCLayerBase();
 
-    HWCRect visible_screen_rect;
+    HWCDefaultLayer& operator=(HWCDefaultLayer const&) = delete;
+    HWCDefaultLayer(HWCDefaultLayer const&) = delete;
 
-    HWCLayerBase& operator=(HWCLayerBase const&) = delete;
-    HWCLayerBase(HWCLayerBase const&) = delete;
+    hwc_layer_1 self;
 };
 
-struct HWCFBLayer : public HWCLayerBase
+struct HWCFBLayer : public HWCDefaultLayer
 {
     HWCFBLayer(std::shared_ptr<ANativeWindowBuffer> const& native_buf,
                HWCRect& display_frame_rect);
