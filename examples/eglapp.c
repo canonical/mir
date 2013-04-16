@@ -24,6 +24,8 @@
 #include <time.h>
 #include <EGL/egl.h>
 
+#include <xkbcommon/xkbcommon-keysyms.h>
+
 static const char servername[] = "/tmp/mir_socket";
 static const char appname[] = "egldemo";
 
@@ -89,7 +91,7 @@ static void mir_eglapp_handle_input(MirSurface* surface, MirEvent const* ev, voi
 {
     (void) surface;
     (void) context;
-    if (ev->key.key_code == 45) /* Q */
+    if (ev->key.key_code == XKB_KEY_q)
         running = 0;
 }
 

@@ -70,8 +70,10 @@ target_link_libraries(mir_demo_client_accelerated
 
 )
 
+add_library(mirdraw STATIC graphics_utils.cpp)
+target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
+
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/accessory
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${GLESv2_INCLUDE_DIRS}

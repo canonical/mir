@@ -29,7 +29,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/run_mir.h"
 
-#include "mir/draw/mir_image.h"
+#include "mir_image.h"
 #include "buffer_render_target.h"
 #include "image_renderer.h"
 
