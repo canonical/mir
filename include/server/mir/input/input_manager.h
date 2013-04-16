@@ -34,12 +34,9 @@ class ViewableArea;
 
 namespace input
 {
-class EventFilter;
 class InputChannel;
-class SessionTarget;
-class SurfaceTarget;
 
-class InputManager : public InputChannelFactory, public shell::InputFocusSelector
+class InputManager : public InputChannelFactory
 {
 public:
     virtual void start() = 0;
@@ -47,20 +44,12 @@ public:
 
     virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
 
-    virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& session,
-                                    std::shared_ptr<input::SurfaceTarget> const& surface) = 0;
-
 protected:
     InputManager() {};
     virtual ~InputManager() {}
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 };
-
-// Needs to be implemented by platform/stack-specific code
-std::shared_ptr<InputManager> create_input_manager(
-    const std::initializer_list<std::shared_ptr<input::EventFilter> const>& event_filters,
-    std::shared_ptr<graphics::ViewableArea> const& viewable_area);
 
 }
 }

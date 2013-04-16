@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_ANDROID_DEFAULT_ANDROID_INPUT_CONFIGURATION_H_
 #define MIR_INPUT_ANDROID_DEFAULT_ANDROID_INPUT_CONFIGURATION_H_
 
-#include "android_input_configuration.h"
+#include "mir/input/android/android_input_configuration.h"
 
 #include "mir/cached_ptr.h"
 
