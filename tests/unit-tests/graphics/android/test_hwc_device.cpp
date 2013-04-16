@@ -134,6 +134,7 @@ static mga::HWCDevice *global_device;
 void* waiting_device(void*)
 {
     global_device->wait_for_vsync();
+    printf("boom.\n");
     return NULL;
 }
 }
@@ -158,18 +159,17 @@ TYPED_TEST(HWCCommon, test_vsync_hook_waits)
 
 }
 
-#if 0
 TYPED_TEST(HWCCommon, test_vsync_hook_from_hwc_unblocks_wait)
 {
     using namespace testing;
 
     hwc_procs_t const* procs;
-    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), _))
+    EXPECT_CALL(*this->mock_device, registerProcs_interface(this->mock_device.get(), _))
         .Times(1)
         .WillOnce(SaveArg<1>(&procs));
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
-    global_device = &device;
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
+    global_device = device.get();
 
     pthread_t thread;
     pthread_create(&thread, NULL, waiting_device, NULL);
@@ -189,68 +189,67 @@ TYPED_TEST(HWCCommon, test_hwc_turns_on_display_after_proc_registration)
 {
     using namespace testing;
     InSequence sequence_enforcer;
-    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(),_))
+    EXPECT_CALL(*this->mock_device, registerProcs_interface(this->mock_device.get(),_))
         .Times(1);
-    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
         .Times(1);
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
-    testing::Mock::VerifyAndClearExpectations(mock_device.get());
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
+    testing::Mock::VerifyAndClearExpectations(this->mock_device.get());
 }
 
 TYPED_TEST(HWCCommon, test_hwc_throws_on_blank_error)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
         .Times(1)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+        auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
     }, std::runtime_error);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
 {
-    auto device = std::make_shared<mga::HWC11Device>(mock_device, mock_organizer, mock_fbdev);
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
 
-    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
         .Times(1);
-    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, 0))
+    EXPECT_CALL(*this->mock_device, eventControl_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, 0))
         .Times(1);
     device.reset();
 }
 
 TYPED_TEST(HWCCommon, hwc_device_reports_2_fbs_available_by_default)
 {
-    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
-    EXPECT_EQ(2u, device.number_of_framebuffers_available());
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
+    EXPECT_EQ(2u, device->number_of_framebuffers_available());
 }
 
 TYPED_TEST(HWCCommon, hwc_device_reports_abgr_8888_by_default)
 {
-    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
-    EXPECT_EQ(geom::PixelFormat::abgr_8888, device.display_format());
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, device->display_format());
 }
 
 TYPED_TEST(HWCCommon, hwc_device_set_next_frontbuffer_adds_to_layerlist)
 {
     std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
-    EXPECT_CALL(*mock_organizer, set_fb_target(mock_buffer))
+    EXPECT_CALL(*this->mock_organizer, set_fb_target(mock_buffer))
         .Times(1);
  
-    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
-    device.set_next_frontbuffer(mock_buffer);
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
+    device->set_next_frontbuffer(mock_buffer);
 }
 
 TYPED_TEST(HWCCommon, hwc_device_set_next_frontbuffer_posts)
 {
     std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
-    EXPECT_CALL(*mock_fbdev, post(mock_buffer))
+    EXPECT_CALL(*this->mock_fbdev, post(mock_buffer))
         .Times(1);
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
-    device.set_next_frontbuffer(mock_buffer);
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_organizer, this->mock_fbdev);
+    device->set_next_frontbuffer(mock_buffer);
 }
-#endif

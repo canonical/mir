@@ -19,7 +19,10 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_COMMON_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_COMMON_DEVICE_H_
 #include "hwc_device.h"
+
 #include <hardware/hwcomposer.h>
+#include <mutex>
+#include <condition_variable>
 
 namespace mir
 {
@@ -27,21 +30,33 @@ namespace graphics
 {
 namespace android
 {
-class HWCLayerOrganizer;
-class FBDevice;
+
+class HWCCommonDevice;
+struct HWCCallbacks
+{
+    hwc_procs_t hooks;
+    HWCCommonDevice* self;
+};
 
 class HWCCommonDevice : public HWCDevice
 {
 public:
-    HWCCommonDevice();
+    HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
     ~HWCCommonDevice() noexcept;
 
     geometry::PixelFormat display_format() const;
     unsigned int number_of_framebuffers_available() const;
-    void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
  
     void wait_for_vsync();
     void notify_vsync();
+
+protected:
+    std::shared_ptr<hwc_composer_device_1> const hwc_device;
+private:
+    HWCCallbacks callbacks;
+    std::mutex vsync_wait_mutex;
+    std::condition_variable vsync_trigger;
+    bool vsync_occurred;
 };
 
 }
