@@ -26,13 +26,20 @@
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
+namespace geom=mir::geometry;
 
 struct FBDevice : public ::testing::Test
 {
     virtual void SetUp()
     {
         using namespace testing;
-        fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(); 
+        
+        width = 413;
+        height = 516;
+        fbnum = 4;
+        format = HAL_PIXEL_FORMAT_RGBA_8888;
+
+        fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum); 
         mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
 
         dummy_buffer = std::make_shared<ANativeWindowBuffer>();
@@ -41,6 +48,7 @@ struct FBDevice : public ::testing::Test
             .WillByDefault(Return(dummy_buffer));
     }
 
+    unsigned int width, height, format, fbnum;
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer;
     std::shared_ptr<ANativeWindowBuffer> dummy_buffer;
@@ -69,4 +77,24 @@ TEST_F(FBDevice, post_fail)
     EXPECT_THROW({
         fbdev.post(mock_buffer);
     }, std::runtime_error); 
+}
+
+TEST_F(FBDevice, determine_size)
+{
+    mga::DefaultFBDevice fbdev(fb_hal_mock);
+    auto size = fbdev.display_size();
+    EXPECT_EQ(width, size.width.as_uint32_t());
+    EXPECT_EQ(height, size.height.as_uint32_t());
+}
+
+TEST_F(FBDevice, determine_fbnum)
+{
+    mga::DefaultFBDevice fbdev(fb_hal_mock);
+    EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
+}
+
+TEST_F(FBDevice, determine_pixformat)
+{
+    mga::DefaultFBDevice fbdev(fb_hal_mock);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
 }
