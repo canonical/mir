@@ -25,6 +25,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <functional>
 
 namespace mir_test_framework
 {
@@ -66,6 +67,8 @@ public:
 
     bool shutdown_server_process();
     void kill_client_processes();
+
+    void run_in_test_process(std::function<void()> const& run_code);
 
 protected:
     virtual void SetUp();
