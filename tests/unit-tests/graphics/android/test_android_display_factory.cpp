@@ -21,6 +21,7 @@
 #include "src/server/graphics/android/hwc_factory.h"
 #include "src/server/graphics/android/android_display_allocator.h"
 #include "src/server/graphics/android/framebuffer_factory.h"
+#include "src/server/graphics/android/fb_device.h"
 
 #include "mir_test/hw_mock.h"
 
@@ -46,6 +47,16 @@ struct MockHWCFactory: public mga::HWCFactory
                                                                        std::shared_ptr<framebuffer_device_t> const&));
 };
 
+struct MockFBDevice : public mga::FBDevice
+{
+    ~MockFBDevice () noexcept {};
+    MOCK_CONST_METHOD0(display_size, mir::geometry::Size()); 
+    MOCK_CONST_METHOD0(display_format, mir::geometry::PixelFormat()); 
+    MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());
+    MOCK_METHOD1(set_next_frontbuffer, void(std::shared_ptr<mga::AndroidBuffer> const&));
+    MOCK_METHOD1(post,                 void(std::shared_ptr<mga::AndroidBuffer> const&));
+};
+
 struct MockDisplayAllocator: public mga::DisplayAllocator
 {
     MockDisplayAllocator()
@@ -64,7 +75,8 @@ struct MockDisplayAllocator: public mga::DisplayAllocator
 
 struct MockFNWFactory : public mga::FramebufferFactory
 {
-    ~MockFNWFactory () noexcept {} 
+    ~MockFNWFactory () noexcept {}
+    MOCK_METHOD0(create_fb_device, std::shared_ptr<mga::FBDevice>()); 
     MOCK_METHOD1(create_fb_native_window,
                     std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplaySupportProvider> const&));
 };
@@ -75,7 +87,8 @@ public:
     AndroidDisplayFactoryTest()
         : mock_display_allocator(std::make_shared<MockDisplayAllocator>()),
           mock_hwc_factory(std::make_shared<MockHWCFactory>()),
-          mock_fnw_factory(std::make_shared<MockFNWFactory>())
+          mock_fnw_factory(std::make_shared<MockFNWFactory>()),
+          mock_fb_device(std::make_shared<MockFBDevice>())
     {
     }
 
@@ -84,10 +97,10 @@ public:
         EXPECT_TRUE(hw_access_mock.open_count_matches_close());
     }
 
-    std::shared_ptr<MockFBDevice> const mock_fb_device;
     std::shared_ptr<MockDisplayAllocator> const mock_display_allocator;
     std::shared_ptr<MockHWCFactory> const mock_hwc_factory;
     std::shared_ptr<MockFNWFactory> const mock_fnw_factory;
+    std::shared_ptr<MockFBDevice> const mock_fb_device;
     mt::HardwareAccessMock hw_access_mock;
 };
 }
@@ -120,6 +133,7 @@ TEST_F(AndroidDisplayFactoryTest, fbdev_unavailable_is_fatal_and_does_not_try_to
 TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_display)
 {
     using namespace testing;
+    auto stub_anativewindow = std::make_shared<ANativeWindow>();
 
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
@@ -135,7 +149,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
     EXPECT_CALL(*mock_fnw_factory, create_fb_device())
         .Times(1)
         .WillOnce(Return(mock_fb_device));
-    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(mock_fb_device))
+    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_fb_device;
+    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1)
         .WillOnce(Return(stub_anativewindow));
     EXPECT_CALL(*mock_display_allocator, create_gpu_display(_))
@@ -149,6 +164,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
 TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
 {
     using namespace testing;
+    auto stub_anativewindow = std::make_shared<ANativeWindow>();
 
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_1(_,_))
         .Times(0);
@@ -163,7 +179,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
     EXPECT_CALL(*mock_fnw_factory, create_fb_device())
         .Times(1)
         .WillOnce(Return(mock_fb_device));
-    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(mock_fb_device))
+    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_fb_device;
+    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1)
         .WillOnce(Return(stub_anativewindow));
     EXPECT_CALL(*mock_display_allocator, create_gpu_display(_))
@@ -189,7 +206,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
     EXPECT_CALL(*mock_fnw_factory, create_fb_device())
         .Times(1)
         .WillOnce(Return(mock_fb_device));
-    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(mock_fb_device))
+    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_fb_device;
+    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1)
         .WillOnce(Return(stub_anativewindow));
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(mock_hwc_device, stub_anativewindow))

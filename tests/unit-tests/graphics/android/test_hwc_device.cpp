@@ -43,8 +43,12 @@ struct MockHWCOrganizer : public mga::HWCLayerOrganizer
 
 struct MockFBDevice : public mga::FBDevice
 {
-    ~MockFBDevice() noexcept {}
-    MOCK_METHOD1(post, void(std::shared_ptr<mga::AndroidBuffer> const&));
+    ~MockFBDevice () noexcept {};
+    MOCK_CONST_METHOD0(display_size, mir::geometry::Size()); 
+    MOCK_CONST_METHOD0(display_format, mir::geometry::PixelFormat()); 
+    MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());
+    MOCK_METHOD1(set_next_frontbuffer, void(std::shared_ptr<mga::AndroidBuffer> const&));
+    MOCK_METHOD1(post,                 void(std::shared_ptr<mga::AndroidBuffer> const&));
 };
 
 struct HWCDummyLayer : public mga::HWCLayerBase

@@ -19,7 +19,8 @@
 #ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
 
-#include <memory>
+#include "display_support_provider.h"
+
 namespace mir
 {
 namespace graphics
@@ -28,11 +29,18 @@ namespace android
 {
 
 class AndroidBuffer;
-class FBDevice
+class FBDevice : public DisplaySupportProvider 
+
 {
 public:
-    virtual ~FBDevice() = default;
+    virtual ~FBDevice() noexcept = default;
 
+    virtual geometry::Size display_size() const = 0; 
+    virtual geometry::PixelFormat display_format() const = 0; 
+    virtual unsigned int number_of_framebuffers_available() const = 0;
+
+    //todo: consolidate?? rename??
+    virtual void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
     virtual void post(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
 
 protected:

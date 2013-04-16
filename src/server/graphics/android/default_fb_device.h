@@ -35,6 +35,12 @@ class DefaultFBDevice : public FBDevice
 public:
     DefaultFBDevice(std::shared_ptr<framebuffer_device_t> const&);
 
+    geometry::Size display_size() const; 
+    geometry::PixelFormat display_format() const; 
+    unsigned int number_of_framebuffers_available() const;
+
+    //todo: consolidate??
+    void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
     void post(std::shared_ptr<AndroidBuffer> const& buffer);
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;

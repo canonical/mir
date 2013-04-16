@@ -25,6 +25,7 @@
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
  
 mga::DefaultFBDevice::DefaultFBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     : fb_device(fbdev)
@@ -38,4 +39,23 @@ void mga::DefaultFBDevice::post(std::shared_ptr<mga::AndroidBuffer> const& buffe
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
+}
+
+geom::Size mga::DefaultFBDevice::display_size() const
+{
+    return geom::Size{geom::Width{4}, geom::Height{45}};
+} 
+
+geom::PixelFormat mga::DefaultFBDevice::display_format() const
+{
+    return geom::PixelFormat::abgr_8888;
+}
+
+unsigned int mga::DefaultFBDevice::number_of_framebuffers_available() const
+{
+    return 12;
+}
+
+void mga::DefaultFBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& /*buffer*/)
+{
 }
