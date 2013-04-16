@@ -238,7 +238,7 @@ TEST_F(AndroidDispatcherControllerFdSetup, on_focus_changed)
     controller.input_application_opened(session);
     controller.input_surface_opened(session, surface);
 
-    controller.focus_changed(session, surface);
+    controller.focus_changed(surface);
 }
 
 TEST_F(AndroidDispatcherControllerFdSetup, on_focus_changed_throw_behavior)
@@ -254,7 +254,7 @@ TEST_F(AndroidDispatcherControllerFdSetup, on_focus_changed_throw_behavior)
     mia::DispatcherController controller(mt::fake_shared(config));
 
     EXPECT_THROW({
-            // We can't focus sessions and surfaces which never opened
-            controller.focus_changed(session, surface);
+            // We can't surfaces which never opened
+            controller.focus_changed(surface);
     }, std::logic_error);
 }

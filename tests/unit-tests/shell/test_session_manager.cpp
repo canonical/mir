@@ -35,6 +35,7 @@
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_input_target_listener.h"
+#include "mir_test_doubles/mock_input_target_listener.h"
 
 #include "mir/shell/surface.h"
 
@@ -223,19 +224,6 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
 namespace
 {
 
-struct MockInputTargetListener : public msh::InputTargetListener
-{
-    virtual ~MockInputTargetListener() noexcept(true) {}
-
-    MOCK_METHOD1(input_application_opened, void(std::shared_ptr<mi::SessionTarget> const&));
-    MOCK_METHOD1(input_application_closed, void(std::shared_ptr<mi::SessionTarget> const&));
-    MOCK_METHOD2(input_surface_opened, void(std::shared_ptr<mi::SessionTarget> const&, std::shared_ptr<mi::SurfaceTarget> const&));
-    MOCK_METHOD1(input_surface_closed, void(std::shared_ptr<mi::SurfaceTarget> const&));
-
-    MOCK_METHOD2(focus_changed, void(std::shared_ptr<mi::SessionTarget> const&, std::shared_ptr<mi::SurfaceTarget> const&));
-    MOCK_METHOD0(focus_cleared, void());
-};
-
 struct MockInputTargetListenerShellConfiguration : public msh::ShellConfiguration
 {
     MockInputTargetListenerShellConfiguration() {}
@@ -262,7 +250,7 @@ struct MockInputTargetListenerShellConfiguration : public msh::ShellConfiguratio
         return mt::fake_shared(input_listener);
     }
 
-    MockInputTargetListener input_listener;
+    mtd::MockInputTargetListener input_listener;
     ::testing::NiceMock<mtd::MockSurfaceFactory> surface_factory;
     ::testing::NiceMock<MockSessionContainer> container;
     ::testing::NiceMock<MockFocusSequence> focus_sequence;
@@ -301,7 +289,7 @@ TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_a
         EXPECT_CALL(config.input_listener, input_application_opened(_))
             .Times(1);
         EXPECT_CALL(config.input_listener, input_surface_opened(_, _)).Times(1);
-        EXPECT_CALL(config.input_listener, focus_changed(_, _)).Times(1);
+        EXPECT_CALL(config.input_listener, focus_changed(_)).Times(1);
         EXPECT_CALL(config.input_listener, input_surface_closed(_)).Times(1);
         EXPECT_CALL(config.input_listener, input_application_closed(_))
             .Times(1);

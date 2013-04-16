@@ -88,11 +88,10 @@ void mia::DispatcherController::focus_cleared()
     input_dispatcher->setInputWindows(empty_windows);
 }
 
-void mia::DispatcherController::focus_changed(std::shared_ptr<mi::SessionTarget> const& session,
-    std::shared_ptr<mi::SurfaceTarget> const& surface)
+void mia::DispatcherController::focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface)
 {
-    auto application_handle = application_handles[session];
     auto window_handle = window_handles[surface];
+    auto application_handle = window_handle->inputApplicationHandle;
     
     if (!application_handle.get() || !window_handle.get())
         BOOST_THROW_EXCEPTION(std::logic_error("Focus changed to an unopened surface"));

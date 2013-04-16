@@ -275,7 +275,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
 
     input_target_listener->input_application_opened(mt::fake_shared(session));
     input_target_listener->input_surface_opened(mt::fake_shared(session), mt::fake_shared(surface));
-    input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface));
+    input_target_listener->focus_changed(mt::fake_shared(surface));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
@@ -318,17 +318,17 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
 
-    input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface1));
+    input_target_listener->focus_changed(mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_1));
     wait1.wait_for_at_most_seconds(1);
 
-    input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface2));
+    input_target_listener->focus_changed(mt::fake_shared(surface2));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_2));
     wait2.wait_for_at_most_seconds(1);
 
-    input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface1));
+    input_target_listener->focus_changed(mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_3));
     wait3.wait_for_at_most_seconds(5);

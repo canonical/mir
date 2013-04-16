@@ -55,8 +55,7 @@ public:
        std::shared_ptr<input::SurfaceTarget> const& opened_surface);
     void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface);
 
-    void focus_changed(std::shared_ptr<input::SessionTarget> const& focus_application,
-        std::shared_ptr<input::SurfaceTarget> const& focus_surface);
+    void focus_changed(std::shared_ptr<input::SurfaceTarget> const& focus_surface);
     void focus_cleared();
 
 protected:

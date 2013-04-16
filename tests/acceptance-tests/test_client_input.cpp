@@ -65,10 +65,9 @@ struct FocusNotifyingDispatcherController : public mia::DispatcherController
 
     }
     
-    void focus_changed(
-        std::shared_ptr<mi::SessionTarget> const& session, std::shared_ptr<mi::SurfaceTarget> const& surface) override
+    void focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface) override
     {
-        DispatcherController::focus_changed(session, surface);
+        DispatcherController::focus_changed(surface);
         
         // We need a synchronization primitive inorder to halt test event injection
         // until after a surface has taken focus (lest the events be discarded).

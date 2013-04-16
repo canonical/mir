@@ -176,8 +176,7 @@ public:
     void input_surface_closed(std::shared_ptr<mi::SurfaceTarget> const&)
     {
     }
-    void focus_changed(std::shared_ptr<mi::SessionTarget> const&,
-        std::shared_ptr<mi::SurfaceTarget> const&)
+    void focus_changed(std::shared_ptr<mi::SurfaceTarget> const&)
     {
     }
     void focus_cleared()
