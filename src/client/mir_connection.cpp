@@ -59,7 +59,7 @@ MirConnection::MirConnection(
     connect_result.set_error("connect not called");
 }
 
-MirConnection::~MirConnection()
+MirConnection::~MirConnection() noexcept
 {
     std::lock_guard<std::mutex> lock(connection_guard);
     valid_connections.erase(this);

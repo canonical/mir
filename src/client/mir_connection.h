@@ -60,7 +60,7 @@ public:
     MirConnection(std::shared_ptr<google::protobuf::RpcChannel> const& channel,
                   std::shared_ptr<mir::client::Logger> const & log,
                   std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
-    ~MirConnection();
+    ~MirConnection() noexcept;
 
     MirConnection(MirConnection const &) = delete;
     MirConnection& operator=(MirConnection const &) = delete;
