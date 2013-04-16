@@ -217,6 +217,11 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
     }
 
+    ~AndroidInputManagerDispatcherInterceptSetup()
+    {
+        input_manager->stop();
+    }
+
     // TODO: It would be nice if it were possible to mock the interface between
     // droidinput::InputChannel and droidinput::InputDispatcher rather than use
     // valid fds to allow non-throwing construction of a real input channel.
@@ -224,18 +229,12 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     {
         input_manager->start();
     }
-    void TearDown()
-    {
-        input_manager->stop();
-        for (auto fd : test_input_fds)
-            close(fd);
-    }
     
     int test_fd()
     {
         int fds[2];
+        // Closed by droidinput InputChannel on shutdown
         socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds);
-        test_input_fds.push_back(fds[0]);
         return fds[0];
     }
 
@@ -247,8 +246,6 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
     std::shared_ptr<mia::InputManager> input_manager;
     std::shared_ptr<msh::InputTargetListener> input_target_listener;
-
-    std::vector<int> test_input_fds;
 };
 
 MATCHER_P(WindowHandleWithInputFd, input_fd, "")
@@ -308,6 +305,8 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     EXPECT_CALL(event_filter, handles(_)).Times(3).WillRepeatedly(Return(false));
 
     {
+        InSequence seq;
+
         EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd_1), _, _))
             .Times(1).WillOnce(DoAll(mt::WakeUp(&wait1), Return(-1)));
         EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd_2), _, _))
@@ -321,16 +320,16 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
 
     input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
-                                .of_scancode(KEY_ENTER));
+                                .of_scancode(KEY_1));
     wait1.wait_for_at_most_seconds(1);
 
     input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface2));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
-                                .of_scancode(KEY_ENTER));
+                                .of_scancode(KEY_2));
     wait2.wait_for_at_most_seconds(1);
 
     input_target_listener->focus_changed(mt::fake_shared(session), mt::fake_shared(surface1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
-                                .of_scancode(KEY_ENTER));
-    wait3.wait_for_at_most_seconds(1);
+                                .of_scancode(KEY_3));
+    wait3.wait_for_at_most_seconds(5);
 } 
