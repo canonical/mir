@@ -125,7 +125,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     std::shared_ptr<msh::InputTargetListener>
     the_input_target_listener() override
     {
-        return input_focus_selector(
+        return input_target_listener(
             [this]()
             {
                 return std::make_shared<FocusNotifyingDispatcherController>(mt::fake_shared(input_config), on_focus_set);
