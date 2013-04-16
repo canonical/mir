@@ -20,7 +20,7 @@ Now, start Mir and a client application:
 Mir Usage of Android Drivers
 ----------------------------
 
-Mir relies on the libhybris library to use android symbols
+Mir relies on the libhybris library to use the android drivers. This allows the drivers to use the bionic libc while Mir itself uses the standard gnu libc.
 
 Mir Display Modes
 -----------------
