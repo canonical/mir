@@ -20,7 +20,7 @@
 #include "mir/shell/surface_builder.h"
 #include "mir/input/input_channel.h"
 #include "mir_toolkit/event.h"
-#include "mir/event_queue.h"
+#include "mir/event_sink.h"
 
 #include <boost/throw_exception.hpp>
 
