@@ -38,16 +38,12 @@ void me::ApplicationSwitcher::set_focus_controller(std::shared_ptr<msh::SessionM
 
 bool me::ApplicationSwitcher::handles(MirEvent const& event)
 {
-    if (!focus_controller)
-        return false;
-    if (event.key.type != mir_event_type_key)
-        return false;
-    if (event.key.action == 1) // Key release
-        return false;
-    if (event.key.scan_code != KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
-        return false;
-
-    focus_controller->focus_next();
-
-    return true;
+    if (event.key.type == mir_event_type_key &&
+        event.key.action != 1 && // Not key-release
+        event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side
+    {
+        focus_controller->focus_next();
+        return true;
+    }
+    return false;
 }
