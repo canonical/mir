@@ -29,18 +29,7 @@ namespace test
 namespace doubles
 {
 
-class ICSHardwareComposerInterface
-{
-public:
-    virtual void registerProcs_interface(struct hwc_composer_device_1* dev, hwc_procs_t const* procs) = 0;
-    virtual int eventControl_interface(struct hwc_composer_device_1* dev, int disp, int event, int enabled) = 0;
-    virtual int set_interface(struct hwc_composer_device_1 *dev, size_t numDisplays, hwc_display_contents_1_t** displays) = 0;
-    virtual int blank_interface(struct hwc_composer_device_1 *dev, int disp, int blank) = 0;
-    virtual int getDisplayConfigs_interface(struct hwc_composer_device_1* dev, int disp, uint32_t* configs, size_t* numConfigs) = 0;
-    virtual int getDisplayAttributes_interface(struct hwc_composer_device_1* dev, int disp, uint32_t config, const uint32_t* attributes, int32_t* values) = 0;
-};
-
-class MockHWCComposerDevice1 : public hwc_composer_device_1, public ICSHardwareComposerInterface
+class MockHWCComposerDevice1 : public hwc_composer_device_1
 {
 public:
     MockHWCComposerDevice1()
