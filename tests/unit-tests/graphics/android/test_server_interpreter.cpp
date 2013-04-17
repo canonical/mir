@@ -54,8 +54,8 @@ struct ServerRenderWindowTest : public ::testing::Test
         mock_buffer1 = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
         mock_buffer2 = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
         mock_buffer3 = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
-        mock_swapper = std::make_shared<MockFBSwapper>();
-        mock_display_poster = std::make_shared<mtd::MockDisplaySupportProvider>();
+        mock_swapper = std::make_shared<NiceMock<MockFBSwapper>>();
+        mock_display_poster = std::make_shared<NiceMock<mtd::MockDisplaySupportProvider>>();
         ON_CALL(*mock_display_poster, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
         stub_sync = std::make_shared<StubFence>();
