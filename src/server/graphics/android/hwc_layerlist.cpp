@@ -19,6 +19,8 @@
 #include "hwc_layerlist.h"
 #include "android_buffer.h"
 
+#include <cstring>
+
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -35,7 +37,6 @@ mga::HWCRect::HWCRect(geom::Rectangle& rect)
     self.right = rect.size.width.as_uint32_t();
 }
 
-//construction is a bit funny because hwc_layer_1 has unions
 mga::HWCDefaultLayer::HWCDefaultLayer(std::initializer_list<mga::HWCRect> list)
 {
     /* default values.*/
@@ -51,19 +52,25 @@ mga::HWCDefaultLayer::HWCDefaultLayer(std::initializer_list<mga::HWCRect> list)
     self.sourceCrop = emptyrect;
     self.displayFrame = emptyrect;
     self.visibleRegionScreen.numRects=list.size();
-    auto rect_array = new hwc_rect_t[list.size()];
-    auto i = 0u;
-    for( auto& rect : list )
+    self.visibleRegionScreen.rects=nullptr;
+    if (list.size() != 0)
     {
-        rect_array[i++] = rect; 
+        auto rect_array = new hwc_rect_t[list.size()];
+        auto i = 0u;
+        for( auto& rect : list )
+        {
+            rect_array[i++] = rect; 
+        }
+        self.visibleRegionScreen.rects = rect_array;
     }
-    self.visibleRegionScreen.rects = rect_array;
 }
 
 mga::HWCDefaultLayer::~HWCDefaultLayer()
 {
     if (self.visibleRegionScreen.rects)
+    {
         delete self.visibleRegionScreen.rects;
+    }
 }
 
 mga::HWCFBLayer::HWCFBLayer(

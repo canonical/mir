@@ -72,16 +72,14 @@ TEST(HWCLayerDeepCopy, hwc_layer)
     geom::Rectangle r2{geom::Point{geom::X{1},geom::Y{1}},
                        geom::Size{geom::Width{2},geom::Height{3}}}; 
     mga::HWCRect a(r0), b(r1), c(r2);
-    {
-        mga::HWCDefaultLayer original2({a, b, c});
-        layer = original2;
-    }
-    ASSERT_EQ(3u, layer.visibleRegionScreen.numRects); 
-    ASSERT_NE(nullptr, layer.visibleRegionScreen.rects);
+    mga::HWCDefaultLayer original2({a, b, c});
+    layer = original2;
 
+    ASSERT_EQ(3u, layer.visibleRegionScreen.numRects);
+    ASSERT_NE(nullptr, layer.visibleRegionScreen.rects);
     EXPECT_THAT(a, HWCRectMatchesRect(layer.visibleRegionScreen.rects[0],""));
- //   EXPECT_THAT(b, HWCRectMatchesRect(layer.visibleRegionScreen.rects[1],""));
- //   EXPECT_THAT(c, HWCRectMatchesRect(layer.visibleRegionScreen.rects[2],""));
+    EXPECT_THAT(b, HWCRectMatchesRect(layer.visibleRegionScreen.rects[1],""));
+    EXPECT_THAT(c, HWCRectMatchesRect(layer.visibleRegionScreen.rects[2],""));
 }
 
 TEST_F(HWCLayerListTest, default_list)

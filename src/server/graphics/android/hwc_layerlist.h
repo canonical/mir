@@ -55,7 +55,6 @@ struct HWCDefaultLayer
     operator hwc_layer_1& () { return self; }
 
 protected:
-
     HWCDefaultLayer& operator=(HWCDefaultLayer const&) = delete;
     HWCDefaultLayer(HWCDefaultLayer const&) = delete;
 
