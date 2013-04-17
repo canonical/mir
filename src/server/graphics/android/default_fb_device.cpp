@@ -32,7 +32,7 @@ mga::DefaultFBDevice::DefaultFBDevice(std::shared_ptr<framebuffer_device_t> cons
 {
 }
 
-void mga::DefaultFBDevice::post(std::shared_ptr<mga::AndroidBuffer> const& buffer)
+void mga::DefaultFBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
     if (fb_device->post(fb_device.get(), handle->handle) != 0)
@@ -57,8 +57,4 @@ geom::PixelFormat mga::DefaultFBDevice::display_format() const
 unsigned int mga::DefaultFBDevice::number_of_framebuffers_available() const
 {
     return static_cast<unsigned int>(fb_device->numFramebuffers);
-}
-
-void mga::DefaultFBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& /*buffer*/)
-{
 }
