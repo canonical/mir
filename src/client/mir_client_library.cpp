@@ -108,7 +108,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
     return connection->egl_native_display();
 }
 
-MirWaitHandle* mir_surface_create(
+MirWaitHandle* mir_connection_create_surface(
     MirConnection* connection,
     MirSurfaceParameters const* params,
     mir_surface_lifecycle_callback callback,
@@ -128,13 +128,13 @@ MirWaitHandle* mir_surface_create(
 
 }
 
-MirSurface* mir_surface_create_sync(
+MirSurface* mir_connection_create_surface_sync(
     MirConnection* connection, 
     MirSurfaceParameters const* params)
 {
     MirSurface *surface = nullptr;
 
-    mir_wait_for(mir_surface_create(connection, params,
+    mir_wait_for(mir_connection_create_surface(connection, params,
         reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
         &surface));
 
