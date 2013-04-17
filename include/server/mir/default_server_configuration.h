@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -79,6 +79,10 @@ namespace input
 class InputManager;
 class EventFilter;
 class InputChannelFactory;
+namespace android
+{
+class InputConfiguration;
+}
 }
 
 namespace logging
@@ -116,6 +120,7 @@ public:
 
     virtual std::shared_ptr<logging::Logger> the_logger();
 
+    virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<input::InputManager> the_input_manager();
     virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
@@ -131,7 +136,9 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<frontend::Shell> session_manager;
+    CachedPtr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<shell::InputFocusSelector> input_focus_selector;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;

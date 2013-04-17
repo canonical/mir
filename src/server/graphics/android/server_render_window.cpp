@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -82,7 +82,6 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             return format; 
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
-            return -1;
     }
 }
 
@@ -94,7 +93,5 @@ int mga::ServerRenderWindow::to_android_format(geom::PixelFormat format)
             return HAL_PIXEL_FORMAT_RGBA_8888;
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("pixel format of fb is unknown!"));
-            return -1;
-
     }
 }

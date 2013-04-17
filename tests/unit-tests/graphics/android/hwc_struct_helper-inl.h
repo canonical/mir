@@ -50,6 +50,16 @@ MATCHER_P2(MatchesMember, value, str,
     return arg == value;
 }
 
+MATCHER_P2(HWCRectMatchesRect, value, str,
+          std::string("rectangle " + std::string(str) + " should be: " + testing::PrintToString(value)))
+{
+    hwc_rect_t rect = arg;
+    return ((rect.left == value.left) &&
+            (rect.top == value.top) &&
+            (rect.right == value.right) &&
+            (rect.bottom == value.bottom));
+}
+
 MATCHER_P2(MatchesRect, value, str,
           std::string("rectangle " + std::string(str) + " should be: " + testing::PrintToString(value)))
 {

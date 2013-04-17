@@ -42,6 +42,8 @@ namespace client
 {
 namespace input
 {
+class XKBMapper;
+
 namespace android
 {
 
@@ -74,6 +76,8 @@ private:
     droidinput::sp<droidinput::Looper> looper;
 
     bool fd_added;
+
+    std::shared_ptr<XKBMapper> xkb_mapper;
 };
 
 }

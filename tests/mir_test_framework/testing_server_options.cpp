@@ -29,6 +29,9 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
+#include "mir/shell/input_focus_selector.h"
+#include "src/server/input/android/android_input_manager.h"
+#include "src/server/input/android/android_dispatcher_controller.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
@@ -41,9 +44,11 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace mia = mir::input::android;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
+namespace msh = mir::shell;
 
 namespace
 {
@@ -152,11 +157,16 @@ class StubInputManager : public mi::InputManager
     {
         return std::make_shared<StubInputChannel>();
     }
+};
 
+class StubInputFocusSelector : public msh::InputFocusSelector
+{
+public:
     void set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& /* session */, std::shared_ptr<mi::SurfaceTarget> const& /* surface */)
     {
     }
 };
+
 }
 
 mtf::TestingServerConfiguration::TestingServerConfiguration() :
@@ -169,9 +179,19 @@ std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_man
 {
     auto options = the_options();
     if (options->get("tests-use-real-input", false))
-        return mi::create_input_manager(the_event_filters(), the_display());
+        return std::make_shared<mia::InputManager>(the_input_configuration());
     else
         return std::make_shared<StubInputManager>();
+}
+
+std::shared_ptr<msh::InputFocusSelector> mtf::TestingServerConfiguration::the_input_focus_selector()
+{
+    auto options = the_options();
+ 
+   if (options->get("tests-use-real-input", false))
+        return std::make_shared<mia::DispatcherController>(the_input_configuration());
+    else
+        return std::make_shared<StubInputFocusSelector>();
 }
 
 std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_platform()

@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -23,7 +23,7 @@
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
-
+#include <initializer_list>
 namespace mir
 {
 namespace graphics
@@ -32,27 +32,36 @@ namespace android
 {
 
 class AndroidBuffer;
-class HWCLayerBase;
-typedef struct std::vector<std::shared_ptr<HWCLayerBase>> LayerList;
+class HWCDefaultLayer;
+typedef struct std::vector<std::shared_ptr<HWCDefaultLayer>> LayerList;
  
-struct HWCRect : public hwc_rect_t
+struct HWCRect
 {
     HWCRect(); 
     HWCRect(geometry::Rectangle& rect);
+
+    operator hwc_rect_t const& () const { return self; }
+    operator hwc_rect_t& () { return self; }
+private:
+    hwc_rect_t self;
 };
 
-struct HWCLayerBase : public hwc_layer_1
+struct HWCDefaultLayer
 {
+    HWCDefaultLayer(std::initializer_list<HWCRect> list);
+    ~HWCDefaultLayer();
+
+    operator hwc_layer_1 const& () const { return self; }
+    operator hwc_layer_1& () { return self; }
+
 protected:
-    HWCLayerBase();
+    HWCDefaultLayer& operator=(HWCDefaultLayer const&) = delete;
+    HWCDefaultLayer(HWCDefaultLayer const&) = delete;
 
-    HWCRect visible_screen_rect;
-
-    HWCLayerBase& operator=(HWCLayerBase const&) = delete;
-    HWCLayerBase(HWCLayerBase const&) = delete;
+    hwc_layer_1 self;
 };
 
-struct HWCFBLayer : public HWCLayerBase
+struct HWCFBLayer : public HWCDefaultLayer
 {
     HWCFBLayer(std::shared_ptr<ANativeWindowBuffer> const& native_buf,
                HWCRect& display_frame_rect);
