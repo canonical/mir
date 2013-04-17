@@ -49,24 +49,15 @@ struct DemoServerConfiguration : mir::DefaultServerConfiguration
         app_switcher(std::make_shared<me::ApplicationSwitcher>())
     {
     }
-    
-    std::shared_ptr<mf::Shell> the_frontend_shell() override
+
+    std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy()
     {
-        return session_manager(
-            [this]() -> std::shared_ptr<msh::SessionManager>
+        return shell_placement_strategy(
+            [this]
             {
-                auto session_container = std::make_shared<msh::SessionContainer>();
-                auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container, the_input_focus_selector());
-                auto focus_selection_strategy = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
-
-                auto placement_strategy = std::make_shared<me::FullscreenPlacementStrategy>(the_display());
-                auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
-
-                return std::make_shared<msh::SessionManager>(organising_factory, session_container,
-                    focus_selection_strategy, focus_mechanism);
-        });
+                return std::make_shared<me::FullscreenPlacementStrategy>(the_display());
+            });
     }
-    
 
     std::initializer_list<std::shared_ptr<mi::EventFilter> const> the_event_filters() override
     {

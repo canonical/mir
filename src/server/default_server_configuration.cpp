@@ -336,9 +336,8 @@ mir::DefaultServerConfiguration::the_shell_placement_strategy()
         });
 }
 
-
-std::shared_ptr<mf::Shell>
-mir::DefaultServerConfiguration::the_frontend_shell()
+std::shared_ptr<msh::SessionManager>
+mir::DefaultServerConfiguration::the_session_manager()
 {
     return session_manager(
         [this]() -> std::shared_ptr<msh::SessionManager>
@@ -349,6 +348,19 @@ mir::DefaultServerConfiguration::the_frontend_shell()
                 the_shell_focus_sequence(),
                 the_shell_focus_setter());
         });
+}
+
+
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
+{
+    return the_session_manager();
+}
+
+std::shared_ptr<msh::FocusController>
+mir::DefaultServerConfiguration::the_focus_controller()
+{
+    return the_session_manager();
 }
 
 std::initializer_list<std::shared_ptr<mi::EventFilter> const>

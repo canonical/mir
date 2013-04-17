@@ -155,11 +155,13 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<frontend::Shell>
+        mir::CachedPtr<mf::Shell> frontend_shell;
+
+        std::shared_ptr<mf::Shell>
         the_frontend_shell() override
         {
-            return session_manager(
-                [this]() -> std::shared_ptr<frontend::Shell>
+            return frontend_shell(
+                [this]() -> std::shared_ptr<mf::Shell>
                 {
                     using namespace ::testing;
 

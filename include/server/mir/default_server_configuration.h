@@ -55,6 +55,8 @@ class SessionContainer;
 class FocusSetter;
 class FocusSequence;
 class PlacementStrategy;
+class FocusController;
+class SessionManager;
 }
 namespace time
 {
@@ -115,6 +117,7 @@ public:
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
 
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
+    virtual std::shared_ptr<shell::FocusController> the_focus_controller();
     virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
     virtual std::shared_ptr<shell::SessionContainer>  the_shell_session_container();
     virtual std::shared_ptr<shell::FocusSetter>       the_shell_focus_setter();
@@ -139,9 +142,10 @@ public:
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
+    virtual std::shared_ptr<shell::SessionManager> the_session_manager();
 
     CachedPtr<frontend::Communicator> communicator;
-    CachedPtr<frontend::Shell> session_manager;
+    CachedPtr<shell::SessionManager> session_manager;
     CachedPtr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<shell::InputFocusSelector> input_focus_selector;
