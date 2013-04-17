@@ -296,20 +296,58 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
         });
 }
 
+std::shared_ptr<msh::SessionContainer>
+mir::DefaultServerConfiguration::the_shell_session_container()
+{
+    return shell_session_container(
+        []{ return std::make_shared<msh::SessionContainer>(); });
+}
+
+std::shared_ptr<msh::FocusSetter>
+mir::DefaultServerConfiguration::the_shell_focus_setter()
+{
+    return shell_focus_setter(
+        [this]
+        {
+            return std::make_shared<msh::SingleVisibilityFocusMechanism>(
+                the_shell_session_container(),
+                the_input_focus_selector());
+        });
+}
+
+std::shared_ptr<msh::FocusSequence>
+mir::DefaultServerConfiguration::the_shell_focus_sequence()
+{
+    return shell_focus_sequence(
+        [this]
+        {
+            return std::make_shared<msh::RegistrationOrderFocusSequence>(
+                the_shell_session_container());
+        });
+}
+
+std::shared_ptr<msh::PlacementStrategy>
+mir::DefaultServerConfiguration::the_shell_placement_strategy()
+{
+    return shell_placement_strategy(
+        [this]
+        {
+            return std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
+        });
+}
+
+
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
 {
     return session_manager(
         [this]() -> std::shared_ptr<msh::SessionManager>
         {
-            auto session_container = std::make_shared<msh::SessionContainer>();
-            auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container, the_input_focus_selector());
-            auto focus_selection_strategy = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
-
-            auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
-            auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
-
-            return std::make_shared<msh::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
+            return std::make_shared<msh::SessionManager>(
+                the_surface_factory(),
+                the_shell_session_container(),
+                the_shell_focus_sequence(),
+                the_shell_focus_setter());
         });
 }
 
@@ -391,10 +429,16 @@ mir::DefaultServerConfiguration::the_renderables()
 std::shared_ptr<msh::SurfaceFactory>
 mir::DefaultServerConfiguration::the_surface_factory()
 {
-    return surface_source(
+    return shell_surface_factory(
         [this]()
         {
-            return std::make_shared<msh::SurfaceSource>(the_surface_builder(), the_input_channel_factory());
+            auto surface_source = std::make_shared<msh::SurfaceSource>(
+                the_surface_builder(),
+                the_input_channel_factory());
+
+            return std::make_shared<msh::OrganisingSurfaceFactory>(
+                surface_source,
+                the_shell_placement_strategy());
         });
 }
 
