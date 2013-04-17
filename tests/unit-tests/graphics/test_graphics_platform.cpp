@@ -88,7 +88,7 @@ public:
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
 #ifdef ANDROID
-    mir::test::HardwareAccessMock hw_access_mock;
+    ::testing::NiceMock<mir::test::HardwareAccessMock> hw_access_mock;
 #else
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;

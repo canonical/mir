@@ -66,7 +66,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 
     NiceMock<mtd::MockInputFocusSelector> input_focus_selector;
 
-    MockShellSession app1, app2, app3;
+    NiceMock<MockShellSession> app1, app2, app3;
     msh::SessionContainer model;
 
     ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
@@ -96,7 +96,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_input_focus_from_default_sur
 
     mtd::MockInputFocusSelector input_focus_selector;
     msh::SessionContainer model;
-    auto session = std::make_shared<MockShellSession>();
+    auto session = std::make_shared<NiceMock<MockShellSession>>();
     auto surface = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
 
     msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model), mt::fake_shared(input_focus_selector));
