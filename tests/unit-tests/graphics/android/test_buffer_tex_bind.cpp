@@ -16,10 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/graphics/android/buffer.h"
+
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test/egl_mock.h"
 
+#include <stdexcept>
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
@@ -35,17 +38,16 @@ public:
     {
         using namespace testing;
 
-        mock_buffer_handle = std::make_shared<mtd::MockBufferHandle>();
-        mock_alloc_dev = std::make_shared<mtd::MockAllocAdaptor>(mock_buffer_handle);
-        EXPECT_CALL(*mock_alloc_dev, alloc_buffer( _, _, _))
-        .Times(AtLeast(0));
-        EXPECT_CALL(*mock_buffer_handle, get_egl_client_buffer())
-        .Times(AtLeast(0));
+        mock_buffer_handle = std::make_shared<NiceMock<mtd::MockBufferHandle>>();
+        ON_CALL(*mock_buffer_handle, native_buffer_handle())
+            .WillByDefault(Return(stub_buffer)); 
+        mock_alloc_dev = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
+        ON_CALL(*mock_alloc_dev, alloc_buffer(_,_,_))
+            .WillByDefault(Return(mock_buffer_handle));
 
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::abgr_8888;
-        buffer = std::shared_ptr<mc::Buffer>(
-                     new mga::AndroidBuffer(mock_alloc_dev, size, pf));
+        buffer = std::make_shared<mga::Buffer>(mock_alloc_dev, size, pf, mga::BufferUsage::use_hardware);
 
         egl_mock.silence_uninteresting();
         gl_mock.silence_uninteresting();
@@ -53,17 +55,17 @@ public:
     virtual void TearDown()
     {
         buffer.reset();
-    };
-
+    }
 
     geom::Size size;
     geom::PixelFormat pf;
 
-    std::shared_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mga::Buffer> buffer;
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;
     std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_dev;
     std::shared_ptr<mtd::MockBufferHandle> mock_buffer_handle;
+    std::shared_ptr<ANativeWindowBuffer> stub_buffer;
 };
 
 TEST_F(AndroidBufferBinding, buffer_queries_for_display)
@@ -202,13 +204,13 @@ TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
 TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
 {
     using namespace testing;
-    EGLClientBuffer fake_egl_image = (EGLClientBuffer) 0x777;
+    auto fake_native_handle = std::make_shared<ANativeWindowBuffer>();
 
-    EXPECT_CALL(*mock_buffer_handle, get_egl_client_buffer())
-    .Times(Exactly(1))
-    .WillOnce(Return(fake_egl_image));
+    EXPECT_CALL(*mock_buffer_handle, native_buffer_handle())
+        .Times(Exactly(1))
+        .WillOnce(Return(fake_native_handle));
 
-    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,fake_egl_image,_))
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,fake_native_handle.get(),_))
     .Times(Exactly(1));
     buffer->bind_to_texture();
 }

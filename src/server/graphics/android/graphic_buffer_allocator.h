@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,46 +17,39 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_
-
-#include <hardware/hardware.h>
+#ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
+#define MIR_GRAPHICS_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "graphic_alloc_adaptor.h"
+#include "android_buffer_handle.h"
 
 namespace mir
 {
-namespace compositor
-{
-class BufferIDUniqueGenerator;
-}
 namespace graphics
 {
-
-class BufferInitializer;
-
 namespace android
 {
 
-class AndroidBufferAllocator: public compositor::GraphicBufferAllocator
+class AndroidBuffer;
+class GraphicBufferAllocator: public compositor::GraphicBufferAllocator
 {
 public:
-    AndroidBufferAllocator(
-        std::shared_ptr<BufferInitializer> const& buffer_initializer);
+    GraphicBufferAllocator() = default;
+    virtual ~GraphicBufferAllocator() = default;
 
     virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
-        compositor::BufferProperties const& buffer_properties);
-
-    std::vector<geometry::PixelFormat> supported_pixel_formats();
+        compositor::BufferProperties const& buffer_properties) = 0;
+    virtual std::shared_ptr<AndroidBuffer> alloc_buffer_platform(
+        geometry::Size sz, geometry::PixelFormat pf, BufferUsage use) = 0;
+    virtual std::vector<geometry::PixelFormat> supported_pixel_formats() = 0;
 
 private:
-    const hw_module_t    *hw_module;
-    std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-    std::shared_ptr<BufferInitializer> const buffer_initializer;
+    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
+    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
 };
 
 }
 }
 }
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_ALLOCATOR_H_ */
+
+#endif /* MIR_GRAPHICS_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_ */

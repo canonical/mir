@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/android_buffer.h"
-#include "src/server/graphics/android/android_buffer_allocator.h"
+#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
@@ -32,6 +32,7 @@
 #include <gmock/gmock.h>
 #include <thread>
 #include <hardware/gralloc.h>
+#include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
 namespace mtf = mir_test_framework;
@@ -441,7 +442,7 @@ struct TestClientIPCRender : public testing::Test
         pf = geom::PixelFormat::abgr_8888;
 
         auto initializer = std::make_shared<mg::NullBufferInitializer>();
-        allocator = std::make_shared<mga::AndroidBufferAllocator> (initializer);
+        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
         mc::BufferProperties properties(size, pf, mc::BufferUsage::hardware);
         android_buffer = allocator->alloc_buffer(properties);
         second_android_buffer = allocator->alloc_buffer(properties);
@@ -479,7 +480,7 @@ struct TestClientIPCRender : public testing::Test
 
     std::shared_ptr<mc::Buffer> android_buffer;
     std::shared_ptr<mc::Buffer> second_android_buffer;
-    std::shared_ptr<mga::AndroidBufferAllocator>  allocator;
+    std::shared_ptr<mga::AndroidGraphicBufferAllocator>  allocator;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;

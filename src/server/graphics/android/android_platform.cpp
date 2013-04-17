@@ -18,11 +18,13 @@
  */
 
 #include "android_platform.h"
-#include "android_buffer_allocator.h"
+#include "android_graphic_buffer_allocator.h"
 #include "android_hwc_factory.h"
 #include "android_display_allocator.h"
 #include "android_display_factory.h"
+#include "default_framebuffer_factory.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
 
 namespace mg=mir::graphics;
@@ -32,14 +34,18 @@ namespace mc=mir::compositor;
 std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
-    return std::make_shared<mga::AndroidBufferAllocator>(buffer_initializer);
+    return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
 }
 
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
     auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
     auto display_allocator = std::make_shared<mga::AndroidDisplayAllocator>();
-    auto display_factory = std::make_shared<mga::AndroidDisplayFactory>(display_allocator, hwc_factory);
+
+    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
+    auto buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+    auto fb_factory = std::make_shared<mga::DefaultFramebufferFactory>(buffer_allocator);
+    auto display_factory = std::make_shared<mga::AndroidDisplayFactory>(display_allocator, hwc_factory, fb_factory);
     return display_factory->create_display();
 }
 

@@ -35,34 +35,18 @@ namespace doubles
 class MockBufferHandle : public graphics::android::AndroidBufferHandle
 {
 public:
-
-    MOCK_CONST_METHOD0(get_egl_client_buffer, EGLClientBuffer());
     MOCK_CONST_METHOD0(size,   geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(usage,  graphics::android::BufferUsage());
-    MOCK_CONST_METHOD0(get_ipc_package,  std::shared_ptr<compositor::BufferIPCPackage>());
-
+    MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<compositor::BufferIPCPackage>());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<ANativeWindowBuffer>());
 };
 
 class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
 {
 public:
-    MockAllocAdaptor(std::shared_ptr<MockBufferHandle> mock)
-        :
-        mock_handle(mock)
-    {
-        using namespace testing;
-
-        ON_CALL(*this, alloc_buffer(_,_,_))
-        .WillByDefault(Return(mock_handle));
-    }
-
     MOCK_METHOD3(alloc_buffer, std::shared_ptr<graphics::android::AndroidBufferHandle>(geometry::Size, geometry::PixelFormat, graphics::android::BufferUsage));
-    MOCK_METHOD2(inspect_buffer, bool(char*, int));
-
-    std::shared_ptr<graphics::android::AndroidBufferHandle> mock_handle;
-
 };
 
 }

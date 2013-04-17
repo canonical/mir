@@ -16,10 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/fb_swapper.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "src/server/graphics/android/fb_simple_swapper.h"
+#include "mir_test_doubles/mock_android_buffer.h"
 
 #include <future>
+#include <initializer_list>
 #include <thread>
 #include <stdexcept>
 #include <gtest/gtest.h>
@@ -28,33 +29,35 @@ namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
-class FBSwapperTest : public ::testing::Test
+class FBSimpleSwapperTest : public ::testing::Test
 {
 public:
     virtual void SetUp()
     {
-        buffer1 = std::make_shared<mtd::MockBuffer>();
-        buffer2 = std::make_shared<mtd::MockBuffer>();
-        buffer3 = std::make_shared<mtd::MockBuffer>();
+        buffer1 = std::make_shared<mtd::MockAndroidBuffer>();
+        buffer2 = std::make_shared<mtd::MockAndroidBuffer>();
+        buffer3 = std::make_shared<mtd::MockAndroidBuffer>();
     }
 
-    std::shared_ptr<mc::Buffer> buffer1;
-    std::shared_ptr<mc::Buffer> buffer2;
-    std::shared_ptr<mc::Buffer> buffer3;
+    std::shared_ptr<mga::AndroidBuffer> buffer1;
+    std::shared_ptr<mga::AndroidBuffer> buffer2;
+    std::shared_ptr<mga::AndroidBuffer> buffer3;
 };
 
-TEST_F(FBSwapperTest, simple_swaps_returns_valid)
+TEST_F(FBSimpleSwapperTest, simple_swaps_returns_valid)
 {
-    mga::FBSwapper fb_swapper({buffer1, buffer2});
+    std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> double_list{buffer1, buffer2};
+    mga::FBSimpleSwapper fb_swapper(double_list);
 
     auto test_buffer = fb_swapper.compositor_acquire();
 
     EXPECT_TRUE((test_buffer == buffer1) || (test_buffer == buffer2));
 } 
 
-TEST_F(FBSwapperTest, simple_swaps_return_aba_pattern)
+TEST_F(FBSimpleSwapperTest, simple_swaps_return_aba_pattern)
 {
-    mga::FBSwapper fb_swapper({buffer1, buffer2});
+    std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> double_list{buffer1, buffer2};
+    mga::FBSimpleSwapper fb_swapper(double_list);
 
     auto test_buffer_1 = fb_swapper.compositor_acquire();
     fb_swapper.compositor_release(test_buffer_1);
@@ -69,9 +72,10 @@ TEST_F(FBSwapperTest, simple_swaps_return_aba_pattern)
     EXPECT_NE(test_buffer_1, test_buffer_2);
 } 
 
-TEST_F(FBSwapperTest, triple_swaps_return_abcab_pattern)
+TEST_F(FBSimpleSwapperTest, triple_swaps_return_abcab_pattern)
 {
-    mga::FBSwapper fb_swapper({buffer1, buffer2, buffer3});
+    std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> triple_list{buffer1, buffer2, buffer3};
+    mga::FBSimpleSwapper fb_swapper(triple_list);
 
     auto test_buffer_1 = fb_swapper.compositor_acquire();
     fb_swapper.compositor_release(test_buffer_1);
@@ -97,25 +101,10 @@ TEST_F(FBSwapperTest, triple_swaps_return_abcab_pattern)
     EXPECT_NE(test_buffer_2, test_buffer_3);
 }
 
-//not supported yet. we will support this for composition bypass
-TEST_F(FBSwapperTest, client_acquires_throw)
+TEST_F(FBSimpleSwapperTest, synctest)
 {
-    mga::FBSwapper fb_swapper({buffer1, buffer2});
-
-    EXPECT_THROW({
-        fb_swapper.client_acquire();
-    }, std::runtime_error);
-
-    EXPECT_THROW({
-        std::shared_ptr<mc::Buffer> empty;
-        fb_swapper.client_release(empty);
-    }, std::runtime_error);
-}
-
-TEST_F(FBSwapperTest, synctest)
-{
-    std::vector<std::shared_ptr<mc::Buffer>> test_buffers{buffer1, buffer2};
-    mga::FBSwapper fb_swapper(test_buffers);
+    std::vector<std::shared_ptr<mga::AndroidBuffer>> test_buffers{buffer1, buffer2};
+    mga::FBSimpleSwapper fb_swapper(test_buffers);
 
     std::vector<std::shared_ptr<mc::Buffer>> blist;
     std::mutex mut;
