@@ -335,7 +335,7 @@ mir::DefaultServerConfiguration::the_input_manager()
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get("enable-input", false))
+            if (the_options()->get("enable-input", true))
                 return std::make_shared<mia::InputManager>(the_input_configuration());
             else 
                 return std::make_shared<mi::NullInputManager>();

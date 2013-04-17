@@ -45,6 +45,7 @@ public:
     EventAction action;
 };
 KeyParameters a_key_down_event();
+KeyParameters a_key_up_event();
 
 class ButtonParameters
 {

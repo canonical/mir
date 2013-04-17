@@ -59,6 +59,8 @@ public:
     void resume();
 
     void make_current();
+    void release_current();
+
 private:
     std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
     EGLDisplay egl_display;

@@ -276,6 +276,11 @@ void mgg::GBMDisplayBuffer::make_current()
     }
 }
 
+void mgg::GBMDisplayBuffer::release_current()
+{
+    egl.release_current();
+}
+
 void mgg::GBMDisplayBuffer::schedule_set_crtc()
 {
     needs_set_crtc = true;

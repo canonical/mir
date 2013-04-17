@@ -35,6 +35,7 @@ class MockDisplayBuffer : public graphics::DisplayBuffer
 public:
     MOCK_CONST_METHOD0(view_area, geometry::Rectangle());
     MOCK_METHOD0(make_current, void());
+    MOCK_METHOD0(release_current, void());
     MOCK_METHOD0(clear, void());
     MOCK_METHOD0(post_update, bool());
 };
