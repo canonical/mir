@@ -247,7 +247,6 @@ TEST_F(AndroidDispatcherControllerFdSetup, on_focus_changed_throw_behavior)
     EXPECT_CALL(config, the_dispatcher()).Times(1)
         .WillOnce(Return(dispatcher));
 
-    auto session = std::make_shared<mtd::StubSessionTarget>();
     auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
 
     mia::DispatcherController controller(mt::fake_shared(config));

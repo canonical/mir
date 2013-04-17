@@ -95,11 +95,11 @@ void mia::DispatcherController::focus_changed(std::shared_ptr<mi::SurfaceTarget>
     std::unique_lock<std::mutex> lock(handles_mutex);
 
     auto window_handle = window_handles[surface];
+
+    if (!window_handle.get())
+        BOOST_THROW_EXCEPTION(std::logic_error("Focus changed to an unopened surface"));
     auto application_handle = window_handle->inputApplicationHandle;
     
-    if (!application_handle.get() || !window_handle.get())
-        BOOST_THROW_EXCEPTION(std::logic_error("Focus changed to an unopened surface"));
-
     input_dispatcher->setFocusedApplication(application_handle);
 
     droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> windows;
