@@ -245,7 +245,7 @@ void mir_wait_for(MirWaitHandle *wait_handle);
  *   \param [in] surface  The surface
  *   \return              An internal ID that identifies the surface
  */
-int mir_debug_surface_id(MirSurface *surface);
+int mir_surface_get_id(MirSurface *surface);
 
 /**
  * Set the type (purpose) of a surface. This is not guaranteed to always work

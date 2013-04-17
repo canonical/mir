@@ -161,7 +161,7 @@ void mir_surface_release_sync(MirSurface *surface)
         nullptr));
 }
 
-int mir_debug_surface_id(MirSurface * surface)
+int mir_surface_get_id(MirSurface * surface)
 {
     return surface->id();
 }
