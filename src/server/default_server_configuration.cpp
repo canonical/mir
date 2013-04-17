@@ -45,6 +45,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/input/null_input_manager.h"
+#include "mir/input/null_input_focus_selector.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_dispatcher_controller.h"
@@ -520,9 +521,12 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
 std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
 {
     return input_focus_selector(
-        [&]()
+        [&]() -> std::shared_ptr<msh::InputFocusSelector>
         {
-            return std::make_shared<mia::DispatcherController>(the_input_configuration());
+            if (the_options()->get("enable-input", false))
+                return std::make_shared<mia::DispatcherController>(the_input_configuration());
+            else
+                return std::make_shared<mi::NullInputFocusSelector>();
         });
 }
 
