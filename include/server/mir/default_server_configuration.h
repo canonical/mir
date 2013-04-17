@@ -48,7 +48,6 @@ class MessageProcessorReport;
 
 namespace shell
 {
-class SessionManager;
 class SurfaceFactory;
 class SurfaceBuilder;
 class InputFocusSelector;
