@@ -59,7 +59,7 @@ public:
             {0,0,0,0,0,0}
           }) 
     {
-        MockFBHalDevice();
+        post = hook_post;
     }
 
     static int hook_post(struct framebuffer_device_t* mock_fb, buffer_handle_t handle)

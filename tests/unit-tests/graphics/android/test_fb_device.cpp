@@ -19,6 +19,7 @@
 #include "mir_test_doubles/mock_fb_device.h"
 #include "mir_test_doubles/mock_android_buffer.h"
 #include "src/server/graphics/android/default_fb_device.h"
+#include "mir_test/hw_mock.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -27,6 +28,7 @@ namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
+namespace mt=mir::test;
 
 struct FBDevice : public ::testing::Test
 {
@@ -52,6 +54,7 @@ struct FBDevice : public ::testing::Test
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer;
     std::shared_ptr<ANativeWindowBuffer> dummy_buffer;
+    mt::HardwareAccessMock hw_access_mock;
 };
 
 TEST_F(FBDevice, post_ok)
