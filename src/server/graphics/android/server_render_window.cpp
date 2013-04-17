@@ -82,7 +82,6 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             return format; 
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
-            return -1;
     }
 }
 
