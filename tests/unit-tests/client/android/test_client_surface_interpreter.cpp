@@ -91,7 +91,7 @@ protected:
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
         mock_client_buffer = std::make_shared<NiceMock<MockClientBuffer>>();
-        mock_sync = std::make_shared<MockSyncFence>();
+        mock_sync = std::make_shared<NiceMock<MockSyncFence>>();
     }
 
     MirSurfaceParameters surf_params;
