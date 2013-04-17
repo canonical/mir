@@ -24,7 +24,6 @@
 #include "src/server/graphics/android/default_framebuffer_factory.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/graphics/android/fb_device.h"
-#include "src/server/graphics/android/default_fb_device.h"
 
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
@@ -102,12 +101,12 @@ protected:
 
     static bool run_hwc11_tests;
     static std::shared_ptr<mga::FramebufferFactory> fb_factory;
-    static std::shared_ptr<mga::FBDevice> fb_device;
+    static std::shared_ptr<mga::DisplaySupportProvider> fb_device;
     static std::shared_ptr<hwc_composer_device_1> hwc_device;
     static hw_module_t const* gr_module;
 };
 
-std::shared_ptr<mga::FBDevice> AndroidGPUDisplay::fb_device;
+std::shared_ptr<mga::DisplaySupportProvider> AndroidGPUDisplay::fb_device;
 std::shared_ptr<mga::FramebufferFactory> AndroidGPUDisplay::fb_factory;
 std::shared_ptr<hwc_composer_device_1> AndroidGPUDisplay::hwc_device;
 hw_module_t const* AndroidGPUDisplay::gr_module;

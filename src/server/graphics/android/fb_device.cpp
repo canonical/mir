@@ -18,7 +18,7 @@
 
 #include "mir/compositor/buffer.h"
 
-#include "default_fb_device.h"
+#include "fb_device.h"
 #include "android_buffer.h"
 
 #include <boost/throw_exception.hpp>
@@ -27,12 +27,12 @@
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
  
-mga::DefaultFBDevice::DefaultFBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
+mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     : fb_device(fbdev)
 {
 }
 
-void mga::DefaultFBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer)
+void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
     if (fb_device->post(fb_device.get(), handle->handle) != 0)
@@ -41,20 +41,20 @@ void mga::DefaultFBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> c
     }
 }
 
-geom::Size mga::DefaultFBDevice::display_size() const
+geom::Size mga::FBDevice::display_size() const
 {
     return geom::Size{geom::Width{fb_device->width},
                       geom::Height{fb_device->height}};
 } 
 
-geom::PixelFormat mga::DefaultFBDevice::display_format() const
+geom::PixelFormat mga::FBDevice::display_format() const
 {
     if (fb_device->format == HAL_PIXEL_FORMAT_RGBA_8888)
         return geom::PixelFormat::abgr_8888;
     return geom::PixelFormat::invalid; 
 }
 
-unsigned int mga::DefaultFBDevice::number_of_framebuffers_available() const
+unsigned int mga::FBDevice::number_of_framebuffers_available() const
 {
     return static_cast<unsigned int>(fb_device->numFramebuffers);
 }

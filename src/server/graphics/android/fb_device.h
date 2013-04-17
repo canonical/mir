@@ -20,42 +20,28 @@
 #define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
 
 #include "display_support_provider.h"
-
+#include <hardware/gralloc.h>
+#include <hardware/fb.h>
+ 
 namespace mir
 {
 namespace graphics
 {
 namespace android
 {
-/////////////////////////////////////////////////////////////
-//REMOOVE
-    //this function schedules the next frontbuffer to be "buffer". depending on implementation, it may
-    //this function schedules the next frontbuffer to be "buffer". depending on implementation, it may
-    //this function schedules the next frontbuffer to be "buffer". depending on implementation, it may
-    //this function schedules the next frontbuffer to be "buffer". depending on implementation, it may
-    //post immediately, or be deferred.
-    //post immediately, or be deferred.
-    //post immediately, or be deferred.
-    //post immediately, or be deferred.
-class AndroidBuffer;
-class FBDevice : public DisplaySupportProvider 
 
+class FBDevice : public DisplaySupportProvider 
 {
 public:
-    virtual ~FBDevice() noexcept = default;
+    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
 
-    virtual geometry::Size display_size() const = 0; 
-    virtual geometry::PixelFormat display_format() const = 0; 
-    virtual unsigned int number_of_framebuffers_available() const = 0;
+    geometry::Size display_size() const; 
+    geometry::PixelFormat display_format() const; 
+    unsigned int number_of_framebuffers_available() const;
 
-    //this function schedules the next frontbuffer to be "buffer". depending on implementation, it may
-    //post immediately, or be deferred.
-    virtual void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
-
-protected:
-    FBDevice() = default;
-    FBDevice(FBDevice const&) = delete;
-    FBDevice& operator=(FBDevice const&) = delete;
+    void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
+private:
+    std::shared_ptr<framebuffer_device_t> const fb_device;
 };
 
 }

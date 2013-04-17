@@ -22,7 +22,6 @@
 #include "display_allocator.h"
 #include "android_display.h"
 #include "hwc_display.h"
-#include "fb_device.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

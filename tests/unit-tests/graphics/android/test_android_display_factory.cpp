@@ -24,6 +24,7 @@
 #include "src/server/graphics/android/fb_device.h"
 #include "src/server/graphics/android/hwc_device.h"
 
+#include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test/hw_mock.h"
 
 #include <gtest/gtest.h>
@@ -31,6 +32,7 @@
 #include <stdexcept>
 
 namespace mt=mir::test;
+namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 
 namespace
@@ -45,17 +47,7 @@ struct MockHWCFactory: public mga::HWCFactory
             .WillByDefault(Return(std::shared_ptr<mga::HWCDevice>()));
     }
     MOCK_CONST_METHOD2(create_hwc_1_1, std::shared_ptr<mga::HWCDevice>(std::shared_ptr<hwc_composer_device_1> const&,
-                                                                       std::shared_ptr<mga::FBDevice> const&));
-};
-
-struct MockFBDevice : public mga::FBDevice
-{
-    ~MockFBDevice () noexcept {};
-    MOCK_CONST_METHOD0(display_size, mir::geometry::Size()); 
-    MOCK_CONST_METHOD0(display_format, mir::geometry::PixelFormat()); 
-    MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());
-    MOCK_METHOD1(set_next_frontbuffer, void(std::shared_ptr<mga::AndroidBuffer> const&));
-    MOCK_METHOD1(post,                 void(std::shared_ptr<mga::AndroidBuffer> const&));
+                                                                       std::shared_ptr<mga::DisplaySupportProvider> const&));
 };
 
 struct MockDisplayAllocator: public mga::DisplayAllocator
@@ -77,7 +69,7 @@ struct MockDisplayAllocator: public mga::DisplayAllocator
 struct MockFNWFactory : public mga::FramebufferFactory
 {
     ~MockFNWFactory () noexcept {}
-    MOCK_CONST_METHOD0(create_fb_device, std::shared_ptr<mga::FBDevice>()); 
+    MOCK_CONST_METHOD0(create_fb_device, std::shared_ptr<mga::DisplaySupportProvider>()); 
     MOCK_CONST_METHOD1(create_fb_native_window,
                     std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::DisplaySupportProvider> const&));
 };
@@ -89,7 +81,7 @@ public:
         : mock_display_allocator(std::make_shared<MockDisplayAllocator>()),
           mock_hwc_factory(std::make_shared<MockHWCFactory>()),
           mock_fnw_factory(std::make_shared<MockFNWFactory>()),
-          mock_fb_device(std::make_shared<MockFBDevice>())
+          mock_fb_device(std::make_shared<mtd::MockDisplaySupportProvider>())
     {
     }
 
@@ -101,7 +93,7 @@ public:
     std::shared_ptr<MockDisplayAllocator> const mock_display_allocator;
     std::shared_ptr<MockHWCFactory> const mock_hwc_factory;
     std::shared_ptr<MockFNWFactory> const mock_fnw_factory;
-    std::shared_ptr<MockFBDevice> const mock_fb_device;
+    std::shared_ptr<mtd::MockDisplaySupportProvider> const mock_fb_device;
     mt::HardwareAccessMock hw_access_mock;
 };
 }

@@ -18,7 +18,7 @@
 
 #include "mir_test_doubles/mock_fb_device.h"
 #include "mir_test_doubles/mock_android_buffer.h"
-#include "src/server/graphics/android/default_fb_device.h"
+#include "src/server/graphics/android/fb_device.h"
 #include "mir_test/hw_mock.h"
 
 #include <gtest/gtest.h>
@@ -60,7 +60,7 @@ struct FBDevice : public ::testing::Test
 TEST_F(FBDevice, set_next_frontbuffer_ok)
 {
     using namespace testing;
-    mga::DefaultFBDevice fbdev(fb_hal_mock);
+    mga::FBDevice fbdev(fb_hal_mock);
 
     EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(),dummy_buffer->handle))
         .Times(1);
@@ -71,7 +71,7 @@ TEST_F(FBDevice, set_next_frontbuffer_ok)
 TEST_F(FBDevice, set_next_frontbuffer_fail)
 {
     using namespace testing;
-    mga::DefaultFBDevice fbdev(fb_hal_mock);
+    mga::FBDevice fbdev(fb_hal_mock);
 
     EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(),dummy_buffer->handle))
         .Times(1)
@@ -84,7 +84,7 @@ TEST_F(FBDevice, set_next_frontbuffer_fail)
 
 TEST_F(FBDevice, determine_size)
 {
-    mga::DefaultFBDevice fbdev(fb_hal_mock);
+    mga::FBDevice fbdev(fb_hal_mock);
     auto size = fbdev.display_size();
     EXPECT_EQ(width, size.width.as_uint32_t());
     EXPECT_EQ(height, size.height.as_uint32_t());
@@ -92,12 +92,12 @@ TEST_F(FBDevice, determine_size)
 
 TEST_F(FBDevice, determine_fbnum)
 {
-    mga::DefaultFBDevice fbdev(fb_hal_mock);
+    mga::FBDevice fbdev(fb_hal_mock);
     EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
 }
 
 TEST_F(FBDevice, determine_pixformat)
 {
-    mga::DefaultFBDevice fbdev(fb_hal_mock);
+    mga::FBDevice fbdev(fb_hal_mock);
     EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
 }
