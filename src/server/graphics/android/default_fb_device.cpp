@@ -43,7 +43,7 @@ void mga::DefaultFBDevice::post(std::shared_ptr<mga::AndroidBuffer> const& buffe
 
 geom::Size mga::DefaultFBDevice::display_size() const
 {
-    return geom::Size{geom::Width{4}, geom::Height{45}};
+    return geom::Size{geom::Width{fb_device->width}, geom::Height{fb_device->height}};
 } 
 
 geom::PixelFormat mga::DefaultFBDevice::display_format() const
