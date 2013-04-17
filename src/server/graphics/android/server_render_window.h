@@ -22,7 +22,6 @@
 
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/geometry/pixel_format.h"
-#include "mir/compositor/buffer_id.h"
 
 #include <hardware/fb.h>
 #include <hardware/hwcomposer.h>

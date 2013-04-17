@@ -94,7 +94,5 @@ int mga::ServerRenderWindow::to_android_format(geom::PixelFormat format)
             return HAL_PIXEL_FORMAT_RGBA_8888;
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("pixel format of fb is unknown!"));
-            return -1;
-
     }
 }
