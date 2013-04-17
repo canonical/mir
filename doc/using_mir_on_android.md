@@ -20,7 +20,8 @@ Now, start Mir and a client application:
 Mir Usage of Android Drivers
 ----------------------------
 
-Mir relies on the libhybris library to use the android drivers. This allows the drivers to use the bionic libc while Mir itself uses the standard gnu libc.
+Mir relies on the libhybris library to use the android drivers. This allows the
+drivers to use the bionic libc while Mir itself uses the standard gnu libc.
 
 Mir Display Modes
 -----------------
@@ -32,25 +33,25 @@ default mode isn't working.
  *  Default Mode
     The default display mode uses the HWC HAL module from the android drivers.
     Depending on the version and device, the default mode may also use the
-    FB HAL module. These modules are used to determine the display information,
-    to synchronize with VSYNC, and to post to the display. The HWC is not used
-    at this time to provide overlay support.
+    framebuffer HAL module. These modules are used to determine the display
+    information, to synchronize with vsync, and to post to the display. The HWC
+    is not used at this time to provide overlay support.
  *  Backup Mode
     The backup mode is used when the primary display mode is unavailable (due
     to system problems, missing shared libraries, or similar conditions)
-    The backup mode will only use the FB HAL module. This module is a bit more
-    limited than the HWC module, and the driver support might be a bit less
-    thoroughly tested. It still should give you a display though.
+    The backup mode will only use the framebuffer HAL module. This module is a
+    bit more limited than the HWC module, and the driver support might be a bit
+    less thoroughly tested. It still should give you a display though.
 
 Mir Device Support
 ------------------
 
 In theory, all devices with that use the normal Android drivers abstractions
-should run mir. Currently, we support HWC version 1.1 (jb/ics devices). The 
-other HWC versions should use the Backup mode to draw to the screen.
-Development focus is currently on the Nexus line of devices, so these should
-be more thoroughly tested. If you have another sort of device, give Mir a try!
-If it doesn't work,
+should run mir. Currently, we support HWC (hardware composer) version 1.1
+(JB/ICS devices). The other HWC versions should use the backup mode to draw to
+the screen. Development focus is currently on the Nexus line of devices, so
+these should be more thoroughly tested. If you have another sort of device,
+give Mir a try! If it doesn't work,
 <a href="https://bugs.launchpad.net/mir">please file a bug,</a> being very
 specific about the chipset, gpu, and driver versions that your phone has. 
  
