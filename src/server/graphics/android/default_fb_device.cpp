@@ -43,17 +43,20 @@ void mga::DefaultFBDevice::post(std::shared_ptr<mga::AndroidBuffer> const& buffe
 
 geom::Size mga::DefaultFBDevice::display_size() const
 {
-    return geom::Size{geom::Width{fb_device->width}, geom::Height{fb_device->height}};
+    return geom::Size{geom::Width{fb_device->width},
+                      geom::Height{fb_device->height}};
 } 
 
 geom::PixelFormat mga::DefaultFBDevice::display_format() const
 {
-    return geom::PixelFormat::abgr_8888;
+    if (fb_device->format == HAL_PIXEL_FORMAT_RGBA_8888)
+        return geom::PixelFormat::abgr_8888;
+    return geom::PixelFormat::invalid; 
 }
 
 unsigned int mga::DefaultFBDevice::number_of_framebuffers_available() const
 {
-    return 12;
+    return static_cast<unsigned int>(fb_device->numFramebuffers);
 }
 
 void mga::DefaultFBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& /*buffer*/)

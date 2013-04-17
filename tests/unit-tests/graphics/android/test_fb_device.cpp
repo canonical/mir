@@ -57,7 +57,7 @@ struct FBDevice : public ::testing::Test
     mt::HardwareAccessMock hw_access_mock;
 };
 
-TEST_F(FBDevice, post_ok)
+TEST_F(FBDevice, set_next_frontbuffer_ok)
 {
     using namespace testing;
     mga::DefaultFBDevice fbdev(fb_hal_mock);
@@ -65,10 +65,10 @@ TEST_F(FBDevice, post_ok)
     EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(),dummy_buffer->handle))
         .Times(1);
 
-    fbdev.post(mock_buffer); 
+    fbdev.set_next_frontbuffer(mock_buffer); 
 }
 
-TEST_F(FBDevice, post_fail)
+TEST_F(FBDevice, set_next_frontbuffer_fail)
 {
     using namespace testing;
     mga::DefaultFBDevice fbdev(fb_hal_mock);
@@ -78,7 +78,7 @@ TEST_F(FBDevice, post_fail)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        fbdev.post(mock_buffer);
+        fbdev.set_next_frontbuffer(mock_buffer); 
     }, std::runtime_error); 
 }
 
