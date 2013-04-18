@@ -50,6 +50,8 @@ class MainLoop;
 class ServerConfiguration
 {
 public:
+    // TODO most of these interfaces are wider DisplayServer needs...
+    // TODO ...some or all of them need narrowing
     virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
