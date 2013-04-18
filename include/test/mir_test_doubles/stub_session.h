@@ -58,6 +58,9 @@ struct StubSession : public frontend::Session
     {
         return 0;
     }
+    void set_event_sink(std::weak_ptr<EventSink> const&)
+    {
+    }
 };
 
 }

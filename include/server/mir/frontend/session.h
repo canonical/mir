@@ -53,7 +53,7 @@ public:
 
     virtual int configure_surface(SurfaceId id, MirSurfaceAttrib attrib, int value) = 0;
 
-    virtual void set_event_sink(std::weak_ptr<EventSink> const&) {}
+    virtual void set_event_sink(std::weak_ptr<EventSink> const&) = 0;
 
 protected:
     Session() = default;
