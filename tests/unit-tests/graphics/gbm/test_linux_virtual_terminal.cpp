@@ -323,11 +323,13 @@ TEST_F(LinuxVirtualTerminalTest, disallows_vt_switch_on_switch_away_handler_fail
 
     /* First switch away attempt */
     EXPECT_CALL(mock_report, report_vt_switch_away_failure());
-    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, disallow_switch));
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP,
+                                 MatcherCast<int>(disallow_switch)));
 
     /* Second switch away attempt */
     EXPECT_CALL(mock_report, report_vt_switch_away_failure());
-    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, disallow_switch));
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP,
+                                 MatcherCast<int>(disallow_switch)));
 
     set_up_expectations_for_vt_teardown();
 
