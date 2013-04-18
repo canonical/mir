@@ -20,8 +20,7 @@
 #ifndef MIR_TEST_STUB_SERVER_TOOL_H_
 #define MIR_TEST_STUB_SERVER_TOOL_H_
 
-#include "mir_protobuf.pb.h"
-#include "include/server/mir/frontend/session_mediator.h" // FIXME
+#include "mir/frontend/server.h"
 #include <condition_variable>
 #include <mutex>
 

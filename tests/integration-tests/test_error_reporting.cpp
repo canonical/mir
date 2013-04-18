@@ -23,7 +23,7 @@
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/frontend/communicator.h"
-#include "mir/frontend/session_mediator.h" // FIXME
+#include "mir/frontend/server.h"
 
 #include "mir_protobuf.pb.h"
 

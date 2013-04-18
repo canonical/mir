@@ -8,7 +8,7 @@ set(
   protobuf_message_processor.cpp
   null_message_processor.cpp
   surface_creation_parameters.cpp
-
+  server.cpp
   resource_cache.cpp
   ${PROTO_HDRS}
 )
