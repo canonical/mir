@@ -38,7 +38,5 @@ TEST(PixelFormatConversion, conversion_to_mir_test)
     EXPECT_EQ(geom::PixelFormat::abgr_8888, mga::to_mir_format(HAL_PIXEL_FORMAT_RGBA_8888));
     EXPECT_EQ(geom::PixelFormat::xbgr_8888, mga::to_mir_format(HAL_PIXEL_FORMAT_RGBX_8888));
     EXPECT_EQ(geom::PixelFormat::argb_8888, mga::to_mir_format(HAL_PIXEL_FORMAT_BGRA_8888));
-    //note X to A conversion!
-    EXPECT_EQ(geom::PixelFormat::xrgb_8888, mga::to_mir_format(HAL_PIXEL_FORMAT_BGRA_8888));
     EXPECT_EQ(geom::PixelFormat::bgr_888, mga::to_mir_format(HAL_PIXEL_FORMAT_RGB_888));
 }
