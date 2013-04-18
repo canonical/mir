@@ -53,6 +53,7 @@ struct MockSessionContainer : public msh::DefaultSessionContainer
     MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
+    ~MockSessionContainer() noexcept {}
 };
 
 struct MockFocusSequence: public msh::FocusSequence

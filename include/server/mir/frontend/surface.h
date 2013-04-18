@@ -48,7 +48,7 @@ public:
     virtual ~Surface() {}
 
     virtual void destroy() = 0;
-    virtual void shutdown() = 0;
+    virtual void force_requests_to_complete() = 0;
 
     virtual geometry::Size size() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;

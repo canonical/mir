@@ -100,11 +100,11 @@ void msh::SessionManager::focus_next()
     set_focus_to_locked(lock, focus);
 }
 
-void msh::SessionManager::shutdown()
+void msh::SessionManager::force_requests_to_complete()
 {
     app_container->for_each([](std::shared_ptr<Session> const& session)
     {
-        session->shutdown();
+        session->force_requests_to_complete();
     });
 }
 

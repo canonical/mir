@@ -53,7 +53,7 @@ public:
 
     virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
-    virtual void shutdown();
+    virtual void force_requests_to_complete();
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& session, int id);
     virtual void focus_session_with_lightdm_id(int id);
