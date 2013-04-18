@@ -1,6 +1,6 @@
 /*
  * Copyright © 2012 Canonical Ltd.
- *
+slnstht *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
  * as published by the Free Software Foundation.
@@ -22,6 +22,10 @@
 
 #include <unistd.h>
 #include <sys/ioctl.h>
+
+
+
+#include <stdio.h>
 
 namespace mga=mir::graphics::android;
 
@@ -117,6 +121,7 @@ int queueBuffer_static(struct ANativeWindow* window,
 /* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
 int setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
 {
+    printf("setswap\n");
     return 0;
 }
 
@@ -163,12 +168,15 @@ mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> 
 
 int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
+    printf("dequeue\n");
     *buffer_to_driver = driver_interpreter->driver_requests_buffer();
+    printf("done dequeue\n");
     return 0;
 }
 
 int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mga::SyncObject> const& fence)
 {
+    printf("queue\n");
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }

@@ -125,6 +125,8 @@ int mga::AndroidAllocAdaptor::convert_to_android_pixel_code(geom::PixelFormat mi
     {
         case geom::PixelFormat::abgr_8888:
             return HAL_PIXEL_FORMAT_RGBA_8888;
+        case geom::PixelFormat::argb_8888:
+            return HAL_PIXEL_FORMAT_BGRA_8888;
         case geom::PixelFormat::xbgr_8888:
             return HAL_PIXEL_FORMAT_RGBX_8888;
         case geom::PixelFormat::bgr_888:

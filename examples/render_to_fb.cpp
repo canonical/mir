@@ -27,6 +27,9 @@
 
 #include <csignal>
 
+#include <chrono>
+#include <iostream>
+
 namespace mg=mir::graphics;
 namespace ml=mir::logging;
 
@@ -69,12 +72,16 @@ int main(int, char**)
     {
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
+            auto start = std::chrono::high_resolution_clock::now();
             buffer.make_current();
             buffer.clear();
 
             gl_animation.render_gl();
 
             buffer.post_update();
+
+            auto end = std::chrono::high_resolution_clock::now();
+            std::cout << "post took: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms.\n";
         });
 
         gl_animation.step();

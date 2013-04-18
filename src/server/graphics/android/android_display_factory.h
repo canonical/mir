@@ -32,6 +32,7 @@ namespace android
 class HWCFactory;
 class HWCDevice;
 class DisplayAllocator;
+class DisplaySupportProvider;
 class FramebufferFactory;
 class AndroidDisplayFactory : public DisplayFactory
 {
@@ -45,6 +46,7 @@ public:
 private:
     void setup_hwc_dev(const hw_module_t* module);
 
+    std::shared_ptr<DisplaySupportProvider> fb_dev;
     std::shared_ptr<DisplayAllocator> const display_factory;
     std::shared_ptr<HWCFactory> const hwc_factory;
     std::shared_ptr<FramebufferFactory> const fb_factory;

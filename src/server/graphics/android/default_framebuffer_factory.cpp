@@ -47,7 +47,9 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     std::vector<std::shared_ptr<mga::AndroidBuffer>> buffers; 
     for( auto i = 0u; i < num_framebuffers; ++i)
     {
+        printf("alloc buffer %i\n", i);        
         buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
+        printf("buffer 0x%X\n", (int) buffers[i].get());
     }
 
     auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);

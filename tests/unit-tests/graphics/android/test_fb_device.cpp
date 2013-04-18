@@ -96,6 +96,14 @@ TEST_F(FBDevice, determine_fbnum)
     EXPECT_EQ(fbnum, fbdev.number_of_framebuffers_available());
 }
 
+//some drivers incorrectly report 0 buffers available. if this is true, we should alloc 2, the minimum requirement
+TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
+{
+    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, 0); 
+    mga::FBDevice fbdev(slightly_malformed_fb_hal_mock);
+    EXPECT_EQ(2u, fbdev.number_of_framebuffers_available());
+}
+
 TEST_F(FBDevice, determine_pixformat)
 {
     mga::FBDevice fbdev(fb_hal_mock);

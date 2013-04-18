@@ -200,12 +200,23 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
 {
     using namespace testing; 
+
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+
+    //abgr_8888
     EXPECT_CALL(*mock_display_poster, display_format())
         .Times(1)
         .WillOnce(Return(geom::PixelFormat::abgr_8888));
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, render_window.driver_requests_info(NATIVE_WINDOW_FORMAT));
 
-    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, render_window.driver_requests_info(NATIVE_WINDOW_FORMAT)); 
+    Mock::VerifyAndClearExpectations(mock_display_poster.get());
+
+    //argb_8888
+    EXPECT_CALL(*mock_display_poster, display_format())
+        .Times(1)
+        .WillOnce(Return(geom::PixelFormat::argb_8888));
+    EXPECT_EQ(HAL_PIXEL_FORMAT_BGRA_8888, render_window.driver_requests_info(NATIVE_WINDOW_FORMAT)); 
+    Mock::VerifyAndClearExpectations(mock_display_poster.get());
 }
 
 TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
@@ -235,7 +246,21 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_se
     unsigned int rc_width = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_WIDTH);
     unsigned int rc_height = render_window.driver_requests_info(NATIVE_WINDOW_DEFAULT_HEIGHT);
     EXPECT_EQ(test_size.width.as_uint32_t(), rc_width); 
+    EXPECT_EQ(test_size.height.as_uint32_t(), rc_height);
+
+    rc_width = render_window.driver_requests_info(NATIVE_WINDOW_WIDTH);
+    rc_height = render_window.driver_requests_info(NATIVE_WINDOW_HEIGHT);
+    EXPECT_EQ(test_size.width.as_uint32_t(), rc_width); 
     EXPECT_EQ(test_size.height.as_uint32_t(), rc_height); 
+}
+
+TEST_F(ServerRenderWindowTest, driver_inquires_about_transform)
+{
+    using namespace testing;
+
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
+
+    EXPECT_EQ(0, render_window.driver_requests_info(NATIVE_WINDOW_TRANSFORM_HINT));
 }
 
 TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
@@ -244,6 +269,6 @@ TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
     EXPECT_THROW({
-        render_window.driver_requests_info(NATIVE_WINDOW_TRANSFORM_HINT);
+        render_window.driver_requests_info(NATIVE_WINDOW_CONSUMER_RUNNING_BEHIND);
     }, std::runtime_error);
 }

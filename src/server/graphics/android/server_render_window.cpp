@@ -26,6 +26,9 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+
+#include <thread>
+#include <chrono>
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
@@ -73,13 +76,17 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
     switch(key)
     {
         case NATIVE_WINDOW_DEFAULT_WIDTH:
+        case NATIVE_WINDOW_WIDTH:
             size = poster->display_size();
             return size.width.as_uint32_t();
         case NATIVE_WINDOW_DEFAULT_HEIGHT:
+        case NATIVE_WINDOW_HEIGHT:
             size = poster->display_size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
-            return format; 
+            return format;
+        case NATIVE_WINDOW_TRANSFORM_HINT:
+            return 0; 
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
     }
@@ -91,6 +98,8 @@ int mga::ServerRenderWindow::to_android_format(geom::PixelFormat format)
     {
         case geom::PixelFormat::abgr_8888:
             return HAL_PIXEL_FORMAT_RGBA_8888;
+        case geom::PixelFormat::argb_8888:
+            return HAL_PIXEL_FORMAT_BGRA_8888;
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("pixel format of fb is unknown!"));
     }
