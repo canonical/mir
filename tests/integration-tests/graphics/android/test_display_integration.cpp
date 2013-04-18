@@ -54,15 +54,6 @@ protected:
 
         /* determine hwc11 capable devices so we can skip the hwc11 tests on non supported tests */
         hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &gr_module);
-#if 0
-        framebuffer_device_t* fbdev_raw;
-        framebuffer_open(gr_module, &fbdev_raw);
-        auto fb_device = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
-                          [](struct framebuffer_device_t* fbdevice)
-                          {
-                             fbdevice->common.close((hw_device_t*) fbdevice);
-                          });
-#endif
         run_hwc11_tests = false;
         const hw_module_t *hw_module;
         int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
@@ -83,8 +74,6 @@ protected:
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
-//        fb_device = std::make_shared< ::android::FramebufferNativeWindow>(gr_module, fb_device);
-        
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer); 
         fb_factory = std::make_shared<mga::DefaultFramebufferFactory>(allocator);

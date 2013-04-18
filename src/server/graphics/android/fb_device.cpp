@@ -50,7 +50,6 @@ geom::Size mga::FBDevice::display_size() const
 
 geom::PixelFormat mga::FBDevice::display_format() const
 {
-    printf("pix format... %i\n", fb_device->format);
     if (fb_device->format == HAL_PIXEL_FORMAT_RGBA_8888)
     {
         return geom::PixelFormat::abgr_8888;

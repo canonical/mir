@@ -27,16 +27,13 @@ namespace mga=mir::graphics::android;
 std::shared_ptr<mga::AndroidBuffer> mga::FBSimpleSwapper::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
-    printf("acquiring in class.. queue size...\n");
     while (queue.empty())
     {
-        printf("wait... why? acquiring in class..\n");
         cv.wait(lk);
     }
 
     auto buffer = queue.front();
     queue.pop();
-        printf("return,..\n");
     return buffer;
 }
 
