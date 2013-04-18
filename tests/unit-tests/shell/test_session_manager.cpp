@@ -21,7 +21,6 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/session.h"
-#include "mir/frontend/session.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel.h"
