@@ -144,17 +144,29 @@ void mfd::ProtobufMessageProcessor::send_response(
     sender->send(buffer);
 }
 
+void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
+{
+    mir::protobuf::EventSequence seq;
+    mir::protobuf::Event *ev = seq.add_event();
+    ev->set_raw(&e, sizeof(MirEvent));
+
+    std::string buffer;
+    seq.SerializeToString(&buffer);
+
+    mir::protobuf::wire::Result result;
+    result.set_response(buffer);
+
+    result.SerializeToString(&buffer);
+
+    sender->send(buffer);
+}
+
 void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
 {
     // Limit the types of events we wish to send over protobuf, for now.
     if (e.type == mir_event_type_surface)
     {
-        mir::protobuf::EventSequence seq;
-        mir::protobuf::Event *ev = seq.add_event();
-        ev->set_raw(&e, sizeof(MirEvent));
-
-        // ID zero is reserved for events
-        send_response(0, &seq);
+        send_event(e);
     }
 }
 

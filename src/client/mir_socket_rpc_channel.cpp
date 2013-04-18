@@ -253,7 +253,7 @@ void mcl::MirSocketRpcChannel::read_message()
 
         log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
 
-        if (result.id() == 0)  // It's an event sequence
+        if (!result.has_id())  // It's an event sequence
         {
             process_event_sequence(result);
         }

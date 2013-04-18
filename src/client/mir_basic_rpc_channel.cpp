@@ -73,7 +73,7 @@ bool mcld::PendingCallCache::empty() const
 
 
 mcl::MirBasicRpcChannel::MirBasicRpcChannel() :
-    next_message_id(1)
+    next_message_id(0)
 {
 }
 
@@ -100,13 +100,7 @@ mir::protobuf::wire::Invocation mcl::MirBasicRpcChannel::invocation_for(
 
 int mcl::MirBasicRpcChannel::next_id()
 {
-    int id;
-
-    // Allocate a non-zero unique ID. We reserve zero for special use.
-    do
-    {
-        id = next_message_id.fetch_add(1);
-    } while (id == 0);
-
+    int id = next_message_id.load();
+    while (!next_message_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
     return id;
 }
