@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
-#include "mir/geometry/size.h"
+#include "display_support_provider.h"
 
 namespace mir
 {
@@ -28,12 +28,18 @@ namespace graphics
 namespace android
 {
 
-class HWCDevice
+class HWCDevice : public DisplaySupportProvider 
 {
 public:
     HWCDevice() = default;
-    virtual ~HWCDevice() {}
-    virtual geometry::Size display_size() = 0; 
+    virtual ~HWCDevice() noexcept = default;
+
+    /* from DisplaySupportProvider */
+    virtual geometry::Size display_size() const = 0; 
+    virtual geometry::PixelFormat display_format() const = 0; 
+    virtual unsigned int number_of_framebuffers_available() const = 0;
+    virtual void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
+
     virtual void wait_for_vsync() = 0;
     virtual void commit_frame() = 0;
 private:

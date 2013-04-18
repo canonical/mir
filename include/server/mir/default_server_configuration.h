@@ -48,11 +48,13 @@ class MessageProcessorReport;
 
 namespace shell
 {
-class SessionManager;
 class SurfaceFactory;
-class SurfaceSource;
 class SurfaceBuilder;
 class InputFocusSelector;
+class SessionContainer;
+class FocusSetter;
+class FocusSequence;
+class PlacementStrategy;
 }
 namespace time
 {
@@ -79,6 +81,10 @@ namespace input
 class InputManager;
 class EventFilter;
 class InputChannelFactory;
+namespace android
+{
+class InputConfiguration;
+}
 }
 
 namespace logging
@@ -110,12 +116,17 @@ public:
 
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
     virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
+    virtual std::shared_ptr<shell::SessionContainer>  the_shell_session_container();
+    virtual std::shared_ptr<shell::FocusSetter>       the_shell_focus_setter();
+    virtual std::shared_ptr<shell::FocusSequence>     the_shell_focus_sequence();
+    virtual std::shared_ptr<shell::PlacementStrategy> the_shell_placement_strategy();
 
     virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
 
     virtual std::shared_ptr<logging::Logger> the_logger();
 
+    virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<input::InputManager> the_input_manager();
     virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
@@ -131,7 +142,9 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<frontend::Shell> session_manager;
+    CachedPtr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<shell::InputFocusSelector> input_focus_selector;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
@@ -144,7 +157,11 @@ protected:
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
-    CachedPtr<shell::SurfaceSource> surface_source;
+    CachedPtr<shell::SurfaceFactory> shell_surface_factory;
+    CachedPtr<shell::SessionContainer>  shell_session_container;
+    CachedPtr<shell::FocusSetter>       shell_focus_setter;
+    CachedPtr<shell::FocusSequence>     shell_focus_sequence;
+    CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
     CachedPtr<compositor::CompositingStrategy> compositing_strategy;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;

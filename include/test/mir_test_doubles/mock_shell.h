@@ -42,7 +42,7 @@ struct MockShell : public frontend::Shell
 
     MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, frontend::SurfaceCreationParameters const&));
 
-    MOCK_METHOD0(shutdown, void());
+    MOCK_METHOD0(force_requests_to_complete, void());
 };
 
 }

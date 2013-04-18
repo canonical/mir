@@ -44,7 +44,7 @@ public:
     virtual std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const = 0;
 
     virtual std::string name() const = 0;
-    virtual void shutdown() = 0;
+    virtual void force_requests_to_complete() = 0;
 
     virtual void hide() = 0;
     virtual void show() = 0;

@@ -49,7 +49,7 @@ class StubShell : public frontend::Shell
     {
         return frontend::SurfaceId{0};
     }
-    void shutdown()
+    void force_requests_to_complete()
     {
     }
 };

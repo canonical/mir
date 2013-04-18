@@ -31,8 +31,9 @@ namespace android
 class AndroidDisplayAllocator : public DisplayAllocator
 {
 public:
-    std::shared_ptr<AndroidDisplay> create_gpu_display() const; 
-    std::shared_ptr<HWCDisplay> create_hwc_display(std::shared_ptr<HWCDevice> const&) const;
+    std::shared_ptr<AndroidDisplay> create_gpu_display(std::shared_ptr<ANativeWindow> const&) const; 
+    std::shared_ptr<HWCDisplay> create_hwc_display(
+        std::shared_ptr<HWCDevice> const&, std::shared_ptr<ANativeWindow> const&) const;
 
 };
 

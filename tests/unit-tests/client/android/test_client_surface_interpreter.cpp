@@ -25,10 +25,16 @@
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
+namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 namespace
 {
+struct MockSyncFence : public mga::SyncObject
+{
+    ~MockSyncFence() noexcept {}
+    MOCK_METHOD0(wait, void());
+};
 struct MockClientBuffer : public mcl::ClientBuffer
 {
     MockClientBuffer()
@@ -85,10 +91,12 @@ protected:
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
         mock_client_buffer = std::make_shared<NiceMock<MockClientBuffer>>();
+        mock_sync = std::make_shared<MockSyncFence>();
     }
 
     MirSurfaceParameters surf_params;
     std::shared_ptr<MockClientBuffer> mock_client_buffer;
+    std::shared_ptr<MockSyncFence> mock_sync;
 };
 
 TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
@@ -136,7 +144,21 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     EXPECT_CALL(mock_surface, next_buffer(_,_))
         .Times(1);
 
-    interpreter.driver_returns_buffer(&buffer);
+    interpreter.driver_returns_buffer(&buffer, mock_sync);
+}
+
+TEST_F(AndroidInterpreterTest, native_window_queue_waits_on_fence)
+{
+    using namespace testing;
+    ANativeWindowBuffer buffer;
+
+    MockMirSurface mock_surface{surf_params};
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
+
+    EXPECT_CALL(*mock_sync, wait())
+        .Times(1);
+
+    interpreter.driver_returns_buffer(&buffer, mock_sync);
 }
 
 /* format is an int that is set by the driver. these are not the HAL_PIXEL_FORMATS in android */

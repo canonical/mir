@@ -122,7 +122,7 @@ geom::Rectangle mga::AndroidDisplay::view_area() const
 
 void mga::AndroidDisplay::clear()
 {
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 bool mga::AndroidDisplay::post_update()
@@ -161,4 +161,9 @@ void mga::AndroidDisplay::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
+}
+
+void mga::AndroidDisplay::release_current()
+{
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }

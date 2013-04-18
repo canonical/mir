@@ -23,6 +23,7 @@
 #include "mir/input/input_manager.h"
 
 #include <utils/StrongPointer.h>
+#include <InputDispatcher.h>
 
 #include <initializer_list>
 
@@ -30,8 +31,6 @@ namespace android
 {
 class EventHubInterface;
 class InputDispatcherInterface;
-class InputWindowHandle;
-class InputApplicationHandle;
 }
 
 namespace droidinput = android;
@@ -67,8 +66,6 @@ public:
 
     std::shared_ptr<InputChannel> make_input_channel();
 
-    void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& session, std::shared_ptr<input::SurfaceTarget> const& surface);
-
 protected:
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
@@ -79,9 +76,6 @@ private:
 
     std::shared_ptr<InputThread> reader_thread;
     std::shared_ptr<InputThread> dispatcher_thread;
-
-    droidinput::sp<droidinput::InputWindowHandle> focused_window_handle;
-    droidinput::sp<droidinput::InputApplicationHandle> focused_application_handle;
 };
 
 }

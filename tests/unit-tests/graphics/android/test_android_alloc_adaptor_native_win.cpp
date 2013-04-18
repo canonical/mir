@@ -44,14 +44,15 @@ protected:
         usage = mga::BufferUsage::use_hardware;
         stride = geom::Stride(300*4);
 
-        anwb.height = (int) size.height.as_uint32_t();
-        anwb.width = (int) size.width.as_uint32_t();
-        anwb.stride = (int) stride.as_uint32_t();
-        anwb.handle  = mock_alloc_device->buffer_handle;
+        anwb = std::make_shared<ANativeWindowBuffer>();
+        anwb->height = (int) size.height.as_uint32_t();
+        anwb->width = (int) size.width.as_uint32_t();
+        anwb->stride = (int) stride.as_uint32_t();
+        anwb->handle  = mock_alloc_device->buffer_handle;
 
     }
 
-    ANativeWindowBuffer anwb;
+    std::shared_ptr<ANativeWindowBuffer> anwb;
 
     std::shared_ptr<mga::AndroidBufferHandleDefault> buffer_handle;
     std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;
@@ -90,27 +91,27 @@ TEST_F(AdaptorNativeWinProduction, native_win_has_correct_usage)
 TEST_F(AdaptorNativeWinProduction, returns_handle_non_null)
 {
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
+    auto handle = buffer_handle->native_buffer_handle();
     ASSERT_NE(nullptr, handle);
 }
 
 TEST_F(AdaptorNativeWinProduction, returns_handle_with_no_modifications)
 {
-    anwb.height = 11;
-    anwb.width =  22;
-    anwb.stride = 33;
-    anwb.format = 44;
-    anwb.usage =  55;
+    anwb->height = 11;
+    anwb->width =  22;
+    anwb->stride = 33;
+    anwb->format = 44;
+    anwb->usage =  55;
 
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    ANativeWindowBuffer* handle = (ANativeWindowBuffer*) buffer_handle->get_egl_client_buffer();
+    auto handle = buffer_handle->native_buffer_handle();
 
-    EXPECT_EQ(anwb.width, handle->width);
-    EXPECT_EQ(anwb.height, handle->height);
-    EXPECT_EQ(anwb.stride, handle->stride);
-    EXPECT_EQ(anwb.usage, handle->usage);
-    EXPECT_EQ(anwb.format, handle->format);
-    EXPECT_EQ(anwb.handle, handle->handle);
+    EXPECT_EQ(anwb->width, handle->width);
+    EXPECT_EQ(anwb->height, handle->height);
+    EXPECT_EQ(anwb->stride, handle->stride);
+    EXPECT_EQ(anwb->usage, handle->usage);
+    EXPECT_EQ(anwb->format, handle->format);
+    EXPECT_EQ(anwb->handle, handle->handle);
 
 }
 
@@ -127,7 +128,7 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_size)
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
 
-    EXPECT_EQ(package->ipc_data.size(), static_cast<uint32_t>(anwb.handle->numInts));
+    EXPECT_EQ(package->ipc_data.size(), static_cast<uint32_t>(anwb->handle->numInts));
 }
 
 TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_data)
@@ -137,10 +138,10 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_data)
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
 
-    int fd_offset = anwb.handle->numFds;
+    int fd_offset = anwb->handle->numFds;
     for(auto it= package->ipc_data.begin(); it != package->ipc_data.end(); it++)
     {
-        EXPECT_EQ(anwb.handle->data[fd_offset++], *it);
+        EXPECT_EQ(anwb->handle->data[fd_offset++], *it);
     }
 }
 
@@ -150,7 +151,7 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_size)
     buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
     auto package = buffer_handle->get_ipc_package();
 
-    EXPECT_EQ(anwb.handle->numFds, static_cast<int>(package->ipc_fds.size()));
+    EXPECT_EQ(anwb->handle->numFds, static_cast<int>(package->ipc_fds.size()));
 }
 
 TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_fds)
@@ -162,6 +163,13 @@ TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_fds)
     int offset = 0;
     for(auto it=package->ipc_fds.begin(); it != package->ipc_fds.end(); it++)
     {
-        EXPECT_EQ(anwb.handle->data[offset++], *it);
+        EXPECT_EQ(anwb->handle->data[offset++], *it);
     }
+}
+
+TEST_F(AdaptorNativeWinProduction, test_native_handle_is_returned_correctly)
+{
+    mga::AndroidBufferHandleDefault buffer_handle(anwb, pf, usage );
+    auto native_handle = buffer_handle.native_buffer_handle();
+    EXPECT_EQ(anwb, native_handle);
 }
