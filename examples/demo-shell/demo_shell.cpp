@@ -45,8 +45,7 @@ namespace examples
 struct DemoServerConfiguration : mir::DefaultServerConfiguration
 {
     DemoServerConfiguration(int argc, char const* argv[])
-      : DefaultServerConfiguration(argc, argv),
-        app_switcher(std::make_shared<me::ApplicationSwitcher>())
+      : DefaultServerConfiguration(argc, argv)
     {
     }
 
@@ -61,8 +60,9 @@ struct DemoServerConfiguration : mir::DefaultServerConfiguration
 
     std::initializer_list<std::shared_ptr<mi::EventFilter> const> the_event_filters() override
     {
-        static std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list = { app_switcher };
-        return filter_list;
+        if (!app_switcher)
+            app_switcher = std::make_shared<me::ApplicationSwitcher>(the_focus_controller());
+        return std::initializer_list<std::shared_ptr<mi::EventFilter> const>{app_switcher};
     }
 
     std::shared_ptr<me::ApplicationSwitcher> app_switcher;
@@ -75,14 +75,7 @@ int main(int argc, char const* argv[])
 try
 {
     me::DemoServerConfiguration config(argc, argv);
-    mir::run_mir(config, [&config](mir::DisplayServer&){
-            // TODO: Remove strange dynamic cast. Perhaps this is an indication that SessionManager provides an interface such as
-            // "FocusController" (and configuration, the_focus_controller())
-            // TODO: We use this strange two phase initialization in order to
-            // avoid a circular dependency between the_input_filters() and the_session_store(). This seems to indicate that perhaps
-            // the InputManager should not be the InputFocusSelector
-            config.app_switcher->set_focus_controller(std::dynamic_pointer_cast<msh::SessionManager>(config.the_frontend_shell()));
-        });
+    mir::run_mir(config, [](mir::DisplayServer&){});
     return 0;
 }
 catch (std::exception const& error)

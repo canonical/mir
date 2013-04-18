@@ -27,7 +27,7 @@ namespace mir
 {
 namespace shell
 {
-class SessionManager;
+class FocusController;
 }
 namespace examples
 {
@@ -35,10 +35,8 @@ namespace examples
 class ApplicationSwitcher : public input::EventFilter
 {
 public: 
-    ApplicationSwitcher();
+    ApplicationSwitcher(std::shared_ptr<shell::FocusController> const& focus_controller);
     ~ApplicationSwitcher() = default;
-    
-    void set_focus_controller(std::shared_ptr<shell::SessionManager> const& shell);
     
     bool handles(MirEvent const& event);
 
@@ -47,7 +45,7 @@ protected:
     ApplicationSwitcher& operator=(const ApplicationSwitcher&) = delete;
 
 private:
-    std::shared_ptr<shell::SessionManager> focus_controller;
+    std::shared_ptr<shell::FocusController> focus_controller;
 };
 
 }

@@ -18,7 +18,7 @@
 
 #include "application_switcher.h"
 
-#include "mir/shell/session_manager.h"
+#include "mir/shell/focus_controller.h"
 
 #include <linux/input.h>
 
@@ -27,13 +27,9 @@
 namespace me = mir::examples;
 namespace msh = mir::shell;
 
-me::ApplicationSwitcher::ApplicationSwitcher()
+me::ApplicationSwitcher::ApplicationSwitcher(std::shared_ptr<msh::FocusController> const& focus_controller) :
+    focus_controller(focus_controller)
 {
-}
-
-void me::ApplicationSwitcher::set_focus_controller(std::shared_ptr<msh::SessionManager> const& shell)
-{
-    focus_controller = shell;
 }
 
 bool me::ApplicationSwitcher::handles(MirEvent const& event)
