@@ -181,7 +181,12 @@ public:
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     /** @} */
 
+    /** @name logging configuration - internal
+     * configurable interfaces implemented and used within logging
+     *  @{ */
     virtual std::shared_ptr<logging::Logger> the_logger();
+    /** @} */
+
     virtual std::shared_ptr<time::TimeSource> the_time_source();
 
 protected:
