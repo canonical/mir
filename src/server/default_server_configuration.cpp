@@ -36,6 +36,7 @@
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
@@ -300,7 +301,7 @@ std::shared_ptr<msh::SessionContainer>
 mir::DefaultServerConfiguration::the_shell_session_container()
 {
     return shell_session_container(
-        []{ return std::make_shared<msh::SessionContainer>(); });
+        []{ return std::make_shared<msh::DefaultSessionContainer>(); });
 }
 
 std::shared_ptr<msh::FocusSetter>

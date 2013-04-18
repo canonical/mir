@@ -16,12 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_CONTAINER_H_
-#define MIR_SHELL_SESSION_CONTAINER_H_
+#ifndef MIR_SHELL_DEFAULT_SESSION_CONTAINER_H_
+#define MIR_SHELL_DEFAULT_SESSION_CONTAINER_H_
 
 #include <vector>
 #include <memory>
 #include <mutex>
+
+#include "mir/shell/session_container.h"
 
 namespace mir
 {
@@ -33,24 +35,20 @@ class Session;
 namespace shell
 {
 
-class SessionContainer
+class DefaultSessionContainer : public SessionContainer
 {
 public:
-    virtual void insert_session(std::shared_ptr<frontend::Session> const& session) = 0;
-    virtual void remove_session(std::shared_ptr<frontend::Session> const& session) = 0;
+    void insert_session(std::shared_ptr<frontend::Session> const& session);
+    void remove_session(std::shared_ptr<frontend::Session> const& session);
+    void for_each(std::function<void(std::shared_ptr<frontend::Session> const&)> f) const;
 
-    virtual void for_each(std::function<void(std::shared_ptr<frontend::Session> const&)> f) const = 0;
-
-protected:
-    SessionContainer() = default;
-    virtual ~SessionContainer() = default;
-
-    SessionContainer(const SessionContainer&) = delete;
-    SessionContainer& operator=(const SessionContainer&) = delete;
+private:
+    std::vector<std::shared_ptr<frontend::Session>> apps;
+    mutable std::mutex guard;
 };
 
 }
 }
 
 
-#endif // MIR_SHELL_SESSION_CONTAINER_H_
+#endif // MIR_SHELL_DEFAULT_SESSION_CONTAINER_H_

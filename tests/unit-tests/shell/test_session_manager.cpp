@@ -19,7 +19,7 @@
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/session_manager.h"
-#include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/shell/session.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface_creation_parameters.h"
@@ -48,12 +48,13 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-struct MockSessionContainer : public msh::SessionContainer
+struct MockSessionContainer : public msh::DefaultSessionContainer
 {
     MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::Session> const&));
     MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::Session> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
+    ~MockSessionContainer() noexcept {}
 };
 
 struct MockFocusSequence: public msh::FocusSequence
