@@ -21,6 +21,7 @@
 #define MIR_TEST_STUB_SERVER_TOOL_H_
 
 #include "mir_protobuf.pb.h"
+#include "include/server/mir/frontend/session_mediator.h" // FIXME
 #include <condition_variable>
 #include <mutex>
 
@@ -29,7 +30,7 @@ namespace mir
 namespace test
 {
 
-struct StubServerTool : mir::protobuf::DisplayServer
+struct StubServerTool : frontend::Server
 {
     StubServerTool()
         : drm_magic{0}

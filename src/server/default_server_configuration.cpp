@@ -106,7 +106,7 @@ private:
     std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    virtual std::shared_ptr<mf::Server> make_ipc_server()
     {
         return std::make_shared<mf::SessionMediator>(
             shell,

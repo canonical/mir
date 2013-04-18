@@ -23,6 +23,7 @@
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/frontend/communicator.h"
+#include "mir/frontend/session_mediator.h" // FIXME
 
 #include "mir_protobuf.pb.h"
 
@@ -47,7 +48,7 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-struct ErrorServer : mir::protobuf::DisplayServer
+struct ErrorServer : mf::Server
 {
     static std::string const test_exception_text;
 

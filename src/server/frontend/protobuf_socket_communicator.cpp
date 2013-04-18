@@ -53,18 +53,18 @@ void mf::ProtobufSocketCommunicator::start_accept()
         next_id(),
         connected_sessions);
 
-    std::shared_ptr<mir::protobuf::DisplayServer> ds =
+    std::shared_ptr<mir::frontend::Server> server =
         ipc_factory->make_ipc_server();
 
     auto proc = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
-        ds,
+        server,
         ipc_factory->resource_cache(),
         ipc_factory->report());
     
     // A dynamic cast is not ideal. But the alternatives all seem to require
     // non-trivial architectural changes. Another day...
-    mf::SessionMediator *sm = dynamic_cast<mf::SessionMediator*>(ds.get());
+    mf::SessionMediator *sm = dynamic_cast<mf::SessionMediator*>(server.get());
     if (sm)
         sm->set_event_sink(proc);
         

@@ -31,7 +31,7 @@ namespace test
 struct TestProtobufServer
 {
     TestProtobufServer(std::string socket_name,
-               const std::shared_ptr<protobuf::DisplayServer>& tool);
+               const std::shared_ptr<frontend::Server>& tool);
 
     std::shared_ptr<frontend::Communicator> make_communicator(
         const std::string& socket_name,

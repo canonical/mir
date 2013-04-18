@@ -35,13 +35,13 @@ namespace doubles
 class StubIpcFactory : public frontend::ProtobufIpcFactory
 {
 public:
-    StubIpcFactory(protobuf::DisplayServer& server) :
+    StubIpcFactory(frontend::Server& server) :
         server(fake_shared(server)),
         cache(std::make_shared<frontend::ResourceCache>())
     {
     }
 
-    std::shared_ptr<protobuf::DisplayServer> make_ipc_server()
+    std::shared_ptr<frontend::Server> make_ipc_server()
     {
         return server;
     }
@@ -57,7 +57,7 @@ private:
         return std::make_shared<frontend::NullMessageProcessorReport>();
     }
 
-    std::shared_ptr<protobuf::DisplayServer> server;
+    std::shared_ptr<frontend::Server> server;
     std::shared_ptr<frontend::ResourceCache> const cache;
 };
 

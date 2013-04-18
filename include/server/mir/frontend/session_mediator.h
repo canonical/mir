@@ -51,8 +51,18 @@ class ResourceCache;
 class SessionMediatorReport;
 class ClientBufferTracker;
 
+class Server : public mir::protobuf::DisplayServer
+{
+public:
+    virtual ~Server() noexcept;
+    void set_event_sink(std::weak_ptr<EventSink> const& sink);
+
+protected:
+    std::weak_ptr<EventSink> event_sink;
+};
+
 // SessionMediator relays requests from the client process into the server.
-class SessionMediator : public mir::protobuf::DisplayServer
+class SessionMediator : public mir::frontend::Server
 {
 public:
 
@@ -108,8 +118,6 @@ public:
                            mir::protobuf::SurfaceSetting*,
                            google::protobuf::Closure* done);
 
-    void set_event_sink(std::weak_ptr<EventSink> const& sink);
-
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
@@ -124,8 +132,6 @@ private:
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 
     std::shared_ptr<Session> session;
-
-    std::weak_ptr<EventSink> event_sink;
 };
 
 }
