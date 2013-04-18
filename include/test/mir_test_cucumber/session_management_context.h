@@ -19,7 +19,6 @@
 #ifndef MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 #define MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 
-#include "mir/server_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/frontend/surface_id.h"
 
@@ -30,8 +29,6 @@
 
 namespace mir
 {
-class ServerConfiguration;
-
 namespace frontend
 {
 class Shell;
