@@ -82,11 +82,9 @@ struct mir::DisplayServer::Private
             ScopedAction comp{[this] { compositor->stop(); },
                               [this] { compositor->start(); }};
 
-            ScopedAction disp{[this] { display->pause(); },
-                              [this] { display->resume(); }};
+            display->pause();
 
             comp.clear();
-            disp.clear();
         }
         catch(std::runtime_error const&)
         {
@@ -100,13 +98,11 @@ struct mir::DisplayServer::Private
     {
         try
         {
-            ScopedAction comp{[this] { display->resume(); },
+            ScopedAction disp{[this] { display->resume(); },
                               [this] { display->pause(); }};
 
-            ScopedAction disp{[this] { compositor->start(); },
-                              [this] { compositor->stop(); }};
+            compositor->start();
 
-            comp.clear();
             disp.clear();
         }
         catch(std::runtime_error const&)
