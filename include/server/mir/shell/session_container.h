@@ -43,7 +43,7 @@ public:
 
 protected:
     SessionContainer() = default;
-    virtual ~SessionContainer() {};
+    virtual ~SessionContainer() = default;
 
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
