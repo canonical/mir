@@ -1,0 +1,47 @@
+/*
+ * Copyright © 2012 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ */
+
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_
+
+#include "mir/geometry/pixel_format.h"
+#include <system/graphics.h>
+
+namespace mir
+{
+namespace graphics
+{
+namespace android
+{
+
+inline static int to_android_format(geometry::PixelFormat format)
+{
+    return 0;
+}
+
+inline static mir::geometry::PixelFormat to_mir_format(int)
+{
+    return mir::geometry::PixelFormat::abgr_8888;
+
+
+}
+
+}
+}
+}
+#endif /* MIR_GRAPHICS_ANDROID_ANDROID_FORMAT_CONVERSION_INL_H_ */
