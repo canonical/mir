@@ -36,9 +36,6 @@ namespace mir
 {
 namespace graphics
 {
-
-class DisplayReport;
-
 namespace gbm
 {
 
@@ -50,7 +47,7 @@ namespace helpers
 class DRMHelper
 {
 public:
-    DRMHelper(std::shared_ptr<DisplayReport> const& report);
+    DRMHelper() : fd{-1} {}
     ~DRMHelper();
 
     DRMHelper(const DRMHelper &) = delete;
@@ -67,8 +64,6 @@ public:
 
 private:
     int open_drm_device();
-
-    std::shared_ptr<DisplayReport> const report;
 };
 
 class GBMHelper

@@ -18,18 +18,13 @@
 
 #include "gbm_platform.h"
 
-#include <boost/throw_exception.hpp>
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/egl/mesa_native_display.h"
-#include "mir/logging/logger.h"
-#include "mir/logging/dumb_console_logger.h"
 
 #include <xf86drm.h>
-
-#include <stdexcept>
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -37,7 +32,6 @@
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mgeglm = mg::egl::mesa;
-namespace ml = mir::logging;
 namespace mc = mir::compositor;
 
 namespace
@@ -84,8 +78,7 @@ struct RealVTFileOperations : public mgg::VTFileOperations
 
 mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
                               std::shared_ptr<VirtualTerminal> const& vt)
-    : drm{listener},
-      listener{listener},
+    : listener{listener},
       vt{vt},
       native_display{0}
 {
