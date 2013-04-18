@@ -20,48 +20,28 @@
 #ifndef MIR_GRAPHICS_ANDROID_FB_SWAPPER_H_
 #define MIR_GRAPHICS_ANDROID_FB_SWAPPER_H_
 
-#include "mir/compositor/buffer_swapper.h"
-
-#include <condition_variable>
-#include <queue>
-#include <vector>
-#include <mutex>
+#include <memory>
 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
-
 namespace graphics
 {
 namespace android
 {
-class Buffer;
 
-class FBSwapper : public compositor::BufferSwapper
+class AndroidBuffer;
+
+class FBSwapper // (todo: for composition bypass, inherit from mc::BufferSwapper)
 {
 public:
-    explicit FBSwapper(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list);
-    explicit FBSwapper(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list);
+    virtual ~FBSwapper() = default;
 
-    std::shared_ptr<compositor::Buffer> client_acquire();
-    void client_release(std::shared_ptr<compositor::Buffer> const& queued_buffer);
-    std::shared_ptr<compositor::Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<compositor::Buffer> const& released_buffer);
-    void force_requests_to_complete();
-
-private:
-    template<class T>
-    void initialize_queues(T);
-
-    void composition_bypass_unsupported();
-
-    std::mutex queue_lock;
-    std::condition_variable cv;
-
-    std::queue<std::shared_ptr<compositor::Buffer>> queue;
+    virtual std::shared_ptr<AndroidBuffer> compositor_acquire() = 0;
+    virtual void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer) = 0;
+protected:
+    FBSwapper() = default;
+    FBSwapper(FBSwapper const&) = delete;
+    FBSwapper& operator=(FBSwapper const&) = delete;
 };
 
 }

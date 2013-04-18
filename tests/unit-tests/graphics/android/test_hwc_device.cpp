@@ -17,7 +17,10 @@
  */
 
 #include "src/server/graphics/android/hwc11_device.h"
+#include "src/server/graphics/android/hwc_layerlist.h"
+#include "src/server/graphics/android/fb_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
+#include "mir_test_doubles/mock_android_buffer.h"
 
 #include <thread>
 #include <chrono>
@@ -27,6 +30,31 @@
 
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
+
+namespace
+{
+struct MockHWCOrganizer : public mga::HWCLayerOrganizer
+{
+    ~MockHWCOrganizer() noexcept {}
+    MOCK_CONST_METHOD0(native_list, mga::LayerList const&());
+    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<mga::AndroidBuffer> const&));
+};
+
+struct MockFBDevice : public mga::FBDevice
+{
+    ~MockFBDevice() noexcept {}
+    MOCK_METHOD1(post, void(std::shared_ptr<mga::AndroidBuffer> const&));
+};
+
+struct HWCDummyLayer : public mga::HWCDefaultLayer
+{
+    HWCDummyLayer()
+     : HWCDefaultLayer({})
+    {
+    }
+};
+}
 
 class HWCDevice : public ::testing::Test
 {
@@ -34,9 +62,13 @@ protected:
     virtual void SetUp()
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
+        mock_fbdev = std::make_shared<MockFBDevice>();
+        mock_organizer = std::make_shared<MockHWCOrganizer>();
     }
 
+    std::shared_ptr<MockHWCOrganizer> mock_organizer;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
+    std::shared_ptr<MockFBDevice> mock_fbdev;
 };
 
 TEST_F(HWCDevice, test_proc_registration)
@@ -48,7 +80,7 @@ TEST_F(HWCDevice, test_proc_registration)
         .Times(1)
         .WillOnce(SaveArg<1>(&procs));
 
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
 
     EXPECT_NE(nullptr, procs->invalidate);
     EXPECT_NE(nullptr, procs->vsync);
@@ -66,7 +98,7 @@ TEST_F(HWCDevice, test_vsync_activation_comes_after_proc_registration)
         .Times(1)
         .WillOnce(Return(0));
 
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     testing::Mock::VerifyAndClearExpectations(mock_device.get());
 }
 
@@ -79,7 +111,7 @@ TEST_F(HWCDevice, test_vsync_activation_failure_throws)
         .WillOnce(Return(-EINVAL));
 
     EXPECT_THROW({
-        mga::HWC11Device device(mock_device);
+        mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     }, std::runtime_error);
 }
 
@@ -95,7 +127,7 @@ void* waiting_device(void*)
 
 TEST_F(HWCDevice, test_vsync_hook_waits)
 {
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     global_device = &device;
 
     pthread_t thread;
@@ -122,7 +154,7 @@ TEST_F(HWCDevice, test_vsync_hook_from_hwc_unblocks_wait)
         .Times(1)
         .WillOnce(SaveArg<1>(&procs));
 
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     global_device = &device;
 
     pthread_t thread;
@@ -139,26 +171,57 @@ TEST_F(HWCDevice, test_vsync_hook_from_hwc_unblocks_wait)
     ASSERT_EQ(0, error);
 }
 
-TEST_F(HWCDevice, test_hwc_gles_set)
+TEST_F(HWCDevice, test_hwc_gles_set_empty_layerlist)
 {
     using namespace testing;
 
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
 
+    mga::LayerList empty_list;
+    EXPECT_CALL(*mock_organizer, native_list())
+        .Times(1)
+        .WillOnce(ReturnRef(empty_list));
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
         .Times(1);
 
     device.commit_frame();
 
-    EXPECT_EQ(0u, mock_device->display0_content.numHwLayers);
+    EXPECT_EQ(empty_list.size(), mock_device->display0_content.numHwLayers);
+
     EXPECT_EQ(-1, mock_device->display0_content.retireFenceFd);
+}
+
+TEST_F(HWCDevice, test_hwc_gles_set_gets_layerlist)
+{
+    using namespace testing;
+
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+
+    mga::LayerList fb_list;
+    fb_list.push_back(std::make_shared<HWCDummyLayer>());
+
+    EXPECT_CALL(*mock_organizer, native_list())
+        .Times(1)
+        .WillOnce(ReturnRef(fb_list));
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
+        .Times(1);
+
+    device.commit_frame();
+
+    EXPECT_EQ(fb_list.size(), mock_device->display0_content.numHwLayers);
 }
 
 TEST_F(HWCDevice, test_hwc_gles_set_error)
 {
     using namespace testing;
 
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+    mga::LayerList fb_list;
+    fb_list.push_back(std::make_shared<HWCDummyLayer>());
+
+    EXPECT_CALL(*mock_organizer, native_list())
+        .Times(1)
+        .WillOnce(ReturnRef(fb_list));
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
         .Times(1)
         .WillOnce(Return(-1));
@@ -177,7 +240,7 @@ TEST_F(HWCDevice, test_hwc_turns_on_display_after_proc_registration)
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
         .Times(1);
 
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     testing::Mock::VerifyAndClearExpectations(mock_device.get());
 }
 
@@ -190,13 +253,13 @@ TEST_F(HWCDevice, test_hwc_throws_on_blank_error)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        mga::HWC11Device device(mock_device);
+        mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     }, std::runtime_error);
 }
 
 TEST_F(HWCDevice, test_hwc_display_is_deactivated_on_destroy)
 {
-    auto device = std::make_shared<mga::HWC11Device>(mock_device);
+    auto device = std::make_shared<mga::HWC11Device>(mock_device, mock_organizer, mock_fbdev);
 
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
         .Times(1);
@@ -214,7 +277,7 @@ TEST_F(HWCDevice, test_hwc_device_display_config)
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<2>(hwc_configs), Return(0)));
 
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
 }
 
 //apparently this can happen if the display is in the 'unplugged state'
@@ -227,7 +290,7 @@ TEST_F(HWCDevice, test_hwc_device_display_config_failure_throws)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        mga::HWC11Device device(mock_device);
+        mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
     }, std::runtime_error);
 }
 
@@ -257,7 +320,7 @@ TEST_F(HWCDevice, test_hwc_device_display_width_height)
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<2>(hwc_configs), Return(0)));
 
-    mga::HWC11Device device(mock_device);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
  
     EXPECT_CALL(*mock_device, getDisplayAttributes_interface(mock_device.get(), HWC_DISPLAY_PRIMARY,hwc_configs,_,_))
         .Times(1)
@@ -267,4 +330,36 @@ TEST_F(HWCDevice, test_hwc_device_display_width_height)
     EXPECT_EQ(size.width.as_uint32_t(),  static_cast<unsigned int>(display_width));
     EXPECT_EQ(size.height.as_uint32_t(), static_cast<unsigned int>(display_height));
 }
+}
+
+TEST_F(HWCDevice, hwc_device_reports_2_fbs_available_by_default)
+{
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+    EXPECT_EQ(2u, device.number_of_framebuffers_available());
+}
+
+TEST_F(HWCDevice, hwc_device_reports_abgr_8888_by_default)
+{
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, device.display_format());
+}
+
+TEST_F(HWCDevice, hwc_device_set_next_frontbuffer_adds_to_layerlist)
+{
+    std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    EXPECT_CALL(*mock_organizer, set_fb_target(mock_buffer))
+        .Times(1);
+ 
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+    device.set_next_frontbuffer(mock_buffer);
+}
+
+TEST_F(HWCDevice, hwc_device_set_next_frontbuffer_posts)
+{
+    std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    EXPECT_CALL(*mock_fbdev, post(mock_buffer))
+        .Times(1);
+
+    mga::HWC11Device device(mock_device, mock_organizer, mock_fbdev);
+    device.set_next_frontbuffer(mock_buffer);
 }

@@ -18,6 +18,8 @@
  */
 
 #include "hwc11_device.h"
+#include "hwc_layerlist.h"
+#include "fb_device.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -41,8 +43,12 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 }
 }
 
-mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
+mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                              std::shared_ptr<HWCLayerOrganizer> const& organizer,
+                              std::shared_ptr<FBDevice> const& fbdev)
     : hwc_device(hwc_device),
+      layer_organizer(organizer),
+      fb_device(fbdev),
       vsync_occurred(false)
 {
     callbacks.hooks.invalidate = invalidate_hook;
@@ -52,15 +58,16 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
 
+    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
+    }
+    
     if (hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
     }
 
-    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
-    }
 
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
@@ -70,13 +77,13 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
     }
 }
 
-mga::HWC11Device::~HWC11Device()
+mga::HWC11Device::~HWC11Device() noexcept
 {
-    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
     hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
+    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
 
-geom::Size mga::HWC11Device::display_size()
+geom::Size mga::HWC11Device::display_size() const
 {
     static uint32_t size_request[3] = { HWC_DISPLAY_WIDTH,
                                         HWC_DISPLAY_HEIGHT,
@@ -91,6 +98,18 @@ geom::Size mga::HWC11Device::display_size()
     return geom::Size{geom::Width{size_values[0]}, geom::Height{size_values[1]}};
 }
 
+geom::PixelFormat mga::HWC11Device::display_format() const
+{
+    return geom::PixelFormat::abgr_8888;
+}
+
+unsigned int mga::HWC11Device::number_of_framebuffers_available() const
+{
+    //note: the default for hwc devices is 2 framebuffers. However, the hwcomposer api allows for the module to give
+    //us a hint to triple buffer. Taking this hint is currently not supported.
+    return 2u;
+}
+ 
 void mga::HWC11Device::notify_vsync()
 {
     std::unique_lock<std::mutex> lk(vsync_wait_mutex);
@@ -108,18 +127,34 @@ void mga::HWC11Device::wait_for_vsync()
     }
 }
 
+void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& buffer)
+{
+    layer_organizer->set_fb_target(buffer);
+    fb_device->post(buffer);
+}
+
 void mga::HWC11Device::commit_frame()
 {
-    /* gles only for now */
-    hwc_display_contents_1_t displays;
-    hwc_display_contents_1_t* disp;
-    displays.numHwLayers = 0;
-    displays.retireFenceFd = -1;
-    disp = &displays;
+    auto& list = layer_organizer->native_list();
 
-    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &disp);
+    auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size());
+    auto hwc_display_raw = static_cast<hwc_display_contents_1_t*>( ::operator new( struct_size));
+    auto hwc_display = std::unique_ptr<hwc_display_contents_1_t>(hwc_display_raw); 
+
+    auto i = 0u;
+    for( auto& layer : list)
+    {
+        hwc_display->hwLayers[i++] = *layer;
+    }
+    hwc_display->numHwLayers = list.size();
+    hwc_display->retireFenceFd = -1;
+
+    auto rc = hwc_device->set(hwc_device.get(), HWC_NUM_DISPLAY_TYPES, &hwc_display_raw);
     if (rc != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
+
+    if (hwc_display->retireFenceFd > 0)
+        close(hwc_display->retireFenceFd);
 }

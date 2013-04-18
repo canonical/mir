@@ -9,17 +9,21 @@ add_library(
 
   android_platform.cpp
   android_buffer_allocator.cpp
-  android_buffer.cpp
+  buffer.cpp
   android_buffer_handle.cpp
   android_display.cpp
   hwc_display.cpp
+  hwc_layerlist.cpp
   hwc11_device.cpp
   android_hwc_factory.cpp
   android_display_allocator.cpp
   android_framebuffer_window.cpp
   android_display_factory.cpp
   android_alloc_adaptor.cpp
-  fb_swapper.cpp
+  server_render_window.cpp
+  default_framebuffer_factory.cpp
+  fb_simple_swapper.cpp
+  default_fb_device.cpp
 )
 
 target_link_libraries(

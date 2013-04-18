@@ -100,7 +100,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
                 mir_buffer_usage_hardware
             };
 
-            MirSurface* surf = mir_surface_create_sync(connection, &request_params);
+            MirSurface* surf = mir_connection_create_surface_sync(connection, &request_params);
 
             /* Ask for the first buffer (should succeed) */
             mir_surface_next_buffer_sync(surf);

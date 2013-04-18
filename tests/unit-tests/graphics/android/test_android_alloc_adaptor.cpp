@@ -36,7 +36,8 @@ class AdaptorICSTest : public ::testing::Test
 public:
     AdaptorICSTest()
      : fb_usage_flags(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB),
-       hw_usage_flags(GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER)
+       hw_usage_flags(GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER),
+       sw_usage_flags(GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN)
     {}
 
     virtual void SetUp()
@@ -69,8 +70,9 @@ public:
     geom::Stride stride;
     std::shared_ptr<mga::AndroidBufferHandle> buffer_data;
     mga::BufferUsage usage;
-    const unsigned int fb_usage_flags;
-    const unsigned int hw_usage_flags;
+    unsigned int const fb_usage_flags;
+    unsigned int const hw_usage_flags;
+    unsigned int const sw_usage_flags;
 };
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
@@ -168,13 +170,22 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_dimension_conversion)
     alloc_adaptor->alloc_buffer(size, pf, usage );
 }
 
-TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion)
+TEST_F(AdaptorICSTest, adaptor_gralloc_hw_usage_conversion)
 {
     using namespace testing;
     EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, hw_usage_flags, _, _));
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     alloc_adaptor->alloc_buffer(size, pf, usage );
+}
+
+TEST_F(AdaptorICSTest, adaptor_gralloc_sw_usage_conversion)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_alloc_device, alloc_interface( _, _, _, _, sw_usage_flags, _, _));
+    EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
+
+    alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_software);
 }
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles)
@@ -234,9 +245,9 @@ TEST_F(AdaptorICSTest, handle_buffer_is_correct)
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    EXPECT_EQ(buffer_cast->handle, mock_alloc_device->buffer_handle);
+    EXPECT_EQ(buffer->handle, mock_alloc_device->buffer_handle);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_abgr_8888)
@@ -246,9 +257,9 @@ TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_abgr_8888)
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    EXPECT_EQ(buffer_cast->format, HAL_PIXEL_FORMAT_RGBA_8888);
+    EXPECT_EQ(buffer->format, HAL_PIXEL_FORMAT_RGBA_8888);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_xbgr_8888)
@@ -258,9 +269,9 @@ TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_xbgr_8888)
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     auto handle = alloc_adaptor->alloc_buffer(size, geom::PixelFormat::xbgr_8888, usage);
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    EXPECT_EQ(buffer_cast->format, HAL_PIXEL_FORMAT_RGBX_8888);
+    EXPECT_EQ(buffer->format, HAL_PIXEL_FORMAT_RGBX_8888);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
@@ -270,9 +281,9 @@ TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    EXPECT_EQ((unsigned int) buffer_cast->usage, hw_usage_flags);
+    EXPECT_EQ((unsigned int) buffer->usage, hw_usage_flags);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_fb)
@@ -285,9 +296,9 @@ TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_fb)
     EXPECT_CALL(*mock_alloc_device, free_interface( _, _) );
 
     auto handle = alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    EXPECT_EQ((unsigned int) buffer_cast->usage, fb_usage_flags);
+    EXPECT_EQ((unsigned int) buffer->usage, fb_usage_flags);
 }
 
 TEST_F(AdaptorICSTest, handle_has_reffable_incref)
@@ -296,11 +307,11 @@ TEST_F(AdaptorICSTest, handle_has_reffable_incref)
 
     struct android_native_base_t *native_base=NULL;
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer_cast->common.incRef);
+    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer->common.incRef);
     EXPECT_NO_THROW({
-        buffer_cast->common.incRef(native_base);
+        buffer->common.incRef(native_base);
     });
 }
 
@@ -310,11 +321,11 @@ TEST_F(AdaptorICSTest, handle_has_reffable_decref)
 
     struct android_native_base_t *native_base=NULL;
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer_cast->common.decRef);
+    ASSERT_NE( (void (*)(android_native_base_t*)) NULL, buffer->common.decRef);
     EXPECT_NO_THROW({
-        buffer_cast->common.decRef(native_base);
+        buffer->common.decRef(native_base);
     });
 }
 
@@ -324,9 +335,9 @@ TEST_F(AdaptorICSTest, handle_has_right_magic)
     int magic = ANDROID_NATIVE_MAKE_CONSTANT('_','b','f','r');  /* magic value shared by JB and ICS */
 
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    EXPECT_EQ( buffer_cast->common.magic, magic);
+    EXPECT_EQ( buffer->common.magic, magic);
 }
 
 TEST_F(AdaptorICSTest, handle_has_version)
@@ -335,7 +346,7 @@ TEST_F(AdaptorICSTest, handle_has_version)
     int version = 96;  /* version value shared by JB and ICS */
 
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage );
-    ANativeWindowBuffer *buffer_cast = (ANativeWindowBuffer*) handle->get_egl_client_buffer();
+    auto buffer = handle->native_buffer_handle();
 
-    EXPECT_EQ( buffer_cast->common.version, version);
+    EXPECT_EQ( buffer->common.version, version);
 }
