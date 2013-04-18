@@ -663,18 +663,23 @@ TEST_F(GBMDisplayTest, resume_sets_drm_master)
     display->resume();
 }
 
-TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws)
+TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_drm, drmDropMaster(_))
-        .WillOnce(Return(-1));
+        .WillOnce(SetErrnoAndReturn(EACCES, -1));
 
     EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .WillOnce(Return(-1));
+        .WillOnce(SetErrnoAndReturn(EPERM, -1));
 
-    auto platform = create_platform();
-    auto display = std::make_shared<mgg::GBMDisplay>(platform, null_report);
+    EXPECT_CALL(*mock_report, report_drm_master_failure(EACCES));
+    EXPECT_CALL(*mock_report, report_drm_master_failure(EPERM));
+
+    auto platform = std::make_shared<mgg::GBMPlatform>(
+                        mock_report,
+                        std::make_shared<mtd::NullVirtualTerminal>());
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
 
     EXPECT_THROW({
         display->pause();

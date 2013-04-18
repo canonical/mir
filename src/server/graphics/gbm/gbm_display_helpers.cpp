@@ -17,6 +17,7 @@
  */
 
 #include "gbm_display_helpers.h"
+#include "mir/graphics/display_report.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -32,6 +33,12 @@ namespace mggh = mir::graphics::gbm::helpers;
 /*************
  * DRMHelper *
  *************/
+
+mggh::DRMHelper::DRMHelper(std::shared_ptr<DisplayReport> const& report)
+    : fd{-1},
+      report{report}
+{
+}
 
 void mggh::DRMHelper::setup()
 {
@@ -109,10 +116,11 @@ void mggh::DRMHelper::drop_master() const
 
     if (ret < 0)
     {
+        report->report_drm_master_failure(errno);
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to drop DRM master"))
-                    << boost::errinfo_errno(ret));
+                    << boost::errinfo_errno(errno));
     }
 }
 
@@ -129,10 +137,11 @@ void mggh::DRMHelper::set_master() const
 
     if (ret < 0)
     {
+        report->report_drm_master_failure(errno);
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to set DRM master"))
-                    << boost::errinfo_errno(ret));
+                    << boost::errinfo_errno(errno));
     }
 }
 

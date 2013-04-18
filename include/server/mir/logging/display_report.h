@@ -44,6 +44,9 @@ class DisplayReport : public graphics::DisplayReport
     virtual void report_successful_egl_buffer_swap_on_construction();
     virtual void report_successful_drm_mode_set_crtc_on_construction();
     virtual void report_successful_display_construction();
+    virtual void report_drm_master_failure(int error);
+    virtual void report_vt_switch_away_failure();
+    virtual void report_vt_switch_back_failure();
 
   protected:
     DisplayReport(const DisplayReport&) = delete;

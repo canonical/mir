@@ -21,6 +21,8 @@
 
 #include "virtual_terminal.h"
 
+#include <memory>
+
 #include <linux/vt.h>
 #include <unistd.h>
 
@@ -28,13 +30,16 @@ namespace mir
 {
 namespace graphics
 {
+
+class DisplayReport;
+
 namespace gbm
 {
 
 class LinuxVirtualTerminal : public VirtualTerminal
 {
 public:
-    LinuxVirtualTerminal();
+    LinuxVirtualTerminal(std::shared_ptr<DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
 
     void set_graphics_mode();
@@ -54,6 +59,7 @@ private:
         int const fd_;
     };
 
+    std::shared_ptr<DisplayReport> const report;
     FDWrapper const vt_fd;
     int prev_kd_mode;
     struct vt_mode prev_vt_mode;

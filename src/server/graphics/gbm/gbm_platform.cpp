@@ -57,9 +57,10 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 
 mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
                               std::shared_ptr<VirtualTerminal> const& vt)
-    : listener(listener),
+    : drm{listener},
+      listener{listener},
       vt{vt},
-      native_display(0)
+      native_display{0}
 {
     drm.setup();
     gbm.setup(drm);
@@ -102,5 +103,5 @@ std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport>
 {
     return std::make_shared<mgg::GBMPlatform>(
         report,
-        std::make_shared<mgg::LinuxVirtualTerminal>());
+        std::make_shared<mgg::LinuxVirtualTerminal>(report));
 }

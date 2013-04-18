@@ -17,6 +17,7 @@
  */
 
 #include "linux_virtual_terminal.h"
+#include "mir/graphics/display_report.h"
 #include "mir/main_loop.h"
 
 #include <boost/throw_exception.hpp>
@@ -96,8 +97,10 @@ int open_vt(int vt_number)
 
 }
 
-mgg::LinuxVirtualTerminal::LinuxVirtualTerminal()
-    : vt_fd{open_vt(find_active_vt_number())},
+mgg::LinuxVirtualTerminal::LinuxVirtualTerminal(
+    std::shared_ptr<DisplayReport> const& report)
+    : report{report},
+      vt_fd{open_vt(find_active_vt_number())},
       prev_kd_mode{0},
       prev_vt_mode(),
       active{true}
@@ -149,7 +152,8 @@ void mgg::LinuxVirtualTerminal::register_switch_handlers(
         {
             if (!active)
             {
-                switch_back();
+                if (!switch_back())
+                    report->report_vt_switch_back_failure();
                 ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
                 active = true;
             }
@@ -167,6 +171,7 @@ void mgg::LinuxVirtualTerminal::register_switch_handlers(
                 else
                 {
                     action = disallow_switch;
+                    report->report_vt_switch_away_failure();
                 }
 
                 ioctl(vt_fd.fd(), VT_RELDISP, action);
