@@ -27,6 +27,7 @@
 
 #include <memory>
 #include <list>
+#include <functional>
 
 namespace mir
 {
@@ -58,6 +59,7 @@ public:
     void tear_down_all();
     Result shutdown_server_process();
     void kill_client_processes();
+    void run_in_test_process(std::function<void()> const& run_code);
 
 private:
     std::shared_ptr<Process> server_process;

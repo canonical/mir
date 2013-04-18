@@ -310,7 +310,7 @@ TEST_F(ShellSurface, destroy_throw_behavior)
     });
 }
 
-TEST_F(ShellSurface, shutdown_throw_behavior)
+TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
@@ -318,13 +318,13 @@ TEST_F(ShellSurface, shutdown_throw_behavior)
             null_input_channel);
 
     EXPECT_NO_THROW({
-        test.shutdown();
+        test.force_requests_to_complete();
     });
 
     surface_builder.reset_surface();
 
     EXPECT_NO_THROW({
-        test.shutdown();
+        test.force_requests_to_complete();
     });
 }
 

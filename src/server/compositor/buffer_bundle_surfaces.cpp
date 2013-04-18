@@ -67,7 +67,7 @@ geom::Size mc::BufferBundleSurfaces::bundle_size()
     return size;
 }
 
-void mc::BufferBundleSurfaces::shutdown()
+void mc::BufferBundleSurfaces::force_requests_to_complete()
 {
-    swapper->shutdown();
+    swapper->force_requests_to_complete();
 }

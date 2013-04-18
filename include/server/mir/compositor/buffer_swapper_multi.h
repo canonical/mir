@@ -47,7 +47,7 @@ public:
     std::shared_ptr<Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
 
-    void shutdown();
+    void force_requests_to_complete();
 
 private:
     template<class T>
@@ -60,6 +60,7 @@ private:
     std::deque<std::shared_ptr<Buffer>> compositor_queue;
     unsigned int in_use_by_client;
     unsigned int const swapper_size;
+    int clients_trying_to_acquire;
 };
 
 }

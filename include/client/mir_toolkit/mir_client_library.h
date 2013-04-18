@@ -114,21 +114,22 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
  *   \return                         A handle that can be passed to
  *                                   mir_wait_for
  */
-MirWaitHandle *mir_surface_create(
+MirWaitHandle *mir_connection_create_surface(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
     mir_surface_lifecycle_callback callback,
     void *context);
 
 /**
- * Create a surface like in mir_surface_create(), but also wait for creation
- * to complete and return the resulting surface.
+ * Create a surface like in mir_connection_create_surface(), but also wait for
+ * creation to complete and return the resulting surface.
  *   \param [in] connection  The connection
  *   \param [in] params      Parameters describing the desired surface
  *   \return                 The resulting surface
  */
-MirSurface *mir_surface_create_sync(MirConnection *connection,
-                                    MirSurfaceParameters const *params);
+MirSurface *mir_connection_create_surface_sync(
+    MirConnection *connection,
+    MirSurfaceParameters const *params);
 
 /**
  * Set the event handler to be called when events arrive for a surface.
@@ -245,7 +246,7 @@ void mir_wait_for(MirWaitHandle *wait_handle);
  *   \param [in] surface  The surface
  *   \return              An internal ID that identifies the surface
  */
-int mir_debug_surface_id(MirSurface *surface);
+int mir_surface_get_id(MirSurface *surface);
 
 /**
  * Set the type (purpose) of a surface. This is not guaranteed to always work

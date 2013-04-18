@@ -45,9 +45,9 @@ ms::Surface::Surface(
     assert(change_callback);
 }
 
-void ms::Surface::shutdown()
+void ms::Surface::force_requests_to_complete()
 {
-    buffer_bundle->shutdown();
+    buffer_bundle->force_requests_to_complete();
 }
 
 ms::Surface::~Surface()
