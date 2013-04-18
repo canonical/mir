@@ -31,6 +31,8 @@ namespace graphics
 namespace android
 {
 class HWC11Device;
+class HWCLayerOrganizer;
+class FBDevice;
 
 struct HWCCallbacks
 {
@@ -41,17 +43,25 @@ struct HWCCallbacks
 class HWC11Device : public HWCDevice
 {
 public:
-    explicit HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
-    ~HWC11Device();
+    HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                std::shared_ptr<HWCLayerOrganizer> const& organizer,
+                std::shared_ptr<FBDevice> const& fbdev);
+    ~HWC11Device() noexcept;
 
-    geometry::Size display_size(); 
+    geometry::Size display_size() const; 
+    geometry::PixelFormat display_format() const;
+    unsigned int number_of_framebuffers_available() const;
+    void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
+ 
     void wait_for_vsync();
     void commit_frame();
     void notify_vsync();
 
 private:
     HWCCallbacks callbacks;
-    std::shared_ptr<hwc_composer_device_1> hwc_device;
+    std::shared_ptr<hwc_composer_device_1> const hwc_device;
+    std::shared_ptr<HWCLayerOrganizer> const layer_organizer;
+    std::shared_ptr<FBDevice> const fb_device;
     std::mutex vsync_wait_mutex;
     std::condition_variable vsync_trigger;
     bool vsync_occurred;
