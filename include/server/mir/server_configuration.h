@@ -31,6 +31,10 @@ namespace frontend
 class Communicator;
 class Shell;
 }
+namespace shell
+{
+class SessionContainer;
+}
 namespace graphics
 {
 class Display;
@@ -47,12 +51,14 @@ class ServerConfiguration
 {
 public:
     virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
-    virtual std::shared_ptr<frontend::Shell> the_frontend_shell() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
     virtual std::shared_ptr<MainLoop> the_main_loop() = 0;
+    virtual std::shared_ptr<shell::SessionContainer>  the_shell_session_container() = 0;
 
+    // TODO no longer belongs but needed by mtc::SessionManagementContext
+    virtual std::shared_ptr<frontend::Shell> the_frontend_shell() = 0;
 protected:
     ServerConfiguration() = default;
     virtual ~ServerConfiguration() {}
