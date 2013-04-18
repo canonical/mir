@@ -25,21 +25,18 @@
 
 namespace mir
 {
-namespace frontend
-{
-class Session;
-}
-
 namespace shell
 {
+
+class Session;
 
 class SessionContainer
 {
 public:
-    virtual void insert_session(std::shared_ptr<frontend::Session> const& session) = 0;
-    virtual void remove_session(std::shared_ptr<frontend::Session> const& session) = 0;
+    virtual void insert_session(std::shared_ptr<Session> const& session) = 0;
+    virtual void remove_session(std::shared_ptr<Session> const& session) = 0;
 
-    virtual void for_each(std::function<void(std::shared_ptr<frontend::Session> const&)> f) const = 0;
+    virtual void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const = 0;
 
 protected:
     SessionContainer() = default;

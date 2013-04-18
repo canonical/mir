@@ -26,6 +26,7 @@ namespace mir
 namespace shell
 {
 class SessionContainer;
+class Session;
 
 class RegistrationOrderFocusSequence : public FocusSequence
 {
@@ -33,9 +34,9 @@ public:
     explicit RegistrationOrderFocusSequence(std::shared_ptr<SessionContainer> const& session_container);
     virtual ~RegistrationOrderFocusSequence() {}
 
-    std::shared_ptr<frontend::Session> successor_of(std::shared_ptr<frontend::Session> const& focused_app) const;
-    std::shared_ptr<frontend::Session> predecessor_of(std::shared_ptr<frontend::Session> const& focused_app) const;
-    std::shared_ptr<frontend::Session> default_focus() const;
+    std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) const;
+    std::shared_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) const;
+    std::shared_ptr<Session> default_focus() const;
 
 protected:
     RegistrationOrderFocusSequence(const RegistrationOrderFocusSequence&) = delete;

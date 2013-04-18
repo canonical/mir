@@ -23,22 +23,20 @@
 
 namespace mir
 {
-namespace frontend
-{
-class Session;
-}
 
 namespace shell
 {
+
+class Session;
 
 class FocusSequence
 {
 public:
     virtual ~FocusSequence() {}
 
-    virtual std::shared_ptr<frontend::Session> successor_of(std::shared_ptr<frontend::Session> const& focused_app) const = 0;
-    virtual std::shared_ptr<frontend::Session> predecessor_of(std::shared_ptr<frontend::Session> const& focused_app) const = 0;
-    virtual std::shared_ptr<frontend::Session> default_focus() const = 0;
+    virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const& focused_app) const = 0;
+    virtual std::shared_ptr<Session> predecessor_of(std::shared_ptr<Session> const& focused_app) const = 0;
+    virtual std::shared_ptr<Session> default_focus() const = 0;
 
 protected:
     FocusSequence() = default;
