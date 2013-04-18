@@ -20,6 +20,7 @@
 
 #include "fb_device.h"
 #include "android_buffer.h"
+#include "android_format_conversion-inl.h"
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>
@@ -50,15 +51,7 @@ geom::Size mga::FBDevice::display_size() const
 
 geom::PixelFormat mga::FBDevice::display_format() const
 {
-    if (fb_device->format == HAL_PIXEL_FORMAT_RGBA_8888)
-    {
-        return geom::PixelFormat::abgr_8888;
-    }
-    if (fb_device->format == HAL_PIXEL_FORMAT_BGRA_8888)
-    {
-        return geom::PixelFormat::argb_8888;
-    }
-    return geom::PixelFormat::invalid; 
+    return to_mir_format(fb_device->format);
 }
 
 unsigned int mga::FBDevice::number_of_framebuffers_available() const

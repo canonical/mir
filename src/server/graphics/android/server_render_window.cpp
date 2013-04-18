@@ -17,11 +17,12 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/compositor/buffer.h"
 #include "server_render_window.h"
 #include "display_support_provider.h"
 #include "fb_swapper.h"
 #include "android_buffer.h"
-#include "mir/compositor/buffer.h"
+#include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -37,7 +38,7 @@ mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> cons
                                             std::shared_ptr<mga::DisplaySupportProvider> const& display_poster)
     : swapper(swapper),
       poster(display_poster),
-      format(to_android_format(poster->display_format()))
+      format(mga::to_android_format(poster->display_format()))
 {
 }
 
@@ -89,18 +90,5 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             return 0; 
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
-    }
-}
-
-int mga::ServerRenderWindow::to_android_format(geom::PixelFormat format)
-{
-    switch (format)
-    {
-        case geom::PixelFormat::abgr_8888:
-            return HAL_PIXEL_FORMAT_RGBA_8888;
-        case geom::PixelFormat::argb_8888:
-            return HAL_PIXEL_FORMAT_BGRA_8888;
-        default:
-            BOOST_THROW_EXCEPTION(std::runtime_error("pixel format of fb is unknown!"));
     }
 }
