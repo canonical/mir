@@ -18,12 +18,13 @@
 
 #include "mir/frontend/server.h"
 
-mir::frontend::Server::~Server() noexcept
+using namespace mir::frontend;
+
+Server::~Server() noexcept
 {
 }
 
-void mir::frontend::Server::set_event_sink(
-    std::weak_ptr<mir::EventSink> const& sink)
+void Server::set_event_sink(std::weak_ptr<mir::EventSink> const& sink)
 {
     event_sink = sink;
 }
