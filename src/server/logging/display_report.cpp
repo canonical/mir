@@ -69,7 +69,7 @@ void ml::DisplayReport::report_drm_master_failure(int error)
     std::stringstream ss;
     ss << "Failed to change ownership of DRM master (error: " << strerror(error) << ").";
     if (error == EPERM || error == EACCES)
-        ss << " Try running mir with root priveleges.";
+        ss << " Try running Mir with root privileges.";
 
     logger->log<Logger::warning>(ss.str(), component());
 }
