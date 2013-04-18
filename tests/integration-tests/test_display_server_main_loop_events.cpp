@@ -74,8 +74,8 @@ public:
 
     void register_pause_resume_handlers(
         mir::MainLoop& main_loop,
-        std::function<bool()> const& pause_handler,
-        std::function<bool()> const& resume_handler)
+        mg::DisplayPauseHandler const& pause_handler,
+        mg::DisplayResumeHandler const& resume_handler)
     {
         main_loop.register_signal_handler(
             {pause_signal},

@@ -58,8 +58,8 @@ public:
 
     void register_pause_resume_handlers(
         MainLoop& main_loop,
-        std::function<bool()> const& pause_handler,
-        std::function<bool()> const& resume_handler);
+        DisplayPauseHandler const& pause_handler,
+        DisplayResumeHandler const& resume_handler);
 
     void pause();
     void resume();

@@ -134,8 +134,8 @@ public:
         return null_configuration;
     }
     void register_pause_resume_handlers(mir::MainLoop&,
-                                        std::function<bool()> const&,
-                                        std::function<bool()> const&)
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
     {
     }
     void pause() {}
