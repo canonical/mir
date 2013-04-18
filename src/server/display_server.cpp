@@ -28,11 +28,36 @@
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
 
+#include <stdexcept>
+
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+
+namespace
+{
+
+class ScopedAction
+{
+public:
+    ScopedAction(std::function<void()> const& enter,
+                 std::function<void()> const& leave)
+        : leave{leave}
+    {
+        enter();
+    }
+
+    ~ScopedAction() { leave(); }
+
+    void clear() { leave = []{}; }
+
+private:
+    std::function<void()> leave;
+};
+
+}
 
 struct mir::DisplayServer::Private
 {
@@ -46,16 +71,50 @@ struct mir::DisplayServer::Private
     {
         display->register_pause_resume_handlers(
             *main_loop,
-            [this]
-            {
-                compositor->stop();
-                display->pause();
-            },
-            [this]
-            {
-                display->resume();
-                compositor->start();
-            });
+            [this] { return pause(); },
+            [this] { return resume(); });
+    }
+
+    bool pause()
+    {
+        try
+        {
+            ScopedAction comp{[this] { compositor->stop(); },
+                              [this] { compositor->start(); }};
+
+            ScopedAction disp{[this] { display->pause(); },
+                              [this] { display->resume(); }};
+
+            comp.clear();
+            disp.clear();
+        }
+        catch(std::runtime_error const&)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool resume()
+    {
+        try
+        {
+            ScopedAction comp{[this] { display->resume(); },
+                              [this] { display->pause(); }};
+
+            ScopedAction disp{[this] { compositor->start(); },
+                              [this] { compositor->stop(); }};
+
+            comp.clear();
+            disp.clear();
+        }
+        catch(std::runtime_error const&)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     std::shared_ptr<mg::Display> display;

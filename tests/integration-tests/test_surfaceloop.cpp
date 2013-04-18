@@ -134,8 +134,8 @@ public:
         return null_configuration;
     }
     void register_pause_resume_handlers(mir::MainLoop&,
-                                        std::function<void()> const&,
-                                        std::function<void()> const&)
+                                        std::function<bool()> const&,
+                                        std::function<bool()> const&)
     {
     }
     void pause() {}

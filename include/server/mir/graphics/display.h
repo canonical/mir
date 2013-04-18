@@ -45,8 +45,8 @@ public:
 
     virtual void register_pause_resume_handlers(
         MainLoop& main_loop,
-        std::function<void()> const& pause_handler,
-        std::function<void()> const& resume_handler) = 0;
+        std::function<bool()> const& pause_handler,
+        std::function<bool()> const& resume_handler) = 0;
 
     virtual void pause() = 0;
     virtual void resume() = 0;

@@ -140,24 +140,36 @@ void mgg::LinuxVirtualTerminal::set_graphics_mode()
 
 void mgg::LinuxVirtualTerminal::register_switch_handlers(
     MainLoop& main_loop,
-    std::function<void()> const& switch_away,
-    std::function<void()> const& switch_back)
+    std::function<bool()> const& switch_away,
+    std::function<bool()> const& switch_back)
 {
     main_loop.register_signal_handler(
         {SIGUSR1},
         [this, switch_away, switch_back](int)
         {
-            active = !active;
-            if (active)
+            if (!active)
             {
-                static int const allow_switch{2};
                 switch_back();
-                ioctl(vt_fd.fd(), VT_RELDISP, allow_switch);
+                ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
+                active = true;
             }
             else
             {
-                switch_away();
-                ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
+                static int const disallow_switch{0};
+                static int const allow_switch{1};
+                int action;
+
+                if (switch_away())
+                {
+                    action = allow_switch;
+                    active = false;
+                }
+                else
+                {
+                    action = disallow_switch;
+                }
+
+                ioctl(vt_fd.fd(), VT_RELDISP, action);
             }
         });
 

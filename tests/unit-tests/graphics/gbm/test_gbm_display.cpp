@@ -60,8 +60,8 @@ public:
     MOCK_METHOD0(set_graphics_mode, void());
     MOCK_METHOD3(register_switch_handlers,
                  void(mir::MainLoop&,
-                      std::function<void()> const&,
-                      std::function<void()> const&));
+                      std::function<bool()> const&,
+                      std::function<bool()> const&));
 };
 
 class GBMDisplayTest : public ::testing::Test

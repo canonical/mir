@@ -107,8 +107,8 @@ void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const&
 
 void mgg::GBMDisplay::register_pause_resume_handlers(
     MainLoop& main_loop,
-    std::function<void()> const& pause_handler,
-    std::function<void()> const& resume_handler)
+    std::function<bool()> const& pause_handler,
+    std::function<bool()> const& resume_handler)
 {
     platform->vt->register_switch_handlers(main_loop, pause_handler, resume_handler);
 }
