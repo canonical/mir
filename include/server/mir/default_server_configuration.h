@@ -110,10 +110,10 @@ public:
     /** @name graphics configuration - internal
      * configurable interfaces implemented and used within graphics
      *  @{ */
-    virtual std::shared_ptr<graphics::Platform> the_graphics_platform();
+    virtual std::shared_ptr<graphics::Platform>          the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<graphics::Renderer> the_renderer();
-    virtual std::shared_ptr<graphics::ViewableArea> the_viewable_area();
+    virtual std::shared_ptr<graphics::Renderer>          the_renderer();
+    virtual std::shared_ptr<graphics::ViewableArea>      the_viewable_area();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -125,7 +125,7 @@ public:
     /** @name compositor configuration - internal
      * configurable interfaces implemented and used within compositor
      *  @{ */
-    virtual std::shared_ptr<compositor::CompositingStrategy> the_compositing_strategy();
+    virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     /** @} */
 
@@ -133,15 +133,15 @@ public:
      * dependencies of compositor on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<compositor::Renderables> the_renderables();
+    virtual std::shared_ptr<compositor::Renderables>            the_renderables();
     /** @} */
 
     /** @name frontend configuration - dependencies
      * dependencies of frontend on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<frontend::SessionMediatorReport> the_session_mediator_report();
+    virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
-    virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
+    virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     /** @} */
 
     /** @name shell configuration - internal

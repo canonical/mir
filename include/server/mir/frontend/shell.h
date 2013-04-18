@@ -45,7 +45,7 @@ public:
                                          SurfaceCreationParameters const& params) = 0;
 
     // TODO - this interface shouldn't be used DisplayServer and
-    // TODO - it shouldn't contain this method
+    // TODO - it shouldn't contain this method (which DS needs)
     virtual void force_requests_to_complete() = 0;
 
 protected:
