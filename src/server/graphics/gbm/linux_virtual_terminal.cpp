@@ -30,82 +30,23 @@
 #include <stdexcept>
 #include <csignal>
 
-#include <fcntl.h>
 #include <linux/vt.h>
 #include <linux/kd.h>
-#include <sys/ioctl.h>
+#include <fcntl.h>
 
 namespace mgg = mir::graphics::gbm;
 
-namespace
-{
-
-int find_active_vt_number()
-{
-    static std::vector<std::string> const paths{"/dev/tty", "/dev/tty0"};
-    int active_vt{-1};
-
-    for (auto& p : paths)
-    {
-        auto fd = open(p.c_str(), O_RDONLY, 0);
-        if (fd < 0)
-            fd = open(p.c_str(), O_WRONLY, 0);
-
-        if (fd >= 0)
-        {
-            struct vt_stat vts;
-            auto status = ioctl(fd, VT_GETSTATE, &vts);
-            close(fd);
-
-            if (status >= 0)
-            {
-                active_vt = vts.v_active;
-                break;
-            }
-        }
-    }
-
-    if (active_vt < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to find the current VT"));
-    }
-
-    return active_vt;
-}
-
-int open_vt(int vt_number)
-{
-    std::stringstream vt_path_stream;
-    vt_path_stream << "/dev/tty" << vt_number;
-
-    std::string const active_vt_path{vt_path_stream.str()};
-
-    auto vt_fd = open(active_vt_path.c_str(), O_RDONLY | O_NDELAY, 0);
-
-    if (vt_fd < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to open current VT"))
-                    << boost::errinfo_file_name(active_vt_path)
-                    << boost::errinfo_errno(errno));
-    }
-
-    return vt_fd;
-}
-
-}
-
 mgg::LinuxVirtualTerminal::LinuxVirtualTerminal(
+    std::shared_ptr<VTFileOperations> const& fops,
     std::shared_ptr<DisplayReport> const& report)
-    : report{report},
-      vt_fd{open_vt(find_active_vt_number())},
+    : fops{fops},
+      report{report},
+      vt_fd{fops, open_vt(find_active_vt_number())},
       prev_kd_mode{0},
       prev_vt_mode(),
       active{true}
 {
-    if (ioctl(vt_fd.fd(), KDGETMODE, &prev_kd_mode) < 0)
+    if (fops->ioctl(vt_fd.fd(), KDGETMODE, &prev_kd_mode) < 0)
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
@@ -113,7 +54,7 @@ mgg::LinuxVirtualTerminal::LinuxVirtualTerminal(
                     << boost::errinfo_errno(errno));
     }
 
-    if (ioctl(vt_fd.fd(), VT_GETMODE, &prev_vt_mode) < 0)
+    if (fops->ioctl(vt_fd.fd(), VT_GETMODE, &prev_vt_mode) < 0)
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
@@ -125,14 +66,14 @@ mgg::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
 {
     if (vt_fd.fd() > 0)
     {
-        ioctl(vt_fd.fd(), KDSETMODE, prev_kd_mode);
-        ioctl(vt_fd.fd(), VT_SETMODE, &prev_vt_mode);
+        fops->ioctl(vt_fd.fd(), KDSETMODE, prev_kd_mode);
+        fops->ioctl(vt_fd.fd(), VT_SETMODE, &prev_vt_mode);
     }
 }
 
 void mgg::LinuxVirtualTerminal::set_graphics_mode()
 {
-    if (ioctl(vt_fd.fd(), KDSETMODE, KD_GRAPHICS) < 0)
+    if (fops->ioctl(vt_fd.fd(), KDSETMODE, KD_GRAPHICS) < 0)
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
@@ -154,7 +95,7 @@ void mgg::LinuxVirtualTerminal::register_switch_handlers(
             {
                 if (!switch_back())
                     report->report_vt_switch_back_failure();
-                ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
+                fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
                 active = true;
             }
             else
@@ -174,7 +115,7 @@ void mgg::LinuxVirtualTerminal::register_switch_handlers(
                     report->report_vt_switch_away_failure();
                 }
 
-                ioctl(vt_fd.fd(), VT_RELDISP, action);
+                fops->ioctl(vt_fd.fd(), VT_RELDISP, action);
             }
         });
 
@@ -187,11 +128,66 @@ void mgg::LinuxVirtualTerminal::register_switch_handlers(
         0
     };
 
-    if (ioctl(vt_fd.fd(), VT_SETMODE, &vtm) < 0)
+    if (fops->ioctl(vt_fd.fd(), VT_SETMODE, &vtm) < 0)
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to set the current VT mode"))
                     << boost::errinfo_errno(errno));
     }
+}
+
+int mgg::LinuxVirtualTerminal::find_active_vt_number()
+{
+    static std::vector<std::string> const paths{"/dev/tty", "/dev/tty0"};
+    int active_vt{-1};
+
+    for (auto& p : paths)
+    {
+        auto fd = fops->open(p.c_str(), O_RDONLY);
+        if (fd < 0)
+            fd = fops->open(p.c_str(), O_WRONLY);
+
+        if (fd >= 0)
+        {
+            struct vt_stat vts;
+            auto status = fops->ioctl(fd, VT_GETSTATE, &vts);
+            fops->close(fd);
+
+            if (status >= 0)
+            {
+                active_vt = vts.v_active;
+                break;
+            }
+        }
+    }
+
+    if (active_vt < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to find the current VT"));
+    }
+
+    return active_vt;
+}
+
+int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
+{
+    std::stringstream vt_path_stream;
+    vt_path_stream << "/dev/tty" << vt_number;
+
+    std::string const active_vt_path{vt_path_stream.str()};
+
+    auto vt_fd = fops->open(active_vt_path.c_str(), O_RDONLY | O_NDELAY);
+
+    if (vt_fd < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to open current VT"))
+                    << boost::errinfo_file_name(active_vt_path)
+                    << boost::errinfo_errno(errno));
+    }
+
+    return vt_fd;
 }

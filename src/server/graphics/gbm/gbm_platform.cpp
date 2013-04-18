@@ -31,6 +31,9 @@
 
 #include <stdexcept>
 
+#include <fcntl.h>
+#include <sys/ioctl.h>
+
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mgeglm = mg::egl::mesa;
@@ -39,6 +42,7 @@ namespace mc = mir::compositor;
 
 namespace
 {
+
 struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 {
     GBMPlatformIPCPackage(int drm_auth_fd)
@@ -50,6 +54,29 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
     {
         if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
             drmClose(ipc_fds[0]);
+    }
+};
+
+struct RealVTFileOperations : public mgg::VTFileOperations
+{
+    int open(char const* pathname, int flags)
+    {
+        return ::open(pathname, flags);
+    }
+
+    int close(int fd)
+    {
+        return ::close(fd);
+    }
+
+    int ioctl(int d, int request, int val)
+    {
+        return ::ioctl(d, request, val);
+    }
+
+    int ioctl(int d, int request, void* p_val)
+    {
+        return ::ioctl(d, request, p_val);
     }
 };
 
@@ -101,7 +128,7 @@ EGLNativeDisplayType mgg::GBMPlatform::shell_egl_display()
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
 {
-    return std::make_shared<mgg::GBMPlatform>(
-        report,
-        std::make_shared<mgg::LinuxVirtualTerminal>(report));
+    auto real_fops = std::make_shared<RealVTFileOperations>();
+    auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, report);
+    return std::make_shared<mgg::GBMPlatform>(report, vt);
 }
