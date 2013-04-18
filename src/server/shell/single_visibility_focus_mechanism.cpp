@@ -34,7 +34,7 @@ msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_
 {
 }
 
-void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<msh::Session> const& focus_session)
+void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<Session> const& focus_session)
 {
     app_container->for_each(
         [&](std::shared_ptr<mf::Session> const& session) {

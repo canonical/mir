@@ -18,13 +18,14 @@
 #ifndef MIR_GRAPHICS_ANDROID_SYNCFENCE_H_
 #define MIR_GRAPHICS_ANDROID_SYNCFENCE_H_
 
-#include <memory>
+#include "mir/graphics/android/sync_object.h"
 
+#include <memory>
 #define SYNC_IOC_WAIT 0x40043E00
 
 namespace mir
 {
-namespace client
+namespace graphics
 {
 namespace android
 {
@@ -42,23 +43,11 @@ protected:
     IoctlWrapper& operator=(IoctlWrapper const&) = delete;
 };
 
-class AndroidFence
-{
-public:
-    virtual ~AndroidFence() {}
-    virtual void wait() = 0;
-
-protected:
-    AndroidFence() = default;
-    AndroidFence(AndroidFence const&) = delete;
-    AndroidFence& operator=(AndroidFence const&) = delete;
-};
-
-class SyncFence : public AndroidFence
+class SyncFence : public SyncObject
 {
 public:
     SyncFence(int fd, std::shared_ptr<IoctlWrapper> const& wrapper);
-    ~SyncFence();
+    ~SyncFence() noexcept;
 
     void wait();
 

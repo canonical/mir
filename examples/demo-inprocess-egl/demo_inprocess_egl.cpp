@@ -36,7 +36,7 @@ try
     {
         client = std::make_shared<me::InprocessEGLClient>(
               config.the_graphics_platform(),
-              config.the_surface_factory());
+              config.the_shell_surface_factory());
     });
 
     return 0;

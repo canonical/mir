@@ -23,13 +23,12 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-namespace mcl=mir::client;
-namespace mcla=mir::client::android;
+namespace mga=mir::graphics::android;
 
 namespace
 {
 
-class IoctlControl : public mcla::IoctlWrapper
+class IoctlControl : public mga::IoctlWrapper
 {
 public:
     int ioctl(int fd, unsigned long int request, int* timeout) const
@@ -66,7 +65,7 @@ static void incRef(android_native_base_t*)
 
 int query_static(const ANativeWindow* anw, int key, int* value)
 {
-    auto self = static_cast<const mcla::MirNativeWindow*>(anw);
+    auto self = static_cast<const mga::MirNativeWindow*>(anw);
     return self->query(key, value);
 }
 
@@ -74,7 +73,7 @@ int perform_static(ANativeWindow* window, int key, ...)
 {
     va_list args;
     va_start(args, key);
-    auto self = static_cast<mcla::MirNativeWindow*>(window);
+    auto self = static_cast<mga::MirNativeWindow*>(window);
     auto ret = self->perform(key, args);
     va_end(args);
 
@@ -84,7 +83,7 @@ int perform_static(ANativeWindow* window, int key, ...)
 int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
-    auto self = static_cast<mcla::MirNativeWindow*>(window);
+    auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
 
@@ -92,25 +91,25 @@ int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
     *fence_fd = -1;
-    auto self = static_cast<mcla::MirNativeWindow*>(window);
+    auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
 
 int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
-    auto self = static_cast<mcla::MirNativeWindow*>(window);
+    auto self = static_cast<mga::MirNativeWindow*>(window);
     auto ioctl_control = std::make_shared<IoctlControl>();
-    auto fence = std::make_shared<mcla::SyncFence>(-1, ioctl_control);
+    auto fence = std::make_shared<mga::SyncFence>(-1, ioctl_control);
     return self->queueBuffer(buffer, fence);
 }
 
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
-    auto self = static_cast<mcla::MirNativeWindow*>(window);
+    auto self = static_cast<mga::MirNativeWindow*>(window);
     auto ioctl_control = std::make_shared<IoctlControl>();
-    auto fence = std::make_shared<mcla::SyncFence>(fence_fd, ioctl_control);
+    auto fence = std::make_shared<mga::SyncFence>(fence_fd, ioctl_control);
     return self->queueBuffer(buffer, fence);
 
 }
@@ -141,7 +140,7 @@ int cancelBuffer_static(struct ANativeWindow* /*window*/,
 
 }
 
-mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
+mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
  : driver_interpreter(interpreter)
 {
     ANativeWindow::query = &query_static;
@@ -162,26 +161,25 @@ mcla::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter>
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
 }
 
-int mcla::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
+int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
     *buffer_to_driver = driver_interpreter->driver_requests_buffer();
     return 0;
 }
 
-int mcla::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mcla::AndroidFence> const& fence)
+int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mga::SyncObject> const& fence)
 {
-    fence->wait();
-    driver_interpreter->driver_returns_buffer(buffer);
+    driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
 
-int mcla::MirNativeWindow::query(int key, int* value ) const
+int mga::MirNativeWindow::query(int key, int* value ) const
 {
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }
 
-int mcla::MirNativeWindow::perform(int key, va_list arg_list )
+int mga::MirNativeWindow::perform(int key, va_list arg_list )
 {
     int ret = 0;
     va_list args;
