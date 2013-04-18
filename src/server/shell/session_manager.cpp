@@ -62,7 +62,7 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const
     return new_session;
 }
 
-inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<msh::Session> const& next_focus)
+inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<Session> const& next_focus)
 {
     focus_application = next_focus;
     focus_setter->set_focus_to(next_focus);
@@ -70,7 +70,7 @@ inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex
 
 void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
 {
-    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
+    auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
     app_container->remove_session(shell_session);
 
@@ -102,7 +102,7 @@ void msh::SessionManager::focus_next()
 
 void msh::SessionManager::shutdown()
 {
-    app_container->for_each([](std::shared_ptr<msh::Session> const& session)
+    app_container->for_each([](std::shared_ptr<Session> const& session)
     {
         session->shutdown();
     });
@@ -113,7 +113,7 @@ void msh::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<mf::Sessio
     std::unique_lock<std::mutex> lock(mutex);
     typedef Tags::value_type Pair;
 
-    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
+    auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
     auto remove = std::remove_if(tags.begin(), tags.end(),
         [&](Pair const& v) { return v.first == id || v.second == shell_session;});
@@ -140,7 +140,7 @@ void msh::SessionManager::focus_session_with_lightdm_id(int id)
 mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
     mf::SurfaceCreationParameters const& params)
 {
-    auto shell_session = std::dynamic_pointer_cast<msh::Session>(session);
+    auto shell_session = std::dynamic_pointer_cast<Session>(session);
     auto id = session->create_surface(params);
     set_focus_to_locked(std::unique_lock<std::mutex>(mutex), shell_session);
 
