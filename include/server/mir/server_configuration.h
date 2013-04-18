@@ -57,8 +57,6 @@ public:
     virtual std::shared_ptr<MainLoop> the_main_loop() = 0;
     virtual std::shared_ptr<shell::SessionContainer>  the_shell_session_container() = 0;
 
-    // TODO no longer belongs but needed by mtc::SessionManagementContext
-    virtual std::shared_ptr<frontend::Shell> the_frontend_shell() = 0;
 protected:
     ServerConfiguration() = default;
     virtual ~ServerConfiguration() {}

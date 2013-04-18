@@ -141,9 +141,10 @@ mtc::SessionManagementContext::SessionManagementContext() :
 {
 }
 
-mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& server_configuration) :
+mtc::SessionManagementContext::SessionManagementContext(
+    std::shared_ptr<frontend::Shell> const& shell) :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    shell(server_configuration.the_frontend_shell())
+    shell(shell)
 {
 }
 

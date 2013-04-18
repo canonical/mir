@@ -51,7 +51,7 @@ class SessionManagementContext
 {
 public:
     SessionManagementContext();
-    SessionManagementContext(ServerConfiguration& server_configuration);
+    SessionManagementContext(std::shared_ptr<frontend::Shell> const& shell);
 
     virtual ~SessionManagementContext() {}
 
