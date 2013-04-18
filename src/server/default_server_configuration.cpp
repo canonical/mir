@@ -241,7 +241,7 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
     return display_report(
         [this]() -> std::shared_ptr<graphics::DisplayReport>
         {
-            if (the_options()->get(log_display, true))
+            if (the_options()->get(log_display, false))
             {
                 return std::make_shared<ml::DisplayReport>(the_logger());
             }
