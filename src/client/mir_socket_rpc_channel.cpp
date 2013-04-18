@@ -255,42 +255,7 @@ void mcl::MirSocketRpcChannel::read_message()
 
         if (result.id() == 0)  // It's an event sequence
         {
-            if (event_handler)
-            {
-                mir::protobuf::EventSequence seq;
-                if (seq.ParseFromString(result.response()))
-                {
-                    const int nevents = seq.event_size();
-                    for (int i = 0; i < nevents; i++)
-                    {
-                        mir::protobuf::Event const& event = seq.event(i);
-                        if (event.has_raw())
-                        {
-                            std::string const& raw_event = event.raw();
-
-                            // In future, events might be compressed where
-                            // possible. But that's a job for later...
-                            if (raw_event.size() == sizeof(MirEvent))
-                            {
-                                MirEvent e;
-
-                                // Make a copy to ensure integer fields get
-                                // correct memory alignment, which is critical
-                                // on many non-x86 architectures.
-                                memcpy(&e, raw_event.data(), sizeof e);
-                                event_handler->handle_event(e);
-                            }
-                            else
-                            {
-                                log->error() << __PRETTY_FUNCTION__
-                                             << " Received MirEvent of an"
-                                                " unexpected size."
-                                             << std::endl;
-                            }
-                        }
-                    }
-                } // else protobuf will log an error
-            } // else ignore incoming events
+            process_event_sequence(result);
         }
         else
         {
@@ -302,6 +267,46 @@ void mcl::MirSocketRpcChannel::read_message()
         log->error() << __PRETTY_FUNCTION__
             << "\n... " << x.what() << std::endl;
     }
+}
+
+void mcl::MirSocketRpcChannel::process_event_sequence(
+    mir::protobuf::wire::Result const& result)
+{
+    if (!event_handler)
+        return;
+
+    mir::protobuf::EventSequence seq;
+    if (seq.ParseFromString(result.response()))
+    {
+        int const nevents = seq.event_size();
+        for (int i = 0; i < nevents; i++)
+        {
+            mir::protobuf::Event const& event = seq.event(i);
+            if (event.has_raw())
+            {
+                std::string const& raw_event = event.raw();
+
+                // In future, events might be compressed where possible.
+                // But that's a job for later...
+                if (raw_event.size() == sizeof(MirEvent))
+                {
+                    MirEvent e;
+
+                    // Make a copy to ensure integer fields get correct memory
+                    // alignment, which is critical on many non-x86
+                    // architectures.
+                    memcpy(&e, raw_event.data(), sizeof e);
+                    event_handler->handle_event(e);
+                }
+                else
+                {
+                    log->error() << __PRETTY_FUNCTION__
+                                 << " Received MirEvent of an unexpected size."
+                                 << std::endl;
+                }
+            }
+        }
+    } // else protobuf will log an error
 }
 
 size_t mcl::MirSocketRpcChannel::read_message_header()
