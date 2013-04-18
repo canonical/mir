@@ -35,8 +35,10 @@ namespace examples
 class ApplicationSwitcher : public input::EventFilter
 {
 public: 
-    ApplicationSwitcher(std::shared_ptr<shell::FocusController> const& focus_controller);
+    ApplicationSwitcher();
     ~ApplicationSwitcher() = default;
+
+    void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
     
     bool handles(MirEvent const& event);
 

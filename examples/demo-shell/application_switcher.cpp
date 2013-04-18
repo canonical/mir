@@ -27,13 +27,19 @@
 namespace me = mir::examples;
 namespace msh = mir::shell;
 
-me::ApplicationSwitcher::ApplicationSwitcher(std::shared_ptr<msh::FocusController> const& focus_controller) :
-    focus_controller(focus_controller)
+me::ApplicationSwitcher::ApplicationSwitcher()
 {
+}
+
+void me::ApplicationSwitcher::set_focus_controller(std::shared_ptr<msh::FocusController> const& controller)
+{
+    focus_controller = controller;
 }
 
 bool me::ApplicationSwitcher::handles(MirEvent const& event)
 {
+    assert(focus_controller);
+
     if (event.key.type == mir_event_type_key &&
         event.key.action != 1 && // Not key-release
         event.key.scan_code == KEY_TAB)  // TODO: Use keycode once we support keymapping on the server side

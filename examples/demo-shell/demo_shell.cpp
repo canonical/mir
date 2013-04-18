@@ -61,7 +61,7 @@ struct DemoServerConfiguration : mir::DefaultServerConfiguration
     std::initializer_list<std::shared_ptr<mi::EventFilter> const> the_event_filters() override
     {
         if (!app_switcher)
-            app_switcher = std::make_shared<me::ApplicationSwitcher>(the_focus_controller());
+            app_switcher = std::make_shared<me::ApplicationSwitcher>();
         return std::initializer_list<std::shared_ptr<mi::EventFilter> const>{app_switcher};
     }
 
@@ -75,7 +75,12 @@ int main(int argc, char const* argv[])
 try
 {
     me::DemoServerConfiguration config(argc, argv);
-    mir::run_mir(config, [](mir::DisplayServer&){});
+    mir::run_mir(config, [&config](mir::DisplayServer&)
+        {
+            // We use this strange two stage initialization to avoid a circular dependency between the EventFilters
+            // and the SessionStore
+            config.app_switcher->set_focus_controller(config.the_focus_controller());
+        });
     return 0;
 }
 catch (std::exception const& error)
