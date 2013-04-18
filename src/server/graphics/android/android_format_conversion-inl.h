@@ -31,7 +31,21 @@ namespace android
 
 inline static int to_android_format(geometry::PixelFormat format)
 {
-    return 0;
+    switch(format)
+    {
+        case geometry::PixelFormat::abgr_8888:
+            return HAL_PIXEL_FORMAT_RGBA_8888;
+        case geometry::PixelFormat::xbgr_8888:
+            return HAL_PIXEL_FORMAT_RGBX_8888;
+        case geometry::PixelFormat::argb_8888:
+            return HAL_PIXEL_FORMAT_BGRA_8888;
+        case geometry::PixelFormat::xrgb_8888:
+            return HAL_PIXEL_FORMAT_BGRA_8888;
+        case geometry::PixelFormat::bgr_888:
+            return HAL_PIXEL_FORMAT_RGB_888;
+        default:
+            return 0;
+    }
 }
 
 inline static mir::geometry::PixelFormat to_mir_format(int)
