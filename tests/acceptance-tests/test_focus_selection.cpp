@@ -110,7 +110,7 @@ struct SurfaceCreatingClient : ClientConfigCommon
             mir_pixel_format_abgr_8888,
             mir_buffer_usage_hardware
         };
-         mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+         mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
          mir_connection_release(connection);
     }
 };
@@ -133,19 +133,15 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mf::Shell>
-        the_frontend_shell()
+        std::shared_ptr<msh::FocusSetter>
+        the_shell_focus_setter() override
         {
-            return session_manager(
-            [this]() -> std::shared_ptr<msh::SessionManager>
+            return shell_focus_setter(
+            []
             {
-                auto session_container = std::make_shared<msh::SessionContainer>();
-                auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
-                auto focus_sequence = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
-
-                auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
-                auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
                 using namespace ::testing;
+
+                auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
                 {
                     InSequence seq;
                     // Once on application registration and once on surface creation
@@ -155,9 +151,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
                 }
                 // TODO: Counterexample ~racarr
 
-                return std::make_shared<msh::SessionManager>(organising_factory, session_container, 
-                                                             focus_sequence, focus_setter,
-                                                             the_input_target_listener());
+                return focus_setter;
             });
         }
     } server_config;

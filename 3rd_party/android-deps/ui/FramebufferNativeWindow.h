@@ -33,6 +33,7 @@
 
 #include <ui/egl/android_natives.h>
 
+#include <memory>
 #include <mutex>
 #include <condition_variable>
 
@@ -50,9 +51,9 @@ class NativeBuffer;
 class FramebufferNativeWindow : public ANativeWindow
 {
 public:
-    FramebufferNativeWindow(); 
+    FramebufferNativeWindow(hw_module_t const* module, std::shared_ptr<framebuffer_device_t> const& fb);
 
-    framebuffer_device_t const * getDevice() const { return fbDev; } 
+    framebuffer_device_t const * getDevice() const { return fbDev.get(); } 
 
     bool isUpdateOnDemand() const { return mUpdateOnDemand; }
     status_t setUpdateRectangle(const Rect& updateRect);
@@ -75,7 +76,7 @@ private:
     static int query(const ANativeWindow* window, int what, int* value);
     static int perform(ANativeWindow* window, int operation, ...);
     
-    framebuffer_device_t* fbDev;
+    std::shared_ptr<framebuffer_device_t> fbDev;
     alloc_device_t* grDev;
 
     NativeBuffer* buffers[NUM_FRAME_BUFFERS];

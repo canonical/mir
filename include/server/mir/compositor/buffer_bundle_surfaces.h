@@ -49,7 +49,7 @@ public:
 
     geometry::PixelFormat get_bundle_pixel_format();
     geometry::Size bundle_size();
-    void shutdown();
+    void force_requests_to_complete();
 
 protected:
     BufferBundleSurfaces(const BufferBundleSurfaces&) = delete;

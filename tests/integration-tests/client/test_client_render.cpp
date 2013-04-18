@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/android_buffer.h"
-#include "src/server/graphics/android/android_buffer_allocator.h"
+#include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"
@@ -32,6 +32,7 @@
 #include <gmock/gmock.h>
 #include <thread>
 #include <hardware/gralloc.h>
+#include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
 namespace mtf = mir_test_framework;
@@ -102,8 +103,10 @@ struct TestClient
         surface_parameters.width = test_width;
         surface_parameters.height = test_height;
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
-        mir_wait_for(mir_surface_create(connection, &surface_parameters,
-                                        &create_callback, &surface));
+        mir_wait_for(mir_connection_create_surface(connection,
+                                                   &surface_parameters,
+                                                   &create_callback,
+                                                   &surface));
 
         auto graphics_region = std::make_shared<MirGraphicsRegion>();
         /* grab a buffer*/
@@ -143,8 +146,10 @@ struct TestClient
         surface_parameters.height = test_height;
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
-        mir_wait_for(mir_surface_create(connection, &surface_parameters,
-                                        &create_callback, &surface));
+        mir_wait_for(mir_connection_create_surface(connection,
+                                                   &surface_parameters,
+                                                   &create_callback,
+                                                   &surface));
 
         auto graphics_region = std::make_shared<MirGraphicsRegion>();
         mir_surface_get_graphics_region( surface, graphics_region.get());
@@ -187,8 +192,10 @@ struct TestClient
         surface_parameters.height = test_height;
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
-        mir_wait_for(mir_surface_create(connection, &surface_parameters,
-                                        &create_callback, &surface));
+        mir_wait_for(mir_connection_create_surface(connection,
+                                                   &surface_parameters,
+                                                   &create_callback,
+                                                   &surface));
 
         int major, minor, n;
         EGLDisplay disp;
@@ -249,8 +256,10 @@ struct TestClient
         surface_parameters.height = test_height;
         surface_parameters.pixel_format = mir_pixel_format_abgr_8888;
 
-        mir_wait_for(mir_surface_create(connection, &surface_parameters,
-                                        &create_callback, &surface));
+        mir_wait_for(mir_connection_create_surface(connection,
+                                                   &surface_parameters,
+                                                   &create_callback,
+                                                   &surface));
 
         int major, minor, n;
         EGLDisplay disp;
@@ -441,7 +450,7 @@ struct TestClientIPCRender : public testing::Test
         pf = geom::PixelFormat::abgr_8888;
 
         auto initializer = std::make_shared<mg::NullBufferInitializer>();
-        allocator = std::make_shared<mga::AndroidBufferAllocator> (initializer);
+        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
         mc::BufferProperties properties(size, pf, mc::BufferUsage::hardware);
         android_buffer = allocator->alloc_buffer(properties);
         second_android_buffer = allocator->alloc_buffer(properties);
@@ -479,7 +488,7 @@ struct TestClientIPCRender : public testing::Test
 
     std::shared_ptr<mc::Buffer> android_buffer;
     std::shared_ptr<mc::Buffer> second_android_buffer;
-    std::shared_ptr<mga::AndroidBufferAllocator>  allocator;
+    std::shared_ptr<mga::AndroidGraphicBufferAllocator>  allocator;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;

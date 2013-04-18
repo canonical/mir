@@ -29,7 +29,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
-#include "mir/shell/input_target_listener.h"
+#include "mir/input/null_input_target_listener.h"
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_dispatcher_controller.h"
 
@@ -159,31 +159,6 @@ class StubInputManager : public mi::InputManager
     }
 };
 
-class StubInputTargetListener : public msh::InputTargetListener
-{
-public:
-    void input_application_opened(std::shared_ptr<mi::SessionTarget> const&)
-    {
-    }
-    void input_application_closed(std::shared_ptr<mi::SessionTarget> const&)
-    {
-    }
-
-    void input_surface_opened(std::shared_ptr<mi::SessionTarget> const&,
-        std::shared_ptr<mi::SurfaceTarget> const&)
-    {
-    }
-    void input_surface_closed(std::shared_ptr<mi::SurfaceTarget> const&)
-    {
-    }
-    void focus_changed(std::shared_ptr<mi::SurfaceTarget> const&)
-    {
-    }
-    void focus_cleared()
-    {
-    }
-};
-
 }
 
 mtf::TestingServerConfiguration::TestingServerConfiguration() :
@@ -208,7 +183,7 @@ std::shared_ptr<msh::InputTargetListener> mtf::TestingServerConfiguration::the_i
    if (options->get("tests-use-real-input", false))
         return std::make_shared<mia::DispatcherController>(the_input_configuration());
     else
-        return std::make_shared<StubInputTargetListener>();
+        return std::make_shared<mi::NullInputTargetListener>();
 }
 
 std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_platform()

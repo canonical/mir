@@ -23,8 +23,9 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
 
-#include <EGL/egl.h>
 #include <memory>
+
+struct ANativeWindowBuffer;
 
 namespace mir
 {
@@ -56,8 +57,8 @@ public:
     virtual geometry::PixelFormat format() const  = 0;
     virtual BufferUsage usage() const = 0;
 
-    virtual EGLClientBuffer get_egl_client_buffer() const = 0;
     virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const = 0;
+    virtual std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const = 0;
 
 protected:
     AndroidBufferHandle() = default;

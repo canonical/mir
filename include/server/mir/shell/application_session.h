@@ -47,7 +47,7 @@ public:
 
     std::string name() const;
 
-    void shutdown();
+    void force_requests_to_complete();
 
     void hide();
     void show();

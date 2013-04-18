@@ -73,7 +73,7 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
 
 mir::DisplayServer::~DisplayServer()
 {
-    p->shell->shutdown();
+    p->shell->force_requests_to_complete();
 }
 
 void mir::DisplayServer::run()

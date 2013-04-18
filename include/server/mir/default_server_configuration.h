@@ -48,11 +48,13 @@ class MessageProcessorReport;
 
 namespace shell
 {
-class SessionManager;
 class SurfaceFactory;
-class SurfaceSource;
 class SurfaceBuilder;
 class InputTargetListener;
+class SessionContainer;
+class FocusSetter;
+class FocusSequence;
+class PlacementStrategy;
 }
 namespace time
 {
@@ -114,6 +116,10 @@ public:
 
     virtual std::shared_ptr<frontend::Shell> the_frontend_shell();
     virtual std::shared_ptr<shell::SurfaceFactory> the_surface_factory();
+    virtual std::shared_ptr<shell::SessionContainer>  the_shell_session_container();
+    virtual std::shared_ptr<shell::FocusSetter>       the_shell_focus_setter();
+    virtual std::shared_ptr<shell::FocusSequence>     the_shell_focus_sequence();
+    virtual std::shared_ptr<shell::PlacementStrategy> the_shell_placement_strategy();
 
     virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
@@ -151,7 +157,11 @@ protected:
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
-    CachedPtr<shell::SurfaceSource> surface_source;
+    CachedPtr<shell::SurfaceFactory> shell_surface_factory;
+    CachedPtr<shell::SessionContainer>  shell_session_container;
+    CachedPtr<shell::FocusSetter>       shell_focus_setter;
+    CachedPtr<shell::FocusSequence>     shell_focus_sequence;
+    CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
     CachedPtr<compositor::CompositingStrategy> compositing_strategy;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
