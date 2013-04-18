@@ -28,14 +28,14 @@
 
 namespace msh = mir::shell;
 
-void msh::DefaultSessionContainer::insert_session(std::shared_ptr<msh::Session> const& session)
+void msh::DefaultSessionContainer::insert_session(std::shared_ptr<Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
     apps.push_back(session);
 }
 
-void msh::DefaultSessionContainer::remove_session(std::shared_ptr<msh::Session> const& session)
+void msh::DefaultSessionContainer::remove_session(std::shared_ptr<Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -50,7 +50,7 @@ void msh::DefaultSessionContainer::remove_session(std::shared_ptr<msh::Session> 
     }
 }
 
-void msh::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<msh::Session> const&)> f) const
+void msh::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(guard);
 
