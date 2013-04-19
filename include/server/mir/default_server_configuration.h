@@ -108,7 +108,7 @@ public:
     /** @} */
 
     /** @name graphics configuration - customization
-     * configurable interfaces for customizing graphics
+     * configurable interfaces for modifying graphics
      *  @{ */
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<graphics::Renderer>          the_renderer();
@@ -122,7 +122,7 @@ public:
     /** @} */
 
     /** @name compositor configuration - customization
-     * configurable interfaces for customizing compositor
+     * configurable interfaces for modifying compositor
      *  @{ */
     virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
@@ -144,7 +144,7 @@ public:
     /** @} */
 
     /** @name shell configuration - customization
-     * configurable interfaces for customizing shell
+     * configurable interfaces for modifying shell
      *  @{ */
     virtual std::shared_ptr<shell::SurfaceFactory>    the_shell_surface_factory();
     virtual std::shared_ptr<shell::SessionContainer>  the_shell_session_container();
@@ -162,7 +162,7 @@ public:
 
 
     /** @name surfaces configuration - customization
-     * configurable interfaces for customizing surfaces
+     * configurable interfaces for modifying surfaces
      *  @{ */
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
     /** @} */
@@ -181,7 +181,7 @@ public:
     /** @} */
 
     /** @name logging configuration - customization
-     * configurable interfaces for customizing logging
+     * configurable interfaces for modifying logging
      *  @{ */
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
