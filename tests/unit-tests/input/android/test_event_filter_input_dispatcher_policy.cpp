@@ -32,7 +32,7 @@ namespace mia = mi::android;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
+TEST(EventFilterDispatcherPolicy, offers_key_events_to_filter)
 {
     using namespace ::testing;
     droidinput::KeyEvent ev;
@@ -53,3 +53,16 @@ TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
     EXPECT_TRUE(policy.filterInputEvent(&ev, 0));
 }
 
+TEST(EventFilterDispatcherPolicy, motion_events_are_allowed_to_pass_to_clients)
+{
+    using namespace ::testing;
+
+    mtd::MockEventFilter filter;
+    mia::EventFilterDispatcherPolicy policy(mt::fake_shared(filter), true);
+
+    uint32_t policy_flags;
+    policy.interceptMotionBeforeQueueing(0, policy_flags);
+
+    // All motion events are allowed. Of course they could later be removed by the input filter.
+    EXPECT_TRUE(policy_flags & droidinput::POLICY_FLAG_PASS_TO_USER);
+}
