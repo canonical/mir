@@ -22,11 +22,6 @@
 #include "mir/frontend/session.h"
 #include "mir/input/session_target.h"
 
-#include <mutex>
-#include <atomic>
-#include <memory>
-#include <string>
-
 namespace mir
 {
 
