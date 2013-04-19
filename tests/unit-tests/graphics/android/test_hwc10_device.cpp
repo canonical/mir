@@ -109,7 +109,9 @@ TEST_F(HWC10Device, hwc10_commit_frame)
 
     mga::HWC10Device device(mock_device, mock_fbdev);
 
+    printf("here\n");
     device.commit_frame(dpy, sur);
+    printf("there\n");
 
     Mock::VerifyAndClearExpectations(mock_device.get());
 
@@ -124,6 +126,23 @@ TEST_F(HWC10Device, hwc10_commit_frame)
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
     EXPECT_EQ(0u, mock_device->display0_prepare_content.flags);
     EXPECT_EQ(0u, mock_device->display0_prepare_content.numHwLayers);
+}
+
+TEST_F(HWC10Device, hwc10_prepare_frame_failure)
+{
+    using namespace testing;
+
+    EGLDisplay dpy = 0x0;
+    EGLSurface sur = 0x0;
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), _, _))
+        .Times(1)
+        .WillOnce(Return(-1));
+
+    mga::HWC10Device device(mock_device, mock_fbdev);
+
+    EXPECT_THROW({
+        device.commit_frame(dpy, sur);
+    }, std::runtime_error);
 }
 
 TEST_F(HWC10Device, hwc10_commit_frame_failure)
