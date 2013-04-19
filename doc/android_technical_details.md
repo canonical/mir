@@ -4,18 +4,18 @@ Android Technical Details {#android_technical_details}
 Mir Usage of Android Drivers
 ----------------------------
 
-Mir relies on the libhybris library to use the android drivers. This allows the
-drivers to use the bionic libc while Mir itself uses the standard gnu libc.
+Mir relies on the libhybris library to use the Android drivers. This allows the
+drivers to use the bionic libc while Mir itself uses the standard GNU libc.
 
 Mir Display Modes
 -----------------
 
-When you're using Mir to drive the display of the android device, Mir has
-a default way to display, as well as a back-up mode that it can try if the
+When you're using Mir to drive the display of the Android device, Mir has
+a default way to display, as well as a backup mode that it can try if the
 default mode isn't working.
 
  *  Default Mode
-    The default display mode uses the HWC HAL module from the android drivers.
+    The default display mode uses the HWC HAL module from the Android drivers.
     Depending on the version and device, the default mode may also use the
     framebuffer HAL module. These modules are used to determine the display
     information, to synchronize with vsync, and to post to the display. The HWC
@@ -31,10 +31,10 @@ Mir Device Support
 ------------------
 
 In theory, all devices with that use the normal Android drivers abstractions
-should run mir. Currently, we support HWC (hardware composer) version 1.1
+should run Mir. Currently, we support HWC (hardware composer) version 1.1
 (JB/ICS devices). The other HWC versions should use the backup mode to draw to
 the screen. Development focus is currently on the Nexus line of devices, so
 these should be more thoroughly tested. If you have another sort of device,
 give Mir a try! If it doesn't work,
 <a href="https://bugs.launchpad.net/mir">please file a bug,</a> being very
-specific about the chipset, gpu, and driver versions that your phone has.  
+specific about the chipset, GPU, and driver versions that your phone has.  
