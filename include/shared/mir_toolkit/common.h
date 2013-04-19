@@ -49,25 +49,13 @@ typedef enum MirSurfaceType
     mir_surface_type_arraysize_
 } MirSurfaceType;
 
-/*
- * MirSurfaceState: "minimized" or "minimised"?
- * A review of 7 leading dictionaries shows "z" is the most common spelling
- * (listed in all dictionaries), and "s" only appears in 4. And those that list
- * both "z" and "s" usually point out that "z" is the main spelling. Only 2
- * dictionaries say that "s" is preferred, and even still all dictionaries seem
- * to agree that "s" is only used in the UK.
- * The same is true for "maximized" vs "maximised".
- */
 typedef enum MirSurfaceState
 {
     mir_surface_state_unknown,
     mir_surface_state_restored,
     mir_surface_state_minimized,
-    mir_surface_state_minimised = mir_surface_state_minimized,
     mir_surface_state_maximized,
-    mir_surface_state_maximised = mir_surface_state_maximized,
     mir_surface_state_vertmaximized,
-    mir_surface_state_vertmaximised = mir_surface_state_vertmaximized,
     /* mir_surface_state_semimaximized,
        Omitted for now, since it's functionally a subset of vertmaximized and
        differs only in the X coordinate. */

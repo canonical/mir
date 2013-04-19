@@ -320,17 +320,18 @@ TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
 
             mir_wait_for(mir_surface_set_state(surface,
                                                mir_surface_state_minimized));
-            EXPECT_EQ(mir_surface_state_minimised,
+            EXPECT_EQ(mir_surface_state_minimized,
                       mir_surface_get_state(surface));
 
             mir_wait_for(mir_surface_set_state(surface,
                                            static_cast<MirSurfaceState>(888)));
-            EXPECT_EQ(mir_surface_state_minimised,
+            EXPECT_EQ(mir_surface_state_minimized,
                       mir_surface_get_state(surface));
 
             // Stress-test synchronization logic with some flooding
             for (int i = 0; i < 100; i++)
             {
+                mir_surface_set_state(surface, mir_surface_state_maximized);
                 mir_surface_set_state(surface, mir_surface_state_restored);
                 mir_wait_for(mir_surface_set_state(surface,
                                                 mir_surface_state_fullscreen));
