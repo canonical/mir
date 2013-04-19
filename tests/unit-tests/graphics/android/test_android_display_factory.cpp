@@ -78,10 +78,10 @@ class AndroidDisplayFactoryTest : public ::testing::Test
 {
 public:
     AndroidDisplayFactoryTest()
-        : mock_display_allocator(std::make_shared<MockDisplayAllocator>()),
-          mock_hwc_factory(std::make_shared<MockHWCFactory>()),
-          mock_fnw_factory(std::make_shared<MockFNWFactory>()),
-          mock_fb_device(std::make_shared<mtd::MockDisplaySupportProvider>())
+        : mock_display_allocator(std::make_shared<testing::NiceMock<MockDisplayAllocator>>()),
+          mock_hwc_factory(std::make_shared<testing::NiceMock<MockHWCFactory>>()),
+          mock_fnw_factory(std::make_shared<testing::NiceMock<MockFNWFactory>>()),
+          mock_fb_device(std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>())
     {
     }
 
@@ -94,7 +94,7 @@ public:
     std::shared_ptr<MockHWCFactory> const mock_hwc_factory;
     std::shared_ptr<MockFNWFactory> const mock_fnw_factory;
     std::shared_ptr<mtd::MockDisplaySupportProvider> const mock_fb_device;
-    mt::HardwareAccessMock hw_access_mock;
+    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
 };
 }
 

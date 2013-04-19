@@ -19,6 +19,9 @@
 #include "mir/logging/display_report.h"
 #include "mir/logging/logger.h"
 
+#include <sstream>
+#include <cstring>
+
 namespace ml=mir::logging;
 
 ml::DisplayReport::DisplayReport(const std::shared_ptr<Logger>& logger) : logger(logger)
@@ -59,4 +62,24 @@ void ml::DisplayReport::report_successful_drm_mode_set_crtc_on_construction()
 void ml::DisplayReport::report_successful_display_construction()
 {
     logger->log<Logger::informational>("Successfully finished construction.", component());
+}
+
+void ml::DisplayReport::report_drm_master_failure(int error)
+{
+    std::stringstream ss;
+    ss << "Failed to change ownership of DRM master (error: " << strerror(error) << ").";
+    if (error == EPERM || error == EACCES)
+        ss << " Try running Mir with root privileges.";
+
+    logger->log<Logger::warning>(ss.str(), component());
+}
+
+void ml::DisplayReport::report_vt_switch_away_failure()
+{
+    logger->log<Logger::warning>("Failed to switch away from Mir VT.", component());
+}
+
+void ml::DisplayReport::report_vt_switch_back_failure()
+{
+    logger->log<Logger::warning>("Failed to switch back to Mir VT.", component());
 }

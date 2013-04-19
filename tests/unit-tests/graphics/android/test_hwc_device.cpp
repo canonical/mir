@@ -57,8 +57,8 @@ protected:
     virtual void SetUp()
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<mtd::MockDisplaySupportProvider>();
-        mock_organizer = std::make_shared<MockHWCOrganizer>();
+        mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
+        mock_organizer = std::make_shared<testing::NiceMock<MockHWCOrganizer>>();
     }
 
     std::shared_ptr<MockHWCOrganizer> mock_organizer;
