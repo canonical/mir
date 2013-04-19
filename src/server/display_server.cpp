@@ -86,6 +86,10 @@ struct mir::DisplayServer::Private
                 [this] { compositor->stop(); },
                 [this] { compositor->start(); }};
 
+            TryButRevertIfUnwinding comm{
+                [this] { communicator->stop(); },
+                [this] { communicator->start(); }};
+
             display->pause();
         }
         catch(std::runtime_error const&)
@@ -103,6 +107,10 @@ struct mir::DisplayServer::Private
             TryButRevertIfUnwinding disp{
                 [this] { display->resume(); },
                 [this] { display->pause(); }};
+
+            TryButRevertIfUnwinding comm{
+                [this] { communicator->start(); },
+                [this] { communicator->stop(); }};
 
             compositor->start();
         }
@@ -128,12 +136,13 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
     p.reset(new DisplayServer::Private(config));
 }
 
+/*
+ * Need to define the destructor in the source file, so that we
+ * can define the 'p' member variable as a unique_ptr to an
+ * incomplete type (DisplayServerPrivate) in the header.
+ */
 mir::DisplayServer::~DisplayServer()
 {
-    p->shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
-    {
-        session->force_requests_to_complete();
-    });
 }
 
 void mir::DisplayServer::run()
@@ -146,6 +155,7 @@ void mir::DisplayServer::run()
 
     p->input_manager->stop();
     p->compositor->stop();
+    p->communicator->stop();
 }
 
 void mir::DisplayServer::stop()
