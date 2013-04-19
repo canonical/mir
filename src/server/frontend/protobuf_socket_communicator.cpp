@@ -51,6 +51,7 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 void mf::ProtobufSocketCommunicator::start_accept()
 {
     std::shared_ptr<EventQueue> event_queue = std::make_shared<EventQueue>();
+    std::shared_ptr<EventSink> event_sink(event_queue);
 
     auto const& socket_session = std::make_shared<mfd::SocketSession>(
         io_service,
@@ -58,7 +59,7 @@ void mf::ProtobufSocketCommunicator::start_accept()
         connected_sessions);
 
     std::shared_ptr<mir::protobuf::DisplayServer> ds =
-        ipc_factory->make_ipc_server(event_queue);
+        ipc_factory->make_ipc_server(event_sink);
 
     auto proc = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),

@@ -107,7 +107,7 @@ private:
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<mir::EventQueue> const& event_queue)
+        std::shared_ptr<mir::EventSink> const& sink)
     {
         return std::make_shared<mf::SessionMediator>(
             shell,
@@ -115,7 +115,7 @@ private:
             graphics_display,
             buffer_allocator,
             sm_report,
-            event_queue,
+            sink,
             resource_cache());
     }
 

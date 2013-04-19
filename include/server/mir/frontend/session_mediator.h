@@ -21,12 +21,14 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
-#include "mir/event_queue.h"
+
 #include <map>
 #include <memory>
 
 namespace mir
 {
+class EventSink;
+
 namespace graphics
 {
 class Platform;
@@ -60,7 +62,7 @@ public:
         std::shared_ptr<graphics::ViewableArea> const& viewable_area,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& report,
-        std::shared_ptr<EventQueue> const& event_queue,
+        std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     /* Platform independent requests */
@@ -117,7 +119,7 @@ private:
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
 
     std::shared_ptr<SessionMediatorReport> const report;
-    std::shared_ptr<EventQueue> const event_queue;
+    std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 
