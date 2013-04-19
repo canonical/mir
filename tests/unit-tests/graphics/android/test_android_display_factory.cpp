@@ -178,13 +178,19 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
 
     std::shared_ptr<mga::HWCDevice> mock_hwc_device;
-    std::shared_ptr<mga::DisplaySupportProvider> xxxa;// = mock_hwc_device;
     auto stub_anativewindow = std::make_shared<ANativeWindow>();
   
+    EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
+        .Times(1);
     EXPECT_CALL(*mock_hwc_factory, create_hwc_1_0(_,_))
         .Times(1)
         .WillOnce(Return(mock_hwc_device));
-    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(xxxa))
+    EXPECT_CALL(*mock_fnw_factory, create_fb_device())
+        .Times(1)
+        .WillOnce(Return(mock_fb_device));
+
+    std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_hwc_device;
+    EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1)
         .WillOnce(Return(stub_anativewindow));
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(mock_hwc_device, stub_anativewindow))
