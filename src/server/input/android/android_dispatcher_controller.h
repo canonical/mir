@@ -19,9 +19,12 @@
 #ifndef MIR_INPUT_ANDROID_DISPATCHER_CONTROLLER_H_
 #define MIR_INPUT_ANDROID_DISPATCHER_CONTROLLER_H_
 
-#include "mir/shell/input_focus_selector.h"
+#include "mir/shell/input_target_listener.h"
 
 #include <utils/StrongPointer.h>
+
+#include <map>
+#include <mutex>
 
 namespace android
 {
@@ -40,13 +43,21 @@ namespace android
 {
 class InputConfiguration;
 
-class DispatcherController : public shell::InputFocusSelector
+class DispatcherController : public shell::InputTargetListener
 {
 public:
     explicit DispatcherController(std::shared_ptr<InputConfiguration> const& input_configuration);
-    virtual ~DispatcherController() = default;
+    virtual ~DispatcherController() noexcept(true) {}
     
-    void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& session, std::shared_ptr<input::SurfaceTarget> const& surface);
+    void input_application_opened(std::shared_ptr<input::SessionTarget> const& application);
+    void input_application_closed(std::shared_ptr<input::SessionTarget> const& application);
+
+    void input_surface_opened(std::shared_ptr<input::SessionTarget> const& application,
+       std::shared_ptr<input::SurfaceTarget> const& opened_surface);
+    void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface);
+
+    void focus_changed(std::shared_ptr<input::SurfaceTarget> const& focus_surface);
+    void focus_cleared();
 
 protected:
     DispatcherController(const DispatcherController&) = delete;
@@ -55,8 +66,10 @@ protected:
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
 
-    droidinput::sp<droidinput::InputWindowHandle> focused_window_handle;
-    droidinput::sp<droidinput::InputApplicationHandle> focused_application_handle;
+    std::map<std::shared_ptr<input::SessionTarget>, droidinput::sp<droidinput::InputApplicationHandle>> application_handles;
+    std::map<std::shared_ptr<input::SurfaceTarget>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
+
+    std::mutex handles_mutex;
 };
 
 }

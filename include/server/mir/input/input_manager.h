@@ -21,7 +21,6 @@
 #define MIR_INPUT_INPUT_MANAGER_H_
 
 #include "mir/input/input_channel_factory.h"
-#include "mir/shell/input_focus_selector.h"
 
 #include <memory>
 

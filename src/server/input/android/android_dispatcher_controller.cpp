@@ -25,35 +25,85 @@
 
 #include <InputDispatcher.h>
 
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
+#include <mutex>
+
 namespace mi = mir::input;
 namespace mia = mi::android;
 
 mia::DispatcherController::DispatcherController(std::shared_ptr<mia::InputConfiguration> const& config) :
-    input_dispatcher(config->the_dispatcher()),
-    focused_window_handle(0),
-    focused_application_handle(0)
+    input_dispatcher(config->the_dispatcher())
 {
 }
 
-void mia::DispatcherController::set_input_focus_to(std::shared_ptr<mi::SessionTarget> const& session,
-    std::shared_ptr<mi::SurfaceTarget> const& surface)
+void mia::DispatcherController::input_application_opened(std::shared_ptr<mi::SessionTarget> const& session)
 {
-    if (focused_window_handle.get())
-    {
-        input_dispatcher->unregisterInputChannel(focused_window_handle->getInfo()->inputChannel);
-        focused_window_handle.clear();
-        focused_application_handle.clear();
-    }
+    std::unique_lock<std::mutex> lock(handles_mutex);
+    if (application_handles.find(session) != application_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("An application was opened twice"));
+    application_handles[session] = new mia::InputApplicationHandle(session);
+}
+
+void mia::DispatcherController::input_application_closed(std::shared_ptr<mi::SessionTarget> const& session)
+{
+    std::unique_lock<std::mutex> lock(handles_mutex);
+    if (application_handles.find(session) == application_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("An application was closed twice"));
+    application_handles.erase(session);
+}
+
+void mia::DispatcherController::input_surface_opened(std::shared_ptr<mi::SessionTarget> const& session,
+                                                     std::shared_ptr<input::SurfaceTarget> const& opened_surface)
+{
+    std::unique_lock<std::mutex> lock(handles_mutex);
+    auto application_handle = application_handles.find(session);
+    if (application_handle == application_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened for an unopened application"));
+    if (window_handles.find(opened_surface) != window_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened twice"));
+
+    droidinput::sp<droidinput::InputWindowHandle> window_handle = new mia::InputWindowHandle(application_handle->second, opened_surface);
+    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
+    
+    window_handles[opened_surface] = window_handle;
+}
+
+void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
+{
+    std::unique_lock<std::mutex> lock(handles_mutex);
+    auto it = window_handles.find(closed_surface);
+    if (it == window_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("A surface was closed twice"));
+
+    input_dispatcher->unregisterInputChannel(it->second->getInfo()->inputChannel);
+    window_handles.erase(it);
+}
+
+void mia::DispatcherController::focus_cleared()
+{
+    droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> empty_windows;
+    droidinput::sp<droidinput::InputApplicationHandle> null_application = nullptr;
+    
+    input_dispatcher->setFocusedApplication(null_application);
+    input_dispatcher->setInputWindows(empty_windows);
+}
+
+void mia::DispatcherController::focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface)
+{
+    std::unique_lock<std::mutex> lock(handles_mutex);
+
+    auto window_handle = window_handles[surface];
+
+    if (!window_handle.get())
+        BOOST_THROW_EXCEPTION(std::logic_error("Focus changed to an unopened surface"));
+    auto application_handle = window_handle->inputApplicationHandle;
+    
+    input_dispatcher->setFocusedApplication(application_handle);
 
     droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> windows;
-    if (surface)
-    {
-        focused_application_handle = new mia::InputApplicationHandle(session);
-        focused_window_handle = new mia::InputWindowHandle(focused_application_handle, surface);
-        input_dispatcher->setFocusedApplication(focused_application_handle);
+    windows.push_back(window_handle);
 
-        input_dispatcher->registerInputChannel(focused_window_handle->getInfo()->inputChannel, focused_window_handle, false);
-        windows.push_back(focused_window_handle);
-    }
     input_dispatcher->setInputWindows(windows);
 }
