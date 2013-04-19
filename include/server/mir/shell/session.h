@@ -32,8 +32,6 @@ class Surface;
 class Session : public frontend::Session, public input::SessionTarget
 {
 public:
-    virtual ~Session() = default;
-
     virtual void force_requests_to_complete() = 0;
 
     virtual std::shared_ptr<Surface> default_surface() const = 0;
