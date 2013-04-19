@@ -121,6 +121,20 @@ TEST_F(HWC11Device, test_hwc_gles_set_error)
 TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set)
 {
     using namespace testing;
+    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
+        .Times(1)
+        .WillOnce(Return(EGL_FALSE));
+
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+
+    EXPECT_THROW({
+        device.commit_frame(dpy, surf);
+    }, std::runtime_error);
+}
+
+TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set)
+{
+    using namespace testing;
 
     mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
 
