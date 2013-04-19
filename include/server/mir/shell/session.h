@@ -37,17 +37,9 @@ class Surface;
 class Session : public frontend::Session, public input::SessionTarget
 {
 public:
-    virtual ~Session() {}
+    virtual ~Session() = default;
 
-    virtual frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params) = 0;
-    virtual void destroy_surface(frontend::SurfaceId surface) = 0;
-    virtual std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const = 0;
-
-    virtual std::string name() const = 0;
     virtual void force_requests_to_complete() = 0;
-
-    virtual void hide() = 0;
-    virtual void show() = 0;
 
     virtual std::shared_ptr<Surface> default_surface() const = 0;
 
