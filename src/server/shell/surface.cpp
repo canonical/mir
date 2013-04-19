@@ -88,6 +88,18 @@ mir::geometry::Size msh::Surface::size() const
     }
 }
 
+mir::geometry::Point msh::Surface::top_left() const
+{
+    if (auto const& s = surface.lock())
+    {
+        return s->top_left();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
 std::string msh::Surface::name() const
 {
     if (auto const& s = surface.lock())

@@ -220,6 +220,24 @@ TEST_F(ShellSurface, size_throw_behavior)
     }, std::runtime_error);
 }
 
+TEST_F(ShellSurface, top_left_throw_behavior)
+{
+    msh::Surface test(
+            mt::fake_shared(surface_builder),
+            mf::a_surface(),
+            null_input_channel);
+
+    EXPECT_NO_THROW({
+        test.top_left();
+    });
+
+    surface_builder.reset_surface();
+
+    EXPECT_THROW({
+        test.top_left();
+    }, std::runtime_error);
+}
+
 TEST_F(ShellSurface, name_throw_behavior)
 {
     msh::Surface test(

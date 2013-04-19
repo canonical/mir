@@ -63,6 +63,7 @@ public:
     virtual std::string name() const;
 
     virtual geometry::Size size() const;
+    virtual geometry::Point top_left() const;
 
     virtual geometry::PixelFormat pixel_format() const;
 
