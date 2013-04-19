@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_INPUT_LISTENER_H_
-#define MIR_SHELL_INPUT_LISTENER_H_
+#ifndef MIR_SHELL_INPUT_TARGET_LISTENER_H_
+#define MIR_SHELL_INPUT_TARGET_LISTENER_H_
 
 #include <memory>
 
@@ -56,4 +56,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_SHELL_INPUT_LISTENER_H_
+#endif // MIR_SHELL_INPUT_TARGET_LISTENER_H_
