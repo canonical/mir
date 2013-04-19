@@ -387,7 +387,7 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
             InSequence seq;
             
             // TODO: Tighten expectations
-            EXPECT_CALL(*handler, handle_input(MotionEvent())).Times(2);
+            EXPECT_CALL(*handler, handle_input(MotionEvent())).Times(2).WillRepeatedly(Return(true));
         }
     } client_config;
     launch_client_process(client_config);
