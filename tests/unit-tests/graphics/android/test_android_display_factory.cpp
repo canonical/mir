@@ -106,6 +106,9 @@ TEST_F(AndroidDisplayFactoryTest, hwc_selection_gets_fb_devices_ok)
 {
     using namespace testing;
 
+    EXPECT_CALL(*mock_fnw_factory, create_fb_device())
+        .Times(1)
+        .WillOnce(Return(mock_fb_device));
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory); 

@@ -81,12 +81,10 @@ unsigned int mga::HWCCommonDevice::number_of_framebuffers_available() const
 
 void mga::HWCCommonDevice::wait_for_vsync()
 {
-    printf("callwait...\n");
     std::unique_lock<std::mutex> lk(vsync_wait_mutex);
     vsync_occurred = false;
     while(!vsync_occurred)
     {
-        printf("waiting..\n");
         vsync_trigger.wait(lk);
     }
 }

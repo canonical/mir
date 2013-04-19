@@ -42,10 +42,10 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device(std::shared_ptr<hwc_compos
 template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC10Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                                                std::shared_ptr<mga::HWCLayerOrganizer> const& organizer,
+                                                std::shared_ptr<mga::HWCLayerOrganizer> const&, 
                                                 std::shared_ptr<mga::DisplaySupportProvider> const& fbdev)
 {
-    return std::make_shared<mga::HWC10Device>(hwc_device, organizer, fbdev);
+    return std::make_shared<mga::HWC10Device>(hwc_device, fbdev);
 }
 
 template <>

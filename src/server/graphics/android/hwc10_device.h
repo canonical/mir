@@ -33,7 +33,6 @@ class HWC10Device : public HWCCommonDevice
 {
 public:
     HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                std::shared_ptr<HWCLayerOrganizer> const& organizer,
                 std::shared_ptr<DisplaySupportProvider> const& fbdev);
     ~HWC10Device() noexcept;
 
