@@ -74,9 +74,15 @@ class HWCCommon : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+        using namespace testing;
+
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
         mock_organizer = std::make_shared<testing::NiceMock<mtd::MockHWCOrganizer>>();
+        mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
+        ON_CALL(*mock_fbdev, number_of_framebuffers_available())
+            .WillByDefault(Return(2u));
+        ON_CALL(*mock_fbdev, display_format())
+            .WillByDefault(Return(geom::PixelFormat::abgr_8888));
     }
 
     std::shared_ptr<mtd::MockHWCOrganizer> mock_organizer;
