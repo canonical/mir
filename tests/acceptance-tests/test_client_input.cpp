@@ -278,9 +278,15 @@ MATCHER_P(KeyOfSymbol, keysym, "")
         return true;
     return false;
 }
-MATCHER(MotionEvent, "")
+
+MATCHER_P2(MotionEventWithPosition, x, y, "")
 {
     if (arg->type != mir_event_type_motion)
+        return false;
+    printf("x: %f \n", arg->motion.pointer_coordinates[0].x);
+    if (arg->motion.pointer_coordinates[0].x != x)
+        return false;
+    if (arg->motion.pointer_coordinates[0].y != y)
         return false;
     return true;
 }
@@ -366,12 +372,12 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
     {
         void inject_input()
         {
-            // TODO: Document
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width / 2,
                                                                                  InputReceivingClient::surface_height / 2));
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width / 2 + 1,
-                                                                                 InputReceivingClient::surface_height / 2 + 1));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width / 2,
+                                                                                 InputReceivingClient::surface_height / 2));
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
+            fake_event_hub->sync_builtin_cursor();
         }
     } server_config;
     launch_server_process(server_config);
@@ -385,9 +391,16 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
             using namespace ::testing;
             
             InSequence seq;
-            
-            // TODO: Tighten expectations
-            EXPECT_CALL(*handler, handle_input(MotionEvent())).Times(2).WillRepeatedly(Return(true));
+
+            // We should see an event as the cursor moves to the mid point of the window
+            EXPECT_CALL(*handler, handle_input(
+                MotionEventWithPosition(InputReceivingClient::surface_width / 2, 
+                                        InputReceivingClient::surface_height / 2))).Times(1).WillOnce(Return(true));
+            // And a second as it escapes it
+            EXPECT_CALL(*handler, handle_input(
+                MotionEventWithPosition(InputReceivingClient::surface_width, 
+                                        InputReceivingClient::surface_height))).Times(1).WillOnce(Return(true));
+            // But we should not receive an event for the third movement outside of our surface!
         }
     } client_config;
     launch_client_process(client_config);
