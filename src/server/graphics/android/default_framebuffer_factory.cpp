@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -19,11 +19,13 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "default_framebuffer_factory.h"
-#include "display_support_provider.h"
+#include "fb_device.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
 #include "fb_simple_swapper.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 #include <vector>
 
 namespace mga=mir::graphics::android;
@@ -36,7 +38,7 @@ mga::DefaultFramebufferFactory::DefaultFramebufferFactory(
 }
 
 std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(
-    std::shared_ptr<DisplaySupportProvider> const& info_provider)
+    std::shared_ptr<DisplaySupportProvider> const& info_provider) const
 {
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();
@@ -52,3 +54,23 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, info_provider);
     return std::make_shared<mga::MirNativeWindow>(interpreter); 
 }
+
+std::shared_ptr<mga::DisplaySupportProvider> mga::DefaultFramebufferFactory::create_fb_device() const
+{
+    hw_module_t const* module;
+    framebuffer_device_t* fbdev_raw;
+
+    auto rc = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
+    if ((rc != 0) || (module == nullptr) || (framebuffer_open(module, &fbdev_raw) != 0) )
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create fb display")); 
+    }
+
+    auto fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
+                      [](struct framebuffer_device_t* fbdevice)
+                      {
+                         fbdevice->common.close((hw_device_t*) fbdevice);
+                      });
+
+    return std::make_shared<mga::FBDevice>(fb_dev);
+} 

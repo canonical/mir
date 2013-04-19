@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -47,7 +47,25 @@ public:
 
     virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
 
-    virtual void shutdown() = 0;
+    /**
+     * Forces requests on the buffer swapper to complete.
+     *
+     * Requests, like client_acquire(), can block waiting for a buffer to
+     * become available. This method tries to force the request to
+     * complete while ensuring that swapper keeps functioning properly.
+     *
+     * Note that it's not always possible to force a request to complete
+     * without breaking the swapper. It's a logic error to attempt to call
+     * this method if the circumstances don't allow a forced completion.
+     *
+     * To successfully use this method you should ensure that (i.e. the
+     * preconditions for calling this method are):
+     *
+     * - The compositor is not holding any buffers (e.g., it has been stopped).
+     * - The client is trying to acquire at most one buffer at a time (which is
+     *   normal usage, and enforced by the high level API).
+     */
+    virtual void force_requests_to_complete() = 0;
 
     virtual ~BufferSwapper() {}
 

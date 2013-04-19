@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,22 +10,26 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/compositor/buffer.h"
 #include "server_render_window.h"
 #include "display_support_provider.h"
 #include "fb_swapper.h"
 #include "android_buffer.h"
-#include "mir/compositor/buffer.h"
+#include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+
+#include <thread>
+#include <chrono>
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
@@ -34,7 +38,7 @@ mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> cons
                                             std::shared_ptr<mga::DisplaySupportProvider> const& display_poster)
     : swapper(swapper),
       poster(display_poster),
-      format(to_android_format(poster->display_format()))
+      format(mga::to_android_format(poster->display_format()))
 {
 }
 
@@ -73,28 +77,18 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
     switch(key)
     {
         case NATIVE_WINDOW_DEFAULT_WIDTH:
+        case NATIVE_WINDOW_WIDTH:
             size = poster->display_size();
             return size.width.as_uint32_t();
         case NATIVE_WINDOW_DEFAULT_HEIGHT:
+        case NATIVE_WINDOW_HEIGHT:
             size = poster->display_size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
-            return format; 
+            return format;
+        case NATIVE_WINDOW_TRANSFORM_HINT:
+            return 0; 
         default:
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
-            return -1;
-    }
-}
-
-int mga::ServerRenderWindow::to_android_format(geom::PixelFormat format)
-{
-    switch (format)
-    {
-        case geom::PixelFormat::abgr_8888:
-            return HAL_PIXEL_FORMAT_RGBA_8888;
-        default:
-            BOOST_THROW_EXCEPTION(std::runtime_error("pixel format of fb is unknown!"));
-            return -1;
-
     }
 }

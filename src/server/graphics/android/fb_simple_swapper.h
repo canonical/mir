@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -37,16 +37,19 @@ namespace android
 class FBSimpleSwapper : public FBSwapper
 {
 public:
-    explicit FBSimpleSwapper(std::initializer_list<std::shared_ptr<AndroidBuffer>> buffer_list);
-    explicit FBSimpleSwapper(std::vector<std::shared_ptr<AndroidBuffer>> buffer_list);
+    template<typename AndroidBufferPtrContainer>
+    explicit FBSimpleSwapper(AndroidBufferPtrContainer const& buffer_list)
+    {
+        for (auto& buffer : buffer_list)
+        {
+            queue.push(buffer);
+        }
+    }
 
     std::shared_ptr<AndroidBuffer> compositor_acquire();
     void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer);
 
 private:
-    template<class T>
-    void initialize_queues(T);
-
     std::mutex queue_lock;
     std::condition_variable cv;
 

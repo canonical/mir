@@ -19,6 +19,7 @@
 #include "mir/graphics/display.h"
 
 #include "src/server/input/android/android_input_manager.h"
+#include "src/server/input/android/android_dispatcher_controller.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -32,12 +33,16 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <xkbcommon/xkbcommon.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
+
 #include <thread>
 #include <functional>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
+namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
@@ -50,11 +55,11 @@ namespace
 namespace
 {
 
-struct FocusNotifyingInputManager : public mia::InputManager
+struct FocusNotifyingDispatcherController : public mia::DispatcherController
 {
-    FocusNotifyingInputManager(std::shared_ptr<mia::InputConfiguration> const& configuration,
-                               mt::WaitCondition &wait_condition)
-      : InputManager(configuration),
+    FocusNotifyingDispatcherController(std::shared_ptr<mia::InputConfiguration> const& configuration,
+                                       mt::WaitCondition &wait_condition)
+      : DispatcherController(configuration),
         on_focus_set(wait_condition)
     {
 
@@ -63,7 +68,7 @@ struct FocusNotifyingInputManager : public mia::InputManager
     void set_input_focus_to(
         std::shared_ptr<mi::SessionTarget> const& session, std::shared_ptr<mi::SurfaceTarget> const& surface) override
     {
-        InputManager::set_input_focus_to(session, surface);
+        DispatcherController::set_input_focus_to(session, surface);
         
         // We need a synchronization primitive inorder to halt test event injection
         // until after a surface has taken focus (lest the events be discarded).
@@ -100,17 +105,31 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     {
         input_injection_thread.join();
     }
-
-    std::shared_ptr<mi::InputManager>
-    the_input_manager() override
+    
+    std::shared_ptr<mia::InputConfiguration> the_input_configuration() override
     {
         fake_event_hub = input_config.the_fake_event_hub();
-
+        return mt::fake_shared(input_config);
+    }
+    
+    std::shared_ptr<mi::InputManager> the_input_manager() override
+    {
         return input_manager(
-        [this]() -> std::shared_ptr<mi::InputManager>
-        {
-            return std::make_shared<FocusNotifyingInputManager>(mt::fake_shared(input_config), on_focus_set);
-        });
+            [&]()
+            {
+                // Force usage of real input even in case of tests-use-real-input = false.
+                return std::make_shared<mia::InputManager>(the_input_configuration());
+            });
+    }
+
+    std::shared_ptr<msh::InputFocusSelector>
+    the_input_focus_selector() override
+    {
+        return input_focus_selector(
+            [this]()
+            {
+                return std::make_shared<FocusNotifyingDispatcherController>(mt::fake_shared(input_config), on_focus_set);
+            });
     }
 
     mtd::FakeEventHubInputConfiguration input_config;
@@ -167,22 +186,27 @@ struct ClientConfigCommon : TestingClientConfiguration
 
 struct MockInputHandler
 {
-    MOCK_METHOD1(handle_input, void(MirEvent const*));
+    MOCK_METHOD1(handle_key_down, void(MirEvent const*));
 };
 
 struct InputReceivingClient : ClientConfigCommon
 {
-    InputReceivingClient()
-      : events_received(0)
+    InputReceivingClient(int events_to_receive)
+      : events_to_receive(events_to_receive),
+        events_received(0)
     {
+        assert(events_to_receive <= max_events_to_receive);
     }
 
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
-        client->handler->handle_input(ev);
-        client->event_received[client->events_received].wake_up_everyone();
-        client->events_received++;
+        if (ev->key.action == 0)
+        {
+            client->handler->handle_key_down(ev);
+            client->event_received[client->events_received].wake_up_everyone();
+            client->events_received++;
+        }
     }
     virtual void expect_input()
     {
@@ -212,13 +236,13 @@ struct InputReceivingClient : ClientConfigCommon
              handle_input,
              this
          };
-         mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+         mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 
          mir_surface_set_event_handler(surface, &event_delegate);
 
-         event_received[0].wait_for_at_most_seconds(5);
-         event_received[1].wait_for_at_most_seconds(5);
-         event_received[2].wait_for_at_most_seconds(5);
+
+         for (int i = 0; i < events_to_receive; i++)
+             event_received[i].wait_for_at_most_seconds(5);
 
          mir_surface_release_sync(surface);
          
@@ -230,7 +254,10 @@ struct InputReceivingClient : ClientConfigCommon
     }
     
     std::shared_ptr<MockInputHandler> handler;
-    mt::WaitCondition event_received[3];
+    static int const max_events_to_receive = 3;
+    mt::WaitCondition event_received[max_events_to_receive];
+    
+    int events_to_receive;
     int events_received;
 };
 
@@ -259,10 +286,60 @@ TEST_F(TestClientInput, clients_receive_key_input)
     
     struct KeyReceivingClient : InputReceivingClient
     {
+        KeyReceivingClient() : InputReceivingClient(num_events_produced) {}
         void expect_input()
         {
             using namespace ::testing;
-            EXPECT_CALL(*handler, handle_input(_)).Times(num_events_produced);
+            EXPECT_CALL(*handler, handle_key_down(_)).Times(num_events_produced);
+        }
+    } client_config;
+    launch_client_process(client_config);
+}
+
+namespace
+{
+MATCHER_P(KeyOfSymbol, keysym, "")
+{
+    if (static_cast<xkb_keysym_t>(arg->key.key_code) == (uint)keysym)
+        return true;
+    return false;
+}
+}
+
+TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
+{
+    using namespace ::testing;
+    
+    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    {
+        void inject_input()
+        {
+            fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                             .of_scancode(KEY_LEFTSHIFT));
+            fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                             .of_scancode(KEY_4));
+
+            // Release the keys so we don't get repeat events.
+            fake_event_hub->synthesize_event(mis::a_key_up_event()
+                                             .of_scancode(KEY_4));
+            fake_event_hub->synthesize_event(mis::a_key_up_event()
+                                             .of_scancode(KEY_LEFTSHIFT));
+
+        }
+    } server_config;
+    launch_server_process(server_config);
+    
+    struct KeyReceivingClient : InputReceivingClient
+    {
+        KeyReceivingClient() : InputReceivingClient(2) {}
+
+        void expect_input()
+        {
+            using namespace ::testing;
+
+            InSequence seq;
+            EXPECT_CALL(*handler, handle_key_down(KeyOfSymbol(XKB_KEY_Shift_L))).Times(1);
+            EXPECT_CALL(*handler, handle_key_down(KeyOfSymbol(XKB_KEY_dollar))).Times(1);
         }
     } client_config;
     launch_client_process(client_config);

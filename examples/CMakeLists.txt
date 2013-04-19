@@ -27,15 +27,11 @@ target_link_libraries(mir_eglplasma
   eglapp
 )
 
-add_executable(
-  mir_demo_client
-
+add_executable(mir_demo_client
   demo_client.c
 )
 
-target_link_libraries(
-  mir_demo_client
-
+target_link_libraries(mir_demo_client
   mirclient
   mirprotobuf
 
@@ -44,15 +40,11 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_executable(
-  mir_demo_client_unaccelerated
-
+add_executable(mir_demo_client_unaccelerated
   demo_client_unaccelerated.c
 )
 
-target_link_libraries(
-  mir_demo_client_unaccelerated
-
+target_link_libraries(mir_demo_client_unaccelerated
   mirclient
   mirprotobuf
 
@@ -61,15 +53,11 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_executable(
-  mir_demo_client_accelerated
-
+add_executable(mir_demo_client_accelerated
   demo_client_accelerated.cpp
 )
 
-target_link_libraries(
-  mir_demo_client_accelerated
-
+target_link_libraries(mir_demo_client_accelerated
   mirdraw
   mirclient
   mirprotobuf
@@ -82,19 +70,21 @@ target_link_libraries(
 
 )
 
+add_library(mirdraw STATIC graphics_utils.cpp)
+target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
+
 include_directories(
-  ${PROJECT_SOURCE_DIR}/include/accessory
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${GLESv2_INCLUDE_DIRS}
 )
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
-add_executable(render_to_fb ${RENDER_TO_FB_SOURCES})
+add_executable(render_to_fb 
+  ${RENDER_TO_FB_SOURCES}
+)
 
-target_link_libraries(
-    render_to_fb
-
+target_link_libraries(render_to_fb
     mirserver
     mirlogging
     mirdraw
@@ -103,18 +93,25 @@ target_link_libraries(
 
 set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)
 add_executable(render_surfaces ${RENDER_SURFACES_SOURCES})
-target_link_libraries(
-    render_surfaces
-
+target_link_libraries(render_surfaces
     mirserver
     mirshell
     ${Boost_LIBRARIES}
+)
+
+add_executable(mir_demo_input_filter
+  demo_input_filter.cpp
+)
+
+target_link_libraries(mir_demo_input_filter  
+  mirserver
 )
 
 set (DEMO_CLIENTS
   mir_demo_client
   mir_demo_client_unaccelerated
   mir_demo_client_accelerated
+  mir_demo_input_filter
   mir_eglflash
   mir_egltriangle
   mir_eglplasma

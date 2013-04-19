@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -28,7 +28,6 @@ namespace graphics
 namespace android
 {
 class HWCLayerOrganizer;
-class FBDevice;
 
 
 class HWC11Device : public HWCCommonDevice
@@ -36,7 +35,7 @@ class HWC11Device : public HWCCommonDevice
 public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<HWCLayerOrganizer> const& organizer,
-                std::shared_ptr<FBDevice> const& fbdev);
+                std::shared_ptr<DisplaySupportProvider> const& fbdev);
     ~HWC11Device() noexcept;
 
     geometry::Size display_size() const; 
@@ -48,7 +47,7 @@ public:
 
 private:
     std::shared_ptr<HWCLayerOrganizer> const layer_organizer;
-    std::shared_ptr<FBDevice> const fb_device;
+    std::shared_ptr<DisplaySupportProvider> const fb_device;
     unsigned int primary_display_config;
 };
 

@@ -23,7 +23,7 @@
 #include "mir/logging/display_report.h"
 #include "mir/logging/dumb_console_logger.h"
 
-#include "mir/draw/graphics.h"
+#include "graphics.h"
 
 #include <csignal>
 

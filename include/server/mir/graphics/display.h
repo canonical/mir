@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -35,6 +35,9 @@ namespace graphics
 class DisplayBuffer;
 class DisplayConfiguration;
 
+typedef std::function<bool()> DisplayPauseHandler;
+typedef std::function<bool()> DisplayResumeHandler;
+
 class Display : public ViewableArea
 {
 public:
@@ -45,8 +48,8 @@ public:
 
     virtual void register_pause_resume_handlers(
         MainLoop& main_loop,
-        std::function<void()> const& pause_handler,
-        std::function<void()> const& resume_handler) = 0;
+        DisplayPauseHandler const& pause_handler,
+        DisplayResumeHandler const& resume_handler) = 0;
 
     virtual void pause() = 0;
     virtual void resume() = 0;

@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -48,7 +48,8 @@ public:
     // We override the_input_manager in the default server configuration
     // to avoid starting and stopping the full android input stack for tests
     // which do not leverage input.
-    virtual std::shared_ptr<input::InputManager> the_input_manager();
+    std::shared_ptr<input::InputManager> the_input_manager();
+    std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
 
     virtual std::string the_socket_file() const;
     using DefaultServerConfiguration::the_options;

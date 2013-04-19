@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -112,7 +112,7 @@ void mggh::DRMHelper::drop_master() const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to drop DRM master"))
-                    << boost::errinfo_errno(ret));
+                    << boost::errinfo_errno(errno));
     }
 }
 
@@ -132,7 +132,7 @@ void mggh::DRMHelper::set_master() const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to set DRM master"))
-                    << boost::errinfo_errno(ret));
+                    << boost::errinfo_errno(errno));
     }
 }
 
@@ -279,7 +279,6 @@ void mggh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 0,
-        EGL_DEPTH_SIZE, 1,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };

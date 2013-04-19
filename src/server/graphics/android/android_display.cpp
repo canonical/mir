@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -122,7 +122,7 @@ geom::Rectangle mga::AndroidDisplay::view_area() const
 
 void mga::AndroidDisplay::clear()
 {
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 bool mga::AndroidDisplay::post_update()
@@ -144,8 +144,8 @@ std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 
 void mga::AndroidDisplay::register_pause_resume_handlers(
     MainLoop& /*main_loop*/,
-    std::function<void()> const& /*pause_handler*/,
-    std::function<void()> const& /*resume_handler*/)
+    DisplayPauseHandler const& /*pause_handler*/,
+    DisplayResumeHandler const& /*resume_handler*/)
 {
 }
 
@@ -161,4 +161,9 @@ void mga::AndroidDisplay::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
+}
+
+void mga::AndroidDisplay::release_current()
+{
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }

@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
@@ -40,6 +40,7 @@ class SurfaceFactory;
 class SessionContainer;
 class FocusSequence;
 class FocusSetter;
+class Session;
 
 class SessionManager : public frontend::Shell
 {
@@ -52,7 +53,6 @@ public:
 
     virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
-    virtual void shutdown();
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& session, int id);
     virtual void focus_session_with_lightdm_id(int id);
@@ -73,11 +73,11 @@ private:
     std::shared_ptr<FocusSetter> const focus_setter;
 
     std::mutex mutex;
-    std::weak_ptr<frontend::Session> focus_application;
-    typedef std::vector<std::pair<int, std::shared_ptr<frontend::Session>>> Tags;
+    std::weak_ptr<Session> focus_application;
+    typedef std::vector<std::pair<int, std::shared_ptr<Session>>> Tags;
     Tags tags;
 
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<frontend::Session> const& next_focus);
+    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 };
 
 }

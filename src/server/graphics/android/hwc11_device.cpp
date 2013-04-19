@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -19,7 +19,6 @@
 
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
-#include "fb_device.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -28,7 +27,7 @@ namespace geom=mir::geometry;
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerOrganizer> const& organizer,
-                              std::shared_ptr<FBDevice> const& fbdev)
+                              std::shared_ptr<DisplaySupportProvider> const& fbdev)
     : HWCCommonDevice(hwc_device),
       layer_organizer(organizer),
       fb_device(fbdev)
@@ -67,15 +66,15 @@ geom::PixelFormat mga::HWC11Device::display_format() const
 
 unsigned int mga::HWC11Device::number_of_framebuffers_available() const
 {
-    //note: the default for hwc devices is 2 framebuffers. However, the api allows for the hwc can give us a hint
-    //      to triple buffer. Taking this hint is currently not supported
+    //note: the default for hwc devices is 2 framebuffers. However, the hwcomposer api allows for the module to give
+    //us a hint to triple buffer. Taking this hint is currently not supported.
     return 2u;
 }
  
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& buffer)
 {
     layer_organizer->set_fb_target(buffer);
-    fb_device->post(buffer);
+    fb_device->set_next_frontbuffer(buffer);
 }
 
 void mga::HWC11Device::commit_frame()

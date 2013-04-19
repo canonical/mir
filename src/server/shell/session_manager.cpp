@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
@@ -62,17 +62,17 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const
     return new_session;
 }
 
-inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<mf::Session> const& next_focus)
+inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex> const&, std::shared_ptr<Session> const& next_focus)
 {
-    auto shell_session = std::dynamic_pointer_cast<msh::Session>(next_focus);
-
-    focus_application = shell_session;
-    focus_setter->set_focus_to(shell_session);
+    focus_application = next_focus;
+    focus_setter->set_focus_to(next_focus);
 }
 
 void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
 {
-    app_container->remove_session(session);
+    auto shell_session = std::dynamic_pointer_cast<Session>(session);
+
+    app_container->remove_session(shell_session);
 
     std::unique_lock<std::mutex> lock(mutex);
     set_focus_to_locked(lock, focus_sequence->default_focus());
@@ -80,7 +80,7 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
     typedef Tags::value_type Pair;
 
     auto remove = std::remove_if(tags.begin(), tags.end(),
-        [&](Pair const& v) { return v.second == session;});
+        [&](Pair const& v) { return v.second == shell_session;});
 
     tags.erase(remove, tags.end());
 }
@@ -100,25 +100,19 @@ void msh::SessionManager::focus_next()
     set_focus_to_locked(lock, focus);
 }
 
-void msh::SessionManager::shutdown()
-{
-    app_container->for_each([](std::shared_ptr<mf::Session> const& session)
-    {
-        session->shutdown();
-    });
-}
-
 void msh::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<mf::Session> const& session, int id)
 {
     std::unique_lock<std::mutex> lock(mutex);
     typedef Tags::value_type Pair;
 
+    auto shell_session = std::dynamic_pointer_cast<Session>(session);
+
     auto remove = std::remove_if(tags.begin(), tags.end(),
-        [&](Pair const& v) { return v.first == id || v.second == session;});
+        [&](Pair const& v) { return v.first == id || v.second == shell_session;});
 
     tags.erase(remove, tags.end());
 
-    tags.push_back(Pair(id, session));
+    tags.push_back(Pair(id, shell_session));
 }
 
 void msh::SessionManager::focus_session_with_lightdm_id(int id)
@@ -138,8 +132,9 @@ void msh::SessionManager::focus_session_with_lightdm_id(int id)
 mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
     mf::SurfaceCreationParameters const& params)
 {
+    auto shell_session = std::dynamic_pointer_cast<Session>(session);
     auto id = session->create_surface(params);
-    set_focus_to_locked(std::unique_lock<std::mutex>(mutex), session);
+    set_focus_to_locked(std::unique_lock<std::mutex>(mutex), shell_session);
 
     return id;
 }

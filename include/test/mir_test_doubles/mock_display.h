@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -36,8 +36,8 @@ public:
     MOCK_METHOD1(for_each_display_buffer, void (std::function<void(graphics::DisplayBuffer&)> const&));
     MOCK_METHOD0(configuration, std::shared_ptr<graphics::DisplayConfiguration>());
     MOCK_METHOD3(register_pause_resume_handlers, void(MainLoop&,
-                                                      std::function<void()> const&,
-                                                      std::function<void()> const&));
+                                                      graphics::DisplayPauseHandler const&,
+                                                      graphics::DisplayResumeHandler const&));
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
 };

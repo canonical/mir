@@ -55,7 +55,7 @@ public:
     virtual void client_release(std::shared_ptr<mc::Buffer> const&) {}
     virtual std::shared_ptr<mc::Buffer> compositor_acquire(){ return std::shared_ptr<mc::Buffer>(); };
     virtual void compositor_release(std::shared_ptr<mc::Buffer> const&){}
-    virtual void shutdown() {}
+    virtual void force_requests_to_complete() {}
 };
 
 struct MockBufferBundleFactory : public ms::BufferBundleFactory

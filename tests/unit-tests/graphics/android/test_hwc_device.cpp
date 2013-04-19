@@ -19,9 +19,10 @@
 #include "src/server/graphics/android/hwc10_device.h"
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
-#include "mir_test_doubles/mock_fb_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
+#include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test_doubles/mock_display_support_provider.h"
 
 #include <thread>
 #include <chrono>
@@ -36,13 +37,13 @@ namespace geom=mir::geometry;
 template<class T>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerOrganizer> const& organizer,
-                                                std::shared_ptr<mga::FBDevice> const& fbdev);
+                                                std::shared_ptr<mga::DisplaySupportProvider> const& fbdev);
 
 template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC10Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerOrganizer> const& organizer,
-                                                std::shared_ptr<mga::FBDevice> const& fbdev)
+                                                std::shared_ptr<mga::DisplaySupportProvider> const& fbdev)
 {
     return std::make_shared<mga::HWC10Device>(hwc_device, organizer, fbdev);
 }
@@ -51,16 +52,19 @@ template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC11Device>(
                                                 std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerOrganizer> const& organizer,
-                                                std::shared_ptr<mga::FBDevice> const& fbdev)
+                                                std::shared_ptr<mga::DisplaySupportProvider> const& fbdev)
 {
     return std::make_shared<mga::HWC11Device>(hwc_device, organizer, fbdev);
 }
 
 namespace
 {
-struct HWCDummyLayer : public mga::HWCLayerBase
+struct HWCDummyLayer : public mga::HWCDefaultLayer
 {
-    HWCDummyLayer() = default;
+    HWCDummyLayer()
+     : HWCDefaultLayer({})
+    {
+    }
 };
 }
 
@@ -71,13 +75,13 @@ protected:
     virtual void SetUp()
     {
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
-        mock_fbdev = std::make_shared<mtd::MockFBDevice>();
-        mock_organizer = std::make_shared<mtd::MockHWCOrganizer>();
+        mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
+        mock_organizer = std::make_shared<testing::NiceMock<mtd::MockHWCOrganizer>>();
     }
 
     std::shared_ptr<mtd::MockHWCOrganizer> mock_organizer;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
-    std::shared_ptr<mtd::MockFBDevice> mock_fbdev;
+    std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fbdev;
 };
 
 typedef ::testing::Types<mga::HWC10Device, mga::HWC11Device> HWCDeviceTestTypes;

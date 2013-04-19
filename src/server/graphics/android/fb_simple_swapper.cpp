@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -23,25 +23,6 @@
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
-
-template<class T>
-void mga::FBSimpleSwapper::initialize_queues(T buffer_list)
-{
-    for (auto& buffer : buffer_list)
-    {
-        queue.push(buffer);
-    }
-}
-
-mga::FBSimpleSwapper::FBSimpleSwapper(std::initializer_list<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
-{
-    initialize_queues(buffer_list);
-}
-
-mga::FBSimpleSwapper::FBSimpleSwapper(std::vector<std::shared_ptr<mga::AndroidBuffer>> buffer_list)
-{
-    initialize_queues(buffer_list);
-}
 
 std::shared_ptr<mga::AndroidBuffer> mga::FBSimpleSwapper::compositor_acquire()
 {
