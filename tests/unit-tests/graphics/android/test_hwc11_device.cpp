@@ -40,6 +40,8 @@ protected:
     std::shared_ptr<mtd::MockHWCOrganizer> mock_organizer;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_support_provider;
+    EGLDisplay dpy;
+    EGLSurface surf;
 };
 
 namespace
@@ -66,7 +68,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
         .Times(1);
 
-    device.commit_frame();
+    device.commit_frame(dpy, surf);
 
     EXPECT_EQ(empty_list.size(), mock_device->display0_content.numHwLayers);
 
@@ -88,7 +90,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_gets_layerlist)
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
         .Times(1);
 
-    device.commit_frame();
+    device.commit_frame(dpy, surf);
 
     EXPECT_EQ(fb_list.size(), mock_device->display0_content.numHwLayers);
 }
@@ -109,7 +111,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_error)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        device.commit_frame();
+        device.commit_frame(dpy, surf);
     }, std::runtime_error);
 }
 
