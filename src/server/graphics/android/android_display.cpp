@@ -53,11 +53,11 @@ public:
 }
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
-    : native_window{native_win},
-      egl_display{EGL_NO_DISPLAY},
+    : egl_display{EGL_NO_DISPLAY},
+      egl_surface{EGL_NO_SURFACE},
+      native_window{native_win},
       egl_config{0},
       egl_context{EGL_NO_CONTEXT},
-      egl_surface{EGL_NO_SURFACE},
       egl_context_shared{EGL_NO_CONTEXT},
       egl_surface_dummy{EGL_NO_SURFACE}
 {

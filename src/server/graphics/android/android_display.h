@@ -61,12 +61,13 @@ public:
     void make_current();
     void release_current();
 
+protected:
+    EGLDisplay egl_display;
+    EGLSurface egl_surface;
 private:
     std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
-    EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContext egl_context;
-    EGLSurface egl_surface;
     EGLContext egl_context_shared;
     EGLSurface egl_surface_dummy;
 };

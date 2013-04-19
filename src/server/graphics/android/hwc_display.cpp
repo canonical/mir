@@ -47,8 +47,7 @@ void mga::HWCDisplay::clear()
 bool mga::HWCDisplay::post_update()
 {
     auto rc = AndroidDisplay::post_update();
-    EGLDisplay dpy = 0; EGLSurface sur = 0;
-    hwc_device->commit_frame(dpy, sur);
+    hwc_device->commit_frame(egl_display, egl_surface);
     hwc_device->wait_for_vsync();
     return rc;
 }
