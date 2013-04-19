@@ -47,6 +47,24 @@ protected:
     mir::EglMock mock_egl;
 };
 
+TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
+{
+    using namespace testing;
+
+    mga::HWCDisplay display(native_win, mock_hwc_device);
+
+    testing::InSequence sequence_enforcer;
+    EXPECT_CALL(*mock_hwc_device, commit_frame(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
+        .Times(1);
+    EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
+        .Times(1);
+
+    display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    {
+        EXPECT_TRUE(buffer.post_update());
+    });
+}
+
 TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
 {
     using namespace testing;

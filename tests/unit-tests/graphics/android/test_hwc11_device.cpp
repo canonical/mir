@@ -22,6 +22,7 @@
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
 #include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test/egl_mock.h"
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
@@ -42,6 +43,7 @@ protected:
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_support_provider;
     EGLDisplay dpy;
     EGLSurface surf;
+    mir::EglMock mock_egl;
 };
 
 namespace
@@ -113,6 +115,31 @@ TEST_F(HWC11Device, test_hwc_gles_set_error)
     EXPECT_THROW({
         device.commit_frame(dpy, surf);
     }, std::runtime_error);
+}
+
+TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set)
+{
+    using namespace testing;
+
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+
+    mga::LayerList fb_list;
+    fb_list.push_back(std::make_shared<HWCDummyLayer>());
+
+    //the order here is very important. eglSwapBuffers will alter the layerlist,
+    //so it must come before assembling the data for set
+    InSequence seq;
+    EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))
+        .Times(1);
+    EXPECT_CALL(*mock_organizer, native_list())
+        .Times(1)
+        .WillOnce(ReturnRef(fb_list));
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
+        .Times(1);
+
+    device.commit_frame(dpy, surf);
+
+    EXPECT_EQ(fb_list.size(), mock_device->display0_content.numHwLayers);
 }
 
 TEST_F(HWC11Device, test_hwc_device_display_config)
