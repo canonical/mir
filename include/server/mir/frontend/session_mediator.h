@@ -21,13 +21,14 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
-#include "mir/frontend/server.h"
 
 #include <map>
 #include <memory>
 
 namespace mir
 {
+class EventSink;
+
 namespace graphics
 {
 class Platform;
@@ -51,7 +52,7 @@ class SessionMediatorReport;
 class ClientBufferTracker;
 
 // SessionMediator relays requests from the client process into the server.
-class SessionMediator : public mir::frontend::Server
+class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
 
@@ -107,6 +108,8 @@ public:
                            mir::protobuf::SurfaceSetting*,
                            google::protobuf::Closure* done);
 
+    void set_event_sink(std::weak_ptr<EventSink> const& sink);
+
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
@@ -121,6 +124,8 @@ private:
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 
     std::shared_ptr<Session> session;
+
+    std::weak_ptr<EventSink> event_sink;
 };
 
 }

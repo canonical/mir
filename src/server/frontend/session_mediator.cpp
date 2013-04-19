@@ -261,3 +261,8 @@ void mir::frontend::SessionMediator::configure_surface(
     done->Run();
 }
 
+void mir::frontend::SessionMediator::set_event_sink(
+    std::weak_ptr<mir::EventSink> const& sink)
+{
+    event_sink = sink;
+}

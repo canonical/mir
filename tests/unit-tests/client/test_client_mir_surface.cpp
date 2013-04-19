@@ -63,7 +63,7 @@ struct MockServerPackageGenerator : public StubServerTool
 
         input_fd = open("/dev/null", O_APPEND);
     }
-    ~MockServerPackageGenerator() noexcept
+    ~MockServerPackageGenerator()
     {
         close(input_fd);
         for (int i = 0; i < server_package.fd_items; i++)
