@@ -201,6 +201,7 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
+
         if(client->handler->handle_input(ev))
         {
             client->event_received[client->events_received].wake_up_everyone();
@@ -279,11 +280,20 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     return false;
 }
 
+MATCHER(HoverEnterEvent, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != AMOTION_EVENT_ACTION_HOVER_ENTER)
+        return false;
+
+    return true;
+}
+
 MATCHER_P2(MotionEventWithPosition, x, y, "")
 {
     if (arg->type != mir_event_type_motion)
         return false;
-    printf("x: %f \n", arg->motion.pointer_coordinates[0].x);
     if (arg->motion.pointer_coordinates[0].x != x)
         return false;
     if (arg->motion.pointer_coordinates[0].y != y)
@@ -372,12 +382,9 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
     {
         void inject_input()
         {
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width / 2,
-                                                                                 InputReceivingClient::surface_height / 2));
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width / 2,
-                                                                                 InputReceivingClient::surface_height / 2));
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
-            fake_event_hub->sync_builtin_cursor();
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width,
+                                                                                 InputReceivingClient::surface_height));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,2));
         }
     } server_config;
     launch_server_process(server_config);
@@ -392,15 +399,12 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
             
             InSequence seq;
 
-            // We should see an event as the cursor moves to the mid point of the window
-            EXPECT_CALL(*handler, handle_input(
-                MotionEventWithPosition(InputReceivingClient::surface_width / 2, 
-                                        InputReceivingClient::surface_height / 2))).Times(1).WillOnce(Return(true));
-            // And a second as it escapes it
+            // We should see the cursor enter
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1).WillOnce(Return(true));
             EXPECT_CALL(*handler, handle_input(
                 MotionEventWithPosition(InputReceivingClient::surface_width, 
                                         InputReceivingClient::surface_height))).Times(1).WillOnce(Return(true));
-            // But we should not receive an event for the third movement outside of our surface!
+            // But we should not receive an event for the second movement outside of our surface!
         }
     } client_config;
     launch_client_process(client_config);
