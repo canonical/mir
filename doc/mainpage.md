@@ -47,6 +47,11 @@ Please file bug reports at: https://bugs.launchpad.net/mir
 
 The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
+Learn about Mir
+----------------
+Android technical info:
+ - \ref android_technical_details
+
 Writing client applications
 ---------------------------
 
