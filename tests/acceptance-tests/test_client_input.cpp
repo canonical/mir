@@ -328,12 +328,6 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             fake_event_hub->synthesize_event(mis::a_key_down_event()
                                              .of_scancode(KEY_4));
 
-            // Release the keys so we don't get repeat events.
-            fake_event_hub->synthesize_event(mis::a_key_up_event()
-                                             .of_scancode(KEY_4));
-            fake_event_hub->synthesize_event(mis::a_key_up_event()
-                                             .of_scancode(KEY_LEFTSHIFT));
-
         }
     } server_config;
     launch_server_process(server_config);
@@ -347,10 +341,10 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             using namespace ::testing;
 
             InSequence seq;
-//            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_Shift_L)))).Times(1);
-//            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_dollar)))).Times(1);
-            EXPECT_CALL(*handler, handle_input(KeyDownEvent())).Times(2);
-//            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_dollar)))).Times(1);
+            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_Shift_L)))).Times(1)
+                .WillOnce(Return(true));
+            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_dollar)))).Times(1)
+                .WillOnce(Return(true));
         }
     } client_config;
     launch_client_process(client_config);
