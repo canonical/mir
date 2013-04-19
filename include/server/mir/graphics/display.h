@@ -35,6 +35,9 @@ namespace graphics
 class DisplayBuffer;
 class DisplayConfiguration;
 
+typedef std::function<bool()> DisplayPauseHandler;
+typedef std::function<bool()> DisplayResumeHandler;
+
 class Display : public ViewableArea
 {
 public:
@@ -45,8 +48,8 @@ public:
 
     virtual void register_pause_resume_handlers(
         MainLoop& main_loop,
-        std::function<void()> const& pause_handler,
-        std::function<void()> const& resume_handler) = 0;
+        DisplayPauseHandler const& pause_handler,
+        DisplayResumeHandler const& resume_handler) = 0;
 
     virtual void pause() = 0;
     virtual void resume() = 0;

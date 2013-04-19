@@ -19,10 +19,9 @@
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/session_manager.h"
-#include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/shell/session.h"
 #include "mir/shell/input_target_listener.h"
-#include "mir/frontend/session.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel.h"
@@ -52,19 +51,20 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-struct MockSessionContainer : public msh::SessionContainer
+struct MockSessionContainer : public msh::DefaultSessionContainer
 {
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<mf::Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<mf::Session> const&));
+    MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD0(lock, void());
     MOCK_METHOD0(unlock, void());
+    ~MockSessionContainer() noexcept {}
 };
 
 struct MockFocusSequence : public msh::FocusSequence
 {
-    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
-    MOCK_CONST_METHOD1(predecessor_of, std::shared_ptr<mf::Session>(std::shared_ptr<mf::Session> const&));
-    MOCK_CONST_METHOD0(default_focus, std::shared_ptr<mf::Session>());
+    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
+    MOCK_CONST_METHOD1(predecessor_of, std::shared_ptr<msh::Session>(std::shared_ptr<msh::Session> const&));
+    MOCK_CONST_METHOD0(default_focus, std::shared_ptr<msh::Session>());
 };
 
 struct SessionManagerSetup : public testing::Test
@@ -99,7 +99,7 @@ TEST_F(SessionManagerSetup, open_and_close_session)
     EXPECT_CALL(focus_setter, set_focus_to(_));
     EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
 
-    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
+    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
     session_manager.close_session(session);
@@ -124,7 +124,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(std::shared_ptr<msh::Session>())).Times(1);
 
-    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
+    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio");
     session->create_surface(mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -135,7 +135,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 TEST_F(SessionManagerSetup, new_applications_receive_focus)
 {
     using namespace ::testing;
-    std::shared_ptr<mf::Session> new_session;
+    std::shared_ptr<msh::Session> new_session;
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
@@ -164,11 +164,14 @@ TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
     auto session1 = session_manager.open_session("Visual Basic Studio");
     auto session2 = session_manager.open_session("IntelliJ IDEA");
 
+    auto shell_session1 = std::dynamic_pointer_cast<msh::Session>(session1);
+    auto shell_session2 = std::dynamic_pointer_cast<msh::Session>(session2);
+
     session_manager.tag_session_with_lightdm_id(session1, 1);
     session_manager.focus_session_with_lightdm_id(1);
 
-    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return(session2));
-    EXPECT_CALL(focus_setter, set_focus_to(Eq(session2)));
+    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return(shell_session2));
+    EXPECT_CALL(focus_setter, set_focus_to(Eq(shell_session2)));
 
     session_manager.close_session(session1);
 }
@@ -233,7 +236,7 @@ TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_a
            mf::a_surface(),
            null_input_channel)));
 
-    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<mf::Session>())));
+    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
     {
         InSequence seq;
 

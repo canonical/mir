@@ -18,7 +18,7 @@
 
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/shell/session.h"
@@ -63,8 +63,8 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 {
     using namespace ::testing;
 
-    MockShellSession app1, app2, app3;
-    msh::SessionContainer model;
+    NiceMock<MockShellSession> app1, app2, app3;
+    msh::DefaultSessionContainer model;
 
     ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
     ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
@@ -86,4 +86,3 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
 }
-

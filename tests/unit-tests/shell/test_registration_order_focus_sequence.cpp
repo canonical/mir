@@ -18,7 +18,7 @@
 
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
@@ -45,10 +45,10 @@ struct RegistrationOrderFocusSequenceSetup : public testing::Test
     void SetUp()
     {
         factory = std::make_shared<mtd::MockSurfaceFactory>();
-        container = std::make_shared<msh::SessionContainer>();
+        container = std::make_shared<msh::DefaultSessionContainer>();
     }
     std::shared_ptr<mtd::MockSurfaceFactory> factory;
-    std::shared_ptr<msh::SessionContainer> container;
+    std::shared_ptr<msh::DefaultSessionContainer> container;
     mtd::StubInputTargetListener input_listener;
 
     static std::string const testing_app_name1;

@@ -144,8 +144,8 @@ std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 
 void mga::AndroidDisplay::register_pause_resume_handlers(
     MainLoop& /*main_loop*/,
-    std::function<void()> const& /*pause_handler*/,
-    std::function<void()> const& /*resume_handler*/)
+    DisplayPauseHandler const& /*pause_handler*/,
+    DisplayResumeHandler const& /*resume_handler*/)
 {
 }
 

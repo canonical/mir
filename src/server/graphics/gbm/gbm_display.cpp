@@ -24,11 +24,28 @@
 #include "kms_page_flipper.h"
 #include "virtual_terminal.h"
 
+#include "mir/graphics/display_report.h"
 #include "mir/geometry/rectangle.h"
+
+#include <boost/exception/get_error_info.hpp>
+#include <boost/exception/errinfo_errno.hpp>
+
+#include <stdexcept>
 
 namespace mgg = mir::graphics::gbm;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+
+namespace
+{
+
+int errno_from_exception(std::exception const& e)
+{
+    auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
+    return (errno_ptr != nullptr) ? *errno_ptr : -1;
+}
+
+}
 
 mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                             std::shared_ptr<DisplayReport> const& listener)
@@ -107,20 +124,36 @@ void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const&
 
 void mgg::GBMDisplay::register_pause_resume_handlers(
     MainLoop& main_loop,
-    std::function<void()> const& pause_handler,
-    std::function<void()> const& resume_handler)
+    DisplayPauseHandler const& pause_handler,
+    DisplayResumeHandler const& resume_handler)
 {
     platform->vt->register_switch_handlers(main_loop, pause_handler, resume_handler);
 }
 
 void mgg::GBMDisplay::pause()
 {
-    platform->drm.drop_master();
+    try
+    {
+        platform->drm.drop_master();
+    }
+    catch(std::runtime_error const& e)
+    {
+        listener->report_drm_master_failure(errno_from_exception(e));
+        throw;
+    }
 }
 
 void mgg::GBMDisplay::resume()
 {
-    platform->drm.set_master();
+    try
+    {
+        platform->drm.set_master();
+    }
+    catch(std::runtime_error const& e)
+    {
+        listener->report_drm_master_failure(errno_from_exception(e));
+        throw;
+    }
 
     for (auto& db_ptr : display_buffers)
         db_ptr->schedule_set_crtc();

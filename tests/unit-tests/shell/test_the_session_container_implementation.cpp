@@ -18,7 +18,7 @@
 
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
@@ -33,11 +33,11 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
-TEST(SessionContainer, for_each)
+TEST(DefaultSessionContainer, for_each)
 {
     using namespace ::testing;
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
-    msh::SessionContainer container;
+    msh::DefaultSessionContainer container;
 
     container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), 
         "Visual Studio 7"));
@@ -61,11 +61,11 @@ TEST(SessionContainer, for_each)
     container.for_each(std::ref(functor));
 }
 
-TEST(SessionContainer, invalid_session_throw_behavior)
+TEST(DefaultSessionContainer, invalid_session_throw_behavior)
 {
     using namespace ::testing;
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
-    msh::SessionContainer container;
+    msh::DefaultSessionContainer container;
 
     auto session = std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), 
         "Visual Studio 7");

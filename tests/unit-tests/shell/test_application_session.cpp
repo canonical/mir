@@ -70,11 +70,11 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     {
         InSequence seq;
         EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
-            .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
+            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
         EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
-            .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
+            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
         EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
-            .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
+            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
     }
 
     mtd::StubInputTargetListener input_listener;
