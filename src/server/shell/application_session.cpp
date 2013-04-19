@@ -37,8 +37,8 @@ msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<mir::EventSink> const& sink) :
     surface_factory(surface_factory),
     session_name(session_name),
-    next_surface_id(0),
-    event_sink(sink)
+    event_sink(sink),
+    next_surface_id(0)
 {
     assert(surface_factory);
 }

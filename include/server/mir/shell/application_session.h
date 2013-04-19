@@ -63,6 +63,7 @@ protected:
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
+    std::shared_ptr<EventSink> const event_sink;
 
     frontend::SurfaceId next_id();
 
@@ -72,8 +73,6 @@ private:
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
-
-    std::shared_ptr<EventSink> const event_sink;
 };
 
 }
