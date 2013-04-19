@@ -44,8 +44,6 @@ public:
     virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
                                          SurfaceCreationParameters const& params) = 0;
 
-    virtual void shutdown() = 0;
-
 protected:
     Shell() = default;
     Shell(const Shell&) = delete;

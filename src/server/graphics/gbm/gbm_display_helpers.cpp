@@ -112,7 +112,7 @@ void mggh::DRMHelper::drop_master() const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to drop DRM master"))
-                    << boost::errinfo_errno(ret));
+                    << boost::errinfo_errno(errno));
     }
 }
 
@@ -132,7 +132,7 @@ void mggh::DRMHelper::set_master() const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to set DRM master"))
-                    << boost::errinfo_errno(ret));
+                    << boost::errinfo_errno(errno));
     }
 }
 
@@ -279,7 +279,6 @@ void mggh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 0,
-        EGL_DEPTH_SIZE, 1,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };

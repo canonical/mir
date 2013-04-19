@@ -2,7 +2,7 @@ set(
   SHELL_SOURCES
 
   application_session.cpp
-  session_container.cpp
+  default_session_container.cpp
   session_manager.cpp
   registration_order_focus_sequence.cpp
   single_visibility_focus_mechanism.cpp

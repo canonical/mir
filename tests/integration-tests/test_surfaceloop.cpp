@@ -134,8 +134,8 @@ public:
         return null_configuration;
     }
     void register_pause_resume_handlers(mir::MainLoop&,
-                                        std::function<void()> const&,
-                                        std::function<void()> const&)
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
     {
     }
     void pause() {}
@@ -293,7 +293,7 @@ TEST_F(SurfaceLoop,
                 mir_buffer_usage_hardware
             };
 
-            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
+            mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);
 
             wait_for_surface_create(ssync);
 
@@ -400,7 +400,7 @@ TEST_F(SurfaceLoop,
                 mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
-            mir_surface_create(connection, &request_params, create_surface_callback, ssync);
+            mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);
 
             wait_for_surface_create(ssync);
 
@@ -539,7 +539,7 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
             };
 
             for (int i = 0; i != max_surface_count; ++i)
-                mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
+                mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync+i);
 
             for (int i = 0; i != max_surface_count; ++i)
                 wait_for_surface_create(ssync+i);
@@ -588,7 +588,7 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_witho
             };
 
             for (int i = 0; i != max_surface_count; ++i)
-                mir_surface_create(connection, &request_params, create_surface_callback, ssync+i);
+                mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync+i);
 
             for (int i = 0; i != max_surface_count; ++i)
                 wait_for_surface_create(ssync+i);

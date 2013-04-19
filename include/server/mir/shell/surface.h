@@ -58,7 +58,7 @@ public:
 
     virtual void destroy();
 
-    virtual void shutdown();
+    virtual void force_requests_to_complete();
 
     virtual std::string name() const;
 
