@@ -39,22 +39,24 @@ namespace mi = mir::input;
 namespace
 {
 
-class ScopedAction
+class TryButRevertIfUnwinding
 {
 public:
-    ScopedAction(std::function<void()> const& enter,
-                 std::function<void()> const& leave)
-        : leave{leave}
+    TryButRevertIfUnwinding(std::function<void()> const& apply,
+                            std::function<void()> const& revert)
+        : revert{revert}
     {
-        enter();
+        apply();
     }
 
-    ~ScopedAction() { leave(); }
-
-    void clear() { leave = []{}; }
+    ~TryButRevertIfUnwinding()
+    {
+        if (std::uncaught_exception())
+            revert();
+    }
 
 private:
-    std::function<void()> leave;
+    std::function<void()> const revert;
 };
 
 }
@@ -79,12 +81,11 @@ struct mir::DisplayServer::Private
     {
         try
         {
-            ScopedAction comp{[this] { compositor->stop(); },
-                              [this] { compositor->start(); }};
+            TryButRevertIfUnwinding comp{
+                [this] { compositor->stop(); },
+                [this] { compositor->start(); }};
 
             display->pause();
-
-            comp.clear();
         }
         catch(std::runtime_error const&)
         {
@@ -98,12 +99,11 @@ struct mir::DisplayServer::Private
     {
         try
         {
-            ScopedAction disp{[this] { display->resume(); },
-                              [this] { display->pause(); }};
+            TryButRevertIfUnwinding disp{
+                [this] { display->resume(); },
+                [this] { display->pause(); }};
 
             compositor->start();
-
-            disp.clear();
         }
         catch(std::runtime_error const&)
         {
