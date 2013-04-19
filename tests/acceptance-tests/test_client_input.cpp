@@ -188,8 +188,6 @@ struct MockInputHandler
     MOCK_METHOD1(handle_input, bool(MirEvent const*));
 };
 
-#include <stdio.h>
-
 struct InputReceivingClient : ClientConfigCommon
 {
     InputReceivingClient(int events_to_receive)
@@ -202,7 +200,6 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
-        printf("Handling event \n");
         if(client->handler->handle_input(ev))
         {
             client->event_received[client->events_received].wake_up_everyone();
