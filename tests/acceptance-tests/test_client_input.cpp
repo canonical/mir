@@ -95,6 +95,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
         {
             on_focus_set.wait_for_at_most_seconds(10);
             fake_event_hub->synthesize_builtin_keyboard_added();
+            fake_event_hub->synthesize_builtin_cursor_added();
             fake_event_hub->synthesize_device_scan_complete();
             inject_input();
         });
@@ -225,7 +226,7 @@ struct InputReceivingClient : ClientConfigCommon
          MirSurfaceParameters const request_params =
          {
              __PRETTY_FUNCTION__,
-             640, 480,
+             surface_width, surface_height,
              mir_pixel_format_abgr_8888,
              mir_buffer_usage_hardware
          };
@@ -257,12 +258,11 @@ struct InputReceivingClient : ClientConfigCommon
     
     int events_to_receive;
     int events_received;
+
+    static int const surface_width = 100;
+    static int const surface_height = 100;
 };
 
-}
-
-namespace
-{
 MATCHER(KeyDownEvent, "")
 {
     if (arg->type != mir_event_type_key)
@@ -278,6 +278,13 @@ MATCHER_P(KeyOfSymbol, keysym, "")
         return true;
     return false;
 }
+MATCHER(MotionEvent, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    return true;
+}
+
 }
 
 
@@ -345,6 +352,42 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
                 .WillOnce(Return(true));
             EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_dollar)))).Times(1)
                 .WillOnce(Return(true));
+        }
+    } client_config;
+    launch_client_process(client_config);
+}
+
+// TODO: Assumes that clients are placed by shell at 0,0
+TEST_F(TestClientInput, clients_receive_motion_inside_window)
+{
+    using namespace ::testing;
+    
+    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    {
+        void inject_input()
+        {
+            // TODO: Document
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width / 2,
+                                                                                 InputReceivingClient::surface_height / 2));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width / 2 + 1,
+                                                                                 InputReceivingClient::surface_height / 2 + 1));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
+        }
+    } server_config;
+    launch_server_process(server_config);
+    
+    struct MotionReceivingClient : InputReceivingClient
+    {
+        MotionReceivingClient() : InputReceivingClient(2) {}
+
+        void expect_input()
+        {
+            using namespace ::testing;
+            
+            InSequence seq;
+            
+            // TODO: Tighten expectations
+            EXPECT_CALL(*handler, handle_input(MotionEvent())).Times(2);
         }
     } client_config;
     launch_client_process(client_config);
