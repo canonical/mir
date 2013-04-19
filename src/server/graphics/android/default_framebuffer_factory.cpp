@@ -37,7 +37,7 @@ mga::DefaultFramebufferFactory::DefaultFramebufferFactory(
 {
 }
 
-std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window (
+std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(
     std::shared_ptr<DisplaySupportProvider> const& info_provider) const
 {
     auto size = info_provider->display_size();

@@ -32,7 +32,6 @@ namespace android
 {
 class HWC11Device;
 class HWCLayerOrganizer;
-class DefaultFBDevice;
 
 struct HWCCallbacks
 {
