@@ -24,7 +24,7 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/shell/session_container.h"
-#include "mir/frontend/session.h"
+#include "mir/shell/session.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
@@ -75,7 +75,7 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
 
 mir::DisplayServer::~DisplayServer()
 {
-    p->shell_sessions->for_each([](std::shared_ptr<mf::Session> const& session)
+    p->shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
     {
         session->force_requests_to_complete();
     });

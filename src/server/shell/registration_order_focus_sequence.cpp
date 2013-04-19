@@ -37,13 +37,13 @@ msh::RegistrationOrderFocusSequence::RegistrationOrderFocusSequence(std::shared_
 
 }
 
-std::shared_ptr<mf::Session> msh::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<mf::Session> const& focused_app) const
+std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::successor_of(std::shared_ptr<Session> const& focused_app) const
 {
-    std::shared_ptr<mf::Session> result, first;
+    std::shared_ptr<Session> result, first;
     bool found{false};
 
     session_container->for_each(
-        [&](std::shared_ptr<mf::Session> const& session)
+        [&](std::shared_ptr<Session> const& session)
          {
              if (!first)
              {
@@ -73,13 +73,13 @@ std::shared_ptr<mf::Session> msh::RegistrationOrderFocusSequence::successor_of(s
     }
 }
 
-std::shared_ptr<mf::Session> msh::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<mf::Session> const& focused_app) const
+std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::predecessor_of(std::shared_ptr<Session> const& focused_app) const
 {
-    std::shared_ptr<mf::Session> result, last;
+    std::shared_ptr<Session> result, last;
     bool found{false};
 
     session_container->for_each(
-        [&](std::shared_ptr<mf::Session> const& session)
+        [&](std::shared_ptr<Session> const& session)
         {
             last = session;
             if (focused_app == session)
@@ -106,12 +106,12 @@ std::shared_ptr<mf::Session> msh::RegistrationOrderFocusSequence::predecessor_of
     }
 }
 
-std::shared_ptr<mf::Session> msh::RegistrationOrderFocusSequence::default_focus() const
+std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::default_focus() const
 {
-    std::shared_ptr<mf::Session> result;
+    std::shared_ptr<Session> result;
 
     session_container->for_each(
-        [&](std::shared_ptr<mf::Session> const& session)
+        [&](std::shared_ptr<Session> const& session)
         {
             result = session;
         });
