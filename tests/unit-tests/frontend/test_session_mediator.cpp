@@ -141,7 +141,9 @@ struct SessionMediatorTest : public ::testing::Test
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
-                   buffer_allocator, report, resource_cache},
+                   buffer_allocator, report, 
+                   std::make_shared<mir::EventQueue>(),
+                   resource_cache},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {

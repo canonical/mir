@@ -102,7 +102,9 @@ struct SessionMediatorGBMTest : public ::testing::Test
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, mock_platform, graphics_display,
-                   buffer_allocator, report, resource_cache},
+                   buffer_allocator, report,
+                   std::make_shared<mir::EventQueue>(),
+                   resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

@@ -21,14 +21,12 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
-
+#include "mir/event_queue.h"
 #include <map>
 #include <memory>
 
 namespace mir
 {
-class EventSink;
-
 namespace graphics
 {
 class Platform;
@@ -62,6 +60,7 @@ public:
         std::shared_ptr<graphics::ViewableArea> const& viewable_area,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& report,
+        std::shared_ptr<EventQueue> const& event_queue,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     /* Platform independent requests */
@@ -108,8 +107,6 @@ public:
                            mir::protobuf::SurfaceSetting*,
                            google::protobuf::Closure* done);
 
-    void set_event_sink(std::weak_ptr<EventSink> const& sink);
-
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
@@ -120,12 +117,11 @@ private:
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
 
     std::shared_ptr<SessionMediatorReport> const report;
+    std::shared_ptr<EventQueue> const event_queue;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 
     std::shared_ptr<Session> session;
-
-    std::weak_ptr<EventSink> event_sink;
 };
 
 }

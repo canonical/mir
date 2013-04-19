@@ -23,6 +23,8 @@
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/protobuf/google_protobuf_guard.h"
 #include "mir/frontend/session_mediator.h"
+#include "mir/event_sink.h"
+#include "mir/event_queue.h"
 
 #include <boost/signals2.hpp>
 
@@ -48,13 +50,15 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
+    std::shared_ptr<EventQueue> event_queue = std::make_shared<EventQueue>();
+
     auto const& socket_session = std::make_shared<mfd::SocketSession>(
         io_service,
         next_id(),
         connected_sessions);
 
     std::shared_ptr<mir::protobuf::DisplayServer> ds =
-        ipc_factory->make_ipc_server();
+        ipc_factory->make_ipc_server(event_queue);
 
     auto proc = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
@@ -62,12 +66,7 @@ void mf::ProtobufSocketCommunicator::start_accept()
         ipc_factory->resource_cache(),
         ipc_factory->report());
     
-    // A dynamic cast is not ideal. But the alternatives all seem to require
-    // non-trivial architectural changes. Another day...
-    mf::SessionMediator *sm = dynamic_cast<mf::SessionMediator*>(ds.get());
-    if (sm)
-        sm->set_event_sink(proc);
-        
+    event_queue->set_target(proc);
     socket_session->set_processor(proc);
 
     acceptor.async_accept(
