@@ -77,8 +77,11 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> 
     fb_device->set_next_frontbuffer(buffer);
 }
 
-void mga::HWC11Device::commit_frame(EGLDisplay, EGLSurface)
+void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
+    /* note, swapbuffers will go around through the driver and call set_next_frontbuffer */
+    eglSwapBuffers(dpy, sur);
+
     auto& list = layer_organizer->native_list();
 
     auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size());
