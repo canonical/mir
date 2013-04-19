@@ -32,6 +32,7 @@ namespace android
 class HWCFactory;
 class HWCDevice;
 class DisplayAllocator;
+class DisplaySupportProvider;
 class FramebufferFactory;
 class AndroidDisplayFactory : public DisplayFactory
 {

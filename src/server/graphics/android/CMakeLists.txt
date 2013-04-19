@@ -23,14 +23,12 @@ add_library(
   server_render_window.cpp
   default_framebuffer_factory.cpp
   fb_simple_swapper.cpp
-  default_fb_device.cpp
+  fb_device.cpp
 )
 
 target_link_libraries(
   mirplatformgraphics
   mircompositor
-
-  3rd_party_fbtype
 
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

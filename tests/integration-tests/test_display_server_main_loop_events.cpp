@@ -74,8 +74,8 @@ public:
 
     void register_pause_resume_handlers(
         mir::MainLoop& main_loop,
-        std::function<void()> const& pause_handler,
-        std::function<void()> const& resume_handler)
+        mg::DisplayPauseHandler const& pause_handler,
+        mg::DisplayResumeHandler const& resume_handler)
     {
         main_loop.register_signal_handler(
             {pause_signal},
@@ -266,6 +266,41 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
         /* Pause */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
+
+        /* Stop */
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+    }
+
+    mir::run_mir(server_config,
+                 [&server_config](mir::DisplayServer&)
+                 {
+                    server_config.emit_pause_event();
+                    kill(getpid(), SIGTERM);
+                 });
+}
+
+TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_failure)
+{
+    using namespace testing;
+
+    PauseResumeServerConfig server_config;
+
+    auto mock_compositor = server_config.the_mock_compositor();
+    auto mock_display = server_config.the_mock_display();
+
+    {
+        InSequence s;
+
+        /* Start */
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+
+        /* Pause failure */
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_display, pause())
+            .WillOnce(Throw(std::runtime_error("")));
+
+        /* Attempt to continue */
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);

@@ -39,8 +39,8 @@ public:
     virtual void set_graphics_mode() = 0;
     virtual void register_switch_handlers(
         MainLoop& main_loop,
-        std::function<void()> const& switch_away,
-        std::function<void()> const& switch_back) = 0;
+        std::function<bool()> const& switch_away,
+        std::function<bool()> const& switch_back) = 0;
 
 protected:
     VirtualTerminal() = default;

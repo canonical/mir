@@ -133,8 +133,6 @@ public:
         ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &Shell::focus_session_with_lightdm_id));
 
         ON_CALL(*this, create_surface_for(_, _)).WillByDefault(Invoke(impl.get(), &Shell::create_surface_for));
-
-        ON_CALL(*this, force_requests_to_complete()).WillByDefault(Invoke(impl.get(), &Shell::force_requests_to_complete));
     }
 
     MOCK_METHOD1(open_session, std::shared_ptr<mf::Session> (std::string const& name));
@@ -144,7 +142,6 @@ public:
     MOCK_METHOD1(focus_session_with_lightdm_id, void (int id));
 
     MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<mf::Session> const&, mf::SurfaceCreationParameters const&));
-    MOCK_METHOD0(force_requests_to_complete, void ());
 
 private:
     std::shared_ptr<frontend::Shell> const impl;
@@ -181,9 +178,6 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 
                     EXPECT_CALL(*mock_shell, close_session(_))
                         .Times(2)
-                        .InSequence(s1, s2);
-
-                    EXPECT_CALL(*mock_shell, force_requests_to_complete())
                         .InSequence(s1, s2);
 
                     {
