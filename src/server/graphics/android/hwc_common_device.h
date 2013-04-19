@@ -50,7 +50,7 @@ public:
 
     virtual geometry::Size display_size() const = 0;
     virtual void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
-    virtual void commit_frame() = 0;
+    virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
 
     void notify_vsync();
 

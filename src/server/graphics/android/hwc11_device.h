@@ -43,7 +43,7 @@ public:
     unsigned int number_of_framebuffers_available() const;
     void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
  
-    void commit_frame();
+    void commit_frame(EGLDisplay dpy, EGLSurface sur);
 
 private:
     std::shared_ptr<HWCLayerOrganizer> const layer_organizer;

@@ -77,7 +77,7 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> 
     fb_device->set_next_frontbuffer(buffer);
 }
 
-void mga::HWC11Device::commit_frame()
+void mga::HWC11Device::commit_frame(EGLDisplay, EGLSurface)
 {
     auto& list = layer_organizer->native_list();
 

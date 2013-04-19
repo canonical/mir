@@ -58,6 +58,6 @@ void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> 
 {
 }
 
-void mga::HWC10Device::commit_frame()
+void mga::HWC10Device::commit_frame(EGLDisplay /*dpy*/, EGLSurface /*sur*/)
 {
 }

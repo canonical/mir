@@ -35,7 +35,7 @@ class MockHWCInterface : public graphics::android::HWCDevice
 public:
     ~MockHWCInterface() noexcept {}
     MOCK_METHOD0(wait_for_vsync, void());
-    MOCK_METHOD0(commit_frame, void());
+    MOCK_METHOD2(commit_frame, void(EGLDisplay, EGLSurface));
     MOCK_CONST_METHOD0(display_size, geometry::Size());
     MOCK_CONST_METHOD0(display_format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(number_of_framebuffers_available, unsigned int());

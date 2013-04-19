@@ -91,7 +91,7 @@ TEST_F(HWC10Device, hwc10_commit_frame)
 
     EGLDisplay dpy;
     EGLSurface sur;
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _)
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
 
     mga::HWC10Device device(mock_device, mock_organizer, mock_fbdev);
@@ -102,7 +102,7 @@ TEST_F(HWC10Device, hwc10_commit_frame)
     EXPECT_EQ(dpy, mock_device->display0_content.dpy);
     EXPECT_EQ(sur, mock_device->display0_content.sur);
     EXPECT_EQ(-1, mock_device->display0_content.retireFenceFd);
-    EXPECT_EQ(0, mock_device->display0_content.flags);
-    EXPECT_EQ(0, mock_device->display0_content.numHwLayers);
+    EXPECT_EQ(0u, mock_device->display0_content.flags);
+    EXPECT_EQ(0u, mock_device->display0_content.numHwLayers);
     EXPECT_EQ(nullptr, mock_device->display0_content.hwLayers);
 }
