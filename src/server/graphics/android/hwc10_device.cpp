@@ -27,8 +27,9 @@ namespace geom=mir::geometry;
 
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerOrganizer> const& /*organizer*/,
-                              std::shared_ptr<DisplaySupportProvider> const& /*fbdev*/)
-    : HWCCommonDevice(hwc_device)
+                              std::shared_ptr<DisplaySupportProvider> const& fbdev)
+    : HWCCommonDevice(hwc_device),
+      fb_device(fbdev)
 {
 }
 
@@ -38,7 +39,7 @@ mga::HWC10Device::~HWC10Device() noexcept
 
 geom::Size mga::HWC10Device::display_size() const
 {
-    return geom::Size{geom::Width{43}, geom::Height{22}};
+    return fb_device->display_size();
 }
 
 geom::PixelFormat mga::HWC10Device::display_format() const

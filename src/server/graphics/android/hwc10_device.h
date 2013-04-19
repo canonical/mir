@@ -43,6 +43,8 @@ public:
     void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
  
     void commit_frame();
+private:
+    std::shared_ptr<DisplaySupportProvider> const fb_device;
 };
 
 }
