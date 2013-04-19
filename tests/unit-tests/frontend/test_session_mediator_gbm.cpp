@@ -27,6 +27,7 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/event_queue.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>

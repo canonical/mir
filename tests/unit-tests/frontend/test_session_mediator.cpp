@@ -34,7 +34,7 @@
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test/fake_shared.h"
-
+#include "mir/event_queue.h"
 #include "mir/shell/surface.h"
 
 #include <gtest/gtest.h>

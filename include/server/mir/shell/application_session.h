@@ -20,7 +20,6 @@
 #define MIR_SHELL_APPLICATION_SESSION_H_
 
 #include "mir/shell/session.h"
-#include "mir/event_queue.h"
 
 #include <map>
 
@@ -54,7 +53,7 @@ public:
 
     int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
 
-    void set_event_sink(std::weak_ptr<mir::EventSink> const& sink);
+    void set_event_sink(std::shared_ptr<mir::EventSink> const& sink);
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
@@ -62,7 +61,6 @@ protected:
 
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
-    std::shared_ptr<EventQueue> event_queue;
     std::string const session_name;
 
     frontend::SurfaceId next_id();
@@ -73,6 +71,8 @@ private:
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
+
+    std::shared_ptr<EventSink> event_sink;
 };
 
 }

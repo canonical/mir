@@ -44,7 +44,7 @@ struct MockSession : public frontend::Session
 
     MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 
-    MOCK_METHOD1(set_event_sink, void(std::weak_ptr<mir::EventSink> const&));
+    MOCK_METHOD1(set_event_sink, void(std::shared_ptr<mir::EventSink> const&));
 };
 
 }

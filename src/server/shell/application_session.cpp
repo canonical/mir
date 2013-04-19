@@ -35,7 +35,6 @@ msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name) :
     surface_factory(surface_factory),
-    event_queue(std::make_shared<EventQueue>()),
     session_name(session_name),
     next_surface_id(0)
 {
@@ -52,9 +51,9 @@ msh::ApplicationSession::~ApplicationSession()
 }
 
 void msh::ApplicationSession::set_event_sink(
-    std::weak_ptr<mir::EventSink> const& sink)
+    std::shared_ptr<mir::EventSink> const& sink)
 {
-    event_queue->set_target(sink);
+    event_sink = sink;
 }
 
 mf::SurfaceId msh::ApplicationSession::next_id()
@@ -67,9 +66,8 @@ mf::SurfaceId msh::ApplicationSession::create_surface(const mf::SurfaceCreationP
     auto surf = surface_factory->create_surface(params);
     auto const id = next_id();
 
-    std::shared_ptr<EventSink> q(event_queue);
     surf->set_id(id);
-    surf->set_event_target(q);
+    surf->set_event_target(event_sink);
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
