@@ -115,12 +115,12 @@ std::string msh::ApplicationSession::name() const
     return session_name;
 }
 
-void msh::ApplicationSession::shutdown()
+void msh::ApplicationSession::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
     {
-        id_s.second->shutdown();
+        id_s.second->force_requests_to_complete();
     }
 }
 

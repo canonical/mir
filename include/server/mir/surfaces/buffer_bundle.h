@@ -44,7 +44,7 @@ public:
     virtual std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer() = 0;
     virtual geometry::PixelFormat get_bundle_pixel_format() = 0;
     virtual geometry::Size bundle_size() = 0;
-    virtual void shutdown() = 0;
+    virtual void force_requests_to_complete() = 0;
 };
 
 }

@@ -44,7 +44,9 @@ public:
     virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
                                          SurfaceCreationParameters const& params) = 0;
 
-    virtual void shutdown() = 0;
+    // TODO - this interface shouldn't be used DisplayServer and
+    // TODO - it shouldn't contain this method (which DS needs)
+    virtual void force_requests_to_complete() = 0;
 
 protected:
     Shell() = default;

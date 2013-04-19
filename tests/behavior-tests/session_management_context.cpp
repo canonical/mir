@@ -128,7 +128,7 @@ namespace
         DummyServerConfiguration() : mir::DefaultServerConfiguration(0, nullptr) {}
 
         virtual std::shared_ptr<mir::shell::SurfaceFactory>
-        the_surface_factory()
+        the_shell_surface_factory()
         {
             return std::make_shared<mtc::DummySurfaceFactory>();
         }

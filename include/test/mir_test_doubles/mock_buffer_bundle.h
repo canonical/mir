@@ -36,7 +36,7 @@ struct MockBufferBundle : public surfaces::BufferBundle
 
     MOCK_METHOD0(get_bundle_pixel_format, geometry::PixelFormat());
     MOCK_METHOD0(bundle_size, geometry::Size());
-    MOCK_METHOD0(shutdown, void());
+    MOCK_METHOD0(force_requests_to_complete, void());
 };
 }
 }

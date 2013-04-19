@@ -83,11 +83,11 @@ void msh::Surface::destroy()
     builder->destroy_surface(surface);
 }
 
-void msh::Surface::shutdown()
+void msh::Surface::force_requests_to_complete()
 {
     if (auto const& s = surface.lock())
     {
-        s->shutdown();
+        s->force_requests_to_complete();
     }
 }
 

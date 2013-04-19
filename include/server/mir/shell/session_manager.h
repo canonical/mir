@@ -40,6 +40,7 @@ class SurfaceFactory;
 class SessionContainer;
 class FocusSequence;
 class FocusSetter;
+class Session;
 
 class SessionManager : public frontend::Shell
 {
@@ -52,7 +53,7 @@ public:
 
     virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
-    virtual void shutdown();
+    virtual void force_requests_to_complete();
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& session, int id);
     virtual void focus_session_with_lightdm_id(int id);
@@ -73,11 +74,11 @@ private:
     std::shared_ptr<FocusSetter> const focus_setter;
 
     std::mutex mutex;
-    std::weak_ptr<frontend::Session> focus_application;
-    typedef std::vector<std::pair<int, std::shared_ptr<frontend::Session>>> Tags;
+    std::weak_ptr<Session> focus_application;
+    typedef std::vector<std::pair<int, std::shared_ptr<Session>>> Tags;
     Tags tags;
 
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<frontend::Session> const& next_focus);
+    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 };
 
 }

@@ -35,7 +35,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
-#include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
@@ -300,7 +300,7 @@ std::shared_ptr<msh::SessionContainer>
 mir::DefaultServerConfiguration::the_shell_session_container()
 {
     return shell_session_container(
-        []{ return std::make_shared<msh::SessionContainer>(); });
+        []{ return std::make_shared<msh::DefaultSessionContainer>(); });
 }
 
 std::shared_ptr<msh::FocusSetter>
@@ -344,7 +344,7 @@ mir::DefaultServerConfiguration::the_frontend_shell()
         [this]() -> std::shared_ptr<msh::SessionManager>
         {
             return std::make_shared<msh::SessionManager>(
-                the_surface_factory(),
+                the_shell_surface_factory(),
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter());
@@ -427,7 +427,7 @@ mir::DefaultServerConfiguration::the_renderables()
 }
 
 std::shared_ptr<msh::SurfaceFactory>
-mir::DefaultServerConfiguration::the_surface_factory()
+mir::DefaultServerConfiguration::the_shell_surface_factory()
 {
     return shell_surface_factory(
         [this]()
