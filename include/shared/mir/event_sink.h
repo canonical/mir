@@ -27,9 +27,13 @@ namespace mir
 class EventSink
 {
 public:
-    virtual ~EventSink() noexcept {}
+    virtual ~EventSink() = default;
+
     virtual void handle_event(MirEvent const& e) = 0;
 
+protected:
+    EventSink() = default;
+    EventSink(EventSink const&) = delete;
     EventSink& operator=(EventSink const&) = delete;
 };
 
