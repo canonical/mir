@@ -34,11 +34,14 @@ namespace mi = mir::input;
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
     frontend::SurfaceCreationParameters const& params,
-    std::shared_ptr<input::InputChannel> const& input_channel)
+    std::shared_ptr<input::InputChannel> const& input_channel,
+    frontend::SurfaceId id,
+    std::shared_ptr<EventSink> const& sink)
   : builder(builder),
     input_channel(input_channel),
     surface(builder->create_surface(params)),
-    id(0),
+    id(id),
+    event_sink(sink),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored)
 {
@@ -50,16 +53,6 @@ msh::Surface::~Surface()
     {
         destroy();
     }
-}
-
-void msh::Surface::set_id(mir::frontend::SurfaceId i)
-{
-    id = i;
-}
-
-void msh::Surface::set_event_target(std::shared_ptr<EventSink> const& sink)
-{
-    event_sink = sink;
 }
 
 void msh::Surface::hide()

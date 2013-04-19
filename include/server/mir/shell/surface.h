@@ -53,7 +53,9 @@ public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
         frontend::SurfaceCreationParameters const& params,
-        std::shared_ptr<input::InputChannel> const& input_channel);
+        std::shared_ptr<input::InputChannel> const& input_channel,
+        frontend::SurfaceId id,
+        std::shared_ptr<EventSink> const& sink);
     ~Surface();
 
     virtual void hide();
@@ -82,9 +84,6 @@ public:
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
-    void set_id(frontend::SurfaceId i);
-    void set_event_target(std::shared_ptr<EventSink> const& sink);
-
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
@@ -94,8 +93,8 @@ private:
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
-    std::shared_ptr<EventSink> event_sink;
-    frontend::SurfaceId id;
+    frontend::SurfaceId const id;
+    std::shared_ptr<EventSink> const event_sink;
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;

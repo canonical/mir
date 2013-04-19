@@ -46,9 +46,9 @@ TEST(ApplicationSession, create_and_destroy_surface)
     auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
 
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
 
-    EXPECT_CALL(surface_factory, create_surface(_));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _));
     EXPECT_CALL(*mock_surface, destroy());
 
     msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo");
@@ -67,11 +67,11 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     mtd::StubSurfaceBuilder surface_builder;
     {
         InSequence seq;
-        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
             .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
-        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
             .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
-        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
             .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
     }
 
@@ -103,11 +103,11 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
 
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
 
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
 
-    EXPECT_CALL(surface_factory, create_surface(_));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _));
 
     {
         InSequence seq;

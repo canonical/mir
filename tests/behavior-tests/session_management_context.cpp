@@ -66,12 +66,16 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
     {
     }
 
-    std::shared_ptr<msh::Surface> create_surface(const mf::SurfaceCreationParameters& params)
+    std::shared_ptr<msh::Surface> create_surface(const mf::SurfaceCreationParameters& params,
+        frontend::SurfaceId id,
+        std::shared_ptr<EventSink> const& sink) override
     {
         return std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
             params,
-            std::shared_ptr<mir::input::InputChannel>());
+            std::shared_ptr<mir::input::InputChannel>(),
+            id,
+            sink);
     }
 
     mtd::StubSurfaceBuilder surface_builder;

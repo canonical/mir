@@ -19,10 +19,13 @@
 #ifndef MIR_SHELL_SURFACE_FACTORY_H_
 #define MIR_SHELL_SURFACE_FACTORY_H_
 
+#include "mir/frontend/surface_id.h"
 #include <memory>
 
 namespace mir
 {
+class EventSink;
+
 namespace frontend
 {
 struct SurfaceCreationParameters;
@@ -34,7 +37,10 @@ class Surface;
 class SurfaceFactory
 {
 public:
-    virtual std::shared_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params) = 0;
+    virtual std::shared_ptr<Surface> create_surface(
+        frontend::SurfaceCreationParameters const& params,
+        frontend::SurfaceId id,
+        std::shared_ptr<EventSink> const& sink) = 0;
 
 protected:
     virtual ~SurfaceFactory() {}
