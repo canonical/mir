@@ -195,7 +195,7 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<frontend::Shell> session_manager;
-    CachedPtr<input::android::InputConfiguration> input_configuration;
+    std::shared_ptr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<shell::InputFocusSelector> input_focus_selector;
     CachedPtr<graphics::Platform>     graphics_platform;
