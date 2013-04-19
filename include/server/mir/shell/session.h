@@ -35,11 +35,6 @@ public:
     virtual void force_requests_to_complete() = 0;
 
     virtual std::shared_ptr<Surface> default_surface() const = 0;
-
-protected:
-    Session() = default;
-    Session(Session const&) = delete;
-    Session& operator=(Session const&) = delete;
 };
 
 }
