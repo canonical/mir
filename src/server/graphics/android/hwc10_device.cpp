@@ -44,14 +44,12 @@ geom::Size mga::HWC10Device::display_size() const
 
 geom::PixelFormat mga::HWC10Device::display_format() const
 {
-    return geom::PixelFormat::abgr_8888;
+    return fb_device->display_format();
 }
 
 unsigned int mga::HWC10Device::number_of_framebuffers_available() const
 {
-    //note: the default for hwc devices is 2 framebuffers. However, the api allows for the hwc can give us a hint
-    //      to triple buffer. Taking this hint is currently not supported
-    return 2u;
+    return fb_device->number_of_framebuffers_available();
 }
 
 void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& /*buffer*/)

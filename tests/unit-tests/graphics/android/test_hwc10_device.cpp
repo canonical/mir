@@ -85,6 +85,16 @@ TEST_F(HWC10Device, hwc10_gets_numfb_from_fb_dev)
     EXPECT_EQ(test_numfb, numfb);
 }
 
+TEST_F(HWC10Device, hwc10_set_next_frontbuffer)
+{
+    std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    EXPECT_CALL(*mock_fbdev, set_next_frontbuffer(mock_buffer))
+        .Times(1);
+
+    mga::HWC10Device device(mock_device, mock_organizer, mock_fbdev);
+    device.set_next_frontbuffer(mock_buffer);
+}
+
 TEST_F(HWC10Device, hwc10_commit_frame)
 {
     using namespace testing;
