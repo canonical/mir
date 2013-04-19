@@ -55,8 +55,8 @@ class StubDisplay : public mg::Display
         return std::shared_ptr<mg::DisplayConfiguration>();
     }
     void register_pause_resume_handlers(mir::MainLoop&,
-                                        std::function<void()> const&,
-                                        std::function<void()> const&)
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
     {
     }
     void pause() {}
@@ -81,8 +81,8 @@ class StubDisplayWithMockBuffers : public mg::Display
         return std::shared_ptr<mg::DisplayConfiguration>();
     }
     void register_pause_resume_handlers(mir::MainLoop&,
-                                        std::function<void()> const&,
-                                        std::function<void()> const&)
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
     {
     }
     void pause() {}

@@ -29,11 +29,38 @@
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
 
+#include <stdexcept>
+
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+
+namespace
+{
+
+class TryButRevertIfUnwinding
+{
+public:
+    TryButRevertIfUnwinding(std::function<void()> const& apply,
+                            std::function<void()> const& revert)
+        : revert{revert}
+    {
+        apply();
+    }
+
+    ~TryButRevertIfUnwinding()
+    {
+        if (std::uncaught_exception())
+            revert();
+    }
+
+private:
+    std::function<void()> const revert;
+};
+
+}
 
 struct mir::DisplayServer::Private
 {
@@ -47,16 +74,44 @@ struct mir::DisplayServer::Private
     {
         display->register_pause_resume_handlers(
             *main_loop,
-            [this]
-            {
-                compositor->stop();
-                display->pause();
-            },
-            [this]
-            {
-                display->resume();
-                compositor->start();
-            });
+            [this] { return pause(); },
+            [this] { return resume(); });
+    }
+
+    bool pause()
+    {
+        try
+        {
+            TryButRevertIfUnwinding comp{
+                [this] { compositor->stop(); },
+                [this] { compositor->start(); }};
+
+            display->pause();
+        }
+        catch(std::runtime_error const&)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool resume()
+    {
+        try
+        {
+            TryButRevertIfUnwinding disp{
+                [this] { display->resume(); },
+                [this] { display->pause(); }};
+
+            compositor->start();
+        }
+        catch(std::runtime_error const&)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     std::shared_ptr<mg::Display> display;

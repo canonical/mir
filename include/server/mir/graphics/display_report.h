@@ -34,6 +34,9 @@ public:
     virtual void report_successful_egl_buffer_swap_on_construction() = 0;
     virtual void report_successful_drm_mode_set_crtc_on_construction() = 0;
     virtual void report_successful_display_construction() = 0;
+    virtual void report_drm_master_failure(int error) = 0;
+    virtual void report_vt_switch_away_failure() = 0;
+    virtual void report_vt_switch_back_failure() = 0;
 
 protected:
     DisplayReport() = default;

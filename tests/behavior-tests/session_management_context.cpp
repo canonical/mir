@@ -106,8 +106,8 @@ public:
     }
 
     void register_pause_resume_handlers(MainLoop&,
-                                        std::function<void()> const&,
-                                        std::function<void()> const&)
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
     {
     }
 
