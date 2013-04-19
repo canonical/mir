@@ -52,10 +52,24 @@ unsigned int mga::HWC10Device::number_of_framebuffers_available() const
     return fb_device->number_of_framebuffers_available();
 }
 
-void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& /*buffer*/)
+void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& buffer)
 {
+    fb_device->set_next_frontbuffer(buffer);
 }
 
-void mga::HWC10Device::commit_frame(EGLDisplay /*dpy*/, EGLSurface /*sur*/)
+void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
+    hwc_display_contents_1 display_contents;
+    display_contents.dpy = dpy;
+    display_contents.sur = sur;
+    display_contents.retireFenceFd = -1;
+    display_contents.flags = 0;
+    display_contents.numHwLayers = 0;
+    hwc_display_contents_1* contents = &display_contents;
+
+    auto rc = hwc_device->set(hwc_device.get(), 1, &contents);
+    if (rc != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
+    }
 }
