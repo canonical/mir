@@ -18,7 +18,7 @@
 
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/shell/session.h"
@@ -67,7 +67,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     NiceMock<mtd::MockInputFocusSelector> input_focus_selector;
 
     MockShellSession app1, app2, app3;
-    msh::SessionContainer model;
+    msh::DefaultSessionContainer model;
 
     ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
     ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
@@ -95,7 +95,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_input_focus_from_default_sur
     using namespace ::testing;
 
     mtd::MockInputFocusSelector input_focus_selector;
-    msh::SessionContainer model;
+    msh::DefaultSessionContainer model;
     auto session = std::make_shared<MockShellSession>();
     auto surface = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
 
