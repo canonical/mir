@@ -133,8 +133,6 @@ public:
         ON_CALL(*this, focus_session_with_lightdm_id(_)).WillByDefault(Invoke(impl.get(), &Shell::focus_session_with_lightdm_id));
 
         ON_CALL(*this, create_surface_for(_, _)).WillByDefault(Invoke(impl.get(), &Shell::create_surface_for));
-
-        ON_CALL(*this, shutdown()).WillByDefault(Invoke(impl.get(), &Shell::shutdown));
     }
 
     MOCK_METHOD1(open_session, std::shared_ptr<mf::Session> (std::string const& name));
@@ -144,7 +142,6 @@ public:
     MOCK_METHOD1(focus_session_with_lightdm_id, void (int id));
 
     MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<mf::Session> const&, mf::SurfaceCreationParameters const&));
-    MOCK_METHOD0(shutdown, void ());
 
 private:
     std::shared_ptr<frontend::Shell> const impl;
@@ -179,9 +176,6 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 
                     EXPECT_CALL(*mock_shell, close_session(_))
                         .Times(2)
-                        .InSequence(s1, s2);
-
-                    EXPECT_CALL(*mock_shell, shutdown())
                         .InSequence(s1, s2);
 
                     {
@@ -226,7 +220,7 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
                 mir_buffer_usage_hardware
             };
 
-            mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+            mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 
             set_flag(focus_ready);
 

@@ -21,6 +21,8 @@
 
 #include "virtual_terminal.h"
 
+#include <memory>
+
 #include <linux/vt.h>
 #include <unistd.h>
 
@@ -28,32 +30,62 @@ namespace mir
 {
 namespace graphics
 {
+
+class DisplayReport;
+
 namespace gbm
 {
+
+class VTFileOperations
+{
+public:
+    virtual ~VTFileOperations() = default;
+
+    virtual int open(char const* pathname, int flags) = 0;
+    virtual int close(int fd) = 0;
+    virtual int ioctl(int d, int request, int val) = 0;
+    virtual int ioctl(int d, int request, void* p_val) = 0;
+
+protected:
+    VTFileOperations() = default;
+    VTFileOperations(VTFileOperations const&) = delete;
+    VTFileOperations& operator=(VTFileOperations const&) = delete;
+};
 
 class LinuxVirtualTerminal : public VirtualTerminal
 {
 public:
-    LinuxVirtualTerminal();
+    LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
+                         std::shared_ptr<DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
 
     void set_graphics_mode();
     void register_switch_handlers(
         MainLoop& main_loop,
-        std::function<void()> const& switch_away,
-        std::function<void()> const& switch_back);
+        std::function<bool()> const& switch_away,
+        std::function<bool()> const& switch_back);
 
 private:
     class FDWrapper
     {
     public:
-        FDWrapper(int fd) : fd_{fd} {}
-        ~FDWrapper() { if (fd_ >= 0) close(fd_); }
+        FDWrapper(std::shared_ptr<VTFileOperations> const& fops, int fd)
+            : fops{fops}, fd_{fd}
+        {
+        }
+        ~FDWrapper() { if (fd_ >= 0) fops->close(fd_); }
         int fd() const { return fd_; }
     private:
+        std::shared_ptr<VTFileOperations> const fops;
         int const fd_;
     };
 
+    int find_active_vt_number();
+    int open_vt(int vt_number);
+
+
+    std::shared_ptr<VTFileOperations> const fops;
+    std::shared_ptr<DisplayReport> const report;
     FDWrapper const vt_fd;
     int prev_kd_mode;
     struct vt_mode prev_vt_mode;

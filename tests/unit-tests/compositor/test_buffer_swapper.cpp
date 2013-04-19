@@ -51,7 +51,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction_vector)
     EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
 
     /* just to keep ref */
-    swapper.shutdown();
+    swapper.force_requests_to_complete();
 }
 
 TEST_F(BufferSwapperConstruction, basic_double_construction_initializer)
@@ -64,7 +64,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction_initializer)
     EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
 
     /* just to keep ref */
-    swapper.shutdown();
+    swapper.force_requests_to_complete();
 }
 
 TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
@@ -79,7 +79,7 @@ TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
     EXPECT_EQ(buffer_c.use_count(), use_count_before_c + 1);
 
     /* just to keep ref */
-    swapper.shutdown();
+    swapper.force_requests_to_complete();
 }
 
 TEST_F(BufferSwapperConstruction, error_construction)

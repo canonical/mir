@@ -10,6 +10,7 @@ set(
   test_test_framework.cpp
   test_focus_management_api.cpp
   test_focus_selection.cpp
+  test_server_shutdown.cpp
 )
 
 list(APPEND SOURCES

@@ -365,3 +365,14 @@ TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
     ms::Surface surf{surface_name, mock_buffer_bundle, mock_change_cb};
     surf.set_alpha(0.5f);
 }
+
+TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_buffer_bundle, force_requests_to_complete()).Times(Exactly(1));
+
+    ms::Surface surf{surface_name, mock_buffer_bundle, mock_change_cb};
+    surf.force_requests_to_complete();
+
+}

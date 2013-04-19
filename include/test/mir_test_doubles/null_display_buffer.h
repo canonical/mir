@@ -33,6 +33,7 @@ class NullDisplayBuffer : public graphics::DisplayBuffer
 public:
     geometry::Rectangle view_area() const { return geometry::Rectangle(); }
     void make_current() {}
+    void release_current() {}
     void clear() {}
     bool post_update() { return true; }
 };

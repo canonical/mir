@@ -25,3 +25,6 @@ void mg::NullDisplayReport::report_successful_egl_make_current_on_construction()
 void mg::NullDisplayReport::report_successful_egl_buffer_swap_on_construction() {}
 void mg::NullDisplayReport::report_successful_drm_mode_set_crtc_on_construction() {}
 void mg::NullDisplayReport::report_successful_display_construction() {}
+void mg::NullDisplayReport::report_drm_master_failure(int) {}
+void mg::NullDisplayReport::report_vt_switch_away_failure() {}
+void mg::NullDisplayReport::report_vt_switch_back_failure() {}

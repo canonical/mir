@@ -158,7 +158,7 @@ geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
 
 void mgg::GBMDisplayBuffer::clear()
 {
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 bool mgg::GBMDisplayBuffer::post_update()
@@ -274,6 +274,11 @@ void mgg::GBMDisplayBuffer::make_current()
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
     }
+}
+
+void mgg::GBMDisplayBuffer::release_current()
+{
+    egl.release_current();
 }
 
 void mgg::GBMDisplayBuffer::schedule_set_crtc()
