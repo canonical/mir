@@ -58,17 +58,14 @@ void mf::ProtobufSocketCommunicator::start_accept()
         next_id(),
         connected_sessions);
 
-    std::shared_ptr<mir::protobuf::DisplayServer> ds =
-        ipc_factory->make_ipc_server(event_sink);
-
-    auto proc = std::make_shared<detail::ProtobufMessageProcessor>(
+    auto session = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
-        ds,
+        ipc_factory->make_ipc_server(event_sink),
         ipc_factory->resource_cache(),
         ipc_factory->report());
-    
-    event_queue->set_target(proc);
-    socket_session->set_processor(proc);
+
+    event_queue->set_target(session);
+    socket_session->set_processor(session);
 
     acceptor.async_accept(
         socket_session->get_socket(),
