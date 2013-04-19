@@ -464,7 +464,7 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_
     using namespace ::testing;
     
     auto mock_input_platform = std::make_shared<mt::MockClientInputPlatform>();
-    auto mock_input_thread = std::make_shared<mt::MockInputReceiverThread>();
+    auto mock_input_thread = std::make_shared<NiceMock<mt::MockInputReceiverThread>>();
     MirEventDelegate delegate = {null_event_callback, nullptr};
 
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_)).Times(2);

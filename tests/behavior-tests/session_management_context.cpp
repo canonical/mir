@@ -106,8 +106,8 @@ public:
     }
 
     void register_pause_resume_handlers(MainLoop&,
-                                        std::function<void()> const&,
-                                        std::function<void()> const&)
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
     {
     }
 
@@ -141,9 +141,10 @@ mtc::SessionManagementContext::SessionManagementContext() :
 {
 }
 
-mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& server_configuration) :
+mtc::SessionManagementContext::SessionManagementContext(
+    std::shared_ptr<frontend::Shell> const& shell) :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    shell(server_configuration.the_frontend_shell())
+    shell(shell)
 {
 }
 

@@ -38,6 +38,9 @@ public:
     MOCK_METHOD0(report_successful_egl_buffer_swap_on_construction, void());
     MOCK_METHOD0(report_successful_drm_mode_set_crtc_on_construction, void());
     MOCK_METHOD0(report_successful_display_construction, void());
+    MOCK_METHOD1(report_drm_master_failure, void(int));
+    MOCK_METHOD0(report_vt_switch_away_failure, void());
+    MOCK_METHOD0(report_vt_switch_back_failure, void());
 };
 
 }

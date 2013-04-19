@@ -91,7 +91,7 @@ protected:
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
         mock_client_buffer = std::make_shared<NiceMock<MockClientBuffer>>();
-        mock_sync = std::make_shared<MockSyncFence>();
+        mock_sync = std::make_shared<NiceMock<MockSyncFence>>();
     }
 
     MirSurfaceParameters surf_params;
@@ -102,7 +102,7 @@ protected:
 TEST_F(AndroidInterpreterTest, native_window_dequeue_calls_surface_get_current)
 {
     using namespace testing;
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     EXPECT_CALL(mock_surface, get_current_buffer())
@@ -119,7 +119,7 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_ret
     ANativeWindowBuffer buffer;
     buffer.handle = &handle;
 
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     EXPECT_CALL(*mock_client_buffer, get_native_handle())
@@ -138,7 +138,7 @@ TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)
     using namespace testing;
     ANativeWindowBuffer buffer;
 
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     EXPECT_CALL(mock_surface, next_buffer(_,_))
@@ -152,7 +152,7 @@ TEST_F(AndroidInterpreterTest, native_window_queue_waits_on_fence)
     using namespace testing;
     ANativeWindowBuffer buffer;
 
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     EXPECT_CALL(*mock_sync, wait())
@@ -165,7 +165,7 @@ TEST_F(AndroidInterpreterTest, native_window_queue_waits_on_fence)
 TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
 {
     int format = 945;
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     interpreter.dispatch_driver_request_format(format);
@@ -176,7 +176,7 @@ TEST_F(AndroidInterpreterTest, native_window_perform_remembers_format)
 
 TEST_F(AndroidInterpreterTest, native_window_hint_query_hook)
 {
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
     /* transform hint is a bitmask of a few options for rotation/flipping buffer. a value
        of zero is no transform */
@@ -188,7 +188,7 @@ TEST_F(AndroidInterpreterTest, native_window_hint_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_default_width_query_hook)
 {
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     auto default_width = interpreter.driver_requests_info(NATIVE_WINDOW_DEFAULT_WIDTH);
@@ -198,7 +198,7 @@ TEST_F(AndroidInterpreterTest, native_window_default_width_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_default_height_query_hook)
 {
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     auto default_height = interpreter.driver_requests_info(NATIVE_WINDOW_DEFAULT_HEIGHT);
@@ -208,7 +208,7 @@ TEST_F(AndroidInterpreterTest, native_window_default_height_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
 {
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     auto width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
@@ -218,7 +218,7 @@ TEST_F(AndroidInterpreterTest, native_window_width_query_hook)
 
 TEST_F(AndroidInterpreterTest, native_window_height_query_hook)
 {
-    MockMirSurface mock_surface{surf_params};
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
     auto height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);

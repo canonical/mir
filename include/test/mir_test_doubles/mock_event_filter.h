@@ -21,8 +21,6 @@
 
 #include "mir/input/event_filter.h"
 
-#include <androidfw/Input.h>
-
 #include <gmock/gmock.h>
 
 namespace mir
@@ -35,36 +33,6 @@ struct MockEventFilter : public mir::input::EventFilter
 {
     MOCK_METHOD1(handles, bool(const MirEvent&));
 };
-}
-
-MATCHER_P(IsKeyEventWithKey, key, "")
-{
-    if (arg.type != mir_event_type_key)
-        return false;
-
-    return arg.key.key_code == key;
-}
-MATCHER(KeyDownEvent, "")
-{
-    if (arg.type != mir_event_type_key)
-        return false;
-
-    return arg.key.action == AKEY_EVENT_ACTION_DOWN;
-}
-MATCHER(ButtonDownEvent, "")
-{
-    if (arg.type != mir_event_type_motion)
-        return false;
-    if (arg.motion.button_state == 0)
-        return false;
-    return arg.motion.action == AKEY_EVENT_ACTION_DOWN;
-}
-MATCHER_P2(MotionEvent, dx, dy, "")
-{
-    if (arg.type != mir_event_type_motion)
-        return false;
-    auto coords = &arg.motion.pointer_coordinates[0];
-    return (coords->x == dx) && (coords->y == dy);
 }
 }
 }

@@ -35,6 +35,7 @@
 #include "mir_test_doubles/stub_surface_target.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
+#include "mir_test/event_matchers.h"
 
 #include <EventHub.h>
 #include <InputDispatcher.h>
