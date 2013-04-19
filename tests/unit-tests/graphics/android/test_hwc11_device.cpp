@@ -118,7 +118,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_error)
     }, std::runtime_error);
 }
 
-TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set)
+TEST_F(HWC11Device, test_hwc_gles_commit_swapbuffers_failure)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglSwapBuffers(dpy,surf))

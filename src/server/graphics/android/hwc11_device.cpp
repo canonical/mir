@@ -80,7 +80,10 @@ void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
     /* note, swapbuffers will go around through the driver and call set_next_frontbuffer */
-    eglSwapBuffers(dpy, sur);
+    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
+    }
 
     auto& list = layer_organizer->native_list();
 
