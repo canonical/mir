@@ -35,7 +35,10 @@ class Surface;
 class ApplicationSession : public Session
 {
 public:
-    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
+    explicit ApplicationSession(
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::string const& session_name,
+        std::shared_ptr<EventSink> const& sink);
     ~ApplicationSession();
 
     frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
@@ -52,8 +55,6 @@ public:
     void show();
 
     int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
-
-    void set_event_sink(std::shared_ptr<mir::EventSink> const& sink);
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
@@ -72,7 +73,7 @@ private:
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
 
-    std::shared_ptr<EventSink> event_sink;
+    std::shared_ptr<EventSink> const event_sink;
 };
 
 }

@@ -149,7 +149,7 @@ struct SessionMediatorTest : public ::testing::Test
     {
         using namespace ::testing;
 
-        ON_CALL(*shell, open_session(_)).WillByDefault(Return(stubbed_session));
+        ON_CALL(*shell, open_session(_, _)).WillByDefault(Return(stubbed_session));
         ON_CALL(*shell, create_surface_for(_, _)).WillByDefault(Return(mf::SurfaceId{1}));
     }
 

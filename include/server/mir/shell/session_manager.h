@@ -51,7 +51,7 @@ public:
                             std::shared_ptr<FocusSetter> const& focus_setter);
     virtual ~SessionManager();
 
-    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);
+    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name, std::shared_ptr<EventSink> const& sink);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
     virtual void force_requests_to_complete();
 

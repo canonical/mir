@@ -58,9 +58,9 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 
     EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session("Visual Basic Studio");
-    auto session2 = session_manager.open_session("Microsoft Access");
-    auto session3 = session_manager.open_session("WordPerfect");
+    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<mir::EventSink>());
+    auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<mir::EventSink>());
+    auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<mir::EventSink>());
 
     {
       InSequence seq;
@@ -91,9 +91,9 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
 
     EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session("Visual Basic Studio");
-    auto session2 = session_manager.open_session("Microsoft Access");
-    auto session3 = session_manager.open_session("WordPerfect");
+    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<mir::EventSink>());
+    auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<mir::EventSink>());
+    auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<mir::EventSink>());
 
     {
       InSequence seq;

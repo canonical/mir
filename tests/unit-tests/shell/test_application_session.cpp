@@ -51,7 +51,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
     EXPECT_CALL(surface_factory, create_surface(_, _, _));
     EXPECT_CALL(*mock_surface, destroy());
 
-    msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo");
+    msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo", std::shared_ptr<mir::EventSink>());
 
     mf::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -75,7 +75,7 @@ TEST(ApplicationSession, default_surface_is_first_surface)
             .WillOnce(Return(std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder))));
     }
 
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo", std::shared_ptr<mir::EventSink>());
 
     mf::SurfaceCreationParameters params;
     auto id1 = app_session.create_surface(params);
@@ -105,7 +105,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
 
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo", std::shared_ptr<mir::EventSink>());
 
     EXPECT_CALL(surface_factory, create_surface(_, _, _));
 
@@ -130,7 +130,7 @@ TEST(Session, get_invalid_surface_throw_behavior)
     using namespace ::testing;
 
     mtd::MockSurfaceFactory surface_factory;
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo", std::shared_ptr<mir::EventSink>());
     mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
@@ -143,7 +143,7 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
     using namespace ::testing;
 
     mtd::MockSurfaceFactory surface_factory;
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo");
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo", std::shared_ptr<mir::EventSink>());
     mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({

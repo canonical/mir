@@ -33,10 +33,12 @@ namespace msh = mir::shell;
 
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::string const& session_name) :
+    std::string const& session_name,
+    std::shared_ptr<mir::EventSink> const& sink) :
     surface_factory(surface_factory),
     session_name(session_name),
-    next_surface_id(0)
+    next_surface_id(0),
+    event_sink(sink)
 {
     assert(surface_factory);
 }
@@ -48,12 +50,6 @@ msh::ApplicationSession::~ApplicationSession()
     {
         pair_id_surface.second->destroy();
     }
-}
-
-void msh::ApplicationSession::set_event_sink(
-    std::shared_ptr<mir::EventSink> const& sink)
-{
-    event_sink = sink;
 }
 
 mf::SurfaceId msh::ApplicationSession::next_id()

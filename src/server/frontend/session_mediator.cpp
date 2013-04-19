@@ -65,8 +65,7 @@ void mir::frontend::SessionMediator::connect(
 {
     report->session_connect_called(request->application_name());
 
-    session = shell->open_session(request->application_name());
-    session->set_event_sink(event_sink);
+    session = shell->open_session(request->application_name(), event_sink);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();

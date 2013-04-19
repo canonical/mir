@@ -51,9 +51,11 @@ msh::SessionManager::~SessionManager()
 {
 }
 
-std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const& name)
+std::shared_ptr<mf::Session> msh::SessionManager::open_session(
+    std::string const& name,
+    std::shared_ptr<EventSink> const& sink)
 {
-    auto new_session = std::make_shared<msh::ApplicationSession>(surface_factory, name);
+    auto new_session = std::make_shared<msh::ApplicationSession>(surface_factory, name, sink);
 
     app_container->insert_session(new_session);
 
