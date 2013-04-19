@@ -41,6 +41,7 @@ public:
         registerProcs = hook_registerProcs;
         eventControl = hook_eventControl;
         set = hook_set;
+        prepare = hook_prepare;
         blank = hook_blank;
         getDisplayConfigs = hook_getDisplayConfigs;
         getDisplayAttributes = hook_getDisplayAttributes;

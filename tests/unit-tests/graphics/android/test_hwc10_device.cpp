@@ -109,9 +109,7 @@ TEST_F(HWC10Device, hwc10_commit_frame)
 
     mga::HWC10Device device(mock_device, mock_fbdev);
 
-    printf("here\n");
     device.commit_frame(dpy, sur);
-    printf("there\n");
 
     Mock::VerifyAndClearExpectations(mock_device.get());
 
