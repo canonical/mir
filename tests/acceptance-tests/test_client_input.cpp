@@ -186,7 +186,7 @@ struct ClientConfigCommon : TestingClientConfiguration
 
 struct MockInputHandler
 {
-    MOCK_METHOD1(handle_key_down, void(MirEvent const*));
+    MOCK_METHOD1(handle_input, void(MirEvent const*));
 };
 
 struct InputReceivingClient : ClientConfigCommon
@@ -203,7 +203,7 @@ struct InputReceivingClient : ClientConfigCommon
         auto client = static_cast<InputReceivingClient *>(context);
         if (ev->key.action == 0)
         {
-            client->handler->handle_key_down(ev);
+            client->handler->handle_input(ev);
             client->event_received[client->events_received].wake_up_everyone();
             client->events_received++;
         }
@@ -263,6 +263,26 @@ struct InputReceivingClient : ClientConfigCommon
 
 }
 
+namespace
+{
+MATCHER(KeyDownEvent, "")
+{
+    if (arg->type != mir_event_type_key)
+        return false;
+    if (arg->key.action != 0) // Key down
+        return false;
+    
+    return true;
+}
+MATCHER_P(KeyOfSymbol, keysym, "")
+{
+    if (static_cast<xkb_keysym_t>(arg->key.key_code) == (uint)keysym)
+        return true;
+    return false;
+}
+}
+
+
 using TestClientInput = BespokeDisplayServerTestFixture;
 
 TEST_F(TestClientInput, clients_receive_key_input)
@@ -290,20 +310,10 @@ TEST_F(TestClientInput, clients_receive_key_input)
         void expect_input()
         {
             using namespace ::testing;
-            EXPECT_CALL(*handler, handle_key_down(_)).Times(num_events_produced);
+            EXPECT_CALL(*handler, handle_input(KeyDownEvent())).Times(num_events_produced);
         }
     } client_config;
     launch_client_process(client_config);
-}
-
-namespace
-{
-MATCHER_P(KeyOfSymbol, keysym, "")
-{
-    if (static_cast<xkb_keysym_t>(arg->key.key_code) == (uint)keysym)
-        return true;
-    return false;
-}
 }
 
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
@@ -338,8 +348,8 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             using namespace ::testing;
 
             InSequence seq;
-            EXPECT_CALL(*handler, handle_key_down(KeyOfSymbol(XKB_KEY_Shift_L))).Times(1);
-            EXPECT_CALL(*handler, handle_key_down(KeyOfSymbol(XKB_KEY_dollar))).Times(1);
+            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_Shift_L)))).Times(1);
+            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_dollar)))).Times(1);
         }
     } client_config;
     launch_client_process(client_config);
