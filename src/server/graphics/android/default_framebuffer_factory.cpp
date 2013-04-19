@@ -40,10 +40,13 @@ mga::DefaultFramebufferFactory::DefaultFramebufferFactory(
 std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(
     std::shared_ptr<DisplaySupportProvider> const& info_provider) const
 {
+    printf("create fb\n"); 
     auto size = info_provider->display_size();
+    printf("create fb a\n"); 
     auto pf = info_provider->display_format();
-    auto num_framebuffers = info_provider->number_of_framebuffers_available();
-    
+    printf("create fb b\n"); 
+    auto num_framebuffers = info_provider->number_of_framebuffers_available(); 
+    printf("how many fbs? %i\n", num_framebuffers); 
     std::vector<std::shared_ptr<mga::AndroidBuffer>> buffers; 
     for( auto i = 0u; i < num_framebuffers; ++i)
     {

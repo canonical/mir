@@ -67,7 +67,8 @@ void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     display_contents.numHwLayers = 0;
     hwc_display_contents_1* contents = &display_contents;
 
-    auto rc = hwc_device->set(hwc_device.get(), 1, &contents);
+    auto rc = hwc_device->prepare(hwc_device.get(), 1, &contents);
+    rc = hwc_device->set(hwc_device.get(), 1, &contents);
     if (rc != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));

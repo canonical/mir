@@ -101,6 +101,11 @@ TEST_F(HWC10Device, hwc10_commit_frame)
 
     EGLDisplay dpy;
     EGLSurface sur;
+
+    InSequence inseq;
+
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
 
@@ -108,12 +113,19 @@ TEST_F(HWC10Device, hwc10_commit_frame)
 
     device.commit_frame(dpy, sur);
 
-    Mock::VerifyAndClearExpectations(mock_device.get()); 
+    Mock::VerifyAndClearExpectations(mock_device.get());
+
     EXPECT_EQ(dpy, mock_device->display0_content.dpy);
     EXPECT_EQ(sur, mock_device->display0_content.sur);
     EXPECT_EQ(-1, mock_device->display0_content.retireFenceFd);
     EXPECT_EQ(0u, mock_device->display0_content.flags);
     EXPECT_EQ(0u, mock_device->display0_content.numHwLayers);
+
+    EXPECT_EQ(dpy, mock_device->display0_prepare_content.dpy);
+    EXPECT_EQ(sur, mock_device->display0_prepare_content.sur);
+    EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
+    EXPECT_EQ(0u, mock_device->display0_prepare_content.flags);
+    EXPECT_EQ(0u, mock_device->display0_prepare_content.numHwLayers);
 }
 
 TEST_F(HWC10Device, hwc10_commit_frame_failure)
