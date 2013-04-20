@@ -18,6 +18,7 @@
 
 #include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/hwc10_device.h"
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "src/server/graphics/android/hwc_display.h"
@@ -55,6 +56,7 @@ protected:
         /* determine hwc11 capable devices so we can skip the hwc11 tests on non supported tests */
         hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &gr_module);
         run_hwc11_tests = false;
+        run_hwc10_tests = false;
         const hw_module_t *hw_module;
         int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
         if (rc == 0) 
@@ -67,6 +69,10 @@ protected:
                 if (hwc_device->common.version == HWC_DEVICE_API_VERSION_1_1)
                 {
                     run_hwc11_tests = true;
+                }
+                if (hwc_device->common.version == HWC_DEVICE_API_VERSION_1_0)
+                {
+                    run_hwc10_tests = true;
                 }
             }
         }
@@ -89,6 +95,7 @@ protected:
     }
 
     static bool run_hwc11_tests;
+    static bool run_hwc10_tests;
     static std::shared_ptr<mga::FramebufferFactory> fb_factory;
     static std::shared_ptr<mga::DisplaySupportProvider> fb_device;
     static std::shared_ptr<hwc_composer_device_1> hwc_device;
@@ -99,6 +106,7 @@ std::shared_ptr<mga::DisplaySupportProvider> AndroidGPUDisplay::fb_device;
 std::shared_ptr<mga::FramebufferFactory> AndroidGPUDisplay::fb_factory;
 std::shared_ptr<hwc_composer_device_1> AndroidGPUDisplay::hwc_device;
 hw_module_t const* AndroidGPUDisplay::gr_module;
+bool AndroidGPUDisplay::run_hwc10_tests;
 bool AndroidGPUDisplay::run_hwc11_tests;
 
 }
@@ -138,12 +146,14 @@ TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 
 #define YELLOW "\033[33m"
 #define RESET "\033[0m"
-#define SUCCEED_IF_NO_HARDWARE_SUPPORT() \
+#define SUCCEED_IF_NO_HWC11_SUPPORT() \
     if(!run_hwc11_tests) { SUCCEED(); std::cout << YELLOW << "--> This device does not have HWC 1.1 support. Skipping test." << RESET << std::endl; return;}
+#define SUCCEED_IF_NO_HWC10_SUPPORT() \
+    if(!run_hwc10_tests) { SUCCEED(); std::cout << YELLOW << "--> This device does not have HWC 1.0 support. Skipping test." << RESET << std::endl; return;}
 
 TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 {
-    SUCCEED_IF_NO_HARDWARE_SUPPORT();
+    SUCCEED_IF_NO_HWC11_SUPPORT();
 
     using namespace testing;
 
@@ -152,6 +162,30 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device);
+    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc);
+
+    gl_animation.init_gl();
+
+    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    {
+        gl_animation.render_gl();
+        buffer.post_update();
+
+        gl_animation.render_gl();
+        buffer.post_update();
+    });
+}
+
+TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
+{
+    SUCCEED_IF_NO_HWC10_SUPPORT();
+
+    using namespace testing;
+
+    auto window = fb_factory->create_fb_native_window(fb_device);
+    auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(window);
+
+    auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device);
     auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc);
 
     gl_animation.init_gl();
