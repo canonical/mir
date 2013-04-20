@@ -52,25 +52,25 @@ public:
             .WillByDefault(Invoke(this, &MockHWCComposerDevice1::save_last_prepare_arguments));
     }
 
-    int save_args(hwc_display_contents_1_t& out, hwc_display_contents_1_t** in)
+    int save_args(hwc_display_contents_1_t* out, hwc_display_contents_1_t** in)
     {
         if ((nullptr == in) || (nullptr == *in))
             return -1;
 
         hwc_display_contents_1_t* primary_display = *in;
-        memcpy(&out, primary_display, sizeof(hwc_display_contents_1_t));
+        memcpy(out, primary_display, sizeof(hwc_display_contents_1_t));
 
         return 0;
 
     }
     int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
-        return save_args(display0_content, displays);
+        return save_args(&display0_prepare_content, displays);
     }
 
     int save_last_set_arguments(struct hwc_composer_device_1 *, size_t, hwc_display_contents_1_t** displays)
     {
-        return save_args(display0_prepare_content, displays);
+        return save_args(&display0_set_content, displays);
     }
 
     static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
@@ -119,7 +119,7 @@ public:
     MOCK_METHOD4(getDisplayConfigs_interface, int(struct hwc_composer_device_1*, int, uint32_t*, size_t*));
     MOCK_METHOD5(getDisplayAttributes_interface, int(struct hwc_composer_device_1*, int, uint32_t, const uint32_t*, int32_t*));
 
-    hwc_display_contents_1_t display0_content;
+    hwc_display_contents_1_t display0_set_content;
     hwc_display_contents_1_t display0_prepare_content;
 };
 

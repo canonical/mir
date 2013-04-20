@@ -73,9 +73,9 @@ TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
 
     device.commit_frame(dpy, surf);
 
-    EXPECT_EQ(empty_list.size(), mock_device->display0_content.numHwLayers);
+    EXPECT_EQ(empty_list.size(), mock_device->display0_set_content.numHwLayers);
 
-    EXPECT_EQ(-1, mock_device->display0_content.retireFenceFd);
+    EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
 }
 
 TEST_F(HWC11Device, test_hwc_gles_set_gets_layerlist)
@@ -95,7 +95,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_gets_layerlist)
 
     device.commit_frame(dpy, surf);
 
-    EXPECT_EQ(fb_list.size(), mock_device->display0_content.numHwLayers);
+    EXPECT_EQ(fb_list.size(), mock_device->display0_set_content.numHwLayers);
 }
 
 TEST_F(HWC11Device, test_hwc_gles_set_error)
@@ -154,7 +154,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set)
 
     device.commit_frame(dpy, surf);
 
-    EXPECT_EQ(fb_list.size(), mock_device->display0_content.numHwLayers);
+    EXPECT_EQ(fb_list.size(), mock_device->display0_set_content.numHwLayers);
 }
 
 TEST_F(HWC11Device, test_hwc_device_display_config)

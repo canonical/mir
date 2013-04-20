@@ -113,11 +113,11 @@ TEST_F(HWC10Device, hwc10_commit_frame)
 
     Mock::VerifyAndClearExpectations(mock_device.get());
 
-    EXPECT_EQ(dpy, mock_device->display0_content.dpy);
-    EXPECT_EQ(sur, mock_device->display0_content.sur);
-    EXPECT_EQ(-1, mock_device->display0_content.retireFenceFd);
-    EXPECT_EQ(0u, mock_device->display0_content.flags);
-    EXPECT_EQ(0u, mock_device->display0_content.numHwLayers);
+    EXPECT_EQ(dpy, mock_device->display0_set_content.dpy);
+    EXPECT_EQ(sur, mock_device->display0_set_content.sur);
+    EXPECT_EQ(-1, mock_device->display0_set_content.retireFenceFd);
+    EXPECT_EQ(0u, mock_device->display0_set_content.flags);
+    EXPECT_EQ(0u, mock_device->display0_set_content.numHwLayers);
 
     EXPECT_EQ(dpy, mock_device->display0_prepare_content.dpy);
     EXPECT_EQ(sur, mock_device->display0_prepare_content.sur);
