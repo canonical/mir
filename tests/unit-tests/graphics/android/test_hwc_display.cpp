@@ -61,7 +61,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
 
     display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
-        EXPECT_TRUE(buffer.post_update());
+        buffer.post_update();
     });
 }
 
@@ -79,7 +79,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
 
     display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
-        EXPECT_TRUE(buffer.post_update());
+        buffer.post_update();
     });
 }
 
