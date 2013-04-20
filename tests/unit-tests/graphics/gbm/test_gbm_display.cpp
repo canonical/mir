@@ -423,7 +423,7 @@ TEST_F(GBMDisplayTest, post_update)
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
-            EXPECT_TRUE(db.post_update());
+            db.post_update();
         });
     });
 }
@@ -456,16 +456,16 @@ TEST_F(GBMDisplayTest, post_update_flip_failure)
             .Times(Exactly(1));
     }
 
-    EXPECT_NO_THROW(
+    EXPECT_THROW(
     {
         auto platform = create_platform();
         auto display = std::make_shared<mgg::GBMDisplay>(platform, null_report);
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
-            EXPECT_FALSE(db.post_update());
+            db.post_update();
         });
-    });
+    }, std::runtime_error);
 }
 
 TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_of_native_resources)
