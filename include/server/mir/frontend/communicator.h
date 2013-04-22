@@ -27,9 +27,10 @@ namespace frontend
 class Communicator
 {
 public:
+    virtual ~Communicator() {}
 
     virtual void start() = 0;
-    virtual ~Communicator() {}
+    virtual void stop() = 0;
 
 protected:
     Communicator() = default;
