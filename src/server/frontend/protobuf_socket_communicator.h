@@ -29,6 +29,7 @@
 #include <thread>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace google
 {
@@ -59,9 +60,11 @@ public:
     explicit ProtobufSocketCommunicator(
         const std::string& socket_file,
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-        int threads);
+        int threads,
+        std::function<void()> const& force_requests_to_complete);
     ~ProtobufSocketCommunicator();
     void start();
+    void stop();
 
 private:
     void start_accept();
@@ -75,6 +78,7 @@ private:
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
     std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
+    std::function<void()> const force_requests_to_complete;
 };
 
 }

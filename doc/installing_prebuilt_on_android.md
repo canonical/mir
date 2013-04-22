@@ -10,7 +10,7 @@ The following devices have been tested with Mir:
 | ------------------ | ------ |
 | Galaxy Nexus (SGX) | tested |
 | Nexus 7 (nvidia)   | tested - needs special hybris for nvidia atm |
-| Nexus 4 (qualcomm) | in progress |
+| Nexus 4 (qualcomm) | tested |
 
 Installing Mir
 --------------
