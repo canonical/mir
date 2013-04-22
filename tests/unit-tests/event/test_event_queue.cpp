@@ -23,19 +23,17 @@
 
 TEST(EventQueue, no_sink)
 {
-    EXPECT_NO_FATAL_FAILURE({
-        mir::EventQueue q;
-        MirEvent e;
+    mir::EventQueue q;
+    MirEvent e;
 
-        e.type = mir_event_type_key;
-        q.handle_event(e);
+    e.type = mir_event_type_key;
+    q.handle_event(e);
 
-        e.type = mir_event_type_motion;
-        q.handle_event(e);
+    e.type = mir_event_type_motion;
+    q.handle_event(e);
 
-        e.type = mir_event_type_surface;
-        q.handle_event(e);
-    });
+    e.type = mir_event_type_surface;
+    q.handle_event(e);
 }
 
 namespace
