@@ -107,10 +107,9 @@ public:
     virtual std::shared_ptr<MainLoop>               the_main_loop();
     /** @} */
 
-    /** @name graphics configuration - internal
-     * configurable interfaces implemented and used within graphics
+    /** @name graphics configuration - customization
+     * configurable interfaces for modifying graphics
      *  @{ */
-    virtual std::shared_ptr<graphics::Platform>          the_graphics_platform();
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<graphics::Renderer>          the_renderer();
     virtual std::shared_ptr<graphics::ViewableArea>      the_viewable_area();
@@ -122,8 +121,8 @@ public:
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
     /** @} */
 
-    /** @name compositor configuration - internal
-     * configurable interfaces implemented and used within compositor
+    /** @name compositor configuration - customization
+     * configurable interfaces for modifying compositor
      *  @{ */
     virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
@@ -144,8 +143,8 @@ public:
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     /** @} */
 
-    /** @name shell configuration - internal
-     * configurable interfaces implemented and used within shell
+    /** @name shell configuration - customization
+     * configurable interfaces for modifying shell
      *  @{ */
     virtual std::shared_ptr<shell::SurfaceFactory>    the_shell_surface_factory();
     virtual std::shared_ptr<shell::SessionContainer>  the_shell_session_container();
@@ -162,8 +161,8 @@ public:
     /** @} */
 
 
-    /** @name surfaces configuration - internal
-     * configurable interfaces implemented and used within surfaces
+    /** @name surfaces configuration - customization
+     * configurable interfaces for modifying surfaces
      *  @{ */
     virtual std::shared_ptr<surfaces::SurfaceStackModel> the_surface_stack_model();
     /** @} */
@@ -181,13 +180,14 @@ public:
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     /** @} */
 
-    /** @name logging configuration - internal
-     * configurable interfaces implemented and used within logging
+    /** @name logging configuration - customization
+     * configurable interfaces for modifying logging
      *  @{ */
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
 
-    virtual std::shared_ptr<time::TimeSource> the_time_source();
+    virtual std::shared_ptr<graphics::Platform>  the_graphics_platform();
+    virtual std::shared_ptr<time::TimeSource>    the_time_source();
 
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;

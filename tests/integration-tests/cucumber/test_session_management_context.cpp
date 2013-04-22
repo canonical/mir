@@ -17,7 +17,6 @@
  */
 
 #include "mir_test_cucumber/session_management_context.h"
-#include "mir/server_configuration.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
@@ -44,17 +43,6 @@ namespace mtc = mt::cucumber;
 
 namespace
 {
-
-struct MockServerConfiguration : public mir::ServerConfiguration
-{
-    MOCK_METHOD0(the_communicator, std::shared_ptr<mf::Communicator>());
-    MOCK_METHOD0(the_frontend_shell, std::shared_ptr<mf::Shell>());
-    MOCK_METHOD0(the_input_manager, std::shared_ptr<mi::InputManager>());
-    MOCK_METHOD0(the_display, std::shared_ptr<mg::Display>());
-    MOCK_METHOD0(the_compositor, std::shared_ptr<mc::Compositor>());
-    MOCK_METHOD0(the_main_loop, std::shared_ptr<mir::MainLoop>());
-};
-
 MATCHER_P(NamedWindowWithNoGeometry, name, "")
 {
     if (arg.name != name)
@@ -83,11 +71,8 @@ struct SessionManagementContextSetup : public testing::Test
     {
         using namespace ::testing;
 
-        EXPECT_CALL(server_configuration, the_frontend_shell()).Times(1)
-            .WillOnce(Return(mt::fake_shared<mf::Shell>(shell)));
-        ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
+        ctx = std::make_shared<mtc::SessionManagementContext>(mt::fake_shared<mf::Shell>(shell));
     }
-    MockServerConfiguration server_configuration;
     mtd::MockShell shell;
     std::shared_ptr<mtc::SessionManagementContext> ctx;
 
@@ -102,9 +87,7 @@ struct SessionManagementContextViewAreaSetup : public SessionManagementContextSe
     {
         using namespace ::testing;
 
-        EXPECT_CALL(server_configuration, the_frontend_shell()).Times(1)
-            .WillOnce(Return(mt::fake_shared<mf::Shell>(shell)));
-        ctx = std::make_shared<mtc::SessionManagementContext>(server_configuration);
+        ctx = std::make_shared<mtc::SessionManagementContext>(mt::fake_shared<mf::Shell>(shell));
         viewable_area = ctx->get_view_area();
     }
 
@@ -116,19 +99,6 @@ std::string const SessionManagementContextSetup::test_window_name{"John"};
 geom::Size const SessionManagementContextSetup::test_window_size{geom::Width{100},
                                                                  geom::Height{100}};
 } // namespace
-
-TEST(SessionManagementContext, constructs_shell_from_server_configuration)
-{
-    using namespace ::testing;
-
-    MockServerConfiguration server_configuration;
-    mtd::MockShell shell;
-
-    EXPECT_CALL(server_configuration, the_frontend_shell()).Times(1)
-        .WillOnce(Return(mt::fake_shared<mf::Shell>(shell)));
-
-    mtc::SessionManagementContext ctx(server_configuration);
-}
 
 TEST_F(SessionManagementContextSetup, open_window_consuming_creates_surface_with_no_geometry)
 {

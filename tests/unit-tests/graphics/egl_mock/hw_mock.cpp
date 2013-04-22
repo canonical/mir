@@ -77,10 +77,10 @@ mt::HardwareAccessMock::HardwareAccessMock()
     assert(global_hw_mock == NULL && "Only one mock object per process is allowed");
     global_hw_mock = this;
 
-    mock_alloc_device = std::make_shared<mtd::MockAllocDevice>();
+    mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocDevice>>();
     mock_gralloc_module = std::make_shared<mt::HardwareModuleStub>(mock_alloc_device->common);
 
-    mock_hwc_device = std::make_shared<mtd::MockHWCComposerDevice1>();
+    mock_hwc_device = std::make_shared<NiceMock<mtd::MockHWCComposerDevice1>>();
     mock_hwc_module = std::make_shared<mt::HardwareModuleStub>(mock_hwc_device->common);
 
     ON_CALL(*this, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID),_))

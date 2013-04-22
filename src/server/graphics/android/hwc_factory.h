@@ -30,6 +30,7 @@ namespace android
 {
 
 class HWCDevice;
+class DisplaySupportProvider;
 class HWCFactory
 {
 public:
@@ -38,7 +39,7 @@ public:
 
     virtual std::shared_ptr<HWCDevice> create_hwc_1_1(
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<framebuffer_device_t> const& fb_device) const = 0;
+        std::shared_ptr<DisplaySupportProvider> const& fb_device) const = 0;
 private:
     HWCFactory(HWCFactory const&) = delete;
     HWCFactory& operator=(HWCFactory const&) = delete; 
