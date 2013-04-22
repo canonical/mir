@@ -18,27 +18,25 @@
 
 #include "gbm_platform.h"
 
-#include <boost/throw_exception.hpp>
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/egl/mesa_native_display.h"
-#include "mir/logging/logger.h"
-#include "mir/logging/dumb_console_logger.h"
 
 #include <xf86drm.h>
 
-#include <stdexcept>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mgeglm = mg::egl::mesa;
-namespace ml = mir::logging;
 namespace mc = mir::compositor;
 
 namespace
 {
+
 struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 {
     GBMPlatformIPCPackage(int drm_auth_fd)
@@ -53,13 +51,36 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
     }
 };
 
+struct RealVTFileOperations : public mgg::VTFileOperations
+{
+    int open(char const* pathname, int flags)
+    {
+        return ::open(pathname, flags);
+    }
+
+    int close(int fd)
+    {
+        return ::close(fd);
+    }
+
+    int ioctl(int d, int request, int val)
+    {
+        return ::ioctl(d, request, val);
+    }
+
+    int ioctl(int d, int request, void* p_val)
+    {
+        return ::ioctl(d, request, p_val);
+    }
+};
+
 }
 
 mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
                               std::shared_ptr<VirtualTerminal> const& vt)
-    : listener(listener),
+    : listener{listener},
       vt{vt},
-      native_display(0)
+      native_display{0}
 {
     drm.setup();
     gbm.setup(drm);
@@ -100,7 +121,7 @@ EGLNativeDisplayType mgg::GBMPlatform::shell_egl_display()
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
 {
-    return std::make_shared<mgg::GBMPlatform>(
-        report,
-        std::make_shared<mgg::LinuxVirtualTerminal>());
+    auto real_fops = std::make_shared<RealVTFileOperations>();
+    auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, report);
+    return std::make_shared<mgg::GBMPlatform>(report, vt);
 }

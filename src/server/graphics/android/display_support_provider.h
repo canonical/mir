@@ -39,6 +39,8 @@ public:
     virtual geometry::Size display_size() const = 0; 
     virtual geometry::PixelFormat display_format() const = 0; 
     virtual unsigned int number_of_framebuffers_available() const = 0;
+    //this function schedules the next frontbuffer to be "buffer" parameter. depending on implementation, it may
+    //post immediately, or be deferred.
     virtual void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
 
 protected:

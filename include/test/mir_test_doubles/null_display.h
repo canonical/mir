@@ -43,8 +43,8 @@ class NullDisplay : public graphics::Display
         return std::shared_ptr<graphics::DisplayConfiguration>();
     }
     void register_pause_resume_handlers(MainLoop&,
-                                        std::function<void()> const&,
-                                        std::function<void()> const&)
+                                        graphics::DisplayPauseHandler const&,
+                                        graphics::DisplayResumeHandler const&)
     {
     }
     void pause() {}

@@ -20,6 +20,8 @@
 #define MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
 
 #include <hardware/hwcomposer.h>
+#include <hardware/gralloc.h>
+#include <hardware/fb.h>
 #include <gmock/gmock.h>
 
 namespace mir
@@ -34,7 +36,29 @@ class MockFBHalDevice : public framebuffer_device_t
 public:
     MockFBHalDevice()
     {
-        using namespace testing;
+        post = hook_post;
+    }
+
+    MockFBHalDevice(unsigned int const width, unsigned int const height,
+                    int const pf, int const numfbs)
+        : framebuffer_device_t({
+            empty_module,
+            0,
+            width,
+            height,
+            0,
+            pf,
+            0.0f,
+            0.0f,
+            0.0f,
+            0,
+            1,
+            numfbs,
+            {0,0,0,0,0,0,0},
+            nullptr, nullptr,nullptr,nullptr, nullptr,nullptr,
+            {0,0,0,0,0,0}
+          }) 
+    {
         post = hook_post;
     }
 
@@ -45,6 +69,8 @@ public:
     }
 
     MOCK_METHOD2(post_interface, int(struct framebuffer_device_t*, buffer_handle_t));
+    
+    hw_device_t empty_module;
 };
 
 }

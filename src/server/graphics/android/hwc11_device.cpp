@@ -19,7 +19,6 @@
 
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
-#include "fb_device.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -45,7 +44,7 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerOrganizer> const& organizer,
-                              std::shared_ptr<FBDevice> const& fbdev)
+                              std::shared_ptr<DisplaySupportProvider> const& fbdev)
     : hwc_device(hwc_device),
       layer_organizer(organizer),
       fb_device(fbdev),
@@ -130,7 +129,7 @@ void mga::HWC11Device::wait_for_vsync()
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& buffer)
 {
     layer_organizer->set_fb_target(buffer);
-    fb_device->post(buffer);
+    fb_device->set_next_frontbuffer(buffer);
 }
 
 void mga::HWC11Device::commit_frame()
