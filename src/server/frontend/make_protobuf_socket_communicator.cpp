@@ -18,11 +18,15 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/options/option.h"
+#include "mir/frontend/shell.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session.h"
 #include "protobuf_socket_communicator.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace msh = mir::shell;
 
 std::shared_ptr<mf::Communicator>
 mir::DefaultServerConfiguration::the_communicator()
@@ -31,10 +35,18 @@ mir::DefaultServerConfiguration::the_communicator()
         [&,this]() -> std::shared_ptr<mf::Communicator>
         {
             auto const threads = the_options()->get("ipc-thread-pool", 10);
+            auto shell_sessions = the_shell_session_container();
             return std::make_shared<mf::ProtobufSocketCommunicator>(
                 the_socket_file(),
                 the_ipc_factory(the_frontend_shell(), the_viewable_area(), the_buffer_allocator()),
-                threads);
+                threads,
+                [shell_sessions]
+                {
+                    shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
+                    {
+                        session->force_requests_to_complete();
+                    });
+                });
         });
 }
 
