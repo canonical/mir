@@ -48,7 +48,7 @@ MATCHER(ButtonDownEvent, "")
         return false;
     if (arg.motion.button_state == 0)
         return false;
-    return arg.motion.action == AKEY_EVENT_ACTION_DOWN;
+    return arg.motion.action == AMOTION_EVENT_ACTION_DOWN;
 }
 MATCHER_P2(MotionEvent, dx, dy, "")
 {
