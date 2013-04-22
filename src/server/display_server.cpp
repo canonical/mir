@@ -23,8 +23,6 @@
 #include "mir/main_loop.h"
 
 #include "mir/compositor/compositor.h"
-#include "mir/shell/session_container.h"
-#include "mir/shell/session.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
 #include "mir/input/input_manager.h"
@@ -67,7 +65,6 @@ struct mir::DisplayServer::Private
     Private(ServerConfiguration& config)
         : display{config.the_display()},
           compositor{config.the_compositor()},
-          shell_sessions{config.the_shell_session_container()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()}
@@ -85,6 +82,10 @@ struct mir::DisplayServer::Private
             TryButRevertIfUnwinding comp{
                 [this] { compositor->stop(); },
                 [this] { compositor->start(); }};
+
+            TryButRevertIfUnwinding comm{
+                [this] { communicator->stop(); },
+                [this] { communicator->start(); }};
 
             display->pause();
         }
@@ -104,6 +105,10 @@ struct mir::DisplayServer::Private
                 [this] { display->resume(); },
                 [this] { display->pause(); }};
 
+            TryButRevertIfUnwinding comm{
+                [this] { communicator->start(); },
+                [this] { communicator->stop(); }};
+
             compositor->start();
         }
         catch(std::runtime_error const&)
@@ -116,7 +121,6 @@ struct mir::DisplayServer::Private
 
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mc::Compositor> compositor;
-    std::shared_ptr<msh::SessionContainer> shell_sessions;
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mir::MainLoop> main_loop;
@@ -128,12 +132,13 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
     p.reset(new DisplayServer::Private(config));
 }
 
+/*
+ * Need to define the destructor in the source file, so that we
+ * can define the 'p' member variable as a unique_ptr to an
+ * incomplete type (DisplayServerPrivate) in the header.
+ */
 mir::DisplayServer::~DisplayServer()
 {
-    p->shell_sessions->for_each([](std::shared_ptr<msh::Session> const& session)
-    {
-        session->force_requests_to_complete();
-    });
 }
 
 void mir::DisplayServer::run()
@@ -146,6 +151,7 @@ void mir::DisplayServer::run()
 
     p->input_manager->stop();
     p->compositor->stop();
+    p->communicator->stop();
 }
 
 void mir::DisplayServer::stop()

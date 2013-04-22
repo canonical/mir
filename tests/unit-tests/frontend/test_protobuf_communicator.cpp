@@ -19,6 +19,7 @@
 
 #include "mir/frontend/communicator.h"
 #include "mir/frontend/resource_cache.h"
+#include "src/server/frontend/protobuf_socket_communicator.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -27,6 +28,7 @@
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_protobuf_server.h"
+#include "mir_test_doubles/stub_ipc_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -37,6 +39,7 @@
 
 namespace mf = mir::frontend;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 struct ProtobufCommunicator : public ::testing::Test
 {
@@ -256,4 +259,33 @@ TEST_F(ProtobufCommunicator, drm_auth_magic_is_processed_by_the_server)
     client->wait_for_drm_auth_magic_done();
 
     EXPECT_EQ(magic.magic(), stub_server_tool->drm_magic);
+}
+
+namespace
+{
+
+class MockForceRequests
+{
+public:
+    MOCK_METHOD0(force_requests_to_complete, void());
+};
+
+}
+
+TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
+{
+    MockForceRequests mock_force_requests;
+    auto stub_server_tool = std::make_shared<mt::StubServerTool>();
+    auto ipc_factory = std::make_shared<mtd::StubIpcFactory>(*stub_server_tool);
+
+    /* Once for the explicit stop() and once when the communicator is destroyed */
+    EXPECT_CALL(mock_force_requests, force_requests_to_complete())
+        .Times(2);
+
+    auto comms = std::make_shared<mf::ProtobufSocketCommunicator>(
+                    "./test_socket1", ipc_factory, 10,
+                    std::bind(&MockForceRequests::force_requests_to_complete,
+                              &mock_force_requests));
+    comms->start();
+    comms->stop();
 }
