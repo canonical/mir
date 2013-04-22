@@ -45,7 +45,6 @@ namespace mtd=mir::test::draw;
 
 namespace
 {
-
 class AndroidGPUDisplay : public ::testing::Test
 {
 protected:
@@ -58,14 +57,12 @@ protected:
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer); 
+        auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer); 
         fb_factory = std::make_shared<mga::DefaultFramebufferFactory>(allocator);
         fb_device = fb_factory->create_fb_device();
-#if 0
-        fb_window = fb_factory->create_fb_native_window(fb_device);
 
-#endif
         /* determine hwc11 capable devices so we can skip the hwc11 tests on non supported tests */
+        hw_module_t const* gr_module;
         hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &gr_module);
         run_hwc11_tests = false;
         const hw_module_t *hw_module;
@@ -87,66 +84,41 @@ protected:
                 }
             }
         }
-
-//        window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
-//        display = std::make_shared<mga::AndroidDisplay>(window_query);
     }
 
     md::glAnimationBasic gl_animation;
 
-    static void TearDownTestCase()
-    {
-    printf("WHAA\n");
-       // hwc_device.reset();
-       // fb_device.reset();
-    }
-
     static bool run_hwc11_tests;
     static bool run_hwc10_tests;
-    static std::shared_ptr<mga::AndroidGraphicBufferAllocator> allocator;
     static std::shared_ptr<mga::FramebufferFactory> fb_factory;
     static std::shared_ptr<mga::DisplaySupportProvider> fb_device;
-    static std::shared_ptr<ANativeWindow> fb_window;
     static std::shared_ptr<hwc_composer_device_1> hwc_device;
-    static std::shared_ptr<mga::AndroidFramebufferWindow> window_query;
-    static std::shared_ptr<mga::AndroidDisplay> display;
-    static hw_module_t const* gr_module;
 };
 
 std::shared_ptr<mga::DisplaySupportProvider> AndroidGPUDisplay::fb_device;
 std::shared_ptr<mga::FramebufferFactory> AndroidGPUDisplay::fb_factory;
 std::shared_ptr<hwc_composer_device_1> AndroidGPUDisplay::hwc_device;
-std::shared_ptr<ANativeWindow> AndroidGPUDisplay::fb_window;
-std::shared_ptr<mga::AndroidGraphicBufferAllocator> AndroidGPUDisplay::allocator;
-std::shared_ptr<mga::AndroidFramebufferWindow> AndroidGPUDisplay::window_query;
-std::shared_ptr<mga::AndroidDisplay> AndroidGPUDisplay::display;
-
-hw_module_t const* AndroidGPUDisplay::gr_module;
 bool AndroidGPUDisplay::run_hwc11_tests;
 bool AndroidGPUDisplay::run_hwc10_tests;
-
 }
 
 /* gpu display tests. These are our back-up display modes, and should be run on every device. */
 TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
+    auto fb_window = fb_factory->create_fb_native_window(fb_device);
+    auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
+    auto bdisplay = std::make_shared<mga::AndroidDisplay>(window_query);
+    bdisplay->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
-        auto fb_window = fb_factory->create_fb_native_window(fb_device);
-        auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
-        printf("1!\n");
-        auto bdisplay = std::make_shared<mga::AndroidDisplay>(window_query);
-        bdisplay->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
-        {
-            buffer.make_current();
-            gl_animation.init_gl();
+        buffer.make_current();
+        gl_animation.init_gl();
 
-            gl_animation.render_gl();
-            buffer.post_update();
+        gl_animation.render_gl();
+        buffer.post_update();
 
-            gl_animation.render_gl();
-            buffer.post_update();
-        });
-    }
+        gl_animation.render_gl();
+        buffer.post_update();
+    });
 }
 
 #define YELLOW "\033[33m"
@@ -167,9 +139,9 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
     auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device);
-    auto adisplay = std::make_shared<mga::HWCDisplay>(window_query, hwc);
+    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc);
 
-    adisplay->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();
         gl_animation.init_gl();

@@ -68,7 +68,6 @@ std::shared_ptr<mga::DisplaySupportProvider> mga::DefaultFramebufferFactory::cre
     auto fb_dev = std::shared_ptr<framebuffer_device_t>(fbdev_raw,
                       [](struct framebuffer_device_t* fbdevice)
                       {
-                        printf("DESTROY FB DEV\n");
                          fbdevice->common.close((hw_device_t*) fbdevice);
                       });
 
