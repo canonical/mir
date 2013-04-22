@@ -34,13 +34,15 @@ namespace ba = boost::asio;
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-    int threads)
+    int threads,
+    std::function<void()> const& force_requests_to_complete)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
     acceptor(io_service, socket_file),
     io_service_threads(threads),
     ipc_factory(ipc_factory),
     next_session_id(0),
-    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
+    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
+    force_requests_to_complete(force_requests_to_complete)
 {
     start_accept();
 }
@@ -87,10 +89,18 @@ void mf::ProtobufSocketCommunicator::start()
     }
 }
 
-mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
+void mf::ProtobufSocketCommunicator::stop()
 {
+    /* Stop processing new requests */
     io_service.stop();
 
+    /* 
+     * Ensure that any pending requests will complete (i.e., that they
+     * will not block indefinitely waiting for a resource from the server)
+     */
+    force_requests_to_complete();
+
+    /* Wait for all io processing threads to finish */
     for (auto& thread : io_service_threads)
     {
         if (thread.joinable())
@@ -98,6 +108,14 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
             thread.join();
         }
     }
+
+    /* Prepare for a potential restart */
+    io_service.reset();
+}
+
+mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
+{
+    stop();
 
     connected_sessions->clear();
 

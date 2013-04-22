@@ -34,5 +34,5 @@ mt::TestProtobufServer::TestProtobufServer(
 
 std::shared_ptr<mf::Communicator> mt::TestProtobufServer::make_communicator(const std::string& socket_name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
 {
-    return std::make_shared<mf::ProtobufSocketCommunicator>(socket_name, factory, 10);
+    return std::make_shared<mf::ProtobufSocketCommunicator>(socket_name, factory, 10, []{});
 }

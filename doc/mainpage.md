@@ -47,10 +47,15 @@ Please file bug reports at: https://bugs.launchpad.net/mir
 
 The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
+Learn about Mir
+----------------
+Android technical info:
+ - \ref android_technical_details
+
 Writing client applications
 ---------------------------
 
- - \ref mir_client_library.h "Mir API Documentation"
+ - \ref mir_toolkit "Mir API Documentation"
  - \subpage demo_client.c "demo_client.c: A simple mir client"
  - \subpage render_surfaces-example "render_surfaces.cpp: A simple program using the mir library"
 
