@@ -47,6 +47,7 @@ mga::Buffer::Buffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
 
 mga::Buffer::~Buffer()
 {
+    printf("DESTROY BUFFER %X\n", (int) this);
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     for(it = egl_image_map.begin(); it != egl_image_map.end(); it++)
     {

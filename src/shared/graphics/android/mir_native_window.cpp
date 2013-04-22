@@ -20,6 +20,7 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "syncfence.h"
 
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 
@@ -65,24 +66,28 @@ static void incRef(android_native_base_t*)
 
 int query_static(const ANativeWindow* anw, int key, int* value)
 {
+    printf("query\n");
     auto self = static_cast<const mga::MirNativeWindow*>(anw);
     return self->query(key, value);
 }
 
 int perform_static(ANativeWindow* window, int key, ...)
 {
+    printf("perf\n");
     va_list args;
     va_start(args, key);
     auto self = static_cast<mga::MirNativeWindow*>(window);
     auto ret = self->perform(key, args);
     va_end(args);
 
+    printf("ret ret %i\n", ret);
     return ret;
 }
 
 int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer)
 {
+    printf("dq dep!\n");
     auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
@@ -90,6 +95,7 @@ int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
 int dequeueBuffer_static (struct ANativeWindow* window,
                           struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
+    printf("dq\n");
     *fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
@@ -98,6 +104,7 @@ int dequeueBuffer_static (struct ANativeWindow* window,
 int queueBuffer_deprecated_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer)
 {
+    printf("q dep!\n");
     auto self = static_cast<mga::MirNativeWindow*>(window);
     auto ioctl_control = std::make_shared<IoctlControl>();
     auto fence = std::make_shared<mga::SyncFence>(-1, ioctl_control);
@@ -107,6 +114,7 @@ int queueBuffer_deprecated_static(struct ANativeWindow* window,
 int queueBuffer_static(struct ANativeWindow* window,
                        struct ANativeWindowBuffer* buffer, int fence_fd)
 {
+    printf("q!\n");
     auto self = static_cast<mga::MirNativeWindow*>(window);
     auto ioctl_control = std::make_shared<IoctlControl>();
     auto fence = std::make_shared<mga::SyncFence>(fence_fd, ioctl_control);

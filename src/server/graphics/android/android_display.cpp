@@ -75,6 +75,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     egl_config = native_window->android_display_egl_config(egl_display);
     EGLNativeWindowType native_win_type = native_window->android_native_window_type();
+        printf("POPPING %X\n", (int) native_win_type);
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl surface\n"));
@@ -87,6 +88,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context\n"));
 
+#if 0
     EGLint pbuffer_attribs[]{EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
     egl_surface_dummy = eglCreatePbufferSurface(egl_display, egl_config, pbuffer_attribs);
     if (egl_surface_dummy == EGL_NO_SURFACE)
@@ -94,10 +96,13 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     if (eglMakeCurrent(egl_display, egl_surface_dummy, egl_surface_dummy, egl_context_shared) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+#endif
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
 {
+printf("killing\n");
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
     eglDestroyContext(egl_display, egl_context_shared);
