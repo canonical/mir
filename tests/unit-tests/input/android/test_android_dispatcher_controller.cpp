@@ -220,11 +220,13 @@ TEST_F(AndroidDispatcherControllerFdSetup, on_focus_changed)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(config, the_dispatcher()).Times(1)
-        .WillOnce(Return(dispatcher));
-
     auto session = std::make_shared<mtd::StubSessionTarget>();
     auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+
+    EXPECT_CALL(config, the_dispatcher()).Times(1)
+        .WillOnce(Return(dispatcher));
+    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(session, surface), false)).Times(1)
+        .WillOnce(Return(droidinput::OK));
 
     {
         InSequence seq;
