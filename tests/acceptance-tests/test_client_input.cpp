@@ -297,12 +297,12 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     if (arg->motion.action != AMOTION_EVENT_ACTION_DOWN)
         return false;
     printf("action: %d \n", arg->motion.action);
-//    if (arg->motion.button_state == 0)
-//.        return false;
-//    if (arg->motion.pointer_coordinates[0].x != x)
-//        return false;
-//    if (arg->motion.pointer_coordinates[0].y != y)
-//        return false;
+    if (arg->motion.button_state == 0)
+        return false;
+    if (arg->motion.pointer_coordinates[0].x != x)
+        return false;
+    if (arg->motion.pointer_coordinates[0].y != y)
+        return false;
     return true;
 }
 
@@ -389,7 +389,7 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
     launch_client_process(client_config);
 }
 
-// TODO: This assumes that clients are placed by shell at 0,0
+// TODO: This assumes that clients are placed by shell at 0,0. Which probably isn't quite safe!
 TEST_F(TestClientInput, clients_receive_motion_inside_window)
 {
     using namespace ::testing;
@@ -434,8 +434,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     {
         void inject_input()
         {
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
-            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(1).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
         }
     } server_config;
     launch_server_process(server_config);
@@ -450,10 +449,8 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
             
             InSequence seq;
 
-            // The cursor starts at 0
-            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1).WillOnce(Return(true));
-            EXPECT_CALL(*handler, handle_input(ButtonDownEvent(1, 1))).Times(1).WillOnce(Return(true));
-            // But we should not receive an event for the second movement outside of our surface!
+            // The cursor starts at (0, 0).
+            EXPECT_CALL(*handler, handle_input(ButtonDownEvent(0, 0))).Times(1).WillOnce(Return(true));
         }
     } client_config;
     launch_client_process(client_config);
