@@ -66,6 +66,7 @@ namespace mt = mir::tools;
 /// and a bespoke compositing strategy
 /// \snippet render_surfaces.cpp RenderSurfacesCompositingStrategy_tag
 ///\section Utilities Utility classes
+/// For smooth animation we need to track time and move surfaces accordingly
 ///\subsection StopWatch StopWatch
 /// \snippet render_surfaces.cpp StopWatch_tag
 ///\subsection Moveable Moveable
