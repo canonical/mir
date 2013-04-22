@@ -22,7 +22,6 @@
 
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/protobuf/google_protobuf_guard.h"
-#include "mir/frontend/session_mediator.h"
 #include "mir/event_sink.h"
 #include "mir/event_queue.h"
 
