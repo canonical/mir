@@ -130,8 +130,8 @@ TEST_F(HWC10Device, hwc10_prepare_frame_failure)
 {
     using namespace testing;
 
-    EGLDisplay dpy = 0x0;
-    EGLSurface sur = 0x0;
+    EGLDisplay dpy = reinterpret_cast<EGLDisplay>(0x1234);
+    EGLSurface sur = reinterpret_cast<EGLSurface>(0x4455);
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), _, _))
         .Times(1)
         .WillOnce(Return(-1));
@@ -147,8 +147,8 @@ TEST_F(HWC10Device, hwc10_commit_frame_failure)
 {
     using namespace testing;
 
-    EGLDisplay dpy = 0x0;
-    EGLSurface sur = 0x0;
+    EGLDisplay dpy = reinterpret_cast<EGLDisplay>(0x1234);
+    EGLSurface sur = reinterpret_cast<EGLSurface>(0x4455);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), _, _))
         .Times(1)
         .WillOnce(Return(-1));

@@ -29,8 +29,6 @@
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
 
-#include <thread>
-#include <chrono>
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -107,8 +105,8 @@ TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
-    auto bdisplay = std::make_shared<mga::AndroidDisplay>(window_query);
-    bdisplay->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    auto display = std::make_shared<mga::AndroidDisplay>(window_query);
+    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();
         gl_animation.init_gl();
@@ -132,15 +130,12 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
 {
     SUCCEED_IF_NO_HWC10_SUPPORT();
 
-    using namespace testing;
-
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
     auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device);
     auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc);
-
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();
@@ -158,14 +153,12 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 {
     SUCCEED_IF_NO_HWC11_SUPPORT();
 
-    using namespace testing;
-
+    auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device);
     auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc);
-
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();

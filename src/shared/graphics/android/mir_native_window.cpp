@@ -20,7 +20,6 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "syncfence.h"
 
-#include <stdio.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 
