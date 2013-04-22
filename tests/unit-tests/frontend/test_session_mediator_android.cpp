@@ -31,6 +31,8 @@
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
 
+#include "mir/event_queue.h"
+
 #include <gtest/gtest.h>
 
 #include <stdexcept>
@@ -97,7 +99,9 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
-                   buffer_allocator, report, resource_cache},
+                   buffer_allocator, report,
+                   std::make_shared<mir::EventQueue>(),
+                   resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
