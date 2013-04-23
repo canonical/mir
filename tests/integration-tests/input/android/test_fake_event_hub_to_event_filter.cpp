@@ -56,7 +56,7 @@ class FakeEventHubSetup : public testing::Test
     void SetUp()
     {
         event_hub = new mia::FakeEventHub();
-        dispatcher_policy = new mia::EventFilterDispatcherPolicy(mt::fake_shared(event_filter));
+        dispatcher_policy = new mia::EventFilterDispatcherPolicy(mt::fake_shared(event_filter), false);
         reader_policy = new mia::RudimentaryInputReaderPolicy();
         dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
         reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
