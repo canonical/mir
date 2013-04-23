@@ -52,14 +52,6 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
     resource_cache->free_resource(response);
 }
 
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Platform* response)
-{
-    const auto& fd = extract_fds_from(response);
-    send_response(id, static_cast<google::protobuf::Message*>(response));
-    sender->send_fds(fd);
-    resource_cache->free_resource(response);
-}
-
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
 {
     const auto& fd = response->has_platform() ?

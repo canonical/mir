@@ -30,11 +30,13 @@ namespace shell
 {
 class SurfaceFactory;
 class Surface;
+class InputTargetListener;
 
 class ApplicationSession : public Session
 {
 public:
-    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
+    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, 
+        std::shared_ptr<InputTargetListener> const& input_target_listener, std::string const& session_name);
     ~ApplicationSession();
 
     frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
@@ -58,6 +60,7 @@ protected:
 
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
+    std::shared_ptr<InputTargetListener> const input_target_listener;
     std::string const session_name;
 
     frontend::SurfaceId next_id();

@@ -35,7 +35,8 @@ extern "C" {
  * Request a connection to the Mir server. The supplied callback is called when
  * the connection is established, or fails. The returned wait handle remains
  * valid until the connection has been released.
- *   \param [in] server       A name identifying the server
+ *   \param [in] server       File path of the server socket to connect to, or
+ *                            NULL to choose the default server
  *   \param [in] app_name     A name referring to the application
  *   \param [in] callback     Callback function to be invoked when request
  *                            completes
@@ -50,7 +51,8 @@ MirWaitHandle *mir_connect(
 
 /**
  * Perform a mir_connect() but also wait for and return the result.
- *   \param [in] server    A name identifying the server
+ *   \param [in] server    File path of the server socket to connect to, or
+ *                         NULL to choose the default server
  *   \param [in] app_name  A name referring to the application
  *   \return               The resulting MirConnection
  */

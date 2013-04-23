@@ -50,7 +50,7 @@ namespace shell
 {
 class SurfaceFactory;
 class SurfaceBuilder;
-class InputFocusSelector;
+class InputTargetListener;
 class SessionContainer;
 class FocusSetter;
 class FocusSequence;
@@ -156,7 +156,6 @@ public:
     /** @name shell configuration - dependencies
      * dependencies of shell on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
     virtual std::shared_ptr<shell::SurfaceBuilder>     the_surface_builder();
     /** @} */
 
@@ -178,6 +177,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
+    virtual std::shared_ptr<shell::InputTargetListener> the_input_target_listener();
     /** @} */
 
     /** @name logging configuration - customization
@@ -197,7 +197,7 @@ protected:
     CachedPtr<frontend::Shell> session_manager;
     std::shared_ptr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
-    CachedPtr<shell::InputFocusSelector> input_focus_selector;
+    CachedPtr<shell::InputTargetListener> input_target_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;

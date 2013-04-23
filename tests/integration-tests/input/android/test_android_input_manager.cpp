@@ -171,7 +171,7 @@ namespace
 struct MockDispatcherPolicy : public mia::EventFilterDispatcherPolicy
 {
     MockDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& filter)
-      : EventFilterDispatcherPolicy(filter)
+      : EventFilterDispatcherPolicy(filter, false)
     {
     }
     MOCK_METHOD3(interceptKeyBeforeDispatching, nsecs_t(droidinput::sp<droidinput::InputWindowHandle> const&,
@@ -211,10 +211,15 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
         input_manager = std::make_shared<mia::InputManager>(configuration);
-        input_focus_selector = std::make_shared<mia::DispatcherController>(configuration);
+        input_target_listener = std::make_shared<mia::DispatcherController>(configuration);
 
         dispatcher_policy = configuration->the_mock_dispatcher_policy();
 
+    }
+
+    ~AndroidInputManagerDispatcherInterceptSetup()
+    {
+        input_manager->stop();
     }
 
     // TODO: It would be nice if it were possible to mock the interface between
@@ -222,13 +227,15 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     // valid fds to allow non-throwing construction of a real input channel.
     void SetUp()
     {
-        test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
         input_manager->start();
     }
-    void TearDown()
+    
+    int test_fd()
     {
-        input_manager->stop();
-        close(test_input_fd);
+        int fds[2];
+        // Closed by droidinput InputChannel on shutdown
+        socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds);
+        return fds[0];
     }
 
     MockEventFilter event_filter;
@@ -238,9 +245,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
     std::shared_ptr<mia::InputManager> input_manager;
-    std::shared_ptr<msh::InputFocusSelector> input_focus_selector;
-
-    int test_input_fd;
+    std::shared_ptr<msh::InputTargetListener> input_target_listener;
 };
 
 MATCHER_P(WindowHandleWithInputFd, input_fd, "")
@@ -259,14 +264,18 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     mt::WaitCondition wait_condition;
 
     mtd::StubSessionTarget session;
-    mtd::StubSurfaceTarget surface(test_input_fd);
+    
+    auto input_fd = test_fd();
+    mtd::StubSurfaceTarget surface(input_fd);
 
     EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
-    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(test_input_fd), _, _))
+    EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
-    input_focus_selector->set_input_focus_to(mt::fake_shared(session), mt::fake_shared(surface));
+    input_target_listener->input_application_opened(mt::fake_shared(session));
+    input_target_listener->input_surface_opened(mt::fake_shared(session), mt::fake_shared(surface));
+    input_target_listener->focus_changed(mt::fake_shared(surface));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
@@ -275,3 +284,52 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
 
     wait_condition.wait_for_at_most_seconds(1);
 }
+
+TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event_recipient)
+{
+    using namespace ::testing;
+
+    mt::WaitCondition wait1, wait2, wait3;
+
+    mtd::StubSessionTarget session;
+    
+    auto input_fd_1 = test_fd();
+    mtd::StubSurfaceTarget surface1(input_fd_1);
+    auto input_fd_2 = test_fd();
+    mtd::StubSurfaceTarget surface2(input_fd_2);
+
+    input_target_listener->input_application_opened(mt::fake_shared(session));
+    input_target_listener->input_surface_opened(mt::fake_shared(session), mt::fake_shared(surface1));
+    input_target_listener->input_surface_opened(mt::fake_shared(session), mt::fake_shared(surface2));
+
+    EXPECT_CALL(event_filter, handles(_)).Times(3).WillRepeatedly(Return(false));
+
+    {
+        InSequence seq;
+
+        EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd_1), _, _))
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait1), Return(-1)));
+        EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd_2), _, _))
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait2), Return(-1)));
+        EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd_1), _, _))
+            .Times(1).WillOnce(DoAll(mt::WakeUp(&wait3), Return(-1)));
+    }
+
+    fake_event_hub->synthesize_builtin_keyboard_added();
+    fake_event_hub->synthesize_device_scan_complete();
+
+    input_target_listener->focus_changed(mt::fake_shared(surface1));
+    fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                .of_scancode(KEY_1));
+    wait1.wait_for_at_most_seconds(1);
+
+    input_target_listener->focus_changed(mt::fake_shared(surface2));
+    fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                .of_scancode(KEY_2));
+    wait2.wait_for_at_most_seconds(1);
+
+    input_target_listener->focus_changed(mt::fake_shared(surface1));
+    fake_event_hub->synthesize_event(mis::a_key_down_event()
+                                .of_scancode(KEY_3));
+    wait3.wait_for_at_most_seconds(5);
+} 
