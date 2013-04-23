@@ -392,6 +392,8 @@ TYPED_TEST(AndroidTestFramebufferInit, make_current_from_interface_calls_egl)
     .WillOnce(Return(EGL_TRUE));
 
     display->make_current();
+
+    Mock::VerifyAndClearExpectations(&this->mock_egl);
 }
 
 TYPED_TEST(AndroidTestFramebufferInit, make_current_failure_throws)
@@ -408,6 +410,8 @@ TYPED_TEST(AndroidTestFramebufferInit, make_current_failure_throws)
     {
         display->make_current();
     }, std::runtime_error);
+
+    Mock::VerifyAndClearExpectations(&this->mock_egl);
 }
 
 namespace
@@ -502,10 +506,12 @@ TYPED_TEST(AndroidTestFramebufferInit, eglSurface_resources_freed)
     ASSERT_TRUE(store.empty());
 }
 
-TYPED_TEST(AndroidTestFramebufferInit, eglDisplay_is_terminated)
+TYPED_TEST(AndroidTestFramebufferInit, display_termination) 
 {
     using namespace testing;
 
+    EXPECT_CALL(this->mock_egl, eglMakeCurrent(this->mock_egl.fake_egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
+    .Times(Exactly(1));
     EXPECT_CALL(this->mock_egl, eglTerminate(this->mock_egl.fake_egl_display))
     .Times(Exactly(1));
 
