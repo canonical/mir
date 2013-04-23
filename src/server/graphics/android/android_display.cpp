@@ -52,7 +52,8 @@ public:
 };
 }
 
-mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
+mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const& native_win,
+                                    std::shared_ptr<DisplayReport> const&)
     : native_window{native_win},
       egl_display{EGL_NO_DISPLAY},
       egl_config{0},

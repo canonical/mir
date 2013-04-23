@@ -34,13 +34,15 @@ class Rectangle;
 }
 namespace graphics
 {
+class DisplayReport;
 namespace android
 {
 
 class AndroidDisplay : public virtual Display, public virtual DisplayBuffer
 {
 public:
-    explicit AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>&);
+    explicit AndroidDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const&,
+                            std::shared_ptr<DisplayReport> const&);
     ~AndroidDisplay();
 
     geometry::Rectangle view_area() const;

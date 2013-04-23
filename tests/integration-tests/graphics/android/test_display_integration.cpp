@@ -27,6 +27,7 @@
 
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
+#include "mir_test_doubles/mock_display_report.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -38,7 +39,7 @@ namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace md=mir::draw;
-namespace mtd=mir::test::draw;
+namespace mtd=mir::test::doubles;
 
 namespace
 {
@@ -49,7 +50,7 @@ protected:
     static void SetUpTestCase()
     {
         /* this is an important precondition for acquiring the display! */
-        ASSERT_FALSE(mtd::is_surface_flinger_running());
+        ASSERT_FALSE(mir::test::draw::is_surface_flinger_running());
 
 
         /* determine hwc11 capable devices so we can skip the hwc11 tests on non supported tests */
@@ -106,9 +107,10 @@ bool AndroidGPUDisplay::run_hwc11_tests;
 /* gpu display tests. These are our back-up display modes, and should be run on every device. */
 TEST_F(AndroidGPUDisplay, gpu_display_post_ok)
 {
+    auto mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     auto window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(window);
-    auto display = std::make_shared<mga::AndroidDisplay>(window_query);
+    auto display = std::make_shared<mga::AndroidDisplay>(window_query, mock_display_report);
 
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
@@ -120,9 +122,10 @@ TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
     using namespace testing;
 
+    auto mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     auto window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(window);
-    auto display = std::make_shared<mga::AndroidDisplay>(window_query);
+    auto display = std::make_shared<mga::AndroidDisplay>(window_query, mock_display_report);
 
     gl_animation.init_gl();
 
@@ -147,12 +150,13 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 
     using namespace testing;
 
+    auto mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     auto window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device);
-    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc);
+    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
 
     gl_animation.init_gl();
 

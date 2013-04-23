@@ -26,8 +26,9 @@ namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
 mga::HWCDisplay::HWCDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& fb_window,
-                            std::shared_ptr<HWCDevice> const& hwc_device)
-    : AndroidDisplay(fb_window),
+                            std::shared_ptr<HWCDevice> const& hwc_device,
+                            std::shared_ptr<DisplayReport> const& listener)
+    : AndroidDisplay(fb_window, listener),
       hwc_device(hwc_device)
 {
 }

@@ -38,7 +38,7 @@ namespace mtd=mir::test::doubles;
 template<class T>
 std::shared_ptr<mg::DisplayBuffer> make_display_buffer(
                                    std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin,
-                                   std::shared_ptr<mg::DisplayReport> const& listener)
+                                   std::shared_ptr<mg::DisplayReport> const& listener);
 template <>
 std::shared_ptr<mg::DisplayBuffer> make_display_buffer<mga::AndroidDisplay>(
                                 std::shared_ptr<mtd::MockAndroidFramebufferWindow> const& fbwin,
@@ -517,7 +517,7 @@ TYPED_TEST(AndroidTestFramebufferInit, logging)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_display_report, report_successful_display_construction())
+    EXPECT_CALL(*this->mock_display_report, report_successful_display_construction())
         .Times(Exactly(1));
 
     auto display = make_display_buffer<TypeParam>(this->native_win, this->mock_display_report);
