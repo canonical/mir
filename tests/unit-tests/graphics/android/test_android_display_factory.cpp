@@ -148,8 +148,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
     EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,tmp2))
         .Times(1);
-//    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
-//        .Times(1);
+    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
+        .Times(1);
 
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory, mock_display_report); 
     display_factory.create_display();
@@ -181,8 +181,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
     EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,tmp2))
         .Times(1);
-//    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
-//        .Times(1);
+    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
+        .Times(1);
 
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory, mock_fnw_factory, mock_display_report); 
     display_factory.create_display();
@@ -206,6 +206,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
     EXPECT_CALL(*mock_fnw_factory, create_fb_device())
         .Times(1)
         .WillOnce(Return(mock_fb_device));
+    EXPECT_CALL(*mock_display_report, report_hwc10_in_use())
+        .Times(1);
 
     std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_hwc_device;
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
@@ -237,8 +239,8 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
     EXPECT_CALL(*mock_fnw_factory, create_fb_device())
         .Times(1)
         .WillOnce(Return(mock_fb_device));
-//    EXPECT_CALL(*mock_display_report, report_hwc11_in_use())
-//        .Times(1);
+    EXPECT_CALL(*mock_display_report, report_hwc11_in_use())
+        .Times(1);
 
     std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_hwc_device;
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
