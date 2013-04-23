@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 #include <string>
 
+namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
@@ -39,8 +40,8 @@ TEST(DefaultSessionContainer, for_each)
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msh::DefaultSessionContainer container;
 
-    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), "Visual Studio 7", std::shared_ptr<mir::events::EventSink>()));
-    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), "Visual Studio 8", std::shared_ptr<mir::events::EventSink>()));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), "Visual Studio 7", std::shared_ptr<me::EventSink>()));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), "Visual Studio 8", std::shared_ptr<me::EventSink>()));
 
     struct local
     {
@@ -69,7 +70,7 @@ TEST(DefaultSessionContainer, invalid_session_throw_behavior)
         factory,
         std::make_shared<mtd::StubInputTargetListener>(),
         "Visual Studio 7",
-        std::shared_ptr<mir::events::EventSink>());
+        std::shared_ptr<me::EventSink>());
     EXPECT_THROW({
         container.remove_session(session);
     }, std::logic_error);

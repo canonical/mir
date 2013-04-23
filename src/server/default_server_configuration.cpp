@@ -62,6 +62,7 @@
 #include "mir/default_configuration.h"
 
 namespace mc = mir::compositor;
+namespace me = mir::events;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -108,7 +109,7 @@ private:
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<mir::events::EventSink> const& sink)
+        std::shared_ptr<me::EventSink> const& sink)
     {
         return std::make_shared<mf::SessionMediator>(
             shell,

@@ -33,6 +33,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace me = mir::events;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
@@ -139,7 +140,7 @@ TEST_F(ShellSurface, creation_and_destruction)
         params,
         null_input_channel,
         mf::SurfaceId(),
-        std::shared_ptr<mir::events::EventSink>());
+        std::shared_ptr<me::EventSink>());
 }
 
 TEST_F(ShellSurface, creation_throws_means_no_destroy)
@@ -160,7 +161,7 @@ TEST_F(ShellSurface, creation_throws_means_no_destroy)
             params,
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
     }, std::runtime_error);
 }
 
@@ -178,7 +179,7 @@ TEST_F(ShellSurface, destroy)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     Mock::VerifyAndClearExpectations(&test);
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
@@ -197,7 +198,7 @@ TEST_F(ShellSurface, client_buffer_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.client_buffer();
@@ -217,7 +218,7 @@ TEST_F(ShellSurface, size_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.size();
@@ -237,7 +238,7 @@ TEST_F(ShellSurface, name_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.name();
@@ -257,7 +258,7 @@ TEST_F(ShellSurface, pixel_format_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.pixel_format();
@@ -277,7 +278,7 @@ TEST_F(ShellSurface, hide_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.hide();
@@ -297,7 +298,7 @@ TEST_F(ShellSurface, show_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.show();
@@ -317,7 +318,7 @@ TEST_F(ShellSurface, destroy_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.destroy();
@@ -337,7 +338,7 @@ TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.force_requests_to_complete();
@@ -357,7 +358,7 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_NO_THROW({
         test.advance_client_buffer();
@@ -381,14 +382,14 @@ TEST_F(ShellSurface, surfaces_with_input_channel_supports_input)
         mf::a_surface(),
         null_input_channel,
         mf::SurfaceId(),
-        std::shared_ptr<mir::events::EventSink>());
+        std::shared_ptr<me::EventSink>());
 
     msh::Surface input_proxy_surface(
         mt::fake_shared(surface_builder),
         mf::a_surface(),
         mt::fake_shared(mock_package),
         mf::SurfaceId(),
-        std::shared_ptr<mir::events::EventSink>());
+        std::shared_ptr<me::EventSink>());
 
     EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
 
@@ -411,7 +412,7 @@ TEST_F(ShellSurface, attributes)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_THROW({
         surf.configure(static_cast<MirSurfaceAttrib>(111), 222);
@@ -427,7 +428,7 @@ TEST_F(ShellSurface, types)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_EQ(mir_surface_type_normal, surf.type());
 
@@ -464,7 +465,7 @@ TEST_F(ShellSurface, states)
             mf::a_surface(),
             null_input_channel,
             mf::SurfaceId(),
-            std::shared_ptr<mir::events::EventSink>());
+            std::shared_ptr<me::EventSink>());
 
     EXPECT_EQ(mir_surface_state_restored, surf.state());
 

@@ -25,6 +25,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -68,7 +69,7 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(mf::a_surface()));
 
-    factory.create_surface(params, mf::SurfaceId(), std::shared_ptr<mir::events::EventSink>());
+    factory.create_surface(params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
 }
 
 TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_placement_strategy_to_underlying_factory)
@@ -83,8 +84,8 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
 
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
-    EXPECT_CALL(*underlying_surface_factory, create_surface(placed_params, mf::SurfaceId(), std::shared_ptr<mir::events::EventSink>()));
+    EXPECT_CALL(*underlying_surface_factory, create_surface(placed_params, mf::SurfaceId(), std::shared_ptr<me::EventSink>()));
 
-    factory.create_surface(params, mf::SurfaceId(), std::shared_ptr<mir::events::EventSink>());
+    factory.create_surface(params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
 }
 
