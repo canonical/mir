@@ -21,8 +21,9 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter) :
-  event_filter(event_filter)
+mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter, bool key_repeat_enabled) :
+  event_filter(event_filter),
+  key_repeat_enabled(key_repeat_enabled)
 {
 }
 
@@ -46,7 +47,7 @@ void mia::EventFilterDispatcherPolicy::getDispatcherConfiguration(droidinput::In
 
 bool mia::EventFilterDispatcherPolicy::isKeyRepeatEnabled()
 {
-    return true;
+    return key_repeat_enabled;
 }
 
 bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)

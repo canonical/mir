@@ -26,7 +26,6 @@
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
-static const char servername[] = "/tmp/mir_socket";
 static const char appname[] = "egldemo";
 
 static MirConnection *connection;
@@ -128,13 +127,13 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
     EGLContext eglctx;
     EGLBoolean ok;
 
-    connection = mir_connect_sync(servername, appname);
+    connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
     mir_connection_get_display_info(connection, &dinfo);
 
-    printf("Connected to display %s: %dx%d, supports %d pixel formats\n",
-           servername, dinfo.width, dinfo.height,
+    printf("Connected to display: %dx%d, supports %d pixel formats\n",
+           dinfo.width, dinfo.height,
            dinfo.supported_pixel_format_items);
 
     surfaceparm.width = *width > 0 ? *width : dinfo.width;
