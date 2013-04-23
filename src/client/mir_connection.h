@@ -44,6 +44,8 @@ namespace client
 class Logger;
 class ClientBufferDepository;
 class ClientPlatformFactory;
+class MirBasicRpcChannel;
+
 namespace input
 {
 class InputPlatform;
@@ -51,12 +53,12 @@ class InputPlatform;
 }
 }
 
-struct MirConnection : mir::client::ClientContext, mir::events::EventSink
+struct MirConnection : mir::client::ClientContext, private mir::events::EventSink
 {
 public:
     MirConnection();
 
-    MirConnection(std::shared_ptr<google::protobuf::RpcChannel> const& channel,
+    MirConnection(std::shared_ptr<mir::client::MirBasicRpcChannel> const& channel,
                   std::shared_ptr<mir::client::Logger> const & log,
                   std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
     ~MirConnection() noexcept;

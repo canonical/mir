@@ -43,7 +43,7 @@ MirConnection::MirConnection() :
 }
 
 MirConnection::MirConnection(
-    std::shared_ptr<google::protobuf::RpcChannel> const& channel,
+    std::shared_ptr<mir::client::MirBasicRpcChannel> const& channel,
     std::shared_ptr<mcl::Logger> const & log,
     std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
         channel(channel),
@@ -52,6 +52,7 @@ MirConnection::MirConnection(
         client_platform_factory(client_platform_factory),
         input_platform(mcli::InputPlatform::create())
 {
+    channel->set_event_handler(this);
     {
         std::lock_guard<std::mutex> lock(connection_guard);
         valid_connections.insert(this);
