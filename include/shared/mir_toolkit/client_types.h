@@ -1,5 +1,5 @@
 /*
- * client.h: Definitions common to client apps and the client library.
+ * client_types.h: Type definitions used in client apps and libmirclient.
  *
  * Copyright © 2013 Canonical Ltd.
  *
@@ -18,8 +18,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_CLIENT_H_
-#define MIR_TOOLKIT_CLIENT_H_
+#ifndef MIR_TOOLKIT_CLIENT_TYPES_H_
+#define MIR_TOOLKIT_CLIENT_TYPES_H_
 
 #include <mir_toolkit/event.h>
 
@@ -187,4 +187,4 @@ typedef struct MirEventDelegate
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_CLIENT_H_ */
+#endif /* MIR_TOOLKIT_CLIENT_TYPES_H_ */
