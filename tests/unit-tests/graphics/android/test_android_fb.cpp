@@ -77,7 +77,7 @@ protected:
         width = 435;
         height = 477;
 
-        mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+        mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
     }
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
@@ -513,28 +513,24 @@ TYPED_TEST(AndroidTestFramebufferInit, eglDisplay_is_terminated)
 }
 
 
-TYPED_TEST(AndroidTestFramebufferInit, logging)
+TYPED_TEST(AndroidTestFramebufferInit, startup_logging)
 {
     using namespace testing;
 
     EXPECT_CALL(*this->mock_display_report, report_successful_setup_of_native_resources())
-        .Times(Exactly(1));
+        .Times(Exactly(2));
     EXPECT_CALL(*this->mock_display_report, report_successful_egl_make_current_on_construction())
         .Times(Exactly(1));
     EXPECT_CALL(*this->mock_display_report, report_successful_display_construction())
         .Times(Exactly(1));
-    auto display = make_display_buffer<TypeParam>(this->native_win, this->mock_display_report);
 
     EXPECT_CALL(this->mock_egl, eglMakeCurrent(_,_,_,_))
-        .Times(1)
-        .WillOnce(Return(EGL_FALSE));
-    EXPECT_CALL(*this->mock_display_report, report_successful_setup_of_native_resources())
-        .Times(Exactly(1));
-    EXPECT_CALL(*this->mock_display_report, report_successful_egl_make_current_on_construction())
-        .Times(Exactly(0));
-    EXPECT_CALL(*this->mock_display_report, report_successful_display_construction())
-        .Times(Exactly(0));
+        .Times(2)
+        .WillOnce(Return(EGL_FALSE))
+        .WillRepeatedly(Return(EGL_TRUE));
+
     EXPECT_THROW({
         auto display = make_display_buffer<TypeParam>(this->native_win, this->mock_display_report);
-    });
+    }, std::runtime_error);
+    auto display = make_display_buffer<TypeParam>(this->native_win, this->mock_display_report);
 }

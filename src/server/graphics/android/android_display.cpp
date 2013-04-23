@@ -18,6 +18,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_report.h"
 #include "android_display.h"
 #include "mir/geometry/rectangle.h"
 
@@ -53,7 +54,7 @@ public:
 }
 
 mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const& native_win,
-                                    std::shared_ptr<DisplayReport> const&)
+                                    std::shared_ptr<DisplayReport> const& display_report)
     : native_window{native_win},
       egl_display{EGL_NO_DISPLAY},
       egl_config{0},
@@ -80,6 +81,8 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<AndroidFramebufferWindowQuer
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl surface\n"));
 
+    display_report->report_successful_setup_of_native_resources();
+
     egl_context_shared = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr);
     if (egl_context_shared == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context dummy\n"));
@@ -95,6 +98,9 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<AndroidFramebufferWindowQuer
 
     if (eglMakeCurrent(egl_display, egl_surface_dummy, egl_surface_dummy, egl_context_shared) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+
+    display_report->report_successful_egl_make_current_on_construction();
+    display_report->report_successful_display_construction();
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
