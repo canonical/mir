@@ -31,11 +31,11 @@ bool mi::EventFilterChain::handles(const MirEvent &event)
     while (it != filters.end())
     {
         auto filter = (*it).lock();
-         if (!filter)
-         {
-             it = filters.erase(it);
-             continue;
-         }
+        if (!filter)
+        {
+            it = filters.erase(it);
+            continue;
+        }
         if (filter->handles(event)) return true;
         ++it;
     }
