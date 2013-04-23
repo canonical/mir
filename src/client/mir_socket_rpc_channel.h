@@ -75,7 +75,7 @@ private:
     void on_header_read(const boost::system::error_code& error);
 
     void read_message();
-    void process_event_sequence(mir::protobuf::wire::Result const& result);
+    void process_event_sequence(std::string const& event);
 
     size_t read_message_header();
 
