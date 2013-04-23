@@ -69,6 +69,8 @@ public:
 
     virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
+    
+    virtual bool is_key_repeat_enabled();
 
 protected:
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;

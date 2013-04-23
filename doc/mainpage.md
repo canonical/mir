@@ -57,7 +57,15 @@ Writing client applications
 
  - \ref mir_toolkit "Mir API Documentation"
  - \subpage demo_client.c "demo_client.c: A simple mir client"
+
+Writing server applications
+---------------------------
+
+Mir server is written as a library which allows the server code to be adapted
+for bespoke applications.
+
  - \subpage render_surfaces-example "render_surfaces.cpp: A simple program using the mir library"
+ - \ref demo_inprocess_egl
 
 Working on Mir code
 -------------------

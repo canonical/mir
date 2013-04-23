@@ -26,9 +26,20 @@
 
 namespace me = mir::examples;
 
+///\page demo_inprocess_egl demo_inprocess_egl.cpp: A simple use of egl in process
+///\section main main
+/// The main() function uses a default configuration for Mir and sets up an InprocessEGLClient
+/// that accesses the graphics platform and surface factory.
+/// \snippet demo_inprocess_egl.cpp main_tag
+/// This InprocessEGLClient sets up a single surface
+/// \snippet inprocess_egl_client.cpp setup_tag
+/// And loops updating the surface
+/// \snippet inprocess_egl_client.cpp loop_tag
+
 int main(int argc, char const* argv[])
 try
 {
+    ///\internal [main_tag]
     mir::DefaultServerConfiguration config(argc, argv);
 
     std::shared_ptr<me::InprocessEGLClient> client;
@@ -38,6 +49,7 @@ try
               config.the_graphics_platform(),
               config.the_shell_surface_factory());
     });
+    ///\internal [main_tag]
 
     return 0;
 }

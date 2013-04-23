@@ -28,6 +28,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir/default_server_configuration.h"
 #include "mir/run_mir.h"
+#include "mir/abnormal_exit.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
@@ -54,13 +55,27 @@ namespace mt = mir::tools;
 ///\page render_surfaces-example render_surfaces.cpp: A simple program using the mir library.
 ///\tableofcontents
 ///render_surfaces shows the use of mir to render some moving surfaces
+///\section main main()
+/// The main() function uses a RenderSurfacesServerConfiguration to initialize and run mir.
+/// \snippet render_surfaces.cpp main_tag
+///\section RenderSurfacesServerConfiguration RenderSurfacesServerConfiguration
+/// The configuration stubs out client connectivity and input.
+/// \snippet render_surfaces.cpp RenderSurfacesServerConfiguration_stubs_tag
+/// it also provides a bespoke buffer initializer
+/// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
+/// and a bespoke compositing strategy
+/// \snippet render_surfaces.cpp RenderSurfacesCompositingStrategy_tag
+///\section Utilities Utility classes
+/// For smooth animation we need to track time and move surfaces accordingly
+///\subsection StopWatch StopWatch
+/// \snippet render_surfaces.cpp StopWatch_tag
+///\subsection Moveable Moveable
+/// \snippet render_surfaces.cpp Moveable_tag
+
 ///\example render_surfaces.cpp A simple program using the mir library.
 
 namespace
 {
-///\page render_surfaces-example
-///\section StopWatch StopWatch
-/// \snippet render_surfaces.cpp StopWatch_tag
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
 class StopWatch
@@ -103,9 +118,6 @@ private:
 };
 ///\internal [StopWatch_tag]
 
-///\page render_surfaces-example
-///\section Moveable Moveable
-/// \snippet render_surfaces.cpp Moveable_tag
 ///\internal [Moveable_tag]
 // Adapter to support movement of surfaces.
 class Moveable
@@ -175,9 +187,6 @@ private:
 };
 ///\internal [Moveable_tag]
 
-///\page render_surfaces-example
-///\section RenderSurfacesServerConfiguration RenderSurfacesServerConfiguration
-/// \snippet render_surfaces.cpp RenderSurfacesServerConfiguration_tag
 ///\internal [RenderSurfacesServerConfiguration_tag]
 // Extend the default configuration to manage moveables.
 class RenderSurfacesServerConfiguration : public mir::DefaultServerConfiguration
@@ -189,17 +198,103 @@ public:
     {
     }
 
-    // Override to stub out the default
-    std::shared_ptr<mf::Communicator> the_communicator() override;
+    ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
+    // Stub out server connectivity.
+    std::shared_ptr<mf::Communicator> the_communicator() override
+    {
+        struct NullCommunicator : public mf::Communicator
+        {
+            void start() {}
+            void stop() {}
+        };
 
-    // Override to stub out the default
-    std::shared_ptr<mi::InputManager> the_input_manager() override;
+        return std::make_shared<NullCommunicator>();
+    }
 
-    // Override for a bespoke initializer
-    std::shared_ptr<mg::BufferInitializer> the_buffer_initializer() override;
+    // Stub out input.
+    std::shared_ptr<mi::InputManager> the_input_manager() override
+    {
+        return std::make_shared<mi::NullInputManager>();
+    }
+    ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 
-    // Override for a bespoke compositing strategy
-    std::shared_ptr<mc::CompositingStrategy> the_compositing_strategy() override;
+    ///\internal [RenderResourcesBufferInitializer_tag]
+    // Override for a bespoke buffer initializer
+    std::shared_ptr<mg::BufferInitializer> the_buffer_initializer() override
+    {
+        class RenderResourcesBufferInitializer : public mg::BufferInitializer
+        {
+        public:
+            RenderResourcesBufferInitializer()
+                : img_renderer{mir_image.pixel_data,
+                               geom::Size{geom::Width{mir_image.width},
+                                          geom::Height{mir_image.height}},
+                               mir_image.bytes_per_pixel}
+            {
+            }
+
+            void operator()(mc::Buffer& buffer)
+            {
+                mt::BufferRenderTarget brt{buffer};
+                brt.make_current();
+                img_renderer.render();
+            }
+
+        private:
+            mt::ImageRenderer img_renderer;
+        };
+
+        return std::make_shared<RenderResourcesBufferInitializer>();
+    }
+    ///\internal [RenderResourcesBufferInitializer_tag]
+
+    ///\internal [RenderSurfacesCompositingStrategy_tag]
+    // Decorate the DefaultCompositingStrategy in order to move surfaces.
+    std::shared_ptr<mc::CompositingStrategy> the_compositing_strategy() override
+    {
+        class RenderSurfacesCompositingStrategy : public mc::CompositingStrategy
+        {
+        public:
+            RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
+                                              std::shared_ptr<mg::Renderer> const& renderer,
+                                              std::vector<Moveable>& moveables)
+                : default_compositing_strategy{renderables, renderer},
+                  frames{0},
+                  moveables(moveables)
+            {
+            }
+
+            void render(mg::DisplayBuffer& display_buffer)
+            {
+                stop_watch.stop();
+                if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
+                {
+                    std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
+                    frames = 0;
+                    stop_watch.restart();
+                }
+
+                glClearColor(0.0, 1.0, 0.0, 1.0);
+                default_compositing_strategy.render(display_buffer);
+
+                for (auto& m : moveables)
+                    m.step();
+
+                frames++;
+            }
+
+        private:
+            mc::DefaultCompositingStrategy default_compositing_strategy;
+            StopWatch stop_watch;
+            uint32_t frames;
+            std::vector<Moveable>& moveables;
+        };
+
+        return std::make_shared<RenderSurfacesCompositingStrategy>(the_renderables(),
+                                                                   the_renderer(),
+                                                                   moveables);
+    }
+    ///\internal [RenderSurfacesCompositingStrategy_tag]
 
     // New function to initialize moveables with surfaces
     void create_surfaces()
@@ -248,13 +343,10 @@ private:
 ///\internal [RenderSurfacesServerConfiguration_tag]
 }
 
-///\page render_surfaces-example
-///\section main main()
-/// \snippet render_surfaces.cpp main_tag
-///\internal [main_tag]
-// Pull the bits together.
 int main(int argc, char **argv)
+try
 {
+    ///\internal [main_tag]
     /* Parse the command line */
     unsigned int num_moveables{5};
 
@@ -269,118 +361,17 @@ int main(int argc, char **argv)
     RenderSurfacesServerConfiguration conf{num_moveables};
 
     mir::run_mir(conf, [&](mir::DisplayServer&) {conf.create_surfaces();});
+    ///\internal [main_tag]
 
     return 0;
 }
-///\internal [main_tag]
-
-///\page render_surfaces-example
-///\section RenderResourcesBufferInitializer RenderResourcesBufferInitializer
-/// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
-///\internal [RenderResourcesBufferInitializer_tag]
-// initialize the buffers for each surface.
-std::shared_ptr<mg::BufferInitializer> RenderSurfacesServerConfiguration::the_buffer_initializer()
+catch (mir::AbnormalExit const& error)
 {
-    class RenderResourcesBufferInitializer : public mg::BufferInitializer
-    {
-    public:
-        RenderResourcesBufferInitializer()
-            : img_renderer{mir_image.pixel_data,
-                           geom::Size{geom::Width{mir_image.width},
-                                      geom::Height{mir_image.height}},
-                           mir_image.bytes_per_pixel}
-        {
-        }
-
-        void operator()(mc::Buffer& buffer)
-        {
-            mt::BufferRenderTarget brt{buffer};
-            brt.make_current();
-            img_renderer.render();
-        }
-
-    private:
-        mt::ImageRenderer img_renderer;
-    };
-
-    return std::make_shared<RenderResourcesBufferInitializer>();
+    std::cerr << error.what() << std::endl;
+    return 1;
 }
-///\internal [RenderResourcesBufferInitializer_tag]
-
-///\page render_surfaces-example
-///\section RenderSurfacesCompositingStrategy RenderSurfacesCompositingStrategy
-/// \snippet render_surfaces.cpp RenderSurfacesCompositingStrategy_tag
-///\internal [RenderSurfacesCompositingStrategy_tag]
-// Decorate the DefaultCompositingStrategy in order to move surfaces.
-std::shared_ptr<mc::CompositingStrategy> RenderSurfacesServerConfiguration::the_compositing_strategy()
+catch (std::exception const& error)
 {
-    class RenderSurfacesCompositingStrategy : public mc::CompositingStrategy
-    {
-    public:
-        RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
-                                          std::shared_ptr<mg::Renderer> const& renderer,
-                                          std::vector<Moveable>& moveables)
-            : default_compositing_strategy{renderables, renderer},
-              frames{0},
-              moveables(moveables)
-        {
-        }
-
-        void render(mg::DisplayBuffer& display_buffer)
-        {
-            stop_watch.stop();
-            if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
-            {
-                std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
-                frames = 0;
-                stop_watch.restart();
-            }
-
-            glClearColor(0.0, 1.0, 0.0, 1.0);
-            default_compositing_strategy.render(display_buffer);
-
-            for (auto& m : moveables)
-                m.step();
-
-            frames++;
-        }
-
-    private:
-        mc::DefaultCompositingStrategy default_compositing_strategy;
-        StopWatch stop_watch;
-        uint32_t frames;
-        std::vector<Moveable>& moveables;
-    };
-
-    return std::make_shared<RenderSurfacesCompositingStrategy>(the_renderables(),
-                                                               the_renderer(),
-                                                               moveables);
+    std::cerr << "ERROR: " << error.what() << std::endl;
+    return 1;
 }
-///\internal [RenderSurfacesCompositingStrategy_tag]
-///\page render_surfaces-example
-///\section NullCommunicator NullCommunicator
-/// \snippet render_surfaces.cpp NullCommunicator_tag
-///\internal [NullCommunicator_tag]
-// Stub out server connectivity.
-std::shared_ptr<mf::Communicator> RenderSurfacesServerConfiguration::the_communicator()
-{
-    struct NullCommunicator : public mf::Communicator
-    {
-        void start() {}
-        void stop() {}
-    };
-
-    return std::make_shared<NullCommunicator>();
-}
-///\internal [NullCommunicator_tag]
-
-///\page render_surfaces-example
-///\section NullInputManager NullInputManager
-/// \snippet render_surfaces.cpp NullInputManager_tag
-///\internal [NullInputManager_tag]
-// Stub out input.
-std::shared_ptr<mi::InputManager> RenderSurfacesServerConfiguration::the_input_manager()
-{
-    return std::make_shared<mi::NullInputManager>();
-}
-///\internal [NullInputManager_tag]
