@@ -105,7 +105,7 @@ public:
     // device_id must be > 0 or input publisher will reject
     static const int32_t filler_device_id = 1;
     // event_action_move is necessary to engage batching behavior
-    static const int32_t motion_event_action_flags = mir_motion_event_action_move;
+    static const int32_t motion_event_action_flags = mir_motion_action_move;
     // We have to have at least 1 pointer or the publisher will fail to marshal a motion event
     static const int32_t default_pointer_count = 1;
 };
