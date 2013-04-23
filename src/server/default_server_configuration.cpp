@@ -59,6 +59,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/time/high_resolution_clock.h"
+#include "mir/default_configuration.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -228,7 +229,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    return the_options()->get("file", "/tmp/mir_socket");
+    return the_options()->get("file", mir::default_server_socket);
 }
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const

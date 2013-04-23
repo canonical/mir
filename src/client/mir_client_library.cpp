@@ -16,6 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 #include "mir_toolkit/mir_client_library_lightdm.h"
@@ -54,11 +55,13 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
+        const std::string sock = socket_file ? socket_file :
+                                               mir::default_server_socket;
         auto log = std::make_shared<mcl::ConsoleLogger>();
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
         MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(socket_file, log),
+            mcl::make_rpc_channel(sock, log),
             log,
             client_platform_factory);
 
