@@ -40,6 +40,9 @@ class NullDisplayReport : public graphics::DisplayReport
     virtual void report_drm_master_failure(int error);
     virtual void report_vt_switch_away_failure();
     virtual void report_vt_switch_back_failure();
+    virtual void report_hwc10_in_use();
+    virtual void report_hwc11_in_use();
+    virtual void report_gpu_composition_in_use();
 };
 }
 }

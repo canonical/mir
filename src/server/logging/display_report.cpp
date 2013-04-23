@@ -83,3 +83,13 @@ void ml::DisplayReport::report_vt_switch_back_failure()
 {
     logger->log<Logger::warning>("Failed to switch back to Mir VT.", component());
 }
+
+void ml::DisplayReport::report_hwc10_in_use()
+{
+}
+void ml::DisplayReport::report_hwc11_in_use()
+{
+}
+void ml::DisplayReport::report_gpu_composition_in_use()
+{
+}
