@@ -101,6 +101,7 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+        EGL_BUFFER_SIZE, 32,
         EGL_NONE
     };
     EGLint ctxattribs[] =
