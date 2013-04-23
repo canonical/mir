@@ -71,7 +71,8 @@ class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 public:
     AndroidInputManagerAndEventFilterDispatcherSetup()
     {
-        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)}, mt::fake_shared(viewable_area), null_cursor_listener);
+        event_filter = std::make_shared<MockEventFilter>();
+        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter}, mt::fake_shared(viewable_area), null_cursor_listener);
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
 
@@ -91,7 +92,7 @@ public:
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<mia::InputManager> input_manager;
-    MockEventFilter event_filter;
+    std::shared_ptr<MockEventFilter> event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
 };
 
@@ -104,7 +105,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
     mt::WaitCondition wait_condition;
 
     EXPECT_CALL(
-        event_filter,
+        *event_filter,
         handles(mt::KeyDownEvent()))
             .Times(1)
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
@@ -125,7 +126,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     mt::WaitCondition wait_condition;
 
     EXPECT_CALL(
-        event_filter,
+        *event_filter,
         handles(mt::ButtonDownEvent()))
             .Times(1)
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
@@ -148,10 +149,10 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
     {
         InSequence seq;
 
-        EXPECT_CALL(event_filter,
+        EXPECT_CALL(*event_filter,
                     handles(mt::MotionEvent(100, 100)))
             .WillOnce(Return(false));
-        EXPECT_CALL(event_filter,
+        EXPECT_CALL(*event_filter,
                     handles(mt::MotionEvent(200, 100)))
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
@@ -203,8 +204,9 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 {
     AndroidInputManagerDispatcherInterceptSetup()
     {
+        event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<TestingInputConfiguration>(
-            mt::fake_shared(event_filter),
+            event_filter,
             mt::fake_shared(viewable_area), null_cursor_listener);
         fake_event_hub = configuration->the_fake_event_hub();
 
@@ -238,7 +240,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         return fds[0];
     }
 
-    MockEventFilter event_filter;
+    std::shared_ptr<MockEventFilter> event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
     std::shared_ptr<TestingInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
@@ -268,7 +270,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     auto input_fd = test_fd();
     mtd::StubSurfaceTarget surface(input_fd);
 
-    EXPECT_CALL(event_filter, handles(_)).Times(1).WillOnce(Return(false));
+    EXPECT_CALL(*event_filter, handles(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
@@ -302,7 +304,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     input_target_listener->input_surface_opened(mt::fake_shared(session), mt::fake_shared(surface1));
     input_target_listener->input_surface_opened(mt::fake_shared(session), mt::fake_shared(surface2));
 
-    EXPECT_CALL(event_filter, handles(_)).Times(3).WillRepeatedly(Return(false));
+    EXPECT_CALL(*event_filter, handles(_)).Times(3).WillRepeatedly(Return(false));
 
     {
         InSequence seq;

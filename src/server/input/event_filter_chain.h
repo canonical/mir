@@ -44,8 +44,8 @@ public:
     virtual bool handles(const MirEvent &event);
 
 private:
-    typedef std::vector<std::shared_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector const filters;
+    typedef std::vector<std::weak_ptr<EventFilter>> EventFilterVector;
+    EventFilterVector filters;
 };
 
 }
