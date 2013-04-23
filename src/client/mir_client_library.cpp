@@ -61,7 +61,7 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
         MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(socket_file, log),
+            mcl::make_rpc_channel(sock, log),
             log,
             client_platform_factory);
 
