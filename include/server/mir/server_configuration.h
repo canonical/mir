@@ -31,6 +31,10 @@ namespace frontend
 class Communicator;
 class Shell;
 }
+namespace shell
+{
+class SessionContainer;
+}
 namespace graphics
 {
 class Display;
@@ -46,8 +50,9 @@ class MainLoop;
 class ServerConfiguration
 {
 public:
+    // TODO most of these interfaces are wider DisplayServer needs...
+    // TODO ...some or all of them need narrowing
     virtual std::shared_ptr<frontend::Communicator> the_communicator() = 0;
-    virtual std::shared_ptr<frontend::Shell> the_frontend_shell() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;

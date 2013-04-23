@@ -56,7 +56,6 @@ private:
 
     std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<AndroidBuffer>> buffers_in_driver;
 
-    int to_android_format(geometry::PixelFormat format);
     int format;
 }; 
 

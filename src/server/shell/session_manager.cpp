@@ -100,14 +100,6 @@ void msh::SessionManager::focus_next()
     set_focus_to_locked(lock, focus);
 }
 
-void msh::SessionManager::force_requests_to_complete()
-{
-    app_container->for_each([](std::shared_ptr<Session> const& session)
-    {
-        session->force_requests_to_complete();
-    });
-}
-
 void msh::SessionManager::tag_session_with_lightdm_id(std::shared_ptr<mf::Session> const& session, int id)
 {
     std::unique_lock<std::mutex> lock(mutex);

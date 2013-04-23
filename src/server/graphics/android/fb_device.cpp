@@ -18,24 +18,44 @@
 
 #include "mir/compositor/buffer.h"
 
-#include "default_fb_device.h"
+#include "fb_device.h"
 #include "android_buffer.h"
+#include "android_format_conversion-inl.h"
 
+#include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
  
-mga::DefaultFBDevice::DefaultFBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
+mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     : fb_device(fbdev)
 {
 }
 
-void mga::DefaultFBDevice::post(std::shared_ptr<mga::AndroidBuffer> const& buffer)
+void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
     if (fb_device->post(fb_device.get(), handle->handle) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
+}
+
+geom::Size mga::FBDevice::display_size() const
+{
+    return geom::Size{geom::Width{fb_device->width},
+                      geom::Height{fb_device->height}};
+} 
+
+geom::PixelFormat mga::FBDevice::display_format() const
+{
+    return to_mir_format(fb_device->format);
+}
+
+unsigned int mga::FBDevice::number_of_framebuffers_available() const
+{
+    auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
+    return std::max(2u, fb_num);
 }

@@ -367,6 +367,7 @@ std::shared_ptr<mf::Communicator> RenderSurfacesServerConfiguration::the_communi
     struct NullCommunicator : public mf::Communicator
     {
         void start() {}
+        void stop() {}
     };
 
     return std::make_shared<NullCommunicator>();

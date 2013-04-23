@@ -18,6 +18,7 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/graphics/display.h"
+#include "mir/frontend/communicator.h"
 #include "mir/main_loop.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
@@ -33,6 +34,7 @@
 namespace mi = mir::input;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mf = mir::frontend;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -40,6 +42,13 @@ namespace
 {
 
 class MockCompositor : public mc::Compositor
+{
+public:
+    MOCK_METHOD0(start, void());
+    MOCK_METHOD0(stop, void());
+};
+
+class MockCommunicator : public mf::Communicator
 {
 public:
     MOCK_METHOD0(start, void());
@@ -74,8 +83,8 @@ public:
 
     void register_pause_resume_handlers(
         mir::MainLoop& main_loop,
-        std::function<void()> const& pause_handler,
-        std::function<void()> const& resume_handler)
+        mg::DisplayPauseHandler const& pause_handler,
+        mg::DisplayResumeHandler const& resume_handler)
     {
         main_loop.register_signal_handler(
             {pause_signal},
@@ -158,6 +167,14 @@ public:
         return mock_compositor;
     }
 
+    std::shared_ptr<mf::Communicator> the_communicator() override
+    {
+        if (!mock_communicator)
+            mock_communicator = std::make_shared<MockCommunicator>();
+
+        return mock_communicator;
+    }
+
     std::shared_ptr<MockDisplay> the_mock_display()
     {
         the_display();
@@ -168,6 +185,12 @@ public:
     {
         the_compositor();
         return mock_compositor;
+    }
+
+    std::shared_ptr<MockCommunicator> the_mock_communicator()
+    {
+        the_communicator();
+        return mock_communicator;
     }
 
     void emit_pause_event()
@@ -183,6 +206,7 @@ public:
 private:
     std::shared_ptr<MockCompositor> mock_compositor;
     std::shared_ptr<MockDisplay> mock_display;
+    std::shared_ptr<MockCommunicator> mock_communicator;
 
     int const pause_signal;
     int const resume_signal;
@@ -220,23 +244,28 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
 
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
+    auto mock_communicator = server_config.the_mock_communicator();
 
     {
         InSequence s;
 
         /* Start */
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Pause */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
 
         /* Resume */
         EXPECT_CALL(*mock_display, resume()).Times(1);
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
     }
 
     mir::run_mir(server_config,
@@ -256,19 +285,63 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
 
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
+    auto mock_communicator = server_config.the_mock_communicator();
 
     {
         InSequence s;
 
         /* Start */
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Pause */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
+    }
+
+    mir::run_mir(server_config,
+                 [&server_config](mir::DisplayServer&)
+                 {
+                    server_config.emit_pause_event();
+                    kill(getpid(), SIGTERM);
+                 });
+}
+
+TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_failure)
+{
+    using namespace testing;
+
+    PauseResumeServerConfig server_config;
+
+    auto mock_compositor = server_config.the_mock_compositor();
+    auto mock_display = server_config.the_mock_display();
+    auto mock_communicator = server_config.the_mock_communicator();
+
+    {
+        InSequence s;
+
+        /* Start */
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+
+        /* Pause failure */
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
+        EXPECT_CALL(*mock_display, pause())
+            .WillOnce(Throw(std::runtime_error("")));
+
+        /* Attempt to continue */
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+
+        /* Stop */
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
     }
 
     mir::run_mir(server_config,
