@@ -16,17 +16,16 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/event_queue.h"
-#include "mir/event_sink.h"
+#include "mir/frontend/event_pipe.h"
 
-using namespace mir;
+namespace mf = mir::frontend;
 
-void EventQueue::set_target(std::weak_ptr<EventSink> const& s)
+void mf::EventPipe::set_target(std::weak_ptr<EventSink> const& s)
 {
     target = s;
 }
 
-void EventQueue::handle_event(MirEvent const& e)
+void mf::EventPipe::handle_event(MirEvent const& e)
 {
     // In future, post might put e on a queue and wait for some background
     // thread to push it through to sink. But that's not required right now.
