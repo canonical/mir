@@ -16,7 +16,7 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/frontend/event_pipe.h"
+#include "event_pipe.h"
 
 namespace mf = mir::frontend;
 

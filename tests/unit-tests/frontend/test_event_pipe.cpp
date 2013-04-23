@@ -16,7 +16,7 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/frontend/event_pipe.h"
+#include "src/server/frontend/event_pipe.h"
 #include <cstring>
 
 #include <gtest/gtest.h>

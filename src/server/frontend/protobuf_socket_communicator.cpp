@@ -22,7 +22,7 @@
 
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/protobuf/google_protobuf_guard.h"
-#include "mir/frontend/event_pipe.h"
+#include "event_pipe.h"
 
 #include <boost/signals2.hpp>
 
