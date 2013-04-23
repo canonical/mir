@@ -29,6 +29,7 @@
 
 namespace mir
 {
+
 namespace frontend
 {
 class Surface;
