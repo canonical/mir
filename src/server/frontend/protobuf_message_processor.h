@@ -62,10 +62,6 @@ private:
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
     // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Platform* response);
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response);
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
