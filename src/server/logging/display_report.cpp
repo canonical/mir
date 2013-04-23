@@ -86,10 +86,15 @@ void ml::DisplayReport::report_vt_switch_back_failure()
 
 void ml::DisplayReport::report_hwc10_in_use()
 {
+    logger->log<Logger::informational>("HWC version 1.0 in use for display.", component());
 }
+
 void ml::DisplayReport::report_hwc11_in_use()
 {
+    logger->log<Logger::informational>("HWC version 1.1 in use for display.", component());
 }
+
 void ml::DisplayReport::report_gpu_composition_in_use()
 {
+    logger->log<Logger::informational>("GPU backup in use for display.", component());
 }
