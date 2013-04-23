@@ -531,7 +531,7 @@ TYPED_TEST(AndroidTestFramebufferInit, startup_logging)
         .Times(Exactly(1));
 
     EXPECT_CALL(this->mock_egl, eglMakeCurrent(_,_,_,_))
-        .Times(2)
+        .Times(AtLeast(2))
         .WillOnce(Return(EGL_FALSE))
         .WillRepeatedly(Return(EGL_TRUE));
 
