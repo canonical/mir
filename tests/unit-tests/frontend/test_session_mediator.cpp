@@ -34,7 +34,7 @@
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test/fake_shared.h"
-#include "mir/event_sink.h"
+#include "mir/events/event_sink.h"
 #include "mir/shell/surface.h"
 
 #include <gtest/gtest.h>
@@ -129,7 +129,7 @@ class StubPlatform : public mg::Platform
     }
 };
 
-class NullEventSink : public mir::EventSink
+class NullEventSink : public mir::events::EventSink
 {
 public:
     void handle_event(MirEvent const& ) override {}

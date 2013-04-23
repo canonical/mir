@@ -31,9 +31,10 @@
 
 namespace mir
 {
-
+namespace events
+{
 class EventSink;
-
+}
 namespace frontend
 {
 struct SurfaceCreationParameters;
@@ -55,7 +56,7 @@ public:
         frontend::SurfaceCreationParameters const& params,
         std::shared_ptr<input::InputChannel> const& input_channel,
         frontend::SurfaceId id,
-        std::shared_ptr<EventSink> const& sink);
+        std::shared_ptr<events::EventSink> const& sink);
     ~Surface();
 
     virtual void hide();
@@ -94,7 +95,7 @@ private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
     frontend::SurfaceId const id;
-    std::shared_ptr<EventSink> const event_sink;
+    std::shared_ptr<events::EventSink> const event_sink;
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;

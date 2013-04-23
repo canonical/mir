@@ -53,7 +53,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
     EXPECT_CALL(*mock_surface, destroy());
 
     mtd::StubInputTargetListener input_listener;
-    msh::ApplicationSession session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::EventSink>());
+    msh::ApplicationSession session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::events::EventSink>());
 
     mf::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -78,7 +78,7 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     }
 
     mtd::StubInputTargetListener input_listener;
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::EventSink>());
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::events::EventSink>());
 
     mf::SurfaceCreationParameters params;
     auto id1 = app_session.create_surface(params);
@@ -109,7 +109,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
 
     mtd::StubInputTargetListener input_listener;
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::EventSink>());
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::events::EventSink>());
 
     EXPECT_CALL(surface_factory, create_surface(_, _, _));
 
@@ -135,7 +135,7 @@ TEST(Session, get_invalid_surface_throw_behavior)
 
     mtd::MockSurfaceFactory surface_factory;
     mtd::StubInputTargetListener input_listener;
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::EventSink>());
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::events::EventSink>());
     mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
@@ -149,7 +149,7 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
 
     mtd::MockSurfaceFactory surface_factory;
     mtd::StubInputTargetListener input_listener;
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::EventSink>());
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo", std::shared_ptr<mir::events::EventSink>());
     mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({

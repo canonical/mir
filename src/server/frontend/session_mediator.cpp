@@ -44,7 +44,7 @@ mir::frontend::SessionMediator::SessionMediator(
     std::shared_ptr<graphics::ViewableArea> const& viewable_area,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
-    std::shared_ptr<EventSink> const& event_sink,
+    std::shared_ptr<events::EventSink> const& event_sink,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),

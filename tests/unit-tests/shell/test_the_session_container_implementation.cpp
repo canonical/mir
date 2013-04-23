@@ -39,8 +39,8 @@ TEST(DefaultSessionContainer, for_each)
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msh::DefaultSessionContainer container;
 
-    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), "Visual Studio 7", std::shared_ptr<mir::EventSink>()));
-    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), "Visual Studio 8", std::shared_ptr<mir::EventSink>()));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), "Visual Studio 7", std::shared_ptr<mir::events::EventSink>()));
+    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, std::make_shared<mtd::StubInputTargetListener>(), "Visual Studio 8", std::shared_ptr<mir::events::EventSink>()));
 
     struct local
     {
@@ -69,7 +69,7 @@ TEST(DefaultSessionContainer, invalid_session_throw_behavior)
         factory,
         std::make_shared<mtd::StubInputTargetListener>(),
         "Visual Studio 7",
-        std::shared_ptr<mir::EventSink>());
+        std::shared_ptr<mir::events::EventSink>());
     EXPECT_THROW({
         container.remove_session(session);
     }, std::logic_error);

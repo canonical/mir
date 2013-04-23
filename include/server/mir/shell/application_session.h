@@ -25,8 +25,10 @@
 
 namespace mir
 {
+namespace events
+{
 class EventSink;
-
+}
 namespace shell
 {
 class SurfaceFactory;
@@ -40,7 +42,7 @@ public:
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<InputTargetListener> const& input_target_listener,
         std::string const& session_name,
-        std::shared_ptr<EventSink> const& sink);
+        std::shared_ptr<events::EventSink> const& sink);
     ~ApplicationSession();
 
     frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
@@ -66,7 +68,7 @@ private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<InputTargetListener> const input_target_listener;
     std::string const session_name;
-    std::shared_ptr<EventSink> const event_sink;
+    std::shared_ptr<events::EventSink> const event_sink;
 
     frontend::SurfaceId next_id();
 

@@ -24,8 +24,10 @@
 
 namespace mir
 {
+namespace events
+{
 class EventSink;
-
+}
 namespace frontend
 {
 struct SurfaceCreationParameters;
@@ -40,7 +42,7 @@ public:
     virtual std::shared_ptr<Surface> create_surface(
         frontend::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
-        std::shared_ptr<EventSink> const& sink) = 0;
+        std::shared_ptr<events::EventSink> const& sink) = 0;
 
 protected:
     virtual ~SurfaceFactory() {}

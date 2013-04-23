@@ -135,7 +135,7 @@ public:
         ON_CALL(*this, create_surface_for(_, _)).WillByDefault(Invoke(impl.get(), &Shell::create_surface_for));
     }
 
-    MOCK_METHOD2(open_session, std::shared_ptr<mf::Session> (std::string const& name, std::shared_ptr<mir::EventSink> const&));
+    MOCK_METHOD2(open_session, std::shared_ptr<mf::Session> (std::string const& name, std::shared_ptr<mir::events::EventSink> const&));
     MOCK_METHOD1(close_session, void (std::shared_ptr<mf::Session> const& session));
 
     MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<mf::Session> const& session, int id));

@@ -34,7 +34,7 @@
 #include "client_context.h"
 
 #include "mir_wait_handle.h"
-#include "mir/event_sink.h"
+#include "mir/events/event_sink.h"
 
 namespace mir
 {
@@ -51,8 +51,7 @@ class InputPlatform;
 }
 }
 
-struct MirConnection : public mir::client::ClientContext,
-                       public mir::EventSink
+struct MirConnection : mir::client::ClientContext, mir::events::EventSink
 {
 public:
     MirConnection();

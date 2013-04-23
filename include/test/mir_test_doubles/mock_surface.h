@@ -42,7 +42,7 @@ struct MockSurface : public shell::Surface
             frontend::a_surface(),
             std::shared_ptr<input::InputChannel>(),
             frontend::SurfaceId(),
-            std::shared_ptr<EventSink>())
+            std::shared_ptr<events::EventSink>())
     {
     }
 

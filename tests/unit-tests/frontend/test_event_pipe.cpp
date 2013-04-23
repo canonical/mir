@@ -41,7 +41,7 @@ TEST(EventPipe, no_sink)
 
 namespace
 {
-    class TestSink : public mir::EventSink
+    class TestSink : public mir::events::EventSink
     {
     public:
         TestSink()

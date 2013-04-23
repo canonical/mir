@@ -35,7 +35,7 @@ msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<msh::InputTargetListener> const& input_target_listener,
     std::string const& session_name,
-    std::shared_ptr<mir::EventSink> const& sink) :
+    std::shared_ptr<mir::events::EventSink> const& sink) :
     surface_factory(surface_factory),
     input_target_listener(input_target_listener),
     session_name(session_name),

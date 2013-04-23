@@ -68,7 +68,7 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
 
     std::shared_ptr<msh::Surface> create_surface(const mf::SurfaceCreationParameters& params,
         frontend::SurfaceId id,
-        std::shared_ptr<EventSink> const& sink) override
+        std::shared_ptr<events::EventSink> const& sink) override
     {
         return std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
@@ -156,7 +156,7 @@ mtc::SessionManagementContext::SessionManagementContext(
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
     auto const params = mf::a_surface().of_name(window_name);
-    auto session = shell->open_session(window_name, std::shared_ptr<mir::EventSink>());
+    auto session = shell->open_session(window_name, std::shared_ptr<mir::events::EventSink>());
     auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);
@@ -168,7 +168,7 @@ bool mtc::SessionManagementContext::open_window_with_size(std::string const& win
                                                           geom::Size const& size)
 {
     auto const params = mf::a_surface().of_name(window_name).of_size(size);
-    auto session = shell->open_session(window_name, std::shared_ptr<mir::EventSink>());
+    auto session = shell->open_session(window_name, std::shared_ptr<mir::events::EventSink>());
     auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);

@@ -53,7 +53,7 @@ public:
                             std::shared_ptr<InputTargetListener> const& input_target_listener);
     virtual ~SessionManager();
 
-    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name, std::shared_ptr<EventSink> const& sink);
+    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name, std::shared_ptr<events::EventSink> const& sink);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& session, int id);

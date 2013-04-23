@@ -39,7 +39,7 @@ public:
     std::shared_ptr<Surface> create_surface(
         frontend::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
-        std::shared_ptr<EventSink> const& sink) override;
+        std::shared_ptr<events::EventSink> const& sink) override;
 
 protected:
     OrganisingSurfaceFactory(OrganisingSurfaceFactory const&) = delete;

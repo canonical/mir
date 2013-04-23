@@ -20,21 +20,21 @@
 #define MIR_FRONTEND_EVENT_PIPE_H_
 
 #include "mir_toolkit/event.h"
-#include "mir/event_sink.h"
+#include "mir/events/event_sink.h"
 #include <memory>
 
 namespace mir
 {
 namespace frontend
 {
-class EventPipe : public EventSink
+class EventPipe : public events::EventSink
 {
 public:
-    void set_target(std::weak_ptr<EventSink> const& s);
+    void set_target(std::weak_ptr<events::EventSink> const& s);
     void handle_event(MirEvent const& e) override;
 
 private:
-    std::weak_ptr<EventSink> target;
+    std::weak_ptr<events::EventSink> target;
 };
 }
 }

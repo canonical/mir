@@ -331,7 +331,7 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     return result;
 }
 
-void mcl::MirSocketRpcChannel::set_event_handler(mir::EventSink *sink)
+void mcl::MirSocketRpcChannel::set_event_handler(events::EventSink *sink)
 {
     /*
      * Yes, these have to be regular pointers. Because ownership of the object
