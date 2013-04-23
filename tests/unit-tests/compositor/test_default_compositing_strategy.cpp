@@ -128,7 +128,7 @@ TEST(DefaultCompositingStrategy, render_overlay)
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(geom::Rectangle()));
     
-    EXPECT_CALL(overlay_renderer, render(ByRef(display_buffer))).Times(1);
+    EXPECT_CALL(overlay_renderer, render(_)).Times(1);
 
     comp.render(display_buffer);
 }

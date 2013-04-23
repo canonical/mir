@@ -33,12 +33,15 @@ namespace mg = mir::graphics;
 
 mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
     std::shared_ptr<Renderables> const& renderables,
-    std::shared_ptr<mg::Renderer> const& renderer)
+    std::shared_ptr<mg::Renderer> const& renderer,
+    std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer)
     : renderables(renderables),
-      renderer(renderer)
+      renderer(renderer),
+      overlay_renderer(overlay_renderer)
 {
     assert(renderables);
     assert(renderer);
+    assert(overlay_renderer);
 }
 
 namespace

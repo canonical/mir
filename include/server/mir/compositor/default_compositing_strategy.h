@@ -34,19 +34,22 @@ class Renderer;
 ///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
+class OverlayRenderer;
 
 class DefaultCompositingStrategy : public CompositingStrategy
 {
 public:
     explicit DefaultCompositingStrategy(
         std::shared_ptr<Renderables> const& renderables,
-        std::shared_ptr<graphics::Renderer> const& renderer);
+        std::shared_ptr<graphics::Renderer> const& renderer,
+        std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
     virtual void render(graphics::DisplayBuffer& display_buffer);
 
 private:
     std::shared_ptr<Renderables> const renderables;
     std::shared_ptr<graphics::Renderer> const renderer;
+    std::shared_ptr<OverlayRenderer> const overlay_renderer;
 };
 
 }
