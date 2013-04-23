@@ -31,10 +31,12 @@ namespace mga=mir::graphics::android;
 
 mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
                                                   std::shared_ptr<HWCFactory> const& hwc_factory,
-                                                  std::shared_ptr<FramebufferFactory> const& fb_factory)
+                                                  std::shared_ptr<FramebufferFactory> const& fb_factory,
+                                                  std::shared_ptr<DisplayReport> const& display_report)
     : display_factory(display_factory),
       hwc_factory(hwc_factory),
-      fb_factory(fb_factory)
+      fb_factory(fb_factory),
+      display_report(display_report)
 {
     const hw_module_t *hw_module;
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
@@ -82,11 +84,11 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
         //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
         auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev, fb_dev);
         auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
-        return display_factory->create_hwc_display(hwc_device, fb_native_win);
+        return display_factory->create_hwc_display(hwc_device, fb_native_win, display_report);
     }
     else
     {
         auto fb_native_win = fb_factory->create_fb_native_window(fb_dev);
-        return display_factory->create_gpu_display(fb_native_win);
+        return display_factory->create_gpu_display(fb_native_win, display_report);
     }
 }
