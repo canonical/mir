@@ -40,6 +40,9 @@ target_link_libraries(mir_demo_client
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
+add_executable(mir_multiwin multiwin.c)
+target_link_libraries(mir_multiwin mirclient)
+
 add_executable(mir_demo_client_unaccelerated
   demo_client_unaccelerated.c
 )
