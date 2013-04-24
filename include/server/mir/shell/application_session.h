@@ -38,11 +38,17 @@ class InputTargetListener;
 class ApplicationSession : public Session
 {
 public:
-    explicit ApplicationSession(
+    ApplicationSession(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<InputTargetListener> const& input_target_listener,
         std::string const& session_name,
         std::shared_ptr<events::EventSink> const& sink);
+
+    ApplicationSession(
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::shared_ptr<InputTargetListener> const& input_target_listener,
+        std::string const& session_name);
+
     ~ApplicationSession();
 
     frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);

@@ -46,6 +46,14 @@ msh::ApplicationSession::ApplicationSession(
     assert(surface_factory);
 }
 
+msh::ApplicationSession::ApplicationSession(
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
+    std::shared_ptr<msh::InputTargetListener> const& input_target_listener,
+    std::string const& session_name) :
+    ApplicationSession(surface_factory, input_target_listener, session_name, std::shared_ptr<me::EventSink>())
+{
+}
+
 msh::ApplicationSession::~ApplicationSession()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
