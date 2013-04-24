@@ -37,12 +37,7 @@ namespace doubles
 struct MockSurface : public shell::Surface
 {
     MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder) :
-        shell::Surface(
-            builder,
-            frontend::a_surface(),
-            std::shared_ptr<input::InputChannel>(),
-            frontend::SurfaceId(),
-            std::shared_ptr<events::EventSink>())
+        shell::Surface(builder, frontend::a_surface(), std::shared_ptr<input::InputChannel>())
     {
     }
 

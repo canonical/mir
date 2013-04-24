@@ -54,14 +54,14 @@ public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
         frontend::SurfaceCreationParameters const& params,
-        std::shared_ptr<input::InputChannel> const& input_channel,
-        frontend::SurfaceId id,
-        std::shared_ptr<events::EventSink> const& sink);
+        std::shared_ptr<input::InputChannel> const& input_channel);
 
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
         frontend::SurfaceCreationParameters const& params,
-        std::shared_ptr<input::InputChannel> const& input_channel);
+        std::shared_ptr<input::InputChannel> const& input_channel,
+        frontend::SurfaceId id,
+        std::shared_ptr<events::EventSink> const& sink);
 
     ~Surface();
 
