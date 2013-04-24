@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "mir_toolkit/common.h"
 
 #ifdef __cplusplus
 /**
@@ -37,7 +38,8 @@ typedef int64_t nsecs_t;
 typedef enum
 {
     mir_event_type_key,
-    mir_event_type_motion
+    mir_event_type_motion,
+    mir_event_type_surface
 } MirEventType;
 
 enum {
@@ -111,11 +113,21 @@ typedef struct
     } pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
 } MirMotionEvent;
 
+typedef struct
+{
+    MirEventType type;
+
+    int id;
+    MirSurfaceAttrib attrib;
+    int value;
+} MirSurfaceEvent;
+
 typedef union
 {
-    MirEventType   type;
-    MirKeyEvent    key;
-    MirMotionEvent motion;
+    MirEventType    type;
+    MirKeyEvent     key;
+    MirMotionEvent  motion;
+    MirSurfaceEvent surface;
 } MirEvent;
 
 #ifdef __cplusplus

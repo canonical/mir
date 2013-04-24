@@ -24,6 +24,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
+#include "mir/event_sink.h"
 
 #include <vector>
 #include <memory>
@@ -42,7 +43,8 @@ class MessageProcessorReport;
 namespace detail
 {
 
-struct ProtobufMessageProcessor : MessageProcessor
+struct ProtobufMessageProcessor : MessageProcessor,
+                                  public EventSink
 {
     ProtobufMessageProcessor(
         MessageSender* sender,
@@ -67,6 +69,10 @@ private:
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
     // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response);
+
+    void send_event(MirEvent const& e);
+
+    void handle_event(MirEvent const& e);
 
     template<class Response>
     std::vector<int32_t> extract_fds_from(Response* response);

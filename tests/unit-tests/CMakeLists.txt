@@ -20,7 +20,7 @@ add_subdirectory(input/)
 add_subdirectory(android_input/)
 add_subdirectory(surfaces/)
 add_subdirectory(draw/)
-
+add_subdirectory(event/)
 
 add_executable(unit-tests ${UNIT_TEST_SOURCES})
 uses_android_input(unit-tests)

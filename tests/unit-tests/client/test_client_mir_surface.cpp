@@ -540,3 +540,21 @@ TEST_F(MirClientSurfaceTest, default_surface_type)
     EXPECT_EQ(mir_surface_type_normal,
               surface->attrib(mir_surface_attrib_type));
 }
+
+TEST_F(MirClientSurfaceTest, default_surface_state)
+{
+    auto surface = std::make_shared<MirSurface> (connection.get(),
+                                                 *client_comm_channel,
+                                                 logger,
+                                                 mock_buffer_factory,
+                                                 input_platform,
+                                                 params,
+                                                 &empty_callback,
+                                                 nullptr);
+    surface->get_create_wait_handle()->wait_for_result();
+
+    // Test the default cached state value. It is always unknown until we
+    // get a real answer from the server.
+    EXPECT_EQ(mir_surface_state_unknown,
+              surface->attrib(mir_surface_attrib_state));
+}

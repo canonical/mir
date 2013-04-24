@@ -26,6 +26,7 @@ set(
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  event_queue.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)

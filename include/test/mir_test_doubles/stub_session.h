@@ -58,6 +58,9 @@ struct StubSession : public frontend::Session
     {
         return 0;
     }
+    void set_event_sink(std::shared_ptr<EventSink> const&)
+    {
+    }
 };
 
 }

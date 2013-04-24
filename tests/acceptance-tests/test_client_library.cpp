@@ -29,6 +29,7 @@
 
 #include <gtest/gtest.h>
 #include <chrono>
+#include <cstring>
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
@@ -274,6 +275,172 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
 
             mir_connection_release(connection);
         }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
+
+            surface = mir_connection_create_surface_sync(connection,
+                                                         &request_params);
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            EXPECT_EQ(mir_surface_state_restored,
+                      mir_surface_get_state(surface));
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                               mir_surface_state_fullscreen));
+            EXPECT_EQ(mir_surface_state_fullscreen,
+                      mir_surface_get_state(surface));
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                           static_cast<MirSurfaceState>(999)));
+            EXPECT_EQ(mir_surface_state_fullscreen,
+                      mir_surface_get_state(surface));
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                               mir_surface_state_minimized));
+            EXPECT_EQ(mir_surface_state_minimized,
+                      mir_surface_get_state(surface));
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                           static_cast<MirSurfaceState>(888)));
+            EXPECT_EQ(mir_surface_state_minimized,
+                      mir_surface_get_state(surface));
+
+            // Stress-test synchronization logic with some flooding
+            for (int i = 0; i < 100; i++)
+            {
+                mir_surface_set_state(surface, mir_surface_state_maximized);
+                mir_surface_set_state(surface, mir_surface_state_restored);
+                mir_wait_for(mir_surface_set_state(surface,
+                                                mir_surface_state_fullscreen));
+                ASSERT_EQ(mir_surface_state_fullscreen,
+                          mir_surface_get_state(surface));
+            }
+
+            mir_surface_release_sync(surface);
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_state_events)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        static void event_callback(MirSurface* surface, MirEvent const* event,
+                                   void* ctx)
+        {
+            ClientConfig* self = static_cast<ClientConfig*>(ctx);
+            self->last_event = *event;
+            self->last_event_surface = surface;
+        }
+
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(connection != NULL);
+            ASSERT_TRUE(mir_connection_is_valid(connection));
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
+
+            memset(&last_event, 0, sizeof last_event);
+            last_event_surface = nullptr;
+
+            MirEventDelegate delegate{&event_callback, this};
+            MirSurface* other_surface =
+                mir_connection_create_surface_sync(connection, &request_params);
+            ASSERT_TRUE(other_surface != NULL);
+            ASSERT_TRUE(mir_surface_is_valid(other_surface));
+            mir_surface_set_event_handler(other_surface, nullptr);
+
+            surface =
+                mir_connection_create_surface_sync(connection, &request_params);
+            ASSERT_TRUE(surface != NULL);
+            ASSERT_TRUE(mir_surface_is_valid(surface));
+
+            mir_surface_set_event_handler(surface, &delegate);
+
+            int surface_id = mir_surface_get_id(surface);
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                               mir_surface_state_fullscreen));
+            mir_wait_for(mir_surface_set_state(other_surface,
+                                               mir_surface_state_minimized));
+            EXPECT_EQ(surface, last_event_surface);
+            EXPECT_EQ(mir_event_type_surface, last_event.type);
+            EXPECT_EQ(surface_id, last_event.surface.id);
+            EXPECT_EQ(mir_surface_attrib_state, last_event.surface.attrib);
+            EXPECT_EQ(mir_surface_state_fullscreen, last_event.surface.value);
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                           static_cast<MirSurfaceState>(999)));
+            EXPECT_EQ(surface, last_event_surface);
+            EXPECT_EQ(mir_event_type_surface, last_event.type);
+            EXPECT_EQ(surface_id, last_event.surface.id);
+            EXPECT_EQ(mir_surface_attrib_state, last_event.surface.attrib);
+            EXPECT_EQ(mir_surface_state_fullscreen, last_event.surface.value);
+
+            memset(&last_event, 0, sizeof last_event);
+            last_event_surface = nullptr;
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                               mir_surface_state_minimized));
+            EXPECT_EQ(surface, last_event_surface);
+            EXPECT_EQ(mir_event_type_surface, last_event.type);
+            EXPECT_EQ(surface_id, last_event.surface.id);
+            EXPECT_EQ(mir_surface_attrib_state, last_event.surface.attrib);
+            EXPECT_EQ(mir_surface_state_minimized, last_event.surface.value);
+
+            memset(&last_event, 0, sizeof last_event);
+            last_event_surface = nullptr;
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                           static_cast<MirSurfaceState>(777)));
+            mir_wait_for(mir_surface_set_state(other_surface,
+                                               mir_surface_state_maximized));
+            EXPECT_EQ(0, last_event_surface);
+            EXPECT_EQ(0, last_event.type);
+            EXPECT_EQ(0, last_event.surface.id);
+            EXPECT_EQ(0, last_event.surface.attrib);
+            EXPECT_EQ(0, last_event.surface.value);
+
+            mir_surface_release_sync(surface);
+            mir_surface_release_sync(other_surface);
+            mir_connection_release(connection);
+        }
+
+        MirEvent last_event;
+        MirSurface* last_event_surface;
     } client_config;
 
     launch_client_process(client_config);

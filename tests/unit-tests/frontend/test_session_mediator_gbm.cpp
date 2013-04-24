@@ -27,6 +27,7 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/event_queue.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -102,7 +103,9 @@ struct SessionMediatorGBMTest : public ::testing::Test
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, mock_platform, graphics_display,
-                   buffer_allocator, report, resource_cache},
+                   buffer_allocator, report,
+                   std::make_shared<mir::EventQueue>(),
+                   resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

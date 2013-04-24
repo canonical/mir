@@ -16,6 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir_toolkit/event.h"
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
@@ -133,6 +134,32 @@ void mfd::ProtobufMessageProcessor::send_response(
     result.SerializeToString(&buffer);
 
     sender->send(buffer);
+}
+
+void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
+{
+    mir::protobuf::EventSequence seq;
+    mir::protobuf::Event *ev = seq.add_event();
+    ev->set_raw(&e, sizeof(MirEvent));
+
+    std::string buffer;
+    seq.SerializeToString(&buffer);
+
+    mir::protobuf::wire::Result result;
+    result.set_response(buffer);
+
+    result.SerializeToString(&buffer);
+
+    sender->send(buffer);
+}
+
+void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
+{
+    // Limit the types of events we wish to send over protobuf, for now.
+    if (e.type == mir_event_type_surface)
+    {
+        send_event(e);
+    }
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
