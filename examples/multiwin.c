@@ -157,13 +157,13 @@ int main(int argc, char *argv[])
         parm.pixel_format = dinfo.supported_pixel_format[0];
     }
 
-    parm.width = 200;
-    parm.height = 200;
+    parm.width = 225;
+    parm.height = 225;
     win[0].surface = mir_connection_create_surface_sync(conn, &parm);
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
-    win[0].fill.a = 0x80;
+    win[0].fill.a = 0x50;
 
     parm.width = 300;
     parm.height = 150;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
-    win[1].fill.a = 0x80;
+    win[1].fill.a = 0x50;
 
     parm.width = 150;
     parm.height = 300;
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
-    win[2].fill.a = 0x80;
+    win[2].fill.a = 0x50;
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
