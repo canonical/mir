@@ -36,6 +36,7 @@ class Renderables;
 class Drawer;
 class CompositingStrategy;
 class Compositor;
+class OverlayRenderer;
 }
 namespace frontend
 {
@@ -125,6 +126,7 @@ public:
      * configurable interfaces for modifying compositor
      *  @{ */
     virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
+    virtual std::shared_ptr<compositor::OverlayRenderer>          the_overlay_renderer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     /** @} */
 
@@ -216,6 +218,7 @@ protected:
     CachedPtr<shell::FocusSequence>     shell_focus_sequence;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
     CachedPtr<compositor::CompositingStrategy> compositing_strategy;
+    CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
