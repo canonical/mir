@@ -79,6 +79,16 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
             (uint32_t)color->g << 8  |
             (uint32_t)color->b;
         break;
+    case mir_pixel_format_bgr_888:
+        for (n = 0; n < count; n++)
+        {
+            uint8_t *p = (uint8_t*)where + n * 3;
+            p[0] = color->b;
+            p[1] = color->g;
+            p[2] = color->r;
+        }
+        count = 0;
+        break;
     default:
         count = 0;
         break;
@@ -133,7 +143,8 @@ int main(int argc, char *argv[])
     parm.pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < dinfo.supported_pixel_format_items; f++)
     {
-        if (dinfo.supported_pixel_format[f] != mir_pixel_format_bgr_888)
+        if (dinfo.supported_pixel_format[f] == mir_pixel_format_abgr_8888 ||
+            dinfo.supported_pixel_format[f] == mir_pixel_format_argb_8888)
         {
             parm.pixel_format = dinfo.supported_pixel_format[f];
             break;
@@ -141,9 +152,9 @@ int main(int argc, char *argv[])
     }
     if (parm.pixel_format == mir_pixel_format_invalid)
     {
-        fprintf(stderr, "Could not find any supported 32-bit pixel format.\n");
-        mir_connection_release(conn);
-        return 1;
+        fprintf(stderr, "Could not find a fast 32-bit pixel format with "
+                        "alpha support. Blending won't work!.\n");
+        parm.pixel_format = dinfo.supported_pixel_format[0];
     }
 
     parm.width = 200;
