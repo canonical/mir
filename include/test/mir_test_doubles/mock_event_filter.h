@@ -49,7 +49,7 @@ MATCHER(KeyDownEvent, "")
     if (arg.type != mir_event_type_key)
         return false;
 
-    return arg.key.action == AKEY_EVENT_ACTION_DOWN;
+    return arg.key.action == mir_key_action_down;
 }
 MATCHER(ButtonDownEvent, "")
 {
@@ -57,7 +57,7 @@ MATCHER(ButtonDownEvent, "")
         return false;
     if (arg.motion.button_state == 0)
         return false;
-    return arg.motion.action == AKEY_EVENT_ACTION_DOWN;
+    return arg.motion.action == mir_motion_action_down;
 }
 MATCHER_P2(MotionEvent, dx, dy, "")
 {
