@@ -13,35 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
-#define MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
-
-#include "src/server/graphics/gbm/virtual_terminal.h"
+#ifndef MIR_COMPOSITOR_OVERLAY_RENDERER_H_
+#define MIR_COMPOSITOR_OVERLAY_RENDERER_H_
 
 namespace mir
 {
-namespace test
+namespace graphics
 {
-namespace doubles
+class DisplayBuffer;
+}
+
+namespace compositor
 {
 
-class NullVirtualTerminal : public graphics::gbm::VirtualTerminal
+class OverlayRenderer
 {
 public:
-    void set_graphics_mode() {}
+    virtual ~OverlayRenderer() {}
 
-    void register_switch_handlers(MainLoop&,
-                                  std::function<bool()> const&,
-                                  std::function<bool()> const&)
-    {
-    }
+    virtual void render(graphics::DisplayBuffer& display_buffer) = 0;
+
+protected:
+    OverlayRenderer() = default;
+    OverlayRenderer& operator=(OverlayRenderer const&) = delete;
+    OverlayRenderer(OverlayRenderer const&) = delete;
 };
 
 }
-}
-}
+} // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_ */
+#endif // MIR_COMPOSITOR_OVERLAY_RENDERER_H_

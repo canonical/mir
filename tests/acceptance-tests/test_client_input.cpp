@@ -200,7 +200,7 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
-        if (ev->key.action == 0)
+        if (ev->key.action == mir_key_action_down)
         {
             client->handler->handle_key_down(ev);
             client->event_received[client->events_received].wake_up_everyone();

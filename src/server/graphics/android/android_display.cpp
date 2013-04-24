@@ -53,11 +53,11 @@ public:
 }
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
-    : native_window{native_win},
-      egl_display{EGL_NO_DISPLAY},
+    : egl_display{EGL_NO_DISPLAY},
+      egl_surface{EGL_NO_SURFACE},
+      native_window{native_win},
       egl_config{0},
       egl_context{EGL_NO_CONTEXT},
-      egl_surface{EGL_NO_SURFACE},
       egl_context_shared{EGL_NO_CONTEXT},
       egl_surface_dummy{EGL_NO_SURFACE}
 {
@@ -98,6 +98,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
 mga::AndroidDisplay::~AndroidDisplay()
 {
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
     eglDestroyContext(egl_display, egl_context_shared);
@@ -125,11 +126,12 @@ void mga::AndroidDisplay::clear()
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-bool mga::AndroidDisplay::post_update()
+void mga::AndroidDisplay::post_update()
 {
     if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
-        return false;
-    return true;
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
+    }
 }
 
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -160,7 +162,9 @@ void mga::AndroidDisplay::resume()
 void mga::AndroidDisplay::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
+    }
 }
 
 void mga::AndroidDisplay::release_current()

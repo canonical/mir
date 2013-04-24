@@ -45,7 +45,7 @@ public:
 
     geometry::Rectangle view_area() const;
     void clear();
-    bool post_update();
+    void post_update();
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
@@ -61,12 +61,13 @@ public:
     void make_current();
     void release_current();
 
+protected:
+    EGLDisplay egl_display;
+    EGLSurface egl_surface;
 private:
     std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
-    EGLDisplay egl_display;
     EGLConfig egl_config;
     EGLContext egl_context;
-    EGLSurface egl_surface;
     EGLContext egl_context_shared;
     EGLSurface egl_surface_dummy;
 };
