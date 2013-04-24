@@ -19,12 +19,13 @@
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
 #include <signal.h>
+#include <stdint.h>
 
 #define NWIN 3
 
 typedef struct
 {
-    unsigned char r, g, b, a;
+    uint8_t r, g, b, a;
 } Color;
 
 typedef struct
@@ -44,31 +45,57 @@ static void shutdown(int signum)
     }
 }
 
+static void put_pixels(void *where, int count, MirPixelFormat format,
+                       const Color *color)
+{
+    uint32_t pixel = 0;
+    int n;
+
+    switch (format)
+    {
+    case mir_pixel_format_abgr_8888:
+        pixel = 
+            (uint32_t)color->a << 24 |
+            (uint32_t)color->b << 16 |
+            (uint32_t)color->g << 8  |
+            (uint32_t)color->r;
+        break;
+    case mir_pixel_format_xbgr_8888:
+        pixel = 
+            (uint32_t)color->b << 16 |
+            (uint32_t)color->g << 8  |
+            (uint32_t)color->r;
+        break;
+    case mir_pixel_format_argb_8888:
+        pixel = 
+            (uint32_t)color->a << 24 |
+            (uint32_t)color->r << 16 |
+            (uint32_t)color->g << 8  |
+            (uint32_t)color->b;
+        break;
+    case mir_pixel_format_xrgb_8888:
+        pixel = 
+            (uint32_t)color->r << 16 |
+            (uint32_t)color->g << 8  |
+            (uint32_t)color->b;
+        break;
+    default:
+        count = 0;
+        break;
+    }
+
+    for (n = 0; n < count; n++)
+        ((uint32_t*)where)[n] = pixel;
+}
+
 static void clear_region(const MirGraphicsRegion *region, const Color *color)
 {
     int y;
-    unsigned char *row = (unsigned char *)region->vaddr;
-    int pixelsize = region->pixel_format == mir_pixel_format_bgr_888 ? 3 : 4;
+    char *row = region->vaddr;
 
     for (y = 0; y < region->height; y++)
     {
-        int x;
-        unsigned char *pixel = row;
-
-        for (x = 0; x < region->width; x++)
-        {
-            int c;
-            for (c = 0; c < pixelsize; c++)
-            {
-                /* FIXME */
-                pixel[0] = color->r;
-                pixel[1] = color->g;
-                pixel[2] = color->b;
-                pixel[3] = 0xff;
-            }
-            pixel += pixelsize;
-        }
-
+        put_pixels(row, region->width, region->pixel_format, color);
         row += region->stride;
     }
 }
@@ -88,6 +115,7 @@ int main(int argc, char *argv[])
     MirSurfaceParameters parm;
     MirDisplayInfo dinfo;
     Window win[NWIN];
+    int f;
 
     (void)argc;
 
@@ -101,8 +129,22 @@ int main(int argc, char *argv[])
     mir_connection_get_display_info(conn, &dinfo);
 
     parm.name = "foo";
-    parm.pixel_format = dinfo.supported_pixel_format[0];
     parm.buffer_usage = mir_buffer_usage_software;
+    parm.pixel_format = mir_pixel_format_invalid;
+    for (f = 0; f < dinfo.supported_pixel_format_items; f++)
+    {
+        if (dinfo.supported_pixel_format[f] != mir_pixel_format_bgr_888)
+        {
+            parm.pixel_format = dinfo.supported_pixel_format[f];
+            break;
+        }
+    }
+    if (parm.pixel_format == mir_pixel_format_invalid)
+    {
+        fprintf(stderr, "Could not find any supported 32-bit pixel format.\n");
+        mir_connection_release(conn);
+        return 1;
+    }
 
     parm.width = 200;
     parm.height = 200;
@@ -110,6 +152,7 @@ int main(int argc, char *argv[])
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
+    win[0].fill.a = 0x80;
 
     parm.width = 300;
     parm.height = 150;
@@ -117,6 +160,7 @@ int main(int argc, char *argv[])
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
+    win[1].fill.a = 0x80;
 
     parm.width = 150;
     parm.height = 300;
@@ -124,15 +168,16 @@ int main(int argc, char *argv[])
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
+    win[2].fill.a = 0x80;
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
 
     while (running)
     {
-        int i;
-        for (i = 0; i < NWIN; i++)
-            draw_window(win + i);
+        int w;
+        for (w = 0; w < NWIN; w++)
+            draw_window(win + w);
     }
 
     mir_connection_release(conn);
