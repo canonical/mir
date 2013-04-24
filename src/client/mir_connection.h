@@ -21,6 +21,7 @@
 #include <string>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 
 #include <mutex>
 
@@ -33,6 +34,7 @@
 #include "client_context.h"
 
 #include "mir_wait_handle.h"
+#include "mir/event_sink.h"
 
 namespace mir
 {
@@ -49,7 +51,8 @@ class InputPlatform;
 }
 }
 
-struct MirConnection : public mir::client::ClientContext
+struct MirConnection : public mir::client::ClientContext,
+                       public mir::EventSink
 {
 public:
     MirConnection();
@@ -57,7 +60,7 @@ public:
     MirConnection(std::shared_ptr<google::protobuf::RpcChannel> const& channel,
                   std::shared_ptr<mir::client::Logger> const & log,
                   std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
-    ~MirConnection();
+    ~MirConnection() noexcept;
 
     MirConnection(MirConnection const &) = delete;
     MirConnection& operator=(MirConnection const &) = delete;
@@ -104,6 +107,9 @@ public:
 
     EGLNativeDisplayType egl_native_display();
 
+    void on_surface_created(int id, MirSurface* surface);
+    void handle_event(MirEvent const&);
+
 private:
     std::shared_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
@@ -131,6 +137,9 @@ private:
 
     static std::mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
+
+    typedef std::unordered_map<int, MirSurface*> SurfaceMap;
+    SurfaceMap valid_surfaces;
 
     struct SurfaceRelease;
 

@@ -27,6 +27,8 @@
 
 namespace mir
 {
+class EventSink;
+
 namespace graphics
 {
 class Platform;
@@ -60,6 +62,7 @@ public:
         std::shared_ptr<graphics::ViewableArea> const& viewable_area,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& report,
+        std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     /* Platform independent requests */
@@ -116,6 +119,7 @@ private:
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
 
     std::shared_ptr<SessionMediatorReport> const report;
+    std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 

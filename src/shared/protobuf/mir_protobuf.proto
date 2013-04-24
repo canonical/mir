@@ -122,6 +122,14 @@ message SurfaceSetting {
   optional string error = 127;
 }
 
+message Event {
+  optional bytes raw = 1;  // MirEvent structure
+}
+
+message EventSequence {
+  repeated Event event = 1;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);

@@ -267,6 +267,22 @@ MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
  */
 MirSurfaceType mir_surface_get_type(MirSurface *surface);
 
+/**
+ * Change the state of a surface.
+ *   \param [in] surface  The surface to operate on
+ *   \param [in] state    The new state of the surface
+ *   \return              A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_surface_set_state(MirSurface *surface,
+                                     MirSurfaceState state);
+
+/**
+ * Get the current state of a surface.
+ *   \param [in] surface  The surface to query
+ *   \return              The state of the surface
+ */
+MirSurfaceState mir_surface_get_state(MirSurface *surface);
+
 #ifdef __cplusplus
 }
 /**@}*/

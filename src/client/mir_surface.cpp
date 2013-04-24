@@ -59,6 +59,7 @@ MirSurface::MirSurface(
     for (int i = 0; i < mir_surface_attrib_arraysize_; i++)
         attrib_cache[i] = -1;
     attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
+    attrib_cache[mir_surface_attrib_state] = mir_surface_state_unknown;
 }
 
 MirSurface::~MirSurface()
@@ -176,6 +177,7 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
     auto platform = connection->get_client_platform();
     accelerated_window = platform->create_egl_native_window(this);
 
+    connection->on_surface_created(id(), this);
     callback(this, context);
     
     create_wait_handle.result_received();
@@ -261,14 +263,16 @@ void MirSurface::on_configured()
         configure_result.surfaceid().value() == surface.id().value() &&
         configure_result.has_attrib())
     {
-        switch (configure_result.attrib())
+        int a = configure_result.attrib();
+
+        switch (a)
         {
         case mir_surface_attrib_type:
+        case mir_surface_attrib_state:
             if (configure_result.has_ivalue())
-            {
-                int t = configure_result.ivalue();
-                attrib_cache[mir_surface_attrib_type] = t;
-            } // else error is probably set due to an unsupported attrib/value
+                attrib_cache[a] = configure_result.ivalue();
+            else
+                assert(configure_result.has_error());
             break;
         default:
             assert(false);
@@ -306,4 +310,17 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
             input_thread->start();
         }
     }
+}
+
+void MirSurface::handle_event(MirEvent const& e)
+{
+    if (e.type == mir_event_type_surface)
+    {
+        MirSurfaceAttrib a = e.surface.attrib;
+        if (a < mir_surface_attrib_arraysize_)
+            attrib_cache[a] = e.surface.value;
+    }
+
+    if (handle_event_callback)
+        handle_event_callback(&e);
 }
