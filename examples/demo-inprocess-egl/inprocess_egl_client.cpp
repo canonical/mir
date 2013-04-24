@@ -54,24 +54,27 @@ void me::InprocessEGLClient::thread_loop()
 {
     geom::Size const surface_size = geom::Size{geom::Width{512},
                                                geom::Height{512}};
-    
+
+    ///\internal [setup_tag]
     auto params = mf::a_surface().of_name("Inprocess EGL Demo")
         .of_size(surface_size)
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
     auto surface = surface_factory->create_surface(params);
-    
+
     surface->advance_client_buffer(); // TODO: What a wart!
-    
+
     auto native_display = graphics_platform->shell_egl_display();
     me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display), reinterpret_cast<EGLNativeWindowType>(surface.get()));
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
     assert(rc == EGL_TRUE);
-    
+
     mir::draw::glAnimationBasic gl_animation;
     gl_animation.init_gl();
-    
+    ///\internal [setup_tag]
+
+    ///\internal [loop_tag]
     for(;;)
     {
         gl_animation.render_gl();
@@ -80,4 +83,5 @@ void me::InprocessEGLClient::thread_loop()
 
         gl_animation.step();
     }
+    ///\internal [loop_tag]
 }

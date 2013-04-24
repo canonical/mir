@@ -41,15 +41,17 @@ class SurfaceFactory;
 class SessionContainer;
 class FocusSequence;
 class FocusSetter;
+class InputTargetListener;
 class Session;
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:
     explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
-                            std::shared_ptr<SessionContainer> const& session_container,
+                            std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<FocusSequence> const& focus_sequence,
-                            std::shared_ptr<FocusSetter> const& focus_setter);
+                            std::shared_ptr<FocusSetter> const& focus_setter,
+                            std::shared_ptr<InputTargetListener> const& input_target_listener);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);
@@ -72,6 +74,7 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
+    std::shared_ptr<InputTargetListener> const input_target_listener;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;

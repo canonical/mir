@@ -25,49 +25,13 @@
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-namespace
-{
-static void invalidate_hook(const struct hwc_procs* /*procs*/)
-{
-}
-
-static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t /*timestamp*/)
-{
-    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self;
-    self->notify_vsync();
-}
-
-static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*connected*/)
-{
-}
-}
-
 mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HWCLayerOrganizer> const& organizer,
                               std::shared_ptr<DisplaySupportProvider> const& fbdev)
-    : hwc_device(hwc_device),
+    : HWCCommonDevice(hwc_device),
       layer_organizer(organizer),
-      fb_device(fbdev),
-      vsync_occurred(false)
+      fb_device(fbdev)
 {
-    callbacks.hooks.invalidate = invalidate_hook;
-    callbacks.hooks.vsync = vsync_hook;
-    callbacks.hooks.hotplug = hotplug_hook;
-    callbacks.self = this;
-
-    hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
-
-    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
-    }
-    
-    if (hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
-    }
-
-
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
     if (rc != 0)
@@ -78,8 +42,6 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
 
 mga::HWC11Device::~HWC11Device() noexcept
 {
-    hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0);
-    hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
 
 geom::Size mga::HWC11Device::display_size() const
@@ -109,31 +71,20 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
     return 2u;
 }
  
-void mga::HWC11Device::notify_vsync()
-{
-    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
-    vsync_occurred = true;
-    vsync_trigger.notify_all();
-}
-
-void mga::HWC11Device::wait_for_vsync()
-{
-    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
-    vsync_occurred = false;
-    while(!vsync_occurred)
-    {
-        vsync_trigger.wait(lk);
-    }
-}
-
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& buffer)
 {
     layer_organizer->set_fb_target(buffer);
     fb_device->set_next_frontbuffer(buffer);
 }
 
-void mga::HWC11Device::commit_frame()
+void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 {
+    /* note, swapbuffers will go around through the driver and call set_next_frontbuffer */
+    if (eglSwapBuffers(dpy, sur) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("error during eglSwapBuffers"));
+    }
+
     auto& list = layer_organizer->native_list();
 
     auto struct_size = sizeof(hwc_display_contents_1_t) + sizeof(hwc_layer_1_t)*(list.size());

@@ -65,10 +65,9 @@ struct FocusNotifyingDispatcherController : public mia::DispatcherController
 
     }
     
-    void set_input_focus_to(
-        std::shared_ptr<mi::SessionTarget> const& session, std::shared_ptr<mi::SurfaceTarget> const& surface) override
+    void focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface) override
     {
-        DispatcherController::set_input_focus_to(session, surface);
+        DispatcherController::focus_changed(surface);
         
         // We need a synchronization primitive inorder to halt test event injection
         // until after a surface has taken focus (lest the events be discarded).
@@ -122,10 +121,10 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
             });
     }
 
-    std::shared_ptr<msh::InputFocusSelector>
-    the_input_focus_selector() override
+    std::shared_ptr<msh::InputTargetListener>
+    the_input_target_listener() override
     {
-        return input_focus_selector(
+        return input_target_listener(
             [this]()
             {
                 return std::make_shared<FocusNotifyingDispatcherController>(mt::fake_shared(input_config), on_focus_set);
@@ -201,7 +200,7 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
-        if (ev->key.action == 0)
+        if (ev->key.action == mir_key_action_down)
         {
             client->handler->handle_key_down(ev);
             client->event_received[client->events_received].wake_up_everyone();

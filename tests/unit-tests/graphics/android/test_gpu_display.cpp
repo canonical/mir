@@ -20,6 +20,7 @@
 #include "src/server/graphics/android/android_display.h"
 #include "mir_test/egl_mock.h"
 
+#include <stdexcept>
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
@@ -54,16 +55,6 @@ TEST_F(GPUFramebuffer, display_post_calls_swapbuffers_once)
     });
 }
 
-TEST_F(GPUFramebuffer, display_post_successful)
-{
-    std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
-
-    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
-    {
-        EXPECT_TRUE(buffer.post_update());
-    });
-}
-
 TEST_F(GPUFramebuffer, display_post_failure)
 {
     using namespace testing;
@@ -73,10 +64,12 @@ TEST_F(GPUFramebuffer, display_post_failure)
     .Times(Exactly(1))
     .WillOnce(Return(EGL_FALSE));
 
-    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
-    {
-        EXPECT_FALSE(buffer.post_update());
-    });
+    EXPECT_THROW({
+        display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
+        {
+                buffer.post_update();
+        });
+    }, std::runtime_error);
 }
 
 TEST_F(GPUFramebuffer, framebuffer_correct_view_area)

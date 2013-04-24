@@ -30,11 +30,12 @@ TEST(SessionManagerDeathTest, DISABLED_class_invariants_not_satisfied_triggers_a
 //  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 // leads to the test failing under valgrind
     EXPECT_EXIT(
-                std::shared_ptr<msh::SurfaceFactory> factory;
-                mir::shell::SessionManager app(factory,
+                std::shared_ptr<msh::SurfaceFactory> surface_factory;
+                mir::shell::SessionManager app(surface_factory,
                                                std::shared_ptr<msh::SessionContainer>(),
                                                std::shared_ptr<msh::FocusSequence>(),
-                                               std::shared_ptr<msh::FocusSetter>()),
+                                               std::shared_ptr<msh::FocusSetter>(),
+                                               std::shared_ptr<msh::InputTargetListener>()),
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");
 }

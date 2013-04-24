@@ -45,7 +45,7 @@ public:
 
     geometry::Rectangle view_area() const;
     void clear();
-    bool post_update();
+    void post_update();
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
     std::shared_ptr<DisplayConfiguration> configuration();
     void make_current();

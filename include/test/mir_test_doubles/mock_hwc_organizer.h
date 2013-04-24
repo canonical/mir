@@ -13,13 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_FOCUS_SELECTOR_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_FOCUS_SELECTOR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_
 
-#include "mir/shell/input_focus_selector.h"
+#include "src/server/graphics/android/hwc_layerlist.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -28,13 +30,14 @@ namespace test
 namespace doubles
 {
 
-struct MockInputFocusSelector : public shell::InputFocusSelector
+struct MockHWCOrganizer : public graphics::android::HWCLayerOrganizer
 {
-    MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<input::SessionTarget> const&, std::shared_ptr<input::SurfaceTarget> const&));
+    ~MockHWCOrganizer() noexcept {}
+    MOCK_CONST_METHOD0(native_list, graphics::android::LayerList const&());
+    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::android::AndroidBuffer> const&));
 };
 
 }
 }
-} // namespace mir
-
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_FOCUS_SELECTOR_H_
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_ORGANIZER_H_ */
