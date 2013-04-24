@@ -117,9 +117,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
        Return(std::make_shared<msh::Surface>(
            mt::fake_shared(surface_builder),
            mf::a_surface(),
-           null_input_channel,
-           mf::SurfaceId(),
-           std::shared_ptr<me::EventSink>())));
+           null_input_channel)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
@@ -187,9 +185,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         Return(std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
             mf::a_surface(),
-            null_input_channel,
-            mf::SurfaceId(),
-            std::shared_ptr<me::EventSink>())));
+            null_input_channel)));
 
     // Once for session creation and once for surface creation
     {
@@ -239,9 +235,7 @@ TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_a
        Return(std::make_shared<msh::Surface>(
            mt::fake_shared(surface_builder),
            mf::a_surface(),
-           null_input_channel,
-           mf::SurfaceId(),
-           std::shared_ptr<me::EventSink>())));
+           null_input_channel)));
     EXPECT_CALL(surface_factory, create_surface(_,_,_)).Times(1);
 
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));

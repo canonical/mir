@@ -57,6 +57,12 @@ public:
         std::shared_ptr<input::InputChannel> const& input_channel,
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink);
+
+    Surface(
+        std::shared_ptr<SurfaceBuilder> const& builder,
+        frontend::SurfaceCreationParameters const& params,
+        std::shared_ptr<input::InputChannel> const& input_channel);
+
     ~Surface();
 
     virtual void hide();
