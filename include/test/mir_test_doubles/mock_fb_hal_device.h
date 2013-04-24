@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
-#define MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_FB_HAL_DEVICE_H_
+#define MIR_TEST_DOUBLES_MOCK_FB_HAL_DEVICE_H_
 
 #include <hardware/hwcomposer.h>
 #include <hardware/gralloc.h>
@@ -76,4 +76,4 @@ public:
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_FB_DEVICE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_FB_HAL_DEVICE_H_ */

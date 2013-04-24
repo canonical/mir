@@ -35,7 +35,7 @@ public:
     virtual void make_current() = 0;
     virtual void release_current() = 0;
     virtual void clear() = 0;
-    virtual bool post_update() = 0;
+    virtual void post_update() = 0;
 
 protected:
     DisplayBuffer() = default;

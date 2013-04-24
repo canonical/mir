@@ -37,7 +37,7 @@ public:
     MOCK_METHOD0(make_current, void());
     MOCK_METHOD0(release_current, void());
     MOCK_METHOD0(clear, void());
-    MOCK_METHOD0(post_update, bool());
+    MOCK_METHOD0(post_update, void());
 };
 
 }

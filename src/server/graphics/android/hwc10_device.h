@@ -16,10 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
+#define MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_
 #include "hwc_common_device.h"
-#include <memory>
 
 namespace mir
 {
@@ -28,15 +27,14 @@ namespace graphics
 namespace android
 {
 class HWCLayerOrganizer;
+class DisplaySupportProvider;
 
-
-class HWC11Device : public HWCCommonDevice
+class HWC10Device : public HWCCommonDevice
 {
 public:
-    HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                std::shared_ptr<HWCLayerOrganizer> const& organizer,
+    HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<DisplaySupportProvider> const& fbdev);
-    ~HWC11Device() noexcept;
+    ~HWC10Device() noexcept;
 
     geometry::Size display_size() const; 
     geometry::PixelFormat display_format() const;
@@ -44,15 +42,12 @@ public:
     void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
  
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
-
 private:
-    std::shared_ptr<HWCLayerOrganizer> const layer_organizer;
     std::shared_ptr<DisplaySupportProvider> const fb_device;
-    unsigned int primary_display_config;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC10_DEVICE_H_ */

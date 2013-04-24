@@ -14,7 +14,9 @@ add_library(
   android_display.cpp
   hwc_display.cpp
   hwc_layerlist.cpp
+  hwc10_device.cpp
   hwc11_device.cpp
+  hwc_common_device.cpp
   android_hwc_factory.cpp
   android_display_allocator.cpp
   android_framebuffer_window.cpp

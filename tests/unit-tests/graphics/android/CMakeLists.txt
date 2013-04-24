@@ -9,6 +9,8 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_alloc_adaptor_native_win.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_device.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc10_device.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc11_device.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gpu_display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_framebuffer_factory.cpp
