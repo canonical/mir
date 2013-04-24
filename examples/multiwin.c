@@ -21,8 +21,6 @@
 #include <signal.h>
 #include <stdint.h>
 
-#define NWIN 3
-
 typedef struct
 {
     uint8_t r, g, b, a;
@@ -124,7 +122,7 @@ int main(int argc, char *argv[])
     MirConnection *conn;
     MirSurfaceParameters parm;
     MirDisplayInfo dinfo;
-    Window win[NWIN];
+    Window win[3];
     int f;
 
     (void)argc;
@@ -187,7 +185,7 @@ int main(int argc, char *argv[])
     while (running)
     {
         int w;
-        for (w = 0; w < NWIN; w++)
+        for (w = 0; w < (int)(sizeof(win)/sizeof(win[0])); w++)
             draw_window(win + w);
     }
 
