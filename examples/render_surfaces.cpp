@@ -257,8 +257,9 @@ public:
         public:
             RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
                                               std::shared_ptr<mg::Renderer> const& renderer,
+                                              std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
                                               std::vector<Moveable>& moveables)
-                : default_compositing_strategy{renderables, renderer},
+                : default_compositing_strategy{renderables, renderer, overlay_renderer},
                   frames{0},
                   moveables(moveables)
             {
@@ -292,6 +293,7 @@ public:
 
         return std::make_shared<RenderSurfacesCompositingStrategy>(the_renderables(),
                                                                    the_renderer(),
+                                                                   the_overlay_renderer(),
                                                                    moveables);
     }
     ///\internal [RenderSurfacesCompositingStrategy_tag]

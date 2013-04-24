@@ -27,6 +27,7 @@
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
+#include "mir/compositor/overlay_renderer.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
@@ -456,13 +457,27 @@ mir::DefaultServerConfiguration::the_surface_builder()
         });
 }
 
+std::shared_ptr<mc::OverlayRenderer>
+mir::DefaultServerConfiguration::the_overlay_renderer()
+{
+    struct NullOverlayRenderer : public mc::OverlayRenderer
+    {
+        virtual void render(mg::DisplayBuffer&) {}
+    };
+    return overlay_renderer(
+        [this]()
+        {
+            return std::make_shared<NullOverlayRenderer>();
+        });
+}
+
 std::shared_ptr<mc::CompositingStrategy>
 mir::DefaultServerConfiguration::the_compositing_strategy()
 {
     return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer(), the_overlay_renderer());
         });
 }
 

@@ -44,12 +44,10 @@ void mga::HWCDisplay::clear()
     AndroidDisplay::clear();
 }
 
-bool mga::HWCDisplay::post_update()
+void mga::HWCDisplay::post_update()
 {
-    auto rc = AndroidDisplay::post_update();
-    hwc_device->commit_frame();
+    hwc_device->commit_frame(egl_display, egl_surface);
     hwc_device->wait_for_vsync();
-    return rc;
 }
 
 void mga::HWCDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)

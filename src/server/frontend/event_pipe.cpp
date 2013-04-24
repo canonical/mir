@@ -27,8 +27,8 @@ void mf::EventPipe::set_target(std::weak_ptr<EventSink> const& s)
 
 void mf::EventPipe::handle_event(MirEvent const& e)
 {
-    // In future, post might put e on a queue and wait for some background
-    // thread to push it through to sink. But that's not required right now.
+    // In future, we might put e on a queue and wait for some background
+    // thread to push it through to target. But that's not required right now.
 
     std::shared_ptr<EventSink> p = target.lock();
     if (p)

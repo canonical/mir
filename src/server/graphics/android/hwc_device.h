@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
 #include "display_support_provider.h"
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -41,7 +42,7 @@ public:
     virtual void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
 
     virtual void wait_for_vsync() = 0;
-    virtual void commit_frame() = 0;
+    virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
 private:
     HWCDevice(HWCDevice const&) = delete;
     HWCDevice& operator=(HWCDevice const&) = delete;
