@@ -15,8 +15,6 @@ set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirserver")
 
-add_library(mireventqueue STATIC event_queue.cpp)
-
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
@@ -28,6 +26,7 @@ set(
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  event_queue.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -53,7 +52,6 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedinput
   mirsurfaces
   mirtime
-  mireventqueue
 )
 
 list(APPEND MIRSERVER_LINKS
