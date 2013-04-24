@@ -52,6 +52,12 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
     switch (format)
     {
     case mir_pixel_format_abgr_8888:
+       /*
+        * XXX
+        * This is right according to the docs in mir_toolkit/c_types.h.
+        * However Mir seems to be mixing up red and blue, rendering this
+        * as ARGB on my system.
+        */
         pixel = 
             (uint32_t)color->a << 24 |
             (uint32_t)color->b << 16 |
@@ -136,7 +142,6 @@ int main(int argc, char *argv[])
 
     mir_connection_get_display_info(conn, &dinfo);
 
-    parm.name = "foo";
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < dinfo.supported_pixel_format_items; f++)
@@ -155,6 +160,7 @@ int main(int argc, char *argv[])
         parm.pixel_format = dinfo.supported_pixel_format[0];
     }
 
+    parm.name = "red";
     parm.width = 225;
     parm.height = 225;
     win[0].surface = mir_connection_create_surface_sync(conn, &parm);
@@ -163,6 +169,7 @@ int main(int argc, char *argv[])
     win[0].fill.b = 0x00;
     win[0].fill.a = 0x50;
 
+    parm.name = "green";
     parm.width = 300;
     parm.height = 150;
     win[1].surface = mir_connection_create_surface_sync(conn, &parm);
@@ -171,6 +178,7 @@ int main(int argc, char *argv[])
     win[1].fill.b = 0x00;
     win[1].fill.a = 0x50;
 
+    parm.name = "blue";
     parm.width = 150;
     parm.height = 300;
     win[2].surface = mir_connection_create_surface_sync(conn, &parm);
