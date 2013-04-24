@@ -55,7 +55,7 @@ public:
     void make_current();
     void release_current();
     void clear();
-    bool post_update();
+    void post_update();
 
     void schedule_set_crtc();
 
