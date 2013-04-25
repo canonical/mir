@@ -40,6 +40,7 @@ struct AndroidBufferHandleDefaultDeleter
     {
         auto anw_buffer = t->native_buffer_handle();
         alloc_device->free(alloc_device.get(), anw_buffer->handle);
+        printf("delete!\n");
         delete t;
     }
 private:
@@ -53,7 +54,18 @@ struct AndroidBufferHandleEmptyDeleter
     }
 };
 
+static int count = 0;
 static void incRef(android_native_base_t*)
+{
+    count++;
+    printf("buf count %i\n", count);
+}
+static void decRef(android_native_base_t*)
+{
+    count--;
+    printf("buf count %i\n", count);
+}
+static void nulRef(android_native_base_t*)
 {
 }
 }
@@ -92,8 +104,15 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
 
     /* we don't use these for refcounting buffers. however, drivers still expect to be
        able to call them */
-    buffer->common.incRef = &incRef;
-    buffer->common.decRef = &incRef;
+    if (GRALLOC_USAGE_HW_FB & buffer->usage)
+    {
+        buffer->common.incRef = &nulRef;
+        buffer->common.decRef = &nulRef;
+    } else
+    {
+        buffer->common.incRef = &incRef;
+        buffer->common.decRef = &decRef;
+    }
     buffer->common.magic = ANDROID_NATIVE_BUFFER_MAGIC;
     buffer->common.version = sizeof(ANativeWindowBuffer);
 

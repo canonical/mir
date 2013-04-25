@@ -29,6 +29,8 @@
 #include <cassert>
 #include <functional>
 
+
+#include <GLES2/gl2.h>
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
@@ -67,15 +69,18 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
 {
-    RenderingOperator applicator(*renderer);
-    FilterForVisibleRenderablesInRegion selector(display_buffer.view_area());
+    {
+        RenderingOperator applicator(*renderer);
+        FilterForVisibleRenderablesInRegion selector(display_buffer.view_area());
 
-    display_buffer.make_current();
-    display_buffer.clear();
+        display_buffer.make_current();
+        display_buffer.clear();
 
-    renderables->for_each_if(selector, applicator);
+        renderables->for_each_if(selector, applicator);
 
-    overlay_renderer->render(display_buffer);
+        overlay_renderer->render(display_buffer);
 
-    display_buffer.post_update();
+        display_buffer.post_update();
+    }
+    display_buffer.release_current();
 }
