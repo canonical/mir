@@ -25,6 +25,11 @@ mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
 {
 }
 
+mc::RenderingOperator::~RenderingOperator()
+{
+    renderer.ensure_no_live_buffers_bound();
+}
+
 void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
 {
     renderer.render(

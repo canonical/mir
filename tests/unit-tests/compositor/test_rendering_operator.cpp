@@ -35,12 +35,7 @@ namespace
 class MockRenderer : public mg::Renderer
 {
 public:
-};
-
-class StubRenderer : public mg::Renderer
-{
-public:
-    StubRenderer()
+    MockRenderer()
      : resource0 (std::make_shared<int>(43)),
        resource1 (std::make_shared<int>(42)),
        resource2 (std::make_shared<int>(41)),
@@ -48,7 +43,7 @@ public:
     {
         using namespace testing;
         ON_CALL(*this, render(_,_))
-            .WillByDefault(Invoke(this, &StubRenderer::saving_render));
+            .WillByDefault(Invoke(this, &MockRenderer::saving_render));
     }
 
     MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&));
@@ -89,26 +84,26 @@ TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
 {
     using namespace testing;
 
-    StubRenderer stub_renderer;
-    EXPECT_CALL(stub_renderer, ensure_no_live_buffers_bound())
+    NiceMock<MockRenderer> mock_renderer;
+    EXPECT_CALL(mock_renderer, ensure_no_live_buffers_bound())
         .Times(1);
 
     mtd::MockRenderable mock_renderable;
-    auto use_count_before0 = stub_renderer.resource0.use_count();
-    auto use_count_before1 = stub_renderer.resource1.use_count();
-    auto use_count_before2 = stub_renderer.resource2.use_count();
+    auto use_count_before0 = mock_renderer.resource0.use_count();
+    auto use_count_before1 = mock_renderer.resource1.use_count();
+    auto use_count_before2 = mock_renderer.resource2.use_count();
     {
-        mc::RenderingOperator rendering_operator(stub_renderer);
+        mc::RenderingOperator rendering_operator(mock_renderer);
 
         rendering_operator(mock_renderable);
         rendering_operator(mock_renderable);
         rendering_operator(mock_renderable);
-        EXPECT_EQ(use_count_before0 + 1, stub_renderer.resource0.use_count());
-        EXPECT_EQ(use_count_before1 + 1, stub_renderer.resource1.use_count());
-        EXPECT_EQ(use_count_before2 + 1, stub_renderer.resource2.use_count());
+        EXPECT_EQ(use_count_before0 + 1, mock_renderer.resource0.use_count());
+        EXPECT_EQ(use_count_before1 + 1, mock_renderer.resource1.use_count());
+        EXPECT_EQ(use_count_before2 + 1, mock_renderer.resource2.use_count());
     }
 
-    EXPECT_EQ(use_count_before0, stub_renderer.resource0.use_count());
-    EXPECT_EQ(use_count_before1, stub_renderer.resource1.use_count());
-    EXPECT_EQ(use_count_before2, stub_renderer.resource2.use_count());
+    EXPECT_EQ(use_count_before0, mock_renderer.resource0.use_count());
+    EXPECT_EQ(use_count_before1, mock_renderer.resource1.use_count());
+    EXPECT_EQ(use_count_before2, mock_renderer.resource2.use_count());
 }
