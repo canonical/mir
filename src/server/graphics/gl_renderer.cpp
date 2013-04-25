@@ -280,4 +280,6 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
 
 void mg::GLRenderer::ensure_no_live_buffers_bound()
 {
+    static int emptytexture;
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE, &emptytexture);
 }
