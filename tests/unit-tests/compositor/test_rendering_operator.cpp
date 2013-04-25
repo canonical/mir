@@ -32,6 +32,11 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
+class MockRenderer : public mg::Renderer
+{
+public:
+};
+
 class StubRenderer : public mg::Renderer
 {
 public:
@@ -41,9 +46,15 @@ public:
        resource2 (std::make_shared<int>(41)),
        counter(0)
     {
-
+        using namespace testing;
+        ON_CALL(*this, render(_,_))
+            .WillByDefault(Invoke(this, &StubRenderer::saving_render));
     }
-    void render(std::function<void(std::shared_ptr<void> const&)> save_resource, mg::Renderable&)
+
+    MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&));
+    MOCK_METHOD0(ensure_no_live_buffers_bound, void());
+
+    void saving_render(std::function<void(std::shared_ptr<void> const&)> save_resource, mg::Renderable&)
     {
         std::shared_ptr<void> tmp;
         switch(counter++)
@@ -66,6 +77,7 @@ public:
         }
     }
 
+
     std::shared_ptr<int> resource0;
     std::shared_ptr<int> resource1;
     std::shared_ptr<int> resource2;
@@ -78,8 +90,10 @@ TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
     using namespace testing;
 
     StubRenderer stub_renderer;
-    mtd::MockRenderable mock_renderable;
+    EXPECT_CALL(stub_renderer, ensure_no_live_buffers_bound())
+        .Times(1);
 
+    mtd::MockRenderable mock_renderable;
     auto use_count_before0 = stub_renderer.resource0.use_count();
     auto use_count_before1 = stub_renderer.resource1.use_count();
     auto use_count_before2 = stub_renderer.resource2.use_count();
