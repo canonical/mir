@@ -29,8 +29,6 @@
 #include <cassert>
 #include <functional>
 
-
-#include <GLES2/gl2.h>
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 

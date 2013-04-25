@@ -169,9 +169,5 @@ void mga::AndroidDisplay::make_current()
 
 void mga::AndroidDisplay::release_current()
 {
-//    static unsigned int nuller;
-//    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE, &nuller);
-    printf("unbinder! 0x%X\n", glGetError());
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    
 }
