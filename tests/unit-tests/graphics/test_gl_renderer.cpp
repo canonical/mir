@@ -359,6 +359,5 @@ TEST_F(GLRenderer, TestRenderEnsureNoBind)
     mtd::MockRenderable rd;
     EXPECT_CALL(gl_mock, glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE,_));
 
-    renderer->render([](std::shared_ptr<void>const&){}, rd);
+    renderer->ensure_no_live_buffers_bound();
 }
-

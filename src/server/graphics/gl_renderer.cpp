@@ -277,3 +277,7 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     glDisableVertexAttribArray(resources.texcoord_attr_loc);
     glDisableVertexAttribArray(resources.position_attr_loc);
 }
+
+void mg::GLRenderer::ensure_no_live_buffers_bound()
+{
+}

@@ -132,6 +132,10 @@ public:
         // Need to acquire the texture to cycle buffers
         r.graphic_region();
     }
+    
+    void ensure_no_live_buffers_bound()
+    {
+    }
 };
 
 struct StubInputChannel : public mi::InputChannel
