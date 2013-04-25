@@ -277,6 +277,7 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     glDisableVertexAttribArray(resources.texcoord_attr_loc);
     glDisableVertexAttribArray(resources.position_attr_loc);
 
-//    static unsigned int nuller;
-//    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,1,1,0,GL_RGBA, GL_BYTE, &nuller); 
+    /* ensure that no */
+    static unsigned int nuller;
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE, &nuller);
 }
