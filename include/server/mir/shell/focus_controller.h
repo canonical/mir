@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,39 +16,29 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
-#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
-
-#include <memory>
-#include <vector>
-
-#include "mir/input/event_filter.h"
-
-namespace android
-{
-class InputEvent;
-}
-
-namespace droidinput = android;
+#ifndef MIR_SHELL_FOCUS_CONTROLLER_H_
+#define MIR_SHELL_FOCUS_CONTROLLER_H_
 
 namespace mir
 {
-namespace input
+
+namespace shell
 {
 
-class EventFilterChain : public EventFilter
+class FocusController
 {
 public:
-    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
+    virtual ~FocusController() {}
 
-    virtual bool handles(const MirEvent &event);
+    virtual void focus_next() = 0;
 
-private:
-    typedef std::vector<std::weak_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector filters;
+protected:
+    FocusController() = default;
+    FocusController(FocusController const&) = delete;
+    FocusController& operator=(FocusController const&) = delete;
 };
 
 }
-}
+} // namespace mir
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+#endif // MIR_SHELL_FOCUS_CONTROLLER_H_

@@ -21,6 +21,7 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
+#include "mir/shell/focus_controller.h"
 
 #include <mutex>
 #include <memory>
@@ -43,7 +44,7 @@ class FocusSetter;
 class InputTargetListener;
 class Session;
 
-class SessionManager : public frontend::Shell
+class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:
     explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
