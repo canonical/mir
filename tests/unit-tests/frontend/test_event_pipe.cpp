@@ -16,14 +16,17 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include <gtest/gtest.h>
-#include "mir/event_queue.h"
-#include "mir/event_sink.h"
+#include "src/server/frontend/event_pipe.h"
 #include <cstring>
 
-TEST(EventQueue, no_sink)
+#include <gtest/gtest.h>
+
+using mir::frontend::EventPipe;
+
+
+TEST(EventPipe, no_sink)
 {
-    mir::EventQueue q;
+    EventPipe q;
     MirEvent e;
 
     e.type = mir_event_type_key;
@@ -38,7 +41,7 @@ TEST(EventQueue, no_sink)
 
 namespace
 {
-    class TestSink : public mir::EventSink
+    class TestSink : public mir::events::EventSink
     {
     public:
         TestSink()
@@ -61,9 +64,9 @@ namespace
     };
 }
 
-TEST(EventQueue, events_get_handled)
+TEST(EventPipe, events_get_handled)
 {
-    mir::EventQueue q;
+    EventPipe q;
     std::shared_ptr<TestSink> s(new TestSink);
 
     q.set_target(s);
@@ -84,9 +87,9 @@ TEST(EventQueue, events_get_handled)
     EXPECT_EQ(mir_event_type_surface, s->last_event_handled().type);
 }
 
-TEST(EventQueue, sink_is_changeable)
+TEST(EventPipe, sink_is_changeable)
 {
-    mir::EventQueue q;
+    EventPipe q;
     std::shared_ptr<TestSink> a(new TestSink);
     std::shared_ptr<TestSink> b(new TestSink);
 

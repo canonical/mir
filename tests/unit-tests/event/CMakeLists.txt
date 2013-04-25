@@ -1,5 +1,0 @@
-set (UNIT_TEST_SOURCES
-  ${UNIT_TEST_SOURCES}
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_event_queue.cpp
-  PARENT_SCOPE
-)

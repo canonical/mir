@@ -16,12 +16,14 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EVENT_SINK_H_
-#define MIR_EVENT_SINK_H_
+#ifndef MIR_EVENTS_EVENT_SINK_H_
+#define MIR_EVENTS_EVENT_SINK_H_
 
 #include "mir_toolkit/event.h"
 
 namespace mir
+{
+namespace events
 {
 
 class EventSink
@@ -36,8 +38,7 @@ protected:
     EventSink(EventSink const&) = delete;
     EventSink& operator=(EventSink const&) = delete;
 };
-
+}
 } // namespace mir
 
-#endif
-
+#endif // MIR_EVENTS_EVENT_SINK_H_

@@ -106,7 +106,7 @@ TEST_F(SessionManagementContextSetup, open_window_consuming_creates_surface_with
 
     mtd::MockSession session;
 
-    EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
+    EXPECT_CALL(shell, open_session(test_window_name, _)).Times(1)
         .WillOnce(Return(mt::fake_shared<mf::Session>(session)));
 
     // As consuming mode is the default, omiting geometry is sufficient to request it.
@@ -122,7 +122,7 @@ TEST_F(SessionManagementContextSetup, open_window_with_size_creates_surface_with
 
     mtd::MockSession session;
 
-    EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
+    EXPECT_CALL(shell, open_session(test_window_name, _)).Times(1)
         .WillOnce(Return(mt::fake_shared<mf::Session>(session)));
 
     EXPECT_CALL(session, create_surface(NamedWindowWithGeometry(test_window_name, test_window_size))).Times(1)
@@ -138,7 +138,7 @@ TEST_F(SessionManagementContextSetup, get_window_size_queries_surface)
     mtd::MockSession session;
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
 
-    EXPECT_CALL(shell, open_session(test_window_name)).Times(1)
+    EXPECT_CALL(shell, open_session(test_window_name, _)).Times(1)
         .WillOnce(Return(mt::fake_shared<mf::Session>(session)));
 
     EXPECT_CALL(session, create_surface(NamedWindowWithGeometry(test_window_name, test_window_size))).Times(1)

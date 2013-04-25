@@ -100,7 +100,5 @@ mir::protobuf::wire::Invocation mcl::MirBasicRpcChannel::invocation_for(
 
 int mcl::MirBasicRpcChannel::next_id()
 {
-    int id = next_message_id.load();
-    while (!next_message_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
+    return next_message_id.fetch_add(1);
 }

@@ -39,11 +39,16 @@ msh::SurfaceSource::SurfaceSource(
     assert(surface_builder);
 }
 
-std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(const mf::SurfaceCreationParameters& params)
+std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
+    frontend::SurfaceCreationParameters const& params,
+    frontend::SurfaceId id,
+    std::shared_ptr<events::EventSink> const& sink)
 {
     return std::make_shared<Surface>(
         surface_builder,
         params,
-        input_factory->make_input_channel());
+        input_factory->make_input_channel(),
+        id,
+        sink);
 }
 

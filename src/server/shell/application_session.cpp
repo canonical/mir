@@ -28,19 +28,30 @@
 #include <cassert>
 #include <algorithm>
 
+namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 msh::ApplicationSession::ApplicationSession(
-    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<msh::InputTargetListener> const& input_target_listener,
-    std::string const& session_name) :
+    std::string const& session_name,
+    std::shared_ptr<me::EventSink> const& sink) :
     surface_factory(surface_factory),
     input_target_listener(input_target_listener),
     session_name(session_name),
+    event_sink(sink),
     next_surface_id(0)
 {
     assert(surface_factory);
+}
+
+msh::ApplicationSession::ApplicationSession(
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
+    std::shared_ptr<msh::InputTargetListener> const& input_target_listener,
+    std::string const& session_name) :
+    ApplicationSession(surface_factory, input_target_listener, session_name, std::shared_ptr<me::EventSink>())
+{
 }
 
 msh::ApplicationSession::~ApplicationSession()
@@ -53,12 +64,6 @@ msh::ApplicationSession::~ApplicationSession()
     }
 }
 
-void msh::ApplicationSession::set_event_sink(
-    std::shared_ptr<mir::EventSink> const& sink)
-{
-    event_sink = sink;
-}
-
 mf::SurfaceId msh::ApplicationSession::next_id()
 {
     return mf::SurfaceId(next_surface_id.fetch_add(1));
@@ -66,11 +71,8 @@ mf::SurfaceId msh::ApplicationSession::next_id()
 
 mf::SurfaceId msh::ApplicationSession::create_surface(const mf::SurfaceCreationParameters& params)
 {
-    auto surf = surface_factory->create_surface(params);
     auto const id = next_id();
-
-    surf->set_id(id);
-    surf->set_event_target(event_sink);
+    auto surf = surface_factory->create_surface(params, id, event_sink);
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;

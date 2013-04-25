@@ -138,6 +138,8 @@ void mfd::ProtobufMessageProcessor::send_response(
 
 void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
 {
+    // In future we might send multiple events, or insert them into messages
+    // containing other responses, but for now we send them individually.
     mir::protobuf::EventSequence seq;
     mir::protobuf::Event *ev = seq.add_event();
     ev->set_raw(&e, sizeof(MirEvent));
@@ -146,7 +148,7 @@ void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
     seq.SerializeToString(&buffer);
 
     mir::protobuf::wire::Result result;
-    result.set_response(buffer);
+    result.add_events(buffer);
 
     result.SerializeToString(&buffer);
 

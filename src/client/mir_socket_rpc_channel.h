@@ -22,7 +22,7 @@
 
 #include "mir_basic_rpc_channel.h"
 #include "mir_logger.h"
-#include "mir/event_sink.h"
+#include "mir/events/event_sink.h"
 
 #include <boost/asio.hpp>
 
@@ -52,7 +52,7 @@ public:
     MirSocketRpcChannel(const std::string& endpoint, const std::shared_ptr<Logger>& log);
     ~MirSocketRpcChannel();
 
-    void set_event_handler(EventSink *sink);
+    void set_event_handler(events::EventSink *sink);
 
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
@@ -75,13 +75,13 @@ private:
     void on_header_read(const boost::system::error_code& error);
 
     void read_message();
-    void process_event_sequence(mir::protobuf::wire::Result const& result);
+    void process_event_sequence(std::string const& event);
 
     size_t read_message_header();
 
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
 
-    EventSink *event_handler;
+    events::EventSink *event_handler;
 };
 
 }

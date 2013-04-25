@@ -298,7 +298,7 @@ struct MirClientSurfaceTest : public testing::Test
         test_server.reset();
     }
 
-    std::shared_ptr<google::protobuf::RpcChannel> channel;
+    std::shared_ptr<mcl::MirBasicRpcChannel> channel;
     std::shared_ptr<mcl::Logger> logger;
     std::shared_ptr<mcl::ClientPlatformFactory> platform_factory;
     std::shared_ptr<MirConnection> connection;
