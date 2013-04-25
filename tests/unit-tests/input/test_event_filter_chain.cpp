@@ -58,3 +58,16 @@ TEST(EventFilterChain, accepting_event_halts_emission)
     EXPECT_TRUE(filter_chain.handles(ev));
 }
 
+TEST(EventFilterChain, does_not_own_event_filters)
+{
+    using namespace ::testing;
+    
+    auto filter = std::make_shared<mtd::MockEventFilter>();
+    MirEvent ev;
+    
+    mi::EventFilterChain filter_chain{filter};
+    EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(true));
+    EXPECT_TRUE(filter_chain.handles(ev));
+    filter.reset();
+    EXPECT_FALSE(filter_chain.handles(ev));    
+}
