@@ -20,6 +20,7 @@
 #include "fullscreen_placement_strategy.h"
 
 #include "mir/run_mir.h"
+#include "mir/report_exception.h"
 #include "mir/default_server_configuration.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
@@ -28,7 +29,6 @@
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
 
-#include <boost/exception/diagnostic_information.hpp>
 #include <iostream>
 
 namespace me = mir::examples;
@@ -85,8 +85,8 @@ try
         });
     return 0;
 }
-catch (std::exception const& error)
+catch (...)
 {
-    std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
+    mir::report_exception(std::cerr);
     return 1;
-} 
+}

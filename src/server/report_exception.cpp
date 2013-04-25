@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2013 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,22 +16,29 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/run_mir.h"
 #include "mir/report_exception.h"
-#include "mir/default_server_configuration.h"
+#include "mir/abnormal_exit.h"
 
-#include <iostream>
+#include <boost/exception/diagnostic_information.hpp>
 
-int main(int argc, char const* argv[])
-try
+
+void mir::report_exception(std::ostream& out)
 {
-    mir::DefaultServerConfiguration config(argc, argv);
+    try
+    {
+        throw;
+    }
+    catch (mir::AbnormalExit const& error)
+    {
+        out << error.what() << std::endl;
+    }
+    catch (std::exception const& error)
+    {
+        out << "ERROR: " << boost::diagnostic_information(error) << std::endl;
+    }
+    catch (...)
+    {
+        out << "ERROR: unrecognised exception. (This is weird!)" << std::endl;
+    }
+}
 
-    run_mir(config, [](mir::DisplayServer&) {/* empty init */});
-    return 0;
-}
-catch (...)
-{
-    mir::report_exception(std::cerr);
-    return 1;
-}
