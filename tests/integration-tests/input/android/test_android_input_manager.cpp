@@ -148,17 +148,17 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     {
       InSequence seq;
       EXPECT_CALL(
-          event_filter,
+          *event_filter,
           handles(mt::ButtonDownEvent()))
               .Times(1)
               .WillOnce(Return(false));
       EXPECT_CALL(
-          event_filter,
+          *event_filter,
           handles(mt::ButtonUpEvent()))
               .Times(1)
               .WillOnce(Return(false));
       EXPECT_CALL(
-          event_filter,
+          *event_filter,
           handles(mt::MotionEvent(0,0)))
               .Times(1)
               .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
