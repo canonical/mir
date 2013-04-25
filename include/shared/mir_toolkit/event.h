@@ -67,7 +67,7 @@ typedef enum {
     mir_key_meta_alt         = 0x02,
     mir_key_meta_alt_left    = 0x10,
     mir_key_meta_alt_right   = 0x20,
-    mir_key_meta_shift_on    = 0x01,
+    mir_key_meta_shift       = 0x01,
     mir_key_meta_shift_left  = 0x40,
     mir_key_meta_shift_right = 0x80,
     mir_key_meta_sym         = 0x04,
