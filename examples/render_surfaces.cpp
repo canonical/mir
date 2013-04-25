@@ -28,7 +28,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir/default_server_configuration.h"
 #include "mir/run_mir.h"
-#include "mir/abnormal_exit.h"
+#include "mir/report_exception.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
@@ -367,13 +367,8 @@ try
 
     return 0;
 }
-catch (mir::AbnormalExit const& error)
+catch (...)
 {
-    std::cerr << error.what() << std::endl;
-    return 1;
-}
-catch (std::exception const& error)
-{
-    std::cerr << "ERROR: " << error.what() << std::endl;
+    mir::report_exception(std::cerr);
     return 1;
 }

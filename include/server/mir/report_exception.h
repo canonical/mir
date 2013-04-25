@@ -17,30 +17,20 @@
  */
 
 
-#ifndef MIR_RUN_MIR_H_
-#define MIR_RUN_MIR_H_
+#ifndef MIR_REPORT_EXCEPTION_H_
+#define MIR_REPORT_EXCEPTION_H_
 
-#include <functional>
 #include <iosfwd>
 
 namespace mir
 {
-class ServerConfiguration;
-class DisplayServer;
-
 /**
- *  Run a DisplayServer with the supplied configuration.
- *  init will be called after constructing the server, but before invoking DisplayServer::run()
- *  The server will be stopped on receipt of SIGTERM or SIGINT
- *  This function does not return until the server has stopped.
+ *  Call this from a catch block (and only from a catch block)
+ *  to write error information to an output stream.
  */
-void run_mir(
-    ServerConfiguration& config,
-    std::function<void(DisplayServer&)> init);
-
 void report_exception(std::ostream& out);
 }
 
 
 
-#endif /* MIR_RUN_MIR_H_ */
+#endif /* MIR_REPORT_EXCEPTION_H_ */
