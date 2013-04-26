@@ -1,12 +1,12 @@
 Mir hacking guide
 =================
 
-Getting mir
+Getting Mir
 -----------
 
 If you're reading this file then you've probably solved this one. ;)
 
-However, for completeness mir is a project on LaunchPad (https://launchpad.net/mir)
+However, for completeness Mir is a project on LaunchPad (https://launchpad.net/mir)
 to grab a copy use the command:
 
     $ bzr branch lp:mir
@@ -20,7 +20,7 @@ To succesfully build Mir there are a few packages required:
     $ mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
 
 
-Building mir
+Building Mir
 -----------
 
 Mir is built using cmake. There are other options, but here's one way to
@@ -33,13 +33,15 @@ build the system:
     $ ctest
 
 
-Coding mir
+Coding Mir
 ----------
 
 There's a coding style guide in the guides subdirectory. To build it into an
 html file:
 
     $ make guides
+
+(Or if you're reading the web version [here](cppguide/index.html)).
 
 
 Code structure
@@ -62,7 +64,7 @@ are normally implementations of interfaces they do not use these types.)
 
 Code structure: src
 
-This comprises the implementation of mir. Header files for use within the component
+This comprises the implementation of Mir. Header files for use within the component
 should be put here. The only headers from the source tree that should be included are
 ones from the current component (ones that do not require a path component).
 
@@ -76,7 +78,7 @@ a component will include headers from within the source tree.
 
 Code structure: 3rd_party
 
-Third party code imported into our source tree for use in mir. We try not to change
+Third party code imported into our source tree for use in Mir. We try not to change
 anything to avoid maintaining a fork.
 
 

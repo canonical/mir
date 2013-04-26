@@ -47,6 +47,8 @@ Please file bug reports at: https://bugs.launchpad.net/mir
 
 The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
+The Mir coding guidelines are [here](cppguide/index.html).
+
 Learn about Mir
 ----------------
 Android technical info:
