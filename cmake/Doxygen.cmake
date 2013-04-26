@@ -16,6 +16,7 @@ if(DOXYGEN_FOUND AND (DOXYGEN_VERSION VERSION_GREATER "1.8"))
   endif()
   add_custom_target(doc ${ALL}
                     COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
-                    SOURCES ${PROJECT_BINARY_DIR}/Doxyfile)
+                    SOURCES ${PROJECT_BINARY_DIR}/Doxyfile
+                    DEPENDS guides)
   install(DIRECTORY ${CMAKE_BINARY_DIR}/doc/html DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/mir-doc/)
 endif()
