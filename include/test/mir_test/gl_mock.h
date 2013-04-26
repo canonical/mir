@@ -66,6 +66,7 @@ public:
     MOCK_METHOD2(glUniform1i, void (GLint, GLint));
     MOCK_METHOD3(glGetProgramiv, void (GLuint, GLenum, GLint *));
     MOCK_METHOD4(glGetProgramInfoLog, void (GLuint, GLsizei, GLsizei *, GLchar *));
+    MOCK_METHOD9(glTexImage2D, void(GLenum,GLint,GLint,GLsizei,GLsizei,GLint,GLenum,GLenum,const GLvoid*));
 };
 }
 

@@ -351,3 +351,13 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     auto result = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
     EXPECT_NE(saved_resources.end(), result);
 }
+
+TEST_F(GLRenderer, TestRenderEnsureNoBind)
+{
+    using namespace std::placeholders;
+
+    mtd::MockRenderable rd;
+    EXPECT_CALL(gl_mock, glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE,_));
+
+    renderer->ensure_no_live_buffers_bound();
+}
