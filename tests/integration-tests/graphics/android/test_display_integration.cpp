@@ -104,7 +104,7 @@ bool AndroidGPUDisplay::run_hwc10_tests;
 /* gpu display tests. These are our back-up display modes, and should be run on every device. */
 TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
-    auto mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto display = std::make_shared<mga::AndroidDisplay>(window_query, mock_display_report);
@@ -132,7 +132,7 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
 {
     SUCCEED_IF_NO_HWC10_SUPPORT();
 
-    auto mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
@@ -156,7 +156,7 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 {
     SUCCEED_IF_NO_HWC11_SUPPORT();
 
-    auto mock_display_report = std::make_shared<mtd::MockDisplayReport>();
+    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
