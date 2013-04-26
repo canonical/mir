@@ -47,7 +47,7 @@ Please file bug reports at: https://bugs.launchpad.net/mir
 
 The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
-The mir coding guideline is [here](cppguide/index.html)
+The Mir coding guidelines are [here](cppguide/index.html).
 
 Learn about Mir
 ----------------

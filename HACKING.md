@@ -41,6 +41,8 @@ html file:
 
     $ make guides
 
+(Or if you're reading the web version [here](cppguide/index.html)).
+
 
 Code structure
 --------------
