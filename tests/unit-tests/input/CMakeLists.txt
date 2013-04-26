@@ -1,5 +1,9 @@
 add_subdirectory(android)
 
+list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_chain.cpp
+)
+
 set(
   UNIT_TEST_SOURCES
   ${UNIT_TEST_SOURCES}

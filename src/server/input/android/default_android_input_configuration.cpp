@@ -98,7 +98,7 @@ droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::DefaultInputConf
     return dispatcher_policy(
         [this]()
         {
-            return new mia::EventFilterDispatcherPolicy(filter_chain);
+            return new mia::EventFilterDispatcherPolicy(filter_chain, is_key_repeat_enabled());
         });
 }
 
@@ -148,4 +148,9 @@ std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thr
             return std::make_shared<CommonInputThread>("InputReader",
                                                        new droidinput::InputReaderThread(the_reader()));
         });
+}
+
+bool mia::DefaultInputConfiguration::is_key_repeat_enabled()
+{
+    return true;
 }

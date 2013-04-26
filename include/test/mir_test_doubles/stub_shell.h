@@ -31,7 +31,7 @@ namespace doubles
 
 class StubShell : public frontend::Shell
 {
-    std::shared_ptr<frontend::Session> open_session(std::string const& /* name */)
+    std::shared_ptr<frontend::Session> open_session(std::string const& /* name */, std::shared_ptr<events::EventSink> const& /* sink */)
     {
         return std::make_shared<StubSession>();
     }

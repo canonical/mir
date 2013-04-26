@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,10 +17,8 @@
  */
 
 #include "mir/run_mir.h"
+#include "mir/report_exception.h"
 #include "mir/default_server_configuration.h"
-#include "mir/abnormal_exit.h"
-
-#include <boost/exception/diagnostic_information.hpp>
 
 #include <iostream>
 
@@ -32,13 +30,8 @@ try
     run_mir(config, [](mir::DisplayServer&) {/* empty init */});
     return 0;
 }
-catch (mir::AbnormalExit const& error)
+catch (...)
 {
-    std::cerr << error.what() << std::endl;
-    return 1;
-}
-catch (std::exception const& error)
-{
-    std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
+    mir::report_exception(std::cerr);
     return 1;
 }

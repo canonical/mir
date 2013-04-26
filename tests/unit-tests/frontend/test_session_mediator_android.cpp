@@ -31,6 +31,8 @@
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
 
+#include "mir/events/event_sink.h"
+
 #include <gtest/gtest.h>
 
 #include <stdexcept>
@@ -85,7 +87,11 @@ class StubPlatform : public mg::Platform
     }
 };
 
-}
+class NullEventSink : public mir::events::EventSink
+{
+public:
+    void handle_event(MirEvent const& ) override {}
+};
 
 struct SessionMediatorAndroidTest : public ::testing::Test
 {
@@ -97,7 +103,9 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
-                   buffer_allocator, report, resource_cache},
+                   buffer_allocator, report,
+                   std::make_shared<NullEventSink>(),
+                   resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
@@ -112,6 +120,8 @@ struct SessionMediatorAndroidTest : public ::testing::Test
 
     std::unique_ptr<google::protobuf::Closure> null_callback;
 };
+
+}
 
 TEST_F(SessionMediatorAndroidTest, drm_auth_magic_throws)
 {

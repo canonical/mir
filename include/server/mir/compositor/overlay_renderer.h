@@ -16,37 +16,33 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_INPUT_FOCUS_SELECTOR_H_
-#define MIR_SHELL_INPUT_FOCUS_SELECTOR_H_
-
-#include <memory>
+#ifndef MIR_COMPOSITOR_OVERLAY_RENDERER_H_
+#define MIR_COMPOSITOR_OVERLAY_RENDERER_H_
 
 namespace mir
 {
-namespace input
+namespace graphics
 {
-class SessionTarget;
-class SurfaceTarget;
+class DisplayBuffer;
 }
 
-namespace shell
+namespace compositor
 {
 
-class InputFocusSelector
+class OverlayRenderer
 {
 public:
-    virtual ~InputFocusSelector() {}
+    virtual ~OverlayRenderer() {}
 
-    virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const& focus_application,
-                                    std::shared_ptr<input::SurfaceTarget> const& focus_surface) = 0;
+    virtual void render(graphics::DisplayBuffer& display_buffer) = 0;
 
 protected:
-    InputFocusSelector() = default;
-    InputFocusSelector(InputFocusSelector const&) = delete;
-    InputFocusSelector& operator=(InputFocusSelector const&) = delete;
+    OverlayRenderer() = default;
+    OverlayRenderer& operator=(OverlayRenderer const&) = delete;
+    OverlayRenderer(OverlayRenderer const&) = delete;
 };
 
 }
 } // namespace mir
 
-#endif // MIR_SHELL_INPUT_FOCUS_SELECTOR_H_
+#endif // MIR_COMPOSITOR_OVERLAY_RENDERER_H_

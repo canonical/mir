@@ -43,7 +43,7 @@ MirConnection::MirConnection() :
 }
 
 MirConnection::MirConnection(
-    std::shared_ptr<google::protobuf::RpcChannel> const& channel,
+    std::shared_ptr<mir::client::MirBasicRpcChannel> const& channel,
     std::shared_ptr<mcl::Logger> const & log,
     std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
         channel(channel),
@@ -52,6 +52,7 @@ MirConnection::MirConnection(
         client_platform_factory(client_platform_factory),
         input_platform(mcli::InputPlatform::create())
 {
+    channel->set_event_handler(this);
     {
         std::lock_guard<std::mutex> lock(connection_guard);
         valid_connections.insert(this);
@@ -59,7 +60,7 @@ MirConnection::MirConnection(
     connect_result.set_error("connect not called");
 }
 
-MirConnection::~MirConnection()
+MirConnection::~MirConnection() noexcept
 {
     std::lock_guard<std::mutex> lock(connection_guard);
     valid_connections.erase(this);
@@ -119,6 +120,8 @@ MirWaitHandle* MirConnection::release_surface(
     auto new_wait_handle = new MirWaitHandle;
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
+
+    valid_surfaces.erase(surface->id());
 
     mir::protobuf::SurfaceId message;
     message.set_value(surface->id());
@@ -311,4 +314,45 @@ MirConnection* MirConnection::mir_connection()
 EGLNativeDisplayType MirConnection::egl_native_display()
 {
     return *native_display;
+}
+
+void MirConnection::on_surface_created(int id, MirSurface* surface)
+{
+    valid_surfaces[id] = surface;
+}
+
+void MirConnection::handle_event(MirEvent const& e)
+{
+    switch (e.type)
+    {
+    case mir_event_type_surface:
+        {
+            int id = e.surface.id;
+            SurfaceMap::iterator it = valid_surfaces.find(id);
+            if (it != valid_surfaces.end())
+            {
+                MirSurface *surface = it->second;
+                surface->handle_event(e);
+            }
+            else
+            {
+                log->error() << __PRETTY_FUNCTION__
+                             << ": mir_event_type_surface "
+                             << "received for non-existent surface ID "
+                             << id
+                             << ".\n";
+            }
+        }
+        break;
+    default:
+        // Don't worry. This function only gets called for events from the
+        // RPC channel (not input). So you will never see this error unless
+        // you make a mistake.
+
+        log->error() << __PRETTY_FUNCTION__
+                     << ": Unsupported event type " 
+                     << e.type
+                     << " received from server.\n";
+        break;
+    }
 }

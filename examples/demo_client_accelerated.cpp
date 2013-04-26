@@ -28,7 +28,7 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
-static char const *socket_file = "/tmp/mir_socket";
+static char const *socket_file = NULL;
 
 int main(int argc, char* argv[])
 {

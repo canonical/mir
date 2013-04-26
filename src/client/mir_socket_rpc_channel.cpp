@@ -27,6 +27,7 @@
 #include "ancillary.h"
 
 #include <boost/bind.hpp>
+#include <cstring>
 
 namespace mcl = mir::client;
 namespace mcld = mir::client::detail;
@@ -36,8 +37,15 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel() :
 {
 }
 
-mcl::MirSocketRpcChannel::MirSocketRpcChannel(std::string const& endpoint, std::shared_ptr<Logger> const& log) :
-    log(log), pending_calls(log), work(io_service), endpoint(endpoint), socket(io_service)
+mcl::MirSocketRpcChannel::MirSocketRpcChannel(
+    std::string const& endpoint,
+    std::shared_ptr<Logger> const& log) :
+    log(log),
+    pending_calls(log),
+    work(io_service),
+    endpoint(endpoint),
+    socket(io_service),
+    event_handler(nullptr)
 {
     socket.connect(endpoint);
 
@@ -245,12 +253,58 @@ void mcl::MirSocketRpcChannel::read_message()
 
         log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
 
-        pending_calls.complete_response(result);
+        for (int i = 0; i != result.events_size(); ++i)
+        {
+            process_event_sequence(result.events(i));
+        }
+
+        if (result.has_id())
+        {
+            pending_calls.complete_response(result);
+        }
     }
     catch (std::exception const& x)
     {
         log->error() << __PRETTY_FUNCTION__
             << "\n... " << x.what() << std::endl;
+    }
+}
+
+void mcl::MirSocketRpcChannel::process_event_sequence(std::string const& event)
+{
+    if (!event_handler)
+        return;
+
+    mir::protobuf::EventSequence seq;
+
+    seq.ParseFromString(event);
+    int const nevents = seq.event_size();
+    for (int i = 0; i != nevents; ++i)
+    {
+        mir::protobuf::Event const& event = seq.event(i);
+        if (event.has_raw())
+        {
+            std::string const& raw_event = event.raw();
+
+            // In future, events might be compressed where possible.
+            // But that's a job for later...
+            if (raw_event.size() == sizeof(MirEvent))
+            {
+                MirEvent e;
+
+                // Make a copy to ensure integer fields get correct memory
+                // alignment, which is critical on many non-x86
+                // architectures.
+                memcpy(&e, raw_event.data(), sizeof e);
+                event_handler->handle_event(e);
+            }
+            else
+            {
+                log->error() << __PRETTY_FUNCTION__
+                             << " Received MirEvent of an unexpected size."
+                             << std::endl;
+            }
+        }
     }
 }
 
@@ -274,4 +328,14 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     mir::protobuf::wire::Result result;
     result.ParseFromIstream(&in);
     return result;
+}
+
+void mcl::MirSocketRpcChannel::set_event_handler(events::EventSink *sink)
+{
+    /*
+     * Yes, these have to be regular pointers. Because ownership of the object
+     * (which is actually a MirConnection) is the responsibility of the calling
+     * client. So out of our control.
+     */
+    event_handler = sink;
 }

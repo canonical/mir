@@ -26,7 +26,6 @@
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
-static const char servername[] = "/tmp/mir_socket";
 static const char appname[] = "egldemo";
 
 static MirConnection *connection;
@@ -91,19 +90,29 @@ static void mir_eglapp_handle_input(MirSurface* surface, MirEvent const* ev, voi
 {
     (void) surface;
     (void) context;
-    if (ev->key.key_code == XKB_KEY_q)
+    if (ev->key.key_code == XKB_KEY_q && ev->key.action == mir_key_action_up)
         running = 0;
+}
+
+static unsigned int get_bpp(MirPixelFormat pf)
+{
+    switch (pf)
+    {
+        case mir_pixel_format_abgr_8888:
+        case mir_pixel_format_xbgr_8888:
+        case mir_pixel_format_argb_8888:
+        case mir_pixel_format_xrgb_8888:
+            return 32;
+        case mir_pixel_format_bgr_888:
+            return 24;
+        case mir_pixel_format_invalid:
+        default:
+            return 0;
+    }
 }
 
 mir_eglapp_bool mir_eglapp_init(int *width, int *height)
 {
-    EGLint attribs[] =
-    {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-        EGL_NONE
-    };
     EGLint ctxattribs[] =
     {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -128,19 +137,28 @@ mir_eglapp_bool mir_eglapp_init(int *width, int *height)
     EGLContext eglctx;
     EGLBoolean ok;
 
-    connection = mir_connect_sync(servername, appname);
+    connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
     mir_connection_get_display_info(connection, &dinfo);
 
-    printf("Connected to display %s: %dx%d, supports %d pixel formats\n",
-           servername, dinfo.width, dinfo.height,
+    printf("Connected to display: %dx%d, supports %d pixel formats\n",
+           dinfo.width, dinfo.height,
            dinfo.supported_pixel_format_items);
 
     surfaceparm.width = *width > 0 ? *width : dinfo.width;
     surfaceparm.height = *height > 0 ? *height : dinfo.height;
     surfaceparm.pixel_format = dinfo.supported_pixel_format[0];
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
+    unsigned int bpp = get_bpp(surfaceparm.pixel_format);
+    EGLint attribs[] =
+    {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+        EGL_BUFFER_SIZE, bpp,
+        EGL_NONE
+    };
 
     surface = mir_connection_create_surface_sync(connection, &surfaceparm);
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");

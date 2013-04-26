@@ -13,28 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_FOCUS_SELECTOR_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_FOCUS_SELECTOR_H_
 
-#include "mir/shell/input_focus_selector.h"
+#ifndef MIR_REPORT_EXCEPTION_H_
+#define MIR_REPORT_EXCEPTION_H_
+
+#include <iosfwd>
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
-{
-
-struct MockInputFocusSelector : public shell::InputFocusSelector
-{
-    MOCK_METHOD2(set_input_focus_to, void(std::shared_ptr<input::SessionTarget> const&, std::shared_ptr<input::SurfaceTarget> const&));
-};
-
+/**
+ *  Call this from a catch block (and only from a catch block)
+ *  to write error information to an output stream.
+ */
+void report_exception(std::ostream& out);
 }
-}
-} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_FOCUS_SELECTOR_H_
+
+
+#endif /* MIR_REPORT_EXCEPTION_H_ */

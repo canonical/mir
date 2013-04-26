@@ -85,6 +85,7 @@ public:
     int attrib(MirSurfaceAttrib a) const;
 
     void set_event_handler(MirEventDelegate const* delegate);
+    void handle_event(MirEvent const& e);
 
 private:
     void on_configured();

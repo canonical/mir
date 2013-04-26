@@ -22,6 +22,7 @@
 
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/protobuf/google_protobuf_guard.h"
+#include "event_pipe.h"
 
 #include <boost/signals2.hpp>
 
@@ -49,6 +50,8 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
+    auto const& event_pipe = std::make_shared<EventPipe>();
+
     auto const& socket_session = std::make_shared<mfd::SocketSession>(
         io_service,
         next_id(),
@@ -56,10 +59,11 @@ void mf::ProtobufSocketCommunicator::start_accept()
 
     auto session = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
-        ipc_factory->make_ipc_server(),
+        ipc_factory->make_ipc_server(event_pipe),
         ipc_factory->resource_cache(),
         ipc_factory->report());
 
+    event_pipe->set_target(session);
     socket_session->set_processor(session);
 
     acceptor.async_accept(

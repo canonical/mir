@@ -27,6 +27,7 @@
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
+#include "mir/compositor/overlay_renderer.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
@@ -45,7 +46,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/input/null_input_manager.h"
-#include "mir/input/null_input_focus_selector.h"
+#include "mir/input/null_input_target_listener.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_dispatcher_controller.h"
@@ -59,8 +60,10 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/time/high_resolution_clock.h"
+#include "mir/default_configuration.h"
 
 namespace mc = mir::compositor;
+namespace me = mir::events;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -106,7 +109,8 @@ private:
     std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
+        std::shared_ptr<me::EventSink> const& sink)
     {
         return std::make_shared<mf::SessionMediator>(
             shell,
@@ -114,6 +118,7 @@ private:
             graphics_display,
             buffer_allocator,
             sm_report,
+            sink,
             resource_cache());
     }
 
@@ -228,7 +233,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    return the_options()->get("file", "/tmp/mir_socket");
+    return the_options()->get("file", mir::default_server_socket);
 }
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
@@ -310,8 +315,7 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
         [this]
         {
             return std::make_shared<msh::SingleVisibilityFocusMechanism>(
-                the_shell_session_container(),
-                the_input_focus_selector());
+                the_shell_session_container());
         });
 }
 
@@ -336,9 +340,8 @@ mir::DefaultServerConfiguration::the_shell_placement_strategy()
         });
 }
 
-
-std::shared_ptr<mf::Shell>
-mir::DefaultServerConfiguration::the_frontend_shell()
+std::shared_ptr<msh::SessionManager>
+mir::DefaultServerConfiguration::the_session_manager()
 {
     return session_manager(
         [this]() -> std::shared_ptr<msh::SessionManager>
@@ -347,8 +350,22 @@ mir::DefaultServerConfiguration::the_frontend_shell()
                 the_shell_surface_factory(),
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
-                the_shell_focus_setter());
+                the_shell_focus_setter(),
+                the_input_target_listener());
         });
+}
+
+
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
+{
+    return the_session_manager();
+}
+
+std::shared_ptr<msh::FocusController>
+mir::DefaultServerConfiguration::the_focus_controller()
+{
+    return the_session_manager();
 }
 
 std::initializer_list<std::shared_ptr<mi::EventFilter> const>
@@ -452,13 +469,27 @@ mir::DefaultServerConfiguration::the_surface_builder()
         });
 }
 
+std::shared_ptr<mc::OverlayRenderer>
+mir::DefaultServerConfiguration::the_overlay_renderer()
+{
+    struct NullOverlayRenderer : public mc::OverlayRenderer
+    {
+        virtual void render(mg::DisplayBuffer&) {}
+    };
+    return overlay_renderer(
+        [this]()
+        {
+            return std::make_shared<NullOverlayRenderer>();
+        });
+}
+
 std::shared_ptr<mc::CompositingStrategy>
 mir::DefaultServerConfiguration::the_compositing_strategy()
 {
     return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer(), the_overlay_renderer());
         });
 }
 
@@ -562,15 +593,15 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_manager();
 }
 
-std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
+std::shared_ptr<msh::InputTargetListener> mir::DefaultServerConfiguration::the_input_target_listener()
 {
-    return input_focus_selector(
-        [&]() -> std::shared_ptr<msh::InputFocusSelector>
+    return input_target_listener(
+        [&]() -> std::shared_ptr<msh::InputTargetListener>
         {
             if (the_options()->get("enable-input", false))
                 return std::make_shared<mia::DispatcherController>(the_input_configuration());
             else
-                return std::make_shared<mi::NullInputFocusSelector>();
+                return std::make_shared<mi::NullInputTargetListener>();
         });
 }
 

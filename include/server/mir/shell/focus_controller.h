@@ -16,33 +16,29 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_NULL_INPUT_FOCUS_SELECTOR_H_
-#define MIR_INPUT_NULL_INPUT_FOCUS_SELECTOR_H_
-
-#include "mir/shell/input_focus_selector.h"
+#ifndef MIR_SHELL_FOCUS_CONTROLLER_H_
+#define MIR_SHELL_FOCUS_CONTROLLER_H_
 
 namespace mir
 {
-namespace input
+
+namespace shell
 {
 
-class NullInputFocusSelector : public shell::InputFocusSelector
+class FocusController
 {
 public:
-    NullInputFocusSelector() {};
-    virtual ~NullInputFocusSelector() {}
-    
-    virtual void set_input_focus_to(std::shared_ptr<input::SessionTarget> const&,
-                                    std::shared_ptr<input::SurfaceTarget> const&)
-    {
-    }
+    virtual ~FocusController() {}
+
+    virtual void focus_next() = 0;
 
 protected:
-    NullInputFocusSelector(const NullInputFocusSelector&) = delete;
-    NullInputFocusSelector& operator=(const NullInputFocusSelector&) = delete;
+    FocusController() = default;
+    FocusController(FocusController const&) = delete;
+    FocusController& operator=(FocusController const&) = delete;
 };
 
 }
-}
+} // namespace mir
 
-#endif // MIR_INPUT_NULL_INPUT_FOCUS_SELECTOR_H_
+#endif // MIR_SHELL_FOCUS_CONTROLLER_H_

@@ -21,6 +21,7 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
+#include "mir/shell/focus_controller.h"
 
 #include <mutex>
 #include <memory>
@@ -40,18 +41,20 @@ class SurfaceFactory;
 class SessionContainer;
 class FocusSequence;
 class FocusSetter;
+class InputTargetListener;
 class Session;
 
-class SessionManager : public frontend::Shell
+class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:
     explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
-                            std::shared_ptr<SessionContainer> const& session_container,
+                            std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<FocusSequence> const& focus_sequence,
-                            std::shared_ptr<FocusSetter> const& focus_setter);
+                            std::shared_ptr<FocusSetter> const& focus_setter,
+                            std::shared_ptr<InputTargetListener> const& input_target_listener);
     virtual ~SessionManager();
 
-    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);
+    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name, std::shared_ptr<events::EventSink> const& sink);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& session, int id);
@@ -71,6 +74,7 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
+    std::shared_ptr<InputTargetListener> const input_target_listener;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;

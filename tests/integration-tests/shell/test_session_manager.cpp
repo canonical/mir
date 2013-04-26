@@ -33,8 +33,10 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
+#include "mir_test_doubles/stub_input_target_listener.h"
 
 namespace mc = mir::compositor;
+namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
@@ -44,29 +46,32 @@ namespace mtd = mir::test::doubles;
 TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 {
     using namespace ::testing;
+
     mtd::MockSurfaceFactory surface_factory;
     std::shared_ptr<msh::DefaultSessionContainer> container(new msh::DefaultSessionContainer());
     msh::RegistrationOrderFocusSequence sequence(container);
-    mtd::MockFocusSetter focus_changer;
+    mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
+    mtd::StubInputTargetListener input_target_listener;
 
     msh::SessionManager session_manager(
             mt::fake_shared(surface_factory),
             container,
             mt::fake_shared(sequence),
-            mt::fake_shared(focus_changer));
+            mt::fake_shared(focus_setter),
+            mt::fake_shared(input_target_listener));
 
-    EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
+    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session("Visual Basic Studio");
-    auto session2 = session_manager.open_session("Microsoft Access");
-    auto session3 = session_manager.open_session("WordPerfect");
+    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
+    auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
+    auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
 
     {
       InSequence seq;
-      EXPECT_CALL(focus_changer, set_focus_to(Eq(session1))).Times(1);
-      EXPECT_CALL(focus_changer, set_focus_to(Eq(session2))).Times(1);
-      EXPECT_CALL(focus_changer, set_focus_to(Eq(session3))).Times(1);
+      EXPECT_CALL(focus_setter, set_focus_to(Eq(session1))).Times(1);
+      EXPECT_CALL(focus_setter, set_focus_to(Eq(session2))).Times(1);
+      EXPECT_CALL(focus_setter, set_focus_to(Eq(session3))).Times(1);
     }
 
     session_manager.focus_next();
@@ -77,28 +82,31 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
+
     mtd::MockSurfaceFactory surface_factory;
-    std::shared_ptr<msh::DefaultSessionContainer> model(new msh::DefaultSessionContainer());
-    msh::RegistrationOrderFocusSequence sequence(model);
-    mtd::MockFocusSetter focus_changer;
+    std::shared_ptr<msh::DefaultSessionContainer> container(new msh::DefaultSessionContainer());
+    msh::RegistrationOrderFocusSequence sequence(container);
+    mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
+    mtd::StubInputTargetListener input_target_listener;
 
     msh::SessionManager session_manager(
-        mt::fake_shared(surface_factory),
-        model,
-        mt::fake_shared(sequence),
-        mt::fake_shared(focus_changer));
+            mt::fake_shared(surface_factory),
+            container,
+            mt::fake_shared(sequence),
+            mt::fake_shared(focus_setter),
+            mt::fake_shared(input_target_listener));
 
-    EXPECT_CALL(focus_changer, set_focus_to(_)).Times(3);
+    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session("Visual Basic Studio");
-    auto session2 = session_manager.open_session("Microsoft Access");
-    auto session3 = session_manager.open_session("WordPerfect");
+    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
+    auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
+    auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
 
     {
       InSequence seq;
-      EXPECT_CALL(focus_changer, set_focus_to(Eq(session2))).Times(1);
-      EXPECT_CALL(focus_changer, set_focus_to(Eq(session1))).Times(1);
+      EXPECT_CALL(focus_setter, set_focus_to(Eq(session2))).Times(1);
+      EXPECT_CALL(focus_setter, set_focus_to(Eq(session1))).Times(1);
     }
 
     session_manager.close_session(session3);

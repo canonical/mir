@@ -37,7 +37,7 @@ TEST(EventFilterDispatcherPolicy, offers_events_to_filter)
     using namespace ::testing;
     droidinput::KeyEvent ev;
     mtd::MockEventFilter filter;
-    mia::EventFilterDispatcherPolicy policy(mt::fake_shared(filter));
+    mia::EventFilterDispatcherPolicy policy(mt::fake_shared(filter), true);
     uint32_t policy_flags;
 
     EXPECT_CALL(filter, handles(_)).Times(1).WillOnce(Return(false));

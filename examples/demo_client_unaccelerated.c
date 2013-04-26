@@ -26,7 +26,7 @@
 #include <getopt.h>
 #include <stdint.h>
 
-static char const *socket_file = "/tmp/mir_socket";
+static char const *socket_file = NULL;
 
 static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
 {

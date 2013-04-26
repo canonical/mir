@@ -36,6 +36,7 @@ class Renderables;
 class Drawer;
 class CompositingStrategy;
 class Compositor;
+class OverlayRenderer;
 }
 namespace frontend
 {
@@ -50,11 +51,13 @@ namespace shell
 {
 class SurfaceFactory;
 class SurfaceBuilder;
-class InputFocusSelector;
+class InputTargetListener;
 class SessionContainer;
 class FocusSetter;
 class FocusSequence;
 class PlacementStrategy;
+class FocusController;
+class SessionManager;
 }
 namespace time
 {
@@ -125,6 +128,7 @@ public:
      * configurable interfaces for modifying compositor
      *  @{ */
     virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
+    virtual std::shared_ptr<compositor::OverlayRenderer>          the_overlay_renderer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     /** @} */
 
@@ -143,6 +147,8 @@ public:
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     /** @} */
 
+    virtual std::shared_ptr<shell::FocusController> the_focus_controller();
+
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
@@ -156,7 +162,6 @@ public:
     /** @name shell configuration - dependencies
      * dependencies of shell on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<shell::InputFocusSelector> the_input_focus_selector();
     virtual std::shared_ptr<shell::SurfaceBuilder>     the_surface_builder();
     /** @} */
 
@@ -178,6 +183,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
+    virtual std::shared_ptr<shell::InputTargetListener> the_input_target_listener();
     /** @} */
 
     /** @name logging configuration - customization
@@ -192,12 +198,13 @@ public:
 protected:
     virtual std::shared_ptr<options::Option> the_options() const;
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
+    virtual std::shared_ptr<shell::SessionManager> the_session_manager();
 
     CachedPtr<frontend::Communicator> communicator;
-    CachedPtr<frontend::Shell> session_manager;
+    CachedPtr<shell::SessionManager> session_manager;
     std::shared_ptr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
-    CachedPtr<shell::InputFocusSelector> input_focus_selector;
+    CachedPtr<shell::InputTargetListener> input_target_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
@@ -216,6 +223,7 @@ protected:
     CachedPtr<shell::FocusSequence>     shell_focus_sequence;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
     CachedPtr<compositor::CompositingStrategy> compositing_strategy;
+    CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;

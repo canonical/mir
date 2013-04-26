@@ -21,6 +21,7 @@
 #define MIR_RUN_MIR_H_
 
 #include <functional>
+#include <iosfwd>
 
 namespace mir
 {
@@ -36,6 +37,8 @@ class DisplayServer;
 void run_mir(
     ServerConfiguration& config,
     std::function<void(DisplayServer&)> init);
+
+void report_exception(std::ostream& out);
 }
 
 

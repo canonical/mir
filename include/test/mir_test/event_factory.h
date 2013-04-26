@@ -60,6 +60,7 @@ public:
     EventAction action;
 };
 ButtonParameters a_button_down_event();
+ButtonParameters a_button_up_event();
 
 class MotionParameters
 {

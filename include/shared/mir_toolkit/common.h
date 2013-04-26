@@ -34,6 +34,7 @@
 typedef enum MirSurfaceAttrib
 {
     mir_surface_attrib_type,
+    mir_surface_attrib_state,
     mir_surface_attrib_arraysize_
 } MirSurfaceAttrib;
 
@@ -48,7 +49,20 @@ typedef enum MirSurfaceType
     mir_surface_type_arraysize_
 } MirSurfaceType;
 
-/* TODO: Surface states here */
+typedef enum MirSurfaceState
+{
+    mir_surface_state_unknown,
+    mir_surface_state_restored,
+    mir_surface_state_minimized,
+    mir_surface_state_maximized,
+    mir_surface_state_vertmaximized,
+    /* mir_surface_state_semimaximized,
+       Omitted for now, since it's functionally a subset of vertmaximized and
+       differs only in the X coordinate. */
+    mir_surface_state_fullscreen,
+    mir_surface_state_arraysize_
+} MirSurfaceState;
+
 /**@}*/
 
 #endif
