@@ -87,14 +87,14 @@ std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
         auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev, fb_dev);
         auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
         display = display_factory->create_hwc_display(hwc_device, fb_native_win, display_report);
-        display_report->report_hwc11_in_use();
+        display_report->report_hwc_composition_in_use(1,1);
     }
     else if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
     {
         auto hwc_device = hwc_factory->create_hwc_1_0(hwc_dev, fb_dev);
         auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
         display = display_factory->create_hwc_display(hwc_device, fb_native_win, display_report);
-        display_report->report_hwc10_in_use();
+        display_report->report_hwc_composition_in_use(1,0);
     }
     else
     {

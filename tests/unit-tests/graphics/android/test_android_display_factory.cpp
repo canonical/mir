@@ -203,8 +203,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_10_success)
         .WillOnce(Return(mock_hwc_device));
     EXPECT_CALL(*mock_fnw_factory, create_fb_device())
         .Times(1);
-    EXPECT_CALL(*mock_display_report, report_hwc10_in_use())
-        .Times(1);
 
     std::shared_ptr<mga::DisplaySupportProvider> tmp = mock_hwc_device;
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))

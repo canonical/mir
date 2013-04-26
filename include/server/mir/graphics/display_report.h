@@ -39,8 +39,7 @@ public:
     virtual void report_vt_switch_away_failure() = 0;
     virtual void report_vt_switch_back_failure() = 0;
     /* android specific */
-    virtual void report_hwc10_in_use() = 0;
-    virtual void report_hwc11_in_use() = 0;
+    virtual void report_hwc_composition_in_use(int major, int minor) = 0;
     virtual void report_gpu_composition_in_use() = 0;
 
 protected:
