@@ -119,7 +119,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
     wait_condition.wait_for_at_most_seconds(1);
 }
 
-TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_button_events_to_filter)
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_button_down_events_to_filter)
 {
     using namespace ::testing;
 
@@ -135,6 +135,40 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     fake_event_hub->synthesize_device_scan_complete();
 
     fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
+
+    wait_condition.wait_for_at_most_seconds(1);
+}
+
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_button_up_events_to_filter)
+{
+    using namespace ::testing;
+
+    mt::WaitCondition wait_condition;
+
+    {
+      InSequence seq;
+      EXPECT_CALL(
+          *event_filter,
+          handles(mt::ButtonDownEvent()))
+              .Times(1)
+              .WillOnce(Return(false));
+      EXPECT_CALL(
+          *event_filter,
+          handles(mt::ButtonUpEvent()))
+              .Times(1)
+              .WillOnce(Return(false));
+      EXPECT_CALL(
+          *event_filter,
+          handles(mt::MotionEvent(0,0)))
+              .Times(1)
+              .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
+    }
+
+    fake_event_hub->synthesize_builtin_cursor_added();
+    fake_event_hub->synthesize_device_scan_complete();
+
+    fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT));
+    fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
 
     wait_condition.wait_for_at_most_seconds(1);
 }

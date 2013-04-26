@@ -60,7 +60,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
-    auto surface = surface_factory->create_surface(params);
+    auto surface = surface_factory->create_surface(params, mf::SurfaceId(), std::shared_ptr<events::EventSink>());
 
     surface->advance_client_buffer(); // TODO: What a wart!
 

@@ -33,6 +33,10 @@
 
 namespace mir
 {
+namespace events
+{
+class EventSink;
+}
 namespace protobuf
 {
 namespace wire
@@ -91,6 +95,8 @@ class MirBasicRpcChannel : public google::protobuf::RpcChannel
 public:
     MirBasicRpcChannel();
     ~MirBasicRpcChannel();
+
+    virtual void set_event_handler(events::EventSink *sink) = 0;
 
 protected:
     mir::protobuf::wire::Invocation invocation_for(const google::protobuf::MethodDescriptor* method,

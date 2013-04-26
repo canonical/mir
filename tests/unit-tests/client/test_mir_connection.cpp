@@ -39,7 +39,7 @@ namespace mp = mir::protobuf;
 namespace
 {
 
-struct MockRpcChannel : public google::protobuf::RpcChannel
+struct MockRpcChannel : public mir::client::MirBasicRpcChannel
 {
     void CallMethod(const google::protobuf::MethodDescriptor* method,
                     google::protobuf::RpcController*,
@@ -63,6 +63,8 @@ struct MockRpcChannel : public google::protobuf::RpcChannel
 
     MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
+
+    void set_event_handler(mir::events::EventSink *) {}
 };
 
 struct MockClientPlatform : public mcl::ClientPlatform

@@ -40,7 +40,10 @@ public:
     explicit SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder, std::shared_ptr<input::InputChannelFactory> const& input_factory);
     virtual ~SurfaceSource() {}
 
-    std::shared_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params);
+    std::shared_ptr<Surface> create_surface(
+        frontend::SurfaceCreationParameters const& params,
+        frontend::SurfaceId id,
+        std::shared_ptr<events::EventSink> const& sink);
 
 protected:
     SurfaceSource(const SurfaceSource&) = delete;

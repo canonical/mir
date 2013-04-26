@@ -126,7 +126,7 @@ public:
     {
         using namespace ::testing;
         using frontend::Shell;
-        ON_CALL(*this, open_session(_)).WillByDefault(Invoke(impl.get(), &Shell::open_session));
+        ON_CALL(*this, open_session(_, _)).WillByDefault(Invoke(impl.get(), &Shell::open_session));
         ON_CALL(*this, close_session(_)).WillByDefault(Invoke(impl.get(), &Shell::close_session));
 
         ON_CALL(*this, tag_session_with_lightdm_id(_, _)).WillByDefault(Invoke(impl.get(), &Shell::tag_session_with_lightdm_id));
@@ -135,7 +135,7 @@ public:
         ON_CALL(*this, create_surface_for(_, _)).WillByDefault(Invoke(impl.get(), &Shell::create_surface_for));
     }
 
-    MOCK_METHOD1(open_session, std::shared_ptr<mf::Session> (std::string const& name));
+    MOCK_METHOD2(open_session, std::shared_ptr<mf::Session> (std::string const& name, std::shared_ptr<mir::events::EventSink> const&));
     MOCK_METHOD1(close_session, void (std::shared_ptr<mf::Session> const& session));
 
     MOCK_METHOD2(tag_session_with_lightdm_id, void (std::shared_ptr<mf::Session> const& session, int id));
@@ -167,13 +167,13 @@ TEST_F(BespokeDisplayServerTestFixture, focus_management)
 
                     Sequence s1, s2;
 
-                    EXPECT_CALL(*mock_shell, open_session(_))
+                    EXPECT_CALL(*mock_shell, open_session(_, _))
                         .InSequence(s1, s2);
 
                     EXPECT_CALL(*mock_shell, create_surface_for(_,_))
                         .InSequence(s1);
 
-                    EXPECT_CALL(*mock_shell, open_session(_))
+                    EXPECT_CALL(*mock_shell, open_session(_, _))
                         .InSequence(s2);
 
                     EXPECT_CALL(*mock_shell, close_session(_))
