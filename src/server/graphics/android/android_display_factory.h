@@ -49,6 +49,7 @@ private:
     std::shared_ptr<DisplayAllocator> const display_factory;
     std::shared_ptr<HWCFactory> const hwc_factory;
     std::shared_ptr<FramebufferFactory> const fb_factory;
+    std::shared_ptr<DisplaySupportProvider> fb_dev;
     std::shared_ptr<hwc_composer_device_1> hwc_dev;
 };
 

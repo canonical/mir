@@ -57,6 +57,7 @@ struct MockShellSession : public msh::Session
     MOCK_METHOD0(show, void());
 
     MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
+    MOCK_METHOD1(set_event_sink, void(std::shared_ptr<mir::EventSink> const&));
 };
 
 TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)

@@ -25,6 +25,7 @@
 
 namespace mir
 {
+class EventSink;
 
 namespace shell
 {
@@ -54,6 +55,8 @@ public:
 
     int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
 
+    void set_event_sink(std::shared_ptr<mir::EventSink> const& sink);
+
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
@@ -71,6 +74,8 @@ private:
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
+
+    std::shared_ptr<EventSink> event_sink;
 };
 
 }

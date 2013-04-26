@@ -16,6 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 #include "mir_toolkit/mir_client_library_lightdm.h"
@@ -25,7 +26,7 @@
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
 #include "mir_logger.h"
-#include "make_rpc_channel.h"
+#include "mir_socket_rpc_channel.h"
 
 #include <set>
 #include <unordered_set>
@@ -54,13 +55,17 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
+        const std::string sock = socket_file ? socket_file :
+                                               mir::default_server_socket;
         auto log = std::make_shared<mcl::ConsoleLogger>();
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-        MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(socket_file, log),
-            log,
-            client_platform_factory);
+        auto rpc = std::make_shared<mcl::MirSocketRpcChannel>(sock, log);
+
+        MirConnection* connection = new MirConnection(rpc, log,
+                                                      client_platform_factory);
+        
+        rpc->set_event_handler(connection);
 
         return connection->connect(name, callback, context);
     }
@@ -253,10 +258,12 @@ try
     auto log = std::make_shared<mcl::ConsoleLogger>();
     auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-    MirConnection* connection = new MirConnection(
-        mcl::make_rpc_channel(server, log),
-        log,
-        client_platform_factory);
+    auto rpc = std::make_shared<mcl::MirSocketRpcChannel>(server, log);
+
+    MirConnection* connection = new MirConnection(rpc, log,
+                                                  client_platform_factory);
+
+    rpc->set_event_handler(connection);
 
     return connection->connect(lightdm_id, app_name, callback, client_context);
 }
@@ -297,4 +304,30 @@ MirSurfaceType mir_surface_get_type(MirSurface *surf)
     }
 
     return type;
+}
+
+MirWaitHandle* mir_surface_set_state(MirSurface *surf, MirSurfaceState state)
+{
+    return surf ? surf->configure(mir_surface_attrib_state, state) : NULL;
+}
+
+MirSurfaceState mir_surface_get_state(MirSurface *surf)
+{
+    MirSurfaceState state = mir_surface_state_unknown;
+
+    if (surf)
+    {
+        int s = surf->attrib(mir_surface_attrib_state);
+
+        if (s == mir_surface_state_unknown)
+        {
+            surf->configure(mir_surface_attrib_state,
+                            mir_surface_state_unknown)->wait_for_result();
+            s = surf->attrib(mir_surface_attrib_state);
+        }
+
+        state = static_cast<MirSurfaceState>(s);
+    }
+
+    return state;
 }

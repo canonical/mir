@@ -35,7 +35,7 @@ public:
     void make_current() {}
     void release_current() {}
     void clear() {}
-    bool post_update() { return true; }
+    void post_update() {}
 };
 
 }

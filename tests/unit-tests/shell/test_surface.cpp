@@ -433,3 +433,38 @@ TEST_F(ShellSurface, types)
                              mir_surface_type_freestyle));
     EXPECT_EQ(mir_surface_type_freestyle, surf.type());
 }
+
+TEST_F(ShellSurface, states)
+{
+    using namespace testing;
+
+    msh::Surface surf(
+            mt::fake_shared(surface_builder),
+            mf::a_surface(),
+            null_input_channel);
+
+    EXPECT_EQ(mir_surface_state_restored, surf.state());
+
+    EXPECT_EQ(mir_surface_state_vertmaximized,
+              surf.configure(mir_surface_attrib_state,
+                             mir_surface_state_vertmaximized));
+    EXPECT_EQ(mir_surface_state_vertmaximized, surf.state());
+
+    EXPECT_THROW({
+        surf.configure(mir_surface_attrib_state, 999);
+    }, std::logic_error);
+    EXPECT_THROW({
+        surf.configure(mir_surface_attrib_state, -1);
+    }, std::logic_error);
+    EXPECT_EQ(mir_surface_state_vertmaximized, surf.state());
+
+    EXPECT_EQ(mir_surface_state_minimized,
+              surf.configure(mir_surface_attrib_state,
+                             mir_surface_state_minimized));
+    EXPECT_EQ(mir_surface_state_minimized, surf.state());
+
+    EXPECT_EQ(mir_surface_state_fullscreen,
+              surf.configure(mir_surface_attrib_state,
+                             mir_surface_state_fullscreen));
+    EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
+}

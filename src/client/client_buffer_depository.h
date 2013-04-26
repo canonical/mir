@@ -48,9 +48,9 @@ public:
 
     /// \param factory is the ClientBufferFactory that will be used to convert IPC data to ClientBuffers
     /// \param max_buffers is the number of buffers the depository will cache. After the client has received
-    /// its initial buffers the ClientBufferDepository will always have the last \ref max_buffers buffers
+    /// its initial buffers the ClientBufferDepository will always have the last max_buffers buffers
     /// cached.
-    /// \note The server relies on the depository caching \ref max_buffers buffers to optimise away buffer
+    /// \note The server relies on the depository caching max_buffers buffers to optimise away buffer
     /// passing. As such, this number needs to be shared between the server and client libraries.
     ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const& factory, int max_buffers);
 

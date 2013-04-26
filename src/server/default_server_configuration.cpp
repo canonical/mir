@@ -27,6 +27,7 @@
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
+#include "mir/compositor/overlay_renderer.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
@@ -59,6 +60,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/time/high_resolution_clock.h"
+#include "mir/default_configuration.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -106,7 +108,8 @@ private:
     std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
+        std::shared_ptr<mir::EventSink> const& sink)
     {
         return std::make_shared<mf::SessionMediator>(
             shell,
@@ -114,6 +117,7 @@ private:
             graphics_display,
             buffer_allocator,
             sm_report,
+            sink,
             resource_cache());
     }
 
@@ -228,7 +232,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    return the_options()->get("file", "/tmp/mir_socket");
+    return the_options()->get("file", mir::default_server_socket);
 }
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
@@ -452,13 +456,27 @@ mir::DefaultServerConfiguration::the_surface_builder()
         });
 }
 
+std::shared_ptr<mc::OverlayRenderer>
+mir::DefaultServerConfiguration::the_overlay_renderer()
+{
+    struct NullOverlayRenderer : public mc::OverlayRenderer
+    {
+        virtual void render(mg::DisplayBuffer&) {}
+    };
+    return overlay_renderer(
+        [this]()
+        {
+            return std::make_shared<NullOverlayRenderer>();
+        });
+}
+
 std::shared_ptr<mc::CompositingStrategy>
 mir::DefaultServerConfiguration::the_compositing_strategy()
 {
     return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer(), the_overlay_renderer());
         });
 }
 

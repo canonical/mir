@@ -18,10 +18,7 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
 #define MIR_GRAPHICS_ANDROID_HWC11_DEVICE_H_
-#include "hwc_device.h"
-#include <hardware/hwcomposer.h>
-#include <mutex>
-#include <condition_variable>
+#include "hwc_common_device.h"
 #include <memory>
 
 namespace mir
@@ -30,16 +27,10 @@ namespace graphics
 {
 namespace android
 {
-class HWC11Device;
 class HWCLayerOrganizer;
 
-struct HWCCallbacks
-{
-    hwc_procs_t hooks;
-    HWC11Device* self;
-};
 
-class HWC11Device : public HWCDevice
+class HWC11Device : public HWCCommonDevice
 {
 public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
@@ -52,18 +43,11 @@ public:
     unsigned int number_of_framebuffers_available() const;
     void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
  
-    void wait_for_vsync();
-    void commit_frame();
-    void notify_vsync();
+    void commit_frame(EGLDisplay dpy, EGLSurface sur);
 
 private:
-    HWCCallbacks callbacks;
-    std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HWCLayerOrganizer> const layer_organizer;
     std::shared_ptr<DisplaySupportProvider> const fb_device;
-    std::mutex vsync_wait_mutex;
-    std::condition_variable vsync_trigger;
-    bool vsync_occurred;
     unsigned int primary_display_config;
 };
 

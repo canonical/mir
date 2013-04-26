@@ -21,6 +21,7 @@
 #define MIR_SHELL_SURFACE_H_
 
 #include "mir/frontend/surface.h"
+#include "mir/frontend/surface_id.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/surface_target.h"
 
@@ -30,6 +31,9 @@
 
 namespace mir
 {
+
+class EventSink;
+
 namespace frontend
 {
 struct SurfaceCreationParameters;
@@ -77,15 +81,25 @@ public:
 
     virtual int configure(MirSurfaceAttrib attrib, int value);
     virtual MirSurfaceType type() const;
+    virtual MirSurfaceState state() const;
+
+    void set_id(frontend::SurfaceId i);
+    void set_event_target(std::shared_ptr<EventSink> const& sink);
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
+    bool set_state(MirSurfaceState s);
+    void notify_change(MirSurfaceAttrib attrib, int value);
 
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
+    std::shared_ptr<EventSink> event_sink;
+    frontend::SurfaceId id;
+
     MirSurfaceType type_value;
+    MirSurfaceState state_value;
 };
 }
 }

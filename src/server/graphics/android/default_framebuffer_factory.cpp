@@ -42,8 +42,7 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
 {
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();
-    auto num_framebuffers = info_provider->number_of_framebuffers_available();
-    
+    auto num_framebuffers = info_provider->number_of_framebuffers_available(); 
     std::vector<std::shared_ptr<mga::AndroidBuffer>> buffers; 
     for( auto i = 0u; i < num_framebuffers; ++i)
     {

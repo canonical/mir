@@ -235,6 +235,7 @@ TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_a
            mt::fake_shared(surface_builder),
            mf::a_surface(),
            null_input_channel)));
+    EXPECT_CALL(surface_factory, create_surface(_)).Times(1);
 
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
     {
