@@ -254,7 +254,7 @@ TEST_F(AndroidDisplayFactoryTest, gpu_logging)
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
 
-    EXPECT_CALL(*mock_display_report, report_display_path_used("GPU fallback"))
+    EXPECT_CALL(*mock_display_report, report_gpu_composition_in_use())
         .Times(1);
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
                                                mock_fnw_factory, mock_display_report); 
@@ -265,7 +265,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc10_logging)
 {
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
 
-    EXPECT_CALL(*mock_display_report, report_display_path_used("HWC 1.0"))
+    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,0))
         .Times(1);
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
                                                mock_fnw_factory, mock_display_report); 
@@ -276,7 +276,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc11_logging)
 {
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
 
-    EXPECT_CALL(*mock_display_report, report_display_path_used("HWC 1.1"))
+    EXPECT_CALL(*mock_display_report, report_hwc_composition_in_use(1,1))
         .Times(1);
     mga::AndroidDisplayFactory display_factory(mock_display_allocator, mock_hwc_factory,
                                                mock_fnw_factory, mock_display_report); 
