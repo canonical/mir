@@ -47,6 +47,9 @@ public:
          */
         std::this_thread::yield();
     }
+    void ensure_no_live_buffers_bound()
+    {
+    }
 };
 
 void null_surface_callback(MirSurface*, void*)

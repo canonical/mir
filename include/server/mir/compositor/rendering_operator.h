@@ -33,6 +33,7 @@ class RenderingOperator : public OperatorForRenderables
 {
 public:
     explicit RenderingOperator(graphics::Renderer& renderer);
+    ~RenderingOperator();
 
     void operator()(graphics::Renderable& renderable);
 
