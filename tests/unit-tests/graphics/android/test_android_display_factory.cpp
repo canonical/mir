@@ -86,14 +86,18 @@ class AndroidDisplayFactoryTest : public ::testing::Test
 {
 public:
     AndroidDisplayFactoryTest()
-        : mock_display_allocator(std::make_shared<testing::NiceMock<MockDisplayAllocator>>()),
-          mock_hwc_factory(std::make_shared<testing::NiceMock<MockHWCFactory>>()),
-          mock_fnw_factory(std::make_shared<testing::NiceMock<MockFNWFactory>>()),
-          mock_fb_device(std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>()),
-          mock_display_report(std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>())
+    {
+    }
+
+    void SetUp()
     {
         using namespace testing;
         stub_anativewindow = std::make_shared<ANativeWindow>();
+        mock_display_allocator = std::make_shared<testing::NiceMock<MockDisplayAllocator>>();
+        mock_hwc_factory = std::make_shared<testing::NiceMock<MockHWCFactory>>();
+        mock_fnw_factory = std::make_shared<testing::NiceMock<MockFNWFactory>>();
+        mock_fb_device = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
+        mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
 
         ON_CALL(*mock_fnw_factory, create_fb_device())
             .WillByDefault(Return(mock_fb_device));
@@ -107,11 +111,11 @@ public:
     }
 
     std::shared_ptr<ANativeWindow> stub_anativewindow;
-    std::shared_ptr<MockDisplayAllocator> const mock_display_allocator;
-    std::shared_ptr<MockHWCFactory> const mock_hwc_factory;
-    std::shared_ptr<MockFNWFactory> const mock_fnw_factory;
-    std::shared_ptr<mtd::MockDisplaySupportProvider> const mock_fb_device;
-    std::shared_ptr<mtd::MockDisplayReport> const mock_display_report;
+    std::shared_ptr<MockDisplayAllocator> mock_display_allocator;
+    std::shared_ptr<MockHWCFactory> mock_hwc_factory;
+    std::shared_ptr<MockFNWFactory> mock_fnw_factory;
+    std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fb_device;
+    std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
 };
 }
@@ -147,7 +151,6 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unavailble_always_creates_gpu_displ
     EXPECT_CALL(*mock_fnw_factory, create_fb_native_window(tmp))
         .Times(1);
 
-    //why?
     std::shared_ptr<mg::DisplayReport> tmp2 = mock_display_report;
     EXPECT_CALL(*mock_display_allocator, create_gpu_display(_,tmp2))
         .Times(1);

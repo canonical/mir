@@ -20,7 +20,9 @@
 #ifndef MIR_TEST_GRAPHICS_DISPLAY_REPORT_H_
 #define MIR_TEST_GRAPHICS_DISPLAY_REPORT_H_
 
+
 #include "mir/graphics/display_report.h"
+
 
 namespace mir
 {
