@@ -519,24 +519,58 @@ TYPED_TEST(AndroidTestFramebufferInit, display_termination)
 }
 
 
-TYPED_TEST(AndroidTestFramebufferInit, startup_logging)
+TYPED_TEST(AndroidTestFramebufferInit, startup_logging_ok)
 {
     using namespace testing;
-
     EXPECT_CALL(*this->mock_display_report, report_successful_setup_of_native_resources())
-        .Times(Exactly(2));
+        .Times(Exactly(1));
     EXPECT_CALL(*this->mock_display_report, report_successful_egl_make_current_on_construction())
         .Times(Exactly(1));
     EXPECT_CALL(*this->mock_display_report, report_successful_display_construction())
         .Times(Exactly(1));
 
     EXPECT_CALL(this->mock_egl, eglMakeCurrent(_,_,_,_))
-        .Times(AtLeast(2))
-        .WillOnce(Return(EGL_FALSE))
-        .WillRepeatedly(Return(EGL_TRUE));
+        .Times(AtLeast(1));
+
+    make_display_buffer<TypeParam>(this->native_win, this->mock_display_report);
+}
+
+TYPED_TEST(AndroidTestFramebufferInit, startup_logging_error_because_of_surface_creation_failure)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*this->mock_display_report, report_successful_setup_of_native_resources())
+        .Times(Exactly(0));
+    EXPECT_CALL(*this->mock_display_report, report_successful_egl_make_current_on_construction())
+        .Times(Exactly(0));
+    EXPECT_CALL(*this->mock_display_report, report_successful_display_construction())
+        .Times(Exactly(0));
+
+    EXPECT_CALL(this->mock_egl, eglCreateWindowSurface(_,_,_,_))
+        .Times(1)
+        .WillOnce(Return(EGL_NO_SURFACE));
 
     EXPECT_THROW({
         auto display = make_display_buffer<TypeParam>(this->native_win, this->mock_display_report);
     }, std::runtime_error);
-    auto display = make_display_buffer<TypeParam>(this->native_win, this->mock_display_report);
+}
+
+TYPED_TEST(AndroidTestFramebufferInit, startup_logging_error_because_of_makecurrent)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*this->mock_display_report, report_successful_setup_of_native_resources())
+        .Times(Exactly(1));
+    EXPECT_CALL(*this->mock_display_report, report_successful_egl_make_current_on_construction())
+        .Times(Exactly(0));
+    EXPECT_CALL(*this->mock_display_report, report_successful_display_construction())
+        .Times(Exactly(0));
+
+    EXPECT_CALL(this->mock_egl, eglMakeCurrent(_,_,_,_))
+        .Times(1)
+        .WillOnce(Return(EGL_FALSE));
+
+    EXPECT_THROW({
+        auto display = make_display_buffer<TypeParam>(this->native_win, this->mock_display_report);
+    }, std::runtime_error);
 }
