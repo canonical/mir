@@ -19,7 +19,7 @@
 #define MIR_CLIENT_MAKE_RPC_CHANNEL_H_
 
 #include <memory>
-#include "mir_protobuf.pb.h"
+#include "mir_basic_rpc_channel.h"
 
 namespace mir
 {
@@ -27,7 +27,7 @@ namespace client
 {
 class Logger;
 
-std::shared_ptr<google::protobuf::RpcChannel>
+std::shared_ptr<MirBasicRpcChannel>
 make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log);
 }
 }

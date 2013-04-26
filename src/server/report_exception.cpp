@@ -13,25 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/event_queue.h"
-#include "mir/event_sink.h"
+#include "mir/report_exception.h"
+#include "mir/abnormal_exit.h"
 
-using namespace mir;
+#include <boost/exception/diagnostic_information.hpp>
 
-void EventQueue::set_target(std::weak_ptr<EventSink> const& s)
+
+void mir::report_exception(std::ostream& out)
 {
-    target = s;
+    try
+    {
+        throw;
+    }
+    catch (mir::AbnormalExit const& error)
+    {
+        out << error.what() << std::endl;
+    }
+    catch (std::exception const& error)
+    {
+        out << "ERROR: " << boost::diagnostic_information(error) << std::endl;
+    }
+    catch (...)
+    {
+        out << "ERROR: unrecognised exception. (This is weird!)" << std::endl;
+    }
 }
 
-void EventQueue::handle_event(MirEvent const& e)
-{
-    // In future, we might put e on a queue and wait for some background
-    // thread to push it through to target. But that's not required right now.
-
-    std::shared_ptr<EventSink> p = target.lock();
-    if (p)
-        p->handle_event(e);
-}

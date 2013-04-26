@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,31 +16,29 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
-
-#include "mir/shell/surface_factory.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#ifndef MIR_SHELL_FOCUS_CONTROLLER_H_
+#define MIR_SHELL_FOCUS_CONTROLLER_H_
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+
+namespace shell
 {
 
-struct MockSurfaceFactory : public shell::SurfaceFactory
+class FocusController
 {
-    MOCK_METHOD3(create_surface, std::shared_ptr<shell::Surface>(
-        const frontend::SurfaceCreationParameters&,
-        frontend::SurfaceId,
-        std::shared_ptr<events::EventSink> const&));
+public:
+    virtual ~FocusController() {}
+
+    virtual void focus_next() = 0;
+
+protected:
+    FocusController() = default;
+    FocusController(FocusController const&) = delete;
+    FocusController& operator=(FocusController const&) = delete;
 };
 
 }
-}
-}
+} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
+#endif // MIR_SHELL_FOCUS_CONTROLLER_H_

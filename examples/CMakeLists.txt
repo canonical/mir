@@ -124,5 +124,7 @@ if (MIR_PLATFORM STREQUAL "gbm")
   add_subdirectory(demo-inprocess-egl)
 endif()
 
+add_subdirectory(demo-shell)
+
 install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION bin)
 

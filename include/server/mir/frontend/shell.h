@@ -24,7 +24,10 @@
 
 namespace mir
 {
-
+namespace events
+{
+class EventSink;
+}
 namespace frontend
 {
 class Session;
@@ -35,7 +38,7 @@ class Shell
 public:
     virtual ~Shell() {}
 
-    virtual std::shared_ptr<Session> open_session(std::string const& name) = 0;
+    virtual std::shared_ptr<Session> open_session(std::string const& name, std::shared_ptr<events::EventSink> const& sink) = 0;
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
     virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id) = 0;

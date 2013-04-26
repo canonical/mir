@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2013 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,25 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/run_mir.h"
-#include "mir/report_exception.h"
-#include "mir/default_server_configuration.h"
+#ifndef MIR_FRONTEND_EVENT_PIPE_H_
+#define MIR_FRONTEND_EVENT_PIPE_H_
 
-#include <iostream>
+#include "mir_toolkit/event.h"
+#include "mir/events/event_sink.h"
+#include <memory>
 
-int main(int argc, char const* argv[])
-try
+namespace mir
 {
-    mir::DefaultServerConfiguration config(argc, argv);
-
-    run_mir(config, [](mir::DisplayServer&) {/* empty init */});
-    return 0;
-}
-catch (...)
+namespace frontend
 {
-    mir::report_exception(std::cerr);
-    return 1;
+class EventPipe : public events::EventSink
+{
+public:
+    void set_target(std::weak_ptr<events::EventSink> const& s);
+    void handle_event(MirEvent const& e) override;
+
+private:
+    std::weak_ptr<events::EventSink> target;
+};
 }
+}
+
+#endif // MIR_FRONTEND_EVENT_PIPE_H_

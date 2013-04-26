@@ -283,7 +283,7 @@ MATCHER(HoverEnterEvent, "")
 {
     if (arg->type != mir_event_type_motion)
         return false;
-    if (arg->motion.action != AMOTION_EVENT_ACTION_HOVER_ENTER)
+    if (arg->motion.action != mir_motion_action_hover_enter)
         return false;
 
     return true;
@@ -293,9 +293,8 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
 {
     if (arg->type != mir_event_type_motion)
         return false;
-    if (arg->motion.action != AMOTION_EVENT_ACTION_DOWN)
+    if (arg->motion.action != mir_motion_action_down)
         return false;
-    printf("action: %d \n", arg->motion.action);
     if (arg->motion.button_state == 0)
         return false;
     if (arg->motion.pointer_coordinates[0].x != x)

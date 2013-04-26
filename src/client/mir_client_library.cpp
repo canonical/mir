@@ -26,7 +26,7 @@
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
 #include "mir_logger.h"
-#include "mir_socket_rpc_channel.h"
+#include "make_rpc_channel.h"
 
 #include <set>
 #include <unordered_set>
@@ -60,12 +60,10 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         auto log = std::make_shared<mcl::ConsoleLogger>();
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-        auto rpc = std::make_shared<mcl::MirSocketRpcChannel>(sock, log);
-
-        MirConnection* connection = new MirConnection(rpc, log,
-                                                      client_platform_factory);
-        
-        rpc->set_event_handler(connection);
+        MirConnection* connection = new MirConnection(
+            mcl::make_rpc_channel(sock, log),
+            log,
+            client_platform_factory);
 
         return connection->connect(name, callback, context);
     }
@@ -258,12 +256,10 @@ try
     auto log = std::make_shared<mcl::ConsoleLogger>();
     auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-    auto rpc = std::make_shared<mcl::MirSocketRpcChannel>(server, log);
-
-    MirConnection* connection = new MirConnection(rpc, log,
-                                                  client_platform_factory);
-
-    rpc->set_event_handler(connection);
+    MirConnection* connection = new MirConnection(
+        mcl::make_rpc_channel(server, log),
+        log,
+        client_platform_factory);
 
     return connection->connect(lightdm_id, app_name, callback, client_context);
 }

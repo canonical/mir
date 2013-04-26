@@ -33,6 +33,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace me = mir::events;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
@@ -468,3 +469,4 @@ TEST_F(ShellSurface, states)
                              mir_surface_state_fullscreen));
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
 }
+

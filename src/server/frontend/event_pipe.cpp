@@ -16,25 +16,21 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EVENT_QUEUE_H_
-#define MIR_EVENT_QUEUE_H_
+#include "event_pipe.h"
 
-#include "mir_toolkit/event.h"
-#include "mir/event_sink.h"
-#include <memory>
+namespace mf = mir::frontend;
 
-namespace mir
+void mf::EventPipe::set_target(std::weak_ptr<EventSink> const& s)
 {
-class EventQueue : public EventSink
+    target = s;
+}
+
+void mf::EventPipe::handle_event(MirEvent const& e)
 {
-public:
-    void set_target(std::weak_ptr<EventSink> const& s);
-    void handle_event(MirEvent const& e) override;
+    // In future, we might put e on a queue and wait for some background
+    // thread to push it through to target. But that's not required right now.
 
-private:
-    std::weak_ptr<EventSink> target;
-};
-
-} // namespace mir
-
-#endif
+    std::shared_ptr<EventSink> p = target.lock();
+    if (p)
+        p->handle_event(e);
+}

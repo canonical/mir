@@ -25,8 +25,10 @@
 
 namespace mir
 {
+namespace events
+{
 class EventSink;
-
+}
 namespace shell
 {
 class SurfaceFactory;
@@ -38,6 +40,13 @@ class ApplicationSession : public Session
 public:
     explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, 
         std::shared_ptr<InputTargetListener> const& input_target_listener, std::string const& session_name);
+
+    ApplicationSession(
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::shared_ptr<InputTargetListener> const& input_target_listener,
+        std::string const& session_name,
+        std::shared_ptr<events::EventSink> const& sink);
+
     ~ApplicationSession();
 
     frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
@@ -55,8 +64,6 @@ public:
 
     int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
 
-    void set_event_sink(std::shared_ptr<mir::EventSink> const& sink);
-
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
@@ -65,6 +72,7 @@ private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<InputTargetListener> const input_target_listener;
     std::string const session_name;
+    std::shared_ptr<events::EventSink> const event_sink;
 
     frontend::SurfaceId next_id();
 
@@ -74,8 +82,6 @@ private:
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     std::mutex mutable surfaces_mutex;
     Surfaces surfaces;
-
-    std::shared_ptr<EventSink> event_sink;
 };
 
 }

@@ -24,7 +24,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
-#include "mir/event_sink.h"
+#include "mir/events/event_sink.h"
 
 #include <vector>
 #include <memory>
@@ -44,7 +44,7 @@ namespace detail
 {
 
 struct ProtobufMessageProcessor : MessageProcessor,
-                                  public EventSink
+                                  public events::EventSink
 {
     ProtobufMessageProcessor(
         MessageSender* sender,

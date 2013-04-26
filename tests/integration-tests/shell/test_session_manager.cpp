@@ -36,6 +36,7 @@
 #include "mir_test_doubles/stub_input_target_listener.h"
 
 namespace mc = mir::compositor;
+namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
@@ -59,12 +60,12 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
             mt::fake_shared(input_target_listener));
-    
+
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session("Visual Basic Studio");
-    auto session2 = session_manager.open_session("Microsoft Access");
-    auto session3 = session_manager.open_session("WordPerfect");
+    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
+    auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
+    auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
 
     {
       InSequence seq;
@@ -98,9 +99,9 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session("Visual Basic Studio");
-    auto session2 = session_manager.open_session("Microsoft Access");
-    auto session3 = session_manager.open_session("WordPerfect");
+    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
+    auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
+    auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
 
     {
       InSequence seq;

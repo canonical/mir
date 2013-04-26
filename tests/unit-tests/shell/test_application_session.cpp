@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
@@ -47,9 +48,9 @@ TEST(ApplicationSession, create_and_destroy_surface)
     auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
 
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
 
-    EXPECT_CALL(surface_factory, create_surface(_));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _));
     EXPECT_CALL(*mock_surface, destroy());
 
     mtd::StubInputTargetListener input_listener;
@@ -69,11 +70,11 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     mtd::StubSurfaceBuilder surface_builder;
     {
         InSequence seq;
-        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
             .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
-        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
             .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
-        EXPECT_CALL(surface_factory, create_surface(_)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
             .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
     }
 
@@ -106,12 +107,12 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
 
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
 
     mtd::StubInputTargetListener input_listener;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo");
 
-    EXPECT_CALL(surface_factory, create_surface(_));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _));
 
     {
         InSequence seq;

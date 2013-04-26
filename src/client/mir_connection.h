@@ -34,7 +34,7 @@
 #include "client_context.h"
 
 #include "mir_wait_handle.h"
-#include "mir/event_sink.h"
+#include "mir/events/event_sink.h"
 
 namespace mir
 {
@@ -44,6 +44,8 @@ namespace client
 class Logger;
 class ClientBufferDepository;
 class ClientPlatformFactory;
+class MirBasicRpcChannel;
+
 namespace input
 {
 class InputPlatform;
@@ -51,13 +53,12 @@ class InputPlatform;
 }
 }
 
-struct MirConnection : public mir::client::ClientContext,
-                       public mir::EventSink
+struct MirConnection : mir::client::ClientContext, private mir::events::EventSink
 {
 public:
     MirConnection();
 
-    MirConnection(std::shared_ptr<google::protobuf::RpcChannel> const& channel,
+    MirConnection(std::shared_ptr<mir::client::MirBasicRpcChannel> const& channel,
                   std::shared_ptr<mir::client::Logger> const & log,
                   std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
     ~MirConnection() noexcept;
