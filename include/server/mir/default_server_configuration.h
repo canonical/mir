@@ -196,7 +196,12 @@ public:
     virtual std::shared_ptr<time::TimeSource>    the_time_source();
 
 protected:
+    // add_options() allows configuration specializations to add their
+    // own options. This MUST be called before the first invocation of
+    // the_options() - typically during construction.
+    boost::program_options::options_description_easy_init add_options();
     virtual std::shared_ptr<options::Option> the_options() const;
+
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<shell::SessionManager> the_session_manager();
 
@@ -232,7 +237,10 @@ protected:
     CachedPtr<MainLoop> main_loop;
 
 private:
-    std::shared_ptr<options::Option> options;
+    int const argc;
+    char const** const argv;
+    std::shared_ptr<boost::program_options::options_description> const program_options;
+    std::shared_ptr<options::Option> mutable options;
 
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(

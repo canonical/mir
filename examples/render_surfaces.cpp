@@ -76,6 +76,8 @@ namespace mt = mir::tools;
 
 namespace
 {
+char const* const surfaces_to_render = "surfaces-to-render";
+
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
 class StopWatch
@@ -192,10 +194,14 @@ private:
 class RenderSurfacesServerConfiguration : public mir::DefaultServerConfiguration
 {
 public:
-    RenderSurfacesServerConfiguration(unsigned int num_moveables)
-        : mir::DefaultServerConfiguration{0, nullptr},
-          moveables{num_moveables}
+    RenderSurfacesServerConfiguration(int argc, char const** argv)
+        : mir::DefaultServerConfiguration{argc, argv}
     {
+        namespace po = boost::program_options;
+
+        add_options()
+            (surfaces_to_render, po::value<int>(),  "Number of surfaces to render"
+                                                    " [int:default=5]");
     }
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
@@ -301,6 +307,9 @@ public:
     // New function to initialize moveables with surfaces
     void create_surfaces()
     {
+        moveables.resize(the_options()->get(surfaces_to_render, 5));
+        std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
+
         auto const display = the_display();
         auto const surface_builder = the_surface_builder();
         geom::Size const display_size{display->view_area().size};
@@ -345,22 +354,11 @@ private:
 ///\internal [RenderSurfacesServerConfiguration_tag]
 }
 
-int main(int argc, char **argv)
+int main(int argc, char const** argv)
 try
 {
     ///\internal [main_tag]
-    /* Parse the command line */
-    unsigned int num_moveables{5};
-
-    if (argc > 1)
-    {
-        std::stringstream ss{argv[1]};
-        ss >> num_moveables;
-    }
-
-    std::cout << "Rendering " << num_moveables << " surfaces" << std::endl;
-
-    RenderSurfacesServerConfiguration conf{num_moveables};
+    RenderSurfacesServerConfiguration conf{argc, argv};
 
     mir::run_mir(conf, [&](mir::DisplayServer&) {conf.create_surfaces();});
     ///\internal [main_tag]
