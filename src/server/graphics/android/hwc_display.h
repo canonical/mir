@@ -29,6 +29,7 @@ namespace mir
 {
 namespace graphics
 {
+class DisplayReport;
 namespace android
 {
 
@@ -41,7 +42,8 @@ class HWCDisplay : public virtual Display,
 {
 public:
     HWCDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const& fb_window,
-               std::shared_ptr<HWCDevice> const& hwc_device);
+               std::shared_ptr<HWCDevice> const& hwc_device,
+               std::shared_ptr<DisplayReport> const&);
 
     geometry::Rectangle view_area() const;
     void clear();

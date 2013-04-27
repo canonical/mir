@@ -28,6 +28,7 @@
 
 #include "examples/graphics.h"
 #include "mir_test/draw/android_graphics.h"
+#include "mir_test_doubles/mock_display_report.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -39,7 +40,7 @@ namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace md=mir::draw;
-namespace mtd=mir::test::draw;
+namespace mtd=mir::test::doubles;
 
 namespace
 {
@@ -49,7 +50,7 @@ protected:
     static void SetUpTestCase()
     {
         /* this is an important precondition for acquiring the display! */
-        ASSERT_FALSE(mtd::is_surface_flinger_running());
+        ASSERT_FALSE(mir::test::draw::is_surface_flinger_running());
 
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
@@ -103,9 +104,10 @@ bool AndroidGPUDisplay::run_hwc10_tests;
 /* gpu display tests. These are our back-up display modes, and should be run on every device. */
 TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
 {
+    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
-    auto display = std::make_shared<mga::AndroidDisplay>(window_query);
+    auto display = std::make_shared<mga::AndroidDisplay>(window_query, mock_display_report);
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();
@@ -130,12 +132,13 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
 {
     SUCCEED_IF_NO_HWC10_SUPPORT();
 
+    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
     auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device);
-    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc);
+    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();
@@ -153,12 +156,14 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 {
     SUCCEED_IF_NO_HWC11_SUPPORT();
 
+    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device);
-    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc);
+    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
+
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();

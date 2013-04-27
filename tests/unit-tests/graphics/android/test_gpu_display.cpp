@@ -18,6 +18,7 @@
 
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "src/server/graphics/android/android_display.h"
+#include "mir_test_doubles/mock_display_report.h"
 #include "mir_test/egl_mock.h"
 
 #include <stdexcept>
@@ -35,7 +36,10 @@ protected:
         using namespace testing;
         native_win = std::make_shared<NiceMock<mtd::MockAndroidFramebufferWindow>>();
         mock_egl.silence_uninteresting();
+        mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     }
+
+    std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
 
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
     mir::EglMock mock_egl;
@@ -44,7 +48,7 @@ protected:
 TEST_F(GPUFramebuffer, display_post_calls_swapbuffers_once)
 {
     using namespace testing;
-    std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+    auto display = std::make_shared<mga::AndroidDisplay>(native_win, mock_display_report);
 
     EXPECT_CALL(mock_egl, eglSwapBuffers(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
         .Times(Exactly(1));
@@ -58,7 +62,7 @@ TEST_F(GPUFramebuffer, display_post_calls_swapbuffers_once)
 TEST_F(GPUFramebuffer, display_post_failure)
 {
     using namespace testing;
-    std::shared_ptr<mg::Display> display = std::make_shared<mga::AndroidDisplay>(native_win);
+    auto display = std::make_shared<mga::AndroidDisplay>(native_win, mock_display_report);
 
     EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
     .Times(Exactly(1))
@@ -75,7 +79,7 @@ TEST_F(GPUFramebuffer, display_post_failure)
 TEST_F(GPUFramebuffer, framebuffer_correct_view_area)
 {
     using namespace testing;
-    auto display = std::make_shared<mga::AndroidDisplay>(native_win);
+    auto display = std::make_shared<mga::AndroidDisplay>(native_win, mock_display_report);
     unsigned int width = 456, height = 42111;
 
     EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display,mock_egl.fake_egl_surface,EGL_WIDTH,_))

@@ -32,11 +32,15 @@ public:
     virtual void report_successful_setup_of_native_resources() = 0;
     virtual void report_successful_egl_make_current_on_construction() = 0;
     virtual void report_successful_egl_buffer_swap_on_construction() = 0;
-    virtual void report_successful_drm_mode_set_crtc_on_construction() = 0;
     virtual void report_successful_display_construction() = 0;
+    /* gbm specific */
+    virtual void report_successful_drm_mode_set_crtc_on_construction() = 0;
     virtual void report_drm_master_failure(int error) = 0;
     virtual void report_vt_switch_away_failure() = 0;
     virtual void report_vt_switch_back_failure() = 0;
+    /* android specific */
+    virtual void report_hwc_composition_in_use(int major, int minor) = 0;
+    virtual void report_gpu_composition_in_use() = 0;
 
 protected:
     DisplayReport() = default;

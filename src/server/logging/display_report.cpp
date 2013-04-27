@@ -83,3 +83,15 @@ void ml::DisplayReport::report_vt_switch_back_failure()
 {
     logger->log<Logger::warning>("Failed to switch back to Mir VT.", component());
 }
+
+void ml::DisplayReport::report_hwc_composition_in_use(int major, int minor)
+{
+    std::stringstream ss;
+    ss << "HWC version " << major << "." << minor << " in use for display.";
+    logger->log<Logger::informational>(ss.str(), component());
+}
+
+void ml::DisplayReport::report_gpu_composition_in_use()
+{
+    logger->log<Logger::informational>("GPU backup in use for display.", component());
+}

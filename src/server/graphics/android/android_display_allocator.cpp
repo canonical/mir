@@ -21,18 +21,19 @@
 #include "hwc_display.h"
 #include "android_framebuffer_window.h"
 
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 std::shared_ptr<mga::AndroidDisplay> mga::AndroidDisplayAllocator::create_gpu_display(
-    std::shared_ptr<ANativeWindow> const& native_window) const
+    std::shared_ptr<ANativeWindow> const& native_window, std::shared_ptr<DisplayReport> const& display_report) const
 {
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (native_window);
-    return std::make_shared<AndroidDisplay>(window);
+    return std::make_shared<AndroidDisplay>(window, display_report);
 }
 
 std::shared_ptr<mga::HWCDisplay> mga::AndroidDisplayAllocator::create_hwc_display(
-    std::shared_ptr<HWCDevice> const& hwc_device, std::shared_ptr<ANativeWindow> const& anw) const
+    std::shared_ptr<HWCDevice> const& hwc_device, std::shared_ptr<ANativeWindow> const& anw, std::shared_ptr<DisplayReport> const& display_report) const
 {
     auto window = std::make_shared<mga::AndroidFramebufferWindow> (anw);
-    return std::make_shared<HWCDisplay>(window, hwc_device);
+    return std::make_shared<HWCDisplay>(window, hwc_device, display_report);
 }
