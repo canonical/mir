@@ -40,6 +40,8 @@ public:
 
     std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
 
+    void for_each_output(std::function<void(KMSOutput&)> functor) const;
+
 private:
     KMSOutputContainer(KMSOutputContainer const&) = delete;
     KMSOutputContainer& operator=(KMSOutputContainer const&) = delete;

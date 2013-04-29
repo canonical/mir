@@ -159,7 +159,57 @@ void mgg::GBMDisplay::resume()
         db_ptr->schedule_set_crtc();
 }
 
+#include "mir/graphics/cursor.h"
+namespace mir
+{
+namespace graphics
+{
+namespace gbm
+{
+class GBMCursor : public Cursor
+{
+public:
+    GBMCursor(
+        std::shared_ptr<GBMPlatform> const& platform,
+        KMSOutputContainer const& output_container) :
+            platform(platform),
+            output_container(output_container),
+            image(height*width, color),
+            buffer(gbm_bo_create(
+                platform->gbm.device,
+                width,
+                height,
+                GBM_FORMAT_ARGB8888,
+                GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
+    {
+        output_container.for_each_output(
+            [&](KMSOutput& /*output*/) {  });
+    }
+
+    ~GBMCursor() noexcept
+    {
+        gbm_bo_destroy(buffer);
+    }
+
+    void set_image(void* /*raw_rgba*/, geometry::Size /*size*/) {}
+    void move_to(geometry::Point /*position*/) {}
+private:
+    static const int width = 64;
+    static const int height = 64;
+    static const uint32_t color = 0xff0000ff;
+    std::shared_ptr<GBMPlatform> const platform;
+    KMSOutputContainer const& output_container;
+
+    std::vector<uint32_t> image;
+    gbm_bo* buffer;
+};
+
+const uint32_t GBMCursor::color;
+}
+}
+}
+
 auto mgg::GBMDisplay::the_cursor() -> std::shared_ptr<Cursor>
 {
-    return std::shared_ptr<Cursor>();
+    return std::make_shared<GBMCursor>(platform, output_container);
 }
