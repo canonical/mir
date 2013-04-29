@@ -360,7 +360,12 @@ try
     ///\internal [main_tag]
     RenderSurfacesServerConfiguration conf{argc, argv};
 
-    mir::run_mir(conf, [&](mir::DisplayServer&) {conf.create_surfaces();});
+    mir::run_mir(conf, [&](mir::DisplayServer&)
+    {
+        conf.create_surfaces();
+
+        static auto cursor = conf.the_display()->the_cursor();
+    });
     ///\internal [main_tag]
 
     return 0;

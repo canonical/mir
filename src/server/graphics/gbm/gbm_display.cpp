@@ -182,8 +182,19 @@ public:
                 GBM_FORMAT_ARGB8888,
                 GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
     {
+        if (!buffer)
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("null buffer"));
+
+        auto result = gbm_bo_write(buffer, image.data(), image.size()*sizeof(uint32_t));
+
+        if (!result)
+            BOOST_THROW_EXCEPTION(
+                ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
+                << boost::errinfo_errno(result));
+
         output_container.for_each_output(
-            [&](KMSOutput& /*output*/) {  });
+            [&](KMSOutput& output) { output.set_cursor(buffer); });
     }
 
     ~GBMCursor() noexcept
@@ -196,7 +207,7 @@ public:
 private:
     static const int width = 64;
     static const int height = 64;
-    static const uint32_t color = 0xff0000ff;
+    static const uint32_t color = 0xffffffff;
     std::shared_ptr<GBMPlatform> const platform;
     KMSOutputContainer const& output_container;
 

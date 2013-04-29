@@ -20,6 +20,7 @@
 #include "page_flipper.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
 #include <vector>
@@ -167,6 +168,39 @@ void mgg::KMSOutput::wait_for_page_flip()
 
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
+
+#include <iostream>
+void mgg::KMSOutput::set_cursor(gbm_bo* buffer)
+{
+    if (current_crtc)
+    {
+        std::cout << "DEBUG got to" << __PRETTY_FUNCTION__ << std::endl;
+        std::cout << "DEBUG gbm_bo_get_handle(buffer).u32=" << gbm_bo_get_handle(buffer).u32 << std::endl;
+
+        auto result =
+            drmModeSetCursor(
+                drm_fd,
+                current_crtc->crtc_id,
+                gbm_bo_get_handle(buffer).u32,
+                gbm_bo_get_width(buffer),
+                gbm_bo_get_height(buffer));
+        if (result)
+            BOOST_THROW_EXCEPTION(
+                ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
+                << boost::errinfo_errno(result));
+
+        result = drmModeMoveCursor(
+            drm_fd,
+            current_crtc->crtc_id,
+            100,
+            100);
+        if (result)
+            BOOST_THROW_EXCEPTION(
+                ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
+                << boost::errinfo_errno(result));
+    }
+}
+
 
 bool mgg::KMSOutput::ensure_crtc()
 {

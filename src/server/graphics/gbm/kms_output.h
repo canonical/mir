@@ -22,6 +22,7 @@
 #include "mir/geometry/size.h"
 #include "drm_mode_resources.h"
 
+#include <gbm.h>
 #include <memory>
 
 namespace mir
@@ -46,6 +47,7 @@ public:
     bool set_crtc(uint32_t fb_id);
     bool schedule_page_flip(uint32_t fb_id);
     void wait_for_page_flip();
+    void set_cursor(gbm_bo* buffer);
 
 private:
     KMSOutput(const KMSOutput&) = delete;
