@@ -49,6 +49,10 @@ class NullDisplay : public graphics::Display
     }
     void pause() {}
     void resume() {}
+    std::shared_ptr<graphics::Cursor> the_cursor()
+    {
+        return std::shared_ptr<graphics::Cursor>();
+    }
 };
 
 }

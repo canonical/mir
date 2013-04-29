@@ -158,3 +158,8 @@ void mgg::GBMDisplay::resume()
     for (auto& db_ptr : display_buffers)
         db_ptr->schedule_set_crtc();
 }
+
+auto mgg::GBMDisplay::the_cursor() -> std::shared_ptr<Cursor>
+{
+    return std::shared_ptr<Cursor>();
+}

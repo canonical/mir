@@ -117,6 +117,10 @@ public:
 
     void pause() {}
     void resume() {}
+    std::shared_ptr<mg::Cursor> the_cursor()
+    {
+        return std::shared_ptr<mg::Cursor>();
+    }
 
     geom::Rectangle area;
 };

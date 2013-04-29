@@ -96,6 +96,10 @@ public:
 
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
+    std::shared_ptr<mg::Cursor> the_cursor()
+    {
+        return std::shared_ptr<mg::Cursor>();
+    }
 
 private:
     std::shared_ptr<mg::Display> const display;
