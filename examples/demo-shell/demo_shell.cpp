@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+/// \example demo_shell.cpp A simple mir shell
+
 #include "application_switcher.h"
 #include "fullscreen_placement_strategy.h"
 
