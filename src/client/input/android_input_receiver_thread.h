@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_ANDROID_INPUT_RECEIVER_THREAD_H_
 #define MIR_INPUT_ANDROID_INPUT_RECEIVER_THREAD_H_
 
-#include "input_receiver_thread.h"
+#include "mir/input/input_receiver_thread.h"
 
 #include "mir_toolkit/event.h"
 

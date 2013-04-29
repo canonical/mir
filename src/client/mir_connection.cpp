@@ -25,7 +25,7 @@
 #include "client_buffer_depository.h"
 #include "make_rpc_channel.h"
 
-#include "input/input_platform.h"
+#include "mir/input/input_platform.h"
 
 #include <thread>
 #include <cstddef>

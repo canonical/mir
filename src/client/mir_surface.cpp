@@ -22,8 +22,8 @@
 #include "client_buffer.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
-#include "input/input_receiver_thread.h"
-#include "input/input_platform.h"
+#include "mir/input/input_receiver_thread.h"
+#include "mir/input/input_platform.h"
 
 #include <cassert>
 

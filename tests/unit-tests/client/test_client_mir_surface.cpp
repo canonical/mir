@@ -25,9 +25,10 @@
 #include "src/client/client_platform_factory.h"
 #include "src/client/mir_surface.h"
 #include "src/client/mir_connection.h"
-#include "src/client/input/input_platform.h"
-#include "src/client/input/input_receiver_thread.h"
+
 #include "mir/frontend/resource_cache.h"
+#include "mir/input/input_platform.h"
+#include "mir/input/input_receiver_thread.h"
 
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"

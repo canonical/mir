@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
 #define MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
 
-#include "input_platform.h"
+#include "mir/input/input_platform.h"
 
 namespace mir
 {
