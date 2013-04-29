@@ -142,41 +142,9 @@ char const* const glog_stderrthreshold = "glog-stderrthreshold";
 char const* const glog_minloglevel     = "glog-minloglevel";
 char const* const glog_log_dir         = "glog-log-dir";
 
-boost::program_options::options_description program_options()
-{
-    namespace po = boost::program_options;
-
-    po::options_description desc(
-        "Command-line options.\n"
-        "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
-    desc.add_options()
-        ("file,f", po::value<std::string>(),    "Socket filename")
-        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=false]")
-        (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
-        (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
-        (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
-        (glog,                                  "Use google::GLog for logging")
-        (glog_stderrthreshold, po::value<int>(),"Copy log messages at or above this level "
-                                                "to stderr in addition to logfiles. The numbers "
-                                                "of severity levels INFO, WARNING, ERROR, and "
-                                                "FATAL are 0, 1, 2, and 3, respectively."
-                                                " [int:default=2]")
-        (glog_minloglevel, po::value<int>(),    "Log messages at or above this level. The numbers "
-                                                "of severity levels INFO, WARNING, ERROR, and "
-                                                "FATAL are 0, 1, 2, and 3, respectively."
-                                                " [int:default=0]")
-        (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
-                                                "directory instead of the default logging directory."
-                                                " [string:default=\"\"]")
-        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool. [int:default=10]")
-        ("tests-use-real-graphics", po::value<bool>(), "Use real graphics in tests. [bool:default=false]")
-        ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
-
-    return desc;
-}
-
 
 void parse_arguments(
+    boost::program_options::options_description desc,
     std::shared_ptr<mir::options::ProgramOption> const& options,
     int argc,
     char const* argv[])
@@ -184,8 +152,6 @@ void parse_arguments(
     namespace po = boost::program_options;
 
     bool exit_with_helptext = false;
-
-    auto desc = program_options();
 
     try
     {
@@ -213,22 +179,51 @@ void parse_arguments(
     }
 }
 
-void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& options)
+void parse_environment(
+    boost::program_options::options_description& desc,
+    std::shared_ptr<mir::options::ProgramOption> const& options)
 {
-    auto desc = program_options();
-
     options->parse_environment(desc, "MIR_SERVER_");
 }
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[])
+mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
+    argc(argc),
+    argv(argv),
+    program_options(std::make_shared<boost::program_options::options_description>(
+    "Command-line options.\n"
+    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
 {
-    auto options = std::make_shared<mir::options::ProgramOption>();
+    namespace po = boost::program_options;
 
-    parse_arguments(options, argc, argv);
-    parse_environment(options);
+    add_options()
+        ("file,f", po::value<std::string>(),    "Socket filename")
+        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=false]")
+        (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
+        (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
+        (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
+        (glog,                                  "Use google::GLog for logging")
+        (glog_stderrthreshold, po::value<int>(),"Copy log messages at or above this level "
+                                                "to stderr in addition to logfiles. The numbers "
+                                                "of severity levels INFO, WARNING, ERROR, and "
+                                                "FATAL are 0, 1, 2, and 3, respectively."
+                                                " [int:default=2]")
+        (glog_minloglevel, po::value<int>(),    "Log messages at or above this level. The numbers "
+                                                "of severity levels INFO, WARNING, ERROR, and "
+                                                "FATAL are 0, 1, 2, and 3, respectively."
+                                                " [int:default=0]")
+        (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
+                                                "directory instead of the default logging directory."
+                                                " [string:default=\"\"]")
+        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool. [int:default=10]");
+}
 
-    this->options = options;
+boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
+{
+    if (options)
+        BOOST_THROW_EXCEPTION(std::logic_error("add_options() must be called before the_options()"));
+
+    return program_options->add_options();
 }
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
@@ -238,6 +233,15 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
 {
+    if (!options)
+    {
+        auto options = std::make_shared<mir::options::ProgramOption>();
+
+        parse_arguments(*program_options, options, argc, argv);
+        parse_environment(*program_options, options);
+
+        this->options = options;
+    }
     return options;
 }
 

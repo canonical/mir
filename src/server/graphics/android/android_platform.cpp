@@ -31,6 +31,11 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
+mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mg::DisplayReport> const& display_report)
+    : display_report(display_report)
+{
+}
+
 std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
@@ -45,7 +50,7 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto fb_factory = std::make_shared<mga::DefaultFramebufferFactory>(buffer_allocator);
-    auto display_factory = std::make_shared<mga::AndroidDisplayFactory>(display_allocator, hwc_factory, fb_factory);
+    auto display_factory = std::make_shared<mga::AndroidDisplayFactory>(display_allocator, hwc_factory, fb_factory, display_report);
     return display_factory->create_display();
 }
 
@@ -60,7 +65,7 @@ EGLNativeDisplayType mga::AndroidPlatform::shell_egl_display()
     return static_cast<EGLNativeDisplayType>(0);
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& /*TODO*/)
+std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)
 {
-    return std::make_shared<mga::AndroidPlatform>();
+    return std::make_shared<mga::AndroidPlatform>(display_report);
 }

@@ -26,6 +26,7 @@ namespace mir
 {
 namespace graphics
 {
+class DisplayReport;
 namespace android
 {
 
@@ -38,9 +39,9 @@ public:
     DisplayAllocator() = default;
     virtual ~DisplayAllocator() {}
 
-    virtual std::shared_ptr<AndroidDisplay> create_gpu_display(std::shared_ptr<ANativeWindow> const&) const = 0;
+    virtual std::shared_ptr<AndroidDisplay> create_gpu_display(std::shared_ptr<ANativeWindow> const&, std::shared_ptr<DisplayReport> const&) const = 0;
     virtual std::shared_ptr<HWCDisplay> create_hwc_display(
-        std::shared_ptr<HWCDevice> const&, std::shared_ptr<ANativeWindow> const&) const = 0;
+        std::shared_ptr<HWCDevice> const&, std::shared_ptr<ANativeWindow> const&, std::shared_ptr<DisplayReport> const&) const = 0;
 
 private:
     DisplayAllocator(DisplayAllocator const&) = delete;

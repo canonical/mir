@@ -132,6 +132,10 @@ public:
         // Need to acquire the texture to cycle buffers
         r.graphic_region();
     }
+    
+    void ensure_no_live_buffers_bound()
+    {
+    }
 };
 
 struct StubInputChannel : public mi::InputChannel
@@ -162,8 +166,13 @@ class StubInputManager : public mi::InputManager
 }
 
 mtf::TestingServerConfiguration::TestingServerConfiguration() :
-    DefaultServerConfiguration(argc, argv)
+    DefaultServerConfiguration(::argc, ::argv)
 {
+    namespace po = boost::program_options;
+
+    add_options()
+        ("tests-use-real-graphics", po::value<bool>(), "Use real graphics in tests. [bool:default=false]")
+        ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
 }
 
 

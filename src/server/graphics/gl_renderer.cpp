@@ -277,3 +277,11 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     glDisableVertexAttribArray(resources.texcoord_attr_loc);
     glDisableVertexAttribArray(resources.position_attr_loc);
 }
+
+void mg::GLRenderer::ensure_no_live_buffers_bound()
+{
+    /* before the system can delete buffers that back OES_EGL_image textures, it
+       must make sure that none of these textures are bound in the GLContext*/
+    static int emptytexture;
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE, &emptytexture);
+}
