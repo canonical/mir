@@ -55,8 +55,8 @@ include (cmake/MirCommon.cmake)
 include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -Wall -pedantic -Wextra -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror -Wall -pedantic -Wextra -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wextra -fPIC")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 #####################################################################
@@ -116,6 +116,7 @@ find_package(GLESv2 REQUIRED)
 find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
+find_package(XKBCOMMON REQUIRED)
 
 include_directories (${GLESv2_INCLUDE_DIRS})                                    
 include_directories (${EGL_INCLUDE_DIRS})
@@ -203,5 +204,13 @@ add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
+
+# There's no nice way to format this. Thanks CMake.
+add_test(LGPL-required
+  /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/shared ${PROJECT_SOURCE_DIR}/include/shared"
+)
+add_test(GPL-required
+  /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
+)
 
 enable_coverage_report(mirserver)

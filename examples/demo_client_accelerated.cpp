@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/draw/graphics.h"
+#include "graphics.h"
 
 #include <assert.h>
 #include <signal.h>
@@ -28,7 +28,7 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
-static char const *socket_file = "/tmp/mir_socket";
+static char const *socket_file = NULL;
 
 int main(int argc, char* argv[])
 {
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
 
-    surface = mir_surface_create_sync(connection, &request_params);
+    surface = mir_connection_create_surface_sync(connection, &request_params);
     assert(surface != NULL);
     assert(mir_surface_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);

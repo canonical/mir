@@ -1,3 +1,5 @@
+include_directories(..)
+
 add_executable(mir_demo_inprocess_egl
   demo_inprocess_egl.cpp
   inprocess_egl_client.cpp

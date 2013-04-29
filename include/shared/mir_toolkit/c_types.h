@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -52,7 +52,7 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
 
 /**
  * Callback to be passed when calling:
- *  - mir_surface_create
+ *  - mir_connection_create_surface
  *  - mir_surface_next_buffer
  *  - mir_surface_release
  *   \param [in] surface             the surface being updated

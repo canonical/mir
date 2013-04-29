@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -100,7 +100,5 @@ mir::protobuf::wire::Invocation mcl::MirBasicRpcChannel::invocation_for(
 
 int mcl::MirBasicRpcChannel::next_id()
 {
-    int id = next_message_id.load();
-    while (!next_message_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
+    return next_message_id.fetch_add(1);
 }

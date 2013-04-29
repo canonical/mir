@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
@@ -19,7 +19,6 @@
 #ifndef MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 #define MIR_TEST_CUCUMBER_SESSION_MANAGEMENT_CONTEXT_H_
 
-#include "mir/server_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/frontend/surface_id.h"
 
@@ -30,8 +29,6 @@
 
 namespace mir
 {
-class ServerConfiguration;
-
 namespace frontend
 {
 class Shell;
@@ -51,7 +48,7 @@ class SessionManagementContext
 {
 public:
     SessionManagementContext();
-    SessionManagementContext(ServerConfiguration& server_configuration);
+    SessionManagementContext(std::shared_ptr<frontend::Shell> const& shell);
 
     virtual ~SessionManagementContext() {}
 

@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
@@ -18,6 +18,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_report.h"
 #include "android_display.h"
 #include "mir/geometry/rectangle.h"
 
@@ -52,12 +53,13 @@ public:
 };
 }
 
-mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win)
-    : native_window{native_win},
-      egl_display{EGL_NO_DISPLAY},
+mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win,
+                                    std::shared_ptr<DisplayReport> const& display_report)
+    : egl_display{EGL_NO_DISPLAY},
+      egl_surface{EGL_NO_SURFACE},
+      native_window{native_win},
       egl_config{0},
       egl_context{EGL_NO_CONTEXT},
-      egl_surface{EGL_NO_SURFACE},
       egl_context_shared{EGL_NO_CONTEXT},
       egl_surface_dummy{EGL_NO_SURFACE}
 {
@@ -79,6 +81,8 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl surface\n"));
 
+    display_report->report_successful_setup_of_native_resources();
+
     egl_context_shared = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr);
     if (egl_context_shared == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context dummy\n"));
@@ -94,10 +98,14 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     if (eglMakeCurrent(egl_display, egl_surface_dummy, egl_surface_dummy, egl_context_shared) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
+
+    display_report->report_successful_egl_make_current_on_construction();
+    display_report->report_successful_display_construction();
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
 {
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
     eglDestroyContext(egl_display, egl_context_shared);
@@ -122,14 +130,15 @@ geom::Rectangle mga::AndroidDisplay::view_area() const
 
 void mga::AndroidDisplay::clear()
 {
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
-bool mga::AndroidDisplay::post_update()
+void mga::AndroidDisplay::post_update()
 {
     if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
-        return false;
-    return true;
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
+    }
 }
 
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -142,8 +151,30 @@ std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
     return std::make_shared<NullDisplayConfiguration>();
 }
 
+void mga::AndroidDisplay::register_pause_resume_handlers(
+    MainLoop& /*main_loop*/,
+    DisplayPauseHandler const& /*pause_handler*/,
+    DisplayResumeHandler const& /*resume_handler*/)
+{
+}
+
+void mga::AndroidDisplay::pause()
+{
+}
+
+void mga::AndroidDisplay::resume()
+{
+}
+
 void mga::AndroidDisplay::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
+    {
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
+    }
+}
+
+void mga::AndroidDisplay::release_current()
+{
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }

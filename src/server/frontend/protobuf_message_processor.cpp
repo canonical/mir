@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,12 +10,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir_toolkit/event.h"
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
@@ -45,14 +46,6 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
-{
-    const auto& fd = extract_fds_from(response);
-    send_response(id, static_cast<google::protobuf::Message*>(response));
-    sender->send_fds(fd);
-    resource_cache->free_resource(response);
-}
-
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Platform* response)
 {
     const auto& fd = extract_fds_from(response);
     send_response(id, static_cast<google::protobuf::Message*>(response));
@@ -141,6 +134,34 @@ void mfd::ProtobufMessageProcessor::send_response(
     result.SerializeToString(&buffer);
 
     sender->send(buffer);
+}
+
+void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
+{
+    // In future we might send multiple events, or insert them into messages
+    // containing other responses, but for now we send them individually.
+    mir::protobuf::EventSequence seq;
+    mir::protobuf::Event *ev = seq.add_event();
+    ev->set_raw(&e, sizeof(MirEvent));
+
+    std::string buffer;
+    seq.SerializeToString(&buffer);
+
+    mir::protobuf::wire::Result result;
+    result.add_events(buffer);
+
+    result.SerializeToString(&buffer);
+
+    sender->send(buffer);
+}
+
+void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
+{
+    // Limit the types of events we wish to send over protobuf, for now.
+    if (e.type == mir_event_type_surface)
+    {
+        send_event(e);
+    }
 }
 
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)

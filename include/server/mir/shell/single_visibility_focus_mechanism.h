@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
@@ -28,13 +28,11 @@ namespace mir
 namespace shell
 {
 class SessionContainer;
-class InputFocusSelector;
 
 class SingleVisibilityFocusMechanism : public FocusSetter
 {
 public:
-    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container,
-                                            std::shared_ptr<shell::InputFocusSelector> const& input_selector);
+    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);
     virtual ~SingleVisibilityFocusMechanism() {}
 
     void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
@@ -44,7 +42,6 @@ protected:
     SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
 private:
     std::shared_ptr<SessionContainer> const app_container;
-    std::shared_ptr<shell::InputFocusSelector> const input_selector;
 };
 
 }

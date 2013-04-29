@@ -258,6 +258,14 @@ void glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei *length, GLcha
     global_gl_mock->glGetProgramInfoLog(program, bufsize, length, infolog);
 }
 
+void glTexImage2D(GLenum target, GLint level, GLint internalformat,
+                  GLsizei width, GLsizei height, GLint border,
+                  GLenum format, GLenum type, const GLvoid* pixels)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_gl_mock->glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+}
+
 void mir::GLMock::silence_uninteresting()
 {
     using namespace testing;

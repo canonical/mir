@@ -40,7 +40,7 @@ public:
     TestingInputProducer(droidinput::sp<droidinput::InputChannel> input_channel) :
         input_publisher(std::make_shared<droidinput::InputPublisher>(input_channel)),
         incrementing_seq_id(1), // Sequence id must be > 0 or publisher will reject
-        testing_key_event_key_code(13)
+        testing_key_event_scan_code(13)
     {
     }
 
@@ -54,8 +54,8 @@ public:
             0 /* source */,
             0 /* action */,
             0 /* flags */,
-            testing_key_event_key_code,
-            0 /* scan_code */,
+            0 /* key_code */,
+            testing_key_event_scan_code,
             0 /* meta_state */,
             0 /* repeat_count */,
             0 /* down_time */,
@@ -99,13 +99,13 @@ public:
     std::shared_ptr<droidinput::InputPublisher> input_publisher;
 
     int incrementing_seq_id;
-    int32_t testing_key_event_key_code;
+    int32_t testing_key_event_scan_code;
     
     // Some default values
     // device_id must be > 0 or input publisher will reject
     static const int32_t filler_device_id = 1;
-    // AMOTION_EVENT_ACTION_MOVE is necessary to engage batching behavior
-    static const int32_t motion_event_action_flags = AMOTION_EVENT_ACTION_MOVE;
+    // event_action_move is necessary to engage batching behavior
+    static const int32_t motion_event_action_flags = mir_motion_action_move;
     // We have to have at least 1 pointer or the publisher will fail to marshal a motion event
     static const int32_t default_pointer_count = 1;
 };
@@ -157,8 +157,9 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
     
     MirEvent ev;
     EXPECT_EQ(true, receiver.next_event(next_event_timeout, ev));
+
     EXPECT_EQ(mir_event_type_key, ev.type);
-    EXPECT_EQ(producer.testing_key_event_key_code, ev.key.key_code);
+    EXPECT_EQ(producer.testing_key_event_scan_code, ev.key.scan_code);
 }
 
 TEST_F(AndroidInputReceiverSetup, receiver_handles_events)

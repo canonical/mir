@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -21,6 +21,7 @@
 #define MIR_SHELL_SURFACE_H_
 
 #include "mir/frontend/surface.h"
+#include "mir/frontend/surface_id.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/surface_target.h"
 
@@ -30,6 +31,10 @@
 
 namespace mir
 {
+namespace events
+{
+class EventSink;
+}
 namespace frontend
 {
 struct SurfaceCreationParameters;
@@ -50,6 +55,14 @@ public:
         std::shared_ptr<SurfaceBuilder> const& builder,
         frontend::SurfaceCreationParameters const& params,
         std::shared_ptr<input::InputChannel> const& input_channel);
+
+    Surface(
+        std::shared_ptr<SurfaceBuilder> const& builder,
+        frontend::SurfaceCreationParameters const& params,
+        std::shared_ptr<input::InputChannel> const& input_channel,
+        frontend::SurfaceId id,
+        std::shared_ptr<events::EventSink> const& sink);
+
     ~Surface();
 
     virtual void hide();
@@ -58,7 +71,7 @@ public:
 
     virtual void destroy();
 
-    virtual void shutdown();
+    virtual void force_requests_to_complete();
 
     virtual std::string name() const;
 
@@ -76,15 +89,22 @@ public:
 
     virtual int configure(MirSurfaceAttrib attrib, int value);
     virtual MirSurfaceType type() const;
+    virtual MirSurfaceState state() const;
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
+    bool set_state(MirSurfaceState s);
+    void notify_change(MirSurfaceAttrib attrib, int value);
 
     std::shared_ptr<SurfaceBuilder> const builder;
     std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
+    frontend::SurfaceId const id;
+    std::shared_ptr<events::EventSink> const event_sink;
+
     MirSurfaceType type_value;
+    MirSurfaceState state_value;
 };
 }
 }

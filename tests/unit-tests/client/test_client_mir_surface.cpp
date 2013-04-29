@@ -298,7 +298,7 @@ struct MirClientSurfaceTest : public testing::Test
         test_server.reset();
     }
 
-    std::shared_ptr<google::protobuf::RpcChannel> channel;
+    std::shared_ptr<mcl::MirBasicRpcChannel> channel;
     std::shared_ptr<mcl::Logger> logger;
     std::shared_ptr<mcl::ClientPlatformFactory> platform_factory;
     std::shared_ptr<MirConnection> connection;
@@ -464,7 +464,7 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_
     using namespace ::testing;
     
     auto mock_input_platform = std::make_shared<mt::MockClientInputPlatform>();
-    auto mock_input_thread = std::make_shared<mt::MockInputReceiverThread>();
+    auto mock_input_thread = std::make_shared<NiceMock<mt::MockInputReceiverThread>>();
     MirEventDelegate delegate = {null_event_callback, nullptr};
 
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_)).Times(2);
@@ -539,4 +539,22 @@ TEST_F(MirClientSurfaceTest, default_surface_type)
 
     EXPECT_EQ(mir_surface_type_normal,
               surface->attrib(mir_surface_attrib_type));
+}
+
+TEST_F(MirClientSurfaceTest, default_surface_state)
+{
+    auto surface = std::make_shared<MirSurface> (connection.get(),
+                                                 *client_comm_channel,
+                                                 logger,
+                                                 mock_buffer_factory,
+                                                 input_platform,
+                                                 params,
+                                                 &empty_callback,
+                                                 nullptr);
+    surface->get_create_wait_handle()->wait_for_result();
+
+    // Test the default cached state value. It is always unknown until we
+    // get a real answer from the server.
+    EXPECT_EQ(mir_surface_state_unknown,
+              surface->attrib(mir_surface_attrib_state));
 }

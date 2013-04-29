@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -25,11 +25,11 @@
 
 namespace mir
 {
-namespace client
+namespace graphics 
 {
 namespace android
 {
-class AndroidFence;
+class SyncObject;
 class AndroidDriverInterpreter;
 
 class MirNativeWindow : public ANativeWindow
@@ -40,7 +40,7 @@ public:
     int query(int key, int* value) const;
     int perform(int key, va_list args );
     int dequeueBuffer(struct ANativeWindowBuffer** buffer);
-    int queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<AndroidFence> const& fence);
+    int queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<SyncObject> const& fence);
 private:
 
     std::shared_ptr<AndroidDriverInterpreter> const driver_interpreter;

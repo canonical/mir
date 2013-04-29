@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
@@ -20,9 +20,9 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_properties.h"
-#include "android_buffer_allocator.h"
+#include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
-#include "android_buffer.h"
+#include "buffer.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -45,7 +45,7 @@ struct AllocDevDeleter
 };
 }
 
-mga::AndroidBufferAllocator::AndroidBufferAllocator(
+mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer)
     : buffer_initializer{buffer_initializer}
 {
@@ -68,19 +68,22 @@ mga::AndroidBufferAllocator::AndroidBufferAllocator(
     alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
 }
 
-std::shared_ptr<mc::Buffer> mga::AndroidBufferAllocator::alloc_buffer(
+std::shared_ptr<mc::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
-    auto buffer = std::make_shared<AndroidBuffer>(alloc_device,
-                                                  buffer_properties.size,
-                                                  buffer_properties.format);
+    auto usage = convert_from_compositor_usage(buffer_properties.usage);
+    return alloc_buffer_platform(buffer_properties.size, buffer_properties.format, usage);
+}
 
+std::shared_ptr<mga::AndroidBuffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
+    geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
+{
+    auto buffer = std::make_shared<Buffer>(alloc_device, sz, pf, use);
     (*buffer_initializer)(*buffer);
-
     return buffer;
 }
 
-std::vector<geom::PixelFormat> mga::AndroidBufferAllocator::supported_pixel_formats()
+std::vector<geom::PixelFormat> mga::AndroidGraphicBufferAllocator::supported_pixel_formats()
 {
     static std::vector<geom::PixelFormat> const pixel_formats{
         geom::PixelFormat::abgr_8888,
@@ -89,4 +92,16 @@ std::vector<geom::PixelFormat> mga::AndroidBufferAllocator::supported_pixel_form
     };
 
     return pixel_formats;
+}
+
+mga::BufferUsage mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mc::BufferUsage usage)
+{
+    switch (usage)
+    {
+        case mc::BufferUsage::software:
+            return mga::BufferUsage::use_software;
+        case mc::BufferUsage::hardware:
+        default:
+            return mga::BufferUsage::use_hardware;
+    } 
 }

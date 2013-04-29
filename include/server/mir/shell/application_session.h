@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored By: Robert Carr <racarr@canonical.com>
@@ -25,16 +25,28 @@
 
 namespace mir
 {
-
+namespace events
+{
+class EventSink;
+}
 namespace shell
 {
 class SurfaceFactory;
 class Surface;
+class InputTargetListener;
 
 class ApplicationSession : public Session
 {
 public:
-    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
+    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, 
+        std::shared_ptr<InputTargetListener> const& input_target_listener, std::string const& session_name);
+
+    ApplicationSession(
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::shared_ptr<InputTargetListener> const& input_target_listener,
+        std::string const& session_name,
+        std::shared_ptr<events::EventSink> const& sink);
+
     ~ApplicationSession();
 
     frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
@@ -45,7 +57,7 @@ public:
 
     std::string name() const;
 
-    void shutdown();
+    void force_requests_to_complete();
 
     void hide();
     void show();
@@ -58,7 +70,9 @@ protected:
 
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
+    std::shared_ptr<InputTargetListener> const input_target_listener;
     std::string const session_name;
+    std::shared_ptr<events::EventSink> const event_sink;
 
     frontend::SurfaceId next_id();
 

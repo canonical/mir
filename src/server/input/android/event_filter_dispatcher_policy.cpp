@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
@@ -21,8 +21,9 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter) :
-  event_filter(event_filter)
+mia::EventFilterDispatcherPolicy::EventFilterDispatcherPolicy(std::shared_ptr<mi::EventFilter> const& event_filter, bool key_repeat_enabled) :
+  event_filter(event_filter),
+  key_repeat_enabled(key_repeat_enabled)
 {
 }
 
@@ -46,13 +47,15 @@ void mia::EventFilterDispatcherPolicy::getDispatcherConfiguration(droidinput::In
 
 bool mia::EventFilterDispatcherPolicy::isKeyRepeatEnabled()
 {
-    return true;
+    return key_repeat_enabled;
 }
 
 bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputEvent* input_event, uint32_t /*policy_flags*/)
 {
     MirEvent mir_ev;
     mia::Lexicon::translate(input_event, mir_ev);
+    
+    // TODO: Use XKBMapper
 
     if (event_filter->handles(mir_ev))
         return false; /* Do not pass the event on */

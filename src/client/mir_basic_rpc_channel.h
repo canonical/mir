@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -33,6 +33,10 @@
 
 namespace mir
 {
+namespace events
+{
+class EventSink;
+}
 namespace protobuf
 {
 namespace wire
@@ -91,6 +95,8 @@ class MirBasicRpcChannel : public google::protobuf::RpcChannel
 public:
     MirBasicRpcChannel();
     ~MirBasicRpcChannel();
+
+    virtual void set_event_handler(events::EventSink *sink) = 0;
 
 protected:
     mir::protobuf::wire::Invocation invocation_for(const google::protobuf::MethodDescriptor* method,

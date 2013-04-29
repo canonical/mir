@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -19,6 +19,7 @@
 #include "mir/compositor/default_compositing_strategy.h"
 
 #include "mir/compositor/rendering_operator.h"
+#include "mir/compositor/overlay_renderer.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
@@ -33,12 +34,15 @@ namespace mg = mir::graphics;
 
 mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
     std::shared_ptr<Renderables> const& renderables,
-    std::shared_ptr<mg::Renderer> const& renderer)
+    std::shared_ptr<mg::Renderer> const& renderer,
+    std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer)
     : renderables(renderables),
-      renderer(renderer)
+      renderer(renderer),
+      overlay_renderer(overlay_renderer)
 {
     assert(renderables);
     assert(renderer);
+    assert(overlay_renderer);
 }
 
 namespace
@@ -70,6 +74,8 @@ void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buf
     display_buffer.clear();
 
     renderables->for_each_if(selector, applicator);
+
+    overlay_renderer->render(display_buffer);
 
     display_buffer.post_update();
 }

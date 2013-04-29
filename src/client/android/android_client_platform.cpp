@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -30,6 +30,7 @@
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
+namespace mga=mir::graphics::android;
 
 namespace
 {
@@ -70,7 +71,7 @@ namespace
 {
 struct MirNativeWindowDeleter
 {
-    MirNativeWindowDeleter(mcla::MirNativeWindow* window)
+    MirNativeWindowDeleter(mga::MirNativeWindow* window)
      : window(window) {}
 
     void operator()(EGLNativeWindowType* type)
@@ -80,14 +81,14 @@ struct MirNativeWindowDeleter
     }
 
 private:
-    mcla::MirNativeWindow *window;
+    mga::MirNativeWindow *window;
 };
 }
 
 std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_native_window(ClientSurface *surface)
 {
     auto anativewindow_interpreter = std::make_shared<mcla::ClientSurfaceInterpreter>(*surface);
-    auto mir_native_window = new mcla::MirNativeWindow(anativewindow_interpreter);
+    auto mir_native_window = new mga::MirNativeWindow(anativewindow_interpreter);
     auto egl_native_window = new EGLNativeWindowType;
     *egl_native_window = mir_native_window;
     MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window);

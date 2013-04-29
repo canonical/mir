@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -29,13 +29,13 @@ namespace client
 namespace android
 {
 
-class ClientSurfaceInterpreter : public AndroidDriverInterpreter
+class ClientSurfaceInterpreter : public graphics::android::AndroidDriverInterpreter
 {
 public:
     explicit ClientSurfaceInterpreter(ClientSurface& surface);
 
     ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*);
+    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<graphics::android::SyncObject> const&);
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;
 private:

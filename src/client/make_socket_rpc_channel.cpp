@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -21,7 +21,7 @@
 
 namespace mcl = mir::client;
 
-std::shared_ptr<google::protobuf::RpcChannel>
+std::shared_ptr<mcl::MirBasicRpcChannel>
 mcl::make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log)
 {
     return std::make_shared<MirSocketRpcChannel>(name, log);

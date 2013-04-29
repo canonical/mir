@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -27,6 +27,7 @@
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
+#include "mir/compositor/overlay_renderer.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
@@ -35,7 +36,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
-#include "mir/shell/session_container.h"
+#include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
@@ -44,8 +45,11 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
-#include "mir/input/input_manager.h"
 #include "mir/input/null_input_manager.h"
+#include "mir/input/null_input_target_listener.h"
+#include "input/android/default_android_input_configuration.h"
+#include "input/android/android_input_manager.h"
+#include "input/android/android_dispatcher_controller.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
@@ -56,8 +60,10 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/time/high_resolution_clock.h"
+#include "mir/default_configuration.h"
 
 namespace mc = mir::compositor;
+namespace me = mir::events;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -65,6 +71,7 @@ namespace ml = mir::logging;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mi = mir::input;
+namespace mia = mi::android;
 
 namespace
 {
@@ -102,7 +109,8 @@ private:
     std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server()
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
+        std::shared_ptr<me::EventSink> const& sink)
     {
         return std::make_shared<mf::SessionMediator>(
             shell,
@@ -110,6 +118,7 @@ private:
             graphics_display,
             buffer_allocator,
             sm_report,
+            sink,
             resource_cache());
     }
 
@@ -133,41 +142,9 @@ char const* const glog_stderrthreshold = "glog-stderrthreshold";
 char const* const glog_minloglevel     = "glog-minloglevel";
 char const* const glog_log_dir         = "glog-log-dir";
 
-boost::program_options::options_description program_options()
-{
-    namespace po = boost::program_options;
-
-    po::options_description desc(
-        "Command-line options.\n"
-        "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"");
-    desc.add_options()
-        ("file,f", po::value<std::string>(),    "Socket filename")
-        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=false]")
-        (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
-        (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
-        (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
-        (glog,                                  "Use google::GLog for logging")
-        (glog_stderrthreshold, po::value<int>(),"Copy log messages at or above this level "
-                                                "to stderr in addition to logfiles. The numbers "
-                                                "of severity levels INFO, WARNING, ERROR, and "
-                                                "FATAL are 0, 1, 2, and 3, respectively."
-                                                " [int:default=2]")
-        (glog_minloglevel, po::value<int>(),    "Log messages at or above this level. The numbers "
-                                                "of severity levels INFO, WARNING, ERROR, and "
-                                                "FATAL are 0, 1, 2, and 3, respectively."
-                                                " [int:default=0]")
-        (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
-                                                "directory instead of the default logging directory."
-                                                " [string:default=\"\"]")
-        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool. [int:default=10]")
-        ("tests-use-real-graphics", po::value<bool>(), "Use real graphics in tests. [bool:default=false]")
-        ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
-
-    return desc;
-}
-
 
 void parse_arguments(
+    boost::program_options::options_description desc,
     std::shared_ptr<mir::options::ProgramOption> const& options,
     int argc,
     char const* argv[])
@@ -175,8 +152,6 @@ void parse_arguments(
     namespace po = boost::program_options;
 
     bool exit_with_helptext = false;
-
-    auto desc = program_options();
 
     try
     {
@@ -204,31 +179,69 @@ void parse_arguments(
     }
 }
 
-void parse_environment(std::shared_ptr<mir::options::ProgramOption> const& options)
+void parse_environment(
+    boost::program_options::options_description& desc,
+    std::shared_ptr<mir::options::ProgramOption> const& options)
 {
-    auto desc = program_options();
-
     options->parse_environment(desc, "MIR_SERVER_");
 }
 }
 
-mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[])
+mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
+    argc(argc),
+    argv(argv),
+    program_options(std::make_shared<boost::program_options::options_description>(
+    "Command-line options.\n"
+    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
 {
-    auto options = std::make_shared<mir::options::ProgramOption>();
+    namespace po = boost::program_options;
 
-    parse_arguments(options, argc, argv);
-    parse_environment(options);
+    add_options()
+        ("file,f", po::value<std::string>(),    "Socket filename")
+        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=false]")
+        (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
+        (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
+        (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
+        (glog,                                  "Use google::GLog for logging")
+        (glog_stderrthreshold, po::value<int>(),"Copy log messages at or above this level "
+                                                "to stderr in addition to logfiles. The numbers "
+                                                "of severity levels INFO, WARNING, ERROR, and "
+                                                "FATAL are 0, 1, 2, and 3, respectively."
+                                                " [int:default=2]")
+        (glog_minloglevel, po::value<int>(),    "Log messages at or above this level. The numbers "
+                                                "of severity levels INFO, WARNING, ERROR, and "
+                                                "FATAL are 0, 1, 2, and 3, respectively."
+                                                " [int:default=0]")
+        (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
+                                                "directory instead of the default logging directory."
+                                                " [string:default=\"\"]")
+        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool. [int:default=10]");
+}
 
-    this->options = options;
+boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
+{
+    if (options)
+        BOOST_THROW_EXCEPTION(std::logic_error("add_options() must be called before the_options()"));
+
+    return program_options->add_options();
 }
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    return the_options()->get("file", "/tmp/mir_socket");
+    return the_options()->get("file", mir::default_server_socket);
 }
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
 {
+    if (!options)
+    {
+        auto options = std::make_shared<mir::options::ProgramOption>();
+
+        parse_arguments(*program_options, options, argc, argv);
+        parse_environment(*program_options, options);
+
+        this->options = options;
+    }
     return options;
 }
 
@@ -292,21 +305,71 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
         });
 }
 
-std::shared_ptr<mf::Shell>
-mir::DefaultServerConfiguration::the_frontend_shell()
+std::shared_ptr<msh::SessionContainer>
+mir::DefaultServerConfiguration::the_shell_session_container()
+{
+    return shell_session_container(
+        []{ return std::make_shared<msh::DefaultSessionContainer>(); });
+}
+
+std::shared_ptr<msh::FocusSetter>
+mir::DefaultServerConfiguration::the_shell_focus_setter()
+{
+    return shell_focus_setter(
+        [this]
+        {
+            return std::make_shared<msh::SingleVisibilityFocusMechanism>(
+                the_shell_session_container());
+        });
+}
+
+std::shared_ptr<msh::FocusSequence>
+mir::DefaultServerConfiguration::the_shell_focus_sequence()
+{
+    return shell_focus_sequence(
+        [this]
+        {
+            return std::make_shared<msh::RegistrationOrderFocusSequence>(
+                the_shell_session_container());
+        });
+}
+
+std::shared_ptr<msh::PlacementStrategy>
+mir::DefaultServerConfiguration::the_shell_placement_strategy()
+{
+    return shell_placement_strategy(
+        [this]
+        {
+            return std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
+        });
+}
+
+std::shared_ptr<msh::SessionManager>
+mir::DefaultServerConfiguration::the_session_manager()
 {
     return session_manager(
         [this]() -> std::shared_ptr<msh::SessionManager>
         {
-            auto session_container = std::make_shared<msh::SessionContainer>();
-            auto focus_mechanism = std::make_shared<msh::SingleVisibilityFocusMechanism>(session_container, the_input_focus_selector());
-            auto focus_selection_strategy = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
-
-            auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
-            auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
-
-            return std::make_shared<msh::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_mechanism);
+            return std::make_shared<msh::SessionManager>(
+                the_shell_surface_factory(),
+                the_shell_session_container(),
+                the_shell_focus_sequence(),
+                the_shell_focus_setter(),
+                the_input_target_listener());
         });
+}
+
+
+std::shared_ptr<mf::Shell>
+mir::DefaultServerConfiguration::the_frontend_shell()
+{
+    return the_session_manager();
+}
+
+std::shared_ptr<msh::FocusController>
+mir::DefaultServerConfiguration::the_focus_controller()
+{
+    return the_session_manager();
 }
 
 std::initializer_list<std::shared_ptr<mi::EventFilter> const>
@@ -315,14 +378,25 @@ mir::DefaultServerConfiguration::the_event_filters()
     return empty_filter_list;
 }
 
+std::shared_ptr<mia::InputConfiguration>
+mir::DefaultServerConfiguration::the_input_configuration()
+{
+    if (!input_configuration)
+    {
+        const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
+        input_configuration = std::make_shared<mia::DefaultInputConfiguration>(the_event_filters(), the_display(), null_cursor_listener);
+    }
+    return input_configuration;
+}
+
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get("enable-input", false))
-                return mi::create_input_manager(the_event_filters(), the_display());
+            if (the_options()->get("enable-input", true))
+                return std::make_shared<mia::InputManager>(the_input_configuration());
             else 
                 return std::make_shared<mi::NullInputManager>();
         });
@@ -374,12 +448,18 @@ mir::DefaultServerConfiguration::the_renderables()
 }
 
 std::shared_ptr<msh::SurfaceFactory>
-mir::DefaultServerConfiguration::the_surface_factory()
+mir::DefaultServerConfiguration::the_shell_surface_factory()
 {
-    return surface_source(
+    return shell_surface_factory(
         [this]()
         {
-            return std::make_shared<msh::SurfaceSource>(the_surface_builder(), the_input_channel_factory());
+            auto surface_source = std::make_shared<msh::SurfaceSource>(
+                the_surface_builder(),
+                the_input_channel_factory());
+
+            return std::make_shared<msh::OrganisingSurfaceFactory>(
+                surface_source,
+                the_shell_placement_strategy());
         });
 }
 
@@ -393,13 +473,27 @@ mir::DefaultServerConfiguration::the_surface_builder()
         });
 }
 
+std::shared_ptr<mc::OverlayRenderer>
+mir::DefaultServerConfiguration::the_overlay_renderer()
+{
+    struct NullOverlayRenderer : public mc::OverlayRenderer
+    {
+        virtual void render(mg::DisplayBuffer&) {}
+    };
+    return overlay_renderer(
+        [this]()
+        {
+            return std::make_shared<NullOverlayRenderer>();
+        });
+}
+
 std::shared_ptr<mc::CompositingStrategy>
 mir::DefaultServerConfiguration::the_compositing_strategy()
 {
     return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer(), the_overlay_renderer());
         });
 }
 
@@ -503,9 +597,16 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_manager();
 }
 
-std::shared_ptr<msh::InputFocusSelector> mir::DefaultServerConfiguration::the_input_focus_selector()
+std::shared_ptr<msh::InputTargetListener> mir::DefaultServerConfiguration::the_input_target_listener()
 {
-    return the_input_manager();
+    return input_target_listener(
+        [&]() -> std::shared_ptr<msh::InputTargetListener>
+        {
+            if (the_options()->get("enable-input", false))
+                return std::make_shared<mia::DispatcherController>(the_input_configuration());
+            else
+                return std::make_shared<mi::NullInputTargetListener>();
+        });
 }
 
 std::shared_ptr<mir::time::TimeSource> mir::DefaultServerConfiguration::the_time_source()

@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -32,12 +32,15 @@ namespace graphics
 namespace gbm
 {
 
+class VirtualTerminal;
+
 class GBMPlatform : public Platform,
                     public DRMAuthenticator,
                     public std::enable_shared_from_this<GBMPlatform>
 {
 public:
-    explicit GBMPlatform(std::shared_ptr<DisplayReport> const& reporter);
+    explicit GBMPlatform(std::shared_ptr<DisplayReport> const& reporter,
+                         std::shared_ptr<VirtualTerminal> const& vt);
 
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
@@ -53,7 +56,9 @@ public:
     helpers::DRMHelper drm;
     helpers::GBMHelper gbm;
 
-    std::shared_ptr<DisplayReport> listener;
+    std::shared_ptr<DisplayReport> const listener;
+    std::shared_ptr<VirtualTerminal> const vt;
+
 private:
     std::shared_ptr<MirMesaEGLNativeDisplay> native_display;
 };

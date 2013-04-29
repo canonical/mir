@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
@@ -27,10 +27,17 @@ mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi:
 
 bool mi::EventFilterChain::handles(const MirEvent &event)
 {
-    for (auto it = filters.begin(); it != filters.end(); it++)
+    auto it = filters.begin();
+    while (it != filters.end())
     {
-        auto filter = *it;
+        auto filter = (*it).lock();
+        if (!filter)
+        {
+            it = filters.erase(it);
+            continue;
+        }
         if (filter->handles(event)) return true;
+        ++it;
     }
     return false;
 }

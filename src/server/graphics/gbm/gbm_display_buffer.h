@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
@@ -52,8 +53,11 @@ public:
 
     geometry::Rectangle view_area() const;
     void make_current();
+    void release_current();
     void clear();
-    bool post_update();
+    void post_update();
+
+    void schedule_set_crtc();
 
 private:
     BufferObject* get_front_buffer_object();
@@ -68,6 +72,7 @@ private:
     GBMSurfaceUPtr surface_gbm;
     helpers::EGLHelper egl;
     geometry::Size size;
+    std::atomic<bool> needs_set_crtc;
 };
 
 }

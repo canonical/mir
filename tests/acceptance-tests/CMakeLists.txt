@@ -9,6 +9,7 @@ set(
   test_surfaceloop.cpp
   test_test_framework.cpp
   test_focus_selection.cpp
+  test_server_shutdown.cpp
 )
 
 list(APPEND SOURCES

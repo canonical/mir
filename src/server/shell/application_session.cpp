@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <racarr@canonical.com>
@@ -18,8 +18,8 @@
 
 #include "mir/shell/application_session.h"
 #include "mir/shell/surface.h"
-
 #include "mir/shell/surface_factory.h"
+#include "mir/shell/input_target_listener.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -28,17 +28,30 @@
 #include <cassert>
 #include <algorithm>
 
+namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::string const& session_name) :
+    std::shared_ptr<msh::InputTargetListener> const& input_target_listener,
+    std::string const& session_name,
+    std::shared_ptr<me::EventSink> const& sink) :
     surface_factory(surface_factory),
+    input_target_listener(input_target_listener),
     session_name(session_name),
+    event_sink(sink),
     next_surface_id(0)
 {
     assert(surface_factory);
+}
+
+msh::ApplicationSession::ApplicationSession(
+    std::shared_ptr<SurfaceFactory> const& surface_factory,
+    std::shared_ptr<msh::InputTargetListener> const& input_target_listener,
+    std::string const& session_name) :
+    ApplicationSession(surface_factory, input_target_listener, session_name, std::shared_ptr<me::EventSink>())
+{
 }
 
 msh::ApplicationSession::~ApplicationSession()
@@ -46,6 +59,7 @@ msh::ApplicationSession::~ApplicationSession()
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto const& pair_id_surface : surfaces)
     {
+        input_target_listener->input_surface_closed(pair_id_surface.second);
         pair_id_surface.second->destroy();
     }
 }
@@ -57,8 +71,8 @@ mf::SurfaceId msh::ApplicationSession::next_id()
 
 mf::SurfaceId msh::ApplicationSession::create_surface(const mf::SurfaceCreationParameters& params)
 {
-    auto surf = surface_factory->create_surface(params);
     auto const id = next_id();
+    auto surf = surface_factory->create_surface(params, id, event_sink);
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
@@ -95,6 +109,7 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
 
+    input_target_listener->input_surface_closed(p->second);
     p->second->destroy();
     surfaces.erase(p);
 }
@@ -104,12 +119,12 @@ std::string msh::ApplicationSession::name() const
     return session_name;
 }
 
-void msh::ApplicationSession::shutdown()
+void msh::ApplicationSession::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     for (auto& id_s : surfaces)
     {
-        id_s.second->shutdown();
+        id_s.second->force_requests_to_complete();
     }
 }
 

@@ -26,7 +26,7 @@
 #include <getopt.h>
 #include <stdint.h>
 
-static char const *socket_file = "/tmp/mir_socket";
+static char const *socket_file = NULL;
 
 static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
 {
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_software};
 
-    surface = mir_surface_create_sync(connection, &request_params);
+    surface = mir_connection_create_surface_sync(connection, &request_params);
     assert(surface != NULL);
     assert(mir_surface_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);

@@ -21,14 +21,25 @@
 #include "mir/run_mir.h"
 #include "mir/default_server_configuration.h"
 
-#include <boost/exception/diagnostic_information.hpp>
+#include "mir/report_exception.h"
 #include <iostream>
 
 namespace me = mir::examples;
 
+///\page demo_inprocess_egl demo_inprocess_egl.cpp: A simple use of egl in process
+///\section main main
+/// The main() function uses a default configuration for Mir and sets up an InprocessEGLClient
+/// that accesses the graphics platform and surface factory.
+/// \snippet demo_inprocess_egl.cpp main_tag
+/// This InprocessEGLClient sets up a single surface
+/// \snippet inprocess_egl_client.cpp setup_tag
+/// And loops updating the surface
+/// \snippet inprocess_egl_client.cpp loop_tag
+
 int main(int argc, char const* argv[])
 try
 {
+    ///\internal [main_tag]
     mir::DefaultServerConfiguration config(argc, argv);
 
     std::shared_ptr<me::InprocessEGLClient> client;
@@ -36,13 +47,14 @@ try
     {
         client = std::make_shared<me::InprocessEGLClient>(
               config.the_graphics_platform(),
-              config.the_surface_factory());
+              config.the_shell_surface_factory());
     });
+    ///\internal [main_tag]
 
     return 0;
 }
-catch (std::exception const& error)
+catch (...)
 {
-    std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
+    mir::report_exception(std::cerr);
     return 1;
 }

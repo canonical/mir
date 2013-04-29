@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voß <thomas.voss@canonical.com>
@@ -49,7 +49,7 @@ MATCHER(KeyDownEvent, "")
     if (arg.type != mir_event_type_key)
         return false;
 
-    return arg.key.action == AKEY_EVENT_ACTION_DOWN;
+    return arg.key.action == mir_key_action_down;
 }
 MATCHER(ButtonDownEvent, "")
 {
@@ -57,7 +57,15 @@ MATCHER(ButtonDownEvent, "")
         return false;
     if (arg.motion.button_state == 0)
         return false;
-    return arg.motion.action == AKEY_EVENT_ACTION_DOWN;
+    return arg.motion.action == mir_motion_action_down;
+}
+MATCHER(ButtonUpEvent, "")
+{
+    if (arg.type != mir_event_type_motion)
+        return false;
+    if (arg.motion.button_state != 0)
+        return false;
+    return arg.motion.action == mir_motion_action_up;
 }
 MATCHER_P2(MotionEvent, dx, dy, "")
 {

@@ -66,12 +66,16 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
     {
     }
 
-    std::shared_ptr<msh::Surface> create_surface(const mf::SurfaceCreationParameters& params)
+    std::shared_ptr<msh::Surface> create_surface(const mf::SurfaceCreationParameters& params,
+        frontend::SurfaceId id,
+        std::shared_ptr<events::EventSink> const& sink) override
     {
         return std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
             params,
-            std::shared_ptr<mir::input::InputChannel>());
+            std::shared_ptr<mir::input::InputChannel>(),
+            id,
+            sink);
     }
 
     mtd::StubSurfaceBuilder surface_builder;
@@ -105,6 +109,15 @@ public:
         return std::shared_ptr<mg::DisplayConfiguration>();
     }
 
+    void register_pause_resume_handlers(MainLoop&,
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
+    {
+    }
+
+    void pause() {}
+    void resume() {}
+
     geom::Rectangle area;
 };
 
@@ -119,7 +132,7 @@ namespace
         DummyServerConfiguration() : mir::DefaultServerConfiguration(0, nullptr) {}
 
         virtual std::shared_ptr<mir::shell::SurfaceFactory>
-        the_surface_factory()
+        the_shell_surface_factory()
         {
             return std::make_shared<mtc::DummySurfaceFactory>();
         }
@@ -132,9 +145,10 @@ mtc::SessionManagementContext::SessionManagementContext() :
 {
 }
 
-mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& server_configuration) :
+mtc::SessionManagementContext::SessionManagementContext(
+    std::shared_ptr<frontend::Shell> const& shell) :
     view_area(std::make_shared<mtc::SizedDisplay>()),
-    shell(server_configuration.the_frontend_shell())
+    shell(shell)
 {
 }
 
@@ -142,7 +156,7 @@ mtc::SessionManagementContext::SessionManagementContext(ServerConfiguration& ser
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
     auto const params = mf::a_surface().of_name(window_name);
-    auto session = shell->open_session(window_name);
+    auto session = shell->open_session(window_name, std::shared_ptr<mir::events::EventSink>());
     auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);
@@ -154,7 +168,7 @@ bool mtc::SessionManagementContext::open_window_with_size(std::string const& win
                                                           geom::Size const& size)
 {
     auto const params = mf::a_surface().of_name(window_name).of_size(size);
-    auto session = shell->open_session(window_name);
+    auto session = shell->open_session(window_name, std::shared_ptr<mir::events::EventSink>());
     auto const surface_id = session->create_surface(params);
 
     open_windows[window_name] = std::make_tuple(session, surface_id);

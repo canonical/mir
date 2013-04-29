@@ -33,6 +33,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace me = mir::events;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
@@ -310,7 +311,7 @@ TEST_F(ShellSurface, destroy_throw_behavior)
     });
 }
 
-TEST_F(ShellSurface, shutdown_throw_behavior)
+TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
@@ -318,13 +319,13 @@ TEST_F(ShellSurface, shutdown_throw_behavior)
             null_input_channel);
 
     EXPECT_NO_THROW({
-        test.shutdown();
+        test.force_requests_to_complete();
     });
 
     surface_builder.reset_surface();
 
     EXPECT_NO_THROW({
-        test.shutdown();
+        test.force_requests_to_complete();
     });
 }
 
@@ -415,3 +416,39 @@ TEST_F(ShellSurface, types)
                              mir_surface_type_freestyle));
     EXPECT_EQ(mir_surface_type_freestyle, surf.type());
 }
+
+TEST_F(ShellSurface, states)
+{
+    using namespace testing;
+
+    msh::Surface surf(
+            mt::fake_shared(surface_builder),
+            mf::a_surface(),
+            null_input_channel);
+
+    EXPECT_EQ(mir_surface_state_restored, surf.state());
+
+    EXPECT_EQ(mir_surface_state_vertmaximized,
+              surf.configure(mir_surface_attrib_state,
+                             mir_surface_state_vertmaximized));
+    EXPECT_EQ(mir_surface_state_vertmaximized, surf.state());
+
+    EXPECT_THROW({
+        surf.configure(mir_surface_attrib_state, 999);
+    }, std::logic_error);
+    EXPECT_THROW({
+        surf.configure(mir_surface_attrib_state, -1);
+    }, std::logic_error);
+    EXPECT_EQ(mir_surface_state_vertmaximized, surf.state());
+
+    EXPECT_EQ(mir_surface_state_minimized,
+              surf.configure(mir_surface_attrib_state,
+                             mir_surface_state_minimized));
+    EXPECT_EQ(mir_surface_state_minimized, surf.state());
+
+    EXPECT_EQ(mir_surface_state_fullscreen,
+              surf.configure(mir_surface_attrib_state,
+                             mir_surface_state_fullscreen));
+    EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
+}
+

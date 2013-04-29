@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
@@ -21,6 +21,7 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
+#include "mir/shell/focus_controller.h"
 
 #include <mutex>
 #include <memory>
@@ -40,19 +41,21 @@ class SurfaceFactory;
 class SessionContainer;
 class FocusSequence;
 class FocusSetter;
+class InputTargetListener;
+class Session;
 
-class SessionManager : public frontend::Shell
+class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:
     explicit SessionManager(std::shared_ptr<SurfaceFactory> const& surface_factory,
-                            std::shared_ptr<SessionContainer> const& session_container,
+                            std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<FocusSequence> const& focus_sequence,
-                            std::shared_ptr<FocusSetter> const& focus_setter);
+                            std::shared_ptr<FocusSetter> const& focus_setter,
+                            std::shared_ptr<InputTargetListener> const& input_target_listener);
     virtual ~SessionManager();
 
-    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name);
+    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name, std::shared_ptr<events::EventSink> const& sink);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
-    virtual void shutdown();
 
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
                                  frontend::SurfaceCreationParameters const& params);
@@ -68,13 +71,14 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
+    std::shared_ptr<InputTargetListener> const input_target_listener;
 
     std::mutex mutex;
-    std::weak_ptr<frontend::Session> focus_application;
-    typedef std::vector<std::pair<int, std::shared_ptr<frontend::Session>>> Tags;
+    std::weak_ptr<Session> focus_application;
+    typedef std::vector<std::pair<int, std::shared_ptr<Session>>> Tags;
     Tags tags;
 
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<frontend::Session> const& next_focus);
+    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 };
 
 }

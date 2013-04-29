@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
@@ -146,7 +146,12 @@ TEST_F(AndroidInputReceiverThreadSetup, input_callback_invoked_from_thread)
     }
 
     input_thread.start();
-    while (handled == false) { } // We would block forever here were delivery not threaded
+
+    // We would block forever here were delivery not threaded.
+    // Yield to improve the run-time under valgrind.
+    while (handled == false)
+        std::this_thread::yield();
+
     input_thread.join();
 }
 

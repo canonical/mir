@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -18,26 +18,25 @@
 
 #include "gbm_platform.h"
 
-#include <boost/throw_exception.hpp>
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
+#include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/egl/mesa_native_display.h"
-#include "mir/logging/logger.h"
-#include "mir/logging/dumb_console_logger.h"
 
 #include <xf86drm.h>
 
-#include <stdexcept>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mgeglm = mg::egl::mesa;
-namespace ml = mir::logging;
 namespace mc = mir::compositor;
 
 namespace
 {
+
 struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
 {
     GBMPlatformIPCPackage(int drm_auth_fd)
@@ -52,11 +51,36 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
     }
 };
 
+struct RealVTFileOperations : public mgg::VTFileOperations
+{
+    int open(char const* pathname, int flags)
+    {
+        return ::open(pathname, flags);
+    }
+
+    int close(int fd)
+    {
+        return ::close(fd);
+    }
+
+    int ioctl(int d, int request, int val)
+    {
+        return ::ioctl(d, request, val);
+    }
+
+    int ioctl(int d, int request, void* p_val)
+    {
+        return ::ioctl(d, request, p_val);
+    }
+};
+
 }
 
-mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener) :
-    listener(listener),
-    native_display(0)
+mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
+                              std::shared_ptr<VirtualTerminal> const& vt)
+    : listener{listener},
+      vt{vt},
+      native_display{0}
 {
     drm.setup();
     gbm.setup(drm);
@@ -97,5 +121,7 @@ EGLNativeDisplayType mgg::GBMPlatform::shell_egl_display()
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
 {
-    return std::make_shared<mgg::GBMPlatform>(report);
+    auto real_fops = std::make_shared<RealVTFileOperations>();
+    auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, report);
+    return std::make_shared<mgg::GBMPlatform>(report, vt);
 }

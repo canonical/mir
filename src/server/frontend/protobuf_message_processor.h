@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -24,6 +24,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
+#include "mir/events/event_sink.h"
 
 #include <vector>
 #include <memory>
@@ -42,7 +43,8 @@ class MessageProcessorReport;
 namespace detail
 {
 
-struct ProtobufMessageProcessor : MessageProcessor
+struct ProtobufMessageProcessor : MessageProcessor,
+                                  public events::EventSink
 {
     ProtobufMessageProcessor(
         MessageSender* sender,
@@ -62,15 +64,15 @@ private:
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
     // OTOH until we have a real requirement it is hard to see how best to generalise.
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Platform* response);
-
-    // TODO detecting the message type to see if we send FDs seems a bit of a frig.
-    // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response);
 
     // TODO detecting the message type to see if we send FDs seems a bit of a frig.
     // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response);
+
+    void send_event(MirEvent const& e);
+
+    void handle_event(MirEvent const& e);
 
     template<class Response>
     std::vector<int32_t> extract_fds_from(Response* response);

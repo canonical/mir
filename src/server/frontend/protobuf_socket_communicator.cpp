@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
@@ -22,6 +22,7 @@
 
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/protobuf/google_protobuf_guard.h"
+#include "event_pipe.h"
 
 #include <boost/signals2.hpp>
 
@@ -34,19 +35,23 @@ namespace ba = boost::asio;
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-    int threads)
+    int threads,
+    std::function<void()> const& force_requests_to_complete)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
     acceptor(io_service, socket_file),
     io_service_threads(threads),
     ipc_factory(ipc_factory),
     next_session_id(0),
-    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
+    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
+    force_requests_to_complete(force_requests_to_complete)
 {
     start_accept();
 }
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
+    auto const& event_pipe = std::make_shared<EventPipe>();
+
     auto const& socket_session = std::make_shared<mfd::SocketSession>(
         io_service,
         next_id(),
@@ -54,10 +59,11 @@ void mf::ProtobufSocketCommunicator::start_accept()
 
     auto session = std::make_shared<detail::ProtobufMessageProcessor>(
         socket_session.get(),
-        ipc_factory->make_ipc_server(),
+        ipc_factory->make_ipc_server(event_pipe),
         ipc_factory->resource_cache(),
         ipc_factory->report());
 
+    event_pipe->set_target(session);
     socket_session->set_processor(session);
 
     acceptor.async_accept(
@@ -87,10 +93,18 @@ void mf::ProtobufSocketCommunicator::start()
     }
 }
 
-mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
+void mf::ProtobufSocketCommunicator::stop()
 {
+    /* Stop processing new requests */
     io_service.stop();
 
+    /* 
+     * Ensure that any pending requests will complete (i.e., that they
+     * will not block indefinitely waiting for a resource from the server)
+     */
+    force_requests_to_complete();
+
+    /* Wait for all io processing threads to finish */
     for (auto& thread : io_service_threads)
     {
         if (thread.joinable())
@@ -98,6 +112,14 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
             thread.join();
         }
     }
+
+    /* Prepare for a potential restart */
+    io_service.reset();
+}
+
+mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
+{
+    stop();
 
     connected_sessions->clear();
 

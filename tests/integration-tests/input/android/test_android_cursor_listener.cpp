@@ -64,8 +64,9 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
             geom::Size{geom::Width(1024), geom::Height(1024)}
         };
 
+        event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            std::initializer_list<std::shared_ptr<mi::EventFilter> const>{mt::fake_shared(event_filter)},
+            std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter},
             mt::fake_shared(viewable_area),
             mt::fake_shared(cursor_listener));
 
@@ -86,7 +87,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
-    MockEventFilter event_filter;
+    std::shared_ptr<MockEventFilter> event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
     std::shared_ptr<mia::InputManager> input_manager;
     MockCursorListener cursor_listener;
@@ -107,7 +108,7 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
     EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1);
 
     // The stack doesn't like shutting down while events are still moving through
-    EXPECT_CALL(event_filter, handles(_))
+    EXPECT_CALL(*event_filter, handles(_))
             .WillOnce(mt::ReturnFalseAndWakeUp(wait_condition));
 
     fake_event_hub->synthesize_builtin_cursor_added();

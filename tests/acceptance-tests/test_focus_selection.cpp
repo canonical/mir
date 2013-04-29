@@ -24,11 +24,11 @@
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
 #include "mir/graphics/display.h"
-#include "mir/shell/input_focus_selector.h"
+#include "mir/shell/input_target_listener.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/mock_input_focus_selector.h"
+#include "mir_test_doubles/mock_input_target_listener.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,7 +36,8 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mi = mir::input;
-namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -46,6 +47,7 @@ namespace
 
 namespace
 {
+
 struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon() :
@@ -108,7 +110,7 @@ struct SurfaceCreatingClient : ClientConfigCommon
             mir_pixel_format_abgr_8888,
             mir_buffer_usage_hardware
         };
-         mir_wait_for(mir_surface_create(connection, &request_params, create_surface_callback, this));
+         mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
          mir_connection_release(connection);
     }
 };
@@ -121,17 +123,9 @@ MATCHER(NonNullSession, "")
 {
     return arg != std::shared_ptr<msh::Session>();
 }
-MATCHER(NonNullSessionTarget, "")
-{
-    return arg != std::shared_ptr<mi::SessionTarget>();
-}
 MATCHER(NonNullSurfaceTarget, "")
 {
     return arg != std::shared_ptr<mi::SurfaceTarget>();
-}
-MATCHER(NullSurfaceTarget, "")
-{
-    return arg == std::shared_ptr<mi::SurfaceTarget>();
 }
 }
 
@@ -139,21 +133,15 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mf::Shell>
-        the_frontend_shell()
+        std::shared_ptr<msh::FocusSetter>
+        the_shell_focus_setter() override
         {
-            return session_manager(
-            [this]() -> std::shared_ptr<msh::SessionManager>
+            return shell_focus_setter(
+            []
             {
                 using namespace ::testing;
 
-                auto session_container = std::make_shared<msh::SessionContainer>();
                 auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
-                auto focus_selection_strategy = std::make_shared<msh::RegistrationOrderFocusSequence>(session_container);
-
-                auto placement_strategy = std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
-                auto organising_factory = std::make_shared<msh::OrganisingSurfaceFactory>(the_surface_factory(), placement_strategy);
-
                 {
                     InSequence seq;
                     // Once on application registration and once on surface creation
@@ -163,7 +151,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
                 }
                 // TODO: Counterexample ~racarr
 
-                return std::make_shared<msh::SessionManager>(organising_factory, session_container, focus_selection_strategy, focus_setter);
+                return focus_setter;
             });
         }
     } server_config;
@@ -179,30 +167,37 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mtd::MockInputFocusSelector> focus_selector;
+        std::shared_ptr<mtd::MockInputTargetListener> target_listener;
         bool expected;
 
         ServerConfig()
-          : focus_selector(std::make_shared<mtd::MockInputFocusSelector>()),
+          : target_listener(std::make_shared<mtd::MockInputTargetListener>()),
             expected(false)
         {
         }
 
-        std::shared_ptr<msh::InputFocusSelector>
-        the_input_focus_selector() override
+        std::shared_ptr<msh::InputTargetListener>
+        the_input_target_listener() override
         {
             using namespace ::testing;
 
             if (!expected)
             {
-                InSequence seq;
+                
+                EXPECT_CALL(*target_listener, input_application_opened(_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, input_application_closed(_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, input_surface_opened(_,_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, input_surface_closed(_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, focus_cleared()).Times(AtLeast(0));
 
-                EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSessionTarget(), NullSurfaceTarget())).Times(1);
-                EXPECT_CALL(*focus_selector, set_input_focus_to(NonNullSessionTarget(), NonNullSurfaceTarget())).Times(1);
-                expected = true;
+                {
+                    InSequence seq;
+                    EXPECT_CALL(*target_listener, focus_changed(NonNullSurfaceTarget())).Times(1);
+                    expected = true;
+                }
             }
 
-            return focus_selector;
+            return target_listener;
         }
     } server_config;
 

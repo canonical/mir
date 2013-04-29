@@ -7,6 +7,9 @@ message Invocation {
 }
 
 message Result {
-  required uint32 id = 1;
+  // Invocation results have id and response.
+  optional uint32 id = 1;
   optional bytes response = 2;
+  // Events are in events.
+  repeated bytes events = 3;
 }

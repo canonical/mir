@@ -25,6 +25,8 @@
 #ifndef ANDROID
 #include "gbm/mock_drm.h"
 #include "gbm/mock_gbm.h"
+#include "mir_test_doubles/null_virtual_terminal.h"
+#include "src/server/graphics/gbm/gbm_platform.h"
 #else
 #include "mir_test/hw_mock.h"
 #endif
@@ -69,13 +71,24 @@ public:
 #endif
     }
 
+    std::shared_ptr<mg::Platform> create_platform()
+    {
+#ifdef ANDROID
+        return mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+#else
+        return std::make_shared<mg::gbm::GBMPlatform>(
+            std::make_shared<mg::NullDisplayReport>(),
+            std::make_shared<mir::test::doubles::NullVirtualTerminal>());
+#endif
+    }
+
     std::shared_ptr<ml::Logger> logger;
     std::shared_ptr<mg::BufferInitializer> buffer_initializer;
 
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
 #ifdef ANDROID
-    mir::test::HardwareAccessMock hw_access_mock;
+    ::testing::NiceMock<mir::test::HardwareAccessMock> hw_access_mock;
 #else
     ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
@@ -87,7 +100,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
     using namespace testing;
 
     EXPECT_NO_THROW (
-        auto platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+        auto platform = create_platform();
         auto allocator = platform->create_buffer_allocator(buffer_initializer);
 
         EXPECT_TRUE(allocator.get());
@@ -97,7 +110,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 
 TEST_F(GraphicsPlatform, buffer_creation)
 {
-    auto platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+    auto platform = create_platform();
     auto allocator = platform->create_buffer_allocator(buffer_initializer);
     auto supported_pixel_formats = allocator->supported_pixel_formats();
 
@@ -119,7 +132,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
 
 TEST_F(GraphicsPlatform, get_ipc_package)
 {
-    auto platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+    auto platform = create_platform();
     auto pkg = platform->get_ipc_package();
 
     ASSERT_TRUE(pkg.get() != NULL);

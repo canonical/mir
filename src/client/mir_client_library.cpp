@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -16,6 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 
@@ -53,11 +54,13 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
+        const std::string sock = socket_file ? socket_file :
+                                               mir::default_server_socket;
         auto log = std::make_shared<mcl::ConsoleLogger>();
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
         MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(socket_file, log),
+            mcl::make_rpc_channel(sock, log),
             log,
             client_platform_factory);
 
@@ -107,7 +110,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
     return connection->egl_native_display();
 }
 
-MirWaitHandle* mir_surface_create(
+MirWaitHandle* mir_connection_create_surface(
     MirConnection* connection,
     MirSurfaceParameters const* params,
     mir_surface_lifecycle_callback callback,
@@ -127,13 +130,13 @@ MirWaitHandle* mir_surface_create(
 
 }
 
-MirSurface* mir_surface_create_sync(
+MirSurface* mir_connection_create_surface_sync(
     MirConnection* connection, 
     MirSurfaceParameters const* params)
 {
     MirSurface *surface = nullptr;
 
-    mir_wait_for(mir_surface_create(connection, params,
+    mir_wait_for(mir_connection_create_surface(connection, params,
         reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
         &surface));
 
@@ -160,7 +163,7 @@ void mir_surface_release_sync(MirSurface *surface)
         nullptr));
 }
 
-int mir_debug_surface_id(MirSurface * surface)
+int mir_surface_get_id(MirSurface * surface)
 {
     return surface->id();
 }
@@ -261,4 +264,30 @@ MirSurfaceType mir_surface_get_type(MirSurface *surf)
     }
 
     return type;
+}
+
+MirWaitHandle* mir_surface_set_state(MirSurface *surf, MirSurfaceState state)
+{
+    return surf ? surf->configure(mir_surface_attrib_state, state) : NULL;
+}
+
+MirSurfaceState mir_surface_get_state(MirSurface *surf)
+{
+    MirSurfaceState state = mir_surface_state_unknown;
+
+    if (surf)
+    {
+        int s = surf->attrib(mir_surface_attrib_state);
+
+        if (s == mir_surface_state_unknown)
+        {
+            surf->configure(mir_surface_attrib_state,
+                            mir_surface_state_unknown)->wait_for_result();
+            s = surf->attrib(mir_surface_attrib_state);
+        }
+
+        state = static_cast<MirSurfaceState>(s);
+    }
+
+    return state;
 }

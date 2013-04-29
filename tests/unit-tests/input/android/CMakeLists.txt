@@ -1,5 +1,4 @@
 list(APPEND UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_chain.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_input_dispatcher_policy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_pointer_controller.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_lexicon.cpp
@@ -8,6 +7,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_communication_package.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_application_handle.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_window_handle.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_dispatcher_controller.cpp
 )
 
 set(

@@ -16,8 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/display_report.h"
 #include "android_display_factory.h"
 #include "hwc_factory.h"
+#include "framebuffer_factory.h"
 #include "display_allocator.h"
 #include "android_display.h"
 #include "hwc_display.h"
@@ -29,12 +31,17 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
-                                        std::shared_ptr<HWCFactory> const& hwc_factory)
+                                                  std::shared_ptr<HWCFactory> const& hwc_factory,
+                                                  std::shared_ptr<FramebufferFactory> const& fb_factory,
+                                                  std::shared_ptr<DisplayReport> const& display_report)
     : display_factory(display_factory),
-      hwc_factory(hwc_factory)
+      hwc_factory(hwc_factory),
+      fb_factory(fb_factory),
+      fb_dev(fb_factory->create_fb_device()),
+      display_report(display_report)
 {
     const hw_module_t *hw_module;
-    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);
+    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);    
     if ((rc != 0) || (hw_module == nullptr))
     {
         return;
@@ -72,15 +79,29 @@ void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
 }
 
 std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
-{ 
+{
+    std::shared_ptr<mg::Display> display;
+    //TODO: if hwc display creation fails, we could try the gpu display
     if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_1))
     {
-        //TODO: once we can log things here, if this throws, we should log and recover to a gpu display
-        auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev);
-        return display_factory->create_hwc_display(hwc_device);
+        auto hwc_device = hwc_factory->create_hwc_1_1(hwc_dev, fb_dev);
+        auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
+        display = display_factory->create_hwc_display(hwc_device, fb_native_win, display_report);
+        display_report->report_hwc_composition_in_use(1,1);
+    }
+    else if (hwc_dev && (hwc_dev->common.version == HWC_DEVICE_API_VERSION_1_0))
+    {
+        auto hwc_device = hwc_factory->create_hwc_1_0(hwc_dev, fb_dev);
+        auto fb_native_win = fb_factory->create_fb_native_window(hwc_device);
+        display = display_factory->create_hwc_display(hwc_device, fb_native_win, display_report);
+        display_report->report_hwc_composition_in_use(1,0);
     }
     else
     {
-        return display_factory->create_gpu_display();
+        auto fb_native_win = fb_factory->create_fb_native_window(fb_dev);
+        display = display_factory->create_gpu_display(fb_native_win, display_report);
+        display_report->report_gpu_composition_in_use();
     }
+
+    return display;
 }

@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
@@ -39,11 +39,16 @@ msh::SurfaceSource::SurfaceSource(
     assert(surface_builder);
 }
 
-std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(const mf::SurfaceCreationParameters& params)
+std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
+    frontend::SurfaceCreationParameters const& params,
+    frontend::SurfaceId id,
+    std::shared_ptr<events::EventSink> const& sink)
 {
     return std::make_shared<Surface>(
         surface_builder,
         params,
-        input_factory->make_input_channel());
+        input_factory->make_input_channel(),
+        id,
+        sink);
 }
 

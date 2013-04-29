@@ -8,7 +8,7 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -21,6 +21,7 @@
 #include <stdexcept>
 
 namespace mcla=mir::client::android;
+namespace mga=mir::graphics::android;
 
 mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
  :  surface(surface),
@@ -39,8 +40,9 @@ ANativeWindowBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*)
+void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<mga::SyncObject> const& sync_fence)
 {
+    sync_fence->wait();
     mir_wait_for(surface.next_buffer(empty, NULL));
 }
 

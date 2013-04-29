@@ -21,6 +21,7 @@
 #include "mir/compositor/renderables.h"
 #include "mir/graphics/display.h"
 #include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/mock_display_buffer.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -53,9 +54,48 @@ class StubDisplay : public mg::Display
     {
         return std::shared_ptr<mg::DisplayConfiguration>();
     }
+    void register_pause_resume_handlers(mir::MainLoop&,
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
+    {
+    }
+    void pause() {}
+    void resume() {}
 
 private:
     std::vector<mtd::NullDisplayBuffer> buffers;
+};
+
+class StubDisplayWithMockBuffers : public mg::Display
+{
+ public:
+    StubDisplayWithMockBuffers(unsigned int nbuffers) : buffers{nbuffers} {}
+    geom::Rectangle view_area() const { return geom::Rectangle(); }
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+    {
+        for (auto& db : buffers)
+            f(db);
+    }
+    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    {
+        return std::shared_ptr<mg::DisplayConfiguration>();
+    }
+    void register_pause_resume_handlers(mir::MainLoop&,
+                                        mg::DisplayPauseHandler const&,
+                                        mg::DisplayResumeHandler const&)
+    {
+    }
+    void pause() {}
+    void resume() {}
+
+    void for_each_mock_buffer(std::function<void(mtd::MockDisplayBuffer&)> const& f)
+    {
+        for (auto& db : buffers)
+            f(db);
+    }
+
+private:
+    std::vector<mtd::MockDisplayBuffer> buffers;
 };
 
 class StubRenderables : public mc::Renderables
@@ -209,6 +249,12 @@ private:
     unsigned int render_count;
 };
 
+class NullCompositingStrategy : public mc::CompositingStrategy
+{
+public:
+    void render(mg::DisplayBuffer&) {}
+};
+
 }
 
 TEST(MultiThreadedCompositor, compositing_happens_in_different_threads)
@@ -294,5 +340,25 @@ TEST(MultiThreadedCompositor, surface_update_from_render_doesnt_deadlock)
     while (!strategy->enough_renders_happened())
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
+    compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, releases_display_buffer_context_when_stopping)
+{
+    using namespace testing;
+
+    unsigned int const nbuffers{3};
+
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
+    auto renderables = std::make_shared<StubRenderables>();
+    auto strategy = std::make_shared<NullCompositingStrategy>();
+    mc::MultiThreadedCompositor compositor{display, renderables, strategy};
+
+    display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
+    {
+        EXPECT_CALL(mock_buf, release_current()).Times(1);
+    });
+
+    compositor.start();
     compositor.stop();
 }

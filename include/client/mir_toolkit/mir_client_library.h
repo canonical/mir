@@ -35,7 +35,8 @@ extern "C" {
  * Request a connection to the Mir server. The supplied callback is called when
  * the connection is established, or fails. The returned wait handle remains
  * valid until the connection has been released.
- *   \param [in] server       A name identifying the server
+ *   \param [in] server       File path of the server socket to connect to, or
+ *                            NULL to choose the default server
  *   \param [in] app_name     A name referring to the application
  *   \param [in] callback     Callback function to be invoked when request
  *                            completes
@@ -50,7 +51,8 @@ MirWaitHandle *mir_connect(
 
 /**
  * Perform a mir_connect() but also wait for and return the result.
- *   \param [in] server    A name identifying the server
+ *   \param [in] server    File path of the server socket to connect to, or
+ *                         NULL to choose the default server
  *   \param [in] app_name  A name referring to the application
  *   \return               The resulting MirConnection
  */
@@ -114,21 +116,22 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
  *   \return                         A handle that can be passed to
  *                                   mir_wait_for
  */
-MirWaitHandle *mir_surface_create(
+MirWaitHandle *mir_connection_create_surface(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
     mir_surface_lifecycle_callback callback,
     void *context);
 
 /**
- * Create a surface like in mir_surface_create(), but also wait for creation
- * to complete and return the resulting surface.
+ * Create a surface like in mir_connection_create_surface(), but also wait for
+ * creation to complete and return the resulting surface.
  *   \param [in] connection  The connection
  *   \param [in] params      Parameters describing the desired surface
  *   \return                 The resulting surface
  */
-MirSurface *mir_surface_create_sync(MirConnection *connection,
-                                    MirSurfaceParameters const *params);
+MirSurface *mir_connection_create_surface_sync(
+    MirConnection *connection,
+    MirSurfaceParameters const *params);
 
 /**
  * Set the event handler to be called when events arrive for a surface.
@@ -245,7 +248,7 @@ void mir_wait_for(MirWaitHandle *wait_handle);
  *   \param [in] surface  The surface
  *   \return              An internal ID that identifies the surface
  */
-int mir_debug_surface_id(MirSurface *surface);
+int mir_surface_get_id(MirSurface *surface);
 
 /**
  * Set the type (purpose) of a surface. This is not guaranteed to always work
@@ -263,6 +266,22 @@ MirWaitHandle* mir_surface_set_type(MirSurface *surface, MirSurfaceType type);
  *   \return              The type of the surface
  */
 MirSurfaceType mir_surface_get_type(MirSurface *surface);
+
+/**
+ * Change the state of a surface.
+ *   \param [in] surface  The surface to operate on
+ *   \param [in] state    The new state of the surface
+ *   \return              A wait handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_surface_set_state(MirSurface *surface,
+                                     MirSurfaceState state);
+
+/**
+ * Get the current state of a surface.
+ *   \param [in] surface  The surface to query
+ *   \return              The state of the surface
+ */
+MirSurfaceState mir_surface_get_state(MirSurface *surface);
 
 #ifdef __cplusplus
 }

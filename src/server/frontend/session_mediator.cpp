@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
@@ -44,12 +44,14 @@ mir::frontend::SessionMediator::SessionMediator(
     std::shared_ptr<graphics::ViewableArea> const& viewable_area,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
+    std::shared_ptr<events::EventSink> const& event_sink,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
     viewable_area(viewable_area),
     buffer_allocator(buffer_allocator),
     report(report),
+    event_sink(event_sink),
     resource_cache(resource_cache),
     client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size))
 {
@@ -63,7 +65,7 @@ void mir::frontend::SessionMediator::connect(
 {
     report->session_connect_called(request->application_name());
 
-    session = shell->open_session(request->application_name());
+    session = shell->open_session(request->application_name(), event_sink);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();

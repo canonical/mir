@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
@@ -29,6 +29,7 @@
 #include <thread>
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace google
 {
@@ -59,9 +60,11 @@ public:
     explicit ProtobufSocketCommunicator(
         const std::string& socket_file,
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
-        int threads);
+        int threads,
+        std::function<void()> const& force_requests_to_complete);
     ~ProtobufSocketCommunicator();
     void start();
+    void stop();
 
 private:
     void start_accept();
@@ -75,6 +78,7 @@ private:
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
     std::atomic<int> next_session_id;
     std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
+    std::function<void()> const force_requests_to_complete;
 };
 
 }
