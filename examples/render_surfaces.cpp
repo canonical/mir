@@ -77,8 +77,33 @@ namespace mt = mir::tools;
 
 namespace
 {
-char const* const surfaces_to_render = "surfaces-to-render";
 std::shared_ptr<mg::Cursor> cursor;
+static const uint32_t bg_color = 0x00000000;
+static const uint32_t fg_color = 0xffff0000;
+
+void update_cursor(uint32_t bg_color, uint32_t fg_color)
+{
+    static const int width = 64;
+    static const int height = 64;
+    std::vector<uint32_t> image(height * width, bg_color);
+    for (int i = 0; i != width-1; ++i)
+    {
+        if (i < 16)
+        {
+            image[0 * height + i] = fg_color;
+            image[1 * height + i] = fg_color;
+            image[i * height + 0] = fg_color;
+            image[i * height + 1] = fg_color;
+        }
+        image[i * height + i] = fg_color;
+        image[(i+1) * height + i] = fg_color;
+        image[i * height + i + 1] = fg_color;
+    }
+    cursor->set_image(image.data(), geom::Size
+    { geom::Width(width), geom::Height(height) });
+}
+
+char const* const surfaces_to_render = "surfaces-to-render";
 
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
@@ -275,13 +300,27 @@ public:
 
             void render(mg::DisplayBuffer& display_buffer)
             {
-                if (cursor) cursor->move_to(geom::Point{geom::X(frames), geom::Y(frames)});
+                static int cursor_pos = 0;
+                if (++cursor_pos == 300)
+                {
+                    cursor_pos = 0;
+
+                    static const uint32_t fg_colors[3] = { fg_color, 0x3fffffff, 0xff000000 };
+                    static int fg_color = 0;
+
+                    if (++fg_color == 3) fg_color = 0;
+
+                    update_cursor(bg_color, fg_colors[fg_color]);
+                }
+
+                cursor->move_to(geom::Point{geom::X(cursor_pos), geom::Y(cursor_pos)});
 
                 stop_watch.stop();
                 if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
                 {
                     std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
                     frames = 0;
+
                     stop_watch.restart();
                 }
 
@@ -370,23 +409,7 @@ try
 
         cursor = conf.the_display()->the_cursor();
 
-        static const int width = 64;
-        static const int height = 64;
-        static const uint32_t bg_color = 0x00000000;
-        static const uint32_t fg_color = 0xffff0000;
-        std::vector<uint32_t> image(height*width, bg_color);
-
-        for (int i = 0; i != width; ++i)
-        {
-            if (i < 16)
-            {
-                image[0*height+i] = fg_color;
-                image[i*height+0] = fg_color;
-            }
-            image[i*height+i] = fg_color;
-        }
-
-        cursor->set_image(image.data(), geom::Size{geom::Width(width), geom::Height(height)});
+        update_cursor(bg_color, fg_color);
     });
     ///\internal [main_tag]
 
