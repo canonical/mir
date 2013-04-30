@@ -37,22 +37,11 @@ namespace android
 class InternalClientWindow : public AndroidDriverInterpreter
 {
 public:
-    InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&&)
-    {
-    }
-
-    ANativeWindowBuffer* driver_requests_buffer()
-    {
-        return nullptr;
-    }
-    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&)
-    {}
-
-    virtual void dispatch_driver_request_format(int)
-    {}
-
-    virtual int  driver_requests_info(int) const
-    {return 8;}
+    explicit InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&&);
+    ANativeWindowBuffer* driver_requests_buffer();
+    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
+    void dispatch_driver_request_format(int);
+    int  driver_requests_info(int) const;
 };
 }
 }

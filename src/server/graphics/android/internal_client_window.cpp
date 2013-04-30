@@ -17,3 +17,26 @@
  */
 
 #include "internal_client_window.h"
+namespace mga=mir::graphics::android;
+
+mga::InternalClientWindow::InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&&)
+{
+}
+
+ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
+{
+    return nullptr;
+}
+
+void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&)
+{
+}
+
+void mga::InternalClientWindow::dispatch_driver_request_format(int)
+{
+}
+
+int mga::InternalClientWindow::driver_requests_info(int) const
+{
+    return 8;
+}
