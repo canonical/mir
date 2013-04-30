@@ -369,6 +369,24 @@ try
         conf.create_surfaces();
 
         cursor = conf.the_display()->the_cursor();
+
+        static const int width = 64;
+        static const int height = 64;
+        static const uint32_t bg_color = 0x00000000;
+        static const uint32_t fg_color = 0xffff0000;
+        std::vector<uint32_t> image(height*width, bg_color);
+
+        for (int i = 0; i != width; ++i)
+        {
+            if (i < 16)
+            {
+                image[0*height+i] = fg_color;
+                image[i*height+0] = fg_color;
+            }
+            image[i*height+i] = fg_color;
+        }
+
+        cursor->set_image(image.data(), geom::Size{geom::Width(width), geom::Height(height)});
     });
     ///\internal [main_tag]
 

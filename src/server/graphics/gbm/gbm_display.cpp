@@ -174,7 +174,6 @@ public:
         KMSOutputContainer const& output_container) :
             platform(platform),
             output_container(output_container),
-            image(height*width, color),
             buffer(gbm_bo_create(
                 platform->gbm.device,
                 width,
@@ -184,10 +183,8 @@ public:
     {
         if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 
-        if (auto result = gbm_bo_write(buffer, image.data(), image.size()*sizeof(uint32_t)))
-            BOOST_THROW_EXCEPTION(
-                ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))
-                << (boost::error_info<GBMCursor, decltype(result)>(result)));
+        std::vector<uint32_t> image(height*width, color);
+        set_image(image.data(), geometry::Size{geometry::Width(width), geometry::Height(height)});
 
         output_container.for_each_output(
             [&](KMSOutput& output) { output.set_cursor(buffer); });
@@ -198,7 +195,20 @@ public:
         gbm_bo_destroy(buffer);
     }
 
-    void set_image(void* /*raw_rgba*/, geometry::Size /*size*/) {}
+    void set_image(const void* raw_argb, geometry::Size size)
+    {
+        if (size != geometry::Size{geometry::Width(width), geometry::Height(height)})
+            BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
+
+        if (auto result = gbm_bo_write(
+            buffer,
+            raw_argb,
+            size.width.as_uint32_t()*size.height.as_uint32_t()*sizeof(uint32_t)))
+            BOOST_THROW_EXCEPTION(
+                ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))
+                << (boost::error_info<GBMCursor, decltype(result)>(result)));
+    }
+
     void move_to(geometry::Point position)
     {
         auto const x = position.x.as_uint32_t();
@@ -210,11 +220,10 @@ public:
 private:
     static const int width = 64;
     static const int height = 64;
-    static const uint32_t color = 0xffffffff;
+    static const uint32_t color = 0x1c00001f;
     std::shared_ptr<GBMPlatform> const platform;
     KMSOutputContainer const& output_container;
 
-    std::vector<uint32_t> image;
     gbm_bo* buffer;
 };
 
