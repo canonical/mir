@@ -25,6 +25,12 @@
 
 #include <stdexcept>
 
+namespace
+{
+int const width = 64;
+int const height = 64;
+uint32_t const color = 0x1c00001f;
+}
 
 namespace mgg = mir::graphics::gbm;
 
@@ -75,5 +81,3 @@ void mgg::GBMCursor::move_to(geometry::Point position)
 
     output_container.for_each_output([&](KMSOutput& output) { output.move_cursor(x, y); });
 }
-
-const uint32_t mgg::GBMCursor::color;

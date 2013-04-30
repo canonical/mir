@@ -48,9 +48,6 @@ public:
     void move_to(geometry::Point position);
 
 private:
-    static const int width = 64;
-    static const int height = 64;
-    static const uint32_t color = 0x1c00001f;
     std::shared_ptr<GBMPlatform> const platform;
     KMSOutputContainer const& output_container;
 
