@@ -329,7 +329,6 @@ public:
                 {
                     std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
                     frames = 0;
-
                     stop_watch.restart();
                 }
 

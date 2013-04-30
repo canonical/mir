@@ -389,8 +389,8 @@ mir::DefaultServerConfiguration::the_input_configuration()
         {
             DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor) :
                 cursor(cursor)
-                {
-                }
+            {
+            }
 
             void cursor_moved_to(float abs_x, float abs_y)
             {
