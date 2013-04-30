@@ -282,17 +282,6 @@ TEST_F(SurfaceCreation, test_surface_move_to_notifies_changes)
     surf.move_to(geom::Point{geom::X{55}, geom::Y{66}});
 }
 
-TEST_F(SurfaceCreation, test_surface_gets_identity_transformation)
-{
-    using namespace testing;
-
-    ms::Surface surf{surface_name, mock_buffer_bundle, null_change_cb};
-
-    auto ret_transformation = surf.transformation();
-
-    EXPECT_EQ(glm::mat4(), ret_transformation);
-}
-
 TEST_F(SurfaceCreation, test_surface_set_rotation)
 {
     using namespace testing;
