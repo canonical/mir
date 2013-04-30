@@ -78,6 +78,7 @@ namespace mt = mir::tools;
 namespace
 {
 char const* const surfaces_to_render = "surfaces-to-render";
+std::shared_ptr<mg::Cursor> cursor;
 
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
@@ -265,17 +266,17 @@ public:
             RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
                                               std::shared_ptr<mg::Renderer> const& renderer,
                                               std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
-                                              std::shared_ptr<mg::Cursor> const& cursor,
                                               std::vector<Moveable>& moveables)
                 : default_compositing_strategy{renderables, renderer, overlay_renderer},
                   frames{0},
-                  cursor(cursor),
                   moveables(moveables)
             {
             }
 
             void render(mg::DisplayBuffer& display_buffer)
             {
+                if (cursor) cursor->move_to(geom::Point{geom::X(frames), geom::Y(frames)});
+
                 stop_watch.stop();
                 if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
                 {
@@ -291,21 +292,18 @@ public:
                     m.step();
 
                 frames++;
-                cursor->move_to(geom::Point{geom::X(frames), geom::Y(frames)});
             }
 
         private:
             mc::DefaultCompositingStrategy default_compositing_strategy;
             StopWatch stop_watch;
             uint32_t frames;
-            std::shared_ptr<mg::Cursor> const cursor;
             std::vector<Moveable>& moveables;
         };
 
         return std::make_shared<RenderSurfacesCompositingStrategy>(the_renderables(),
                                                                    the_renderer(),
                                                                    the_overlay_renderer(),
-                                                                   the_display()->the_cursor(),
                                                                    moveables);
     }
     ///\internal [RenderSurfacesCompositingStrategy_tag]
@@ -366,7 +364,12 @@ try
     ///\internal [main_tag]
     RenderSurfacesServerConfiguration conf{argc, argv};
 
-    mir::run_mir(conf, [&](mir::DisplayServer&) { conf.create_surfaces(); });
+    mir::run_mir(conf, [&](mir::DisplayServer&)
+    {
+        conf.create_surfaces();
+
+        cursor = conf.the_display()->the_cursor();
+    });
     ///\internal [main_tag]
 
     return 0;

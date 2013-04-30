@@ -189,11 +189,14 @@ void mgg::KMSOutput::set_cursor(gbm_bo* buffer)
 
 void mgg::KMSOutput::move_cursor(int x, int y)
 {
-    if (auto result = drmModeMoveCursor(drm_fd, current_crtc->crtc_id, x, y))
+    if (current_crtc)
     {
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
-                << (boost::error_info<KMSOutput, decltype(result)>(result)));
+        if (auto result = drmModeMoveCursor(drm_fd, current_crtc->crtc_id, x, y))
+        {
+            BOOST_THROW_EXCEPTION(
+                ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
+                    << (boost::error_info<KMSOutput, decltype(result)>(result)));
+        }
     }
 }
 
