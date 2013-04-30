@@ -52,6 +52,8 @@ using namespace ::testing;
 struct MockCursorListener : public mi::CursorListener
 {
     MOCK_METHOD2(cursor_moved_to, void(float, float));
+
+    ~MockCursorListener() noexcept {}
 };
 
 struct AndroidInputManagerAndCursorListenerSetup : public testing::Test

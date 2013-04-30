@@ -29,7 +29,7 @@ namespace input
 class CursorListener
 {
 public:
-    virtual ~CursorListener() {}
+    virtual ~CursorListener() = default;
 
     virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
 
