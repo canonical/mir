@@ -195,6 +195,9 @@ public:
     virtual std::shared_ptr<graphics::Platform>  the_graphics_platform();
     virtual std::shared_ptr<time::TimeSource>    the_time_source();
 
+    // TODO: Does this belong? ~racarr
+    virtual std::shared_ptr<shell::SessionManager> the_session_manager();
+
 protected:
     // add_options() allows configuration specializations to add their
     // own options. This MUST be called before the first invocation of
@@ -203,7 +206,6 @@ protected:
     virtual std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
-    virtual std::shared_ptr<shell::SessionManager> the_session_manager();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;

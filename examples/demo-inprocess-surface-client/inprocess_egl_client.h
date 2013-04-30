@@ -40,7 +40,7 @@ class Platform;
 }
 namespace shell
 {
-class SurfaceFactory;
+class SessionManager;
 }
 
 namespace examples
@@ -51,7 +51,7 @@ class InprocessEGLClient
 {
 public:
     InprocessEGLClient(std::shared_ptr<graphics::Platform> const& graphics_platform,
-                       std::shared_ptr<shell::SurfaceFactory> const& surface_factory);
+                       std::shared_ptr<shell::SessionManager> const& session_manager);
 
 protected:
     InprocessEGLClient(InprocessEGLClient const&) = delete;
@@ -59,7 +59,7 @@ protected:
 
 private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
-    std::shared_ptr<shell::SurfaceFactory> const surface_factory;
+    std::shared_ptr<shell::SessionManager> const session_manager;
 
     std::atomic<bool> running;
     std::thread client_thread;

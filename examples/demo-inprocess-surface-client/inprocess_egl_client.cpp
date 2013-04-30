@@ -19,9 +19,10 @@
 #include "inprocess_egl_client.h"
 #include "example_egl_helper.h"
 
-#include "mir/shell/surface_factory.h"
+#include "mir/shell/session_manager.h"
 #include "mir/shell/surface.h"
 #include "mir/frontend/surface_creation_parameters.h"
+#include "mir/frontend/session.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/platform.h"
@@ -47,9 +48,9 @@ namespace mcli = mir::client::input;
 namespace geom = mir::geometry;
 
 me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
-                                           std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
+                                           std::shared_ptr<msh::SessionManager> const& session_manager)
   : graphics_platform(graphics_platform),
-    surface_factory(surface_factory),
+    session_manager(session_manager),
     running(true),
     client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this)
 {
@@ -66,7 +67,10 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
-    auto surface = surface_factory->create_surface(params, mf::SurfaceId(), std::shared_ptr<events::EventSink>());
+    auto session = session_manager->open_session("Inprocess client",
+                                                 std::shared_ptr<mir::events::EventSink>());
+    // TODO: Why do we get an ID? ~racarr
+    auto surface = session->get_surface(session_manager->create_surface_for(session, params));
     
     auto input_platform = mcli::InputPlatform::create();
     input_thread = input_platform->create_input_thread(
