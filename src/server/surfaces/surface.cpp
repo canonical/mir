@@ -36,6 +36,7 @@ ms::Surface::Surface(
     std::function<void()> const& change_callback) :
     surface_name(name),
     buffer_bundle(buffer_bundle),
+    client_buffer_resource(buffer_bundle->secure_client_buffer()),
     alpha_value(1.0f),
     is_hidden(false),
     notify_change(change_callback)
