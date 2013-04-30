@@ -104,7 +104,6 @@ void me::InprocessEGLClient::thread_loop()
 
 void me::InprocessEGLClient::handle_event(MirEvent *event)
 {
-    printf("Event \n");
     if (event->type != mir_event_type_key)
         return;
     if (event->key.action != mir_key_action_down)
