@@ -305,7 +305,7 @@ public:
                 {
                     cursor_pos = 0;
 
-                    static const uint32_t fg_colors[3] = { fg_color, 0x0fffffff, 0xff000000 };
+                    static const uint32_t fg_colors[3] = { fg_color, 0xffffffff, 0x3f000000 };
                     static int fg_color = 0;
 
                     if (++fg_color == 3) fg_color = 0;
