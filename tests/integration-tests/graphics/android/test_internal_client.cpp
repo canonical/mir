@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,6 +21,7 @@
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/android/mir_native_window.h"
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
@@ -52,7 +53,7 @@ TEST_F(AndroidInternalClient, creation)
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     mc::BufferProperties actual;
     auto swapper = strategy->create_swapper(actual, buffer_properties);
-    auto interpreter = std::make_shared<mga::InternalClientInterpreter>(swapper); 
+    auto interpreter = std::make_shared<mga::InternalClientInterpreter>(std::move(swapper)); 
 //    auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter); 
 #if 0
         Buffer a, b;
