@@ -22,6 +22,8 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/android/mir_native_window.h"
+
+#include <EGL/egl.h>
 #include <gtest/gtest.h>
 
 namespace mg=mir::graphics;
@@ -54,25 +56,23 @@ TEST_F(AndroidInternalClient, creation)
     mc::BufferProperties actual;
     auto swapper = strategy->create_swapper(actual, buffer_properties);
     auto interpreter = std::make_shared<mga::InternalClientInterpreter>(std::move(swapper)); 
-//    auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter); 
-#if 0
-        Buffer a, b;
-        BufferSwapperMulti bsm({a,b});
-        BufferBundle bb(bsm);
-        Surface s(bb)
-        MirNativeWindow mnw(s);
+    auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter);
 
-
-        /* egl setup junk */
-        EGLNativeWindowType egl_nwt = (EGLNativeWindowType*) mnw;
-        eglCreateSurface(egl_nwt)
-
-        //render [pattern] 
-
-        eglSwapBuffers();
-
-        auto test = swapper->compositor_acquire(); 
-        check_buffer(test, [pattern]) 
-#endif
-
+    int major, minor, n;
+    //EGLContext context;
+    //EGLSurface egl_surface;
+    EGLConfig egl_config;
+    EGLint attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE };
+    EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    eglInitialize(egl_display, &major, &minor);
+    eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
+    eglCreateWindowSurface(egl_display, egl_config, mnw.get(), context_attribs); 
 }
