@@ -39,12 +39,14 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
+#include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_manager.h"
 #include "mir/input/null_input_target_listener.h"
 #include "input/android/default_android_input_configuration.h"
@@ -383,8 +385,28 @@ mir::DefaultServerConfiguration::the_input_configuration()
 {
     if (!input_configuration)
     {
-        const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-        input_configuration = std::make_shared<mia::DefaultInputConfiguration>(the_event_filters(), the_display(), null_cursor_listener);
+        struct DefaultCursorListener : mi::CursorListener
+        {
+            DefaultCursorListener(std::shared_ptr<mg::Cursor> const& cursor) :
+                cursor(cursor)
+                {
+                }
+
+            void cursor_moved_to(float abs_x, float abs_y)
+            {
+                if (cursor)
+                {
+                    cursor->move_to(geom::Point{geom::X(abs_x), geom::Y(abs_y)});
+                }
+            }
+
+            std::shared_ptr<mg::Cursor> cursor;
+        };
+
+        input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
+            the_event_filters(),
+            the_display(),
+            std::make_shared<DefaultCursorListener>(the_display()->the_cursor()));
     }
     return input_configuration;
 }

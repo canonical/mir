@@ -77,6 +77,7 @@ namespace mt = mir::tools;
 
 namespace
 {
+bool input_is_on = false;
 std::shared_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
 static const uint32_t fg_color = 0xffff0000;
@@ -105,7 +106,7 @@ void update_cursor(uint32_t bg_color, uint32_t fg_color)
 
 void animate_cursor()
 {
-    if (cursor)
+    if (!input_is_on && cursor)
     {
         static int cursor_pos = 0;
         if (cursor && ++cursor_pos == 300)
@@ -266,12 +267,6 @@ public:
 
         return std::make_shared<NullCommunicator>();
     }
-
-    // Stub out input.
-    std::shared_ptr<mi::InputManager> the_input_manager() override
-    {
-        return std::make_shared<mi::NullInputManager>();
-    }
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 
     ///\internal [RenderResourcesBufferInitializer_tag]
@@ -417,12 +412,14 @@ try
     mir::run_mir(conf, [&](mir::DisplayServer&)
     {
         conf.create_surfaces();
-
-        if (conf.the_options()->get(display_cursor, false))
+        std::shared_ptr<mir::options::Option> the_options = conf.the_options();
+        if (the_options->get(display_cursor, false))
         {
             cursor = conf.the_display()->the_cursor();
             update_cursor(bg_color, fg_color);
         }
+
+        input_is_on = the_options->get("enable-input", input_is_on);
     });
     ///\internal [main_tag]
 
