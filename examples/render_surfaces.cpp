@@ -80,7 +80,7 @@ namespace
 bool input_is_on = false;
 std::shared_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
-static const uint32_t fg_color = 0xffff0000;
+static const uint32_t fg_color = 0xffdd4814;
 
 void update_cursor(uint32_t bg_color, uint32_t fg_color)
 {
@@ -100,8 +100,9 @@ void update_cursor(uint32_t bg_color, uint32_t fg_color)
         image[(i+1) * height + i] = fg_color;
         image[i * height + i + 1] = fg_color;
     }
-    cursor->set_image(image.data(), geom::Size
-    { geom::Width(width), geom::Height(height) });
+    cursor->set_image(
+        image.data(),
+        geom::Size{ geom::Width(width), geom::Height(height) });
 }
 
 void animate_cursor()
@@ -416,7 +417,6 @@ try
         if (the_options->get(display_cursor, false))
         {
             cursor = conf.the_display()->the_cursor();
-            update_cursor(bg_color, fg_color);
         }
 
         input_is_on = the_options->get("enable-input", input_is_on);

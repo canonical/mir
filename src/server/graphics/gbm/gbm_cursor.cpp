@@ -29,7 +29,8 @@ namespace
 {
 int const width = 64;
 int const height = 64;
-uint32_t const color = 0x1c00001f;
+const uint32_t bg_color = 0x00000000;
+uint32_t const fg_color = 0xffdd4814;
 }
 
 namespace mgg = mir::graphics::gbm;
@@ -48,7 +49,21 @@ mgg::GBMCursor::GBMCursor(
 {
     if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 
-    std::vector<uint32_t> image(height*width, color);
+    std::vector<uint32_t> image(height*width, bg_color);
+    for (int i = 0; i != width-1; ++i)
+    {
+        if (i < 16)
+        {
+            image[0 * height + i] = fg_color;
+            image[1 * height + i] = fg_color;
+            image[i * height + 0] = fg_color;
+            image[i * height + 1] = fg_color;
+        }
+        image[i * height + i] = fg_color;
+        image[(i+1) * height + i] = fg_color;
+        image[i * height + i + 1] = fg_color;
+    }
+
     set_image(image.data(), geometry::Size{geometry::Width(width), geometry::Height(height)});
 
     output_container.for_each_output(
