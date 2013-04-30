@@ -50,6 +50,7 @@ public:
     void wait_for_page_flip();
     void set_cursor(gbm_bo* buffer);
     void move_cursor(geometry::Point destination);
+    void clear_cursor();
 
 private:
     KMSOutput(const KMSOutput&) = delete;

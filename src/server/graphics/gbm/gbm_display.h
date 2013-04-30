@@ -74,7 +74,7 @@ private:
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;
     KMSOutputContainer output_container;
-    std::shared_ptr<Cursor> cursor;
+    std::weak_ptr<Cursor> cursor;
 };
 
 }

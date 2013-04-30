@@ -70,8 +70,13 @@ mgg::GBMCursor::GBMCursor(
         [&](KMSOutput& output) { output.set_cursor(buffer); });
 }
 
+#include <iostream>
 mgg::GBMCursor::~GBMCursor() noexcept
 {
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
+//    output_container.for_each_output(
+//        [&](KMSOutput& output) { output.clear_cursor(); });
+
     gbm_bo_destroy(buffer);
 }
 

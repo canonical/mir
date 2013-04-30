@@ -162,6 +162,11 @@ void mgg::GBMDisplay::resume()
 
 auto mgg::GBMDisplay::the_cursor() -> std::shared_ptr<Cursor>
 {
-    if (!cursor) cursor = std::make_shared<GBMCursor>(platform, output_container);
-    return cursor;
+    if (auto sp = cursor.lock())
+        return sp;
+
+    auto sp = std::make_shared<GBMCursor>(platform, output_container);
+    cursor = sp;
+
+    return sp;
 }

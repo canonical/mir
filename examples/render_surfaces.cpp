@@ -423,6 +423,7 @@ try
     });
     ///\internal [main_tag]
 
+    cursor.reset();
     return 0;
 }
 catch (...)
