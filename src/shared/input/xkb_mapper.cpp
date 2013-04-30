@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "xkb_mapper.h"
+#include "mir/input/xkb_mapper.h"
 
 #include <string.h>
 

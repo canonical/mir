@@ -17,8 +17,8 @@
  */
 
 #include "android_input_receiver.h"
-#include "xkb_mapper.h"
 
+#include "mir/input/xkb_mapper.h"
 #include "mir/input/android/android_input_lexicon.h"
 
 #include <androidfw/InputTransport.h>

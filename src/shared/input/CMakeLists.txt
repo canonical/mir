@@ -16,6 +16,7 @@
 
 set(
   ANDROID_SHARED_INPUT_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
 
 add_subdirectory(android)
@@ -29,4 +30,5 @@ target_link_libraries(
   mirsharedinput
   
   android-input
+  ${XKBCOMMON_LIBRARIES}
 )

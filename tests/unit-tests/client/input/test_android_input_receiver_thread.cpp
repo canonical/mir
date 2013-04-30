@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/client/input/android_input_receiver_thread.h"
-#include "src/client/input/android_input_receiver.h"
+#include "src/shared/input/android/android_input_receiver_thread.h"
+#include "src/shared/input/android/android_input_receiver.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
