@@ -103,7 +103,29 @@ void update_cursor(uint32_t bg_color, uint32_t fg_color)
     { geom::Width(width), geom::Height(height) });
 }
 
+void animate_cursor()
+{
+    if (cursor)
+    {
+        static int cursor_pos = 0;
+        if (cursor && ++cursor_pos == 300)
+        {
+            cursor_pos = 0;
+
+            static const uint32_t fg_colors[3] = { fg_color, 0xffffffff, 0x3f000000 };
+            static int fg_color = 0;
+
+            if (++fg_color == 3) fg_color = 0;
+
+            update_cursor(bg_color, fg_colors[fg_color]);
+        }
+
+        cursor->move_to(geom::Point{geom::X(cursor_pos), geom::Y(cursor_pos)});
+    }
+}
+
 char const* const surfaces_to_render = "surfaces-to-render";
+char const* const display_cursor     = "display-cursor";
 
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
@@ -228,7 +250,8 @@ public:
 
         add_options()
             (surfaces_to_render, po::value<int>(),  "Number of surfaces to render"
-                                                    " [int:default=5]");
+                                                    " [int:default=5]")
+            (display_cursor, po::value<bool>(),  "Display test cursor [bool:default=false]");
     }
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
@@ -300,21 +323,7 @@ public:
 
             void render(mg::DisplayBuffer& display_buffer)
             {
-                static int cursor_pos = 0;
-                if (++cursor_pos == 300)
-                {
-                    cursor_pos = 0;
-
-                    static const uint32_t fg_colors[3] = { fg_color, 0xffffffff, 0x3f000000 };
-                    static int fg_color = 0;
-
-                    if (++fg_color == 3) fg_color = 0;
-
-                    update_cursor(bg_color, fg_colors[fg_color]);
-                }
-
-                cursor->move_to(geom::Point{geom::X(cursor_pos), geom::Y(cursor_pos)});
-
+                animate_cursor();
                 stop_watch.stop();
                 if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
                 {
@@ -391,6 +400,8 @@ public:
         }
     }
 
+    using mir::DefaultServerConfiguration::the_options;
+
 private:
     std::vector<Moveable> moveables;
 };
@@ -407,9 +418,11 @@ try
     {
         conf.create_surfaces();
 
-        cursor = conf.the_display()->the_cursor();
-
-        update_cursor(bg_color, fg_color);
+        if (conf.the_options()->get(display_cursor, false))
+        {
+            cursor = conf.the_display()->the_cursor();
+            update_cursor(bg_color, fg_color);
+        }
     });
     ///\internal [main_tag]
 
