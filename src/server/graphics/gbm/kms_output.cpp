@@ -200,13 +200,10 @@ void mgg::KMSOutput::move_cursor(geometry::Point destination)
     }
 }
 
-#include <iostream>
 void mgg::KMSOutput::clear_cursor()
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     if (current_crtc)
     {
-        std::cout << __PRETTY_FUNCTION__ << " - reset 1"<< std::endl;
         drmModeSetCursor(drm_fd, current_crtc->crtc_id, 0, 0, 0);
     }
 }
