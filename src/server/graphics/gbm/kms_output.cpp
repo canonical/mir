@@ -187,11 +187,11 @@ void mgg::KMSOutput::set_cursor(gbm_bo* buffer)
     }
 }
 
-void mgg::KMSOutput::move_cursor(int x, int y)
+void mgg::KMSOutput::move_cursor(geometry::Point destination)
 {
     if (current_crtc)
     {
-        if (auto result = drmModeMoveCursor(drm_fd, current_crtc->crtc_id, x, y))
+        if (auto result = drmModeMoveCursor(drm_fd, current_crtc->crtc_id, destination.x.as_uint32_t(), destination.y.as_uint32_t()))
         {
             BOOST_THROW_EXCEPTION(
                 ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))

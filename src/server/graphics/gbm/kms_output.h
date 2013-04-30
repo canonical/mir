@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_GBM_KMS_OUTPUT_H_
 
 #include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 #include "drm_mode_resources.h"
 
 #include <gbm.h>
@@ -48,7 +49,7 @@ public:
     bool schedule_page_flip(uint32_t fb_id);
     void wait_for_page_flip();
     void set_cursor(gbm_bo* buffer);
-    void move_cursor(int x, int y);
+    void move_cursor(geometry::Point destination);
 
 private:
     KMSOutput(const KMSOutput&) = delete;

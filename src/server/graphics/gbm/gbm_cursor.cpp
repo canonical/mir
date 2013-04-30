@@ -91,8 +91,5 @@ void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
 
 void mgg::GBMCursor::move_to(geometry::Point position)
 {
-    auto const x = position.x.as_uint32_t();
-    auto const y = position.y.as_uint32_t();
-
-    output_container.for_each_output([&](KMSOutput& output) { output.move_cursor(x, y); });
+    output_container.for_each_output([&](KMSOutput& output) { output.move_cursor(position); });
 }
