@@ -61,22 +61,13 @@ std::string const& ms::Surface::name() const
 
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
-    transformation_matrix[3][0] = top_left.x.as_float();
-    transformation_matrix[3][1] = top_left.y.as_float();
+    top_left_point = top_left;
     notify_change();
 }
 
 void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
 {
-    float p[3];
-    for (int i = 0; i < 3; i++)
-        p[i] = transformation_matrix[3][i];
-
-    transformation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
-
-    for (int i = 0; i < 3; i++)
-        transformation_matrix[3][i] = p[i];
-
+    rotation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
     notify_change();
 }
 
@@ -88,10 +79,7 @@ void ms::Surface::set_alpha(float alpha_v)
 
 geom::Point ms::Surface::top_left() const
 {
-    geom::Point p;
-    p.x = geom::X{transformation_matrix[3][0]};
-    p.y = geom::Y{transformation_matrix[3][1]};
-    return p;
+    return top_left_point;
 }
 
 mir::geometry::Size ms::Surface::size() const
@@ -106,7 +94,35 @@ std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
 
 glm::mat4 ms::Surface::transformation() const
 {
-    return transformation_matrix;
+    const geom::Size sz = size();
+
+    const glm::vec3 top_left_vec{top_left_point.x.as_uint32_t(),
+                                 top_left_point.y.as_uint32_t(),
+                                 0.0f};
+    const glm::vec3 size_vec{sz.width.as_uint32_t(),
+                             sz.height.as_uint32_t(),
+                             0.0f};
+
+    /* Get the center of the renderable's area */
+    const glm::vec3 center_vec{top_left_vec + 0.5f * size_vec};
+
+    /*
+     * Every renderable is drawn using a 1x1 quad centered at 0,0.
+     * We need to transform and scale that quad to get to its final position
+     * and size.
+     *
+     * 1. We scale the quad vertices (from 1x1 to wxh)
+     * 2. We move the quad to its final position. Note that because the quad
+     *    is centered at (0,0), we need to translate by center_vec, not
+     *    top_left_vec.
+     */
+    glm::mat4 pos_size_matrix;
+    pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
+    pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
+
+    const glm::mat4 transformation = pos_size_matrix * rotation_matrix;
+
+    return transformation;
 }
 
 float ms::Surface::alpha() const
