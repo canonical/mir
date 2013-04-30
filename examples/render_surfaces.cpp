@@ -257,7 +257,9 @@ public:
         add_options()
             (surfaces_to_render, po::value<int>(),  "Number of surfaces to render"
                                                     " [int:default=5]")
-            (display_cursor, po::value<bool>(),  "Display test cursor [bool:default=false]");
+            (display_cursor, po::value<bool>(), "Display test cursor. (If input is "
+                                                "disabled it gets animated.) "
+                                                "[bool:default=false]");
     }
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]

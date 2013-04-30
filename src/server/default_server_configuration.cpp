@@ -217,7 +217,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
                                                 "directory instead of the default logging directory."
                                                 " [string:default=\"\"]")
-        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool. [int:default=10]");
+        ("ipc-thread-pool", po::value<int>(),   "threads in frontend thread pool. [int:default=10]");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
