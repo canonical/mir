@@ -61,9 +61,9 @@ class StubDisplay : public mg::Display
     }
     void pause() {}
     void resume() {}
-    std::shared_ptr<mg::Cursor> the_cursor()
+    std::weak_ptr<mg::Cursor> the_cursor()
     {
-        return std::shared_ptr<mg::Cursor>();
+        return std::weak_ptr<mg::Cursor>();
     }
 
 private:
@@ -91,9 +91,9 @@ class StubDisplayWithMockBuffers : public mg::Display
     }
     void pause() {}
     void resume() {}
-    std::shared_ptr<mg::Cursor> the_cursor()
+    std::weak_ptr<mg::Cursor> the_cursor()
     {
-        return std::shared_ptr<mg::Cursor>();
+        return std::weak_ptr<mg::Cursor>();
     }
 
     void for_each_mock_buffer(std::function<void(mtd::MockDisplayBuffer&)> const& f)

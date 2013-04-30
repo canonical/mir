@@ -180,7 +180,7 @@ void mga::AndroidDisplay::release_current()
 }
 
 
-auto mga::AndroidDisplay::the_cursor() -> std::shared_ptr<Cursor>
+auto mga::AndroidDisplay::the_cursor() -> std::weak_ptr<Cursor>
 {
-    return std::shared_ptr<Cursor>();
+    return std::weak_ptr<Cursor>();
 }

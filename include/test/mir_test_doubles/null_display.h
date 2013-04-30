@@ -49,9 +49,9 @@ class NullDisplay : public graphics::Display
     }
     void pause() {}
     void resume() {}
-    std::shared_ptr<graphics::Cursor> the_cursor()
+    std::weak_ptr<graphics::Cursor> the_cursor()
     {
-        return std::shared_ptr<graphics::Cursor>();
+        return std::weak_ptr<graphics::Cursor>();
     }
 };
 

@@ -387,20 +387,20 @@ mir::DefaultServerConfiguration::the_input_configuration()
     {
         struct DefaultCursorListener : mi::CursorListener
         {
-            DefaultCursorListener(std::shared_ptr<mg::Cursor> const& cursor) :
+            DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor) :
                 cursor(cursor)
                 {
                 }
 
             void cursor_moved_to(float abs_x, float abs_y)
             {
-                if (cursor)
+                if (auto c = cursor.lock())
                 {
-                    cursor->move_to(geom::Point{geom::X(abs_x), geom::Y(abs_y)});
+                    c->move_to(geom::Point{geom::X(abs_x), geom::Y(abs_y)});
                 }
             }
 
-            std::shared_ptr<mg::Cursor> cursor;
+            std::weak_ptr<mg::Cursor> const cursor;
         };
 
         input_configuration = std::make_shared<mia::DefaultInputConfiguration>(

@@ -78,36 +78,40 @@ namespace mt = mir::tools;
 namespace
 {
 bool input_is_on = false;
-std::shared_ptr<mg::Cursor> cursor;
+std::weak_ptr<mg::Cursor> cursor;
 static const uint32_t bg_color = 0x00000000;
 static const uint32_t fg_color = 0xffdd4814;
 
 void update_cursor(uint32_t bg_color, uint32_t fg_color)
 {
-    static const int width = 64;
-    static const int height = 64;
-    std::vector<uint32_t> image(height * width, bg_color);
-    for (int i = 0; i != width-1; ++i)
+    if (auto cursor = ::cursor.lock())
     {
-        if (i < 16)
+        static const int width = 64;
+        static const int height = 64;
+        std::vector<uint32_t> image(height * width, bg_color);
+        for (int i = 0; i != width-1; ++i)
         {
-            image[0 * height + i] = fg_color;
-            image[1 * height + i] = fg_color;
-            image[i * height + 0] = fg_color;
-            image[i * height + 1] = fg_color;
+            if (i < 16)
+            {
+                image[0 * height + i] = fg_color;
+                image[1 * height + i] = fg_color;
+                image[i * height + 0] = fg_color;
+                image[i * height + 1] = fg_color;
+            }
+            image[i * height + i] = fg_color;
+            image[(i+1) * height + i] = fg_color;
+            image[i * height + i + 1] = fg_color;
         }
-        image[i * height + i] = fg_color;
-        image[(i+1) * height + i] = fg_color;
-        image[i * height + i + 1] = fg_color;
+        cursor->set_image(
+            image.data(),
+            geom::Size{ geom::Width(width), geom::Height(height) });
     }
-    cursor->set_image(
-        image.data(),
-        geom::Size{ geom::Width(width), geom::Height(height) });
 }
 
 void animate_cursor()
 {
-    if (!input_is_on && cursor)
+    if (!input_is_on)
+    if (auto cursor = ::cursor.lock())
     {
         static int cursor_pos = 0;
         if (cursor && ++cursor_pos == 300)

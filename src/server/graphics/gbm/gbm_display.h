@@ -64,7 +64,7 @@ public:
     void pause();
     void resume();
 
-    std::shared_ptr<Cursor> the_cursor();
+    std::weak_ptr<Cursor> the_cursor();
 
 private:
     void configure(std::shared_ptr<DisplayConfiguration> const& conf);

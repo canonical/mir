@@ -98,9 +98,9 @@ public:
     }
     void pause() {}
     void resume() {}
-    std::shared_ptr<mg::Cursor> the_cursor()
+    std::weak_ptr<mg::Cursor> the_cursor()
     {
-        return std::shared_ptr<mg::Cursor>();
+        return std::weak_ptr<mg::Cursor>();
     }
 };
 

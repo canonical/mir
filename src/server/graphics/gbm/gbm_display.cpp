@@ -160,7 +160,7 @@ void mgg::GBMDisplay::resume()
         db_ptr->schedule_set_crtc();
 }
 
-auto mgg::GBMDisplay::the_cursor() -> std::shared_ptr<Cursor>
+auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
 {
     if (!cursor) cursor = std::make_shared<GBMCursor>(platform, output_container);
     return cursor;

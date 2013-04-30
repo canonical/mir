@@ -55,7 +55,7 @@ public:
     virtual void pause() = 0;
     virtual void resume() = 0;
 
-    virtual std::shared_ptr<Cursor> the_cursor() = 0;
+    virtual std::weak_ptr<Cursor> the_cursor() = 0;
 
 protected:
     Display() = default;
