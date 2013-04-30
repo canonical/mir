@@ -20,6 +20,9 @@
 #ifndef MIR_GRAPHICS_CURSOR_H_
 #define MIR_GRAPHICS_CURSOR_H_
 
+#include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
+
 namespace mir
 {
 namespace graphics

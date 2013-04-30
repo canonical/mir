@@ -17,6 +17,7 @@
  */
 
 #include "gbm_display.h"
+#include "gbm_cursor.h"
 #include "gbm_platform.h"
 #include "gbm_display_buffer.h"
 #include "kms_display_configuration.h"
@@ -157,79 +158,6 @@ void mgg::GBMDisplay::resume()
 
     for (auto& db_ptr : display_buffers)
         db_ptr->schedule_set_crtc();
-}
-
-#include "mir/graphics/cursor.h"
-namespace mir
-{
-namespace graphics
-{
-namespace gbm
-{
-class GBMCursor : public Cursor
-{
-public:
-    GBMCursor(
-        std::shared_ptr<GBMPlatform> const& platform,
-        KMSOutputContainer const& output_container) :
-            platform(platform),
-            output_container(output_container),
-            buffer(gbm_bo_create(
-                platform->gbm.device,
-                width,
-                height,
-                GBM_FORMAT_ARGB8888,
-                GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
-    {
-        if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
-
-        std::vector<uint32_t> image(height*width, color);
-        set_image(image.data(), geometry::Size{geometry::Width(width), geometry::Height(height)});
-
-        output_container.for_each_output(
-            [&](KMSOutput& output) { output.set_cursor(buffer); });
-    }
-
-    ~GBMCursor() noexcept
-    {
-        gbm_bo_destroy(buffer);
-    }
-
-    void set_image(const void* raw_argb, geometry::Size size)
-    {
-        if (size != geometry::Size{geometry::Width(width), geometry::Height(height)})
-            BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
-
-        if (auto result = gbm_bo_write(
-            buffer,
-            raw_argb,
-            size.width.as_uint32_t()*size.height.as_uint32_t()*sizeof(uint32_t)))
-            BOOST_THROW_EXCEPTION(
-                ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))
-                << (boost::error_info<GBMCursor, decltype(result)>(result)));
-    }
-
-    void move_to(geometry::Point position)
-    {
-        auto const x = position.x.as_uint32_t();
-        auto const y = position.y.as_uint32_t();
-
-        output_container.for_each_output([&](KMSOutput& output) { output.move_cursor(x, y); });
-    }
-
-private:
-    static const int width = 64;
-    static const int height = 64;
-    static const uint32_t color = 0x1c00001f;
-    std::shared_ptr<GBMPlatform> const platform;
-    KMSOutputContainer const& output_container;
-
-    gbm_bo* buffer;
-};
-
-const uint32_t GBMCursor::color;
-}
-}
 }
 
 auto mgg::GBMDisplay::the_cursor() -> std::shared_ptr<Cursor>
