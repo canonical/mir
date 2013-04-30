@@ -290,7 +290,7 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 
     geom::Size s{geom::Width{55}, geom::Height{66}};
-    ON_CALL(*mock_buffer_bundle.get(), bundle_size()).WillByDefault(Return(s));
+    ON_CALL(*mock_buffer_bundle, bundle_size()).WillByDefault(Return(s));
 
     auto ret_transformation = surf.transformation();
 
