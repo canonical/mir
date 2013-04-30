@@ -72,8 +72,8 @@ mgg::GBMCursor::GBMCursor(
 
 mgg::GBMCursor::~GBMCursor() noexcept
 {
-//    output_container.for_each_output(
-//        [&](KMSOutput& output) { output.clear_cursor(); });
+    output_container.for_each_output(
+        [&](KMSOutput& output) { output.clear_cursor(); });
     gbm_bo_destroy(buffer);
 }
 
