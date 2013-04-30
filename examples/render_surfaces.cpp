@@ -22,6 +22,7 @@
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/input/null_input_manager.h"
 #include "mir/shell/surface_builder.h"
@@ -264,9 +265,11 @@ public:
             RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
                                               std::shared_ptr<mg::Renderer> const& renderer,
                                               std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
+                                              std::shared_ptr<mg::Cursor> const& cursor,
                                               std::vector<Moveable>& moveables)
                 : default_compositing_strategy{renderables, renderer, overlay_renderer},
                   frames{0},
+                  cursor(cursor),
                   moveables(moveables)
             {
             }
@@ -288,18 +291,21 @@ public:
                     m.step();
 
                 frames++;
+                cursor->move_to(geom::Point{geom::X(frames), geom::Y(frames)});
             }
 
         private:
             mc::DefaultCompositingStrategy default_compositing_strategy;
             StopWatch stop_watch;
             uint32_t frames;
+            std::shared_ptr<mg::Cursor> const cursor;
             std::vector<Moveable>& moveables;
         };
 
         return std::make_shared<RenderSurfacesCompositingStrategy>(the_renderables(),
                                                                    the_renderer(),
                                                                    the_overlay_renderer(),
+                                                                   the_display()->the_cursor(),
                                                                    moveables);
     }
     ///\internal [RenderSurfacesCompositingStrategy_tag]
@@ -360,12 +366,7 @@ try
     ///\internal [main_tag]
     RenderSurfacesServerConfiguration conf{argc, argv};
 
-    mir::run_mir(conf, [&](mir::DisplayServer&)
-    {
-        conf.create_surfaces();
-
-        static auto cursor = conf.the_display()->the_cursor();
-    });
+    mir::run_mir(conf, [&](mir::DisplayServer&) { conf.create_surfaces(); });
     ///\internal [main_tag]
 
     return 0;

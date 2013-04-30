@@ -48,6 +48,7 @@ public:
     bool schedule_page_flip(uint32_t fb_id);
     void wait_for_page_flip();
     void set_cursor(gbm_bo* buffer);
+    void move_cursor(int x, int y);
 
 private:
     KMSOutput(const KMSOutput&) = delete;

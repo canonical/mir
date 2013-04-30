@@ -182,16 +182,12 @@ public:
                 GBM_FORMAT_ARGB8888,
                 GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
     {
-        if (!buffer)
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error("null buffer"));
+        if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 
-        auto result = gbm_bo_write(buffer, image.data(), image.size()*sizeof(uint32_t));
-
-        if (!result)
+        if (auto result = gbm_bo_write(buffer, image.data(), image.size()*sizeof(uint32_t)))
             BOOST_THROW_EXCEPTION(
-                ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
-                << boost::errinfo_errno(result));
+                ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))
+                << (boost::error_info<GBMCursor, decltype(result)>(result)));
 
         output_container.for_each_output(
             [&](KMSOutput& output) { output.set_cursor(buffer); });
@@ -203,7 +199,14 @@ public:
     }
 
     void set_image(void* /*raw_rgba*/, geometry::Size /*size*/) {}
-    void move_to(geometry::Point /*position*/) {}
+    void move_to(geometry::Point position)
+    {
+        auto const x = position.x.as_uint32_t();
+        auto const y = position.y.as_uint32_t();
+
+        output_container.for_each_output([&](KMSOutput& output) { output.move_cursor(x, y); });
+    }
+
 private:
     static const int width = 64;
     static const int height = 64;
