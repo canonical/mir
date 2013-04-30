@@ -16,8 +16,9 @@
 
 set(
   ANDROID_SHARED_INPUT_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_lexicon.cpp
 )
+
+add_subdirectory(android)
 
 add_library(
   mirsharedinput STATIC
