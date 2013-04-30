@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/internal_client_interpreter.h"
+#include "src/server/graphics/android/internal_client_window.h"
 #include "mir_test_doubles/mock_android_buffer.h"
 #include "mir_test_doubles/mock_swapper.h"
 
@@ -26,11 +26,11 @@ namespace mc=mir::compositor;
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
  
-struct InternalClientInterpreter : public ::testing::Test
+struct InternalClientWindow : public ::testing::Test
 {
 };
 
-TEST_F(InternalClientInterpreter, driver_requests_buffer)
+TEST_F(InternalClientWindow, driver_requests_buffer)
 {
     using namespace testing;
     auto stub_anw = std::make_shared<ANativeWindowBuffer>();
@@ -43,12 +43,12 @@ TEST_F(InternalClientInterpreter, driver_requests_buffer)
         .Times(1)
         .WillOnce(Return(mock_buffer));
 
-    mga::InternalClientInterpreter interpreter(std::move(mock_swapper));
+    mga::InternalClientWindow interpreter(std::move(mock_swapper));
     auto test_buffer = interpreter.driver_requests_buffer();
     EXPECT_EQ(stub_anw.get(), test_buffer); 
 }
 
-TEST_F(InternalClientInterpreter, driver_returns_buffer)
+TEST_F(InternalClientWindow, driver_returns_buffer)
 {
     using namespace testing;
     auto stub_anw = std::make_shared<ANativeWindowBuffer>();
@@ -61,7 +61,7 @@ TEST_F(InternalClientInterpreter, driver_returns_buffer)
         .Times(1)
         .WillOnce(Return(mock_buffer));
 
-    mga::InternalClientInterpreter interpreter(std::move(mock_swapper));
+    mga::InternalClientWindow interpreter(std::move(mock_swapper));
     auto test_bufferptr = interpreter.driver_requests_buffer();
 
     /* end setup */
@@ -73,7 +73,7 @@ TEST_F(InternalClientInterpreter, driver_returns_buffer)
     interpreter.driver_returns_buffer(test_bufferptr, fake_sync);
 }
 
-TEST_F(InternalClientInterpreter, driver_requests_buffer_ownership)
+TEST_F(InternalClientWindow, driver_requests_buffer_ownership)
 {
     using namespace testing;
     auto stub_anw = std::make_shared<ANativeWindowBuffer>();
@@ -86,7 +86,7 @@ TEST_F(InternalClientInterpreter, driver_requests_buffer_ownership)
         .Times(1)
         .WillOnce(Return(mock_buffer));
 
-    mga::InternalClientInterpreter interpreter(std::move(mock_swapper));
+    mga::InternalClientWindow interpreter(std::move(mock_swapper));
 
     auto use_count_before = mock_buffer.use_count();
     auto test_anwb = interpreter.driver_requests_buffer();

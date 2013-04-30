@@ -16,41 +16,4 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_driver_interpreter.h"
-
-namespace mir
-{
-
-namespace compositor
-{
-class BufferSwapper;
-}
-
-namespace graphics
-{
-namespace android
-{
-
-class InternalClientInterpreter : public AndroidDriverInterpreter
-{
-public:
-    InternalClientInterpreter(std::unique_ptr<compositor::BufferSwapper>&&)
-    {
-    }
-
-    ANativeWindowBuffer* driver_requests_buffer()
-    {
-        return nullptr;
-    }
-    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&)
-    {}
-
-    virtual void dispatch_driver_request_format(int)
-    {}
-
-    virtual int  driver_requests_info(int) const
-    {return 8;}
-};
-}
-}
-}
+#include "internal_client_window.h"

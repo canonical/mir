@@ -17,7 +17,7 @@
  */
 
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/server/graphics/android/internal_client_interpreter.h"
+#include "src/server/graphics/android/internal_client_window.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/graphics/buffer_initializer.h"
@@ -55,7 +55,7 @@ TEST_F(AndroidInternalClient, creation)
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     mc::BufferProperties actual;
     auto swapper = strategy->create_swapper(actual, buffer_properties);
-    auto interpreter = std::make_shared<mga::InternalClientInterpreter>(std::move(swapper)); 
+    auto interpreter = std::make_shared<mga::InternalClientWindow>(std::move(swapper)); 
     auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter);
 
     int major, minor, n;
