@@ -61,13 +61,22 @@ std::string const& ms::Surface::name() const
 
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
-    top_left_point = top_left;
+    transformation_matrix[3][0] = top_left.x.as_float();
+    transformation_matrix[3][1] = top_left.y.as_float();
     notify_change();
 }
 
 void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
 {
+    float p[3];
+    for (int i = 0; i < 3; i++)
+        p[i] = transformation_matrix[3][i];
+
     transformation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
+
+    for (int i = 0; i < 3; i++)
+        transformation_matrix[3][i] = p[i];
+
     notify_change();
 }
 
@@ -79,7 +88,10 @@ void ms::Surface::set_alpha(float alpha_v)
 
 geom::Point ms::Surface::top_left() const
 {
-    return top_left_point;
+    geom::Point p;
+    p.x = geom::X{transformation_matrix[3][0]};
+    p.y = geom::Y{transformation_matrix[3][1]};
+    return p;
 }
 
 mir::geometry::Size ms::Surface::size() const

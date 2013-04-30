@@ -218,7 +218,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
 
 void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable)
 {
-    const geom::Point top_left = renderable.top_left();
+    const geom::Point top_left; // = renderable.top_left();
     const geom::Size size = renderable.size();
 
     const glm::vec3 top_left_vec{top_left.x.as_uint32_t(),
@@ -242,7 +242,7 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
      *    top_left_vec.
      */
     glm::mat4 pos_size_matrix;
-    pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
+    //pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
     pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
 
     glUseProgram(resources.program);
@@ -252,7 +252,7 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     glActiveTexture(GL_TEXTURE0);
 
     /* Apply the renderable's custom transformation */
-    const glm::mat4 transformation = pos_size_matrix * renderable.transformation();
+    const glm::mat4 transformation = renderable.transformation() * pos_size_matrix;
 
     glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(transformation));
     glUniform1f(resources.alpha_uniform_loc, renderable.alpha());

@@ -77,7 +77,6 @@ private:
     std::shared_ptr<BufferBundle> buffer_bundle;
 
     std::shared_ptr<compositor::Buffer> client_buffer_resource;
-    geometry::Point top_left_point;
     glm::mat4 transformation_matrix;
     float alpha_value;
 
