@@ -225,5 +225,6 @@ const uint32_t GBMCursor::color;
 
 auto mgg::GBMDisplay::the_cursor() -> std::shared_ptr<Cursor>
 {
-    return std::make_shared<GBMCursor>(platform, output_container);
+    if (!cursor) cursor = std::make_shared<GBMCursor>(platform, output_container);
+    return cursor;
 }
