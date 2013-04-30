@@ -19,11 +19,21 @@
 #ifndef MIR_EXAMPLES_INPROCESS_EGL_CLIENT_H_
 #define MIR_EXAMPLES_INPROCESS_EGL_CLIENT_H_
 
+#include "mir_toolkit/event.h"
+
 #include <thread>
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
+namespace client
+{
+namespace input
+{
+class InputReceiverThread;
+}
+}
 namespace graphics
 {
 class Platform;
@@ -50,9 +60,14 @@ protected:
 private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<shell::SurfaceFactory> const surface_factory;
-    
+
+    std::atomic<bool> running;
     std::thread client_thread;
+    
+    std::shared_ptr<client::input::InputReceiverThread> input_thread;
+    
     void thread_loop();
+    void handle_event(MirEvent *event);
 };
 
 }

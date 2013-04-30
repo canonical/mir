@@ -25,10 +25,14 @@
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/platform.h"
+#include "mir/input/input_receiver_thread.h"
+#include "mir/input/input_platform.h"
 
 #include "graphics.h"
 
 #include <EGL/egl.h>
+
+#include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <functional>
 
@@ -39,12 +43,14 @@ namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace me = mir::examples;
+namespace mcli = mir::client::input;
 namespace geom = mir::geometry;
 
 me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
                                            std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
   : graphics_platform(graphics_platform),
     surface_factory(surface_factory),
+    running(true),
     client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this)
 {
     client_thread.detach();
@@ -61,6 +67,12 @@ void me::InprocessEGLClient::thread_loop()
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
     auto surface = surface_factory->create_surface(params, mf::SurfaceId(), std::shared_ptr<events::EventSink>());
+    
+    auto input_platform = mcli::InputPlatform::create();
+    input_thread = input_platform->create_input_thread(
+        surface->client_input_fd(), 
+            std::bind(std::mem_fn(&me::InprocessEGLClient::handle_event), this, std::placeholders::_1));
+    input_thread->start();
 
     surface->advance_client_buffer(); // TODO: What a wart!
 
@@ -75,7 +87,7 @@ void me::InprocessEGLClient::thread_loop()
     ///\internal [setup_tag]
 
     ///\internal [loop_tag]
-    for(;;)
+    while (running)
     {
         gl_animation.render_gl();
         rc = eglSwapBuffers(helper.the_display(), helper.the_surface());
@@ -84,4 +96,17 @@ void me::InprocessEGLClient::thread_loop()
         gl_animation.step();
     }
     ///\internal [loop_tag]
+}
+
+void me::InprocessEGLClient::handle_event(MirEvent *event)
+{
+    printf("Event \n");
+    if (event->type != mir_event_type_key)
+        return;
+    if (event->key.action != mir_key_action_down)
+        return;
+    if (event->key.key_code != XKB_KEY_Escape)
+        return;
+    input_thread->stop();
+    running = false;
 }

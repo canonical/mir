@@ -121,7 +121,7 @@ set (DEMO_CLIENTS
 )
 
 if (MIR_PLATFORM STREQUAL "gbm")
-  add_subdirectory(demo-inprocess-egl)
+  add_subdirectory(demo-inprocess-surface-client)
 endif()
 
 add_subdirectory(demo-shell)
