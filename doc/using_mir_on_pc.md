@@ -51,11 +51,11 @@ strange errors.
 VT switching away from Mir will only work if Mir is run as root. In this case
 we need to change the permissions to the Mir socket so that clients can connect:
 
-    $ sudo mir
+    $ sudo mir_demo_server
     <Ctrl+Alt+F2> - log in to VT 2
     $ sudo chmod 777 /tmp/mir_socket
     $ some-mir-client
-    <Ctrl+Alt+F1> - switch back to mir. Watch your friends be amazed!
+    <Ctrl+Alt+F1> - switch back to Mir. Watch your friends be amazed!
 
 In case you accidentally killed your X login and ended up with a failsafe
 screen, you might find on subsequent reboots you can't log in to X at all any
