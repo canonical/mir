@@ -43,4 +43,4 @@ Installing Mir
 
 5. Install Mir:
 
-       # apt-get install mir libmirclient-demos
+       # apt-get install mir-demos

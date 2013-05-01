@@ -25,5 +25,5 @@ Installing pre-built packages on a PC {#installing_prebuilt_on_pc}
 
 5. Install mir and dist-upgrade:
 
-       sudo apt-get install mir
+       sudo apt-get install mir-demos
        sudo apt-get dist-upgrade
