@@ -80,7 +80,7 @@ protected:
     mc::BufferUsage usage;
     mc::BufferProperties buffer_properties;
 
-    ::testing::NiceMock<mgg::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;

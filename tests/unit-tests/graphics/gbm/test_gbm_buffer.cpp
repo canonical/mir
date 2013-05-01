@@ -85,7 +85,7 @@ protected:
         allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
     }
 
-    ::testing::NiceMock<mgg::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock>  mock_gl;

@@ -41,6 +41,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 class GraphicsPlatform : public ::testing::Test
 {
@@ -90,7 +91,7 @@ public:
 #ifdef ANDROID
     ::testing::NiceMock<mir::test::HardwareAccessMock> hw_access_mock;
 #else
-    ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 #endif
 };

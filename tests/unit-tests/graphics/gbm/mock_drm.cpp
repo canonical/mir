@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
-namespace mgg=mir::graphics::gbm;
+namespace mgg=mir::test::doubles;
 namespace geom = mir::geometry;
 
 namespace

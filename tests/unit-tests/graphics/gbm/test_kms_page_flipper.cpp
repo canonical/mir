@@ -49,7 +49,7 @@ public:
     {
     }
 
-    testing::NiceMock<mgg::MockDRM> mock_drm;
+    testing::NiceMock<mtd::MockDRM> mock_drm;
     mgg::KMSPageFlipper page_flipper;
 };
 

@@ -56,7 +56,7 @@ public:
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
-    ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
 };
 }
