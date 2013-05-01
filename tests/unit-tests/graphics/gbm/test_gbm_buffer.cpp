@@ -18,7 +18,7 @@
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 #include "mock_gbm.h"
 
 #include "src/server/graphics/gbm/gbm_platform.h"
@@ -85,7 +85,7 @@ protected:
         allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
     }
 
-    ::testing::NiceMock<mgg::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock>  mock_gl;

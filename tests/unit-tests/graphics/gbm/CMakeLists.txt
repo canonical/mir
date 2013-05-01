@@ -1,5 +1,4 @@
 list(APPEND UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp

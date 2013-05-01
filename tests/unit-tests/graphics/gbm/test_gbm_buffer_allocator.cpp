@@ -22,7 +22,7 @@
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/compositor/buffer_properties.h"
 
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 #include "mock_gbm.h"
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
@@ -80,7 +80,7 @@ protected:
     mc::BufferUsage usage;
     mc::BufferProperties buffer_properties;
 
-    ::testing::NiceMock<mgg::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
