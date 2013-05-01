@@ -62,8 +62,6 @@ void me::InprocessEGLClient::thread_loop()
         .of_pixel_format(geom::PixelFormat::argb_8888);
     auto surface = surface_factory->create_surface(params, mf::SurfaceId(), std::shared_ptr<events::EventSink>());
 
-    surface->advance_client_buffer(); // TODO: What a wart!
-
     auto native_display = graphics_platform->shell_egl_display();
     me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display), reinterpret_cast<EGLNativeWindowType>(surface.get()));
 

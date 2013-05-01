@@ -31,26 +31,17 @@ namespace doubles
 
 class StubShell : public frontend::Shell
 {
-    std::shared_ptr<frontend::Session> open_session(std::string const& /* name */, std::shared_ptr<events::EventSink> const& /* sink */)
+    std::shared_ptr<frontend::Session> open_session(std::string const& /* name */, std::shared_ptr<events::EventSink> const& /* sink */) override
     {
         return std::make_shared<StubSession>();
     }
-    void close_session(std::shared_ptr<frontend::Session> const& /* session */)
-    {
-    }
-    void tag_session_with_lightdm_id(std::shared_ptr<frontend::Session> const& /* session */, int /* id */)
-    {
-    }
-    void focus_session_with_lightdm_id(int /* id */)
+    void close_session(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& /* session */,
                                         frontend::SurfaceCreationParameters const& /* params */)
     {
         return frontend::SurfaceId{0};
-    }
-    void force_requests_to_complete()
-    {
     }
 };
 

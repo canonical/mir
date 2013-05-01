@@ -36,8 +36,10 @@ ms::Surface::Surface(
     std::function<void()> const& change_callback) :
     surface_name(name),
     buffer_bundle(buffer_bundle),
+    client_buffer_resource(buffer_bundle->secure_client_buffer()),
     alpha_value(1.0f),
     is_hidden(false),
+    buffer_is_valid(false),
     notify_change(change_callback)
 {
     // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
@@ -74,6 +76,12 @@ void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
 void ms::Surface::set_alpha(float alpha_v)
 {
     alpha_value = alpha_v;
+    notify_change();
+}
+
+void ms::Surface::set_hidden(bool hide)
+{
+    is_hidden = hide;
     notify_change();
 }
 
@@ -131,15 +139,9 @@ float ms::Surface::alpha() const
     return alpha_value;
 }
 
-bool ms::Surface::hidden() const
+bool ms::Surface::should_be_rendered() const
 {
-    return is_hidden;
-}
-
-void ms::Surface::set_hidden(bool hide)
-{
-    is_hidden = hide;
-    notify_change();
+    return !is_hidden && buffer_is_valid;
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the
@@ -157,10 +159,16 @@ void ms::Surface::advance_client_buffer()
     /* todo: the surface shouldn't be holding onto the resource... the frontend should! */
     client_buffer_resource.reset();  // Release old client buffer
     client_buffer_resource = buffer_bundle->secure_client_buffer();
+    flag_for_render();
     notify_change();
 }
 
 std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 {
     return client_buffer_resource;
+}
+
+void ms::Surface::flag_for_render()
+{
+    buffer_is_valid = true;
 }
