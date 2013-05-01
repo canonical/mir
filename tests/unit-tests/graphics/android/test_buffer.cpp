@@ -139,7 +139,7 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_native_handle)
 {
     using namespace testing;
 
-    auto expected_anwb = std::make_shared<ANativeWindowBuffer>();
+    MirNativeBuffer expected_anwb = std::make_shared<ANativeWindowBuffer>();
 
     EXPECT_CALL(*mock_buffer_handle, native_buffer_handle())
         .Times(Exactly(1))

@@ -20,7 +20,7 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
-#include "mir_native_buffer.h"
+#include "mir/graphics/mir_native_buffer.h"
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 
