@@ -361,3 +361,13 @@ int drmDropMaster(int fd)
 {
     return global_mock->drmDropMaster(fd);
 }
+
+int drmModeSetCursor(int fd, uint32_t crtcId, uint32_t bo_handle, uint32_t width, uint32_t height)
+{
+    return global_mock->drmModeSetCursor(fd, crtcId, bo_handle, width, height);
+}
+
+int drmModeMoveCursor(int fd, uint32_t crtcId, int x, int y)
+{
+    return global_mock->drmModeMoveCursor(fd, crtcId, x, y);
+}
