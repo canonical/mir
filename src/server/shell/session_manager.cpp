@@ -68,7 +68,7 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(
     app_container->insert_session(new_session);
     
     input_target_listener->input_application_opened(new_session);
-    session_listener->application_appeared(new_session);
+    session_listener->starting(new_session);
 
     set_focus_to_locked(std::unique_lock<std::mutex>(mutex), new_session);
 
@@ -93,7 +93,7 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
     input_target_listener->input_application_closed(shell_session);
-    session_listener->application_vanished(shell_session);
+    session_listener->stopping(shell_session);
 
     app_container->remove_session(shell_session);
 

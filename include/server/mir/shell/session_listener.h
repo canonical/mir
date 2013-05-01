@@ -30,8 +30,8 @@ class Session;
 class SessionListener
 {
 public:
-    virtual void application_appeared(std::shared_ptr<Session> const& session) = 0;
-    virtual void application_vanished(std::shared_ptr<Session> const& session) = 0;
+    virtual void starting(std::shared_ptr<Session> const& session) = 0;
+    virtual void stopping(std::shared_ptr<Session> const& session) = 0;
 
 protected:
     SessionListener() = default;
