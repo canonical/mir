@@ -52,7 +52,7 @@ void mia::Lexicon::translate(const droidinput::InputEvent *android_event, MirEve
             mir_event.motion.source_id = android_event->getSource();
             mir_event.motion.action = static_cast<MirMotionAction>(mev->getAction());
             mir_event.motion.flags = static_cast<MirMotionFlag>(mev->getFlags());
-            mir_event.motion.meta_state = mev->getMetaState();
+            mir_event.motion.modifiers = mev->getMetaState();
             mir_event.motion.edge_flags = mev->getEdgeFlags();
             mir_event.motion.button_state = static_cast<MirMotionButton>(mev->getButtonState());
             mir_event.motion.x_offset = mev->getXOffset();

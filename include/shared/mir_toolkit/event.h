@@ -135,7 +135,7 @@ typedef struct
     int32_t source_id;
     MirMotionAction action;
     MirMotionFlag flags;
-    int32_t meta_state;
+    unsigned int modifiers;
 
     int32_t edge_flags;
     MirMotionButton button_state;
