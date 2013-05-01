@@ -41,9 +41,6 @@ public:
     virtual std::shared_ptr<Session> open_session(std::string const& name, std::shared_ptr<events::EventSink> const& sink) = 0;
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
-    virtual void tag_session_with_lightdm_id(std::shared_ptr<Session> const& session, int id) = 0;
-    virtual void focus_session_with_lightdm_id(int id) = 0;
-
     virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
                                          SurfaceCreationParameters const& params) = 0;
 
