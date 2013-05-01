@@ -120,6 +120,7 @@ glm::mat4 ms::Surface::transformation() const
     pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
     pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
 
+    // Rotate, then scale, then translate
     const glm::mat4 transformation = pos_size_matrix * rotation_matrix;
 
     return transformation;
