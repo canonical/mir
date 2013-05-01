@@ -47,7 +47,10 @@ void mia::InputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfi
         width,
         height,
         default_display_orientation);
+    
+    out_config->pointerVelocityControlParameters.acceleration = 1.0;
 }
+
 droidinput::sp<droidinput::PointerControllerInterface> mia::InputReaderPolicy::obtainPointerController(int32_t /*device_id*/)
 {
     return pointer_controller;

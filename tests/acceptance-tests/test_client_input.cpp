@@ -95,6 +95,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
         {
             on_focus_set.wait_for_at_most_seconds(10);
             fake_event_hub->synthesize_builtin_keyboard_added();
+            fake_event_hub->synthesize_builtin_cursor_added();
             fake_event_hub->synthesize_device_scan_complete();
             inject_input();
         });
@@ -185,7 +186,7 @@ struct ClientConfigCommon : TestingClientConfiguration
 
 struct MockInputHandler
 {
-    MOCK_METHOD1(handle_key_down, void(MirEvent const*));
+    MOCK_METHOD1(handle_input, bool(MirEvent const*));
 };
 
 struct InputReceivingClient : ClientConfigCommon
@@ -200,9 +201,8 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
-        if (ev->key.action == mir_key_action_down)
+        if (client->handler->handle_input(ev))
         {
-            client->handler->handle_key_down(ev);
             client->event_received[client->events_received].wake_up_everyone();
             client->events_received++;
         }
@@ -226,7 +226,7 @@ struct InputReceivingClient : ClientConfigCommon
          MirSurfaceParameters const request_params =
          {
              __PRETTY_FUNCTION__,
-             640, 480,
+             surface_width, surface_height,
              mir_pixel_format_abgr_8888,
              mir_buffer_usage_hardware
          };
@@ -258,9 +258,65 @@ struct InputReceivingClient : ClientConfigCommon
     
     int events_to_receive;
     int events_received;
+
+    static int const surface_width = 100;
+    static int const surface_height = 100;
 };
 
+MATCHER(KeyDownEvent, "")
+{
+    if (arg->type != mir_event_type_key)
+        return false;
+    if (arg->key.action != mir_key_action_down) // Key down
+        return false;
+    
+    return true;
 }
+MATCHER_P(KeyOfSymbol, keysym, "")
+{
+    if (static_cast<xkb_keysym_t>(arg->key.key_code) == (uint)keysym)
+        return true;
+    return false;
+}
+
+MATCHER(HoverEnterEvent, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_hover_enter)
+        return false;
+
+    return true;
+}
+
+MATCHER_P2(ButtonDownEvent, x, y, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_down)
+        return false;
+    if (arg->motion.button_state == 0)
+        return false;
+    if (arg->motion.pointer_coordinates[0].x != x)
+        return false;
+    if (arg->motion.pointer_coordinates[0].y != y)
+        return false;
+    return true;
+}
+
+MATCHER_P2(MotionEventWithPosition, x, y, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.pointer_coordinates[0].x != x)
+        return false;
+    if (arg->motion.pointer_coordinates[0].y != y)
+        return false;
+    return true;
+}
+
+}
+
 
 using TestClientInput = BespokeDisplayServerTestFixture;
 
@@ -289,20 +345,11 @@ TEST_F(TestClientInput, clients_receive_key_input)
         void expect_input()
         {
             using namespace ::testing;
-            EXPECT_CALL(*handler, handle_key_down(_)).Times(num_events_produced);
+            EXPECT_CALL(*handler, handle_input(KeyDownEvent())).Times(num_events_produced)
+                .WillRepeatedly(Return(true));
         }
     } client_config;
     launch_client_process(client_config);
-}
-
-namespace
-{
-MATCHER_P(KeyOfSymbol, keysym, "")
-{
-    if (static_cast<xkb_keysym_t>(arg->key.key_code) == (uint)keysym)
-        return true;
-    return false;
-}
 }
 
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
@@ -318,12 +365,6 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             fake_event_hub->synthesize_event(mis::a_key_down_event()
                                              .of_scancode(KEY_4));
 
-            // Release the keys so we don't get repeat events.
-            fake_event_hub->synthesize_event(mis::a_key_up_event()
-                                             .of_scancode(KEY_4));
-            fake_event_hub->synthesize_event(mis::a_key_up_event()
-                                             .of_scancode(KEY_LEFTSHIFT));
-
         }
     } server_config;
     launch_server_process(server_config);
@@ -337,10 +378,78 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             using namespace ::testing;
 
             InSequence seq;
-            EXPECT_CALL(*handler, handle_key_down(KeyOfSymbol(XKB_KEY_Shift_L))).Times(1);
-            EXPECT_CALL(*handler, handle_key_down(KeyOfSymbol(XKB_KEY_dollar))).Times(1);
+            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_Shift_L)))).Times(1)
+                .WillOnce(Return(true));
+            EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_dollar)))).Times(1)
+                .WillOnce(Return(true));
         }
     } client_config;
     launch_client_process(client_config);
 }
 
+// TODO: This assumes that clients are placed by shell at 0,0. Which probably isn't quite safe!
+TEST_F(TestClientInput, clients_receive_motion_inside_window)
+{
+    using namespace ::testing;
+    
+    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    {
+        void inject_input()
+        {
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width,
+                                                                                 InputReceivingClient::surface_height));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,2));
+        }
+    } server_config;
+    launch_server_process(server_config);
+    
+    struct MotionReceivingClient : InputReceivingClient
+    {
+        MotionReceivingClient() : InputReceivingClient(2) {}
+
+        void expect_input()
+        {
+            using namespace ::testing;
+            
+            InSequence seq;
+
+            // We should see the cursor enter
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1).WillOnce(Return(true));
+            EXPECT_CALL(*handler, handle_input(
+                MotionEventWithPosition(InputReceivingClient::surface_width, 
+                                        InputReceivingClient::surface_height))).Times(1).WillOnce(Return(true));
+            // But we should not receive an event for the second movement outside of our surface!
+        }
+    } client_config;
+    launch_client_process(client_config);
+}
+
+TEST_F(TestClientInput, clients_receive_button_events_inside_window)
+{
+    using namespace ::testing;
+    
+    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    {
+        void inject_input()
+        {
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+        }
+    } server_config;
+    launch_server_process(server_config);
+    
+    struct ButtonReceivingClient : InputReceivingClient
+    {
+        ButtonReceivingClient() : InputReceivingClient(1) {}
+
+        void expect_input()
+        {
+            using namespace ::testing;
+            
+            InSequence seq;
+
+            // The cursor starts at (0, 0).
+            EXPECT_CALL(*handler, handle_input(ButtonDownEvent(0, 0))).Times(1).WillOnce(Return(true));
+        }
+    } client_config;
+    launch_client_process(client_config);
+}

@@ -68,9 +68,9 @@ void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinp
     policy_flags |= droidinput::POLICY_FLAG_PASS_TO_USER;
 }
 
-void mia::EventFilterDispatcherPolicy::interceptMotionBeforeQueueing(nsecs_t /* when */, uint32_t& /* policyFlags */)
+void mia::EventFilterDispatcherPolicy::interceptMotionBeforeQueueing(nsecs_t /* when */, uint32_t& policy_flags)
 {
-    // TODO: Implement for motion events to client.
+    policy_flags |= droidinput::POLICY_FLAG_PASS_TO_USER;
 }
 
 nsecs_t mia::EventFilterDispatcherPolicy::interceptKeyBeforeDispatching(
