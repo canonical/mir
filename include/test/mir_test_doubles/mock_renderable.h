@@ -46,7 +46,7 @@ public:
     MOCK_CONST_METHOD0(graphic_region, std::shared_ptr<surfaces::GraphicRegion>());
     MOCK_CONST_METHOD0(transformation, glm::mat4());
     MOCK_CONST_METHOD0(alpha, float());
-    MOCK_CONST_METHOD0(hidden, bool());
+    MOCK_CONST_METHOD0(should_be_rendered, bool());
 
     std::shared_ptr<surfaces::GraphicRegion> const region;
     std::shared_ptr<compositor::Buffer> const buffer;

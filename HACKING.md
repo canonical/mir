@@ -99,7 +99,7 @@ you need to know to get it working, and also to prevent your existing X server
 from dying at the same time.
 
 1. Make sure your hardware is supported. That means you're using a Mesa driver,
-   of which only intel and radeon families are presently supported. If you're
+   of which intel, radeon, and nouveau families are supported. If you're
    logged in to X then run this command to verify an appropriate DRI driver
    is active:
        sudo pmap `pidof X` | grep dri.so
@@ -115,34 +115,24 @@ from dying at the same time.
 
 3. Build Mir as described at the top of this document.
 
-4. Log in to VT1 (Ctrl+Alt+F1) _after_ you are already logged in to X. If you
-   do so before then you will not be assigned adequate credentials to access
-   the graphics hardware and will get strange errors.
+4. Log in to VT1 (Ctrl+Alt+F1)
 
-5. Note that you can switch back to X using Alt+F7. But it is very important
-   to remember NOT to switch once you have any mir binaries running. Doing
-   so will make X die (!).
+5. Start Mir as root:
+    
+    $ cd <mir_source_dir>/build/bin
+    $ sudo ./mir
 
-6. Switch back to VT1: Ctrl+Alt+F1
+6. To VT2: Ctrl+Alt+F2
 
-7. Now we want to run the mir server and a client to render something. The
-   trick is that we need to make sure the mir server is easy to terminate
-   before ever switching back to X. To ensure this, the server needs to be in
-   the foreground, but starting before your client (in the background). To
-   do this, you must:
-       cd <mir_source_dir>/build/bin
-       (sleep 5; ./mir_demo_client_accelerated) & ./mir ; kill $!
+7. Fix permissions on the Mir socket so that non-root clients can connect:
 
-   Wait 5 seconds and the client will start. You can kill it with Ctrl+C or
-   Alt+F2,Alt+F1,Ctrl+C. REMEMBER to kill the mir processes fully before
-   attempting to switch back to X or your X login will die.
+    $ sudo chmod 777 /tmp/mir_socket
 
-8. In case you accidentally killed your X login and ended up with a failsafe
-   screen, you might find on subsequent reboots you can't log in to X at all
-   any more (it instantly and silently takes you back to the login screen).
-   The fix for this is to log in to a VT and:
-       rm .Xauthority
-       sudo restart lightdm
+8. Start a mir client
+
+    $ ./mir_demo_client_accelerated
+
+9. Switch back to Mir on VT1 (Ctrl+Alt+F1)
 
 
 Documentation
