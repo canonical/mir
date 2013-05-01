@@ -154,13 +154,11 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
 std::shared_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
-    uint32_t bo_flags{0};
+    uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
     /* Create the GBM buffer object */
     if (buffer_properties.usage == mc::BufferUsage::software)
         bo_flags |= GBM_BO_USE_WRITE;
-    else
-        bo_flags |= GBM_BO_USE_RENDERING;
 
     gbm_bo *bo_raw = gbm_bo_create(
         platform->gbm.device,
