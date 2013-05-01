@@ -84,8 +84,9 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
                   SetArgPointee<6>(size.width.as_uint32_t()*4),
                   Return(-1)));
 
-    buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage );
-    EXPECT_EQ(buffer_data.get(), (mga::AndroidBufferHandle*) NULL);
+    EXPECT_THROW({
+        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage );
+    }, std::runtime_error);
 }
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_stride)
@@ -97,8 +98,9 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_stride)
                   SetArgPointee<6>(0),
                   Return(0)));
 
-    buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage );
-    EXPECT_EQ(buffer_data.get(), (mga::AndroidBufferHandle*) NULL);
+    EXPECT_THROW({
+        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage );
+    }, std::runtime_error);
 }
 
 TEST_F(AdaptorICSTest, resource_type_test_fail_null_handle)
@@ -110,8 +112,9 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_null_handle)
                   SetArgPointee<6>(size.width.as_uint32_t()*4),
                   Return(0)));
 
-    buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage );
-    EXPECT_EQ(buffer_data.get(), (mga::AndroidBufferHandle*) NULL);
+    EXPECT_THROW({
+        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage );
+    }, std::runtime_error);
 }
 
 TEST_F(AdaptorICSTest, resource_type_test_success_ret)
