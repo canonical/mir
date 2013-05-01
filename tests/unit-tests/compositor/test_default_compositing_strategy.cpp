@@ -133,7 +133,7 @@ TEST(DefaultCompositingStrategy, render_overlay)
     comp.render(display_buffer);
 }
 
-TEST(DefaultCompositingStrategy, skips_invisible_renderables)
+TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
 {
     using namespace testing;
 
@@ -143,9 +143,9 @@ TEST(DefaultCompositingStrategy, skips_invisible_renderables)
 
     NiceMock<mtd::MockRenderable> mr1, mr2, mr3;
 
-    EXPECT_CALL(mr1, hidden()).WillOnce(Return(false));
-    EXPECT_CALL(mr2, hidden()).WillOnce(Return(true));
-    EXPECT_CALL(mr3, hidden()).WillOnce(Return(false));
+    EXPECT_CALL(mr1, should_be_rendered()).WillOnce(Return(true));
+    EXPECT_CALL(mr2, should_be_rendered()).WillOnce(Return(false));
+    EXPECT_CALL(mr3, should_be_rendered()).WillOnce(Return(true));
 
     std::vector<mg::Renderable*> renderable_vec;
     renderable_vec.push_back(&mr1);

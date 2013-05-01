@@ -49,7 +49,7 @@ public:
     virtual std::shared_ptr<surfaces::GraphicRegion> graphic_region() const = 0;
     virtual glm::mat4 transformation() const = 0;
     virtual float alpha() const = 0;
-    virtual bool hidden() const = 0;
+    virtual bool should_be_rendered() const = 0;
 
 protected:
     Renderable() = default;
