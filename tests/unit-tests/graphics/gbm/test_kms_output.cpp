@@ -21,7 +21,7 @@
 
 #include "mir_test/fake_shared.h"
 
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 
 #include <stdexcept>
 

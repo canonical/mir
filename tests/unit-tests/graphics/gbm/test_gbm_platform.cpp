@@ -25,7 +25,7 @@
 
 #include <gtest/gtest.h>
 
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 #include "mock_gbm.h"
 
 #include <gtest/gtest.h>

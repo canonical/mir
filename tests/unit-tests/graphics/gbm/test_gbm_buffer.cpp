@@ -18,7 +18,7 @@
 
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 #include "mock_gbm.h"
 
 #include "src/server/graphics/gbm/gbm_platform.h"

@@ -17,7 +17,7 @@
  * Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 #include "mir/geometry/size.h"
 #include <gtest/gtest.h>
 
