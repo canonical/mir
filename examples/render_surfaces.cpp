@@ -401,7 +401,22 @@ public:
         }
     }
 
-    using mir::DefaultServerConfiguration::the_options;
+    bool input_is_on()
+    {
+        return the_options()->get("enable-input", ::input_is_on);
+    }
+
+    std::weak_ptr<mg::Cursor> the_cursor()
+    {
+        if (the_options()->get(display_cursor, false))
+        {
+            return the_display()->the_cursor();
+        }
+        else
+        {
+            return {};
+        }
+    }
 
 private:
     std::vector<Moveable> moveables;
@@ -418,13 +433,10 @@ try
     mir::run_mir(conf, [&](mir::DisplayServer&)
     {
         conf.create_surfaces();
-        std::shared_ptr<mir::options::Option> the_options = conf.the_options();
-        if (the_options->get(display_cursor, false))
-        {
-            cursor = conf.the_display()->the_cursor();
-        }
 
-        input_is_on = the_options->get("enable-input", input_is_on);
+        cursor = conf.the_cursor();
+
+        input_is_on = conf.input_is_on();
     });
     ///\internal [main_tag]
 
