@@ -22,7 +22,7 @@
 
 #ifdef ANDROID
 struct ANativeWindowBuffer;
-typedef ANativeWindowBuffer* MirNativeBuffer;
+typedef ANativeWindowBuffer MirNativeBuffer;
 #else
 typedef void* MirNativeBuffer;
 #endif

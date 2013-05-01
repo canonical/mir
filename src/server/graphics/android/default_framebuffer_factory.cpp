@@ -43,13 +43,14 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();
     auto num_framebuffers = info_provider->number_of_framebuffers_available(); 
-    std::vector<std::shared_ptr<mga::AndroidBuffer>> buffers; 
+    std::vector<std::shared_ptr<mga::Buffer>> buffers; 
     for( auto i = 0u; i < num_framebuffers; ++i)
     {
         buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
     }
 
-    auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);
+//    auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);
+    auto swapper = std::shared_ptr<mga::FBSimpleSwapper>(new mga::FBSimpleSwapper(buffers));
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, info_provider);
     return std::make_shared<mga::MirNativeWindow>(interpreter); 
 }

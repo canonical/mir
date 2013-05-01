@@ -29,15 +29,15 @@ namespace graphics
 namespace android
 {
 
-class AndroidBuffer;
+class Buffer;
 
 class FBSwapper // (todo: for composition bypass, inherit from mc::BufferSwapper)
 {
 public:
     virtual ~FBSwapper() = default;
 
-    virtual std::shared_ptr<AndroidBuffer> compositor_acquire() = 0;
-    virtual void compositor_release(std::shared_ptr<AndroidBuffer> const& released_buffer) = 0;
+    virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
+    virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
 protected:
     FBSwapper() = default;
     FBSwapper(FBSwapper const&) = delete;

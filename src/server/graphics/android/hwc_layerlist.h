@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/mir_native_buffer.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
@@ -31,7 +32,7 @@ namespace graphics
 namespace android
 {
 
-class AndroidBuffer;
+class Buffer;
 class HWCDefaultLayer;
 typedef struct std::vector<std::shared_ptr<HWCDefaultLayer>> LayerList;
  
@@ -63,7 +64,7 @@ protected:
 
 struct HWCFBLayer : public HWCDefaultLayer
 {
-    HWCFBLayer(std::shared_ptr<ANativeWindowBuffer> const& native_buf,
+    HWCFBLayer(std::shared_ptr<MirNativeBuffer> const& native_buf,
                HWCRect& display_frame_rect);
 };
 
@@ -72,7 +73,7 @@ class HWCLayerOrganizer
 public:
     virtual ~HWCLayerOrganizer() = default;
     virtual const LayerList& native_list() const = 0;
-    virtual void set_fb_target(std::shared_ptr<AndroidBuffer> const&) = 0;
+    virtual void set_fb_target(std::shared_ptr<Buffer> const&) = 0;
 
 protected:
     HWCLayerOrganizer() = default;
@@ -87,7 +88,7 @@ public:
     HWCLayerList();
     const LayerList& native_list() const;
 
-    void set_fb_target(std::shared_ptr<AndroidBuffer> const&);
+    void set_fb_target(std::shared_ptr<Buffer> const&);
 
 private:
     LayerList layer_list;

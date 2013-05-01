@@ -17,7 +17,7 @@
  */
 
 #include "hwc_layerlist.h"
-#include "android_buffer.h"
+#include "buffer.h"
 
 #include <cstring>
 
@@ -74,7 +74,7 @@ mga::HWCDefaultLayer::~HWCDefaultLayer()
 }
 
 mga::HWCFBLayer::HWCFBLayer(
-        std::shared_ptr<ANativeWindowBuffer> const& native_buf,
+        std::shared_ptr<MirNativeBuffer> const& native_buf,
         HWCRect& display_frame_rect)
     : HWCDefaultLayer{display_frame_rect}
 {
@@ -94,7 +94,7 @@ const mga::LayerList& mga::HWCLayerList::native_list() const
     return layer_list;
 }
 
-void mga::HWCLayerList::set_fb_target(std::shared_ptr<mga::AndroidBuffer> const& buffer)
+void mga::HWCLayerList::set_fb_target(std::shared_ptr<mga::Buffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
 

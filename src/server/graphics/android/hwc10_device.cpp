@@ -51,7 +51,7 @@ unsigned int mga::HWC10Device::number_of_framebuffers_available() const
     return fb_device->number_of_framebuffers_available();
 }
 
-void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& buffer)
+void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mga::Buffer> const& buffer)
 {
     fb_device->set_next_frontbuffer(buffer);
 }

@@ -24,7 +24,7 @@
 
 namespace mga=mir::graphics::android;
 
-std::shared_ptr<mga::AndroidBuffer> mga::FBSimpleSwapper::compositor_acquire()
+std::shared_ptr<mga::Buffer> mga::FBSimpleSwapper::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
     while (queue.empty())
@@ -37,7 +37,7 @@ std::shared_ptr<mga::AndroidBuffer> mga::FBSimpleSwapper::compositor_acquire()
     return buffer;
 }
 
-void mga::FBSimpleSwapper::compositor_release(std::shared_ptr<mga::AndroidBuffer> const& released_buffer)
+void mga::FBSimpleSwapper::compositor_release(std::shared_ptr<mga::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lk(queue_lock);
 
