@@ -35,7 +35,7 @@ Installing Mir
        # stop
        # ubuntu_chroot shell
 
-4. Add the mir staging PPA to your device's sources list:
+4. Add the Mir staging PPA to your device's sources list:
 
        # apt-get install software-properties-common (to get the add-apt-repository command)
        # add-apt-repository ppa:mir-team/staging
@@ -43,4 +43,4 @@ Installing Mir
 
 5. Install Mir:
 
-       # apt-get install mir libmirclient-demos
+       # apt-get install mir-demos

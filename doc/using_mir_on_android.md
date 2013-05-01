@@ -14,13 +14,13 @@ In the Android shell, stop SurfaceFlinger and open the Ubuntu touch chroot shell
 
 Now, start Mir and a client application:
 
-    # mir &
+    # mir_demo_server &
     # some-mir-client (e.g. mir_demo_client_accelerated)
 
 Getting some example client applications
 ----------------------------------------
 
-You can get some example programs by installing the `libmirclient-demos` package
+You can get some example programs by installing the `mir-demos` package
 inside the Ubuntu touch chroot shell (see above):
 
-    # apt-get install libmirclient-demos
+    # apt-get install mir-demos
