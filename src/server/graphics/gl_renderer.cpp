@@ -218,43 +218,13 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
 
 void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable)
 {
-    const geom::Point top_left = renderable.top_left();
-    const geom::Size size = renderable.size();
-
-    const glm::vec3 top_left_vec{top_left.x.as_uint32_t(),
-                                 top_left.y.as_uint32_t(),
-                                 0.0f};
-    const glm::vec3 size_vec{size.width.as_uint32_t(),
-                             size.height.as_uint32_t(),
-                             0.0f};
-
-    /* Get the center of the renderable's area */
-    const glm::vec3 center_vec{top_left_vec + 0.5f * size_vec};
-
-    /*
-     * Every renderable is drawn using a 1x1 quad centered at 0,0.
-     * We need to transform and scale that quad to get to its final position
-     * and size.
-     *
-     * 1. We scale the quad vertices (from 1x1 to wxh)
-     * 2. We move the quad to its final position. Note that because the quad
-     *    is centered at (0,0), we need to translate by center_vec, not
-     *    top_left_vec.
-     */
-    glm::mat4 pos_size_matrix;
-    pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
-    pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
-
     glUseProgram(resources.program);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
 
-    /* Apply the renderable's custom transformation */
-    const glm::mat4 transformation = pos_size_matrix * renderable.transformation();
-
-    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(transformation));
+    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(renderable.transformation()));
     glUniform1f(resources.alpha_uniform_loc, renderable.alpha());
 
     /* Set up vertex attribute data */

@@ -151,7 +151,7 @@ TEST_F(GBMBufferAllocatorTest, creates_software_rendering_buffer)
 
     mc::BufferProperties properties{size, pf, mc::BufferUsage::software};
 
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_WRITE)));
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_WRITE|GBM_BO_USE_RENDERING)));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
     allocator->alloc_buffer(properties);

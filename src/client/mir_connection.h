@@ -83,14 +83,6 @@ public:
         mir_connected_callback callback,
         void * context);
 
-    MirWaitHandle* connect(
-        int lightdm_id,
-        const char* app_name,
-        mir_connected_callback callback,
-        void * context);
-
-    void select_focus_by_lightdm_id(int lightdm_id);
-
     MirWaitHandle* disconnect();
 
     MirWaitHandle* drm_auth_magic(unsigned int magic,

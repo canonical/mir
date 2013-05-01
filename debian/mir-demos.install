@@ -1,3 +1,5 @@
+usr/bin/mir_demo_shell
+usr/bin/mir_demo_server
 usr/bin/mir_demo_client
 usr/bin/mir_demo_client_unaccelerated
 usr/bin/mir_demo_client_accelerated

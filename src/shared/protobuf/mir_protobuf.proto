@@ -4,7 +4,6 @@ package mir.protobuf;
 
 message ConnectParameters {
   required string application_name = 1;
-  optional int32 lightdm_id  = 2;
 }
 
 message SurfaceParameters {
@@ -16,10 +15,6 @@ message SurfaceParameters {
 }
 
 message SurfaceId {
-  required int32 value = 1;
-};
-
-message LightdmId {
   required int32 value = 1;
 };
 
@@ -137,7 +132,6 @@ service DisplayServer {
   rpc create_surface(SurfaceParameters) returns (Surface);
   rpc next_buffer(SurfaceId) returns (Buffer);
   rpc release_surface(SurfaceId) returns (Void);
-  rpc select_focus_by_lightdm_id(LightdmId) returns (Void);
 
   // Platform specific requests
   rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
