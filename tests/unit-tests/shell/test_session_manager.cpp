@@ -145,38 +145,6 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
     EXPECT_EQ(session, new_session);
 }
 
-TEST_F(SessionManagerSetup, apps_selected_by_id_receive_focus)
-{
-    using namespace ::testing;
-
-    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
-    auto session2 = session_manager.open_session("IntelliJ IDEA", std::shared_ptr<me::EventSink>());
-
-    session_manager.tag_session_with_lightdm_id(session1, 1);
-
-    EXPECT_CALL(focus_setter, set_focus_to(Eq(session1)));
-    session_manager.focus_session_with_lightdm_id(1);
-}
-
-TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
-{
-    using namespace ::testing;
-
-    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
-    auto session2 = session_manager.open_session("IntelliJ IDEA", std::shared_ptr<me::EventSink>());
-
-    auto shell_session1 = std::dynamic_pointer_cast<msh::Session>(session1);
-    auto shell_session2 = std::dynamic_pointer_cast<msh::Session>(session2);
-
-    session_manager.tag_session_with_lightdm_id(session1, 1);
-    session_manager.focus_session_with_lightdm_id(1);
-
-    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return(shell_session2));
-    EXPECT_CALL(focus_setter, set_focus_to(Eq(shell_session2)));
-
-    session_manager.close_session(session1);
-}
-
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
     using namespace ::testing;
