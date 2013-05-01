@@ -55,7 +55,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(source_id, mir_ev.key.source_id);
     EXPECT_EQ(action, mir_ev.key.action);
     EXPECT_EQ(flags, mir_ev.key.flags);
-    EXPECT_EQ(meta_state, mir_ev.key.meta_state);
+    EXPECT_EQ((unsigned int)meta_state, mir_ev.key.modifiers);
 
     auto mir_key_ev = &mir_ev.key;
     // Key event specific properties
