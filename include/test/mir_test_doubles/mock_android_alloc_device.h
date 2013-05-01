@@ -112,7 +112,7 @@ public:
     MOCK_METHOD3(dump_interface, int(alloc_device_t*, char*, int));
 
     native_handle_t* buffer_handle;
-    int fake_stride;
+    unsigned int fake_stride;
 };
 }
 }

@@ -21,6 +21,7 @@
 #include "android_buffer_handle_default.h"
 #include "android_format_conversion-inl.h"
 
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mg=mir::graphics;
@@ -68,24 +69,24 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     geometry::Size size, geometry::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
+    auto stride = 0;
+    auto format = mga::to_android_format(pf);
+    auto width = static_cast<int>(size.width.as_uint32_t());
+    auto height = static_cast<int>(size.height.as_uint32_t());
+    auto usage_flag = convert_to_android_usage(usage);
+    auto ret = alloc_dev->alloc(alloc_dev.get(), width, height,
+                           format, usage_flag, &buf_handle, &stride);
 
-    int ret, stride_as_int = 0;
-    int format = mga::to_android_format(pf);
-    int usage_flag = convert_to_android_usage(usage);
-    ret = alloc_dev->alloc(alloc_dev.get(), (int) size.width.as_uint32_t(), (int) size.height.as_uint32_t(),
-                           format, usage_flag, &buf_handle, &stride_as_int);
-
-    //todo: kdub we should not be passing an empty ptr around like this
-    AndroidBufferHandleEmptyDeleter empty_del;
-    AndroidBufferHandle *null_handle = NULL;
-    if (( ret ) || (buf_handle == NULL) || (stride_as_int == 0))
-        return std::shared_ptr<mga::AndroidBufferHandle>(null_handle, empty_del);
+    if (( ret ) || (buf_handle == NULL) || (stride == 0))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("buffer allocation failed\n"));
+    }
 
     /* pack ANativeWindow buffer for the handle */
     auto buffer = std::make_shared<ANativeWindowBuffer>();
-    buffer->width = (int) size.width.as_uint32_t();
-    buffer->height = (int) size.height.as_uint32_t();
-    buffer->stride = stride_as_int;
+    buffer->width = width;
+    buffer->height = height;
+    buffer->stride = stride;
     buffer->handle = buf_handle;
     buffer->format = format;
     buffer->usage = usage_flag;
@@ -103,7 +104,6 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
 
     return handle;
 }
-
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
 {
