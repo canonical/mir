@@ -39,6 +39,7 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
@@ -344,6 +345,16 @@ mir::DefaultServerConfiguration::the_shell_placement_strategy()
         });
 }
 
+std::shared_ptr<msh::SessionListener>
+mir::DefaultServerConfiguration::the_shell_session_listener()
+{
+    return shell_session_listener(
+        [this]
+        {
+            return std::make_shared<msh::NullSessionListener>();
+        });
+}
+
 std::shared_ptr<msh::SessionManager>
 mir::DefaultServerConfiguration::the_session_manager()
 {
@@ -355,7 +366,8 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
-                the_input_target_listener());
+                the_input_target_listener(),
+                the_shell_session_listener());
         });
 }
 
