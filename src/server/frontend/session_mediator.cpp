@@ -120,7 +120,6 @@ void mir::frontend::SessionMediator::create_surface(
         if (surface->supports_input())
             response->add_fd(surface->client_input_fd());
 
-        surface->advance_client_buffer();
         auto const& buffer_resource = surface->client_buffer();
 
         auto const& id = buffer_resource->id();
