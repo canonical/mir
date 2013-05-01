@@ -140,10 +140,7 @@ public:
     }
     void pause() {}
     void resume() {}
-    std::weak_ptr<mg::Cursor> the_cursor()
-    {
-        return std::weak_ptr<mg::Cursor>();
-    }
+    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 };
 
 struct SurfaceSync

@@ -84,7 +84,7 @@ class MockDRM
 {
 public:
     MockDRM();
-    ~MockDRM();
+    ~MockDRM() noexcept;
 
     MOCK_METHOD2(drmOpen, int(const char *name, const char *busid));
     MOCK_METHOD1(drmClose, int(int fd));

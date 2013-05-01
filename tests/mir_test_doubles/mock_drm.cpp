@@ -29,7 +29,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-mgg::MockDRM* global_mock = NULL;
+mgg::MockDRM* global_mock = nullptr;
 }
 
 mgg::FakeDRMResources::FakeDRMResources()
@@ -237,9 +237,9 @@ mgg::MockDRM::MockDRM()
     .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_connector)));
 }
 
-mgg::MockDRM::~MockDRM()
+mgg::MockDRM::~MockDRM() noexcept
 {
-    global_mock = NULL;
+    global_mock = nullptr;
 }
 
 int drmOpen(const char *name, const char *busid)
