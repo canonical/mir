@@ -111,22 +111,24 @@ void update_cursor(uint32_t bg_color, uint32_t fg_color)
 void animate_cursor()
 {
     if (!input_is_on)
-    if (auto cursor = ::cursor.lock())
     {
-        static int cursor_pos = 0;
-        if (++cursor_pos == 300)
+        if (auto cursor = ::cursor.lock())
         {
-            cursor_pos = 0;
+            static int cursor_pos = 0;
+            if (++cursor_pos == 300)
+            {
+                cursor_pos = 0;
 
-            static const uint32_t fg_colors[3] = { fg_color, 0xffffffff, 0x3f000000 };
-            static int fg_color = 0;
+                static const uint32_t fg_colors[3] = { fg_color, 0xffffffff, 0x3f000000 };
+                static int fg_color = 0;
 
-            if (++fg_color == 3) fg_color = 0;
+                if (++fg_color == 3) fg_color = 0;
 
-            update_cursor(bg_color, fg_colors[fg_color]);
+                update_cursor(bg_color, fg_colors[fg_color]);
+            }
+
+            cursor->move_to(geom::Point{geom::X(cursor_pos), geom::Y(cursor_pos)});
         }
-
-        cursor->move_to(geom::Point{geom::X(cursor_pos), geom::Y(cursor_pos)});
     }
 }
 

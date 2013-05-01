@@ -82,13 +82,14 @@ void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
     if (size != geometry::Size{geometry::Width(width), geometry::Height(height)})
         BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
 
-    if (auto result = gbm_bo_write(
-        buffer,
-        raw_argb,
-        size.width.as_uint32_t()*size.height.as_uint32_t()*sizeof(uint32_t)))
+    auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
+
+    if (auto result = gbm_bo_write(buffer, raw_argb, count))
+    {
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))
-            << (boost::error_info<GBMCursor, decltype(result)>(result)));
+                << (boost::error_info<GBMCursor, decltype(result)>(result)));
+    }
 }
 
 void mgg::GBMCursor::move_to(geometry::Point position)
