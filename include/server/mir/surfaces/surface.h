@@ -78,7 +78,7 @@ private:
 
     std::shared_ptr<compositor::Buffer> client_buffer_resource;
     geometry::Point top_left_point;
-    glm::mat4 transformation_matrix;
+    glm::mat4 rotation_matrix;
     float alpha_value;
 
     bool is_hidden;

@@ -198,10 +198,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         {
             invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
         }
-        else if ("select_focus_by_lightdm_id" == invocation.method_name())
-        {
-            invoke(&protobuf::DisplayServer::select_focus_by_lightdm_id, invocation);
-        }
         else if ("configure_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::configure_surface, invocation);
