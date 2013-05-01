@@ -114,7 +114,7 @@ void animate_cursor()
     if (auto cursor = ::cursor.lock())
     {
         static int cursor_pos = 0;
-        if (cursor && ++cursor_pos == 300)
+        if (++cursor_pos == 300)
         {
             cursor_pos = 0;
 

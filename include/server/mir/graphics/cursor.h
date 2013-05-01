@@ -32,8 +32,7 @@ class Cursor
 public:
     virtual void set_image(void const* raw_argb, geometry::Size size) = 0;
     virtual void move_to(geometry::Point position) = 0;
-//    virtual void hide() = 0;
-//    virtual void show() = 0;
+
 protected:
     Cursor() = default;
     virtual ~Cursor() = default;
