@@ -60,6 +60,7 @@ struct MockServerPackageGenerator : public StubServerTool
         width_sent  = 891;
         height_sent = 458;
         pf_sent = mir_pixel_format_abgr_8888;
+        stride_sent = 66;
 
         input_fd = open("/dev/null", O_APPEND);
     }
@@ -108,7 +109,7 @@ struct MockServerPackageGenerator : public StubServerTool
         {
             server_package.data[i] = (global_buffer_id + i) * 2;
         }
-        server_package.stride = 66;
+        server_package.stride = stride_sent;
     }
 
     MirBufferPackage server_package;
@@ -116,6 +117,7 @@ struct MockServerPackageGenerator : public StubServerTool
     int width_sent;
     int height_sent;
     int pf_sent;
+    int stride_sent;
     
     int input_fd;
 
@@ -557,4 +559,109 @@ TEST_F(MirClientSurfaceTest, default_surface_state)
     // get a real answer from the server.
     EXPECT_EQ(mir_surface_state_unknown,
               surface->attrib(mir_surface_attrib_state));
+}
+
+namespace
+{
+
+struct StubBuffer : public mcl::ClientBuffer
+{
+    StubBuffer(geom::Size size, geom::Stride stride, geom::PixelFormat pf)
+        : size_{size}, stride_{stride}, pf_{pf}
+    {
+    }
+
+    std::shared_ptr<mcl::MemoryRegion> secure_for_cpu_write()
+    {
+        auto raw = new mcl::MemoryRegion{size_.width,
+                                         size_.height,
+                                         stride_,
+                                         pf_,
+                                         nullptr};
+
+        return std::shared_ptr<mcl::MemoryRegion>(raw);
+    }
+
+    geom::Size size() const { return size_; }
+    geom::Stride stride() const { return stride_; }
+    geom::PixelFormat pixel_format() const { return pf_; }
+    uint32_t age() const { return 0; }
+    void increment_age() {}
+    void mark_as_submitted() {}
+
+    std::shared_ptr<MirBufferPackage> get_buffer_package() const
+    {
+        return std::shared_ptr<MirBufferPackage>();
+    }
+
+    MirNativeBuffer get_native_handle()
+    {
+        return MirNativeBuffer();
+    }
+
+    geom::Size size_;
+    geom::Stride stride_;
+    geom::PixelFormat pf_;
+};
+
+struct StubClientBufferFactory : public mcl::ClientBufferFactory
+{
+    std::shared_ptr<mcl::ClientBuffer> create_buffer(
+        std::shared_ptr<MirBufferPackage> const& package,
+        geom::Size size, geom::PixelFormat pf)
+    {
+        return std::make_shared<StubBuffer>(size,
+                                            geom::Stride{package->stride},
+                                            pf);
+    }
+};
+
+}
+TEST_F(MirClientSurfaceTest, get_cpu_region_returns_correct_data)
+{
+    using namespace testing;
+
+    struct TestDataEntry
+    {
+        int width;
+        int height;
+        int stride;
+        MirPixelFormat pf;
+    };
+
+    std::vector<TestDataEntry> test_data{
+        {100, 200, 300, mir_pixel_format_argb_8888},
+        {101, 201, 301, mir_pixel_format_xrgb_8888},
+        {102, 202, 302, mir_pixel_format_bgr_888}
+    };
+
+    auto stub_buffer_factory = std::make_shared<StubClientBufferFactory>();
+
+    for (auto& td : test_data)
+    {
+        mock_server_tool->width_sent = td.width;
+        mock_server_tool->height_sent = td.height;
+        mock_server_tool->stride_sent = td.stride;
+        mock_server_tool->pf_sent = td.pf;
+
+        auto surface = std::make_shared<MirSurface>(connection.get(),
+                                                    *client_comm_channel,
+                                                    logger,
+                                                    stub_buffer_factory,
+                                                    input_platform,
+                                                    params,
+                                                    &empty_callback,
+                                                    nullptr);
+
+        auto wait_handle = surface->get_create_wait_handle();
+        wait_handle->wait_for_result();
+
+        MirGraphicsRegion region;
+        surface->get_cpu_region(region);
+
+        EXPECT_EQ(mock_server_tool->width_sent, region.width);
+        EXPECT_EQ(mock_server_tool->height_sent, region.height);
+        EXPECT_EQ(mock_server_tool->stride_sent, region.stride);
+        EXPECT_EQ(mock_server_tool->pf_sent, region.pixel_format);
+    }
 }
