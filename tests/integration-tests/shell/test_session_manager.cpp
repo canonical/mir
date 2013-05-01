@@ -22,6 +22,7 @@
 #include "mir/shell/focus_setter.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/default_session_container.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
@@ -53,13 +54,15 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
     mtd::StubInputTargetListener input_target_listener;
+    msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager(
             mt::fake_shared(surface_factory),
             container,
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
-            mt::fake_shared(input_target_listener));
+            mt::fake_shared(input_target_listener),
+            mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
@@ -89,13 +92,15 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
     mtd::StubInputTargetListener input_target_listener;
+    msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager(
             mt::fake_shared(surface_factory),
             container,
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
-            mt::fake_shared(input_target_listener));
+            mt::fake_shared(input_target_listener),
+            mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
