@@ -27,7 +27,7 @@ your /etc/lightdm/lightdm.conf to look to look like this:
     [SeatDefaults]
     user-session=ubuntu
     greeter-session=unity-greeter
-    type=mir
+    type=unity
 
 Now restart lightdm:
 
@@ -48,20 +48,14 @@ you are already logged in to X.  If you do so before then you will not be
 assigned adequate credentials to access the graphics hardware and will get
 strange errors.
 
-Note that you can switch back to X using Alt+F7. But it is very important to
-remember NOT to switch once you have any mir binaries running. Doing so will
-currently make X die (!).
+VT switching away from Mir will only work if Mir is run as root. In this case
+we need to change the permissions to the Mir socket so that clients can connect:
 
-Now we want to run the mir server and a client to render something. The trick
-is that we need to make sure the mir server is easy to terminate before ever
-switching back to X. To ensure this, the server needs to be in the foreground,
-but starting before your client (in the background). To do this, you must:
-
-    $ (sleep 3; some-mir-client) & mir ; kill $!
-
-Wait 3 seconds and the client will start. You can kill it with Ctrl+C. REMEMBER
-to kill the mir processes fully before attempting to switch back to X or your X
-login will die.
+    $ sudo mir
+    <Ctrl+Alt+F2> - log in to VT 2
+    $ sudo chmod 777 /tmp/mir_socket
+    $ some-mir-client
+    <Ctrl+Alt+F1> - switch back to mir. Watch your friends be amazed!
 
 In case you accidentally killed your X login and ended up with a failsafe
 screen, you might find on subsequent reboots you can't log in to X at all any
