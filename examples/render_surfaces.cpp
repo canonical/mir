@@ -332,6 +332,12 @@ public:
                     ).lock();
 
             /*
+             * Let the system know that the surface is suitable for rendering
+             * (i.e., that it contains buffers with valid contents).
+             */
+            s->flag_for_render();
+
+            /*
              * Place each surface at a different starting location and give it a
              * different speed, rotation and alpha offset.
              */
