@@ -18,6 +18,7 @@
  */
 
 #include "mir/graphics/android/mir_native_window.h"
+#include "buffer.h"
 #include "default_framebuffer_factory.h"
 #include "fb_device.h"
 #include "graphic_buffer_allocator.h"
@@ -43,10 +44,11 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();
     auto num_framebuffers = info_provider->number_of_framebuffers_available(); 
-    std::vector<std::shared_ptr<mga::Buffer>> buffers; 
+    std::vector<std::shared_ptr<mc::Buffer>> buffers; 
     for( auto i = 0u; i < num_framebuffers; ++i)
     {
-        buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
+        auto buf = buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles);
+        buffers.push_back(buf);
     }
 
 //    auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);

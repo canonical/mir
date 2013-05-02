@@ -17,7 +17,7 @@
  */
 
 #include "src/server/graphics/android/internal_client_window.h"
-#include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_swapper.h"
 
 #include <gtest/gtest.h>
@@ -34,7 +34,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
 {
     using namespace testing;
     auto stub_anw = std::make_shared<ANativeWindowBuffer>();
-    auto mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>();
     auto mock_swapper = std::unique_ptr<mtd::MockSwapper>(new mtd::MockSwapper());
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1)
@@ -52,7 +52,7 @@ TEST_F(InternalClientWindow, driver_returns_buffer)
 {
     using namespace testing;
     auto stub_anw = std::make_shared<ANativeWindowBuffer>();
-    auto mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>();
     auto mock_swapper = std::unique_ptr<mtd::MockSwapper>(new mtd::MockSwapper());
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1)
@@ -77,7 +77,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer_ownership)
 {
     using namespace testing;
     auto stub_anw = std::make_shared<ANativeWindowBuffer>();
-    auto mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>();
     auto mock_swapper = std::unique_ptr<mtd::MockSwapper>(new mtd::MockSwapper());
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1)

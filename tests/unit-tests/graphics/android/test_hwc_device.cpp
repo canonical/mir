@@ -21,7 +21,7 @@
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
-#include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
 
 #include <thread>

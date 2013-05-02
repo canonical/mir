@@ -81,3 +81,7 @@ std::shared_ptr<mc::BufferIPCPackage> mc::TemporaryBuffer::get_ipc_package() con
     return buffer->get_ipc_package();
 }
 
+std::shared_ptr<MirNativeBuffer> mc::TemporaryBuffer::native_buffer_handle() const
+{
+    return buffer->native_buffer_handle();
+}
