@@ -73,7 +73,8 @@ private:
 
     std::mutex guard;
     std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
-    std::map<DepthId, std::vector<std::shared_ptr<Surface>>> surfaces_by_depth;
+    typedef std::vector<std::shared_ptr<Surface>> Layer;
+    std::map<DepthId, Layer> layers_by_depth;
     std::mutex notify_change_mutex;
     std::function<void()> notify_change;
 };

@@ -45,9 +45,9 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_fa
 void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
 {
     std::lock_guard<std::mutex> lock(guard);
-    for (auto lit = surfaces_by_depth.begin(); lit != surfaces_by_depth.end(); ++lit)
+    for (auto &layer : layers_by_depth)
     {
-        auto surfaces = lit->second;
+        auto surfaces = layer.second;
         for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         {
             mg::Renderable& renderable = **it;
@@ -77,7 +77,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::Surf
 
     {
         std::lock_guard<std::mutex> lg(guard);
-        surfaces_by_depth[depth].push_back(surface);
+        layers_by_depth[depth].push_back(surface);
     }
 
     emit_change_notification();
@@ -90,9 +90,9 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
     {
         std::lock_guard<std::mutex> lg(guard);
 
-        for (auto it = surfaces_by_depth.begin(); it != surfaces_by_depth.end(); ++it)
+        for (auto &layer : layers_by_depth)
         {
-            auto surfaces = it->second;
+            auto surfaces = layer.second;
             auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
 
             if (p != surfaces.end())
