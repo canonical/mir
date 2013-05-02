@@ -57,7 +57,7 @@ public:
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
 };
 }
 

@@ -92,7 +92,7 @@ public:
     ::testing::NiceMock<mir::test::HardwareAccessMock> hw_access_mock;
 #else
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
 #endif
 };
 

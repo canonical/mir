@@ -86,7 +86,7 @@ protected:
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mgg::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock>  mock_gl;
     std::shared_ptr<mgg::GBMPlatform> platform;
