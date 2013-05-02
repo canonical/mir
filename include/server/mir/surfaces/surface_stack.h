@@ -57,8 +57,9 @@ public:
     virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
     virtual void set_change_callback(std::function<void()> const& f);
 
-    // From SurfaceStackModel
-    virtual std::weak_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params);
+    // From SurfaceStackModel 
+    // TODO: Use intwrapper?
+    virtual std::weak_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params, int layer);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 

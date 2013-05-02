@@ -28,7 +28,8 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 
 std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(frontend::SurfaceCreationParameters const& params)
 {
-    return surface_stack->create_surface(params);
+    static int const default_surface_layer = 0;
+    return surface_stack->create_surface(params, default_surface_layer);
 }
 
 void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)

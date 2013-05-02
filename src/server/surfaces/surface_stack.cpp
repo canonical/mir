@@ -59,9 +59,9 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params, int layer)
 {
-
+    (void) layer;
     mc::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
                                            params.buffer_usage};

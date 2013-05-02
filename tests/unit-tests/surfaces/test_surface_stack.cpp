@@ -125,7 +125,7 @@ TEST(
 
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
 
     stack.destroy_surface(surface);
 }
@@ -172,11 +172,11 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
     auto surface2 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
     auto surface3 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -210,11 +210,11 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
     auto surface2 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
     auto surface3 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -254,7 +254,7 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        mf::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
+        mf::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format), 0);
 
     stack.destroy_surface(surface);
 }
@@ -291,7 +291,7 @@ TEST(SurfaceStack, create_surface_notifies_changes)
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
 }
 
 TEST(SurfaceStack, destroy_surface_notifies_changes)
@@ -306,10 +306,37 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), 0);
 
     Mock::VerifyAndClearExpectations(&mock_cb);
     EXPECT_CALL(mock_cb, call()).Times(1);
 
     stack.destroy_surface(surface);
+}
+
+TEST(SurfaceStack, surfaces_are_emitted_by_layer)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    mtd::MockSurfaceRenderer renderer;
+    MockFilterForRenderables filter;
+    MockOperatorForRenderables renderable_operator(&renderer);
+
+    auto surface1 = stack.create_surface(mf::a_surface(), 0);
+    auto surface2 = stack.create_surface(mf::a_surface(), 1);
+    auto surface3 = stack.create_surface(mf::a_surface(), 0);
+    
+    {
+        InSequence seq;
+        
+        EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1)
+            .WillOnce(Return(false));                                  
+        EXPECT_CALL(filter, filter(Ref(*surface2.lock()))).Times(1)
+            .WillOnce(Return(false));
+        EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1)
+            .WillOnce(Return(false));
+    }
+    
+    stack.for_each_if(filter, renderable_operator);
 }
