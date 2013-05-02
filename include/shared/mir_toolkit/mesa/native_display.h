@@ -18,7 +18,7 @@
 #ifndef MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 #define MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 
-#include "mir_toolkit/c_types.h"
+#include "mir_toolkit/client_types.h"
 
 #ifdef __cplusplus
 /**

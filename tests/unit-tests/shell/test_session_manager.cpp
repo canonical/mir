@@ -22,6 +22,9 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/session.h"
 #include "mir/shell/input_target_listener.h"
+#include "mir/shell/surface.h"
+#include "mir/shell/session_listener.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel.h"
@@ -34,8 +37,6 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_input_target_listener.h"
 #include "mir_test_doubles/mock_input_target_listener.h"
-
-#include "mir/shell/surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -75,7 +76,8 @@ struct SessionManagerSetup : public testing::Test
                         mt::fake_shared(container),
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
-                        mt::fake_shared(input_target_listener))
+                        mt::fake_shared(input_target_listener),
+                        mt::fake_shared(session_listener))
     {
     }
 
@@ -85,6 +87,7 @@ struct SessionManagerSetup : public testing::Test
     MockFocusSequence focus_sequence;
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     mtd::StubInputTargetListener input_target_listener;
+    msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager;
 };
@@ -145,38 +148,6 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
     EXPECT_EQ(session, new_session);
 }
 
-TEST_F(SessionManagerSetup, apps_selected_by_id_receive_focus)
-{
-    using namespace ::testing;
-
-    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
-    auto session2 = session_manager.open_session("IntelliJ IDEA", std::shared_ptr<me::EventSink>());
-
-    session_manager.tag_session_with_lightdm_id(session1, 1);
-
-    EXPECT_CALL(focus_setter, set_focus_to(Eq(session1)));
-    session_manager.focus_session_with_lightdm_id(1);
-}
-
-TEST_F(SessionManagerSetup, closing_apps_selected_by_id_changes_focus)
-{
-    using namespace ::testing;
-
-    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
-    auto session2 = session_manager.open_session("IntelliJ IDEA", std::shared_ptr<me::EventSink>());
-
-    auto shell_session1 = std::dynamic_pointer_cast<msh::Session>(session1);
-    auto shell_session2 = std::dynamic_pointer_cast<msh::Session>(session2);
-
-    session_manager.tag_session_with_lightdm_id(session1, 1);
-    session_manager.focus_session_with_lightdm_id(1);
-
-    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return(shell_session2));
-    EXPECT_CALL(focus_setter, set_focus_to(Eq(shell_session2)));
-
-    session_manager.close_session(session1);
-}
-
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
     using namespace ::testing;
@@ -210,7 +181,8 @@ struct SessionManagerInputTargetListenerSetup : public testing::Test
                         mt::fake_shared(container),
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
-                        mt::fake_shared(input_target_listener))
+                        mt::fake_shared(input_target_listener),
+                        mt::fake_shared(session_listener))
     {
     }
 
@@ -220,13 +192,14 @@ struct SessionManagerInputTargetListenerSetup : public testing::Test
     testing::NiceMock<MockFocusSequence> focus_sequence;
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     mtd::MockInputTargetListener input_target_listener;
+    msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager;
 };
 
 }
 
-TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_and_surfacelifecycle)
+TEST_F(SessionManagerInputTargetListenerSetup, input_listener_is_notified_of_session_and_surfacelifecycle)
 {
     using namespace ::testing;
 
@@ -258,4 +231,51 @@ TEST_F(SessionManagerInputTargetListenerSetup, listener_is_notified_of_session_a
         session->destroy_surface(surf);
         session_manager.close_session(session);
     }
+}
+
+namespace 
+{
+
+struct MockSessionListener : public msh::SessionListener
+{
+    virtual ~MockSessionListener() noexcept(true) {}
+    MOCK_METHOD1(starting, void(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD1(stopping, void(std::shared_ptr<msh::Session> const&));
+};
+
+struct SessionManagerSessionTargetListenerSetup : public testing::Test
+{
+    SessionManagerSessionTargetListenerSetup()
+      : session_manager(mt::fake_shared(surface_factory),
+                        mt::fake_shared(container),
+                        mt::fake_shared(focus_sequence),
+                        mt::fake_shared(focus_setter),
+                        mt::fake_shared(input_target_listener),
+                        mt::fake_shared(session_listener))
+    {
+    }
+
+    mtd::StubSurfaceBuilder surface_builder;
+    mtd::MockSurfaceFactory surface_factory;
+    testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
+    testing::NiceMock<MockFocusSequence> focus_sequence;
+    testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
+    mtd::StubInputTargetListener input_target_listener;
+    MockSessionListener session_listener;
+
+    msh::SessionManager session_manager;
+};
+}
+
+TEST_F(SessionManagerSessionTargetListenerSetup, session_listener_is_notified_of_lifecycle)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(session_listener, starting(_)).Times(1);
+    EXPECT_CALL(session_listener, stopping(_)).Times(1);
+
+    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
+    
+    auto session = session_manager.open_session("XPlane", std::shared_ptr<me::EventSink>());
+    session_manager.close_session(session);
 }

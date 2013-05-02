@@ -21,7 +21,7 @@
 
 #include "mir_test/fake_shared.h"
 
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 
 #include <stdexcept>
 
@@ -32,6 +32,7 @@ namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -63,7 +64,7 @@ public:
 
     void setup_outputs_connected_crtc()
     {
-        mgg::FakeDRMResources& resources(mock_drm.fake_drm);
+        mtd::FakeDRMResources& resources(mock_drm.fake_drm);
         uint32_t const possible_crtcs_mask{0x1};
 
         resources.reset();
@@ -78,7 +79,7 @@ public:
 
     void setup_outputs_no_connected_crtc()
     {
-        mgg::FakeDRMResources& resources(mock_drm.fake_drm);
+        mtd::FakeDRMResources& resources(mock_drm.fake_drm);
         uint32_t const possible_crtcs_mask1{0x1};
         uint32_t const possible_crtcs_mask_all{0x3};
 
@@ -96,7 +97,7 @@ public:
         resources.prepare();
     }
 
-    testing::NiceMock<mgg::MockDRM> mock_drm;
+    testing::NiceMock<mtd::MockDRM> mock_drm;
     MockPageFlipper mock_page_flipper;
     NullPageFlipper null_page_flipper;
 

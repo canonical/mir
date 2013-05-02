@@ -128,3 +128,16 @@ add_subdirectory(demo-shell)
 
 install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION bin)
 
+add_executable(mir_demo_server
+  demo_server.cpp
+)
+
+target_link_libraries(mir_demo_server
+  mirserver
+  ${Boost_LIBRARIES}
+)
+
+install(TARGETS mir_demo_server
+  RUNTIME DESTINATION bin
+)
+

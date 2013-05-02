@@ -20,6 +20,7 @@
 #define MIR_INPUT_SURFACE_TARGET_H_
 
 #include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 
 #include <string>
 
@@ -33,6 +34,7 @@ class SurfaceTarget
 public:
     virtual ~SurfaceTarget() {}
 
+    virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
     virtual std::string name() const = 0;
 

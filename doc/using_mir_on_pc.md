@@ -11,7 +11,7 @@ installed. If you installed Mir using the packages from mir-team staging PPA
 If you built Mir from source code (see \ref building_source_for_pc), you need
 to ensure you are using the proper Mesa at runtime. You can do that by
 installing the Mesa packages manually from the staging PPA, or by building the
-custom Mesa yourself and ensuring it can be found by mir, e.g., by using
+custom Mesa yourself and ensuring it can be found by Mir, e.g., by using
 LD_LIBRARY_PATH.
 
 Using Mir as system compositor with X
@@ -25,20 +25,20 @@ To run X sessions under Mir, with Mir acting as the system compositor, edit
 your /etc/lightdm/lightdm.conf to look to look like this:
 
     [SeatDefaults]
+    type=unity
     user-session=ubuntu
     greeter-session=unity-greeter
-    type=mir
 
 Now restart lightdm:
 
-    $ sudo service lightdm restart
+    $ sudo restart lightdm
 
 In theory, you should now find yourself back in Ubuntu and not notice
-anything different. You can verify you're in mir several ways:
+anything different. You can verify you're in Mir several ways:
 
-    $ ps aux | grep mir
+    $ ps aux | grep unity-system-compositor
     $ grep -i xmir /var/log/Xorg.0.log
-    $ ls -l /var/log/lightdm/mir.log
+    $ ls -l /var/log/lightdm/unity-system-compositor.log
 
 Running Mir natively
 --------------------
@@ -48,20 +48,14 @@ you are already logged in to X.  If you do so before then you will not be
 assigned adequate credentials to access the graphics hardware and will get
 strange errors.
 
-Note that you can switch back to X using Alt+F7. But it is very important to
-remember NOT to switch once you have any mir binaries running. Doing so will
-currently make X die (!).
+VT switching away from Mir will only work if Mir is run as root. In this case
+we need to change the permissions to the Mir socket so that clients can connect:
 
-Now we want to run the mir server and a client to render something. The trick
-is that we need to make sure the mir server is easy to terminate before ever
-switching back to X. To ensure this, the server needs to be in the foreground,
-but starting before your client (in the background). To do this, you must:
-
-    $ (sleep 3; some-mir-client) & mir ; kill $!
-
-Wait 3 seconds and the client will start. You can kill it with Ctrl+C. REMEMBER
-to kill the mir processes fully before attempting to switch back to X or your X
-login will die.
+    $ sudo mir_demo_server
+    <Ctrl+Alt+F2> - log in to VT 2
+    $ sudo chmod 777 /tmp/mir_socket
+    $ some-mir-client
+    <Ctrl+Alt+F1> - switch back to Mir. Watch your friends be amazed!
 
 In case you accidentally killed your X login and ended up with a failsafe
 screen, you might find on subsequent reboots you can't log in to X at all any
@@ -74,10 +68,10 @@ for this is to log in to a VT and:
 Getting some example client applications
 ----------------------------------------
 
-If you installed mir using the packages from the mir-team staging PPA, you can
-get some example programs by installing the `libmirclient-demos` package:
+If you installed Mir using the packages from the mir-team staging PPA, you can
+get some example programs by installing the `mir-demos` package:
 
-    $ sudo apt-get install libmirclient-demos
+    $ sudo apt-get install mir-demos
 
 If you are building from source you can find client applications in the bin/
 subdirectory of the build directory.

@@ -63,25 +63,25 @@ typedef enum {
 } MirKeyFlag;
 
 typedef enum {
-    mir_key_meta_none        = 0,
-    mir_key_meta_alt         = 0x02,
-    mir_key_meta_alt_left    = 0x10,
-    mir_key_meta_alt_right   = 0x20,
-    mir_key_meta_shift       = 0x01,
-    mir_key_meta_shift_left  = 0x40,
-    mir_key_meta_shift_right = 0x80,
-    mir_key_meta_sym         = 0x04,
-    mir_key_meta_function    = 0x08,
-    mir_key_meta_crtl        = 0x1000,
-    mir_key_meta_ctrl_left   = 0x2000,
-    mir_key_meta_ctrl_right  = 0x4000,
-    mir_key_meta_meta        = 0x10000,
-    mir_key_meta_meta_left   = 0x20000,
-    mir_key_meta_meta_right  = 0x40000,
-    mir_key_meta_caps_lock   = 0x100000,
-    mir_key_meta_num_lock    = 0x200000,
-    mir_key_meta_scroll_lock = 0x400000
-} MirKeyMeta;
+    mir_key_modifier_none        = 0,
+    mir_key_modifier_alt         = 0x02,
+    mir_key_modifier_alt_left    = 0x10,
+    mir_key_modifier_alt_right   = 0x20,
+    mir_key_modifier_shift       = 0x01,
+    mir_key_modifier_shift_left  = 0x40,
+    mir_key_modifier_shift_right = 0x80,
+    mir_key_modifier_sym         = 0x04,
+    mir_key_modifier_function    = 0x08,
+    mir_key_modifier_ctrl        = 0x1000,
+    mir_key_modifier_ctrl_left   = 0x2000,
+    mir_key_modifier_ctrl_right  = 0x4000,
+    mir_key_modifier_meta        = 0x10000,
+    mir_key_modifier_meta_left   = 0x20000,
+    mir_key_modifier_meta_right  = 0x40000,
+    mir_key_modifier_caps_lock   = 0x100000,
+    mir_key_modifier_num_lock    = 0x200000,
+    mir_key_modifier_scroll_lock = 0x400000
+} MirKeyModifier;
 
 typedef enum {
     mir_motion_action_down         = 0,
@@ -117,7 +117,7 @@ typedef struct
     int32_t source_id;
     MirKeyAction action;
     MirKeyFlag flags;
-    MirKeyMeta meta_state;
+    unsigned int modifiers;
 
     int32_t key_code;
     int32_t scan_code;
@@ -135,7 +135,7 @@ typedef struct
     int32_t source_id;
     MirMotionAction action;
     MirMotionFlag flags;
-    int32_t meta_state;
+    unsigned int modifiers;
 
     int32_t edge_flags;
     MirMotionButton button_state;

@@ -30,7 +30,7 @@
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 #include "mock_gbm.h"
 
 #include <gtest/gtest.h>
@@ -188,7 +188,7 @@ public:
 
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
-    ::testing::NiceMock<mgg::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mgg::MockGBM> mock_gbm;
     std::shared_ptr<testing::NiceMock<mtd::MockDisplayReport>> const mock_report;
     std::shared_ptr<mg::DisplayReport> const null_report;

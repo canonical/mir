@@ -7,3 +7,5 @@ add_executable(mir_demo_shell
 target_link_libraries(mir_demo_shell
   mirserver
 )
+
+install(TARGETS mir_demo_shell RUNTIME DESTINATION bin)

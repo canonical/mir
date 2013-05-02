@@ -35,14 +35,6 @@ add_library(mirserver ${MIRSERVER_LINKAGE}
   ${SRCS}
 )
 
-add_executable(
-  mirds
-
-  main.cpp
-)
-
-set_target_properties(mirds PROPERTIES OUTPUT_NAME mir)
-
 list(APPEND MIRSERVER_ARCHIVES
   miroptions
   mircompositor
@@ -86,15 +78,6 @@ endif()
 set_target_properties(mirserver PROPERTIES
   VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
   SOVERSION ${MIR_VERSION_MAJOR}
-)
-
-target_link_libraries(mirds
-  mirserver
-  ${Boost_LIBRARIES}
-)
-
-install(TARGETS mirds
-  RUNTIME DESTINATION bin
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc

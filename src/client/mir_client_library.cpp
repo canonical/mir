@@ -19,7 +19,6 @@
 #include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
-#include "mir_toolkit/mir_client_library_lightdm.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
@@ -243,41 +242,6 @@ MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
                                              void* context)
 {
     return connection->drm_auth_magic(magic, callback, context);
-}
-
-MirWaitHandle *mir_connect_with_lightdm_id(
-    char const *server,
-    int lightdm_id,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *client_context)
-try
-{
-    auto log = std::make_shared<mcl::ConsoleLogger>();
-    auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
-
-    MirConnection* connection = new MirConnection(
-        mcl::make_rpc_channel(server, log),
-        log,
-        client_platform_factory);
-
-    return connection->connect(lightdm_id, app_name, callback, client_context);
-}
-catch (std::exception const& x)
-{
-    error_connection.set_error_message(x.what());
-    callback(&error_connection, client_context);
-    return 0;
-}
-
-void mir_select_focus_by_lightdm_id(MirConnection* connection, int lightdm_id)
-try
-{
-    connection->select_focus_by_lightdm_id(lightdm_id);
-}
-catch (std::exception const&)
-{
-    // Ignore
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,

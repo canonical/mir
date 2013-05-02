@@ -21,7 +21,7 @@
 
 #include "../egl_native_display_container.h"
 
-#include "mir_toolkit/c_types.h"
+#include "mir_toolkit/client_types.h"
 
 #include <unordered_set>
 #include <mutex>
