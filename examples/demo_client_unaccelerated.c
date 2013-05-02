@@ -145,12 +145,12 @@ int main(int argc, char* argv[])
     int i=0;
     while (1)
     {
-        mir_surface_next_buffer_sync(surface);
         mir_surface_get_graphics_region( surface, &graphics_region);
         if ((i++ % 2) == 0)
             render_pattern(&graphics_region, pattern[0]);
         else
             render_pattern(&graphics_region, pattern[1]);
+        mir_surface_next_buffer_sync(surface);
     }
 
     mir_surface_release_sync(surface);
