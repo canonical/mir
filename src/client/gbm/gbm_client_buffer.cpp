@@ -166,13 +166,8 @@ geom::PixelFormat mclg::GBMClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
-std::shared_ptr<MirBufferPackage> mclg::GBMClientBuffer::get_buffer_package() const
+std::shared_ptr<MirNativeBuffer> mclg::GBMClientBuffer::native_buffer_handle() const
 {
     creation_package->age = age();
     return creation_package;
-}
-
-MirNativeBuffer* mclg::GBMClientBuffer::get_native_handle()
-{
-    return NULL;
 }

@@ -82,7 +82,7 @@ TEST_F(MirGBMBufferTest, buffer_returns_set_package)
 
     mclg::GBMClientBuffer buffer(drm_fd_handler, std::move(package), size, pf);
 
-    auto package_return = buffer.get_buffer_package();
+    auto package_return = buffer.native_buffer_handle();
     EXPECT_EQ(package_return->data_items, package_copy->data_items);
     EXPECT_EQ(package_return->fd_items, package_copy->fd_items);
     EXPECT_EQ(package_return->stride, package_copy->stride);
