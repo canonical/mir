@@ -24,6 +24,7 @@
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
+#include <vector>
 
 namespace
 {
@@ -35,20 +36,26 @@ uint32_t const fg_color = 0xffdd4814;
 
 namespace mgg = mir::graphics::gbm;
 
+mgg::GBMCursor::GBMBOWrapper::GBMBOWrapper(GBMPlatform& platform) :
+    buffer(gbm_bo_create(
+                platform.gbm.device,
+                width,
+                height,
+                GBM_FORMAT_ARGB8888,
+                GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
+{
+    if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
+}
+
+inline mgg::GBMCursor::GBMBOWrapper::operator gbm_bo*() { return buffer; }
+inline mgg::GBMCursor::GBMBOWrapper::~GBMBOWrapper()    { gbm_bo_destroy(buffer); }
+
 mgg::GBMCursor::GBMCursor(
     std::shared_ptr<GBMPlatform> const& platform,
     KMSOutputContainer const& output_container) :
-        platform(platform),
         output_container(output_container),
-        buffer(gbm_bo_create(
-            platform->gbm.device,
-            width,
-            height,
-            GBM_FORMAT_ARGB8888,
-            GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
+        buffer(*platform)
 {
-    if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
-
     std::vector<uint32_t> image(height*width, bg_color);
     for (int i = 0; i != width-1; ++i)
     {
@@ -74,7 +81,6 @@ mgg::GBMCursor::~GBMCursor() noexcept
 {
     output_container.for_each_output(
         [&](KMSOutput& output) { output.clear_cursor(); });
-    gbm_bo_destroy(buffer);
 }
 
 void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)

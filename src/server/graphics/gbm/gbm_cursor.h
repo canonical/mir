@@ -48,10 +48,18 @@ public:
     void move_to(geometry::Point position);
 
 private:
-    std::shared_ptr<GBMPlatform> const platform;
     KMSOutputContainer const& output_container;
 
-    gbm_bo* buffer;
+    struct GBMBOWrapper
+    {
+        GBMBOWrapper(GBMPlatform& platform);
+        operator gbm_bo*();
+        ~GBMBOWrapper();
+    private:
+        gbm_bo* buffer;
+        GBMBOWrapper(GBMBOWrapper const&) = delete;
+        GBMBOWrapper& operator=(GBMBOWrapper const&) = delete;
+    } buffer;
 };
 }
 }
