@@ -286,7 +286,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer)
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package),
                                                         size, pf);
 
-    auto native_handle = buffer->get_native_handle();
+    auto native_handle = buffer->native_handle();
 
     ASSERT_NE(nullptr, native_handle);
     EXPECT_EQ(buffer_handle, native_handle->handle);
@@ -297,7 +297,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_dimensions)
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package),
                                                         size, pf);
 
-    auto native_handle = buffer->get_native_handle();
+    auto native_handle = buffer->native_handle();
 
     ASSERT_NE(nullptr, native_handle);
     EXPECT_EQ(width.as_uint32_t(), static_cast<uint32_t>(native_handle->width));
@@ -308,7 +308,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_format)
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    auto native_handle = buffer->get_native_handle();
+    auto native_handle = buffer->native_handle();
     int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     ASSERT_NE(nullptr, native_handle);
     EXPECT_EQ(correct_usage, native_handle->usage);
@@ -318,7 +318,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_stride)
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    auto native_handle = buffer->get_native_handle();
+    auto native_handle = buffer->native_handle();
     ASSERT_NE(nullptr, native_handle);
     EXPECT_EQ(static_cast<int32_t>(stride.as_uint32_t()), native_handle->stride);
 }
@@ -327,7 +327,7 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set
 {
     buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, std::move(package), size, pf);
 
-    auto native_handle = buffer->get_native_handle();
+    auto native_handle = buffer->native_handle();
 
     ASSERT_NE(nullptr, native_handle);
     ASSERT_NE(nullptr, native_handle->common.incRef);
