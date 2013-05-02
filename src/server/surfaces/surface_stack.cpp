@@ -98,13 +98,11 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
             if (p != surfaces.end())
             {
                 surfaces.erase(p);
-                emit_change_notification();
-                return;
             }
         }
     }
-
-    // else; TODO error logging
+    emit_change_notification();
+    // TODO: error logging when surface not found
 }
 
 void ms::SurfaceStack::emit_change_notification()
