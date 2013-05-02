@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_MIR_TEST_GRAPHICS_GBM_MOCK_DRM_H_
-#define MIR_MIR_TEST_GRAPHICS_GBM_MOCK_DRM_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_DRM_H_
+#define MIR_TEST_DOUBLES_MOCK_DRM_H_
 
 #include <gmock/gmock.h>
 
@@ -30,9 +30,10 @@ namespace geometry
 {
 struct Size;
 }
-namespace graphics
+
+namespace test
 {
-namespace gbm
+namespace doubles
 {
 
 class FakeDRMResources
@@ -127,4 +128,4 @@ public:
 }
 }
 
-#endif /* MIR_MIR_TEST_GRAPHICS_GBM_DRM_MOCK_H_ */
+#endif /* MIR_TEST_DOUBLES_DRM_MOCK_H_ */
