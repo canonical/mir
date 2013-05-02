@@ -172,7 +172,7 @@ std::shared_ptr<MirBufferPackage> mclg::GBMClientBuffer::get_buffer_package() co
     return creation_package;
 }
 
-MirNativeBuffer mclg::GBMClientBuffer::get_native_handle()
+MirNativeBuffer* mclg::GBMClientBuffer::get_native_handle()
 {
     return NULL;
 }

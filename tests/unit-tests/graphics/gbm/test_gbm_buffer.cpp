@@ -149,6 +149,10 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
     ASSERT_TRUE(ipc_package->ipc_data.empty());
 }
 
+TEST_F(GBMGraphicBufferBasic, buffer_)
+{
+}
+
 MATCHER_P(GEMFlinkHandleIs, value, "")
 {
     auto flink = reinterpret_cast<struct drm_gem_flink*>(arg);
