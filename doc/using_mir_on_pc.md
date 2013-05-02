@@ -4,6 +4,17 @@ Using Mir on a PC {#using_mir_on_pc}
 Before you begin
 ----------------
 
+Make sure your hardware is supported. That means you're using a Mesa driver,
+of which intel, radeon, and nouveau families are supported. If you're
+logged in to X then run this command to verify an appropriate DRI driver
+is active:
+
+    sudo pmap `pidof X` | grep dri.so
+
+or
+
+    lsmod | grep drm
+
 Before you can use Mir you need to ensure you have the proper custom Mesa build
 installed. If you installed Mir using the packages from mir-team staging PPA
 (see \ref installing_prebuilt_on_pc), you should be good to go.

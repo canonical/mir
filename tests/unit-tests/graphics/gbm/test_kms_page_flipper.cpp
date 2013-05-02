@@ -18,7 +18,7 @@
 
 #include "src/server/graphics/gbm/kms_page_flipper.h"
 
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir_test/fake_shared.h"
@@ -49,7 +49,7 @@ public:
     {
     }
 
-    testing::NiceMock<mgg::MockDRM> mock_drm;
+    testing::NiceMock<mtd::MockDRM> mock_drm;
     mgg::KMSPageFlipper page_flipper;
 };
 

@@ -8,16 +8,15 @@ set(
 
   test_protobuf_client.cpp
   event_factory.cpp
-)
-
-list(APPEND TEST_UTILS_SRCS
   fake_event_hub.cpp
   fake_event_hub_input_configuration.cpp
-)
-
-list(APPEND TEST_UTILS_SRCS
   test_protobuf_socket_server.cpp
 )
+
+if (MIR_PLATFORM STREQUAL "gbm")
+include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
+list(APPEND TEST_UTILS_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp)
+endif()
 
 add_library(
   mir-test-doubles STATIC

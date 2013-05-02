@@ -17,14 +17,14 @@
  * Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mock_drm.h"
+#include "mir_test_doubles/mock_drm.h"
 #include "mir/geometry/size.h"
 #include <gtest/gtest.h>
 
 #include <stdexcept>
 #include <unistd.h>
 
-namespace mgg=mir::graphics::gbm;
+namespace mgg=mir::test::doubles;
 namespace geom = mir::geometry;
 
 namespace

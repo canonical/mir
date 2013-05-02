@@ -20,7 +20,6 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
-#include "mir_toolkit/c_types.h"
 #include "mir_toolkit/mesa/native_display.h"
 
 #include "mir_test/fake_shared.h"

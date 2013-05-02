@@ -128,7 +128,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
     EXPECT_EQ(source_id, mir_ev.motion.source_id);
     EXPECT_EQ(action, mir_ev.motion.action);
     EXPECT_EQ(flags, mir_ev.motion.flags);
-    EXPECT_EQ(meta_state, mir_ev.motion.meta_state);
+    EXPECT_EQ((unsigned int)meta_state, mir_ev.motion.modifiers);
 
     // Motion event specific properties
     EXPECT_EQ(mir_ev.type, mir_event_type_motion);

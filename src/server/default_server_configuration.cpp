@@ -39,6 +39,7 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
@@ -142,6 +143,7 @@ char const* const glog_stderrthreshold = "glog-stderrthreshold";
 char const* const glog_minloglevel     = "glog-minloglevel";
 char const* const glog_log_dir         = "glog-log-dir";
 
+bool const enable_input_default = true;
 
 void parse_arguments(
     boost::program_options::options_description desc,
@@ -198,7 +200,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
     add_options()
         ("file,f", po::value<std::string>(),    "Socket filename")
-        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=false]")
+        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=true]")
         (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
         (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
         (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
@@ -344,6 +346,16 @@ mir::DefaultServerConfiguration::the_shell_placement_strategy()
         });
 }
 
+std::shared_ptr<msh::SessionListener>
+mir::DefaultServerConfiguration::the_shell_session_listener()
+{
+    return shell_session_listener(
+        [this]
+        {
+            return std::make_shared<msh::NullSessionListener>();
+        });
+}
+
 std::shared_ptr<msh::SessionManager>
 mir::DefaultServerConfiguration::the_session_manager()
 {
@@ -355,7 +367,8 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
-                the_input_target_listener());
+                the_input_target_listener(),
+                the_shell_session_listener());
         });
 }
 
@@ -395,7 +408,7 @@ mir::DefaultServerConfiguration::the_input_manager()
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get("enable-input", true))
+            if (the_options()->get("enable-input", enable_input_default))
                 return std::make_shared<mia::InputManager>(the_input_configuration());
             else 
                 return std::make_shared<mi::NullInputManager>();
@@ -602,7 +615,7 @@ std::shared_ptr<msh::InputTargetListener> mir::DefaultServerConfiguration::the_i
     return input_target_listener(
         [&]() -> std::shared_ptr<msh::InputTargetListener>
         {
-            if (the_options()->get("enable-input", false))
+            if (the_options()->get("enable-input", enable_input_default))
                 return std::make_shared<mia::DispatcherController>(the_input_configuration());
             else
                 return std::make_shared<mi::NullInputTargetListener>();
