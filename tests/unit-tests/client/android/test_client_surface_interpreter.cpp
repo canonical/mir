@@ -40,6 +40,7 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MockClientBuffer()
     {
         using namespace testing;
+        buffer = std::make_shared<ANativeWindowBuffer>();
         ON_CALL(*this, native_buffer_handle())
             .WillByDefault(Return(buffer));
     }
