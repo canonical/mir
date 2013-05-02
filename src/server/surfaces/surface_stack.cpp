@@ -45,10 +45,14 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_fa
 void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
 {
     std::lock_guard<std::mutex> lock(guard);
-    for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+    for (auto lit = surfaces_by_layer.begin(); lit != surfaces_by_layer.end(); ++lit)
     {
-        mg::Renderable& renderable = **it;
-        if (filter(renderable)) renderable_operator(renderable);
+        auto surfaces = lit->second;
+        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        {
+            mg::Renderable& renderable = **it;
+            if (filter(renderable)) renderable_operator(renderable);
+        }
     }
 }
 
@@ -61,7 +65,6 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params, int layer)
 {
-    (void) layer;
     mc::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
                                            params.buffer_usage};
@@ -74,7 +77,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::Surf
 
     {
         std::lock_guard<std::mutex> lg(guard);
-        surfaces.push_back(surface);
+        surfaces_by_layer[layer].push_back(surface);
     }
 
     emit_change_notification();
@@ -87,13 +90,21 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
     {
         std::lock_guard<std::mutex> lg(guard);
 
-        auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
+        for (auto it = surfaces_by_layer.begin(); it != surfaces_by_layer.end(); ++it)
+        {
+            auto surfaces = it->second;
+            auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
 
-        if (p != surfaces.end()) surfaces.erase(p);
-        // else; TODO error logging
+            if (p != surfaces.end())
+            {
+                surfaces.erase(p);
+                emit_change_notification();
+                return;
+            }
+        }
     }
 
-    emit_change_notification();
+    // else; TODO error logging
 }
 
 void ms::SurfaceStack::emit_change_notification()

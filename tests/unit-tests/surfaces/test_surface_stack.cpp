@@ -329,12 +329,12 @@ TEST(SurfaceStack, surfaces_are_emitted_by_layer)
     
     {
         InSequence seq;
-        
+
+        EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1)
+            .WillOnce(Return(false));
         EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1)
             .WillOnce(Return(false));                                  
         EXPECT_CALL(filter, filter(Ref(*surface2.lock()))).Times(1)
-            .WillOnce(Return(false));
-        EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1)
             .WillOnce(Return(false));
     }
     

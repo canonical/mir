@@ -25,6 +25,7 @@
 #include <memory>
 #include <vector>
 #include <mutex>
+#include <map>
 
 namespace mir
 {
@@ -71,7 +72,8 @@ private:
 
     std::mutex guard;
     std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
-    std::vector<std::shared_ptr<Surface>> surfaces;
+    // TODO: Use layer id type
+    std::map<int, std::vector<std::shared_ptr<Surface>>> surfaces_by_layer;
     std::mutex notify_change_mutex;
     std::function<void()> notify_change;
 };
