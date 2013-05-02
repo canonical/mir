@@ -23,7 +23,7 @@
 #include "mir/compositor/buffer_properties.h"
 
 #include "mir_test_doubles/mock_drm.h"
-#include "mock_gbm.h"
+#include "mir_test_doubles/mock_gbm.h"
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test_doubles/mock_buffer_initializer.h"
