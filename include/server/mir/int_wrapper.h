@@ -27,7 +27,8 @@ enum class IntWrapperTypeTag
 {
     SessionsSurfaceId,
     GraphicsConfCardId,
-    GraphicsConfOutputId
+    GraphicsConfOutputId,
+    DepthId
 };
 
 template<IntWrapperTypeTag Tag, typename ValueType_ = int>

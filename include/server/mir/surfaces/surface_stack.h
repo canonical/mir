@@ -20,7 +20,9 @@
 #define MIR_SURFACES_SURFACESTACK_H_
 
 #include "surface_stack_model.h"
+
 #include "mir/compositor/renderables.h"
+#include "mir/surfaces/depth_id.h"
 
 #include <memory>
 #include <vector>
@@ -59,8 +61,7 @@ public:
     virtual void set_change_callback(std::function<void()> const& f);
 
     // From SurfaceStackModel 
-    // TODO: Use intwrapper?
-    virtual std::weak_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params, int layer);
+    virtual std::weak_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params, DepthId depth);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 
@@ -72,8 +73,7 @@ private:
 
     std::mutex guard;
     std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
-    // TODO: Use layer id type
-    std::map<int, std::vector<std::shared_ptr<Surface>>> surfaces_by_layer;
+    std::map<DepthId, std::vector<std::shared_ptr<Surface>>> surfaces_by_depth;
     std::mutex notify_change_mutex;
     std::function<void()> notify_change;
 };

@@ -45,7 +45,7 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_fa
 void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
 {
     std::lock_guard<std::mutex> lock(guard);
-    for (auto lit = surfaces_by_layer.begin(); lit != surfaces_by_layer.end(); ++lit)
+    for (auto lit = surfaces_by_depth.begin(); lit != surfaces_by_depth.end(); ++lit)
     {
         auto surfaces = lit->second;
         for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
@@ -63,7 +63,7 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params, int layer)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::SurfaceCreationParameters& params, ms::DepthId depth)
 {
     mc::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
@@ -77,7 +77,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::Surf
 
     {
         std::lock_guard<std::mutex> lg(guard);
-        surfaces_by_layer[layer].push_back(surface);
+        surfaces_by_depth[depth].push_back(surface);
     }
 
     emit_change_notification();
@@ -90,7 +90,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
     {
         std::lock_guard<std::mutex> lg(guard);
 
-        for (auto it = surfaces_by_layer.begin(); it != surfaces_by_layer.end(); ++it)
+        for (auto it = surfaces_by_depth.begin(); it != surfaces_by_depth.end(); ++it)
         {
             auto surfaces = it->second;
             auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());

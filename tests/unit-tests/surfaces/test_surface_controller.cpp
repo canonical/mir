@@ -33,7 +33,7 @@ namespace
 {
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
 {
-    MOCK_METHOD2(create_surface, std::weak_ptr<ms::Surface>(mf::SurfaceCreationParameters const&, int layer));
+    MOCK_METHOD2(create_surface, std::weak_ptr<ms::Surface>(mf::SurfaceCreationParameters const&, ms::DepthId depth));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> const&));
 };
 }
