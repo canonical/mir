@@ -25,7 +25,6 @@
 #include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_toolkit/mesa/native_display.h"
-#include "mir_toolkit/c_types.h"
 
 #include <mutex>
 #include <set>

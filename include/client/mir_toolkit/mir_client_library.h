@@ -18,7 +18,7 @@
 #ifndef MIR_CLIENT_LIBRARY_H
 #define MIR_CLIENT_LIBRARY_H
 
-#include "mir_toolkit/c_types.h"
+#include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
 
 #ifdef __cplusplus

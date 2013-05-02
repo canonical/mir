@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_GBM_EGL_NATIVE_DISPLAY_CONTAINER_H_
 #define MIR_CLIENT_GBM_EGL_NATIVE_DISPLAY_CONTAINER_H_
 
-#include "mir_toolkit/c_types.h"
+#include "mir_toolkit/client_types.h"
 
 namespace mir
 {
