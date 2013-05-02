@@ -13,11 +13,36 @@ if [ ! -d ${1} ]; then
     mkdir -p ${1} 
 fi
 
+download_and_extract_packages()
+{
+    declare -a PACKAGES=$1[@]
+    local ARCHITECTURE=$2
+
+    for i in ${!PACKAGES}; do
+
+        PACKAGE_VERSION=`apt-cache show ${i}:${ARCHITECTURE} | grep Version | awk -F: '{print $NF}' | sed "s/ //g"`
+        PACKAGE_FILENAME="${i}_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
+
+        if [ ! -f ${PACKAGE_FILENAME} ]; then
+            echo "Downloading mir dependency: ${i}"
+            apt-get download "${i}:${ARCHITECTURE}"
+        else
+            echo "already downloaded: ${PACKAGE_FILENAME}"
+        fi
+
+        #quick sanity check
+        if [ ! -f ${PACKAGE_FILENAME} ]; then
+            echo "error: did not download expected file (${PACKAGE_FILENAME}. script is malformed!"; exit 1        
+        fi
+
+        echo "Extracting: ${PACKAGE_FILENAME}"
+        dpkg -x ${PACKAGE_FILENAME} . 
+    done
+}
+
 pushd ${1} > /dev/null
 
-    ARCHITECTURE=armhf
-
-    declare -a PACKAGES=(
+    declare -a PACKAGES_ARMHF=(
         libboost1.49-dev
         libboost-chrono1.49-dev
         libboost-chrono1.49-dev
@@ -50,6 +75,8 @@ pushd ${1} > /dev/null
         libxkbcommon-dev
         zlib1g)
 
+    declare -a PACKAGES_ALL=(libglm-dev)
+
     #cleanup
     for i in * ; do
         if [[ -d ${i} ]]; then 
@@ -58,26 +85,8 @@ pushd ${1} > /dev/null
         fi
     done
 
-    for i in ${PACKAGES[@]}; do
-
-        PACKAGE_VERSION=`apt-cache show ${i}:${ARCHITECTURE} | grep Version | awk -F: '{print $NF}' | sed "s/ //g"`
-        PACKAGE_FILENAME="${i}_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
-
-        if [ ! -f ${PACKAGE_FILENAME} ]; then
-            echo "Downloading mir dependency: ${i}"
-            apt-get download "${i}:${ARCHITECTURE}"
-        else
-            echo "already downloaded: ${PACKAGE_FILENAME}"
-        fi
-
-        #quick sanity check
-        if [ ! -f ${PACKAGE_FILENAME} ]; then
-            echo "error: did not download expected file (${PACKAGE_FILENAME}. script is malformed!"; exit 1        
-        fi
-
-        echo "Extracting: ${PACKAGE_FILENAME}"
-        dpkg -x ${PACKAGE_FILENAME} . 
-    done
+    download_and_extract_packages PACKAGES_ARMHF armhf
+    download_and_extract_packages PACKAGES_ALL all
 
     #todo: we get egl/gles headers from the mesa packages, but should be pointing at the hybris libraries
     #just rewrite the symlinks for now
