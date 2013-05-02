@@ -29,7 +29,7 @@ mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
 {
 }
 
-ANativeWindowBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
+MirNativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
     auto buffer_to_driver = buffer->get_native_handle();
@@ -40,7 +40,7 @@ ANativeWindowBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
 {}
-void mcla::ClientSurfaceInterpreter::driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<mga::SyncObject> const& sync_fence)
+void mcla::ClientSurfaceInterpreter::driver_returns_buffer(MirNativeBuffer*, std::shared_ptr<mga::SyncObject> const& sync_fence)
 {
     sync_fence->wait();
     mir_wait_for(surface.next_buffer(empty, NULL));

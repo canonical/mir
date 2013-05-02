@@ -51,8 +51,7 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
         buffers.push_back(buf);
     }
 
-//    auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);
-    auto swapper = std::shared_ptr<mga::FBSimpleSwapper>(new mga::FBSimpleSwapper(buffers));
+    auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, info_provider);
     return std::make_shared<mga::MirNativeWindow>(interpreter); 
 }

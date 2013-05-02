@@ -35,8 +35,8 @@ namespace android
 
 class Buffer;
 
-class FBSwapper // (todo: for composition bypass, inherit from mc::BufferSwapper)
-{
+//TODO: remove this interface. FBSimpleSwapper should inherit from mc::BufferSwapper
+class FBSwapper{
 public:
     virtual ~FBSwapper() = default;
 

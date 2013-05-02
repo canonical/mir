@@ -594,9 +594,9 @@ struct StubBuffer : public mcl::ClientBuffer
         return std::shared_ptr<MirBufferPackage>();
     }
 
-    MirNativeBuffer get_native_handle()
+    MirNativeBuffer* get_native_handle()
     {
-        return MirNativeBuffer();
+        return nullptr;
     }
 
     geom::Size size_;
