@@ -32,10 +32,10 @@ mcla::ClientSurfaceInterpreter::ClientSurfaceInterpreter(ClientSurface& surface)
 MirNativeBuffer* mcla::ClientSurfaceInterpreter::driver_requests_buffer()
 {
     auto buffer = surface.get_current_buffer();
-    auto buffer_to_driver = buffer->get_native_handle();
+    auto buffer_to_driver = buffer->native_buffer_handle();
     buffer_to_driver->format = driver_pixel_format;
 
-    return buffer_to_driver;
+    return buffer_to_driver.get();
 }
 
 static void empty(MirSurface * /*surface*/, void * /*client_context*/)
