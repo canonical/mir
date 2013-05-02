@@ -178,3 +178,9 @@ void mga::AndroidDisplay::release_current()
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
+
+
+auto mga::AndroidDisplay::the_cursor() -> std::weak_ptr<Cursor>
+{
+    return std::weak_ptr<Cursor>();
+}

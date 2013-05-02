@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,33 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_INPUT_CURSOR_LISTENER_H_
-#define MIR_INPUT_CURSOR_LISTENER_H_
+
+#ifndef MIR_GRAPHICS_CURSOR_H_
+#define MIR_GRAPHICS_CURSOR_H_
+
+#include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 
 namespace mir
 {
-namespace input
+namespace graphics
 {
-
-/// An interface for listening to absolute cursor events (without context): For example to update
-/// the position of the visible cursor.
-class CursorListener
+class Cursor
 {
 public:
-    virtual ~CursorListener() = default;
-
-    virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
+    virtual void set_image(void const* raw_argb, geometry::Size size) = 0;
+    virtual void move_to(geometry::Point position) = 0;
 
 protected:
-    CursorListener() = default;
-    CursorListener(const CursorListener&) = delete;
-    CursorListener& operator=(const CursorListener&) = delete;
+    Cursor() = default;
+    virtual ~Cursor() = default;
+    Cursor(Cursor const&) = delete;
+    Cursor& operator=(Cursor const&) = delete;
 };
-
 }
 }
 
-#endif // MIR_INPUT_CURSOR_LISTENER_H_
+
+#endif /* MIR_GRAPHICS_CURSOR_H_ */
