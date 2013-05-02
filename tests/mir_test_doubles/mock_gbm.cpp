@@ -17,17 +17,17 @@
  * Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mock_gbm.h"
+#include "mir_test_doubles/mock_gbm.h"
 #include <gtest/gtest.h>
 
-namespace mgg=mir::graphics::gbm;
+namespace mtd=mir::test::doubles;
 
 namespace
 {
-mgg::MockGBM* global_mock = NULL;
+mtd::MockGBM* global_mock = NULL;
 }
 
-mgg::FakeGBMResources::FakeGBMResources()
+mtd::FakeGBMResources::FakeGBMResources()
     : device(reinterpret_cast<gbm_device*>(0x12345678)),
       surface(reinterpret_cast<gbm_surface*>(0x1234abcd)),
       bo(reinterpret_cast<gbm_bo*>(0xabcdef12))
@@ -35,7 +35,7 @@ mgg::FakeGBMResources::FakeGBMResources()
     bo_handle.u32 = 0x0987;
 }
 
-mgg::MockGBM::MockGBM()
+mtd::MockGBM::MockGBM()
 {
     using namespace testing;
     assert(global_mock == NULL && "Only one mock object per process is allowed");
@@ -64,7 +64,7 @@ mgg::MockGBM::MockGBM()
     .WillByDefault(Invoke(this, &MockGBM::on_gbm_bo_set_user_data));
 }
 
-mgg::MockGBM::~MockGBM()
+mtd::MockGBM::~MockGBM()
 {
     // this is probably later than optimal, but at least ensures memory freed
     for (auto i = destroyers.begin(); i != destroyers.end(); ++i) (*i)();
