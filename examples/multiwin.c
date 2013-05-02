@@ -52,12 +52,6 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
     switch (format)
     {
     case mir_pixel_format_abgr_8888:
-       /*
-        * XXX
-        * This is right according to the docs in mir_toolkit/c_types.h.
-        * However Mir seems to be mixing up red and blue, rendering this
-        * as ARGB on my system.
-        */
         pixel = 
             (uint32_t)color->a << 24 |
             (uint32_t)color->b << 16 |
