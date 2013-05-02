@@ -176,7 +176,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD0(mark_as_submitted, void());
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
-    MOCK_METHOD0(get_native_handle, MirNativeBuffer());
+    MOCK_METHOD0(get_native_handle, MirNativeBuffer*());
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory

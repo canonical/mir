@@ -183,6 +183,7 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
     using namespace testing;
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
+    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
     mc::BufferID id{442}, returned_id;
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
@@ -190,6 +191,9 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
     EXPECT_CALL(*mock_swapper, compositor_release(_))
         .Times(1);
     std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
+    EXPECT_CALL(*mock_buffer1, native_buffer_handle())
+        .Times(1)
+        .WillOnce(Return(stub_anw));
     EXPECT_CALL(*mock_display_poster, set_next_frontbuffer(buf1))
         .Times(1);
 

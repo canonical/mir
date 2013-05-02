@@ -56,7 +56,7 @@ struct MyAgingBuffer : public mcl::AgingBuffer
         exit(1);
     }
 
-    MirNativeBuffer get_native_handle()
+    MirNativeBuffer* get_native_handle()
     {
         exit(1);
     }

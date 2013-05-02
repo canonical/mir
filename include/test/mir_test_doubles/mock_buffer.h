@@ -59,6 +59,8 @@ struct MockBuffer : public compositor::Buffer
                 .WillByDefault(Return(empty_package));
         ON_CALL(*this, id())
                 .WillByDefault(Return(compositor::BufferID{4}));
+        ON_CALL(*this, native_buffer_handle())
+                .WillByDefault(Return(std::shared_ptr<MirNativeBuffer>()));
     }
 
     MOCK_CONST_METHOD0(size, geometry::Size());

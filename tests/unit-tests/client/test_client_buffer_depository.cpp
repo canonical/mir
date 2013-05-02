@@ -53,7 +53,7 @@ struct MockBuffer : public mcl::AgingBuffer
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
     MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
-    MOCK_METHOD0(get_native_handle, MirNativeBuffer());
+    MOCK_METHOD0(get_native_handle, MirNativeBuffer*());
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
