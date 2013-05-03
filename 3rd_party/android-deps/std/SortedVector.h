@@ -20,7 +20,7 @@
 #ifndef MIR_ANDROID_UBUNTU_SORTEDVECTOR_H_
 #define MIR_ANDROID_UBUNTU_SORTEDVECTOR_H_
 
-#include ANDROIDFW_UTILS(Errors.h)
+#include <std/Errors.h>
 
 #include <algorithm>
 #include <vector>

@@ -21,7 +21,7 @@
 #define LOG_TAG "filemap"
 
 #include <utils/FileMap.h>
-#include <utils/Log.h>
+#include <std/Log.h>
 
 #include <stdio.h>
 #include <stdlib.h>
