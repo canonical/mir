@@ -17,7 +17,6 @@
 #ifndef _UTILS_TOKENIZER_H
 #define _UTILS_TOKENIZER_H
 
-#include <androidfw/Platform.h>
 
 #include <assert.h>
 #include <std/Errors.h>

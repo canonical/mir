@@ -17,7 +17,6 @@
 #ifndef _ANDROIDFW_KEYBOARD_H
 #define _ANDROIDFW_KEYBOARD_H
 
-#include <androidfw/Platform.h>
 
 #include <androidfw/Input.h>
 #include <androidfw/InputDevice.h>

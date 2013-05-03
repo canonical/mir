@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "androidfw/Platform.h"
 
 #include <std/PropertyMap.h>
 

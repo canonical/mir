@@ -17,7 +17,6 @@
 #ifndef _ANDROIDFW_KEY_LAYOUT_MAP_H
 #define _ANDROIDFW_KEY_LAYOUT_MAP_H
 
-#include <androidfw/Platform.h>
 
 #include <stdint.h>
 #include <std/Errors.h>

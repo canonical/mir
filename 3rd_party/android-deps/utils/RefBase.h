@@ -17,7 +17,6 @@
 #ifndef ANDROID_REF_BASE_H
 #define ANDROID_REF_BASE_H
 
-#include <androidfw/Platform.h>
 
 #include <std/atomic.h>
 

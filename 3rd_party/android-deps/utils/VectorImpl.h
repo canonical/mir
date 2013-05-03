@@ -17,7 +17,6 @@
 #ifndef ANDROID_VECTOR_IMPL_H
 #define ANDROID_VECTOR_IMPL_H
 
-#include <androidfw/Platform.h>
 
 #include <assert.h>
 #include <stdint.h>

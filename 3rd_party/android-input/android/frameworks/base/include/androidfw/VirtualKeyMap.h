@@ -17,7 +17,6 @@
 #ifndef _ANDROIDFW_VIRTUAL_KEY_MAP_H
 #define _ANDROIDFW_VIRTUAL_KEY_MAP_H
 
-#include <androidfw/Platform.h>
 
 #include <stdint.h>
 

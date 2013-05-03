@@ -17,7 +17,6 @@
 #ifndef _ANDROIDFW_VELOCITY_TRACKER_H
 #define _ANDROIDFW_VELOCITY_TRACKER_H
 
-#include <androidfw/Platform.h>
 
 #include <androidfw/Input.h>
 #include <std/Timers.h>

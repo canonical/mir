@@ -16,7 +16,6 @@
 
 #define LOG_TAG "RefBase"
 
-#include <androidfw/Platform.h>
 
 #include <utils/RefBase.h>
 

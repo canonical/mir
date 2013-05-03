@@ -17,7 +17,6 @@
 #ifndef _LIBS_UTILS_THREADS_H
 #define _LIBS_UTILS_THREADS_H
 
-#include <androidfw/Platform.h>
 
 /*
  * Please, DO NOT USE!

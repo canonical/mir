@@ -17,7 +17,6 @@
 #ifndef ANDROID_STRONG_POINTER_H
 #define ANDROID_STRONG_POINTER_H
 
-#include <androidfw/Platform.h>
 
 #include <std/atomic.h>
 

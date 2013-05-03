@@ -17,7 +17,6 @@
 #ifndef ANDROID_STRING16_H
 #define ANDROID_STRING16_H
 
-#include <androidfw/Platform.h>
 
 #include <std/Errors.h>
 #include <std/SharedBuffer.h>

@@ -20,7 +20,6 @@
 #ifndef __LIBS_FILE_MAP_H
 #define __LIBS_FILE_MAP_H
 
-#include <androidfw/Platform.h>
 
 #include <sys/types.h>
 

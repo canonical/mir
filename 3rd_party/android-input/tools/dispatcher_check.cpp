@@ -1,4 +1,3 @@
-#include "androidfw/Platform.h"
 
 #include <InputManager.h>
 #include <pthread.h>
