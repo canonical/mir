@@ -20,6 +20,7 @@
 #define MIR_EXAMPLES_APPLICATION_SWITCHER_H_
 
 #include "mir/input/event_filter.h"
+#include "mir/geometry/displacement.h"
 
 #include <memory>
 
@@ -51,6 +52,7 @@ protected:
 private:
     std::shared_ptr<shell::FocusController> focus_controller;
     std::shared_ptr<shell::SessionManager> session_manager;
+    geometry::Displacement click;
 };
 
 }

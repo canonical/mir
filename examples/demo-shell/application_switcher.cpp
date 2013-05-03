@@ -61,6 +61,10 @@ bool me::ApplicationSwitcher::handles(MirEvent const& event)
     else if (event.type == mir_event_type_motion &&
              session_manager)
     {
+        geometry::Point cursor{
+            geometry::X{event.motion.pointer_coordinates[0].x},
+            geometry::Y{event.motion.pointer_coordinates[0].y}};
+
         printf("vv: %lu: pointers=%d\n",
             (unsigned long)event.motion.event_time,
             (int)event.motion.pointer_count);
@@ -68,11 +72,25 @@ bool me::ApplicationSwitcher::handles(MirEvent const& event)
         std::shared_ptr<msh::Session> app =
             session_manager->focussed_application().lock();
         printf("vv: app is %p\n", (void*)app.get());
+
         if (app)
         {
             // Default surface == front/focussed?!
             std::shared_ptr<msh::Surface> surf = app->default_surface();
             printf("vv:    --> surf %p\n", (void*)surf.get());
+
+            if (surf)
+            {
+                if (event.motion.button_state == 0)
+                {
+                    click = cursor - surf->top_left();
+                }
+                else if (event.motion.button_state & mir_motion_button_primary)
+                {
+                    geometry::Point abs = cursor - click;
+                    surf->move_to(abs);
+                }
+            }
         }
         fflush(stdout);
     }

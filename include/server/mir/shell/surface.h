@@ -75,6 +75,8 @@ public:
 
     virtual std::string name() const;
 
+    virtual void move_to(geometry::Point const& top_left);
+
     virtual geometry::Size size() const;
     virtual geometry::Point top_left() const;
 
