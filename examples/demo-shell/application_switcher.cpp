@@ -26,7 +26,6 @@
 #include <linux/input.h>
 
 #include <assert.h>
-#include <cstdio>
 
 namespace me = mir::examples;
 namespace msh = mir::shell;
@@ -65,19 +64,13 @@ bool me::ApplicationSwitcher::handles(MirEvent const& event)
             geometry::X{event.motion.pointer_coordinates[0].x},
             geometry::Y{event.motion.pointer_coordinates[0].y}};
 
-        printf("vv: %lu: pointers=%d\n",
-            (unsigned long)event.motion.event_time,
-            (int)event.motion.pointer_count);
-
         std::shared_ptr<msh::Session> app =
             session_manager->focussed_application().lock();
-        printf("vv: app is %p\n", (void*)app.get());
 
         if (app)
         {
             // Default surface == front/focussed?!
             std::shared_ptr<msh::Surface> surf = app->default_surface();
-            printf("vv:    --> surf %p\n", (void*)surf.get());
 
             if (surf &&
                 event.motion.modifiers & mir_key_modifier_alt)
