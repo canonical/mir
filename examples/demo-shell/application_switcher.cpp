@@ -79,7 +79,8 @@ bool me::ApplicationSwitcher::handles(MirEvent const& event)
             std::shared_ptr<msh::Surface> surf = app->default_surface();
             printf("vv:    --> surf %p\n", (void*)surf.get());
 
-            if (surf)
+            if (surf &&
+                event.motion.modifiers & mir_key_modifier_alt)
             {
                 if (event.motion.button_state == 0)
                 {
