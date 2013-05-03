@@ -29,6 +29,8 @@ namespace mli = mir::logging::input_report;
 
 namespace
 {
+char const* const component = "android-input";
+
 class MyInputReport;
 
 std::mutex mutex;
@@ -50,19 +52,19 @@ public:
         case ANDROID_LOG_DEFAULT:
         case ANDROID_LOG_VERBOSE:
         case ANDROID_LOG_DEBUG:
-            logger->log<ml::Logger::debug>(buffer);
+            logger->log<ml::Logger::debug>(buffer, component);
             break;
 
         case ANDROID_LOG_INFO:
-            logger->log<ml::Logger::informational>(buffer);
+            logger->log<ml::Logger::informational>(buffer, component);
             break;
 
         case ANDROID_LOG_WARN:
-            logger->log<ml::Logger::warning>(buffer);
+            logger->log<ml::Logger::warning>(buffer, component);
             break;
 
         case ANDROID_LOG_ERROR:
-            logger->log<ml::Logger::error>(buffer);
+            logger->log<ml::Logger::error>(buffer, component);
         };
     }
 
