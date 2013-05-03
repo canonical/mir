@@ -83,10 +83,10 @@ bool me::ApplicationSwitcher::handles(MirEvent const& event)
                 {
                     geometry::Point abs = cursor - click;
                     surf->move_to(abs);
+                    return true;
                 }
             }
         }
-        fflush(stdout);
     }
     return false;
 }
