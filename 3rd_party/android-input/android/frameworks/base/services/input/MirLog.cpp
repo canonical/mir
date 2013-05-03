@@ -21,15 +21,20 @@
 #include <cstdarg>
 #include <cstdio>
 
-// TODO replace logging with mir reporting subsystem
+namespace mir
+{
+extern void (*write_to_log)(int prio, char const* buffer);
+}
+
 extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, ...)
 {
-    if (prio < ANDROID_LOG_INFO) return 0;
+    char buffer[1024] = {'0'};
     va_list ap;
     va_start(ap, fmt);
-    int result = vfprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
+    int result = vsnprintf(buffer, sizeof buffer - 1, fmt, ap);
     va_end(ap);
+
+    mir::write_to_log(prio, buffer);
 
     return result;
 }
@@ -37,22 +42,37 @@ extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, .
 extern "C" void __android_log_assert(const char *cond, const char *tag,
               const char *fmt, ...)
 {
+    char buffer[1024] = {'0'};
     if (fmt) {
         va_list ap;
         va_start(ap, fmt);
-        vfprintf(stderr, fmt, ap);
-        fprintf(stderr, "\n");
+        vsnprintf(buffer, sizeof buffer - 1, fmt, ap);
         va_end(ap);
+
+        mir::write_to_log(ANDROID_LOG_ERROR, buffer);
     } else {
         /* Msg not provided, log condition.  N.B. Do not use cond directly as
          * format string as it could contain spurious '%' syntax (e.g.
          * "%d" in "blocks%devs == 0").
          */
-        if (cond)
-            fprintf(stderr, "Assertion failed: %s\n", cond);
+        if (cond) {
+            snprintf(buffer, sizeof buffer - 1, "Assertion failed: %s", cond);
+            mir::write_to_log(ANDROID_LOG_ERROR, buffer);
+        }
         else
-            fprintf(stderr, "Unspecified assertion failed\n");
+            mir::write_to_log(ANDROID_LOG_ERROR, "Unspecified assertion failed");
     }
 
     __builtin_trap(); /* trap so we have a chance to debug the situation */
 }
+
+namespace
+{
+// TODO replace default logging with mir reporting subsystem
+static void default_write_to_log(int prio, char const* buffer)
+{
+    if (prio >= ANDROID_LOG_INFO) fprintf(stderr, "%s\n", buffer);
+}
+}
+
+void (*mir::write_to_log)(int prio, char const* buffer) = ::default_write_to_log;
