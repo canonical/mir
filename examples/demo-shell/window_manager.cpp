@@ -60,28 +60,29 @@ bool me::WindowManager::handles(MirEvent const& event)
     else if (event.type == mir_event_type_motion &&
              session_manager)
     {
-        geometry::Point cursor{
-            geometry::X{event.motion.pointer_coordinates[0].x},
-            geometry::Y{event.motion.pointer_coordinates[0].y}};
-
         std::shared_ptr<msh::Session> app =
             session_manager->focussed_application().lock();
 
         if (app)
         {
-            // Default surface == front/focussed?!
+            // FIXME: We need to be able to select individual surfaces in
+            //        future and not just the "default" one.
             std::shared_ptr<msh::Surface> surf = app->default_surface();
 
             if (surf &&
                 event.motion.modifiers & mir_key_modifier_alt)
             {
+                geometry::Point cursor{
+                    geometry::X{event.motion.pointer_coordinates[0].x},
+                    geometry::Y{event.motion.pointer_coordinates[0].y}};
+
                 if (event.motion.button_state == 0)
                 {
-                    click = cursor - surf->top_left();
+                    relative_click = cursor - surf->top_left();
                 }
                 else if (event.motion.button_state & mir_motion_button_primary)
                 {
-                    geometry::Point abs = cursor - click;
+                    geometry::Point abs = cursor - relative_click;
                     surf->move_to(abs);
                     return true;
                 }

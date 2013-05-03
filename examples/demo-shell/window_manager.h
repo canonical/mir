@@ -52,7 +52,7 @@ protected:
 private:
     std::shared_ptr<shell::FocusController> focus_controller;
     std::shared_ptr<shell::SessionManager> session_manager;
-    geometry::Displacement click;
+    geometry::Displacement relative_click;  // Click location in window space
 };
 
 }
