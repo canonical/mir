@@ -24,7 +24,7 @@
 #include "mir_test/gl_mock.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
-#include "gbm/mock_gbm.h"
+#include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 #else
@@ -92,7 +92,7 @@ public:
     ::testing::NiceMock<mir::test::HardwareAccessMock> hw_access_mock;
 #else
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
 #endif
 };
 

@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_MIR_TEST_GRAPHICS_GBM_MOCK_GBM_H_
-#define MIR_MIR_TEST_GRAPHICS_GBM_MOCK_GBM_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_GBM_H_
+#define MIR_TEST_DOUBLES_MOCK_GBM_H_
 
 #include <gmock/gmock.h>
 
@@ -28,9 +28,9 @@
 
 namespace mir
 {
-namespace graphics
+namespace test
 {
-namespace gbm
+namespace doubles
 {
 
 class FakeGBMResources
@@ -101,4 +101,4 @@ private:
 }
 }
 
-#endif /* MIR_MIR_TEST_GRAPHICS_GBM_MOCK_GBM_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_GBM_H_ */

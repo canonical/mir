@@ -28,7 +28,7 @@
 #include "mir_test_doubles/null_virtual_terminal.h"
 
 #include "mir_test_doubles/mock_drm.h"
-#include "mock_gbm.h"
+#include "mir_test_doubles/mock_gbm.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -105,7 +105,7 @@ public:
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mgg::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<mg::DisplayConfigurationMode> conf_modes0;
