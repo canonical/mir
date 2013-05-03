@@ -73,14 +73,12 @@ mgg::GBMCursor::GBMCursor(
 
     set_image(image.data(), geometry::Size{geometry::Width(width), geometry::Height(height)});
 
-    output_container.for_each_output(
-        [&](KMSOutput& output) { output.set_cursor(buffer); });
+    show();
 }
 
 mgg::GBMCursor::~GBMCursor() noexcept
 {
-    output_container.for_each_output(
-        [&](KMSOutput& output) { output.clear_cursor(); });
+    hide();
 }
 
 void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
@@ -101,4 +99,16 @@ void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
 void mgg::GBMCursor::move_to(geometry::Point position)
 {
     output_container.for_each_output([&](KMSOutput& output) { output.move_cursor(position); });
+}
+
+void mgg::GBMCursor::show()
+{
+    output_container.for_each_output(
+        [&](KMSOutput& output) { output.set_cursor(buffer); });
+}
+
+void mgg::GBMCursor::hide()
+{
+    output_container.for_each_output(
+        [&](KMSOutput& output) { output.clear_cursor(); });
 }

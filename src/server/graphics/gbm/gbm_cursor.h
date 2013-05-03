@@ -47,6 +47,9 @@ public:
 
     void move_to(geometry::Point position);
 
+    void show();
+    void hide();
+
 private:
     KMSOutputContainer const& output_container;
 

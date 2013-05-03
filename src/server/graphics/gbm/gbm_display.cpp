@@ -135,6 +135,7 @@ void mgg::GBMDisplay::pause()
 {
     try
     {
+        if (cursor) cursor->hide();
         platform->drm.drop_master();
     }
     catch(std::runtime_error const& e)
@@ -149,6 +150,7 @@ void mgg::GBMDisplay::resume()
     try
     {
         platform->drm.set_master();
+        if (cursor) cursor->show();
     }
     catch(std::runtime_error const& e)
     {
