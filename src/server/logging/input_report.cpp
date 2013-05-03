@@ -25,13 +25,16 @@
 #include <mutex>
 
 namespace ml = mir::logging;
+namespace mli = mir::logging::input_report;
 
 namespace
 {
-std::mutex mutex;
-std::shared_ptr<ml::InputReport> the_input_report;
+class MyInputReport;
 
-class MyInputReport : public ml::InputReport
+std::mutex mutex;
+std::shared_ptr<MyInputReport> the_input_report;
+
+class MyInputReport
 {
 public:
     MyInputReport(std::shared_ptr<ml::Logger> const& logger) :
@@ -75,14 +78,11 @@ void my_write_to_log(int prio, char const* buffer)
 }
 
 
-std::shared_ptr<ml::InputReport>
-ml::InputReport::initialize_input_report(std::shared_ptr<Logger> const& logger)
+void mli::initialize(std::shared_ptr<Logger> const& logger)
 {
     std::unique_lock<std::mutex> lock(mutex);
     if (!::the_input_report)
         ::the_input_report = std::make_shared<MyInputReport>(logger);
 
     mir::write_to_log = my_write_to_log;
-
-    return ::the_input_report;
 }

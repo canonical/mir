@@ -27,20 +27,10 @@ namespace logging
 {
 class Logger;
 
-class InputReport
+namespace input_report
 {
-public:
-    static std::shared_ptr<InputReport> initialize_input_report(std::shared_ptr<Logger> const& logger);
-
-    virtual void log(int prio, char const* buffer) = 0;
-
-protected:
-    InputReport() = default;
-    ~InputReport() = default;
-    InputReport(InputReport const&) = delete;
-    InputReport& operator=(InputReport const&) = delete;
-};
-
+void initialize(std::shared_ptr<Logger> const& logger);
+}
 }
 }
 
