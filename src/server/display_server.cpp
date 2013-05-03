@@ -79,6 +79,10 @@ struct mir::DisplayServer::Private
     {
         try
         {
+            TryButRevertIfUnwinding input{
+                [this] { input_manager->stop(); },
+                [this] { input_manager->start(); }};
+
             TryButRevertIfUnwinding comp{
                 [this] { compositor->stop(); },
                 [this] { compositor->start(); }};
@@ -108,6 +112,10 @@ struct mir::DisplayServer::Private
             TryButRevertIfUnwinding comm{
                 [this] { communicator->start(); },
                 [this] { communicator->stop(); }};
+
+            TryButRevertIfUnwinding input{
+                [this] { input_manager->start(); },
+                [this] { input_manager->stop(); }};
 
             compositor->start();
         }
