@@ -19,10 +19,10 @@
 
 #include <androidfw/Input.h>
 
-#include ANDROIDFW_UTILS(KeyedVector.h)
-#include ANDROIDFW_UTILS(String8.h)
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(Tokenizer.h)
+#include <std/KeyedVector.h>
+#include <std/String8.h>
+#include <std/Errors.h>
+#include <std/Tokenizer.h>
 
 namespace android {
 

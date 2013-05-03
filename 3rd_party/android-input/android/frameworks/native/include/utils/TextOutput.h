@@ -17,9 +17,8 @@
 #ifndef ANDROID_TEXTOUTPUT_H
 #define ANDROID_TEXTOUTPUT_H
 
-#include <androidfw/Platform.h>
 
-#include ANDROIDFW_UTILS(Errors.h)
+#include <std/Errors.h>
 
 #include <stdint.h>
 #include <string.h>

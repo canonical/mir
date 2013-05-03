@@ -21,9 +21,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include ANDROIDFW_UTILS(Vector.h)
-#include ANDROIDFW_UTILS(VectorImpl.h)
-#include ANDROIDFW_UTILS(TypeHelpers.h)
+#include <std/Vector.h>
+#include <std/VectorImpl.h>
+#include <std/TypeHelpers.h>
 
 // ---------------------------------------------------------------------------
 

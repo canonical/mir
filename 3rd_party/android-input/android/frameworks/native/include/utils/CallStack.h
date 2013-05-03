@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include ANDROIDFW_UTILS(String8.h)
+#include <std/String8.h>
 #include <corkscrew/backtrace.h>
 
 // ---------------------------------------------------------------------------

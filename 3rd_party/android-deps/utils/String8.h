@@ -17,12 +17,11 @@
 #ifndef ANDROID_STRING8_H
 #define ANDROID_STRING8_H
 
-#include <androidfw/Platform.h>
 
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(SharedBuffer.h)
-#include ANDROIDFW_UTILS(Unicode.h)
-#include ANDROIDFW_UTILS(TypeHelpers.h)
+#include <std/Errors.h>
+#include <std/SharedBuffer.h>
+#include <std/Unicode.h>
+#include <std/TypeHelpers.h>
 
 #include <string.h> // for strcmp
 #include <stdarg.h>

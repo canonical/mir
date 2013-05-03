@@ -25,9 +25,9 @@
 # include <pthread.h>
 #endif
 
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(Mutex.h)
-#include ANDROIDFW_UTILS(Timers.h)
+#include <std/Errors.h>
+#include <std/Mutex.h>
+#include <std/Timers.h>
 
 // ---------------------------------------------------------------------------
 namespace android {
