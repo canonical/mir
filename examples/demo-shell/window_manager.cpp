@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "application_switcher.h"
+#include "window_manager.h"
 
 #include "mir/shell/focus_controller.h"
 #include "mir/shell/session_manager.h"
@@ -30,22 +30,22 @@
 namespace me = mir::examples;
 namespace msh = mir::shell;
 
-me::ApplicationSwitcher::ApplicationSwitcher()
+me::WindowManager::WindowManager()
 {
 }
 
-void me::ApplicationSwitcher::set_focus_controller(std::shared_ptr<msh::FocusController> const& controller)
+void me::WindowManager::set_focus_controller(std::shared_ptr<msh::FocusController> const& controller)
 {
     focus_controller = controller;
 }
 
-void me::ApplicationSwitcher::set_session_manager(
+void me::WindowManager::set_session_manager(
     std::shared_ptr<msh::SessionManager> const& sm)
 {
     session_manager = sm;
 }
 
-bool me::ApplicationSwitcher::handles(MirEvent const& event)
+bool me::WindowManager::handles(MirEvent const& event)
 {
     assert(focus_controller);
 

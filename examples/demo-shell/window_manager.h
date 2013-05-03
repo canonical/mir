@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_EXAMPLES_APPLICATION_SWITCHER_H_
-#define MIR_EXAMPLES_APPLICATION_SWITCHER_H_
+#ifndef MIR_EXAMPLES_WINDOW_MANAGER_H_
+#define MIR_EXAMPLES_WINDOW_MANAGER_H_
 
 #include "mir/input/event_filter.h"
 #include "mir/geometry/displacement.h"
@@ -34,11 +34,11 @@ class SessionManager;
 namespace examples
 {
 
-class ApplicationSwitcher : public input::EventFilter
+class WindowManager : public input::EventFilter
 {
 public: 
-    ApplicationSwitcher();
-    ~ApplicationSwitcher() = default;
+    WindowManager();
+    ~WindowManager() = default;
 
     void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
     void set_session_manager(std::shared_ptr<shell::SessionManager> const& sm);
@@ -46,8 +46,8 @@ public:
     bool handles(MirEvent const& event);
 
 protected:
-    ApplicationSwitcher(const ApplicationSwitcher&) = delete;
-    ApplicationSwitcher& operator=(const ApplicationSwitcher&) = delete;
+    WindowManager(const WindowManager&) = delete;
+    WindowManager& operator=(const WindowManager&) = delete;
 
 private:
     std::shared_ptr<shell::FocusController> focus_controller;
@@ -58,4 +58,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_EXAMPLES_APPLICATION_SWITCHER_H_
+#endif // MIR_EXAMPLES_WINDOW_MANAGER_H_
