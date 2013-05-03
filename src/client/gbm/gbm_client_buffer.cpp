@@ -133,7 +133,7 @@ mclg::GBMClientBuffer::GBMClientBuffer(
 {
 }
 
-mclg::GBMClientBuffer::~GBMClientBuffer()
+mclg::GBMClientBuffer::~GBMClientBuffer() noexcept
 {
     // TODO (@raof): Error reporting? It should not be possible for this to fail; if it does,
     //               something's seriously wrong.

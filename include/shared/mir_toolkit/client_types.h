@@ -21,6 +21,7 @@
 #ifndef MIR_TOOLKIT_CLIENT_TYPES_H_
 #define MIR_TOOLKIT_CLIENT_TYPES_H_
 
+#include <mir/graphics/mir_native_buffer.h>
 #include <mir_toolkit/event.h>
 
 #ifdef __cplusplus
@@ -119,6 +120,12 @@ typedef struct MirSurfaceParameters
 enum { mir_platform_package_max = 32 };
 
 /** TODO */
+typedef enum MirPlatformType
+{
+    mir_platform_type_gbm,
+    mir_platform_type_android    
+} MirPlatformType;
+
 typedef struct MirPlatformPackage
 {
     int data_items;

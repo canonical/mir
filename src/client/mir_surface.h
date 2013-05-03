@@ -77,6 +77,7 @@ public:
     MirWaitHandle* get_create_wait_handle();
 
     std::shared_ptr<MirNativeBuffer> get_current_buffer_package();
+    MirPlatformType platform_type();
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();

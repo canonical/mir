@@ -42,7 +42,7 @@ struct MockBuffer : public mcl::AgingBuffer
     }
 
     MOCK_METHOD0(Destroy, void());
-    virtual ~MockBuffer()
+    virtual ~MockBuffer() noexcept
     {
         Destroy();
     }

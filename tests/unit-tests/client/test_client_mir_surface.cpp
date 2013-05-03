@@ -168,6 +168,7 @@ struct MockBuffer : public mcl::ClientBuffer
         ON_CALL(*this, native_buffer_handle())
             .WillByDefault(Return(buffer_package));
     }
+    ~MockBuffer() noexcept {}
 
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
@@ -204,6 +205,10 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
 
 struct StubClientPlatform : public mcl::ClientPlatform
 {
+    MirPlatformType platform_type() const
+    {
+        return mir_platform_type_android; 
+    } 
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
         return std::shared_ptr<MockClientBufferFactory>();
@@ -251,7 +256,6 @@ struct MockInputReceiverThread : public mcli::InputReceiverThread
 }
 }
 
-#if 0
 namespace mt = mir::test;
 
 void connected_callback(MirConnection* /*connection*/, void * /*client_context*/)
@@ -658,4 +662,3 @@ TEST_F(MirClientSurfaceTest, get_cpu_region_returns_correct_data)
         EXPECT_EQ(mock_server_tool->pf_sent, region.pixel_format);
     }
 }
-#endif

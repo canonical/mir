@@ -183,21 +183,11 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_get_current_buffer(MirSurface * /*surface*/, MirBufferPackage * /*buffer_package_out*/)
+void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer * buffer_package_out, MirPlatformType *platform_type_out)
 {
-#if 0
     auto package = surface->get_current_buffer_package();
-
-    buffer_package_out->data_items = package->data_items;
-    buffer_package_out->fd_items = package->fd_items;
-    for(auto i=0; i<mir_buffer_package_max; i++)
-    {
-        buffer_package_out->data[i] = package->data[i];
-        buffer_package_out->fd[i] = package->fd[i];
-    }
-
-    buffer_package_out->stride = package->stride;
-#endif
+    memcpy(buffer_package_out, package.get(), sizeof(MirNativeBuffer));
+    *platform_type_out = surface->platform_type();
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)

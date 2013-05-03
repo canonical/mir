@@ -43,7 +43,7 @@ public:
                     geometry::Size size,
                     geometry::PixelFormat pf);
 
-    virtual ~GBMClientBuffer();
+    virtual ~GBMClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;

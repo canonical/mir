@@ -197,7 +197,7 @@ MirWaitHandle* MirSurface::release_surface(
 
 std::shared_ptr<MirNativeBuffer> MirSurface::get_current_buffer_package()
 {
-    auto buffer = buffer_depository->current_buffer();
+    auto buffer = get_current_buffer();
     return buffer->native_buffer_handle();
 }
 
@@ -320,4 +320,10 @@ void MirSurface::handle_event(MirEvent const& e)
 
     if (handle_event_callback)
         handle_event_callback(&e);
+}
+
+MirPlatformType MirSurface::platform_type()
+{
+    auto platform = connection->get_client_platform();
+    return platform->platform_type();
 }

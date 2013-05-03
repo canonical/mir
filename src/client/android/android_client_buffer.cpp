@@ -56,7 +56,7 @@ void mcla::AndroidClientBuffer::pack_native_window_buffer()
     native_window_buffer->common.decRef = &incRef;
 }
 
-mcla::AndroidClientBuffer::~AndroidClientBuffer()
+mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept
 {
     buffer_registrar->unregister_buffer(native_handle.get());
 }

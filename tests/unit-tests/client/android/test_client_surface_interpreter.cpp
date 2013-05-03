@@ -44,6 +44,8 @@ struct MockClientBuffer : public mcl::ClientBuffer
         ON_CALL(*this, native_buffer_handle())
             .WillByDefault(Return(buffer));
     }
+    ~MockClientBuffer() noexcept {}
+
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
