@@ -34,7 +34,7 @@ mf::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(mf::Surface
 {
     auto placed_parameters = request_parameters;
 
-    placed_parameters.size = display_area->view_area().size;
+    //placed_parameters.size = display_area->view_area().size;
 
     return placed_parameters;
 }

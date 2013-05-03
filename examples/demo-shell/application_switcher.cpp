@@ -19,10 +19,14 @@
 #include "application_switcher.h"
 
 #include "mir/shell/focus_controller.h"
+#include "mir/shell/session_manager.h"
+#include "mir/shell/session.h"
+#include "mir/shell/surface.h"
 
 #include <linux/input.h>
 
 #include <assert.h>
+#include <cstdio>
 
 namespace me = mir::examples;
 namespace msh = mir::shell;
@@ -36,6 +40,12 @@ void me::ApplicationSwitcher::set_focus_controller(std::shared_ptr<msh::FocusCon
     focus_controller = controller;
 }
 
+void me::ApplicationSwitcher::set_session_manager(
+    std::shared_ptr<msh::SessionManager> const& sm)
+{
+    session_manager = sm;
+}
+
 bool me::ApplicationSwitcher::handles(MirEvent const& event)
 {
     assert(focus_controller);
@@ -47,6 +57,24 @@ bool me::ApplicationSwitcher::handles(MirEvent const& event)
     {
         focus_controller->focus_next();
         return true;
+    }
+    else if (event.type == mir_event_type_motion &&
+             session_manager)
+    {
+        printf("vv: %lu: pointers=%d\n",
+            (unsigned long)event.motion.event_time,
+            (int)event.motion.pointer_count);
+
+        std::shared_ptr<msh::Session> app =
+            session_manager->focussed_application().lock();
+        printf("vv: app is %p\n", (void*)app.get());
+        if (app)
+        {
+            // Default surface == front/focussed?!
+            std::shared_ptr<msh::Surface> surf = app->default_surface();
+            printf("vv:    --> surf %p\n", (void*)surf.get());
+        }
+        fflush(stdout);
     }
     return false;
 }

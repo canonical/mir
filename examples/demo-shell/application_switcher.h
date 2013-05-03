@@ -28,6 +28,7 @@ namespace mir
 namespace shell
 {
 class FocusController;
+class SessionManager;
 }
 namespace examples
 {
@@ -39,6 +40,7 @@ public:
     ~ApplicationSwitcher() = default;
 
     void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
+    void set_session_manager(std::shared_ptr<shell::SessionManager> const& sm);
     
     bool handles(MirEvent const& event);
 
@@ -48,6 +50,7 @@ protected:
 
 private:
     std::shared_ptr<shell::FocusController> focus_controller;
+    std::shared_ptr<shell::SessionManager> session_manager;
 };
 
 }

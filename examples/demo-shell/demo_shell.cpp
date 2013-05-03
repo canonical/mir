@@ -78,12 +78,13 @@ try
 {
     auto app_switcher = std::make_shared<me::ApplicationSwitcher>();
     me::DemoServerConfiguration config(argc, argv, {app_switcher});
-    
+
     mir::run_mir(config, [&config, &app_switcher](mir::DisplayServer&)
         {
             // We use this strange two stage initialization to avoid a circular dependency between the EventFilters
             // and the SessionStore
             app_switcher->set_focus_controller(config.the_focus_controller());
+            app_switcher->set_session_manager(config.the_session_manager());
         });
     return 0;
 }

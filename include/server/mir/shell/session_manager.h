@@ -63,6 +63,7 @@ public:
                                  frontend::SurfaceCreationParameters const& params);
 
     void focus_next();
+    std::weak_ptr<Session> focussed_application() const;
 
 protected:
     SessionManager(const SessionManager&) = delete;
