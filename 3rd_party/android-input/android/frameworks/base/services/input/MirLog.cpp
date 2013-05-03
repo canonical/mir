@@ -17,14 +17,10 @@
  */
 
 #include <std/Log.h>
-
+#include <std/MirLog.h>
 #include <cstdarg>
 #include <cstdio>
 
-namespace mir
-{
-extern void (*write_to_log)(int prio, char const* buffer);
-}
 
 extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, ...)
 {
