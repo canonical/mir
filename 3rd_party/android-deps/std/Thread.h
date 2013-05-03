@@ -52,6 +52,7 @@ public:
         (void)name; (void)priority; (void)stack;
 
         status.store(NO_ERROR);
+        exit_pending.store(false);
 
         thread = std::thread([this]() -> void
             {
