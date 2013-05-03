@@ -73,6 +73,8 @@ mgg::GBMCursor::GBMCursor(
 
     set_image(image.data(), geometry::Size{geometry::Width(width), geometry::Height(height)});
 
+    move_to(geometry::Point());
+
     show();
 }
 
