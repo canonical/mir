@@ -20,7 +20,7 @@
 #include <utils/RefBase.h>
 
 #include <utils/CallStack.h>
-#include <utils/Log.h>
+#include <std/Log.h>
 #include <std/TextOutput.h>
 
 #include <stdlib.h>
