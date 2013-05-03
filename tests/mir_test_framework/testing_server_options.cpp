@@ -98,6 +98,7 @@ public:
     }
     void pause() {}
     void resume() {}
+    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 };
 
 class StubGraphicPlatform : public mg::Platform
@@ -117,7 +118,7 @@ class StubGraphicPlatform : public mg::Platform
     {
         return std::make_shared<mg::PlatformIPCPackage>();
     }
-    
+
     EGLNativeDisplayType shell_egl_display()
     {
         return (EGLNativeDisplayType) 0;

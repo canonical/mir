@@ -19,7 +19,7 @@
 #include "mir_test/egl_mock.h"
 #include "mir_test/gl_mock.h"
 #include "mir_test_doubles/mock_drm.h"
-#include "mock_gbm.h"
+#include "mir_test_doubles/mock_gbm.h"
 
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/gbm_buffer.h"
@@ -86,7 +86,7 @@ protected:
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mgg::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock>  mock_gl;
     std::shared_ptr<mgg::GBMPlatform> platform;
@@ -147,10 +147,6 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
     auto ipc_package = buffer->get_ipc_package();
     ASSERT_EQ(size_t(1), ipc_package->ipc_fds.size());
     ASSERT_TRUE(ipc_package->ipc_data.empty());
-}
-
-TEST_F(GBMGraphicBufferBasic, buffer_)
-{
 }
 
 MATCHER_P(GEMFlinkHandleIs, value, "")

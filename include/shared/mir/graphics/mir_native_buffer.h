@@ -20,12 +20,5 @@
 #ifndef MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 #define MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 
-#ifdef ANDROID
-#include <system/window.h>
-typedef ANativeWindowBuffer MirNativeBuffer;
-#else
-#include "mir_toolkit/client_types.h"
-typedef MirBufferPackage MirNativeBuffer;
-#endif
 
 #endif /* MIR_CLIENT_MIR_NATIVE_BUFFER_H_ */

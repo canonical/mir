@@ -20,7 +20,7 @@
 #define MIR_COMPOSITOR_BUFFER_H_
 
 #include "mir/surfaces/graphic_region.h"
-#include "mir/graphics/mir_native_buffer.h"
+#include "mir_toolkit/common.h"
 
 #include <memory>
 

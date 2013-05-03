@@ -63,6 +63,8 @@ public:
     void make_current();
     void release_current();
 
+    std::weak_ptr<Cursor> the_cursor();
+
 protected:
     EGLDisplay egl_display;
     EGLSurface egl_surface;

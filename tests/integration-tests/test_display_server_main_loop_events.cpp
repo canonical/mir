@@ -96,6 +96,7 @@ public:
 
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
+    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 
 private:
     std::shared_ptr<mg::Display> const display;
