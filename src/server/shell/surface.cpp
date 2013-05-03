@@ -114,7 +114,7 @@ void msh::Surface::move_to(geometry::Point const& p)
 {
     if (auto const& s = surface.lock())
     {
-        return s->move_to(p);
+        s->move_to(p);
     }
     else
     {
