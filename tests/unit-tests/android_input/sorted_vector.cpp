@@ -18,7 +18,7 @@
 
 #include "androidfw/Platform.h"
 
-#include ANDROIDFW_UTILS(SortedVector.h)
+#include <std/SortedVector.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

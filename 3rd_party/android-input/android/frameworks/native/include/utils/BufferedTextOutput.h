@@ -19,8 +19,8 @@
 
 #include <androidfw/Platform.h>
 
-#include ANDROIDFW_UTILS(TextOutput.h)
-#include ANDROIDFW_UTILS(threads.h)
+#include <std/TextOutput.h>
+#include <std/threads.h>
 #include <cutils/uio.h>
 
 // ---------------------------------------------------------------------------

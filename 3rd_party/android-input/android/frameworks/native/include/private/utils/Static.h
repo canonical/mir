@@ -19,8 +19,8 @@
 
 #include <androidfw/Platform.h>
 
-#include ANDROIDFW_UTILS(threads.h)
-#include ANDROIDFW_UTILS(Vector.h)
+#include <std/threads.h>
+#include <std/Vector.h>
 
 namespace android {
 // For TextStream.cpp

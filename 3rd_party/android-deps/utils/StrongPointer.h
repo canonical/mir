@@ -19,7 +19,7 @@
 
 #include <androidfw/Platform.h>
 
-#include ANDROIDFW_CUTILS(atomic.h)
+#include <std/atomic.h>
 
 #include <stdint.h>
 #include <sys/types.h>

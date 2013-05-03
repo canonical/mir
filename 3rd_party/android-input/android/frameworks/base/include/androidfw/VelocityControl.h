@@ -21,7 +21,7 @@
 
 #include <androidfw/Input.h>
 #include <androidfw/VelocityTracker.h>
-#include ANDROIDFW_UTILS(Timers.h)
+#include <std/Timers.h>
 
 namespace android {
 

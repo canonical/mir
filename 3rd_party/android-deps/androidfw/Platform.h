@@ -20,22 +20,5 @@
 #ifndef MIR_ANDROID_PLATFORM_H_
 #define MIR_ANDROID_PLATFORM_H_
 
-#if !defined(ANDROID_USE_STD)
-    // use the android headers
-    #ifndef ANDROIDFW_UTILS
-        #define ANDROIDFW_UTILS(name) <utils/name>
-    #endif
-    #ifndef ANDROIDFW_CUTILS
-        #define ANDROIDFW_CUTILS(name) <cutils/name>
-    #endif
-#else
-    // use the standard library
-    #ifndef ANDROIDFW_UTILS
-        #define ANDROIDFW_UTILS(name) <std/name>
-    #endif
-    #ifndef ANDROIDFW_CUTILS
-        #define ANDROIDFW_CUTILS(name) <std/name>
-    #endif
-#endif
 
 #endif /* MIR_ANDROID_PLATFORM_H_ */

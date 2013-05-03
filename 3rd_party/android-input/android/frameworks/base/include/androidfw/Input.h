@@ -24,11 +24,11 @@
  */
 
 #include <android/input.h>
-#include ANDROIDFW_UTILS(Vector.h)
-#include ANDROIDFW_UTILS(KeyedVector.h)
-#include ANDROIDFW_UTILS(Timers.h)
-#include ANDROIDFW_UTILS(RefBase.h)
-#include ANDROIDFW_UTILS(String8.h)
+#include <std/Vector.h>
+#include <std/KeyedVector.h>
+#include <std/Timers.h>
+#include <std/RefBase.h>
+#include <std/String8.h>
 
 #ifdef HAVE_ANDROID_OS
 class SkMatrix;

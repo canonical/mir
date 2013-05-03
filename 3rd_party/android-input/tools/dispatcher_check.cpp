@@ -2,7 +2,7 @@
 
 #include <InputManager.h>
 #include <pthread.h>
-#include ANDROIDFW_UTILS(Thread.h)
+#include <std/Thread.h>
 #include <iostream>
 
 using namespace android;

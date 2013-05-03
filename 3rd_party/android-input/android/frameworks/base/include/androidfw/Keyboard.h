@@ -21,9 +21,9 @@
 
 #include <androidfw/Input.h>
 #include <androidfw/InputDevice.h>
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(String8.h)
-#include ANDROIDFW_UTILS(PropertyMap.h)
+#include <std/Errors.h>
+#include <std/String8.h>
+#include <std/PropertyMap.h>
 
 namespace android {
 

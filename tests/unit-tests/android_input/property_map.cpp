@@ -18,7 +18,7 @@
 
 #include "androidfw/Platform.h"
 
-#include ANDROIDFW_UTILS(PropertyMap.h)
+#include <std/PropertyMap.h>
 
 #include <fstream>
 

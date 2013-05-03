@@ -27,14 +27,14 @@
  *
  */
 
-#include ANDROIDFW_UTILS(AndroidThreads.h)
+#include <std/AndroidThreads.h>
 
 #ifdef __cplusplus
-#include ANDROIDFW_UTILS(Condition.h)
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(Mutex.h)
-#include ANDROIDFW_UTILS(RWLock.h)
-#include ANDROIDFW_UTILS(Thread.h)
+#include <std/Condition.h>
+#include <std/Errors.h>
+#include <std/Mutex.h>
+#include <std/RWLock.h>
+#include <std/Thread.h>
 #endif
 
 #endif // _LIBS_UTILS_THREADS_H

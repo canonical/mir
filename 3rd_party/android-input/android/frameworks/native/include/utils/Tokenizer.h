@@ -20,9 +20,9 @@
 #include <androidfw/Platform.h>
 
 #include <assert.h>
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(FileMap.h)
-#include ANDROIDFW_UTILS(String8.h)
+#include <std/Errors.h>
+#include <std/FileMap.h>
+#include <std/String8.h>
 
 namespace android {
 

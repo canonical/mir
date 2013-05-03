@@ -24,9 +24,9 @@
 #define release_wake_lock(id) {}
 
 #include <cutils/properties.h>
-#include ANDROIDFW_UTILS(Log.h)
-#include ANDROIDFW_UTILS(Timers.h)
-#include ANDROIDFW_UTILS(Errors.h)
+#include <std/Log.h>
+#include <std/Timers.h>
+#include <std/Errors.h>
 
 #include <stdlib.h>
 #include <stdio.h>

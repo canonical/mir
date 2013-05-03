@@ -18,7 +18,7 @@
 
 #include "androidfw/Platform.h"
 
-#include ANDROIDFW_UTILS(String8.h)
+#include <std/String8.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

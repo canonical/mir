@@ -22,7 +22,7 @@
 
 #include <utils/CallStack.h>
 #include <utils/Log.h>
-#include ANDROIDFW_UTILS(TextOutput.h)
+#include <std/TextOutput.h>
 
 #include <stdlib.h>
 #include <stdio.h>

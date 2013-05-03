@@ -19,7 +19,7 @@
 
 #include <androidfw/Platform.h>
 
-#include ANDROIDFW_UTILS(Errors.h)
+#include <std/Errors.h>
 
 #include <stdint.h>
 #include <string.h>

@@ -20,8 +20,8 @@
 #include <androidfw/Platform.h>
 
 #include <androidfw/Input.h>
-#include ANDROIDFW_UTILS(Timers.h)
-#include ANDROIDFW_UTILS(BitSet.h)
+#include <std/Timers.h>
+#include <std/BitSet.h>
 
 namespace android {
 
