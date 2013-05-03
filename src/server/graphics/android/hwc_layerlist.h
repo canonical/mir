@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/mir_native_buffer.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
 #include <vector>
@@ -67,7 +66,7 @@ protected:
 
 struct HWCFBLayer : public HWCDefaultLayer
 {
-    HWCFBLayer(std::shared_ptr<MirNativeBuffer> const& native_buf,
+    HWCFBLayer(std::shared_ptr<ANativeWindowBuffer> const& native_buf,
                HWCRect& display_frame_rect);
 };
 

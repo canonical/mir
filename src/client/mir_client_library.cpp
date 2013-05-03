@@ -183,10 +183,10 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer * buffer_package_out, MirPlatformType *platform_type_out)
+void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer * /*buffer_package_out*/, MirPlatformType *platform_type_out)
 {
     auto package = surface->get_current_buffer_package();
-    memcpy(buffer_package_out, package.get(), sizeof(MirNativeBuffer));
+//    memcpy(buffer_package_out, package.get(), sizeof(MirNativeBuffer));
     *platform_type_out = surface->platform_type();
 }
 

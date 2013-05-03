@@ -19,7 +19,6 @@
 #ifndef MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
 #define MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
 
-#include "mir/graphics/mir_native_buffer.h"
 #include <system/window.h>
 #include "sync_object.h"
 #include <memory>

@@ -24,7 +24,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"
-#include "mir/graphics/mir_native_buffer.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
