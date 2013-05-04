@@ -64,10 +64,9 @@ extern "C" void __android_log_assert(const char *cond, const char *tag,
 
 namespace
 {
-// TODO replace default logging with mir reporting subsystem
-static void default_write_to_log(int prio, char const* buffer)
+static void default_write_to_log(int /*prio*/, char const* /*buffer*/)
 {
-    if (prio >= ANDROID_LOG_INFO) fprintf(stderr, "%s\n", buffer);
+    // By default don't log
 }
 }
 
