@@ -54,6 +54,7 @@
 #include "input/android/android_input_manager.h"
 #include "input/android/android_dispatcher_controller.h"
 #include "mir/logging/logger.h"
+#include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
 #include "mir/logging/session_mediator_report.h"
@@ -139,6 +140,7 @@ private:
 char const* const log_app_mediator = "log-app-mediator";
 char const* const log_msg_processor = "log-msg-processor";
 char const* const log_display      = "log-display";
+char const* const log_input        = "log-input";
 
 char const* const glog                 = "glog";
 char const* const glog_stderrthreshold = "glog-stderrthreshold";
@@ -204,6 +206,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         ("file,f", po::value<std::string>(),    "Socket filename")
         ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=true]")
         (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
+        (log_input, po::value<bool>(),          "Log the input stack. [bool:default=false]")
         (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
         (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
         (glog,                                  "Use google::GLog for logging")
@@ -431,7 +434,11 @@ mir::DefaultServerConfiguration::the_input_manager()
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
             if (the_options()->get("enable-input", enable_input_default))
+            {
+                if (the_options()->get(log_input, false))
+                    ml::input_report::initialize(the_logger());
                 return std::make_shared<mia::InputManager>(the_input_configuration());
+            }
             else 
                 return std::make_shared<mi::NullInputManager>();
         });
