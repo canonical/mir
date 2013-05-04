@@ -191,15 +191,14 @@ void mgg::KMSOutput::move_cursor(geometry::Point destination)
 {
     if (current_crtc)
     {
-//        if (auto result = drmModeMoveCursor(drm_fd, current_crtc->crtc_id, destination.x.as_uint32_t(), destination.y.as_uint32_t()))
-//        {
-//            BOOST_THROW_EXCEPTION(
-//                ::boost::enable_error_info(std::runtime_error("drmModeMoveCursor() failed"))
-//                    << (boost::error_info<KMSOutput, decltype(result)>(result)));
-//        }
-        // TODO result can be be -13 (-EACCES I presume) if we process cursor movement when we don't own the display
-        // For now we just ignore the return code in the finest tradition of procedural programming
-        drmModeMoveCursor(drm_fd, current_crtc->crtc_id, destination.x.as_uint32_t(), destination.y.as_uint32_t());
+        if (auto result = drmModeMoveCursor(drm_fd, current_crtc->crtc_id,
+                                            destination.x.as_uint32_t(),
+                                            destination.y.as_uint32_t()))
+        {
+            BOOST_THROW_EXCEPTION(
+                ::boost::enable_error_info(std::runtime_error("drmModeMoveCursor() failed"))
+                    << (boost::error_info<KMSOutput, decltype(result)>(result)));
+        }
     }
 }
 
