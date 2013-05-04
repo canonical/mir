@@ -42,7 +42,6 @@ struct InputReport : public testing::Test
 {
     MockLogger     logger;
 
-
     InputReport()
     {
         mli::initialize(mir::test::fake_shared(logger));
@@ -50,6 +49,7 @@ struct InputReport : public testing::Test
 };
 
 char const* const component = "android-input";
+char const* const LOG_TAG = 0;
 }
 
 TEST_F(InputReport, debug_message)
@@ -60,5 +60,58 @@ TEST_F(InputReport, debug_message)
             component));
 
   ALOG(LOG_DEBUG, NULL, "Test function is %s", __PRETTY_FUNCTION__);
+}
 
+TEST_F(InputReport, unknown_message)
+{
+    char const* const unknown = "Unknown message";
+
+    EXPECT_CALL(logger, log(
+            ml::Logger::debug,
+            unknown,
+            component));
+
+  ALOG(LOG_UNKNOWN, NULL, unknown);
+}
+
+TEST_F(InputReport, verbose_message)
+{
+    char const* const verbose = "A very long story. (OK, I lied.)";
+
+    EXPECT_CALL(logger, log(
+            ml::Logger::debug,
+            verbose,
+            component));
+
+  ALOG(LOG_VERBOSE, NULL, verbose);
+}
+
+TEST_F(InputReport, info_message)
+{
+    EXPECT_CALL(logger, log(
+            ml::Logger::informational,
+            __PRETTY_FUNCTION__,
+            component));
+
+    ALOGI(__PRETTY_FUNCTION__);
+}
+
+TEST_F(InputReport, warning_message)
+{
+    EXPECT_CALL(logger, log(
+            ml::Logger::warning,
+            __PRETTY_FUNCTION__,
+            component));
+
+    ALOGW(__PRETTY_FUNCTION__);
+}
+
+TEST_F(InputReport, error_message)
+{
+    EXPECT_CALL(logger, log(
+            ml::Logger::error,
+            __PRETTY_FUNCTION__,
+            component));
+
+    ALOGE(__PRETTY_FUNCTION__);
 }

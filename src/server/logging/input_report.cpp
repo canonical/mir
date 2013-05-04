@@ -83,8 +83,7 @@ void my_write_to_log(int prio, char const* buffer)
 void mli::initialize(std::shared_ptr<Logger> const& logger)
 {
     std::unique_lock<std::mutex> lock(mutex);
-    if (!::the_input_report)
-        ::the_input_report = std::make_shared<MyInputReport>(logger);
+    ::the_input_report = std::make_shared<MyInputReport>(logger);
 
     mir::write_to_log = my_write_to_log;
 }
