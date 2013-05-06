@@ -21,9 +21,9 @@
 #include "buffer.h"
 #include "default_framebuffer_factory.h"
 #include "fb_device.h"
+#include "fb_simple_swapper.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
-#include "fb_simple_swapper.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -47,8 +47,7 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     std::vector<std::shared_ptr<mc::Buffer>> buffers; 
     for( auto i = 0u; i < num_framebuffers; ++i)
     {
-        auto buf = buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles);
-        buffers.push_back(buf);
+        buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
     }
 
     auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);
