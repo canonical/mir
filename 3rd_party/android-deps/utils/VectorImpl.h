@@ -17,12 +17,11 @@
 #ifndef ANDROID_VECTOR_IMPL_H
 #define ANDROID_VECTOR_IMPL_H
 
-#include <androidfw/Platform.h>
 
 #include <assert.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include ANDROIDFW_UTILS(Errors.h)
+#include <std/Errors.h>
 
 // ---------------------------------------------------------------------------
 // No user serviceable parts in here...

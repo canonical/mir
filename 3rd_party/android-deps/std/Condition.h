@@ -20,7 +20,7 @@
 #ifndef MIR_ANDROID_UBUNTU_CONDITION_H_
 #define MIR_ANDROID_UBUNTU_CONDITION_H_
 
-#include ANDROIDFW_UTILS(Timers.h)
+#include <std/Timers.h>
 
 #include <condition_variable>
 #include <chrono>

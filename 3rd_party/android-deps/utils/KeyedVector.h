@@ -21,9 +21,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include ANDROIDFW_UTILS(SortedVector.h)
-#include ANDROIDFW_UTILS(TypeHelpers.h)
-#include ANDROIDFW_UTILS(Errors.h)
+#include <std/SortedVector.h>
+#include <std/TypeHelpers.h>
+#include <std/Errors.h>
 
 // ---------------------------------------------------------------------------
 

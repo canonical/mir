@@ -21,7 +21,7 @@
 
 #include <androidfw/InputTransport.h>
 #include <cutils/log.h>
-#include ANDROIDFW_CUTILS(properties.h)
+#include <std/properties.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>

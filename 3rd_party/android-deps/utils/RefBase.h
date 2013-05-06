@@ -17,17 +17,16 @@
 #ifndef ANDROID_REF_BASE_H
 #define ANDROID_REF_BASE_H
 
-#include <androidfw/Platform.h>
 
-#include ANDROIDFW_CUTILS(atomic.h)
+#include <std/atomic.h>
 
 #include <stdint.h>
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include ANDROIDFW_UTILS(StrongPointer.h)
-#include ANDROIDFW_UTILS(TypeHelpers.h)
+#include <std/StrongPointer.h>
+#include <std/TypeHelpers.h>
 
 // ---------------------------------------------------------------------------
 namespace android {
