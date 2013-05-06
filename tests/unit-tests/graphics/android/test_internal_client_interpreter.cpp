@@ -59,7 +59,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
     EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_anw.get()))
         .Times(1);
 
-    mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache);
+    mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache, sz, pf);
     auto test_buffer = interpreter.driver_requests_buffer();
     EXPECT_EQ(stub_anw.get(), test_buffer); 
 }
@@ -76,7 +76,36 @@ TEST_F(InternalClientWindow, driver_returns_buffer)
     EXPECT_CALL(*mock_swapper, client_release(tmp))
         .Times(1);
 
-    mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache);
+    mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache, sz, pf);
     auto test_bufferptr = interpreter.driver_requests_buffer();
     interpreter.driver_returns_buffer(test_bufferptr, fake_sync);
+}
+
+TEST_F(InternalClientWindow, size_test)
+{
+    mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache, sz, pf);
+
+    interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
+    auto rc_width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
+    auto rc_height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);
+
+    EXPECT_EQ(sz.width.as_uint32_t(), rc_width); 
+    EXPECT_EQ(sz.height.as_uint32_t(), rc_height); 
+}
+
+TEST_F(InternalClientWindow, driver_default_format)
+{
+    mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache, sz, pf);
+
+    auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format); 
+}
+
+TEST_F(InternalClientWindow, driver_sets_format)
+{
+    mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache, sz, pf);
+
+    interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
+    auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, rc_format); 
 }

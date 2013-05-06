@@ -28,7 +28,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-
 #include <thread>
 #include <chrono>
 namespace mc=mir::compositor;

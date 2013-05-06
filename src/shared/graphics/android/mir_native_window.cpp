@@ -20,6 +20,7 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "syncfence.h"
 
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 
@@ -80,15 +81,15 @@ int perform_static(ANativeWindow* window, int key, ...)
     return ret;
 }
 
-int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
-                          struct ANativeWindowBuffer** buffer)
+int dequeueBuffer_deprecated_static(struct ANativeWindow* window,
+                                    struct ANativeWindowBuffer** buffer)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
 
-int dequeueBuffer_static (struct ANativeWindow* window,
-                          struct ANativeWindowBuffer** buffer, int* fence_fd)
+int dequeueBuffer_static(struct ANativeWindow* window,
+                         struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
     *fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
@@ -115,7 +116,7 @@ int queueBuffer_static(struct ANativeWindow* window,
 }
 
 /* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
-int setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
+int setSwapInterval_static(struct ANativeWindow* /*window*/, int /*interval*/)
 {
     return 0;
 }
@@ -175,6 +176,7 @@ int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::s
 
 int mga::MirNativeWindow::query(int key, int* value ) const
 {
+    printf("query %i\n", key);
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }
@@ -189,10 +191,12 @@ int mga::MirNativeWindow::perform(int key, va_list arg_list )
     switch(key)
     {
         case NATIVE_WINDOW_SET_BUFFERS_FORMAT:
+            printf("perform set\n");
             driver_format = va_arg(args, int);
             driver_interpreter->dispatch_driver_request_format(driver_format);
             break;
         default:
+            printf("perform unknown %i\n", key);
             break;
     }
 

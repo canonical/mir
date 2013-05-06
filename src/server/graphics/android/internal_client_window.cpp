@@ -20,13 +20,19 @@
 #include "mir/compositor/buffer.h"
 #include "internal_client_window.h"
 #include "interpreter_resource_cache.h"
+#include "android_format_conversion-inl.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 namespace mga=mir::graphics::android;
 
 mga::InternalClientWindow::InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&& swapper,
-                                                std::shared_ptr<InterpreterResourceCache> const& cache)
+                                                std::shared_ptr<InterpreterResourceCache> const& cache,
+                                                geom::Size sz, geom::PixelFormat pf)
     : swapper(std::move(swapper)),
-      resource_cache(cache)
+      resource_cache(cache),
+      size(sz),
+      format(to_android_format(pf))
 {
 }
 
@@ -44,11 +50,27 @@ void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handl
     swapper->client_release(buffer);
 }
 
-void mga::InternalClientWindow::dispatch_driver_request_format(int)
+void mga::InternalClientWindow::dispatch_driver_request_format(int request_format)
 {
+    format = request_format;
 }
 
-int mga::InternalClientWindow::driver_requests_info(int) const
+int mga::InternalClientWindow::driver_requests_info(int key) const
 {
-    return 8;
+    switch(key)
+    {
+        case NATIVE_WINDOW_DEFAULT_WIDTH:
+        case NATIVE_WINDOW_WIDTH:
+            return size.width.as_uint32_t();
+        case NATIVE_WINDOW_DEFAULT_HEIGHT:
+        case NATIVE_WINDOW_HEIGHT:
+            return size.height.as_uint32_t();
+        case NATIVE_WINDOW_FORMAT:
+            return format;
+        case NATIVE_WINDOW_TRANSFORM_HINT:
+            return 0; 
+        default:
+            printf("key...%i\n", key);
+            BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
+    }
 }
