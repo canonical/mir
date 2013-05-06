@@ -49,13 +49,13 @@ ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = swapper->compositor_acquire();
     auto handle = buffer->native_buffer_handle().get();
-    resource_cache->store_buffer(buffer, handle); 
+    resource_cache->store_buffer(buffer, handle);
     return handle;
 }
 
 //sync object could be passed to hwc. we don't need to that yet though
 void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returned_handle, std::shared_ptr<SyncObject> const&)
-{ 
+{
     auto buffer = resource_cache->retrieve_buffer(returned_handle); 
     poster->set_next_frontbuffer(buffer);
     swapper->compositor_release(buffer);

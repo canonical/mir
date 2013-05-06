@@ -35,6 +35,7 @@ std::shared_ptr<mc::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindow
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("driver is returning buffers it never was given!"));
     }
+    auto buffer_out = buffer_it->second;
     buffers_in_driver.erase(buffer_it);
-    return buffer_it->second;
+    return buffer_out;
 }
