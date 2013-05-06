@@ -21,6 +21,7 @@
 
 #include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_interpreter_resource_cache.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -86,11 +87,12 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
         .WillOnce(Return(stub_anw));
-    EXPECT_CALL(*mock_cache, store_buffer(mock_buffer, stub_anw.get()))
+
+    std::shared_ptr<mc::Buffer> tmp = mock_buffer1;
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_anw.get()))
         .Times(1);
 
     auto rc_buffer = render_window.driver_requests_buffer();
-
     EXPECT_EQ(stub_anw.get(), rc_buffer);
 }
 
@@ -100,7 +102,6 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
     auto stub_anw = std::make_shared<ANativeWindowBuffer>();
-
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
@@ -112,7 +113,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
     std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
-    EXPECT_CALL(*mock_cache, retrieve_buffer(&stub_anw))
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))

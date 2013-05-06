@@ -27,6 +27,7 @@ add_library(
   fb_simple_swapper.cpp
   fb_device.cpp
   internal_client_window.cpp
+  interpreter_cache.cpp
 )
 
 target_link_libraries(

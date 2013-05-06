@@ -35,7 +35,8 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> const& swapper,
-                                            std::shared_ptr<mga::DisplaySupportProvider> const& display_poster)
+                                            std::shared_ptr<mga::DisplaySupportProvider> const& display_poster,
+                                            std::shared_ptr<InterpreterResourceCache> const&)
     : swapper(swapper),
       poster(display_poster),
       format(mga::to_android_format(poster->display_format()))

@@ -16,39 +16,35 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_WINDOW_H_
-#define MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_WINDOW_H_
-
-#include "mir/graphics/android/android_driver_interpreter.h"
+#ifndef MIR_GRAPHICS_ANDROID_INTERPRETER_RESOURCE_CACHE_H_
+#define MIR_GRAPHICS_ANDROID_INTERPRETER_RESOURCE_CACHE_H_
+#include <system/window.h>
+#include <memory>
 
 namespace mir
 {
-
 namespace compositor
 {
-class BufferSwapper;
+class Buffer;
 }
-
 namespace graphics
 {
 namespace android
 {
-
-class InterpreterResourceCache;
-class InternalClientWindow : public AndroidDriverInterpreter
+class InterpreterResourceCache
 {
 public:
-    InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&&,
-                         std::shared_ptr<InterpreterResourceCache> const&);
-    ANativeWindowBuffer* driver_requests_buffer();
-    void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
-    void dispatch_driver_request_format(int);
-    int  driver_requests_info(int) const;
+    InterpreterResourceCache() {}
 
-private:
-    std::unique_ptr<compositor::BufferSwapper> swapper;
+    virtual void store_buffer(std::shared_ptr<compositor::Buffer>const& buffer, ANativeWindowBuffer* key) = 0;
+    virtual std::shared_ptr<compositor::Buffer> retrieve_buffer(ANativeWindowBuffer* key) = 0;
+
+protected:
+    virtual ~InterpreterResourceCache() {}
+    InterpreterResourceCache(const InterpreterResourceCache&) = delete;
+    InterpreterResourceCache& operator=(const InterpreterResourceCache&) = delete;
 };
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_WINDOW_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_INTERPRETER_RESOURCE_CACHE_H_ */

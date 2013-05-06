@@ -16,31 +16,16 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_swapper.h"
-#include "internal_client_window.h"
+#include "interpreter_cache.h"
 
 namespace mga=mir::graphics::android;
+namespace mc=mir::compositor;
 
-mga::InternalClientWindow::InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&& swapper,
-                                                std::shared_ptr<InterpreterResourceCache> const&)
-    : swapper(std::move(swapper))
+void mga::InterpreterCache::store_buffer(std::shared_ptr<compositor::Buffer>const&, ANativeWindowBuffer*)
 {
 }
 
-ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
+std::shared_ptr<mc::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindowBuffer*)
 {
-    return nullptr;
-}
-
-void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&)
-{
-}
-
-void mga::InternalClientWindow::dispatch_driver_request_format(int)
-{
-}
-
-int mga::InternalClientWindow::driver_requests_info(int) const
-{
-    return 8;
+    return std::shared_ptr<mc::Buffer>();
 }

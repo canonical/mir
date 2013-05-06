@@ -51,12 +51,12 @@ struct InternalClientWindow : public ::testing::Test
 TEST_F(InternalClientWindow, driver_requests_buffer)
 {
     using namespace testing;
+    EXPECT_CALL(*mock_swapper, client_acquire())
+        .Times(1);
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1);
-    EXPECT_CALL(*mock_swapper, client_acquire())
-        .Times(1)
-        .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_cache, store_buffer(mock_buffer, &stub_anw))
+    std::shared_ptr<mc::Buffer> tmp = mock_buffer;
+    EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_anw.get()))
         .Times(1);
 
     mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache);
@@ -68,7 +68,8 @@ TEST_F(InternalClientWindow, driver_returns_buffer)
 {
     using namespace testing;
     std::shared_ptr<mga::SyncObject> fake_sync;
-    EXPECT_CALL(*mock_cache, retrieve_buffer(&stub_anw))
+
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
         .Times(1)
         .WillOnce(Return(mock_buffer));
     std::shared_ptr<mc::Buffer> tmp = mock_buffer;
@@ -79,4 +80,3 @@ TEST_F(InternalClientWindow, driver_returns_buffer)
     auto test_bufferptr = interpreter.driver_requests_buffer();
     interpreter.driver_returns_buffer(test_bufferptr, fake_sync);
 }
-
