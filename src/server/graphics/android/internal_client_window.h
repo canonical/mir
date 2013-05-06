@@ -42,6 +42,9 @@ public:
     void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
     void dispatch_driver_request_format(int);
     int  driver_requests_info(int) const;
+
+private:
+    std::unique_ptr<compositor::BufferSwapper> swapper;
 };
 }
 }

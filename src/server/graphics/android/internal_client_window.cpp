@@ -16,10 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/compositor/buffer_swapper.h"
 #include "internal_client_window.h"
+
 namespace mga=mir::graphics::android;
 
-mga::InternalClientWindow::InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&&)
+mga::InternalClientWindow::InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&& swapper)
+    : swapper(std::move(swapper))
 {
 }
 
