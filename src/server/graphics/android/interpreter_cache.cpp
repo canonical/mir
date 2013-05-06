@@ -29,3 +29,13 @@ std::shared_ptr<mc::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindow
 {
     return std::shared_ptr<mc::Buffer>();
 }
+#if 0
+    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
+
+    auto buffer_it = buffers_in_driver.find(returned_handle); 
+    if (buffer_it == buffers_in_driver.end())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("driver is returning buffers it never was given!"));
+    }
+    buffers_in_driver.erase(buffer_it);
+#endif

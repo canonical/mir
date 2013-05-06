@@ -58,8 +58,7 @@ public:
 private:
     std::shared_ptr<FBSwapper> const swapper;
     std::shared_ptr<DisplaySupportProvider> const poster;
-
-    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
+    std::shared_ptr<InterpreterResourceCache> const resource_cache;
 
     int format;
 }; 

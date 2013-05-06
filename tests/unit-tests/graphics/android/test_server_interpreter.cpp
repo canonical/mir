@@ -99,9 +99,12 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
 TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 {
     using namespace testing;
+    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
-    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
@@ -113,9 +116,6 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
     std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
-    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
-        .Times(1)
-        .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))
         .Times(1);
     EXPECT_CALL(*stub_sync, wait())
@@ -128,9 +128,12 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
 TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
 {
     using namespace testing;
+    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
+    EXPECT_CALL(*mock_cache, retrieve_buffer(_))
+        .Times(1)
+        .WillOnce(Return(mock_buffer1));
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
-    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
     mc::BufferID id{442}, returned_id;
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
