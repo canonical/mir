@@ -191,7 +191,7 @@ MirPlatformType mir_surface_get_platform_type(MirSurface *surface);
  *   \param [in] surface          The surface
  *   \param [out] buffer_package  Structure to be populated
  */
-void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer *buffer_package);
+void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer **buffer_package);
 
 /**
  * Get a surface's graphics_region, i.e., map the graphics buffer to main

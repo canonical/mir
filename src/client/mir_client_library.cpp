@@ -188,10 +188,10 @@ MirPlatformType mir_surface_get_platform_type(MirSurface * surface)
     return surface->platform_type();
 }
 
-void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer * /*buffer_package_out*/)
+void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buffer_package_out)
 {
     auto package = surface->get_current_buffer_package();
-//    memcpy(buffer_package_out, package.get(), sizeof(MirNativeBuffer));
+    *buffer_package_out = package.get();
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
