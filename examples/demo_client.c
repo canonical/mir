@@ -158,8 +158,8 @@ void demo_client(const char* server, int buffer_swap_count)
         {
             if (mir_platform_type_gbm == mir_surface_get_platform_type(mcd.surface))
             {
-                MirBufferPackage buffer_package;
-                mir_surface_get_current_buffer(mcd.surface, &buffer_package);
+                MirNativeBuffer* buffer_package = NULL;
+                mir_surface_get_current_buffer(mcd.surface, buffer_package);
             }
             // In a real application we'd render into the current buffer
         }
