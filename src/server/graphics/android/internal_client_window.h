@@ -47,6 +47,7 @@ public:
 
 private:
     std::unique_ptr<compositor::BufferSwapper> swapper;
+    std::shared_ptr<InterpreterResourceCache> const resource_cache;
 };
 }
 }

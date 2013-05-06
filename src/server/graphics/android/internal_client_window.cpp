@@ -17,23 +17,31 @@
  */
 
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer.h"
 #include "internal_client_window.h"
+#include "interpreter_resource_cache.h"
 
 namespace mga=mir::graphics::android;
 
 mga::InternalClientWindow::InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&& swapper,
-                                                std::shared_ptr<InterpreterResourceCache> const&)
-    : swapper(std::move(swapper))
+                                                std::shared_ptr<InterpreterResourceCache> const& cache)
+    : swapper(std::move(swapper)),
+      resource_cache(cache)
 {
 }
 
 ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
-    return nullptr;
+    auto buffer = swapper->client_acquire();
+    auto handle = buffer->native_buffer_handle().get();
+    resource_cache->store_buffer(buffer, handle);
+    return handle;
 }
 
-void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&)
+void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handle, std::shared_ptr<SyncObject> const&)
 {
+    auto buffer = resource_cache->retrieve_buffer(handle);
+    swapper->client_release(buffer);
 }
 
 void mga::InternalClientWindow::dispatch_driver_request_format(int)
