@@ -57,12 +57,12 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     mc::BufferProperties actual;
     auto swapper = strategy->create_swapper(actual, buffer_properties);
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::InternalClientWindow>(std::move(swapper), cache); 
+    auto interpreter = std::make_shared<mga::InternalClientWindow>(std::move(swapper), cache, size, pf); 
     auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter);
 
     int major, minor, n;
-    //EGLContext context;
-    //EGLSurface egl_surface;
+    EGLContext context;
+    EGLSurface surface;
     EGLConfig egl_config;
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -81,10 +81,10 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     rc = eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
     EXPECT_EQ(EGL_TRUE, rc);
 
-    auto surface = eglCreateWindowSurface(egl_display, egl_config, mnw.get(), NULL);
+    surface = eglCreateWindowSurface(egl_display, egl_config, mnw.get(), NULL);
     EXPECT_NE(EGL_NO_SURFACE, surface);
 
-    auto context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
+    context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
     EXPECT_NE(EGL_NO_CONTEXT, context);
 
     rc = eglMakeCurrent(egl_display, surface, surface, context);

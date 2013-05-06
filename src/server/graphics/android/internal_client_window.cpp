@@ -25,6 +25,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
 
 mga::InternalClientWindow::InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&& swapper,
                                                 std::shared_ptr<InterpreterResourceCache> const& cache,

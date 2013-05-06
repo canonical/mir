@@ -26,12 +26,15 @@
 namespace mc=mir::compositor;
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
+namespace geom=mir::geometry;
  
 struct InternalClientWindow : public ::testing::Test
 {
     void SetUp()
     {
         using namespace testing;
+        sz = geom::Size{geom::Width{4}, geom::Height{23}};
+        pf = geom::PixelFormat::abgr_8888;
         stub_anw = std::make_shared<ANativeWindowBuffer>();
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         mock_swapper = std::unique_ptr<mtd::MockSwapper>(new mtd::MockSwapper());
@@ -46,6 +49,8 @@ struct InternalClientWindow : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::unique_ptr<mtd::MockSwapper> mock_swapper;
+    geom::Size sz;
+    geom::PixelFormat pf;
 };
 
 TEST_F(InternalClientWindow, driver_requests_buffer)
@@ -86,8 +91,8 @@ TEST_F(InternalClientWindow, size_test)
     mga::InternalClientWindow interpreter(std::move(mock_swapper), mock_cache, sz, pf);
 
     interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
-    auto rc_width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
-    auto rc_height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);
+    unsigned int rc_width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
+    unsigned int rc_height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);
 
     EXPECT_EQ(sz.width.as_uint32_t(), rc_width); 
     EXPECT_EQ(sz.height.as_uint32_t(), rc_height); 

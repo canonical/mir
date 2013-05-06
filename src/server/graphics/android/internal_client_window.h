@@ -20,6 +20,8 @@
 #define MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_WINDOW_H_
 
 #include "mir/graphics/android/android_driver_interpreter.h"
+#include "mir/geometry/size.h"
+#include "mir/geometry/pixel_format.h"
 
 namespace mir
 {
@@ -39,7 +41,7 @@ class InternalClientWindow : public AndroidDriverInterpreter
 {
 public:
     InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&&,
-                         std::shared_ptr<InterpreterResourceCache> const&);
+                         std::shared_ptr<InterpreterResourceCache> const&, geometry::Size, geometry::PixelFormat);
     ANativeWindowBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
     void dispatch_driver_request_format(int);
@@ -48,6 +50,7 @@ public:
 private:
     std::unique_ptr<compositor::BufferSwapper> swapper;
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
+    geometry::Size size;
     int format;
 };
 }
