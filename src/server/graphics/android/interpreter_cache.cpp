@@ -17,25 +17,24 @@
  */
 
 #include "interpreter_cache.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
-void mga::InterpreterCache::store_buffer(std::shared_ptr<compositor::Buffer>const&, ANativeWindowBuffer*)
+void mga::InterpreterCache::store_buffer(std::shared_ptr<compositor::Buffer>const& buffer, ANativeWindowBuffer* key)
 {
+    buffers_in_driver[key] = buffer;
 }
 
-std::shared_ptr<mc::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindowBuffer*)
+std::shared_ptr<mc::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindowBuffer* returned_handle)
 {
-    return std::shared_ptr<mc::Buffer>();
-}
-#if 0
-    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
-
     auto buffer_it = buffers_in_driver.find(returned_handle); 
     if (buffer_it == buffers_in_driver.end())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("driver is returning buffers it never was given!"));
     }
     buffers_in_driver.erase(buffer_it);
-#endif
+    return buffer_it->second;
+}

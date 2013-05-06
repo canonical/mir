@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_INTERPRETER_CACHE_H_
 #define MIR_GRAPHICS_ANDROID_INTERPRETER_CACHE_H_
 #include "interpreter_resource_cache.h"
+#include <unordered_map>
 
 namespace mir
 {
@@ -33,6 +34,9 @@ public:
 
     void store_buffer(std::shared_ptr<compositor::Buffer>const& buffer, ANativeWindowBuffer* key);
     std::shared_ptr<compositor::Buffer> retrieve_buffer(ANativeWindowBuffer* key);
+
+private:
+    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
 };
 }
 }
