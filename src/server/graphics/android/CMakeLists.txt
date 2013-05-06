@@ -26,6 +26,7 @@ add_library(
   default_framebuffer_factory.cpp
   fb_simple_swapper.cpp
   fb_device.cpp
+  internal_client_window.cpp
 )
 
 target_link_libraries(
