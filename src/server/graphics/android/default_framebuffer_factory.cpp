@@ -24,6 +24,7 @@
 #include "fb_simple_swapper.h"
 #include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
+#include "interpreter_cache.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -51,7 +52,7 @@ std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_
     }
 
     auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);
-    std::shared_ptr<InterpreterResourceCache> cache;
+    auto cache = std::make_shared<mga::InterpreterCache>();
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, info_provider, cache);
     return std::make_shared<mga::MirNativeWindow>(interpreter); 
 }
