@@ -156,14 +156,10 @@ void demo_client(const char* server, int buffer_swap_count)
     {
         // We can query the current graphics buffer attributes
         {
-            if (mir_platform_type_gbm == mir_surface_get_platform_type())
+            if (mir_platform_type_gbm == mir_surface_get_platform_type(mcd.surface))
             {
                 MirBufferPackage buffer_package;
-                buffer_package.data_items = -1;
-                buffer_package.fd_items = -1;
                 mir_surface_get_current_buffer(mcd.surface, &buffer_package);
-                assert(0 <= buffer_package.data_items);
-                assert(0 <= buffer_package.fd_items);
             }
             // In a real application we'd render into the current buffer
         }

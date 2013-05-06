@@ -57,7 +57,7 @@ private:
     std::shared_ptr<FBSwapper> const swapper;
     std::shared_ptr<DisplaySupportProvider> const poster;
 
-    std::unordered_map<MirNativeBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
+    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
 
     int format;
 }; 

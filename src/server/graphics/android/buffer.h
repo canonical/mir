@@ -50,7 +50,7 @@ public:
     geometry::PixelFormat pixel_format() const;
     void bind_to_texture();
     std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
+    std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
 
 private:
     std::shared_ptr<GraphicAllocAdaptor> const alloc_device;

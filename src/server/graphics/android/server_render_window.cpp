@@ -42,7 +42,7 @@ mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> cons
 {
 }
 
-MirNativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
+ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = swapper->compositor_acquire();
     auto handle = buffer->native_buffer_handle().get();
@@ -52,7 +52,7 @@ MirNativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 }
 
 //sync object could be passed to hwc. we don't need to that yet though
-void mga::ServerRenderWindow::driver_returns_buffer(MirNativeBuffer* returned_handle, std::shared_ptr<SyncObject> const&)
+void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returned_handle, std::shared_ptr<SyncObject> const&)
 {
     auto buffer_it = buffers_in_driver.find(returned_handle); 
     if (buffer_it == buffers_in_driver.end())

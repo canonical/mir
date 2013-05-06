@@ -109,7 +109,7 @@ std::shared_ptr<mc::BufferIPCPackage> mga::Buffer::get_ipc_package() const
     return native_window_buffer_handle->get_ipc_package();
 }
     
-std::shared_ptr<MirNativeBuffer> mga::Buffer::native_buffer_handle() const
+std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
 {
     return native_window_buffer_handle->native_buffer_handle();
 }

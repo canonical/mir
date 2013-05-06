@@ -45,8 +45,7 @@ static void gbm_egl_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* displ
                                                MirBufferPackage* buffer_package)
 {
     MirSurface* ms = static_cast<MirSurface*>(surface);
-    MirPlatformType type;
-    mir_surface_get_current_buffer(ms, buffer_package, &type);
+    mir_surface_get_current_buffer(ms, buffer_package);
 }
 
 static void buffer_advanced_callback(MirSurface*  /* surface */,
