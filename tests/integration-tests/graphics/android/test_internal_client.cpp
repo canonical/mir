@@ -43,7 +43,7 @@ protected:
 };
 }
 
-TEST_F(AndroidInternalClient, creation)
+TEST_F(AndroidInternalClient, internal_client_creation_and_use)
 {
     auto size = geom::Size{geom::Width{334},
                       geom::Height{122}};
@@ -73,8 +73,20 @@ TEST_F(AndroidInternalClient, creation)
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
     auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    eglInitialize(egl_display, &major, &minor);
-    eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
-    eglCreateWindowSurface(egl_display, egl_config, mnw.get(), context_attribs);
+    int rc = eglInitialize(egl_display, &major, &minor);
+    EXPECT_EQ(EGL_TRUE, rc);
+
+    rc = eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
+    EXPECT_EQ(EGL_TRUE, rc);
+
+    auto surface = eglCreateWindowSurface(egl_display, egl_config, mnw.get(), NULL);
+    EXPECT_NE(EGL_NO_SURFACE, surface);
+
+    auto context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
+    EXPECT_NE(EGL_NO_CONTEXT, context);
+
+    rc = eglMakeCurrent(egl_display, surface, surface, context);
+    EXPECT_EQ(EGL_TRUE, rc);
 }
