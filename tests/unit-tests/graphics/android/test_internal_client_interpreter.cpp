@@ -23,6 +23,7 @@
 #include "mir/frontend/surface.h"
 
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace mtd=mir::test::doubles;
@@ -135,9 +136,26 @@ TEST_F(InternalClientWindow, driver_default_format)
 
 TEST_F(InternalClientWindow, driver_sets_format)
 {
+    using namespace testing;
+    EXPECT_CALL(*mock_surface, pixel_format())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(geom::PixelFormat::abgr_8888));
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
 
-    interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
+    interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBA_8888);
     auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, rc_format); 
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, rc_format); 
+}
+
+TEST_F(InternalClientWindow, driver_sets_incompatible_format)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_surface, pixel_format())
+        .Times(1)
+        .WillOnce(Return(geom::PixelFormat::abgr_8888));
+    mga::InternalClientWindow interpreter(mock_surface, mock_cache);
+
+    EXPECT_THROW({
+        interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGB_565);
+    }, std::runtime_error);
 }

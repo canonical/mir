@@ -49,32 +49,34 @@ void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handl
     /* here, the mc::TemporaryBuffer will destruct, triggering buffer advance */
 }
 
-void mga::InternalClientWindow::dispatch_driver_request_format(int /*request_format*/)
+void mga::InternalClientWindow::dispatch_driver_request_format(int request_format)
 {
-#if 0
-    format = request_format;
-#endif
+    if (request_format != mga::to_android_format(surface->pixel_format()))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("driver expects incompatible format"));
+    }
 }
 
-int mga::InternalClientWindow::driver_requests_info(int /*key*/) const
+int mga::InternalClientWindow::driver_requests_info(int key) const
 {
-#if 0
+    geom::Size size;
+    geom::PixelFormat pf;
     switch(key)
     {
         case NATIVE_WINDOW_DEFAULT_WIDTH:
         case NATIVE_WINDOW_WIDTH:
+            size = surface->size();
             return size.width.as_uint32_t();
         case NATIVE_WINDOW_DEFAULT_HEIGHT:
         case NATIVE_WINDOW_HEIGHT:
+            size = surface->size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
-            return format;
+            pf = surface->pixel_format();
+            return mga::to_android_format(pf);
         case NATIVE_WINDOW_TRANSFORM_HINT:
             return 0; 
         default:
-            printf("key...%i\n", key);
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
     }
-#endif
-    return 8;
 }
