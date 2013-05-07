@@ -28,6 +28,7 @@ add_library(
   fb_device.cpp
   internal_client_window.cpp
   interpreter_cache.cpp
+  internal_client.cpp
 )
 
 target_link_libraries(
