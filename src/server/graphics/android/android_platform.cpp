@@ -23,6 +23,7 @@
 #include "android_display_allocator.h"
 #include "android_display_factory.h"
 #include "default_framebuffer_factory.h"
+#include "internal_client.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
@@ -60,11 +61,10 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client(std::shared_ptr<mf::Surface> const&)
+std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client(
+    std::shared_ptr<mf::Surface> const& surface)
 {
-    return std::shared_ptr<mg::InternalClient>();   
-    // TODO: Implement
-//    return static_cast<EGLNativeDisplayType>(0);
+    return std::make_shared<mga::InternalClient>(surface);
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)

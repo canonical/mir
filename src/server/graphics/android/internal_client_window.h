@@ -50,6 +50,7 @@ public:
 private:
     std::shared_ptr<frontend::Surface> const surface;
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
+    int format;
 };
 }
 }

@@ -32,6 +32,7 @@ mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<frontend::Surfac
     : surface(surface),
       resource_cache(cache)
 {
+    format = mga::to_android_format(surface->pixel_format());
 }
 
 ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
@@ -51,16 +52,16 @@ void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handl
 
 void mga::InternalClientWindow::dispatch_driver_request_format(int request_format)
 {
-    if (request_format != mga::to_android_format(surface->pixel_format()))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("driver expects incompatible format"));
-    }
+    format = request_format;
+//    if (request_format != mga::to_android_format(surface->pixel_format()))
+//    {
+//        BOOST_THROW_EXCEPTION(std::runtime_error("driver expects incompatible format"));
+//    }
 }
 
 int mga::InternalClientWindow::driver_requests_info(int key) const
 {
     geom::Size size;
-    geom::PixelFormat pf;
     switch(key)
     {
         case NATIVE_WINDOW_DEFAULT_WIDTH:
@@ -72,8 +73,7 @@ int mga::InternalClientWindow::driver_requests_info(int key) const
             size = surface->size();
             return size.height.as_uint32_t();
         case NATIVE_WINDOW_FORMAT:
-            pf = surface->pixel_format();
-            return mga::to_android_format(pf);
+            return format;
         case NATIVE_WINDOW_TRANSFORM_HINT:
             return 0; 
         default:

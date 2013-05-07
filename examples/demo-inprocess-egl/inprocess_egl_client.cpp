@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/internal_client.h"
 
 #include "graphics.h"
 
