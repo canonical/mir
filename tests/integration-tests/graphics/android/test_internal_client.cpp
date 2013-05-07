@@ -23,7 +23,9 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/null_display_report.h"
 #include "mir/graphics/android/mir_native_window.h"
+#include "mir/graphics/platform.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/shell/surface_source.h"
@@ -88,13 +90,14 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller, stub_input_factory);
     auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());
 
-    auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::InternalClientWindow>(mir_surface, cache); 
-    auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter);
+    auto report = std::shared_ptr<mg::NullDisplayReport>(); 
+    auto platform = mg::create_platform(report);
+    auto egl_native_display = platform->shell_egl_display();
+    auto egl_native_surface = platform->shell_egl_surface(mir_surface);
 
     int major, minor, n;
-    EGLContext context;
-    EGLSurface surface;
+    EGLContext egl_context;
+    EGLSurface egl_surface;
     EGLConfig egl_config;
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -106,24 +109,24 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
-    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    auto egl_display = eglGetDisplay(*egl_native_display);
     int rc = eglInitialize(egl_display, &major, &minor);
     EXPECT_EQ(EGL_TRUE, rc);
 
     rc = eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
     EXPECT_EQ(EGL_TRUE, rc);
 
-    surface = eglCreateWindowSurface(egl_display, egl_config, mnw.get(), NULL);
+    egl_surface = eglCreateWindowSurface(egl_display, egl_config, *egl_native_surface, NULL);
     EXPECT_NE(EGL_NO_SURFACE, surface);
 
-    context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
+    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
     EXPECT_NE(EGL_NO_CONTEXT, context);
 
-    rc = eglMakeCurrent(egl_display, surface, surface, context);
+    rc = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     EXPECT_EQ(EGL_TRUE, rc);
 
     glClearColor(1.0f, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
-    rc = eglSwapBuffers(egl_display, surface);
+    rc = eglSwapBuffers(egl_display, egl_surface);
     EXPECT_EQ(EGL_TRUE, rc);
 }

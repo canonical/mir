@@ -22,9 +22,12 @@
 
 namespace me = mir::examples;
 
-me::EGLHelper::EGLHelper(EGLNativeDisplayType native_display, EGLNativeWindowType native_window)
+me::EGLHelper::EGLHelper(std::shared_ptr<EGLNativeDisplayType> const& native_display,
+                         std::shared_ptr<EGLNativeWindowType> const& native_window)
+    : native_display(native_display),
+      native_window(native_window)
 {
-    display = eglGetDisplay(native_display);
+    display = eglGetDisplay(*native_display);
     assert(display != EGL_NO_DISPLAY);
 
     int major, minor, rc;
@@ -47,7 +50,7 @@ me::EGLHelper::EGLHelper(EGLNativeDisplayType native_display, EGLNativeWindowTyp
     assert(rc == EGL_TRUE);
     assert(n == 1);
 
-    surface = eglCreateWindowSurface(display, egl_config, native_window, nullptr);
+    surface = eglCreateWindowSurface(display, egl_config, *native_window, nullptr);
     assert(surface != EGL_NO_SURFACE);
 
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
