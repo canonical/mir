@@ -39,6 +39,7 @@ namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace ms=mir::surfaces;
 namespace mf=mir::frontend;
+
 namespace
 {
 class AndroidInternalClient : public ::testing::Test
