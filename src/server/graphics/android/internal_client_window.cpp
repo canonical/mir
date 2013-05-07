@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_swapper.h"
+#include "mir/frontend/surface.h"
 #include "mir/compositor/buffer.h"
 #include "internal_client_window.h"
 #include "interpreter_resource_cache.h"
@@ -27,29 +27,26 @@
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<frontend::Surface> const& /*surface*/,
+mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<frontend::Surface> const& surface,
                                                 std::shared_ptr<InterpreterResourceCache> const& cache)
-    : resource_cache(cache)
+    : surface(surface),
+      resource_cache(cache)
 {
 }
 
 ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
-#if 0
-    auto buffer = swapper->client_acquire();
+    auto buffer = surface->client_buffer();
     auto handle = buffer->native_buffer_handle().get();
     resource_cache->store_buffer(buffer, handle);
     return handle;
-#endif
-    return nullptr;
 }
 
-void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* /*handle*/, std::shared_ptr<SyncObject> const&)
+void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handle,
+                                                      std::shared_ptr<SyncObject> const&)
 {
-#if 0
-    auto buffer = resource_cache->retrieve_buffer(handle);
-    swapper->client_release(buffer);
-#endif
+    resource_cache->retrieve_buffer(handle);
+    /* here, the mc::TemporaryBuffer will destruct, triggering buffer advance */
 }
 
 void mga::InternalClientWindow::dispatch_driver_request_format(int /*request_format*/)
