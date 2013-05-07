@@ -5,6 +5,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_display_multi_monitor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_display_configuration.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_internal_client.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_kms_output.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_kms_page_flipper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_linux_virtual_terminal.cpp

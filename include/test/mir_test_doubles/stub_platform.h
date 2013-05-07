@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_package.h"
 #include "null_display.h"
 
 namespace mir

@@ -17,6 +17,7 @@
  */
 
 #include "mir/frontend/surface.h"
+#include "mir_toolkit/mesa/native_display.h"
 #include "src/server/graphics/gbm/internal_client.h"
 #include "mir_test_doubles/stub_platform.h"
 
@@ -24,7 +25,8 @@
 
 namespace geom=mir::geometry;
 namespace mc=mir::compositor;
-namespace mga=mir::graphics::android;
+namespace mgg=mir::graphics::gbm;
+namespace mtd=mir::test::doubles;
 
 namespace
 {
@@ -73,7 +75,7 @@ TEST(InternalClient, native_display)
     mgg::InternalClient client(platform, surface);
 
     auto native_display = client.egl_native_display();
-    MirMesaEGLNativeDisplay* disp = native_display.get(); 
+    MirMesaEGLNativeDisplay* disp = reinterpret_cast<MirMesaEGLNativeDisplay*>(native_display); 
 
     ASSERT_NE(nullptr, disp);
     EXPECT_NE(nullptr, disp->display_get_platform);

@@ -26,6 +26,7 @@ add_library(
   kms_output_container.cpp
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
+  internal_client.cpp
 )
 
 target_link_libraries(
