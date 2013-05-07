@@ -33,12 +33,16 @@ namespace graphics
 namespace android
 {
 
+class MirNativeWindow;
 class InternalClient : public mir::graphics::InternalClient
 {
 public:
     InternalClient(std::shared_ptr<frontend::Surface> const&);
     EGLNativeDisplayType egl_native_display();
     EGLNativeWindowType egl_native_window();
+
+private:
+    std::shared_ptr<MirNativeWindow> client_window;
 };
 
 }

@@ -17,20 +17,26 @@
  */
 
 #include "internal_client.h"
+#include "interpreter_cache.h"
+#include "internal_client_window.h"
+#include "mir/graphics/android/mir_native_window.h"
 
 namespace mf=mir::frontend;
 namespace mga=mir::graphics::android;
 
-mga::InternalClient::InternalClient(std::shared_ptr<frontend::Surface> const&)
+mga::InternalClient::InternalClient(std::shared_ptr<frontend::Surface> const& surface)
 {
-
+    auto cache = std::make_shared<mga::InterpreterCache>();
+    auto interpreter = std::make_shared<mga::InternalClientWindow>(surface, cache); 
+    client_window = std::make_shared<mga::MirNativeWindow>(interpreter);
 }
+
 EGLNativeDisplayType mga::InternalClient::egl_native_display()
 {
-    return (EGLNativeDisplayType) 0;
+    return EGL_DEFAULT_DISPLAY;
 }
 
 EGLNativeWindowType mga::InternalClient::egl_native_window()
 {
-    return (EGLNativeWindowType) 0;
+    return client_window.get();
 }
