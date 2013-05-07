@@ -88,7 +88,6 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller, stub_input_factory);
     auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());
 
-
     auto cache = std::make_shared<mga::InterpreterCache>();
     auto interpreter = std::make_shared<mga::InternalClientWindow>(mir_surface, cache); 
     auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter);

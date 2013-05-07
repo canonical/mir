@@ -89,7 +89,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
     auto test_buffer = interpreter.driver_requests_buffer();
     EXPECT_EQ(stub_anw.get(), test_buffer); 
 }
-#if 0
+
 TEST_F(InternalClientWindow, driver_returns_buffer)
 {
     using namespace testing;
@@ -98,9 +98,6 @@ TEST_F(InternalClientWindow, driver_returns_buffer)
     EXPECT_CALL(*mock_cache, retrieve_buffer(stub_anw.get()))
         .Times(1)
         .WillOnce(Return(mock_buffer));
-    std::shared_ptr<mc::Buffer> tmp = mock_buffer;
-    EXPECT_CALL(*mock_swapper, client_release(tmp))
-        .Times(1);
 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
     auto test_bufferptr = interpreter.driver_requests_buffer();
@@ -109,9 +106,13 @@ TEST_F(InternalClientWindow, driver_returns_buffer)
 
 TEST_F(InternalClientWindow, size_test)
 {
+    using namespace testing;
+    EXPECT_CALL(*mock_surface, size())
+        .Times(2)
+        .WillOnce(Return(sz)) 
+        .WillOnce(Return(sz)); 
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
 
-    interpreter.dispatch_driver_request_format(HAL_PIXEL_FORMAT_RGBX_8888);
     unsigned int rc_width = interpreter.driver_requests_info(NATIVE_WINDOW_WIDTH);
     unsigned int rc_height = interpreter.driver_requests_info(NATIVE_WINDOW_HEIGHT);
 
@@ -121,6 +122,11 @@ TEST_F(InternalClientWindow, size_test)
 
 TEST_F(InternalClientWindow, driver_default_format)
 {
+    using namespace testing;
+    EXPECT_CALL(*mock_surface, pixel_format())
+        .Times(1)
+        .WillOnce(Return(geom::PixelFormat::abgr_8888));
+
     mga::InternalClientWindow interpreter(mock_surface, mock_cache);
 
     auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
@@ -135,4 +141,3 @@ TEST_F(InternalClientWindow, driver_sets_format)
     auto rc_format = interpreter.driver_requests_info(NATIVE_WINDOW_FORMAT);
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, rc_format); 
 }
-#endif
