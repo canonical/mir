@@ -26,6 +26,7 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/internal_client.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/shell/surface_source.h"
@@ -116,10 +117,10 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     EXPECT_EQ(EGL_TRUE, rc);
 
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, internal_client->egl_native_window(), NULL);
-    EXPECT_NE(EGL_NO_SURFACE, surface);
+    EXPECT_NE(EGL_NO_SURFACE, egl_surface);
 
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
-    EXPECT_NE(EGL_NO_CONTEXT, context);
+    EXPECT_NE(EGL_NO_CONTEXT, egl_context);
 
     rc = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     EXPECT_EQ(EGL_TRUE, rc);

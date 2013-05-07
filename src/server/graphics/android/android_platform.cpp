@@ -30,6 +30,7 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
+namespace mf=mir::frontend;
 
 mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mg::DisplayReport> const& display_report)
     : display_report(display_report)
@@ -59,10 +60,11 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-EGLNativeDisplayType mga::AndroidPlatform::shell_egl_display()
+std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client(std::shared_ptr<mf::Surface> const&)
 {
+    return std::shared_ptr<mg::InternalClient>();   
     // TODO: Implement
-    return static_cast<EGLNativeDisplayType>(0);
+//    return static_cast<EGLNativeDisplayType>(0);
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)

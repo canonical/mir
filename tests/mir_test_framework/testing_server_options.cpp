@@ -119,9 +119,9 @@ class StubGraphicPlatform : public mg::Platform
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    EGLNativeDisplayType shell_egl_display()
+    std::shared_ptr<mg::InternalClient> create_internal_client(std::shared_ptr<mf::Surface> const&)
     {
-        return (EGLNativeDisplayType) 0;
+        return std::shared_ptr<mg::InternalClient>();   
     }
 };
 
