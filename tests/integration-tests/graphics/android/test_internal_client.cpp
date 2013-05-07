@@ -21,8 +21,11 @@
 #include "src/server/graphics/android/interpreter_cache.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/android/mir_native_window.h"
+#include "mir/surfaces/surface_stack.h"
+#include "mir/frontend/surface_creation_parameters.h"
 
 #include <EGL/egl.h>
 #include <gtest/gtest.h>
@@ -34,7 +37,8 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
-
+namespace ms=mir::surfaces;
+namespace mf=mir::frontend;
 namespace
 {
 class AndroidInternalClient : public ::testing::Test
@@ -51,16 +55,21 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto size = geom::Size{geom::Width{334},
                       geom::Height{122}};
     auto pf  = geom::PixelFormat::abgr_8888;
-    auto buffer_properties = mc::BufferProperties{size, pf, mc::BufferUsage::software};
+    mf::SurfaceCreationParameters params;
+    params.name = std::string("test");
+    params.size = size; 
+    params.pixel_format = pf;
+    params.buffer_usage = mc::BufferUsage::hardware; 
 
 
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
-    mc::BufferProperties actual;
-    auto swapper = strategy->create_swapper(actual, buffer_properties);
+    auto buffer_bundle_factory = std::make_shared<mc::BufferBundleManager>(strategy);
+    auto ss = std::make_shared<ms::SurfaceStack>(buffer_bundle_factory);
+    auto mir_surface = ss->create_surface(params);
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::InternalClientWindow>(std::move(swapper), cache, size, pf); 
+    auto interpreter = std::make_shared<mga::InternalClientWindow>(mir_surface, cache); 
     auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter);
 
     int major, minor, n;
