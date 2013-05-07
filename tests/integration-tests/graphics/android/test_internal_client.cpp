@@ -27,6 +27,9 @@
 #include <EGL/egl.h>
 #include <gtest/gtest.h>
 
+#include <GLES2/gl2.h>
+
+
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
@@ -88,5 +91,10 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     EXPECT_NE(EGL_NO_CONTEXT, context);
 
     rc = eglMakeCurrent(egl_display, surface, surface, context);
+    EXPECT_EQ(EGL_TRUE, rc);
+
+    glClearColor(1.0f, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    rc = eglSwapBuffers(egl_display, surface);
     EXPECT_EQ(EGL_TRUE, rc);
 }
