@@ -61,9 +61,8 @@ void me::InprocessEGLClient::thread_loop()
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
     auto surface = surface_factory->create_surface(params, mf::SurfaceId(), std::shared_ptr<events::EventSink>());
-    auto native_display = graphics_platform->shell_egl_display();
-    auto native_surface = graphics_platform->shell_egl_surface(surface);
-    me::EGLHelper helper(native_display, native_surface);
+    auto internal_client = graphics_platform->create_internal_client(surface);
+    me::EGLHelper helper(internal_client->egl_native_display(), internal_client->egl_native_window());
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
     assert(rc == EGL_TRUE);

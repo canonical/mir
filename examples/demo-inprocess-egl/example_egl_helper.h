@@ -30,8 +30,7 @@ namespace examples
 class EGLHelper
 {
 public:
-    EGLHelper(std::shared_ptr<EGLNativeDisplayType> const& native_display,
-              std::shared_ptr<EGLNativeWindowType> const& native_window)
+    EGLHelper(EGLNativeDisplayType native_display, EGLNativeWindowType native_surface);
     virtual ~EGLHelper();
     
     EGLDisplay the_display() const;
@@ -43,8 +42,6 @@ protected:
     EGLHelper& operator=(EGLHelper const&) = delete;
 
 private:
-    std::shared_ptr<EGLNativeDisplayType> const& native_display;
-    std::shared_ptr<EGLNativeWindowType> const& native_window;
     EGLDisplay display;
     EGLContext context;
     EGLSurface surface;
