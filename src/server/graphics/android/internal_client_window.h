@@ -26,9 +26,9 @@
 namespace mir
 {
 
-namespace compositor
+namespace frontend
 {
-class BufferSwapper;
+class Surface;
 }
 
 namespace graphics
@@ -40,18 +40,16 @@ class InterpreterResourceCache;
 class InternalClientWindow : public AndroidDriverInterpreter
 {
 public:
-    InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&&,
-                         std::shared_ptr<InterpreterResourceCache> const&, geometry::Size, geometry::PixelFormat);
+    InternalClientWindow(std::shared_ptr<frontend::Surface> const&,
+                         std::shared_ptr<InterpreterResourceCache> const&);
     ANativeWindowBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
     void dispatch_driver_request_format(int);
     int  driver_requests_info(int) const;
 
 private:
-    std::unique_ptr<compositor::BufferSwapper> swapper;
+
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
-    geometry::Size size;
-    int format;
 };
 }
 }

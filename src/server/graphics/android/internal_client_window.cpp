@@ -27,37 +27,41 @@
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::InternalClientWindow::InternalClientWindow(std::unique_ptr<compositor::BufferSwapper>&& swapper,
-                                                std::shared_ptr<InterpreterResourceCache> const& cache,
-                                                geom::Size sz, geom::PixelFormat pf)
-    : swapper(std::move(swapper)),
-      resource_cache(cache),
-      size(sz),
-      format(to_android_format(pf))
+mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<frontend::Surface> const& /*surface*/,
+                                                std::shared_ptr<InterpreterResourceCache> const& cache)
+    : resource_cache(cache)
 {
 }
 
 ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()
 {
+#if 0
     auto buffer = swapper->client_acquire();
     auto handle = buffer->native_buffer_handle().get();
     resource_cache->store_buffer(buffer, handle);
     return handle;
+#endif
+    return nullptr;
 }
 
-void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handle, std::shared_ptr<SyncObject> const&)
+void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* /*handle*/, std::shared_ptr<SyncObject> const&)
 {
+#if 0
     auto buffer = resource_cache->retrieve_buffer(handle);
     swapper->client_release(buffer);
+#endif
 }
 
-void mga::InternalClientWindow::dispatch_driver_request_format(int request_format)
+void mga::InternalClientWindow::dispatch_driver_request_format(int /*request_format*/)
 {
+#if 0
     format = request_format;
+#endif
 }
 
-int mga::InternalClientWindow::driver_requests_info(int key) const
+int mga::InternalClientWindow::driver_requests_info(int /*key*/) const
 {
+#if 0
     switch(key)
     {
         case NATIVE_WINDOW_DEFAULT_WIDTH:
@@ -74,4 +78,6 @@ int mga::InternalClientWindow::driver_requests_info(int key) const
             printf("key...%i\n", key);
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
     }
+#endif
+    return 8;
 }

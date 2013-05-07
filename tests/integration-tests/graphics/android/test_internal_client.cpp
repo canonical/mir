@@ -25,7 +25,12 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_controller.h"
+#include "mir/shell/surface_source.h"
+#include "mir/shell/surface.h"
 #include "mir/frontend/surface_creation_parameters.h"
+#include "mir/frontend/surface_id.h"
+#include "mir/input/input_channel_factory.h"
 
 #include <EGL/egl.h>
 #include <gtest/gtest.h>
@@ -38,7 +43,9 @@ namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace ms=mir::surfaces;
+namespace msh=mir::shell;
 namespace mf=mir::frontend;
+namespace mi=mir::input;
 
 namespace
 {
@@ -47,6 +54,14 @@ class AndroidInternalClient : public ::testing::Test
 protected:
     virtual void SetUp()
     {
+    }
+};
+
+struct StubInputFactory : public mi::InputChannelFactory 
+{
+    std::shared_ptr<mi::InputChannel> make_input_channel()
+    {
+        return std::shared_ptr<mi::InputChannel>();
     }
 };
 }
@@ -61,14 +76,19 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     params.size = size; 
     params.pixel_format = pf;
     params.buffer_usage = mc::BufferUsage::hardware; 
+    auto id = mf::SurfaceId{4458};
 
-
+    auto stub_input_factory = std::make_shared<StubInputFactory>();
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     auto buffer_bundle_factory = std::make_shared<mc::BufferBundleManager>(strategy);
     auto ss = std::make_shared<ms::SurfaceStack>(buffer_bundle_factory);
-    auto mir_surface = ss->create_surface(params);
+    auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
+    auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller, stub_input_factory);
+    auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());
+
+
     auto cache = std::make_shared<mga::InterpreterCache>();
     auto interpreter = std::make_shared<mga::InternalClientWindow>(mir_surface, cache); 
     auto mnw = std::make_shared<mga::MirNativeWindow>(interpreter);

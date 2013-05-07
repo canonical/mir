@@ -56,7 +56,7 @@ struct InternalClientWindow : public ::testing::Test
         pf = geom::PixelFormat::abgr_8888;
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         mock_surface = std::make_shared<MockSurface>();
-        mock_buffer = std::make_shared<MockBuffer>();
+        mock_buffer = std::make_shared<mtd::MockBuffer>();
         stub_anw = std::make_shared<ANativeWindowBuffer>();
 
         ON_CALL(*mock_surface, client_buffer())
@@ -68,7 +68,7 @@ struct InternalClientWindow : public ::testing::Test
     std::shared_ptr<ANativeWindowBuffer> stub_anw;
     std::shared_ptr<mtd::MockInterpreterResourceCache> mock_cache;
     std::shared_ptr<MockSurface> mock_surface;
-    std::shared_ptr<MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer;
     geom::Size sz;
     geom::PixelFormat pf;
 };
