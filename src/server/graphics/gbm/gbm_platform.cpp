@@ -20,9 +20,9 @@
 
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
+#include "internal_client.h"
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/egl/mesa_native_display.h"
 
 #include <xf86drm.h>
 
@@ -31,7 +31,6 @@
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
-namespace mgeglm = mg::egl::mesa;
 namespace mc = mir::compositor;
 
 namespace
@@ -79,8 +78,7 @@ struct RealVTFileOperations : public mgg::VTFileOperations
 mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
                               std::shared_ptr<VirtualTerminal> const& vt)
     : listener{listener},
-      vt{vt},
-      native_display{0}
+      vt{vt}
 {
     drm.setup();
     gbm.setup(drm);
@@ -111,9 +109,9 @@ void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
 }
 
 std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client(
-    std::shared_ptr<frontend::Surface> const&)
+    std::shared_ptr<frontend::Surface> const& surface)
 {
-    return std::shared_ptr<mg::InternalClient>();
+    return std::make_shared<mgg::InternalClient>(this->shared_from_this(), surface);
 #if 0
     if (native_display)
         return reinterpret_cast<EGLNativeDisplayType>(native_display.get());

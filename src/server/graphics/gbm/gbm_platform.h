@@ -58,8 +58,6 @@ public:
     std::shared_ptr<DisplayReport> const listener;
     std::shared_ptr<VirtualTerminal> const vt;
 
-private:
-    std::shared_ptr<MirMesaEGLNativeDisplay> native_display;
 };
 
 }

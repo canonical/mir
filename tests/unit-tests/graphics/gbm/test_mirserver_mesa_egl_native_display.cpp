@@ -62,6 +62,7 @@ struct MirServerMesaEGLNativeDisplaySetup : public testing::Test
             .WillByDefault(Return(mt::fake_shared(test_platform_package)));
     }
 
+    std::shared_ptr<MirBufferPackage> platform_package;
     // Test dependencies
     MockGraphicsPlatform mock_graphics_platform;
 
@@ -110,22 +111,12 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, display_get_platform_is_cached_platfo
 {
     using namespace ::testing;
     
-    EXPECT_CALL(mock_graphics_platform, get_ipc_package()).Times(1);
-
-    auto display = mgeglm::create_native_display(mt::fake_shared(mock_graphics_platform));
+    ShellMesaEGLNativeDisplay native_display(platform_package); 
     
-    MirPlatformPackage package;
+    MirPlatformPackage test_package;
     memset(&package, 0, sizeof(MirPlatformPackage));
-    display->display_get_platform(display.get(), &package);
-    EXPECT_THAT(package, PackageMatches(test_platform_package));
-
-    MirPlatformPackage requeried_package;
-    // The package is cached to allow the package creator to control lifespan of fd members
-    // and so this should not trigger another call to get_ipc_package()
-    display->display_get_platform(display.get(), &requeried_package);
-    
-    EXPECT_FALSE(memcmp(&requeried_package.data, &package.data, sizeof(package.data[0])*package.data_items));
-    EXPECT_FALSE(memcmp(&requeried_package.fd, &package.fd, sizeof(package.fd[0])*package.fd_items));
+    native_display->display_get_platform(&native_display, &test_package);
+    EXPECT_THAT(test_package, PackageMatches(test_platform_package));
 }
 
 TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_current_buffer)

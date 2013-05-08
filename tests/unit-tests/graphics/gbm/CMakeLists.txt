@@ -9,6 +9,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_kms_output.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_kms_page_flipper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_linux_virtual_terminal.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_mirserver_mesa_egl_native_display.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
