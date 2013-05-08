@@ -114,13 +114,6 @@ std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client(
 {
     auto native_display = std::make_shared<mgg::InternalNativeDisplay>(get_ipc_package()); 
     return std::make_shared<mgg::InternalClient>(native_display, surface);
-#if 0
-    if (native_display)
-        return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
-    native_display = mgeglm::create_native_display(this->shared_from_this());
-    
-    return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
-#endif
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
@@ -130,13 +123,14 @@ std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport>
     return std::make_shared<mgg::GBMPlatform>(report, vt);
 }
 
-#if 0
 extern "C"
 {
-int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
+/* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different
+ *       implementations and both have symbols for it.
+ */
+int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* /*display*/)
 {
-    std::unique_lock<std::mutex> lg(valid_displays_guard);
-    return valid_displays.find(display) != valid_displays.end();
+    printf("ok..\n");
+    return 0;
 }
 }
-#endif
