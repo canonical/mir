@@ -70,29 +70,13 @@ class StubSurface : public mir::frontend::Surface
 
 TEST(InternalClient, native_display)
 {
-    auto surface = std::make_shared<StubSurface>();
-    auto platform = std::make_shared<mtd::StubPlatform>();
-    mgg::InternalClient client(platform, surface);
+    auto stub_window = std::make_shared<StubSurface>();
+    auto stub_display = std::make_shared<MirMesaEGLNativeDisplay>();
+    mgg::InternalClient client(stub_display, stub_window);
 
     auto native_display = client.egl_native_display();
-    MirMesaEGLNativeDisplay* disp = reinterpret_cast<MirMesaEGLNativeDisplay*>(native_display); 
+    auto native_window = client.egl_native_window();
 
-    ASSERT_NE(nullptr, disp);
-    EXPECT_NE(nullptr, disp->display_get_platform);
-    EXPECT_NE(nullptr, disp->surface_get_current_buffer);
-    EXPECT_NE(nullptr, disp->surface_get_parameters);
-    EXPECT_NE(nullptr, disp->surface_advance_buffer);
-    EXPECT_NE(nullptr, disp->context);
-}
-
-TEST(InternalClient, native_window)
-{
-    auto surface = std::make_shared<StubSurface>();
-    auto platform = std::make_shared<mtd::StubPlatform>();
-    mgg::InternalClient client(platform, surface);
-
-    auto native_display = client.egl_native_window();
-
-    //in mesa, mf::Surface is the EGLNativeWindowType
-    EXPECT_EQ(native_display, surface.get());
+    EXPECT_NE(reinterpret_cast<EGLNativeDisplayType>(stub_display.get()), native_display);
+    EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(stub_window.get()), native_window);
 }

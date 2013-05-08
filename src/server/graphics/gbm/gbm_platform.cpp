@@ -21,6 +21,7 @@
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
 #include "internal_client.h"
+#include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
 
@@ -111,7 +112,8 @@ void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
 std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client(
     std::shared_ptr<frontend::Surface> const& surface)
 {
-    return std::make_shared<mgg::InternalClient>(this->shared_from_this(), surface);
+    auto native_display = std::make_shared<mgg::InternalNativeDisplay>(get_ipc_package()); 
+    return std::make_shared<mgg::InternalClient>(native_display, surface);
 #if 0
     if (native_display)
         return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
@@ -127,3 +129,14 @@ std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport>
     auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, report);
     return std::make_shared<mgg::GBMPlatform>(report, vt);
 }
+
+#if 0
+extern "C"
+{
+int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
+{
+    std::unique_lock<std::mutex> lg(valid_displays_guard);
+    return valid_displays.find(display) != valid_displays.end();
+}
+}
+#endif
