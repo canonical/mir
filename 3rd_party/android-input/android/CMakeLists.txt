@@ -45,6 +45,7 @@ add_library(
   frameworks/base/services/input/VelocityControl.cpp
   frameworks/base/services/input/VelocityTracker.cpp
   frameworks/base/services/input/VirtualKeyMap.cpp
+  frameworks/base/services/input/MirLog.cpp
   frameworks/native/libs/utils/Tokenizer.cpp
   frameworks/native/libs/utils/FileMap.cpp
   ${UTIL_SOURCES}
