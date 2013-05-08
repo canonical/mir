@@ -44,8 +44,8 @@ public:
     EGLNativeWindowType egl_native_window();
 
 private:
+    std::shared_ptr<MirMesaEGLNativeDisplay> const native_display;
     std::shared_ptr<frontend::Surface> const surface;
-    std::shared_ptr<MirMesaEGLNativeDisplay> native_display;
 };
 
 }

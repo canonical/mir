@@ -150,12 +150,12 @@ TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal
 {
     auto stub_surface = std::make_shared<mtd::StubSurface>();
     MirMesaEGLNativeDisplay* native_display = nullptr;
-    EXPECT_FALSE(mir_egl_mesa_display_is_valid(native_display));
+    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
     {
         auto platform = create_platform();
         auto client = platform->create_internal_client(stub_surface);
         native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
-        EXPECT_TRUE(mir_egl_mesa_display_is_valid(native_display));
+        EXPECT_EQ(1, mir_server_internal_display_is_valid(native_display));
     }
-    EXPECT_FALSE(mir_egl_mesa_display_is_valid(native_display));
+    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
 }

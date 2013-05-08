@@ -33,7 +33,7 @@ namespace gbm
 {
 
 class VirtualTerminal;
-
+class InternalNativeDisplay;
 class GBMPlatform : public Platform,
                     public DRMAuthenticator,
                     public std::enable_shared_from_this<GBMPlatform>
@@ -41,6 +41,7 @@ class GBMPlatform : public Platform,
 public:
     explicit GBMPlatform(std::shared_ptr<DisplayReport> const& reporter,
                          std::shared_ptr<VirtualTerminal> const& vt);
+    ~GBMPlatform();
 
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
@@ -58,6 +59,9 @@ public:
     std::shared_ptr<DisplayReport> const listener;
     std::shared_ptr<VirtualTerminal> const vt;
 
+    //connection shared by all internal clients
+    static bool internal_display_clients_present;
+    static std::shared_ptr<InternalNativeDisplay> internal_native_display;
 };
 
 }

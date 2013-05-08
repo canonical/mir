@@ -73,6 +73,7 @@ static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display *
 
 int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
+    printf("client function\n");
     return mcl::EGLNativeDisplayContainer::instance().validate(display);
 }
 
