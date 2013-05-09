@@ -96,7 +96,7 @@ namespace logging
 class Logger;
 }
 
-class DefaultServerConfiguration : public ServerConfiguration
+class DefaultServerConfiguration : public virtual ServerConfiguration
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
