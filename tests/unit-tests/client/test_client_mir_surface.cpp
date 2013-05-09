@@ -162,13 +162,10 @@ struct MockBuffer : public mcl::ClientBuffer
 {
     MockBuffer()
     {
-        using namespace testing;
-
-        //auto buffer_package = std::make_shared<MirBufferPackage>();
-        //ON_CALL(*this, native_buffer_handle())
-        //    .WillByDefault(Return(buffer_package));
     }
-    ~MockBuffer() noexcept {}
+    ~MockBuffer() noexcept
+    {
+    }
 
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
@@ -375,7 +372,6 @@ MATCHER_P(BufferPackageMatches, package, "")
     return true;
 }
 
-#if 0
 TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_create)
 {
     using namespace testing;
@@ -394,7 +390,6 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     /* check for same contents */
     EXPECT_THAT(*submitted_package, BufferPackageMatches(mock_server_tool->server_package));
 }
-#endif
 
 TEST_F(MirClientSurfaceTest, message_width_used_in_buffer_creation )
 {
@@ -497,7 +492,6 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_
     }
 }
 
-#if 0
 TEST_F(MirClientSurfaceTest, get_buffer_returns_last_received_buffer_package)
 {
     using namespace testing;
@@ -515,17 +509,15 @@ TEST_F(MirClientSurfaceTest, get_buffer_returns_last_received_buffer_package)
                                                  nullptr);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
-
-    EXPECT_THAT(*surface->get_current_buffer_package(), BufferPackageMatches(mock_server_tool->server_package));
+    Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
 
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, nullptr);
     buffer_wait_handle->wait_for_result();
-
-    EXPECT_THAT(*surface->get_current_buffer_package(), BufferPackageMatches(mock_server_tool->server_package));
+    Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
 }
-#endif
+
 TEST_F(MirClientSurfaceTest, default_surface_type)
 {
     using namespace testing;
