@@ -19,6 +19,7 @@
 #include "inprocess_egl_client.h"
 #include "example_egl_helper.h"
 
+#include "mir/main_loop.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
 #include "mir/frontend/surface_creation_parameters.h"
@@ -34,6 +35,8 @@
 #include <functional>
 
 #include <assert.h>
+#include <signal.h>
+
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
@@ -42,12 +45,20 @@ namespace mg = mir::graphics;
 namespace me = mir::examples;
 namespace geom = mir::geometry;
 
-me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
+me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
+                                           std::shared_ptr<mg::Platform> const& graphics_platform,
                                            std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
   : graphics_platform(graphics_platform),
     surface_factory(surface_factory),
-    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this)
+    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this),
+    terminate(false)
 {
+    main_loop->register_signal_handler({SIGTERM, SIGINT},
+        [this](int)
+        {
+            terminate = true;
+        }
+    );
     client_thread.detach();
 }
 
@@ -73,7 +84,7 @@ void me::InprocessEGLClient::thread_loop()
     ///\internal [setup_tag]
 
     ///\internal [loop_tag]
-    for(;;)
+    while(!terminate)
     {
         gl_animation.render_gl();
         rc = eglSwapBuffers(helper.the_display(), helper.the_surface());
