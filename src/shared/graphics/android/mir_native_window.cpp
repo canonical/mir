@@ -80,15 +80,15 @@ int perform_static(ANativeWindow* window, int key, ...)
     return ret;
 }
 
-int dequeueBuffer_deprecated_static(struct ANativeWindow* window,
-                                    struct ANativeWindowBuffer** buffer)
+int dequeueBuffer_deprecated_static (struct ANativeWindow* window,
+                          struct ANativeWindowBuffer** buffer)
 {
     auto self = static_cast<mga::MirNativeWindow*>(window);
     return self->dequeueBuffer(buffer);
 }
 
-int dequeueBuffer_static(struct ANativeWindow* window,
-                         struct ANativeWindowBuffer** buffer, int* fence_fd)
+int dequeueBuffer_static (struct ANativeWindow* window,
+                          struct ANativeWindowBuffer** buffer, int* fence_fd)
 {
     *fence_fd = -1;
     auto self = static_cast<mga::MirNativeWindow*>(window);
@@ -115,7 +115,7 @@ int queueBuffer_static(struct ANativeWindow* window,
 }
 
 /* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
-int setSwapInterval_static(struct ANativeWindow* /*window*/, int /*interval*/)
+int setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
 {
     return 0;
 }
