@@ -25,12 +25,15 @@
 
 namespace mir
 {
+namespace compositor
+{
+class Buffer;
+}
 namespace graphics
 {
 namespace android
 {
 
-class AndroidBuffer;
 class DisplaySupportProvider
 {
 public:
@@ -41,7 +44,7 @@ public:
     virtual unsigned int number_of_framebuffers_available() const = 0;
     //this function schedules the next frontbuffer to be "buffer" parameter. depending on implementation, it may
     //post immediately, or be deferred.
-    virtual void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer) = 0;
+    virtual void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
 
 protected:
     DisplaySupportProvider() = default;

@@ -34,7 +34,7 @@ struct MockHWCOrganizer : public graphics::android::HWCLayerOrganizer
 {
     ~MockHWCOrganizer() noexcept {}
     MOCK_CONST_METHOD0(native_list, graphics::android::LayerList const&());
-    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<graphics::android::AndroidBuffer> const&));
+    MOCK_METHOD1(set_fb_target, void(std::shared_ptr<compositor::Buffer> const&));
 };
 
 }

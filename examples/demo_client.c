@@ -40,6 +40,8 @@
 /// \snippet demo_client.c surface_release_tag
 ///\subsection connection_release We release our connection
 /// \snippet demo_client.c connection_release_tag
+///\subsection get the raw, platform-specific buffer handle for the current buffer
+/// \snippet demo_client.c get_current_buffer_tag
 /// \example demo_client.c A simple mir client
 ///\section MirDemoState MirDemoState
 /// The handles needs to be accessible both to callbacks and to the control function.
@@ -156,13 +158,18 @@ void demo_client(const char* server, int buffer_swap_count)
     {
         // We can query the current graphics buffer attributes
         {
-            MirBufferPackage buffer_package;
-            buffer_package.data_items = -1;
-            buffer_package.fd_items = -1;
+            ///\internal [get_current_buffer_tag]
+            MirNativeBuffer* buffer_package = NULL;
             mir_surface_get_current_buffer(mcd.surface, &buffer_package);
-            assert(0 <= buffer_package.data_items);
-            assert(0 <= buffer_package.fd_items);
-
+            assert(buffer_package != NULL);
+            if (mir_platform_type_gbm == mir_surface_get_platform_type(mcd.surface))
+            {
+                // Interpret buffer_package as MirBufferPackage
+            } else if (mir_platform_type_android == mir_surface_get_platform_type(mcd.surface))
+            {
+                // Interpret buffer_package as ANativeWindowBuffer
+            }
+            ///\internal [get_current_buffer_tag]
             // In a real application we'd render into the current buffer
         }
 

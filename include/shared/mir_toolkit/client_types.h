@@ -118,7 +118,15 @@ typedef struct MirSurfaceParameters
 
 enum { mir_platform_package_max = 32 };
 
-/** TODO */
+/**
+ * The native buffer type for the system the client is connected on
+ */
+typedef enum MirPlatformType
+{
+    mir_platform_type_gbm,
+    mir_platform_type_android    
+} MirPlatformType;
+
 typedef struct MirPlatformPackage
 {
     int data_items;
@@ -128,22 +136,6 @@ typedef struct MirPlatformPackage
     int fd[mir_platform_package_max];
 } MirPlatformPackage;
 
-enum { mir_buffer_package_max = 32 };
-
-/** TODO */
-typedef struct MirBufferPackage
-{
-    int data_items;
-    int fd_items;
-
-    int data[mir_buffer_package_max];
-    int fd[mir_buffer_package_max];
-
-    int stride;
-    int age; /**< Number of frames submitted by the client since the client has rendered to this buffer. */
-             /**< This has the same semantics as the EGL_EXT_buffer_age extension */
-             /**< \see http://www.khronos.org/registry/egl/extensions/EXT/EGL_EXT_buffer_age.txt */
-} MirBufferPackage;
 
 /**
  * Retrieved information about a MirSurface. This is most useful for learning

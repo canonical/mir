@@ -20,11 +20,25 @@
 #ifndef MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 #define MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 
+enum { mir_buffer_package_max = 32 };
+typedef struct MirBufferPackage
+{
+    int data_items;
+    int fd_items;
+
+    int data[mir_buffer_package_max];
+    int fd[mir_buffer_package_max];
+
+    int stride;
+    int age; /**< Number of frames submitted by the client since the client has rendered to this buffer. */
+             /**< This has the same semantics as the EGL_EXT_buffer_age extension */
+             /**< \see http://www.khronos.org/registry/egl/extensions/EXT/EGL_EXT_buffer_age.txt */
+} MirBufferPackage;
+
 #ifdef ANDROID
 struct ANativeWindowBuffer;
-typedef ANativeWindowBuffer* MirNativeBuffer;
+typedef struct ANativeWindowBuffer MirNativeBuffer;
 #else
-typedef void* MirNativeBuffer;
+typedef struct MirBufferPackage MirNativeBuffer; 
 #endif
-
 #endif /* MIR_CLIENT_MIR_NATIVE_BUFFER_H_ */

@@ -39,7 +39,7 @@ public:
     geometry::PixelFormat display_format() const; 
     unsigned int number_of_framebuffers_available() const;
 
-    void set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer);
+    void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
 };

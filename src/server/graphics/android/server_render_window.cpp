@@ -21,7 +21,7 @@
 #include "server_render_window.h"
 #include "display_support_provider.h"
 #include "fb_swapper.h"
-#include "android_buffer.h"
+#include "buffer.h"
 #include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>

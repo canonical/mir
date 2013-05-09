@@ -160,14 +160,11 @@ struct MockServerPackageGenerator : public StubServerTool
 
 struct MockBuffer : public mcl::ClientBuffer
 {
-    explicit MockBuffer(std::shared_ptr<MirBufferPackage> const& contents)
+    MockBuffer()
     {
-        using namespace testing;
-
-        auto buffer_package = std::make_shared<MirBufferPackage>();
-        *buffer_package = *contents;
-        ON_CALL(*this, get_buffer_package())
-            .WillByDefault(Return(buffer_package));
+    }
+    ~MockBuffer() noexcept
+    {
     }
 
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
@@ -177,8 +174,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(age, uint32_t());
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD0(mark_as_submitted, void());
-    MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
-    MOCK_METHOD0(get_native_handle, MirNativeBuffer());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
@@ -187,11 +183,11 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     {
         using namespace testing;
 
-        emptybuffer=std::make_shared<NiceMock<MockBuffer>>(std::make_shared<MirBufferPackage>());
+        emptybuffer=std::make_shared<NiceMock<MockBuffer>>();
 
         ON_CALL(*this, create_buffer(_,_,_))
             .WillByDefault(DoAll(SaveArg<0>(&current_package),
-                                 InvokeWithoutArgs([this] () {this->current_buffer = std::make_shared<NiceMock<MockBuffer>>(current_package);}),
+                                 InvokeWithoutArgs([this] () {this->current_buffer = std::make_shared<NiceMock<MockBuffer>>();}),
                                  ReturnPointee(&current_buffer)));
     }
 
@@ -204,9 +200,12 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     std::shared_ptr<mcl::ClientBuffer> emptybuffer;
 };
 
-
 struct StubClientPlatform : public mcl::ClientPlatform
 {
+    MirPlatformType platform_type() const
+    {
+        return mir_platform_type_android; 
+    } 
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
         return std::shared_ptr<MockClientBufferFactory>();
@@ -510,15 +509,13 @@ TEST_F(MirClientSurfaceTest, get_buffer_returns_last_received_buffer_package)
                                                  nullptr);
     auto wait_handle = surface->get_create_wait_handle();
     wait_handle->wait_for_result();
-
-    EXPECT_THAT(*surface->get_current_buffer_package(), BufferPackageMatches(mock_server_tool->server_package));
+    Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
 
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, nullptr);
     buffer_wait_handle->wait_for_result();
-
-    EXPECT_THAT(*surface->get_current_buffer_package(), BufferPackageMatches(mock_server_tool->server_package));
+    Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
 }
 
 TEST_F(MirClientSurfaceTest, default_surface_type)
@@ -589,14 +586,9 @@ struct StubBuffer : public mcl::ClientBuffer
     void increment_age() {}
     void mark_as_submitted() {}
 
-    std::shared_ptr<MirBufferPackage> get_buffer_package() const
+    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
     {
-        return std::shared_ptr<MirBufferPackage>();
-    }
-
-    MirNativeBuffer get_native_handle()
-    {
-        return MirNativeBuffer();
+        return std::shared_ptr<MirNativeBuffer>();
     }
 
     geom::Size size_;

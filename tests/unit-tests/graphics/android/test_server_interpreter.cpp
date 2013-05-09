@@ -20,7 +20,7 @@
 #include "src/server/graphics/android/fb_swapper.h"
 
 #include "mir_test_doubles/mock_display_support_provider.h"
-#include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -43,17 +43,17 @@ struct StubFence : public mga::SyncObject
 struct MockFBSwapper : public mga::FBSwapper
 {
     ~MockFBSwapper() noexcept {}
-    MOCK_METHOD0(compositor_acquire, std::shared_ptr<mga::AndroidBuffer>());
-    MOCK_METHOD1(compositor_release, void(std::shared_ptr<mga::AndroidBuffer> const& released_buffer));
+    MOCK_METHOD0(compositor_acquire, std::shared_ptr<mc::Buffer>());
+    MOCK_METHOD1(compositor_release, void(std::shared_ptr<mc::Buffer> const& released_buffer));
 }; 
 struct ServerRenderWindowTest : public ::testing::Test
 {
     virtual void SetUp()
     {
         using namespace testing;
-        mock_buffer1 = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
-        mock_buffer2 = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
-        mock_buffer3 = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
+        mock_buffer1 = std::make_shared<NiceMock<mtd::MockBuffer>>();
+        mock_buffer2 = std::make_shared<NiceMock<mtd::MockBuffer>>();
+        mock_buffer3 = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_swapper = std::make_shared<NiceMock<MockFBSwapper>>();
         mock_display_poster = std::make_shared<NiceMock<mtd::MockDisplaySupportProvider>>();
         ON_CALL(*mock_display_poster, display_format())
@@ -61,9 +61,9 @@ struct ServerRenderWindowTest : public ::testing::Test
         stub_sync = std::make_shared<StubFence>();
     }
 
-    std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer1;
-    std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer2;
-    std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer3;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer1;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer2;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer3;
     std::shared_ptr<MockFBSwapper> mock_swapper;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_poster;
     std::shared_ptr<StubFence> stub_sync;
@@ -106,7 +106,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     render_window.driver_requests_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
-    std::shared_ptr<mga::AndroidBuffer> buf1 = mock_buffer1;
+    std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))
         .Times(1);
     EXPECT_CALL(*stub_sync, wait())
@@ -147,9 +147,9 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_few_buffers_properly)
     auto handle3 = render_window.driver_requests_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
-    std::shared_ptr<mga::AndroidBuffer> buf1 = mock_buffer1;
-    std::shared_ptr<mga::AndroidBuffer> buf2 = mock_buffer2;
-    std::shared_ptr<mga::AndroidBuffer> buf3 = mock_buffer3;
+    std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
+    std::shared_ptr<mc::Buffer> buf2 = mock_buffer2;
+    std::shared_ptr<mc::Buffer> buf3 = mock_buffer3;
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))
         .Times(1);
     EXPECT_CALL(*mock_swapper, compositor_release(buf2))
@@ -183,13 +183,17 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
     using namespace testing;
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster);
 
+    auto stub_anw = std::make_shared<ANativeWindowBuffer>();
     mc::BufferID id{442}, returned_id;
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_swapper, compositor_release(_))
         .Times(1);
-    std::shared_ptr<mga::AndroidBuffer> buf1 = mock_buffer1;
+    std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
+    EXPECT_CALL(*mock_buffer1, native_buffer_handle())
+        .Times(1)
+        .WillOnce(Return(stub_anw));
     EXPECT_CALL(*mock_display_poster, set_next_frontbuffer(buf1))
         .Times(1);
 

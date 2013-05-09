@@ -31,6 +31,10 @@
 
 namespace mir
 {
+namespace compositor
+{
+class Buffer;
+}
 namespace graphics
 {
 namespace android
@@ -38,7 +42,6 @@ namespace android
 
 class FBSwapper;
 class DisplaySupportProvider;
-class AndroidBuffer;
 class ServerRenderWindow : public AndroidDriverInterpreter 
 {
 public:
@@ -54,7 +57,7 @@ private:
     std::shared_ptr<FBSwapper> const swapper;
     std::shared_ptr<DisplaySupportProvider> const poster;
 
-    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<AndroidBuffer>> buffers_in_driver;
+    std::unordered_map<ANativeWindowBuffer*, std::shared_ptr<compositor::Buffer>> buffers_in_driver;
 
     int format;
 }; 

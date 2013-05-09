@@ -22,6 +22,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -71,7 +72,7 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
     return 2u;
 }
  
-void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& buffer)
+void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buffer)
 {
     layer_organizer->set_fb_target(buffer);
     fb_device->set_next_frontbuffer(buffer);

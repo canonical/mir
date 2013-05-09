@@ -102,3 +102,8 @@ mcla::AndroidClientPlatform::create_egl_native_display()
     *native_display = EGL_DEFAULT_DISPLAY;
     return native_display;
 }
+
+MirPlatformType mcla::AndroidClientPlatform::platform_type() const
+{
+    return mir_platform_type_android; 
+} 

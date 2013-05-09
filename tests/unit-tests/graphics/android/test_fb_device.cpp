@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_doubles/mock_fb_hal_device.h"
-#include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "src/server/graphics/android/fb_device.h"
 #include "mir_test/hw_mock.h"
 
@@ -42,7 +42,7 @@ struct FBDevice : public ::testing::Test
         format = HAL_PIXEL_FORMAT_RGBA_8888;
 
         fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum); 
-        mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
 
         dummy_buffer = std::make_shared<ANativeWindowBuffer>();
         dummy_buffer->handle = (buffer_handle_t) 0x4893;
@@ -52,7 +52,7 @@ struct FBDevice : public ::testing::Test
 
     unsigned int width, height, format, fbnum;
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
-    std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<ANativeWindowBuffer> dummy_buffer;
     mt::HardwareAccessMock hw_access_mock;
 };
