@@ -31,10 +31,10 @@ mgg::InternalClient::InternalClient(std::shared_ptr<MirMesaEGLNativeDisplay> con
 
 EGLNativeDisplayType mgg::InternalClient::egl_native_display()
 {
-    return (EGLNativeDisplayType) native_display.get();
+    return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
 }
 
 EGLNativeWindowType mgg::InternalClient::egl_native_window()
 {
-    return (EGLNativeWindowType) surface.get();
+    return reinterpret_cast<EGLNativeWindowType>(surface.get());
 }

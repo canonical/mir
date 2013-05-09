@@ -18,6 +18,7 @@
 
 #ifndef MIR_GRAPHICS_ANDROID_INTERPRETER_CACHE_H_
 #define MIR_GRAPHICS_ANDROID_INTERPRETER_CACHE_H_
+
 #include "interpreter_resource_cache.h"
 #include <unordered_map>
 

@@ -54,10 +54,6 @@ void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* handl
 void mga::InternalClientWindow::dispatch_driver_request_format(int request_format)
 {
     format = request_format;
-//    if (request_format != mga::to_android_format(surface->pixel_format()))
-//    {
-//        BOOST_THROW_EXCEPTION(std::runtime_error("driver expects incompatible format"));
-//    }
 }
 
 int mga::InternalClientWindow::driver_requests_info(int key) const
