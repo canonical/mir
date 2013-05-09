@@ -252,7 +252,7 @@ class RenderSurfacesServerConfiguration : public mir::DefaultServerConfiguration
 {
 public:
     RenderSurfacesServerConfiguration(int argc, char const** argv)
-        : mir::DefaultServerConfiguration{argc, argv}
+        : mir::DefaultServerConfiguration(argc, argv)
     {
         namespace po = boost::program_options;
 
