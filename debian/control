@@ -114,7 +114,7 @@ Description: Display server for Ubuntu - development headers
 Package: mir-demos
 Architecture: any
 Depends: ${misc:Depends},
-        libmirclient-dev(= ${binary:Version}),
+         ${shlibs:Depends}
 Breaks: mir (<< 0.0.2-0ubuntu1),
         libmirclient-demos
 Replaces: libmirclient-demos
