@@ -28,11 +28,11 @@ namespace mir
 {
 namespace graphics
 {
-class PlatformIPCPackage;
+struct PlatformIPCPackage;
 namespace gbm
 {
 
-struct InternalNativeDisplay : MirMesaEGLNativeDisplay
+class InternalNativeDisplay : public MirMesaEGLNativeDisplay
 {
 public:
     InternalNativeDisplay(std::shared_ptr<PlatformIPCPackage> const& platform_package);
