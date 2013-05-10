@@ -42,6 +42,7 @@ class NullDisplayReport : public graphics::DisplayReport
     virtual void report_vt_switch_back_failure();
     virtual void report_hwc_composition_in_use(int major, int minor);
     virtual void report_gpu_composition_in_use();
+    virtual void report_egl_configuration(EGLDisplay disp, EGLConfig cfg);
 };
 }
 }

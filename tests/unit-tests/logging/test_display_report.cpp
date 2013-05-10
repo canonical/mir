@@ -48,7 +48,7 @@ struct DisplayReport : public testing::Test
     mir::EglMock mock_egl;
 };
 
-char const* const component = "android-input";
+char const* const component = "graphics";
 
 #define STRMACRO(X) #X
 std::string egl_string_mapping [] =
@@ -76,7 +76,6 @@ std::string egl_string_mapping [] =
     STRMACRO(EGL_TRANSPARENT_BLUE_VALUE),
     STRMACRO(EGL_TRANSPARENT_GREEN_VALUE),
     STRMACRO(EGL_TRANSPARENT_RED_VALUE),
-    STRMACRO(EGL_NONE),
     STRMACRO(EGL_BIND_TO_TEXTURE_RGB),
     STRMACRO(EGL_BIND_TO_TEXTURE_RGBA),
     STRMACRO(EGL_MIN_SWAP_INTERVAL),
@@ -116,5 +115,5 @@ TEST_F(DisplayReport, eglconfig)
     }
 
     ml::DisplayReport report(logger);
-    report.report_egl_configuration(disp, config)
+    report.report_egl_configuration(disp, config);
 }
