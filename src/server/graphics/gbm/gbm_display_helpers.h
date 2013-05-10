@@ -104,6 +104,7 @@ public:
 
     EGLContext context() { return egl_context; }
 
+    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
 private:
     void setup_internal(GBMHelper const& gbm, bool initialize);
 
