@@ -524,6 +524,8 @@ TYPED_TEST(AndroidTestFramebufferInit, startup_logging_ok)
     using namespace testing;
     EXPECT_CALL(*this->mock_display_report, report_successful_setup_of_native_resources())
         .Times(Exactly(1));
+    EXPECT_CALL(*this->mock_display_report, report_egl_configuration(_))
+        .Times(Exactly(1));
     EXPECT_CALL(*this->mock_display_report, report_successful_egl_make_current_on_construction())
         .Times(Exactly(1));
     EXPECT_CALL(*this->mock_display_report, report_successful_display_construction())

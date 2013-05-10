@@ -54,7 +54,7 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
 
     if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
+//        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
     }
     
     if (hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1) != 0)

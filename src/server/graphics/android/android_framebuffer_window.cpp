@@ -57,6 +57,7 @@ EGLConfig mga::AndroidFramebufferWindow::android_display_egl_config(EGLDisplay e
     /* upon return, this will fill config_slots[0:num_match_configs] with the matching */
     eglChooseConfig(egl_display, default_egl_config_attr,
                     config_slots.data(), num_potential_configs, &num_match_configs);
+    printf("ok... matches.. %i\n", num_match_configs);
     config_slots.resize(num_match_configs);
 
     /* why check manually for EGL_NATIVE_VISUAL_ID instead of using eglChooseConfig? the egl

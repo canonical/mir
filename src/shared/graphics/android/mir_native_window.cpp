@@ -22,7 +22,7 @@
 
 #include <unistd.h>
 #include <sys/ioctl.h>
-
+#include <stdio.h>
 namespace mga=mir::graphics::android;
 
 namespace
@@ -163,24 +163,28 @@ mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> 
 
 int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)
 {
+    printf("dequeue\n");
     *buffer_to_driver = driver_interpreter->driver_requests_buffer();
     return 0;
 }
 
 int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, std::shared_ptr<mga::SyncObject> const& fence)
 {
+    printf("queue\n");
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
 
 int mga::MirNativeWindow::query(int key, int* value ) const
 {
+    printf("query... %i\n", key);
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }
 
 int mga::MirNativeWindow::perform(int key, va_list arg_list )
 {
+    printf("perform... %i\n", key);
     int ret = 0;
     va_list args;
     va_copy(args, arg_list);
