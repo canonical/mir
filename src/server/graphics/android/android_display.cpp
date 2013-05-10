@@ -101,6 +101,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
+    display_report->report_egl_configuration(egl_display, egl_config);
 }
 
 mga::AndroidDisplay::~AndroidDisplay()

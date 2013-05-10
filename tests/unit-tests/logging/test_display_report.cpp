@@ -106,11 +106,15 @@ TEST_F(DisplayReport, eglconfig)
         .Times(AnyNumber())
         .WillRepeatedly(DoAll(SetArgPointee<3>(dummy_value),Return(EGL_TRUE)));
 
+    EXPECT_CALL(*logger, log(
+        ml::Logger::informational,
+        "Display EGL Configuration:",
+        component));
     for(auto &i : egl_string_mapping)
     {
         EXPECT_CALL(*logger, log(
             ml::Logger::informational,
-            "[" + i + "] : " + std::to_string(dummy_value),
+            "    [" + i + "] : " + std::to_string(dummy_value),
             component));
     }
 

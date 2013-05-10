@@ -142,11 +142,12 @@ void ml::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig conf
     };
     #undef STRMACRO
 
+    logger->log<Logger::informational>("Display EGL Configuration:", component());
     for( auto &i : egl_string_mapping)
     {
         EGLint value;
         eglGetConfigAttrib(disp, config, i.val, &value);
         logger->log<Logger::informational>(
-            "[" + i.name + "] : " + std::to_string(value), component());
+            "    [" + i.name + "] : " + std::to_string(value), component());
     } 
 }
