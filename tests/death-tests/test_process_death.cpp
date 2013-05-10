@@ -20,7 +20,6 @@
 
 #include <gtest/gtest.h>
 
-#if defined(MIR_DEATH_TESTS_ENABLED)
 TEST(ProcessDeathTest,
      construction_with_an_invalid_pid_triggers_assertion)
 {
@@ -29,7 +28,3 @@ TEST(ProcessDeathTest,
         ::testing::KilledBySignal(SIGABRT),
         ".*");
 }
-#endif // defined(MIR_DEATH_TESTS_ENABLED)
-
-
-
