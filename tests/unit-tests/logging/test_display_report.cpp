@@ -41,6 +41,10 @@ struct DisplayReport : public testing::Test
 {
     DisplayReport()
     {
+    }
+
+    void SetUp()
+    {
         logger = std::make_shared<MockLogger>();
     }
 
