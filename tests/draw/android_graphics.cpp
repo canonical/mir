@@ -33,7 +33,7 @@ namespace
 {
 struct RegionDeleter
 {
-    RegionDeleter(gralloc_module_t* grmod, native_handle_t* handle)
+    RegionDeleter(gralloc_module_t* grmod, native_handle_t const* handle)
      : grmod(grmod),
        handle(handle)
     {
@@ -42,12 +42,11 @@ struct RegionDeleter
     void operator()(MirGraphicsRegion* region)
     {
         grmod->unlock(grmod, handle);
-        free(handle);
         delete region;
     }
 
     gralloc_module_t *grmod;
-    native_handle_t *handle;
+    native_handle_t const* handle;
 };
 
 static const char* proc_dir = "/proc";
@@ -97,32 +96,20 @@ mtd::TestGrallocMapper::~TestGrallocMapper()
         gralloc_close(alloc_dev);
 }
 
-std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::get_graphic_region_from_package(
-                        const std::shared_ptr<mc::BufferIPCPackage>& package,
-                        geom::Size sz)
+std::shared_ptr<MirGraphicsRegion> mtd::TestGrallocMapper::graphic_region_from_handle(
+                        std::shared_ptr<ANativeWindowBuffer> const& package)
 {
-    native_handle_t* handle;
-    handle = (native_handle_t*) malloc(sizeof(int) * ( 3 + package->ipc_data.size() + package->ipc_fds.size() ));
-    handle->version = sizeof(native_handle_t);
-    handle->numInts = package->ipc_data.size();
-    handle->numFds  = package->ipc_fds.size();
-    int i;
-    for(i = 0; i< handle->numFds; i++)
-        handle->data[i] = package->ipc_fds[i];
-    for(; i < handle->numFds + handle->numInts; i++)
-        handle->data[i] = package->ipc_data[i-handle->numFds];
-
     int *vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
-    module->lock(module, handle, usage, 0, 0, sz.width.as_uint32_t(), sz.height.as_uint32_t(), (void**) &vaddr);
+    module->lock(module, package->handle, usage, 0, 0, package->width, package->height, (void**) &vaddr);
 
     MirGraphicsRegion* region = new MirGraphicsRegion;
-    RegionDeleter del(module, handle);
+    RegionDeleter del(module, package->handle);
 
     region->vaddr = (char*) vaddr;
     region->stride = package->stride;
-    region->width = sz.width.as_uint32_t();
-    region->height = sz.height.as_uint32_t();
+    region->width = package->width;
+    region->height = package->height;
     region->pixel_format = mir_pixel_format_abgr_8888;
 
     return std::shared_ptr<MirGraphicsRegion>(region, del);
