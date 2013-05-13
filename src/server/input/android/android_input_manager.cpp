@@ -64,6 +64,7 @@ void mia::InputManager::start()
 {
     dispatcher->setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen);
     dispatcher->setInputFilterEnabled(true);
+    event_hub->flush();
 
     reader_thread->start();
     dispatcher_thread->start();

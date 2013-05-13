@@ -1498,5 +1498,22 @@ void EventHub::monitor() {
     mLock.unlock();
 }
 
+void EventHub::flush() {
+    static const int bufferSize = 256;
+
+    AutoMutex _l(mLock);
+
+    char readBuffer[bufferSize];
+    int32_t readSize;
+
+    // Read any pending events from the input devices. Note that
+    // the device fds are in non-blocking mode (see openDeviceLocked).
+    for (size_t i = 0; i < mDevices.size(); i++) {
+        const Device* device = mDevices.valueAt(i);
+        do {
+            readSize = read(device->fd, readBuffer, bufferSize);
+        } while (readSize > 0);
+    }
+}
 
 }; // namespace android

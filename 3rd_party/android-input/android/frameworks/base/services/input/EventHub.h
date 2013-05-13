@@ -236,6 +236,9 @@ public:
 
     /* Called by the heatbeat to ensures that the reader has not deadlocked. */
     virtual void monitor() = 0;
+
+    /* Flush all pending events not yet read from the input devices */
+    virtual void flush() = 0;
 };
 
 class EventHub : public EventHubInterface
@@ -293,6 +296,7 @@ public:
 
     virtual void dump(String8& dump);
     virtual void monitor();
+    virtual void flush();
 
 protected:
     virtual ~EventHub();
