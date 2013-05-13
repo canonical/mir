@@ -19,12 +19,14 @@
 #include "inprocess_egl_client.h"
 #include "example_egl_helper.h"
 
+#include "mir/main_loop.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/internal_client.h"
 
 #include "graphics.h"
 
@@ -33,6 +35,8 @@
 #include <functional>
 
 #include <assert.h>
+#include <signal.h>
+
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
@@ -41,12 +45,20 @@ namespace mg = mir::graphics;
 namespace me = mir::examples;
 namespace geom = mir::geometry;
 
-me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
+me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
+                                           std::shared_ptr<mg::Platform> const& graphics_platform,
                                            std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
   : graphics_platform(graphics_platform),
     surface_factory(surface_factory),
-    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this)
+    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this),
+    terminate(false)
 {
+    main_loop->register_signal_handler({SIGTERM, SIGINT},
+        [this](int)
+        {
+            terminate = true;
+        }
+    );
     client_thread.detach();
 }
 
@@ -61,9 +73,8 @@ void me::InprocessEGLClient::thread_loop()
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
     auto surface = surface_factory->create_surface(params, mf::SurfaceId(), std::shared_ptr<events::EventSink>());
-
-    auto native_display = graphics_platform->shell_egl_display();
-    me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display), reinterpret_cast<EGLNativeWindowType>(surface.get()));
+    auto internal_client = graphics_platform->create_internal_client(surface);
+    me::EGLHelper helper(internal_client->egl_native_display(), internal_client->egl_native_window());
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
     assert(rc == EGL_TRUE);
@@ -73,7 +84,7 @@ void me::InprocessEGLClient::thread_loop()
     ///\internal [setup_tag]
 
     ///\internal [loop_tag]
-    for(;;)
+    while(!terminate)
     {
         gl_animation.render_gl();
         rc = eglSwapBuffers(helper.the_display(), helper.the_surface());

@@ -24,6 +24,7 @@
 
 namespace mir
 {
+class MainLoop;
 namespace graphics
 {
 class Platform;
@@ -40,7 +41,8 @@ namespace examples
 class InprocessEGLClient
 {
 public:
-    InprocessEGLClient(std::shared_ptr<graphics::Platform> const& graphics_platform,
+    InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
+                       std::shared_ptr<graphics::Platform> const& graphics_platform,
                        std::shared_ptr<shell::SurfaceFactory> const& surface_factory);
 
 protected:
@@ -50,9 +52,10 @@ protected:
 private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<shell::SurfaceFactory> const surface_factory;
-    
+
     std::thread client_thread;
     void thread_loop();
+    bool terminate;
 };
 
 }

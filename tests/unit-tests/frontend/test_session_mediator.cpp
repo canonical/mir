@@ -33,6 +33,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_platform.h"
 #include "mir_test/fake_shared.h"
 #include "mir/events/event_sink.h"
 #include "mir/shell/surface.h"
@@ -104,31 +105,6 @@ public:
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 };
 
-class StubPlatform : public mg::Platform
-{
- public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
-    {
-        return std::shared_ptr<mc::GraphicBufferAllocator>();
-    }
-
-    std::shared_ptr<mg::Display> create_display()
-    {
-        return std::make_shared<mtd::NullDisplay>();
-    }
-
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
-    }
-    
-    EGLNativeDisplayType shell_egl_display()
-    {
-        return static_cast<EGLNativeDisplayType>(0);
-    }
-};
-
 class NullEventSink : public mir::events::EventSink
 {
 public:
@@ -139,7 +115,7 @@ struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
-          graphics_platform{std::make_shared<StubPlatform>()},
+          graphics_platform{std::make_shared<mtd::StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},

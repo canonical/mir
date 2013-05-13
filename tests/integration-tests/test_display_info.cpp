@@ -34,6 +34,7 @@
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
@@ -103,10 +104,11 @@ public:
     {
         return std::make_shared<mg::PlatformIPCPackage>();
     }
-    EGLNativeDisplayType shell_egl_display()
+
+    std::shared_ptr<mg::InternalClient> create_internal_client(std::shared_ptr<mf::Surface> const&)
     {
-        return static_cast<EGLNativeDisplayType>(0);
-    }
+        return std::shared_ptr<mg::InternalClient>();   
+    } 
 };
 
 void connection_callback(MirConnection* connection, void* context)

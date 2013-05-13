@@ -80,9 +80,9 @@ public:
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    EGLNativeDisplayType shell_egl_display()
+    std::shared_ptr<mg::InternalClient> create_internal_client(std::shared_ptr<mir::frontend::Surface> const&)
     {
-        return static_cast<EGLNativeDisplayType>(0);
+        return std::shared_ptr<mg::InternalClient>();
     }
 
     MOCK_METHOD1(drm_auth_magic, void(unsigned int));
