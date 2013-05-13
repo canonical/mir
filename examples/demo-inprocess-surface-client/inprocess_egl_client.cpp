@@ -92,8 +92,7 @@ void me::InprocessEGLClient::thread_loop()
     input_thread->start();
 
     auto internal_client = graphics_platform->create_internal_client(surface);
-    me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(internal_client->egl_native_display()),
-                         reinterpret_cast<EGLNativeWindowType>(internal_client->egl_native_window()));
+    me::EGLHelper helper(internal_client->egl_native_display(), internal_client->egl_native_window());
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
     assert(rc == EGL_TRUE);
