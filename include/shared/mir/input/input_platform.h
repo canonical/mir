@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_INPUT_PLATFORM_H_
-#define MIR_CLIENT_INPUT_PLATFORM_H_
+#ifndef MIR_INPUT_RECEIVER_PLATFORM_H_
+#define MIR_INPUT_RECEIVER_PLATFORM_H_
 
 #include "mir_toolkit/event.h"
 
@@ -26,9 +26,9 @@
 
 namespace mir
 {
-namespace client
-{
 namespace input
+{
+namespace receiver
 {
 class InputReceiverThread;
 
@@ -52,4 +52,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_CLIENT_INPUT_PLATFORM_H_
+#endif // MIR_INPUT_RECEIVER_PLATFORM_H_

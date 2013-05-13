@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_INPUT_XKB_MAPPER_H_
-#define MIR_CLIENT_INPUT_XKB_MAPPER_H_
+#ifndef MIR_INPUT_RECEIVER_XKB_MAPPER_H_
+#define MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 
 #include <xkbcommon/xkbcommon.h>
 
@@ -25,9 +25,9 @@
 
 namespace mir
 {
-namespace client
-{
 namespace input
+{
+namespace receiver
 {
 
 class XKBMapper
@@ -53,4 +53,4 @@ private:
 }
 }
 
-#endif // MIR_CLIENT_INPUT_XKB_MAPPER_H_
+#endif // MIR_INPUT_RECEIVER_XKB_MAPPER_H_

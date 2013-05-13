@@ -31,7 +31,7 @@
 #include <cstddef>
 
 namespace mcl = mir::client;
-namespace mcli = mcl::input;
+namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -50,7 +50,7 @@ MirConnection::MirConnection(
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         log(log),
         client_platform_factory(client_platform_factory),
-        input_platform(mcli::InputPlatform::create())
+        input_platform(mircv::InputPlatform::create())
 {
     channel->set_event_handler(this);
     {

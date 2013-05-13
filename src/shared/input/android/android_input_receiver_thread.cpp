@@ -21,9 +21,9 @@
 
 #include <thread>
 
-namespace mclia = mir::client::input::android;
+namespace mircva = mir::input::receiver::android;
 
-mclia::InputReceiverThread::InputReceiverThread(std::shared_ptr<mclia::InputReceiver> const& receiver,
+mircva::InputReceiverThread::InputReceiverThread(std::shared_ptr<mircva::InputReceiver> const& receiver,
                                                 std::function<void(MirEvent*)> const& event_handling_callback)
   : receiver(receiver),
     handler(event_handling_callback),
@@ -31,7 +31,7 @@ mclia::InputReceiverThread::InputReceiverThread(std::shared_ptr<mclia::InputRece
 {
 }
 
-mclia::InputReceiverThread::~InputReceiverThread()
+mircva::InputReceiverThread::~InputReceiverThread()
 {
     if (running)
         stop();
@@ -39,24 +39,24 @@ mclia::InputReceiverThread::~InputReceiverThread()
         join();
 }
 
-void mclia::InputReceiverThread::start()
+void mircva::InputReceiverThread::start()
 {
     running = true;
-    thread = std::thread(std::mem_fn(&mclia::InputReceiverThread::thread_loop), this);
+    thread = std::thread(std::mem_fn(&mircva::InputReceiverThread::thread_loop), this);
 }
 
-void mclia::InputReceiverThread::stop()
+void mircva::InputReceiverThread::stop()
 {
     running = false;
     receiver->wake();
 }
 
-void mclia::InputReceiverThread::join()
+void mircva::InputReceiverThread::join()
 {
     thread.join();
 }
 
-void mclia::InputReceiverThread::thread_loop()
+void mircva::InputReceiverThread::thread_loop()
 {
     while (running)
     {

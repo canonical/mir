@@ -23,9 +23,9 @@
 
 namespace mir
 {
-namespace client
-{
 namespace input
+{
+namespace receiver
 {
 namespace android
 {

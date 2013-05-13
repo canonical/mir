@@ -27,14 +27,14 @@
 
 namespace mir
 {
-namespace client
-{
+class MainLoop;
 namespace input
+{
+namespace receiver
 {
 class InputReceiverThread;
 }
 }
-class MainLoop;
 namespace graphics
 {
 class Platform;
@@ -66,7 +66,7 @@ private:
     std::atomic<bool> running;
     std::thread client_thread;
     
-    std::shared_ptr<client::input::InputReceiverThread> input_thread;
+    std::shared_ptr<input::receiver::InputReceiverThread> input_thread;
     
     void thread_loop();
     void handle_event(MirEvent *event);

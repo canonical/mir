@@ -48,7 +48,7 @@ namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace me = mir::examples;
-namespace mcli = mir::client::input;
+namespace mircv = mir::input::receiver;
 namespace geom = mir::geometry;
 
 
@@ -85,7 +85,7 @@ void me::InprocessEGLClient::thread_loop()
     // TODO: Why do we get an ID? ~racarr
     auto surface = session->get_surface(session_manager->create_surface_for(session, params));
     
-    auto input_platform = mcli::InputPlatform::create();
+    auto input_platform = mircv::InputPlatform::create();
     input_thread = input_platform->create_input_thread(
         surface->client_input_fd(), 
             std::bind(std::mem_fn(&me::InprocessEGLClient::handle_event), this, std::placeholders::_1));

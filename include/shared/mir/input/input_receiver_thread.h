@@ -16,14 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
-#define MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#ifndef MIR_INPUT_RECEIVER_RECEIVER_THREAD_H_
+#define MIR_INPUT_RECEIVER_RECEIVER_THREAD_H_
 
 namespace mir
 {
-namespace client
-{
 namespace input
+{
+namespace receiver
 {
 
 class InputReceiverThread
@@ -45,4 +45,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#endif // MIR_INPUT_RECEIVER_RECEIVER_THREAD_H_

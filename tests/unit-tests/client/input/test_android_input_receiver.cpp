@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <memory>
 
-namespace mclia = mir::client::input::android;
+namespace mircva = mir::input::receiver::android;
 
 namespace droidinput = android;
 
@@ -141,14 +141,14 @@ std::chrono::milliseconds const AndroidInputReceiverSetup::next_event_timeout(10
 
 TEST_F(AndroidInputReceiverSetup, receiever_takes_channel_fd)
 {
-    mclia::InputReceiver receiver(android_client_channel);
+    mircva::InputReceiver receiver(android_client_channel);
     
     EXPECT_EQ(android_client_channel->getFd(), receiver.fd());
 }
 
 TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 {
-    mclia::InputReceiver receiver(android_client_channel);
+    mircva::InputReceiver receiver(android_client_channel);
     TestingInputProducer producer(android_server_channel);
     
     producer.produce_a_key_event();
@@ -164,7 +164,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 
 TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 {
-    mclia::InputReceiver receiver(android_client_channel);
+    mircva::InputReceiver receiver(android_client_channel);
     TestingInputProducer producer(android_server_channel);
     
     producer.produce_a_key_event();
@@ -180,7 +180,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 
 TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
 {
-    mclia::InputReceiver receiver(android_client_channel);
+    mircva::InputReceiver receiver(android_client_channel);
     TestingInputProducer producer(android_server_channel);
     
     // Produce 3 motion events before client handles any.
