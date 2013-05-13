@@ -20,9 +20,10 @@
 #include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
-#include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include <gtest/gtest.h>
 
+namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
@@ -85,7 +86,7 @@ TEST_F(HWC10Device, hwc10_gets_numfb_from_fb_dev)
 
 TEST_F(HWC10Device, hwc10_set_next_frontbuffer)
 {
-    std::shared_ptr<mga::AndroidBuffer> mock_buffer = std::make_shared<mtd::MockAndroidBuffer>();
+    std::shared_ptr<mc::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*mock_fbdev, set_next_frontbuffer(mock_buffer))
         .Times(1);
 

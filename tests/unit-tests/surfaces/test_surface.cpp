@@ -140,6 +140,8 @@ struct SurfaceCreation : public ::testing::Test
 {
     virtual void SetUp()
     {
+        using namespace testing;
+
         surface_name = "test_surfaceA";
         pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{43}, geom::Height{420}};
@@ -147,6 +149,9 @@ struct SurfaceCreation : public ::testing::Test
         mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
         null_change_cb = []{};
         mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
+
+        ON_CALL(*mock_buffer_bundle, secure_client_buffer())
+            .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
     }
 
     std::string surface_name;
@@ -159,6 +164,18 @@ struct SurfaceCreation : public ::testing::Test
     std::function<void()> mock_change_cb;
 };
 
+}
+
+TEST_F(SurfaceCreation, test_surface_secures_client_buffer_on_creation)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
+        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+
+    ms::Surface surf(surface_name, mock_buffer_bundle, null_change_cb);
+
+    EXPECT_NE(nullptr, surf.client_buffer());
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
@@ -282,23 +299,15 @@ TEST_F(SurfaceCreation, test_surface_move_to_notifies_changes)
     surf.move_to(geom::Point{geom::X{55}, geom::Y{66}});
 }
 
-TEST_F(SurfaceCreation, test_surface_gets_identity_transformation)
-{
-    using namespace testing;
-
-    ms::Surface surf{surface_name, mock_buffer_bundle, null_change_cb};
-
-    auto ret_transformation = surf.transformation();
-
-    EXPECT_EQ(glm::mat4(), ret_transformation);
-}
-
 TEST_F(SurfaceCreation, test_surface_set_rotation)
 {
     using namespace testing;
 
     ms::Surface surf{surface_name, mock_buffer_bundle, null_change_cb};
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+
+    geom::Size s{geom::Width{55}, geom::Height{66}};
+    ON_CALL(*mock_buffer_bundle, bundle_size()).WillByDefault(Return(s));
 
     auto ret_transformation = surf.transformation();
 

@@ -16,9 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "androidfw/Platform.h"
 
-#include ANDROIDFW_UTILS(SortedVector.h)
+#include <std/SortedVector.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -187,7 +186,6 @@ TEST_F(AndroidInputSortedVector, count_items_at_removed_index_are_not_found)
     EXPECT_NE(android::NAME_NOT_FOUND, test_vector.indexOf(30));
 }
 
-#if defined(ANDROID_USE_STD)
 // Android utils use ALOG_ASSERT - which tends to bomb the program
 TEST_F(AndroidInputSortedVector, remove_beyond_end_fails)
 {
@@ -204,4 +202,3 @@ TEST_F(AndroidInputSortedVector, remove_beyond_end_fails)
 
     EXPECT_EQ(4u, test_vector.size());
 }
-#endif

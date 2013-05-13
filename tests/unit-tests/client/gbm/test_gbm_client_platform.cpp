@@ -40,6 +40,10 @@ TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
     EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(&surface), *native_window);
 }
 
+/* TODO: mir_egl_mesa_display_is_valid is a bit fragile because libmirserver and libmirclient both have very
+ *       different implementations and both have symbols for it. If the linking order of the test changes,
+ *       specifically, if mir_egl_mesa_display_is_valid resolves into libmirserver, then this test will break. 
+ */
 TEST(GBMClientPlatformTest, egl_native_display_is_valid_until_released)
 {
     mtd::MockClientContext context;

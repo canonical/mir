@@ -40,9 +40,12 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MockClientBuffer()
     {
         using namespace testing;
-        ON_CALL(*this, get_native_handle())
-            .WillByDefault(Return(&buffer));
+        buffer = std::make_shared<ANativeWindowBuffer>();
+        ON_CALL(*this, native_buffer_handle())
+            .WillByDefault(Return(buffer));
     }
+    ~MockClientBuffer() noexcept {}
+
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
@@ -52,10 +55,9 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(mark_as_submitted, void());
     MOCK_METHOD0(increment_age, void());
 
-    MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
-    MOCK_METHOD0(get_native_handle, ANativeWindowBuffer*());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
 
-    ANativeWindowBuffer buffer;
+    std::shared_ptr<ANativeWindowBuffer> buffer;
     native_handle_t handle;
 };
 
@@ -116,21 +118,21 @@ TEST_F(AndroidInterpreterTest, native_window_dequeue_gets_native_handle_from_ret
 {
     using namespace testing;
     native_handle_t handle;
-    ANativeWindowBuffer buffer;
-    buffer.handle = &handle;
+    auto buffer = std::make_shared<ANativeWindowBuffer>();
+    buffer->handle = &handle;
 
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::ClientSurfaceInterpreter interpreter(mock_surface);
 
-    EXPECT_CALL(*mock_client_buffer, get_native_handle())
+    EXPECT_CALL(*mock_client_buffer, native_buffer_handle())
         .Times(1)
-        .WillOnce(Return(&buffer));
+        .WillOnce(Return(buffer));
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1)
         .WillOnce(Return(mock_client_buffer));
 
     auto returned_buffer = interpreter.driver_requests_buffer();
-    EXPECT_EQ(&buffer, returned_buffer);
+    EXPECT_EQ(buffer.get(), returned_buffer);
 }
 
 TEST_F(AndroidInterpreterTest, native_window_queue_advances_buffer)

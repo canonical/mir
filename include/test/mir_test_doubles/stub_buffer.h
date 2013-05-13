@@ -53,8 +53,15 @@ public:
 
     virtual geometry::PixelFormat pixel_format() const { return buf_pixel_format; }
 
-    virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const { return std::make_shared<compositor::BufferIPCPackage>(); }
+    virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const
+    {
+        return std::make_shared<compositor::BufferIPCPackage>();
+    }
 
+    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
+    {
+        return std::shared_ptr<MirNativeBuffer>();
+    }
     virtual void bind_to_texture() {}
 
     geometry::Size const buf_size;

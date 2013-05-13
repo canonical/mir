@@ -56,6 +56,7 @@ class SessionContainer;
 class FocusSetter;
 class FocusSequence;
 class PlacementStrategy;
+class SessionListener;
 class FocusController;
 class SessionManager;
 }
@@ -95,7 +96,7 @@ namespace logging
 class Logger;
 }
 
-class DefaultServerConfiguration : public ServerConfiguration
+class DefaultServerConfiguration : public virtual ServerConfiguration
 {
 public:
     DefaultServerConfiguration(int argc, char const* argv[]);
@@ -157,6 +158,7 @@ public:
     virtual std::shared_ptr<shell::FocusSetter>       the_shell_focus_setter();
     virtual std::shared_ptr<shell::FocusSequence>     the_shell_focus_sequence();
     virtual std::shared_ptr<shell::PlacementStrategy> the_shell_placement_strategy();
+    virtual std::shared_ptr<shell::SessionListener>   the_shell_session_listener();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -229,6 +231,7 @@ protected:
     CachedPtr<shell::FocusSetter>       shell_focus_setter;
     CachedPtr<shell::FocusSequence>     shell_focus_sequence;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
+    CachedPtr<shell::SessionListener> shell_session_listener;
     CachedPtr<compositor::CompositingStrategy> compositing_strategy;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;

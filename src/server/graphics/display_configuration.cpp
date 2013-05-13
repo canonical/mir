@@ -18,7 +18,7 @@
 
 #include "mir/graphics/display_configuration.h"
 
-#include <iostream>
+#include <ostream>
 
 namespace mg = mir::graphics;
 

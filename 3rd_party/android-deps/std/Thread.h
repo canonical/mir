@@ -20,9 +20,9 @@
 #ifndef MIR_ANDROID_UBUNTU_THREAD_H_
 #define MIR_ANDROID_UBUNTU_THREAD_H_
 
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(ThreadDefs.h)
-#include ANDROIDFW_UTILS(RefBase.h)
+#include <std/Errors.h>
+#include <std/ThreadDefs.h>
+#include <std/RefBase.h>
 
 #include <thread>
 #include <atomic>
@@ -52,6 +52,7 @@ public:
         (void)name; (void)priority; (void)stack;
 
         status.store(NO_ERROR);
+        exit_pending.store(false);
 
         thread = std::thread([this]() -> void
             {

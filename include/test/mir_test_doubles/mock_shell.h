@@ -37,12 +37,7 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD2(open_session, std::shared_ptr<frontend::Session>(std::string const&, std::shared_ptr<events::EventSink> const&));
     MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::Session> const&));
 
-    MOCK_METHOD2(tag_session_with_lightdm_id, void(std::shared_ptr<frontend::Session> const&, int));
-    MOCK_METHOD1(focus_session_with_lightdm_id, void(int));
-
     MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, frontend::SurfaceCreationParameters const&));
-
-    MOCK_METHOD0(force_requests_to_complete, void());
 };
 
 }

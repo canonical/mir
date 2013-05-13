@@ -104,28 +104,19 @@ set(
   "graphics backend to build (options are 'gbm' or 'android')"
 )
 
-set (MIR_INPUT_USE_ANDROID_TYPES
-  false
-  CACHE
-  BOOL
-  "Use android types in input stack instead of std library"
-)
-
 find_package(EGL REQUIRED)
 find_package(GLESv2 REQUIRED)
+find_package(GLM REQUIRED)
 find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(XKBCOMMON REQUIRED)
 
-include_directories (${GLESv2_INCLUDE_DIRS})                                    
+include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})
+include_directories (${GLM_INCLUDE_DIRS})
 
-if (NOT MIR_INPUT_USE_ANDROID_TYPES)
-add_definitions(
-  -DANDROID_USE_STD
-)
-endif()
+add_definitions(-DANDROID_USE_STD)
 
 if (MIR_PLATFORM STREQUAL "android")
   include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)

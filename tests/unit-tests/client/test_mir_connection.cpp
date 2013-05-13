@@ -80,6 +80,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
             .WillByDefault(Return(native_display));
     }
 
+    MOCK_CONST_METHOD0(platform_type, MirPlatformType()); 
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::ClientSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());

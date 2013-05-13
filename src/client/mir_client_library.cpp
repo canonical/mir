@@ -19,7 +19,6 @@
 #include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
-#include "mir_toolkit/mir_client_library_lightdm.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
@@ -184,19 +183,15 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buffer_package_out)
+MirPlatformType mir_surface_get_platform_type(MirSurface * surface)
+{
+    return surface->platform_type();
+}
+
+void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buffer_package_out)
 {
     auto package = surface->get_current_buffer_package();
-
-    buffer_package_out->data_items = package->data_items;
-    buffer_package_out->fd_items = package->fd_items;
-    for(auto i=0; i<mir_buffer_package_max; i++)
-    {
-        buffer_package_out->data[i] = package->data[i];
-        buffer_package_out->fd[i] = package->fd[i];
-    }
-
-    buffer_package_out->stride = package->stride;
+    *buffer_package_out = package.get();
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
@@ -243,41 +238,6 @@ MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
                                              void* context)
 {
     return connection->drm_auth_magic(magic, callback, context);
-}
-
-MirWaitHandle *mir_connect_with_lightdm_id(
-    char const *server,
-    int lightdm_id,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *client_context)
-try
-{
-    auto log = std::make_shared<mcl::ConsoleLogger>();
-    auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
-
-    MirConnection* connection = new MirConnection(
-        mcl::make_rpc_channel(server, log),
-        log,
-        client_platform_factory);
-
-    return connection->connect(lightdm_id, app_name, callback, client_context);
-}
-catch (std::exception const& x)
-{
-    error_connection.set_error_message(x.what());
-    callback(&error_connection, client_context);
-    return 0;
-}
-
-void mir_select_focus_by_lightdm_id(MirConnection* connection, int lightdm_id)
-try
-{
-    connection->select_focus_by_lightdm_id(lightdm_id);
-}
-catch (std::exception const&)
-{
-    // Ignore
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,

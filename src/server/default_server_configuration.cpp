@@ -39,18 +39,22 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
+#include "mir/graphics/cursor.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_manager.h"
 #include "mir/input/null_input_target_listener.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_dispatcher_controller.h"
 #include "mir/logging/logger.h"
+#include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/logging/glog_logger.h"
 #include "mir/logging/session_mediator_report.h"
@@ -136,12 +140,14 @@ private:
 char const* const log_app_mediator = "log-app-mediator";
 char const* const log_msg_processor = "log-msg-processor";
 char const* const log_display      = "log-display";
+char const* const log_input        = "log-input";
 
 char const* const glog                 = "glog";
 char const* const glog_stderrthreshold = "glog-stderrthreshold";
 char const* const glog_minloglevel     = "glog-minloglevel";
 char const* const glog_log_dir         = "glog-log-dir";
 
+bool const enable_input_default = true;
 
 void parse_arguments(
     boost::program_options::options_description desc,
@@ -198,8 +204,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
     add_options()
         ("file,f", po::value<std::string>(),    "Socket filename")
-        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=false]")
+        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=true]")
         (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
+        (log_input, po::value<bool>(),          "Log the input stack. [bool:default=false]")
         (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
         (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
         (glog,                                  "Use google::GLog for logging")
@@ -215,7 +222,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
                                                 "directory instead of the default logging directory."
                                                 " [string:default=\"\"]")
-        ("ipc-thread-pool,i", po::value<int>(), "threads in frontend thread pool. [int:default=10]");
+        ("ipc-thread-pool", po::value<int>(),   "threads in frontend thread pool. [int:default=10]");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
@@ -344,6 +351,16 @@ mir::DefaultServerConfiguration::the_shell_placement_strategy()
         });
 }
 
+std::shared_ptr<msh::SessionListener>
+mir::DefaultServerConfiguration::the_shell_session_listener()
+{
+    return shell_session_listener(
+        [this]
+        {
+            return std::make_shared<msh::NullSessionListener>();
+        });
+}
+
 std::shared_ptr<msh::SessionManager>
 mir::DefaultServerConfiguration::the_session_manager()
 {
@@ -355,7 +372,8 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
-                the_input_target_listener());
+                the_input_target_listener(),
+                the_shell_session_listener());
         });
 }
 
@@ -383,8 +401,28 @@ mir::DefaultServerConfiguration::the_input_configuration()
 {
     if (!input_configuration)
     {
-        const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
-        input_configuration = std::make_shared<mia::DefaultInputConfiguration>(the_event_filters(), the_display(), null_cursor_listener);
+        struct DefaultCursorListener : mi::CursorListener
+        {
+            DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor) :
+                cursor(cursor)
+            {
+            }
+
+            void cursor_moved_to(float abs_x, float abs_y)
+            {
+                if (auto c = cursor.lock())
+                {
+                    c->move_to(geom::Point{geom::X(abs_x), geom::Y(abs_y)});
+                }
+            }
+
+            std::weak_ptr<mg::Cursor> const cursor;
+        };
+
+        input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
+            the_event_filters(),
+            the_display(),
+            std::make_shared<DefaultCursorListener>(the_display()->the_cursor()));
     }
     return input_configuration;
 }
@@ -395,8 +433,12 @@ mir::DefaultServerConfiguration::the_input_manager()
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get("enable-input", true))
+            if (the_options()->get("enable-input", enable_input_default))
+            {
+                if (the_options()->get(log_input, false))
+                    ml::input_report::initialize(the_logger());
                 return std::make_shared<mia::InputManager>(the_input_configuration());
+            }
             else 
                 return std::make_shared<mi::NullInputManager>();
         });
@@ -602,7 +644,7 @@ std::shared_ptr<msh::InputTargetListener> mir::DefaultServerConfiguration::the_i
     return input_target_listener(
         [&]() -> std::shared_ptr<msh::InputTargetListener>
         {
-            if (the_options()->get("enable-input", false))
+            if (the_options()->get("enable-input", enable_input_default))
                 return std::make_shared<mia::DispatcherController>(the_input_configuration());
             else
                 return std::make_shared<mi::NullInputTargetListener>();

@@ -266,6 +266,10 @@ void mia::FakeEventHub::monitor()
 {
 }
 
+void mia::FakeEventHub::flush()
+{
+}
+
 void mia::FakeEventHub::synthesize_builtin_keyboard_added()
 {
     RawEvent event;
@@ -322,7 +326,7 @@ void mia::FakeEventHub::synthesize_event(const mis::KeyParameters &parameters)
 void mia::FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters)
 {
     RawEvent event;
-    event.when = 0; // TODO: This may need a timestamp to go over the wire ~racarr
+    event.when = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     event.type = EV_KEY;
     event.code = parameters.button;
 
@@ -348,7 +352,7 @@ void mia::FakeEventHub::synthesize_event(const mis::ButtonParameters &parameters
 void mia::FakeEventHub::synthesize_event(const mis::MotionParameters &parameters)
 {
     RawEvent event;
-    event.when = 0;
+    event.when = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     event.type = EV_REL;
     if (parameters.device_id)
         event.deviceId = parameters.device_id;

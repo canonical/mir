@@ -2745,19 +2745,6 @@ void InputDispatcher::setInputWindows(const Vector<sp<InputWindowHandle> >& inpu
             }
         }
 
-        // Release information for windows that are no longer present.
-        // This ensures that unused input channels are released promptly.
-        // Otherwise, they might stick around until the window handle is destroyed
-        // which might not happen until the next GC.
-        for (size_t i = 0; i < oldWindowHandles.size(); i++) {
-            const sp<InputWindowHandle>& oldWindowHandle = oldWindowHandles.itemAt(i);
-            if (!hasWindowHandleLocked(oldWindowHandle)) {
-#if DEBUG_FOCUS
-                ALOGD("Window went away: %s", c_str(oldWindowHandle->getName()));
-#endif
-                oldWindowHandle->releaseInfo();
-            }
-        }
     } // release lock
 
     // Wake up poll loop since it may need to make new input dispatching choices.

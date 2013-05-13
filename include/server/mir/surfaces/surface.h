@@ -54,6 +54,7 @@ public:
     void move_to(geometry::Point const& top_left);
     void set_rotation(float degrees, glm::vec3 const& axis);
     void set_alpha(float alpha);
+    void set_hidden(bool is_hidden);
 
     /* From Renderable */
     geometry::Point top_left() const;
@@ -61,8 +62,7 @@ public:
     std::shared_ptr<GraphicRegion> graphic_region() const;
     glm::mat4 transformation() const;
     float alpha() const;
-    bool hidden() const;
-    void set_hidden(bool is_hidden);
+    bool should_be_rendered() const;
 
     geometry::PixelFormat pixel_format() const;
 
@@ -71,6 +71,7 @@ public:
     void advance_client_buffer();
     std::shared_ptr<compositor::Buffer> client_buffer() const;
     void force_requests_to_complete();
+    void flag_for_render();
 
 private:
     std::string surface_name;
@@ -78,10 +79,11 @@ private:
 
     std::shared_ptr<compositor::Buffer> client_buffer_resource;
     geometry::Point top_left_point;
-    glm::mat4 transformation_matrix;
+    glm::mat4 rotation_matrix;
     float alpha_value;
 
     bool is_hidden;
+    bool buffer_is_valid;
     std::function<void()> notify_change;
 };
 

@@ -17,6 +17,7 @@
  */
 
 #include "gbm_display.h"
+#include "gbm_cursor.h"
 #include "gbm_platform.h"
 #include "gbm_display_buffer.h"
 #include "kms_display_configuration.h"
@@ -134,6 +135,7 @@ void mgg::GBMDisplay::pause()
 {
     try
     {
+        if (cursor) cursor->hide();
         platform->drm.drop_master();
     }
     catch(std::runtime_error const& e)
@@ -148,6 +150,7 @@ void mgg::GBMDisplay::resume()
     try
     {
         platform->drm.set_master();
+        if (cursor) cursor->show_at_last_known_position();
     }
     catch(std::runtime_error const& e)
     {
@@ -157,4 +160,10 @@ void mgg::GBMDisplay::resume()
 
     for (auto& db_ptr : display_buffers)
         db_ptr->schedule_set_crtc();
+}
+
+auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
+{
+    if (!cursor) cursor = std::make_shared<GBMCursor>(platform, output_container);
+    return cursor;
 }

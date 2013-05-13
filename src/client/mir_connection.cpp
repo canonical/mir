@@ -162,32 +162,6 @@ MirWaitHandle* MirConnection::connect(
     return &connect_wait_handle;
 }
 
-MirWaitHandle* MirConnection::connect(
-    int lightdm_id,
-    const char* app_name,
-    mir_connected_callback callback,
-    void * context)
-{
-    connect_parameters.set_application_name(app_name);
-    connect_parameters.set_lightdm_id(lightdm_id);
-    server.connect(
-        0,
-        &connect_parameters,
-        &connect_result,
-        google::protobuf::NewCallback(
-            this, &MirConnection::connected, callback, context));
-    return &connect_wait_handle;
-}
-
-void MirConnection::select_focus_by_lightdm_id(int lightdm_id)
-{
-    mir::protobuf::LightdmId id;
-    id.set_value(lightdm_id);
-    server.select_focus_by_lightdm_id(0, &id, &ignored,
-        google::protobuf::NewCallback(google::protobuf::DoNothing));
-}
-
-
 void MirConnection::done_disconnect()
 {
     /* todo: keeping all MirWaitHandles from a release surface until the end of the connection

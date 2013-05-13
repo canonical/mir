@@ -21,6 +21,7 @@
 #include "mir_toolkit/mesa/native_display.h"
 #include "mir_toolkit/mir_client_library.h"
 
+#include <cstring>
 #include <unordered_set>
 #include <mutex>
 
@@ -45,7 +46,9 @@ static void gbm_egl_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* displ
                                                MirBufferPackage* buffer_package)
 {
     MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_surface_get_current_buffer(ms, buffer_package);
+    MirBufferPackage * current_package;
+    mir_surface_get_current_buffer(ms, &current_package);
+    memcpy(buffer_package, current_package, sizeof(MirBufferPackage));
 }
 
 static void buffer_advanced_callback(MirSurface*  /* surface */,

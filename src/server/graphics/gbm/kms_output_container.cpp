@@ -46,3 +46,9 @@ std::shared_ptr<mgg::KMSOutput> mgg::KMSOutputContainer::get_kms_output_for(uint
 
     return output;
 }
+
+void mgg::KMSOutputContainer::for_each_output(std::function<void(KMSOutput&)> functor) const
+{
+    for(auto& pair: outputs)
+        functor(*pair.second);
+}

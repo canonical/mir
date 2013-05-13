@@ -19,14 +19,16 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/server/graphics/gbm/internal_client.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir_test_doubles/stub_surface.h"
 
 #include "mir/graphics/null_display_report.h"
 
 #include <gtest/gtest.h>
 
-#include "mock_drm.h"
-#include "mock_gbm.h"
+#include "mir_test_doubles/mock_drm.h"
+#include "mir_test_doubles/mock_gbm.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -56,8 +58,8 @@ public:
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
-    ::testing::NiceMock<mg::gbm::MockDRM> mock_drm;
-    ::testing::NiceMock<mg::gbm::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
 };
 }
 
@@ -138,4 +140,22 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     EXPECT_THROW({
         authenticator->drm_auth_magic(magic);
     }, std::runtime_error);
+}
+
+/* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different
+ *       implementations and both have symbols for it. If the linking order of the test changes,
+ *       specifically, if mir_egl_mesa_display_is_valid resolves into libmirclient, then this test will break. 
+ */
+TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
+{
+    auto stub_surface = std::make_shared<mtd::StubSurface>();
+    MirMesaEGLNativeDisplay* native_display = nullptr;
+    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
+    {
+        auto platform = create_platform();
+        auto client = platform->create_internal_client(stub_surface);
+        native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
+        EXPECT_EQ(1, mir_server_internal_display_is_valid(native_display));
+    }
+    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
 }

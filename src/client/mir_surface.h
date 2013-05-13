@@ -24,6 +24,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
@@ -75,7 +76,8 @@ public:
     MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 
-    std::shared_ptr<MirBufferPackage> get_current_buffer_package();
+    std::shared_ptr<MirNativeBuffer> get_current_buffer_package();
+    MirPlatformType platform_type();
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();

@@ -93,56 +93,13 @@ strong and no-throw guarantees. http://www.boost.org/community/exception_safety.
 Running Mir
 -----------
 
-This is a brief guide describing how to run the Mir binaries once you have
+There are some brief guides describing how to run the Mir binaries once you have
 them built. You might think it's obvious but there are some important things
 you need to know to get it working, and also to prevent your existing X server
 from dying at the same time.
 
-1. Make sure your hardware is supported. That means you're using a Mesa driver,
-   of which only intel and radeon families are presently supported. If you're
-   logged in to X then run this command to verify an appropriate DRI driver
-   is active:
-       sudo pmap `pidof X` | grep dri.so
-   or
-       lsmod | grep drm
-
-2. Make sure your software is supported. Mir requires a custom build of the
-   Mesa packages to work at all. At the time of writing, these were available
-   from:
-       https://launchpad.net/~mir-team/+archive/staging
-   If you don't have the right Mesa, you will get nothing on the screen and/or
-   strange errors later.
-
-3. Build Mir as described at the top of this document.
-
-4. Log in to VT1 (Ctrl+Alt+F1) _after_ you are already logged in to X. If you
-   do so before then you will not be assigned adequate credentials to access
-   the graphics hardware and will get strange errors.
-
-5. Note that you can switch back to X using Alt+F7. But it is very important
-   to remember NOT to switch once you have any mir binaries running. Doing
-   so will make X die (!).
-
-6. Switch back to VT1: Ctrl+Alt+F1
-
-7. Now we want to run the mir server and a client to render something. The
-   trick is that we need to make sure the mir server is easy to terminate
-   before ever switching back to X. To ensure this, the server needs to be in
-   the foreground, but starting before your client (in the background). To
-   do this, you must:
-       cd <mir_source_dir>/build/bin
-       (sleep 5; ./mir_demo_client_accelerated) & ./mir ; kill $!
-
-   Wait 5 seconds and the client will start. You can kill it with Ctrl+C or
-   Alt+F2,Alt+F1,Ctrl+C. REMEMBER to kill the mir processes fully before
-   attempting to switch back to X or your X login will die.
-
-8. In case you accidentally killed your X login and ended up with a failsafe
-   screen, you might find on subsequent reboots you can't log in to X at all
-   any more (it instantly and silently takes you back to the login screen).
-   The fix for this is to log in to a VT and:
-       rm .Xauthority
-       sudo restart lightdm
+ - \ref using_mir_on_pc
+ - \ref using_mir_on_android
 
 
 Documentation

@@ -30,8 +30,8 @@
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
-#include "mock_drm.h"
-#include "mock_gbm.h"
+#include "mir_test_doubles/mock_drm.h"
+#include "mir_test_doubles/mock_gbm.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -188,8 +188,8 @@ public:
 
     ::testing::NiceMock<mir::EglMock> mock_egl;
     ::testing::NiceMock<mir::GLMock> mock_gl;
-    ::testing::NiceMock<mgg::MockDRM> mock_drm;
-    ::testing::NiceMock<mgg::MockGBM> mock_gbm;
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
+    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     std::shared_ptr<testing::NiceMock<mtd::MockDisplayReport>> const mock_report;
     std::shared_ptr<mg::DisplayReport> const null_report;
 };
@@ -490,6 +490,10 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
     EXPECT_CALL(
         *mock_report,
         report_successful_display_construction()).Times(Exactly(1));
+
+    EXPECT_CALL(
+        *mock_report,
+        report_egl_configuration(mock_egl.fake_egl_display,mock_egl.fake_configs[0])).Times(Exactly(1));
 
     EXPECT_NO_THROW(
     {

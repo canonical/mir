@@ -139,6 +139,11 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
+    egl.report_egl_configuration(
+        [&listener] (EGLDisplay disp, EGLConfig cfg)
+        {
+            listener->report_egl_configuration(disp, cfg);
+        });
 }
 
 mgg::GBMDisplayBuffer::~GBMDisplayBuffer()

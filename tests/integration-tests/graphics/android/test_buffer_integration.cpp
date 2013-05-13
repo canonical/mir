@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/platform.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
@@ -43,9 +42,6 @@ class AndroidBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
-        ASSERT_TRUE(platform != NULL);
-
         size = geom::Size{geom::Width{334},
                           geom::Height{122}};
         pf  = geom::PixelFormat::abgr_8888;
@@ -58,8 +54,6 @@ protected:
     geom::PixelFormat pf;
     mc::BufferProperties buffer_properties;
     mtd::TestGrallocMapper sw_renderer;
-
-    std::shared_ptr<mg::Platform> platform;
 };
 
 }
@@ -98,7 +92,6 @@ TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     mc::BufferProperties actual;
-    mc::BufferID id{34};
     auto swapper = strategy->create_swapper(actual, buffer_properties);
     auto returned_buffer = swapper->client_acquire();
 

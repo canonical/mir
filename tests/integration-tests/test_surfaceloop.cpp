@@ -42,6 +42,7 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
@@ -140,6 +141,7 @@ public:
     }
     void pause() {}
     void resume() {}
+    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 };
 
 struct SurfaceSync
@@ -354,10 +356,10 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return std::make_shared<mg::PlatformIPCPackage>();
         }
 
-        EGLNativeDisplayType shell_egl_display()
+        std::shared_ptr<mg::InternalClient> create_internal_client(std::shared_ptr<mf::Surface> const&)
         {
-            return static_cast<EGLNativeDisplayType>(0);
-        }
+            return std::shared_ptr<mg::InternalClient>();   
+        } 
     };
 
     std::shared_ptr<mg::Platform> the_graphics_platform()
@@ -486,9 +488,9 @@ struct BufferCounterConfig : TestingServerConfiguration
             return std::make_shared<mg::PlatformIPCPackage>();
         }
 
-        EGLNativeDisplayType shell_egl_display()
+        std::shared_ptr<mg::InternalClient> create_internal_client(std::shared_ptr<mf::Surface> const&)
         {
-            return (EGLNativeDisplayType) 0;
+            return std::shared_ptr<mg::InternalClient>();   
         }
     };
 

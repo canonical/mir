@@ -25,8 +25,8 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
-#include "mock_drm.h"
-#include "mock_gbm.h"
+#include "mir_test_doubles/mock_drm.h"
+#include "mir_test_doubles/mock_gbm.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -79,13 +79,13 @@ public:
 
     void setup_outputs(int n)
     {
-        mgg::FakeDRMResources& resources(mock_drm.fake_drm);
+        mtd::FakeDRMResources& resources(mock_drm.fake_drm);
 
         modes0.clear();
-        modes0.push_back(mgg::FakeDRMResources::create_mode(1920, 1080, 138500, 2080, 1111));
-        modes0.push_back(mgg::FakeDRMResources::create_mode(1920, 1080, 148500, 2200, 1125));
-        modes0.push_back(mgg::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
-        modes0.push_back(mgg::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
+        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 138500, 2080, 1111));
+        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 148500, 2200, 1125));
+        modes0.push_back(mtd::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
+        modes0.push_back(mtd::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
 
         geom::Size const connector_physical_size_mm{geom::Width{1597}, geom::Height{987}};
 
@@ -123,8 +123,8 @@ public:
 
     testing::NiceMock<mir::EglMock> mock_egl;
     testing::NiceMock<mir::GLMock> mock_gl;
-    testing::NiceMock<mgg::MockDRM> mock_drm;
-    testing::NiceMock<mgg::MockGBM> mock_gbm;
+    testing::NiceMock<mtd::MockDRM> mock_drm;
+    testing::NiceMock<mtd::MockGBM> mock_gbm;
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<drmModeModeInfo> modes_empty;

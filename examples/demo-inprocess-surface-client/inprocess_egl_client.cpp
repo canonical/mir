@@ -19,6 +19,7 @@
 #include "inprocess_egl_client.h"
 #include "example_egl_helper.h"
 
+#include "mir/main_loop.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/surface.h"
 #include "mir/frontend/surface_creation_parameters.h"
@@ -28,6 +29,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
+#include "mir/graphics/internal_client.h"
 
 #include "graphics.h"
 
@@ -38,6 +40,8 @@
 #include <functional>
 
 #include <assert.h>
+#include <signal.h>
+
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
@@ -47,13 +51,22 @@ namespace me = mir::examples;
 namespace mcli = mir::client::input;
 namespace geom = mir::geometry;
 
-me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
+
+me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
+                                           std::shared_ptr<mg::Platform> const& graphics_platform,
                                            std::shared_ptr<msh::SessionManager> const& session_manager)
   : graphics_platform(graphics_platform),
+
     session_manager(session_manager),
-    running(true),
-    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this)
+    client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this),
+    terminate(false)
 {
+    main_loop->register_signal_handler({SIGTERM, SIGINT},
+        [this](int)
+        {
+            terminate = true;
+        }
+    );
     client_thread.detach();
 }
 
@@ -78,10 +91,9 @@ void me::InprocessEGLClient::thread_loop()
             std::bind(std::mem_fn(&me::InprocessEGLClient::handle_event), this, std::placeholders::_1));
     input_thread->start();
 
-    surface->advance_client_buffer(); // TODO: What a wart!
-
-    auto native_display = graphics_platform->shell_egl_display();
-    me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(native_display), reinterpret_cast<EGLNativeWindowType>(surface.get()));
+    auto internal_client = graphics_platform->create_internal_client(surface);
+    me::EGLHelper helper(reinterpret_cast<EGLNativeDisplayType>(internal_client->egl_native_display()),
+                         reinterpret_cast<EGLNativeWindowType>(internal_client->egl_native_window()));
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
     assert(rc == EGL_TRUE);
@@ -91,7 +103,7 @@ void me::InprocessEGLClient::thread_loop()
     ///\internal [setup_tag]
 
     ///\internal [loop_tag]
-    while (running)
+    while(!terminate)
     {
         gl_animation.render_gl();
         rc = eglSwapBuffers(helper.the_display(), helper.the_surface());
@@ -99,6 +111,8 @@ void me::InprocessEGLClient::thread_loop()
 
         gl_animation.step();
     }
+
+    input_thread->stop();
     ///\internal [loop_tag]
 }
 
@@ -110,6 +124,5 @@ void me::InprocessEGLClient::handle_event(MirEvent *event)
         return;
     if (event->key.key_code != XKB_KEY_Escape)
         return;
-    input_thread->stop();
-    running = false;
+    terminate = true;
 }

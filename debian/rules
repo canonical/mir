@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -f 2)
+
 
 %:
 	dh $@ --parallel
@@ -25,7 +27,6 @@ ifeq ($(DEB_HOST_ARCH),armhf)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DBoost_COMPILER=-gcc \
-	  -DMIR_ENABLE_DEATH_TESTS=NO \
 	  -DMIR_PLATFORM=android
 else
 	dh_auto_configure -- \
@@ -36,4 +37,5 @@ override_dh_installexamples:
 	dh_installexamples -p libmirclient-demos
 
 override_dh_makeshlibs:
-	dh_makeshlibs -V
+	dh_makeshlibs -p libmirserver0 -V 'libmirserver0 (= ${EXACT_PACKAGE_VERSION})'
+	dh_makeshlibs --remaining-packages -V
