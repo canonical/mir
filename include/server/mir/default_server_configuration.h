@@ -197,7 +197,6 @@ public:
     virtual std::shared_ptr<graphics::Platform>  the_graphics_platform();
     virtual std::shared_ptr<time::TimeSource>    the_time_source();
 
-    // TODO: Does this belong? ~racarr
     virtual std::shared_ptr<shell::SessionManager> the_session_manager();
 
 protected:
