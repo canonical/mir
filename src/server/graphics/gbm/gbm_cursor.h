@@ -47,11 +47,12 @@ public:
 
     void move_to(geometry::Point position);
 
-    void show();
+    void show_at_last_known_position();
     void hide();
 
 private:
     KMSOutputContainer const& output_container;
+    geometry::Point current_position;
 
     struct GBMBOWrapper
     {

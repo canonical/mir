@@ -54,6 +54,7 @@ mgg::GBMCursor::GBMCursor(
     std::shared_ptr<GBMPlatform> const& platform,
     KMSOutputContainer const& output_container) :
         output_container(output_container),
+        current_position(),
         buffer(*platform)
 {
     std::vector<uint32_t> image(height*width, bg_color);
@@ -73,9 +74,7 @@ mgg::GBMCursor::GBMCursor(
 
     set_image(image.data(), geometry::Size{geometry::Width(width), geometry::Height(height)});
 
-    move_to(geometry::Point());
-
-    show();
+    show_at_last_known_position();
 }
 
 mgg::GBMCursor::~GBMCursor() noexcept
@@ -101,12 +100,16 @@ void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
 void mgg::GBMCursor::move_to(geometry::Point position)
 {
     output_container.for_each_output([&](KMSOutput& output) { output.move_cursor(position); });
+    current_position = position;
 }
 
-void mgg::GBMCursor::show()
+void mgg::GBMCursor::show_at_last_known_position()
 {
-    output_container.for_each_output(
-        [&](KMSOutput& output) { output.set_cursor(buffer); });
+    output_container.for_each_output([&](KMSOutput& output)
+    {
+        output.move_cursor(current_position);
+        output.set_cursor(buffer);
+    });
 }
 
 void mgg::GBMCursor::hide()
