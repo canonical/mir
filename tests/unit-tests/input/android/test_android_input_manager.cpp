@@ -82,6 +82,7 @@ struct MockEventHub : public droidinput::EventHubInterface
     MOCK_METHOD0(wake, void());
     MOCK_METHOD1(dump, void(droidinput::String8&));
     MOCK_METHOD0(monitor, void());
+    MOCK_METHOD0(flush, void());
 };
 
 struct MockInputThread : public mia::InputThread
@@ -149,11 +150,24 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchEnabled, mia::DispatchUnfrozen)).Times(1);
-    EXPECT_CALL(*dispatcher, setInputFilterEnabled(true)).Times(1);
+    ExpectationSet dispatcher_setup;
+    ExpectationSet reader_setup;
 
-    EXPECT_CALL(*reader_thread, start()).Times(1);
-    EXPECT_CALL(*dispatcher_thread, start()).Times(1);
+    dispatcher_setup += EXPECT_CALL(*dispatcher,
+                                    setInputDispatchMode(mia::DispatchEnabled,
+                                                         mia::DispatchUnfrozen))
+                            .Times(1);
+    dispatcher_setup += EXPECT_CALL(*dispatcher, setInputFilterEnabled(true)).Times(1);
+
+    reader_setup += EXPECT_CALL(*event_hub, flush()).Times(1);
+
+    EXPECT_CALL(*reader_thread, start())
+        .Times(1)
+        .After(reader_setup);
+
+    EXPECT_CALL(*dispatcher_thread, start())
+        .Times(1)
+        .After(dispatcher_setup);
 
     {
         InSequence seq;

@@ -150,7 +150,7 @@ void mgg::GBMDisplay::resume()
     try
     {
         platform->drm.set_master();
-        if (cursor) cursor->show();
+        if (cursor) cursor->show_at_last_known_position();
     }
     catch(std::runtime_error const& e)
     {

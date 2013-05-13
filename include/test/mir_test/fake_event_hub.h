@@ -107,6 +107,7 @@ public:
     virtual void dump(droidinput::String8& dump);
 
     virtual void monitor();
+    virtual void flush();
 
     void synthesize_builtin_keyboard_added();
     void synthesize_builtin_cursor_added();
