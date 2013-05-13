@@ -317,3 +317,8 @@ void mggh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to choose ARGB EGL config"));
     }
 }
+
+void mggh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f)
+{
+    f(egl_display, egl_config);
+}

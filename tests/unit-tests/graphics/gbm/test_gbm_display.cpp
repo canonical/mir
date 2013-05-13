@@ -491,6 +491,10 @@ TEST_F(GBMDisplayTest, successful_creation_of_display_reports_successful_setup_o
         *mock_report,
         report_successful_display_construction()).Times(Exactly(1));
 
+    EXPECT_CALL(
+        *mock_report,
+        report_egl_configuration(mock_egl.fake_egl_display,mock_egl.fake_configs[0])).Times(Exactly(1));
+
     EXPECT_NO_THROW(
     {
         auto platform = create_platform();
