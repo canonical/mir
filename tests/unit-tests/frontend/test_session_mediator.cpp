@@ -373,61 +373,25 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     {
-#if 0
-        auto package = std::make_shared<mc::BufferIPCPackage>();
-        package->ipc_data = std::vector<int32_t>{5, 23, 1};
-        package->ipc_fds = std::vector<int32_t>{2, 1};
-
-        ON_CALL(*stubbed_session->mock_buffer, get_ipc_package())
-            .WillByDefault(Return(package));
         EXPECT_CALL(*stubbed_session->mock_buffer, id())
             .WillOnce(Return(mc::BufferID{4}))
             .WillOnce(Return(mc::BufferID{5}))
             .WillOnce(Return(mc::BufferID{4}))
             .WillOnce(Return(mc::BufferID{5}));
 
-#endif
-
         mp::Surface surface_response;
         mp::SurfaceId buffer_request;
-        //mp::Buffer buffer_response[3];
+        mp::Buffer buffer_response[3];
 
         std::shared_ptr<mc::Buffer> tmp_buffer = stubbed_session->mock_buffer;
-        EXPECT_CALL(*graphics_platform, fill_ipc_package(surface_response.mutable_buffer(), tmp_buffer))
+        EXPECT_CALL(*graphics_platform, fill_ipc_package(_, tmp_buffer))
             .Times(2);
 
         mp::SurfaceParameters surface_request;
         mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
-#if 0
-        ASSERT_EQ(mc::BufferID{4}.as_uint32_t(), static_cast<uint32_t>(surface_response.buffer().buffer_id()));
-        EXPECT_EQ(2, surface_response.buffer().fd_size());
-        EXPECT_EQ(3, surface_response.buffer().data_size());
-        for (int i = 0; i < surface_response.buffer().fd_size(); ++i)
-            EXPECT_EQ(package->ipc_fds[i], surface_response.buffer().fd(i));
-        for (int i = 0; i < surface_response.buffer().data_size(); ++i)
-            EXPECT_EQ(package->ipc_data[i], surface_response.buffer().data(i));
-
-
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[0], null_callback.get());
-        ASSERT_EQ(mc::BufferID{5}.as_uint32_t(), static_cast<uint32_t>(buffer_response[0].buffer_id()));
-        EXPECT_EQ(2, buffer_response[0].fd_size());
-        EXPECT_EQ(3, buffer_response[0].data_size());
-        for (int i = 0; i < buffer_response[0].fd_size(); ++i)
-            EXPECT_EQ(package->ipc_fds[i], buffer_response[0].fd(i));
-        for (int i = 0; i < buffer_response[0].data_size(); ++i)
-            EXPECT_EQ(package->ipc_data[i], buffer_response[0].data(i));
-
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[1], null_callback.get());
-        ASSERT_EQ(mc::BufferID{4}.as_uint32_t(), static_cast<uint32_t>(buffer_response[1].buffer_id()));
-        EXPECT_EQ(0, buffer_response[1].fd_size());
-        EXPECT_EQ(0, buffer_response[1].data_size());
-
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[2], null_callback.get());
-
-        ASSERT_EQ(mc::BufferID{5}.as_uint32_t(), static_cast<uint32_t>(buffer_response[2].buffer_id()));
-        EXPECT_EQ(0, buffer_response[2].fd_size());
-        EXPECT_EQ(0, buffer_response[2].data_size());
-#endif
     }
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());

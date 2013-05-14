@@ -163,8 +163,8 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
     mp::Buffer response;
     platform->fill_ipc_package(&response, mock_buffer);
 
-    EXPECT_EQ(native_handle->data_items, response.fd_size());
-    EXPECT_EQ(native_handle->fd_items, response.data_size());
+    EXPECT_EQ(native_handle->fd_items, response.fd_size());
+    EXPECT_EQ(native_handle->data_items, response.data_size());
     for (int i = 0; i < response.fd_size(); ++i)
         EXPECT_EQ(native_handle->fd[i], response.fd(i));
     for (int i = 0; i < response.data_size(); ++i)

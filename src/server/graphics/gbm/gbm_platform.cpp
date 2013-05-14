@@ -116,8 +116,10 @@ void mgg::GBMPlatform::fill_ipc_package(protobuf::Buffer* response, std::shared_
     }    
     for(auto i=0; i<native_handle->fd_items; i++)
     {
-        response->add_data(native_handle->fd[i]);
-    }    
+        response->add_fd(native_handle->fd[i]);
+    }
+
+    response->set_stride(buffer->stride().as_uint32_t()); 
 }
 
 void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
