@@ -56,7 +56,7 @@ public:
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
     virtual std::shared_ptr<Display> create_display() = 0;
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
-    virtual std::shared_ptr<InternalClient> create_internal_client(std::shared_ptr<frontend::Surface> const&) = 0;
+    virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 };
 
 // Create and return a new graphics platform.

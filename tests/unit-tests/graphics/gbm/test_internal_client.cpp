@@ -33,10 +33,10 @@ TEST(InternalClient, native_display)
 {
     auto stub_window = std::make_shared<mtd::StubSurface>();
     auto stub_display = std::make_shared<MirMesaEGLNativeDisplay>();
-    mgg::InternalClient client(stub_display, stub_window);
+    mgg::InternalClient client(stub_display);
 
     auto native_display = client.egl_native_display();
-    auto native_window = client.egl_native_window();
+    auto native_window = client.egl_native_window(stub_window);
 
     EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(stub_display.get()), native_display);
     EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(stub_window.get()), native_window);
