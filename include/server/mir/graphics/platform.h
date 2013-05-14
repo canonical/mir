@@ -56,6 +56,8 @@ public:
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
     virtual std::shared_ptr<Display> create_display() = 0;
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
+    virtual std::shared_ptr<compositor::BufferIPCPackage> create_buffer_ipc_package(
+            std::shared_ptr<compositor::Buffer> const& buffer) const = 0;
     
     virtual EGLNativeDisplayType shell_egl_display() = 0;
 };

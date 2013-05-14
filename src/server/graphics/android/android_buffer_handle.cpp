@@ -25,18 +25,14 @@ namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
+
+/* todo: this class is trivial. remove */
 mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(std::shared_ptr<ANativeWindowBuffer> const& buf, geom::PixelFormat pf, BufferUsage use)
     : anw_buffer(buf),
       pixel_format(pf),
       buffer_usage(use)
 {
-    pack_ipc_package();
 }
-
-void mga::AndroidBufferHandleDefault::pack_ipc_package()
-{
-}
-
 
 geom::Size mga::AndroidBufferHandleDefault::size() const
 {
@@ -57,11 +53,6 @@ geom::PixelFormat mga::AndroidBufferHandleDefault::format() const
 mga::BufferUsage mga::AndroidBufferHandleDefault::usage() const
 {
     return buffer_usage;
-}
-
-std::shared_ptr<mc::BufferIPCPackage> mga::AndroidBufferHandleDefault::get_ipc_package() const
-{
-    return ipc_package;
 }
 
 std::shared_ptr<ANativeWindowBuffer> mga::AndroidBufferHandleDefault::native_buffer_handle() const

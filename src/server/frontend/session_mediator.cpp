@@ -129,7 +129,7 @@ void mir::frontend::SessionMediator::create_surface(
 
         if (!client_tracker->client_has(id))
         {
-            auto ipc_package = buffer_resource->get_ipc_package();
+            auto ipc_package = graphics_platform->create_buffer_ipc_package(buffer_resource);
 
             for (auto& data : ipc_package->ipc_data)
                 buffer->add_data(data);
@@ -167,7 +167,7 @@ void mir::frontend::SessionMediator::next_buffer(
 
     if (!client_tracker->client_has(id))
     {
-        auto ipc_package = buffer_resource->get_ipc_package();
+        auto ipc_package = graphics_platform->create_buffer_ipc_package(buffer_resource);
 
         for (auto& data : ipc_package->ipc_data)
             response->add_data(data);

@@ -46,7 +46,6 @@ enum class BufferUsage : uint32_t
     use_framebuffer_gles //buffer supports usage as a gles render target, hwc layer, and is postable to framebuffer
 };
 
-/* note: this interface will need a new concrete class implementing it when the struct for ANativeWindowBuffer changes */
 class AndroidBufferHandle
 {
 public:
@@ -57,7 +56,6 @@ public:
     virtual geometry::PixelFormat format() const  = 0;
     virtual BufferUsage usage() const = 0;
 
-    virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const = 0;
     virtual std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const = 0;
 
 protected:

@@ -104,29 +104,27 @@ public:
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 };
 
-class StubPlatform : public mg::Platform
+class MockPlatform : public mg::Platform
 {
  public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+    MockPlatform()
     {
-        return std::shared_ptr<mc::GraphicBufferAllocator>();
+        using namespace testing;
+        ON_CALL(*this, create_buffer_allocator(_))
+            .WillByDefault(Return(std::shared_ptr<mc::GraphicBufferAllocator>()));
+        ON_CALL(*this, create_display())
+            .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
+        ON_CALL(*this, get_ipc_package())
+            .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
+        ON_CALL(*this, create_buffer_ipc_package(_))
+            .WillByDefault(Return(std::make_shared<mc::BufferIPCPackage>()));
     }
 
-    std::shared_ptr<mg::Display> create_display()
-    {
-        return std::make_shared<mtd::NullDisplay>();
-    }
-
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
-    }
-    
-    EGLNativeDisplayType shell_egl_display()
-    {
-        return static_cast<EGLNativeDisplayType>(0);
-    }
+    MOCK_METHOD1(create_buffer_allocator, std::shared_ptr<mc::GraphicBufferAllocator>(std::shared_ptr<mg::BufferInitializer> const&));
+    MOCK_METHOD0(create_display, std::shared_ptr<mg::Display>());
+    MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
+    MOCK_METHOD0(shell_egl_display, EGLNativeDisplayType());
+    MOCK_CONST_METHOD1(create_buffer_ipc_package, std::shared_ptr<mc::BufferIPCPackage>(std::shared_ptr<mc::Buffer> const&));
 };
 
 class NullEventSink : public mir::events::EventSink
@@ -139,7 +137,7 @@ struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
-          graphics_platform{std::make_shared<StubPlatform>()},
+          graphics_platform{std::make_shared<MockPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
@@ -158,7 +156,7 @@ struct SessionMediatorTest : public ::testing::Test
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
-    std::shared_ptr<mg::Platform> const graphics_platform;
+    std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
@@ -390,8 +388,10 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
             .WillOnce(Return(mc::BufferID{4}))
             .WillOnce(Return(mc::BufferID{5}));
 
-        EXPECT_CALL(*stubbed_session->mock_buffer, get_ipc_package())
-            .Times(2);
+        std::shared_ptr<mc::Buffer> tmp_buffer = stubbed_session->mock_buffer;
+        EXPECT_CALL(*graphics_platform, create_buffer_ipc_package(tmp_buffer))
+            .Times(2)
+            .WillRepeatedly(Return(package));
 
         mp::SurfaceParameters surface_request;
         mp::Surface surface_response;

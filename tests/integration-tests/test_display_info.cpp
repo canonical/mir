@@ -107,6 +107,11 @@ public:
     {
         return static_cast<EGLNativeDisplayType>(0);
     }
+    std::shared_ptr<mc::BufferIPCPackage> create_buffer_ipc_package(
+            std::shared_ptr<mc::Buffer> const&) const
+    {
+        return std::make_shared<mc::BufferIPCPackage>();
+    }
 };
 
 void connection_callback(MirConnection* connection, void* context)

@@ -49,7 +49,6 @@ public:
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
     void bind_to_texture();
-    std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
     std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
 
 private:

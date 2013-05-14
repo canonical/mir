@@ -359,6 +359,12 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
         {
             return static_cast<EGLNativeDisplayType>(0);
         }
+
+        std::shared_ptr<mc::BufferIPCPackage> create_buffer_ipc_package(
+                std::shared_ptr<mc::Buffer> const&) const
+        {
+            return std::make_shared<mc::BufferIPCPackage>();
+        }
     };
 
     std::shared_ptr<mg::Platform> the_graphics_platform()
@@ -490,6 +496,11 @@ struct BufferCounterConfig : TestingServerConfiguration
         EGLNativeDisplayType shell_egl_display()
         {
             return (EGLNativeDisplayType) 0;
+        }
+        std::shared_ptr<mc::BufferIPCPackage> create_buffer_ipc_package(
+                std::shared_ptr<mc::Buffer> const&) const
+        {
+            return std::make_shared<mc::BufferIPCPackage>();
         }
     };
 

@@ -26,6 +26,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session.h"
@@ -84,6 +85,11 @@ class StubPlatform : public mg::Platform
     EGLNativeDisplayType shell_egl_display()
     {
         return static_cast<EGLNativeDisplayType>(0);
+    }
+
+    std::shared_ptr<mc::BufferIPCPackage> create_buffer_ipc_package(std::shared_ptr<mc::Buffer> const&) const
+    {
+        return std::make_shared<mc::BufferIPCPackage>();
     }
 };
 
