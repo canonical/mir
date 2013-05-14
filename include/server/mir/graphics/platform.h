@@ -20,10 +20,6 @@
 #ifndef MIR_GRAPHICS_PLATFORM_H_
 #define MIR_GRAPHICS_PLATFORM_H_
 
-#include "mir_toolkit/mir_native_buffer.h"
-
-#include <EGL/egl.h>
-
 #include <memory>
 
 namespace mir

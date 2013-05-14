@@ -136,7 +136,6 @@ TEST_F(InternalNativeDisplay, surface_get_current_buffer)
     native_display.surface_get_current_buffer(
         &native_display, static_cast<MirEGLNativeWindowType>(&surface), &buffer_package);
 
-    //TODO: generalize matcher
     EXPECT_EQ(test_buffer_package->data_items, buffer_package.data_items);
     EXPECT_EQ(test_buffer_package->data[0], buffer_package.data[0]);
     EXPECT_EQ(test_buffer_package->data[1], buffer_package.data[1]);

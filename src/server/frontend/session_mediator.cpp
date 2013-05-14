@@ -129,8 +129,10 @@ void mir::frontend::SessionMediator::create_surface(
         if (!client_tracker->client_has(id))
         {
             graphics_platform->fill_ipc_package(buffer, buffer_resource);
-//???
-//            resource_cache->save_resource(response, ipc_package);
+
+            //TODO: (kdub) here, we should hold onto buffer_resource. so ms::Surface doesn't have
+            // to worry about it. ms::Surface guarentees the resource will be there until the end
+            // of the ipc request
         }
         client_tracker->add(id);
     }
@@ -160,8 +162,9 @@ void mir::frontend::SessionMediator::next_buffer(
     {
         graphics_platform->fill_ipc_package(response, buffer_resource);
 
-//this should save the buffer! YAY
-//        resource_cache->save_resource(response, ipc_package);
+        //TODO: (kdub) here, we should hold onto buffer_resource. so ms::Surface doesn't have
+        // to worry about it. ms::Surface guarentees the resource will be there until the end
+        // of the ipc request
     }
     client_tracker->add(id);
     done->Run();
