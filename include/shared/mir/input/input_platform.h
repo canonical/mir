@@ -16,33 +16,40 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
-#define MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#ifndef MIR_INPUT_RECEIVER_PLATFORM_H_
+#define MIR_INPUT_RECEIVER_PLATFORM_H_
+
+#include "mir_toolkit/event.h"
+
+#include <memory>
+#include <functional>
 
 namespace mir
 {
-namespace client
-{
 namespace input
 {
+namespace receiver
+{
+class InputReceiverThread;
 
-class InputReceiverThread
+// Interface for MirSurface to construct input dispatcher threads.
+class InputPlatform
 {
 public:
-    virtual ~InputReceiverThread() {};
+    virtual ~InputPlatform() {};  
 
-    virtual void start() = 0;
-    virtual void stop() = 0;
-    virtual void join() = 0;
+    virtual std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> const& callback) = 0;
+    
+    static std::shared_ptr<InputPlatform> create();
 
 protected:
-    InputReceiverThread() = default;
-    InputReceiverThread(const InputReceiverThread&) = delete;
-    InputReceiverThread& operator=(const InputReceiverThread&) = delete;
+    InputPlatform() = default;
+    InputPlatform(const InputPlatform&) = delete;
+    InputPlatform& operator=(const InputPlatform&) = delete;
 };
 
 }
 }
 } // namespace mir
 
-#endif // MIR_CLIENT_INPUT_RECEIVER_THREAD_H_
+#endif // MIR_INPUT_RECEIVER_PLATFORM_H_

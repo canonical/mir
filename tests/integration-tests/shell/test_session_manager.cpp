@@ -70,6 +70,8 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
     auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
 
+    Mock::VerifyAndClearExpectations(&focus_setter);
+
     {
       InSequence seq;
       EXPECT_CALL(focus_setter, set_focus_to(Eq(session1))).Times(1);
@@ -80,6 +82,11 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     session_manager.focus_next();
     session_manager.focus_next();
     session_manager.focus_next();
+
+    Mock::VerifyAndClearExpectations(&focus_setter);
+
+    // Possible change of focus while sessions are closed on shutdown
+    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(AtLeast(0));
 }
 
 TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
@@ -108,6 +115,8 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
     auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
     auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
 
+    Mock::VerifyAndClearExpectations(&focus_setter);
+
     {
       InSequence seq;
       EXPECT_CALL(focus_setter, set_focus_to(Eq(session2))).Times(1);
@@ -116,4 +125,9 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
 
     session_manager.close_session(session3);
     session_manager.close_session(session2);
+
+    Mock::VerifyAndClearExpectations(&focus_setter);
+
+    // Possible change of focus while sessions are closed on shutdown
+    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(AtLeast(0));
 }

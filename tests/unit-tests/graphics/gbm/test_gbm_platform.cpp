@@ -19,8 +19,10 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
+#include "src/server/graphics/gbm/internal_client.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_surface.h"
 
 #include "mir/graphics/null_display_report.h"
 #include "mir_protobuf.pb.h"
@@ -169,21 +171,22 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
         EXPECT_EQ(native_handle->fd[i], response.fd(i));
     for (int i = 0; i < response.data_size(); ++i)
         EXPECT_EQ(native_handle->data[i], response.data(i));
+}
 
-#if 0
-    ASSERT_NE(nullptr, package);
-    ASSERT_EQ(native_handle->data_items, static_cast<int>(package->ipc_data.size()));
-    ASSERT_EQ(native_handle->fd_items, static_cast<int>(package->ipc_fds.size()));
-    EXPECT_EQ(dummy_stride, package->stride);
-
-    for(auto i=0; i < native_handle->fd_items; i++)
+/* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different
+ *       implementations and both have symbols for it. If the linking order of the test changes,
+ *       specifically, if mir_egl_mesa_display_is_valid resolves into libmirclient, then this test will break. 
+ */
+TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
+{
+    auto stub_surface = std::make_shared<mtd::StubSurface>();
+    MirMesaEGLNativeDisplay* native_display = nullptr;
+    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
     {
-        EXPECT_EQ(native_handle->fd[i], package->ipc_fds[i]);
+        auto platform = create_platform();
+        auto client = platform->create_internal_client(stub_surface);
+        native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
+        EXPECT_EQ(1, mir_server_internal_display_is_valid(native_display));
     }
-
-    for(auto i=0; i < native_handle->data_items; i++)
-    {
-        EXPECT_EQ(native_handle->data[i], package->ipc_data[i]);
-    }
-#endif
+    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
 }

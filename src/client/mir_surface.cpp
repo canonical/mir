@@ -22,14 +22,14 @@
 #include "client_buffer.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
-#include "input/input_receiver_thread.h"
-#include "input/input_platform.h"
+#include "mir/input/input_receiver_thread.h"
+#include "mir/input/input_platform.h"
 
 #include <cassert>
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
-namespace mcli = mir::client::input;
+namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -38,7 +38,7 @@ MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
     std::shared_ptr<mir::client::Logger> const& logger,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    std::shared_ptr<mcli::InputPlatform> const& input_platform,
+    std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),

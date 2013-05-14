@@ -16,11 +16,11 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "xkb_mapper.h"
+#include "mir/input/xkb_mapper.h"
 
 #include <string.h>
 
-namespace mcli = mir::client::input;
+namespace mircv = mir::input::receiver;
 
 namespace
 {
@@ -47,7 +47,7 @@ struct XKBStateDeleter
 };
 }
 
-mcli::XKBMapper::XKBMapper()
+mircv::XKBMapper::XKBMapper()
 {
     xkb_rule_names names;
     names.rules = "evdev";
@@ -85,7 +85,7 @@ static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_cod
 
 }
 
-xkb_keysym_t mcli::XKBMapper::press_and_map_key(int scan_code)
+xkb_keysym_t mircv::XKBMapper::press_and_map_key(int scan_code)
 {
     uint32_t xkb_scan_code = to_xkb_scan_code(scan_code);
     xkb_state_update_key(state.get(), xkb_scan_code, XKB_KEY_DOWN);
@@ -93,7 +93,7 @@ xkb_keysym_t mcli::XKBMapper::press_and_map_key(int scan_code)
     return keysym_for_scan_code(state.get(), xkb_scan_code);
 }
 
-xkb_keysym_t mcli::XKBMapper::release_and_map_key(int scan_code)
+xkb_keysym_t mircv::XKBMapper::release_and_map_key(int scan_code)
 {
     uint32_t xkb_scan_code = to_xkb_scan_code(scan_code);
     xkb_state_update_key(state.get(), xkb_scan_code, XKB_KEY_UP);

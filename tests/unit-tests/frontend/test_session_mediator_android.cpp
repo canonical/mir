@@ -30,6 +30,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
+#include "mir_test_doubles/stub_platform.h"
 
 #include "mir/events/event_sink.h"
 
@@ -62,35 +63,6 @@ public:
     }
 };
 
-class StubPlatform : public mg::Platform
-{
- public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
-    {
-        return std::shared_ptr<mc::GraphicBufferAllocator>();
-    }
-
-    std::shared_ptr<mg::Display> create_display()
-    {
-        return std::make_shared<mtd::NullDisplay>();
-    }
-
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
-    }
-
-    EGLNativeDisplayType shell_egl_display()
-    {
-        return static_cast<EGLNativeDisplayType>(0);
-    }
-
-    void fill_ipc_package(mir::protobuf::Buffer*, std::shared_ptr<mc::Buffer> const&) const
-    {
-    }
-};
-
 class NullEventSink : public mir::events::EventSink
 {
 public:
@@ -101,7 +73,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
 {
     SessionMediatorAndroidTest()
         : shell{std::make_shared<mtd::StubShell>()},
-          graphics_platform{std::make_shared<StubPlatform>()},
+          graphics_platform{std::make_shared<mtd::StubPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
@@ -115,7 +87,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
     }
 
     std::shared_ptr<mtd::StubShell> const shell;
-    std::shared_ptr<StubPlatform> const graphics_platform;
+    std::shared_ptr<mtd::StubPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;

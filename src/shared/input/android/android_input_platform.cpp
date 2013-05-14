@@ -20,25 +20,25 @@
 #include "android_input_receiver.h"
 #include "android_input_receiver_thread.h"
 
-namespace mcli = mir::client::input;
-namespace mclia = mcli::android;
+namespace mircv = mir::input::receiver;
+namespace mircva = mircv::android;
 
-mclia::AndroidInputPlatform::AndroidInputPlatform()
+mircva::AndroidInputPlatform::AndroidInputPlatform()
 {
 }
 
-mclia::AndroidInputPlatform::~AndroidInputPlatform()
+mircva::AndroidInputPlatform::~AndroidInputPlatform()
 {
 }
 
-std::shared_ptr<mcli::InputReceiverThread> mclia::AndroidInputPlatform::create_input_thread(
+std::shared_ptr<mircv::InputReceiverThread> mircva::AndroidInputPlatform::create_input_thread(
     int fd, std::function<void(MirEvent*)> const& callback)
 {
-    auto receiver = std::make_shared<mclia::InputReceiver>(fd);
-    return std::make_shared<mclia::InputReceiverThread>(receiver, callback);
+    auto receiver = std::make_shared<mircva::InputReceiver>(fd);
+    return std::make_shared<mircva::InputReceiverThread>(receiver, callback);
 }
 
-std::shared_ptr<mcli::InputPlatform> mcli::InputPlatform::create()
+std::shared_ptr<mircv::InputPlatform> mircv::InputPlatform::create()
 {
-    return std::make_shared<mclia::AndroidInputPlatform>();
+    return std::make_shared<mircva::AndroidInputPlatform>();
 }

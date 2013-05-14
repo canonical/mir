@@ -35,7 +35,6 @@ set(
   mir_basic_rpc_channel.cpp
   ${PROTO_SRCS}
 )
-add_subdirectory(input)
 
 list(APPEND CLIENT_SOURCES
   mir_socket_rpc_channel.cpp

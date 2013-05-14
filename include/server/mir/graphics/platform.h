@@ -32,6 +32,10 @@ namespace protobuf
 {
 class Buffer;
 }
+namespace frontend
+{
+class Surface;
+}
 namespace compositor
 {
 class GraphicBufferAllocator;
@@ -46,7 +50,7 @@ namespace graphics
 class Display;
 struct PlatformIPCPackage;
 class BufferInitializer;
-
+class InternalClient;
 class DisplayReport;
 
 /// Interface to platform specific support for graphics operations.
@@ -64,7 +68,7 @@ public:
     virtual void fill_ipc_package(protobuf::Buffer* response,
             std::shared_ptr<compositor::Buffer> const& buffer) const = 0;
     
-    virtual EGLNativeDisplayType shell_egl_display() = 0;
+    virtual std::shared_ptr<InternalClient> create_internal_client(std::shared_ptr<frontend::Surface> const&) = 0;
 };
 
 // Create and return a new graphics platform.

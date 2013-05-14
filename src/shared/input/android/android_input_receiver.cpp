@@ -17,41 +17,41 @@
  */
 
 #include "android_input_receiver.h"
-#include "xkb_mapper.h"
 
+#include "mir/input/xkb_mapper.h"
 #include "mir/input/android/android_input_lexicon.h"
 
 #include <androidfw/InputTransport.h>
 #include <utils/Looper.h>
 
-namespace mcli = mir::client::input;
-namespace mclia = mcli::android;
+namespace mircv = mir::input::receiver;
+namespace mircva = mircv::android;
 
 namespace mia = mir::input::android;
 
-mclia::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
+mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel)
   : input_channel(input_channel),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
-    xkb_mapper(std::make_shared<mcli::XKBMapper>())
+    xkb_mapper(std::make_shared<mircv::XKBMapper>())
 {
 }
 
-mclia::InputReceiver::InputReceiver(int fd)
+mircva::InputReceiver::InputReceiver(int fd)
   : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)), 
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
-    xkb_mapper(std::make_shared<mcli::XKBMapper>())
+    xkb_mapper(std::make_shared<mircv::XKBMapper>())
 {
 }
 
-mclia::InputReceiver::~InputReceiver()
+mircva::InputReceiver::~InputReceiver()
 {
 }
 
-int mclia::InputReceiver::fd() const
+int mircva::InputReceiver::fd() const
 {
     return input_channel->getFd();
 }
@@ -59,7 +59,7 @@ int mclia::InputReceiver::fd() const
 namespace
 {
 
-static void map_key_event(std::shared_ptr<mcli::XKBMapper> const& xkb_mapper, MirEvent &ev)
+static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, MirEvent &ev)
 {
     // TODO: As XKBMapper is used to track modifier state we need to use a seperate instance
     // of XKBMapper per device id (or modify XKBMapper semantics)
@@ -77,7 +77,7 @@ static void map_key_event(std::shared_ptr<mcli::XKBMapper> const& xkb_mapper, Mi
 
 // TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
 // with the existing client io_service ~racarr ~tvoss
-bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
+bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
@@ -113,7 +113,7 @@ bool mclia::InputReceiver::next_event(std::chrono::milliseconds const& timeout, 
     return handled_event;
 }
 
-void mclia::InputReceiver::wake()
+void mircva::InputReceiver::wake()
 {
     looper->wake();
 }

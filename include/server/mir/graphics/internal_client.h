@@ -13,30 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_
-#define MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_
 
-#include "mir_toolkit/mesa/native_display.h"
+#ifndef MIR_GRAPHICS_INTERNAL_CLIENT_H_
+#define MIR_GRAPHICS_INTERNAL_CLIENT_H_
 
-#include <memory>
+#include <EGL/egl.h>
 
 namespace mir
 {
 namespace graphics
 {
-class Platform;
-
-namespace egl
+class InternalClient
 {
-namespace mesa
-{
-std::shared_ptr<MirMesaEGLNativeDisplay> create_native_display(std::shared_ptr<Platform> const& platform);
+public:
+    virtual EGLNativeDisplayType egl_native_display() = 0;
+    virtual EGLNativeWindowType egl_native_window() = 0;
+protected:
+    InternalClient() = default;
+    virtual ~InternalClient() = default;
+    InternalClient(InternalClient const&) = delete;
+    InternalClient& operator=(InternalClient const&) = delete;
+};
 }
 }
-}
-} // namespace mir
 
-#endif // MIR_GRAPHICS_EGL_NATIVE_DISPLAY_H_
+#endif /* MIR_GRAPHICS_INTERNAL_CLIENT_H_ */

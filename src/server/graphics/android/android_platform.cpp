@@ -23,6 +23,7 @@
 #include "android_display_allocator.h"
 #include "android_display_factory.h"
 #include "default_framebuffer_factory.h"
+#include "internal_client.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
@@ -32,6 +33,7 @@ namespace mp=mir::protobuf;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
+namespace mf=mir::frontend;
 
 mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mg::DisplayReport> const& display_report)
     : display_report(display_report)
@@ -78,36 +80,11 @@ void mga::AndroidPlatform::fill_ipc_package(mp::Buffer* response, std::shared_pt
 
     response->set_stride(buffer->stride().as_uint32_t()); 
 }
-#if 0
-std::shared_ptr<mc::BufferIPCPackage> mga::AndroidPlatform::create_buffer_ipc_package(
-    std::shared_ptr<mc::Buffer> const& buffer) const
+
+std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client(
+    std::shared_ptr<mf::Surface> const& surface)
 {
-    auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
-
-    const native_handle_t *native_handle = buffer->native_buffer_handle()->handle;
-
-    ipc_package->ipc_fds.resize(native_handle->numFds);
-    int offset = 0;
-    for(auto it=ipc_package->ipc_fds.begin(); it != ipc_package->ipc_fds.end(); it++)
-    {
-        *it = native_handle->data[offset++];
-    }
-
-    ipc_package->ipc_data.resize(native_handle->numInts);
-    for(auto it=ipc_package->ipc_data.begin(); it != ipc_package->ipc_data.end(); it++)
-    {
-        *it = native_handle->data[offset++];
-    }
-
-    ipc_package->stride = buffer->stride().as_uint32_t();
-
-    return ipc_package;
-}
-#endif
-EGLNativeDisplayType mga::AndroidPlatform::shell_egl_display()
-{
-    // TODO: Implement
-    return static_cast<EGLNativeDisplayType>(0);
+    return std::make_shared<mga::InternalClient>(surface);
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)
