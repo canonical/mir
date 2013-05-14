@@ -36,9 +36,11 @@ public:
     AndroidPlatform(std::shared_ptr<DisplayReport> const& display_report);
 
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<BufferInitializer>& buffer_initializer);
+            std::shared_ptr<BufferInitializer> const& buffer_initializer);
     std::shared_ptr<Display> create_display();
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    std::shared_ptr<compositor::BufferIPCPackage> create_buffer_ipc_package(
+            std::shared_ptr<compositor::Buffer> const& buffer) const;
     
     EGLNativeDisplayType shell_egl_display();
 

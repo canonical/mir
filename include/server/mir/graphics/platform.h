@@ -29,6 +29,8 @@ namespace mir
 namespace compositor
 {
 class GraphicBufferAllocator;
+class Buffer;
+class BufferIPCPackage;
 }
 
 /// Graphics subsystem. Mediates interaction between core system and
