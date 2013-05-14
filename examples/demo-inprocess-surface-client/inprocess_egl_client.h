@@ -63,7 +63,6 @@ private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<shell::SessionManager> const session_manager;
 
-    std::atomic<bool> running;
     std::thread client_thread;
     
     std::shared_ptr<input::receiver::InputReceiverThread> input_thread;
@@ -71,7 +70,7 @@ private:
     void thread_loop();
     void handle_event(MirEvent *event);
 
-    bool terminate;
+    std::atomic<bool> terminate;
 };
 
 }
