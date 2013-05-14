@@ -27,6 +27,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_ipc_package.h"
+#include "mir_protobuf.pb.h"
 
 namespace mp=mir::protobuf;
 namespace mg=mir::graphics;
@@ -61,9 +62,22 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::fill_ipc_package(mp::Buffer* /*response*/, std::shared_ptr<mc::Buffer> const& /*buffer*/) const
+void mga::AndroidPlatform::fill_ipc_package(mp::Buffer* response, std::shared_ptr<mc::Buffer> const& buffer) const
 {
+    auto native_buffer = buffer->native_buffer_handle();
+    auto buffer_handle = native_buffer->handle;
 
+    int offset = 0;
+    for(auto i=0; i<buffer_handle->numFds; i++)
+    {
+        response->add_fd(buffer_handle->data[offset++]);
+    }    
+    for(auto i=0; i<buffer_handle->numInts; i++)
+    {
+        response->add_data(buffer_handle->data[offset++]);
+    }    
+
+    response->set_stride(buffer->stride().as_uint32_t()); 
 }
 #if 0
 std::shared_ptr<mc::BufferIPCPackage> mga::AndroidPlatform::create_buffer_ipc_package(
