@@ -16,6 +16,9 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
 endif ()
 
+# GCC 4.8 dislikes the gmock headers…
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-local-typedefs")
+
 include_directories(${PROJECT_SOURCE_DIR}/include/server)
 include_directories(${PROJECT_SOURCE_DIR}/include/client)
 include_directories(${PROJECT_SOURCE_DIR}/include/test)
