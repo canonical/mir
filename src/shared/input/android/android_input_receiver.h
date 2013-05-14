@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_INPUT_RECEIVER_H_
-#define MIR_INPUT_ANDROID_INPUT_RECEIVER_H_
+#ifndef MIR_INPUT_RECEIVER_ANDROID_INPUT_RECEIVER_H_
+#define MIR_INPUT_RECEIVER_ANDROID_INPUT_RECEIVER_H_
 
 #include "mir_toolkit/event.h"
 
@@ -38,9 +38,9 @@ class Looper;
 
 namespace mir
 {
-namespace client
-{
 namespace input
+{
+namespace receiver
 {
 class XKBMapper;
 
@@ -85,4 +85,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_INPUT_ANDROID_INPUT_RECEIVER_H_
+#endif // MIR_INPUT_RECEIVER_ANDROID_INPUT_RECEIVER_H_

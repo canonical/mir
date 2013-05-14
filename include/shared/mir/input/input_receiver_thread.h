@@ -16,37 +16,33 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
-#define MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
-
-#include "input_platform.h"
+#ifndef MIR_INPUT_RECEIVER_RECEIVER_THREAD_H_
+#define MIR_INPUT_RECEIVER_RECEIVER_THREAD_H_
 
 namespace mir
 {
-namespace client
-{
 namespace input
 {
-namespace android
+namespace receiver
 {
 
-/// Implementation of client input machinery for android input stack wire protocol.
-class AndroidInputPlatform : public InputPlatform
+class InputReceiverThread
 {
 public:
-    AndroidInputPlatform();
-    virtual ~AndroidInputPlatform();  
+    virtual ~InputReceiverThread() {};
 
-    std::shared_ptr<InputReceiverThread> create_input_thread(int fd, std::function<void(MirEvent *)> const& callback);
+    virtual void start() = 0;
+    virtual void stop() = 0;
+    virtual void join() = 0;
 
 protected:
-    AndroidInputPlatform(const AndroidInputPlatform&) = delete;
-    AndroidInputPlatform& operator=(const AndroidInputPlatform&) = delete;
+    InputReceiverThread() = default;
+    InputReceiverThread(const InputReceiverThread&) = delete;
+    InputReceiverThread& operator=(const InputReceiverThread&) = delete;
 };
 
 }
 }
-}
 } // namespace mir
 
-#endif // MIR_CLIENT_ANDROID_INPUT_PLATFORM_H_
+#endif // MIR_INPUT_RECEIVER_RECEIVER_THREAD_H_

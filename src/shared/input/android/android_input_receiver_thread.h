@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_INPUT_RECEIVER_THREAD_H_
-#define MIR_INPUT_ANDROID_INPUT_RECEIVER_THREAD_H_
+#ifndef MIR_INPUT_RECEIVER_ANDROID_INPUT_RECEIVER_THREAD_H_
+#define MIR_INPUT_RECEIVER_ANDROID_INPUT_RECEIVER_THREAD_H_
 
-#include "input_receiver_thread.h"
+#include "mir/input/input_receiver_thread.h"
 
 #include "mir_toolkit/event.h"
 
@@ -30,16 +30,16 @@
 
 namespace mir
 {
-namespace client
-{
 namespace input
+{
+namespace receiver
 {
 namespace android
 {
 class InputReceiver;
 
 /// Responsible for polling an InputReceiver to read and dispatch events when appropriate.
-class InputReceiverThread : public input::InputReceiverThread
+class InputReceiverThread : public receiver::InputReceiverThread
 {
 public:
     InputReceiverThread(std::shared_ptr<InputReceiver> const& receiver, 
@@ -68,4 +68,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_INPUT_ANDROID_INPUT_RECEIVER_THREAD_H_
+#endif // MIR_INPUT_RECEIVER_ANDROID_INPUT_RECEIVER_THREAD_H_

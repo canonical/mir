@@ -20,17 +20,22 @@
 #include "example_egl_helper.h"
 
 #include "mir/main_loop.h"
-#include "mir/shell/surface_factory.h"
+#include "mir/shell/session_manager.h"
 #include "mir/shell/surface.h"
 #include "mir/frontend/surface_creation_parameters.h"
+#include "mir/frontend/session.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/platform.h"
+#include "mir/input/input_receiver_thread.h"
+#include "mir/input/input_platform.h"
 #include "mir/graphics/internal_client.h"
 
 #include "graphics.h"
 
 #include <EGL/egl.h>
+
+#include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <functional>
 
@@ -43,13 +48,16 @@ namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace me = mir::examples;
+namespace mircv = mir::input::receiver;
 namespace geom = mir::geometry;
+
 
 me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
                                            std::shared_ptr<mg::Platform> const& graphics_platform,
-                                           std::shared_ptr<msh::SurfaceFactory> const& surface_factory)
+                                           std::shared_ptr<msh::SessionManager> const& session_manager)
   : graphics_platform(graphics_platform),
-    surface_factory(surface_factory),
+
+    session_manager(session_manager),
     client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this),
     terminate(false)
 {
@@ -72,7 +80,17 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
-    auto surface = surface_factory->create_surface(params, mf::SurfaceId(), std::shared_ptr<events::EventSink>());
+    auto session = session_manager->open_session("Inprocess client",
+                                                 std::shared_ptr<mir::events::EventSink>());
+    // TODO: Why do we get an ID? ~racarr
+    auto surface = session->get_surface(session_manager->create_surface_for(session, params));
+    
+    auto input_platform = mircv::InputPlatform::create();
+    input_thread = input_platform->create_input_thread(
+        surface->client_input_fd(), 
+            std::bind(std::mem_fn(&me::InprocessEGLClient::handle_event), this, std::placeholders::_1));
+    input_thread->start();
+
     auto internal_client = graphics_platform->create_internal_client(surface);
     me::EGLHelper helper(internal_client->egl_native_display(), internal_client->egl_native_window());
 
@@ -92,5 +110,18 @@ void me::InprocessEGLClient::thread_loop()
 
         gl_animation.step();
     }
+
+    input_thread->stop();
     ///\internal [loop_tag]
+}
+
+void me::InprocessEGLClient::handle_event(MirEvent *event)
+{
+    if (event->type != mir_event_type_key)
+        return;
+    if (event->key.action != mir_key_action_down)
+        return;
+    if (event->key.key_code != XKB_KEY_Escape)
+        return;
+    terminate = true;
 }

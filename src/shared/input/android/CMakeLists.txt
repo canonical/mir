@@ -12,23 +12,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Thomas Voss <thomas.voss@canonical.com>
+# Authored by: Robert Carr <robert.carr@canonical.com>
+
+list(
+  APPEND ANDROID_SHARED_INPUT_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_lexicon.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_receiver.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_receiver_thread.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_platform.cpp
+)
 
 set(
   ANDROID_SHARED_INPUT_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
-)
-
-add_subdirectory(android)
-
-add_library(
-  mirsharedinput STATIC
   ${ANDROID_SHARED_INPUT_SOURCES}
-)
-
-target_link_libraries(
-  mirsharedinput
-  
-  android-input
-  ${XKBCOMMON_LIBRARIES}
+  PARENT_SCOPE
 )

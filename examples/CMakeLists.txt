@@ -120,7 +120,7 @@ set (DEMO_CLIENTS
   mir_eglplasma
 )
 
-add_subdirectory(demo-inprocess-egl)
+add_subdirectory(demo-inprocess-surface-client)
 add_subdirectory(demo-shell)
 
 install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION bin)
