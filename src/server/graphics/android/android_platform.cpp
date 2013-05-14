@@ -28,6 +28,7 @@
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_ipc_package.h"
 
+namespace mp=mir::protobuf;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
@@ -60,6 +61,11 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
+void mga::AndroidPlatform::fill_ipc_package(mp::Buffer* /*response*/, std::shared_ptr<mc::Buffer> const& /*buffer*/) const
+{
+
+}
+#if 0
 std::shared_ptr<mc::BufferIPCPackage> mga::AndroidPlatform::create_buffer_ipc_package(
     std::shared_ptr<mc::Buffer> const& buffer) const
 {
@@ -84,7 +90,7 @@ std::shared_ptr<mc::BufferIPCPackage> mga::AndroidPlatform::create_buffer_ipc_pa
 
     return ipc_package;
 }
-
+#endif
 EGLNativeDisplayType mga::AndroidPlatform::shell_egl_display()
 {
     // TODO: Implement

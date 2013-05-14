@@ -19,9 +19,11 @@
 #include "mir/graphics/null_display_report.h"
 #include "src/server/graphics/android/android_platform.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_protobuf.pb.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
+namespace mp=mir::protobuf;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
@@ -71,23 +73,24 @@ protected:
 /* ipc packaging tests */
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
-    mga::AndroidPlatform platform(stub_display_report);
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>();
+    int dummy_stride = 4390;
 
-    auto package = platform.create_buffer_ipc_package(mock_buffer);
+    EXPECT_CALL(*mock_buffer, native_buffer_handle())
+        .WillOnce(testing::Return(anwb));
+    EXPECT_CALL(*mock_buffer, stride())
+        .WillOnce(testing::Return(mir::geometry::Stride{dummy_stride}));
 
-    EXPECT_EQ(
-    ASSERT_NE(nullptr, package);
-    ASSERT_EQ(num_ints, package->ipc_data.size());
-    ASSERT_EQ(num_fds, package->ipc_fds.size());
+    auto platform = mg::create_platform(stub_display_report);
 
+    mp::Buffer response;
+    platform->fill_ipc_package(&response, mock_buffer);
+
+    EXPECT_EQ(native_buffer_handle->numFds, response.fd_size());
+    EXPECT_EQ(native_buffer_handle->numInts, response.data_size());
     int offset = 0;
-    for(auto it=package->ipc_fds.begin(); it != package->ipc_fds.end(); it++)
-    {
-        EXPECT_EQ(anwb->handle->data[offset++], *it);
-    }
-
-    for(auto it= package->ipc_data.begin(); it != package->ipc_data.end(); it++)
-    {
-        EXPECT_EQ(anwb->handle->data[offset++], *it);
-    }
+    for (int i = 0; i < response.fd_size(); ++i)
+        EXPECT_EQ(native_buffer_handle->data[offset++], response.fd(i));
+    for (int i = 0; i < response.data_size(); ++i)
+        EXPECT_EQ(native_buffer_handle->data[offset++], response.data(i));
 }
