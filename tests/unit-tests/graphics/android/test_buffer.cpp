@@ -17,7 +17,6 @@
  */
 
 #include "src/server/graphics/android/buffer.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 
 #include <hardware/gralloc.h>

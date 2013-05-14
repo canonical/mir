@@ -20,7 +20,6 @@
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_basic.h"

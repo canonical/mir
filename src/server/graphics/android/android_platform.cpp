@@ -26,7 +26,6 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir_protobuf.pb.h"
 
 namespace mp=mir::protobuf;

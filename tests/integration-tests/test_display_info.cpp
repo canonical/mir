@@ -20,7 +20,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"

@@ -18,7 +18,6 @@
 
 #include "mir_test_framework/process.h"
 
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"

@@ -20,7 +20,6 @@
 
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include <fcntl.h>
 #include <xf86drm.h>

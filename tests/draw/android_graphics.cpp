@@ -18,7 +18,6 @@
 
 
 #include "mir_test/draw/android_graphics.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include <fstream>
 #include <stdexcept>

@@ -18,7 +18,6 @@
  */
 
 #include "android_buffer_handle_default.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include <system/window.h>
 
 namespace mga=mir::graphics::android;
@@ -26,7 +25,7 @@ namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 
-/* todo: this class is trivial. remove */
+/* TODO: (kdub) this class has become trivial. remove soon */
 mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(std::shared_ptr<ANativeWindowBuffer> const& buf, geom::PixelFormat pf, BufferUsage use)
     : anw_buffer(buf),
       pixel_format(pf),

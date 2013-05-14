@@ -18,7 +18,6 @@
 #include "mir/graphics/egl/mesa_native_display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 
