@@ -19,7 +19,6 @@
 
 #include "buffer.h"
 #include "graphic_alloc_adaptor.h"
-#include "android_format_conversion-inl.h"
 
 #include <system/window.h>
 #include <GLES2/gl2.h>
@@ -58,18 +57,17 @@ mga::Buffer::~Buffer()
 
 geom::Size mga::Buffer::size() const
 {
-    return geom::Size{geom::Width{native_window_buffer_handle->width},
-                      geom::Height{native_window_buffer_handle->height}};
+    return native_window_buffer_handle->size();
 }
 
 geom::Stride mga::Buffer::stride() const
 {
-    return geom::Stride(native_window_buffer_handle->stride);
+    return native_window_buffer_handle->stride();
 }
 
 geom::PixelFormat mga::Buffer::pixel_format() const
 {
-    return to_mir_format(native_window_buffer_handle->format);
+    return native_window_buffer_handle->format();
 }
 
 void mga::Buffer::bind_to_texture()
@@ -87,8 +85,9 @@ void mga::Buffer::bind_to_texture()
     auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
+        auto buffer = native_window_buffer_handle->native_buffer_handle();
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  native_window_buffer_handle.get(), image_attrs);
+                                  buffer.get(), image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error binding buffer to texture\n"));
@@ -107,5 +106,5 @@ void mga::Buffer::bind_to_texture()
  
 std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
 {
-    return native_window_buffer_handle;
+    return native_window_buffer_handle->native_buffer_handle();
 }

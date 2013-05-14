@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012,2013 Canonical Ltd.
+ * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,19 +16,10 @@
  * Authored by:
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_
+#define MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_
 
-#ifndef MIR_GRAPHICS_ANDROID_BUFFER_H_
-#define MIR_GRAPHICS_ANDROID_BUFFER_H_
-
-#include "mir/compositor/buffer_basic.h"
 #include "android_buffer_handle.h"
-
-#include <map>
-
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
 
 namespace mir
 {
@@ -37,30 +28,29 @@ namespace graphics
 namespace android
 {
 
-class GraphicAllocAdaptor;
-class Buffer: public compositor::BufferBasic 
+class AndroidBufferHandleDefault: public AndroidBufferHandle
 {
 public:
-    Buffer(const std::shared_ptr<GraphicAllocAdaptor>& device,
-                  geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
-    ~Buffer();
+    AndroidBufferHandleDefault(std::shared_ptr<ANativeWindowBuffer> const& buf, geometry::PixelFormat pf, BufferUsage use);
 
     geometry::Size size() const;
     geometry::Stride stride() const;
-    geometry::PixelFormat pixel_format() const;
-    void bind_to_texture();
+    geometry::PixelFormat format() const;
+    BufferUsage usage() const;
+
     std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
 
 private:
-    std::shared_ptr<GraphicAllocAdaptor> const alloc_device;
+    std::shared_ptr<ANativeWindowBuffer> anw_buffer;
 
-    std::map<EGLDisplay,EGLImageKHR> egl_image_map;
-
-    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
+    /* we save these so that when other parts of the system query for the mir
+       types, we don't have to convert back */
+    const geometry::PixelFormat pixel_format;
+    const BufferUsage buffer_usage;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_BUFFER_H_ */
+#endif /*MIR_GRAPHICS_ANDROID_ANDROID_BUFFER_HANDLE_DEFAULT_H_ */
