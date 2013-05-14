@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 
 #include "mir/graphics/null_display_report.h"
+#include "mir_protobuf.pb.h"
 
 #include <gtest/gtest.h>
 
@@ -34,6 +35,7 @@
 
 #include <stdexcept>
 
+namespace mp = mir::protobuf;
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mtd = mir::test::doubles;
@@ -157,8 +159,18 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
         .WillOnce(testing::Return(mir::geometry::Stride{dummy_stride}));
 
     auto platform = create_platform();
-    auto package = platform->create_buffer_ipc_package(mock_buffer);
 
+    mp::Buffer response;
+    platform->fill_ipc_package(&response, mock_buffer);
+
+    EXPECT_EQ(native_handle->data_items, response.fd_size());
+    EXPECT_EQ(native_handle->fd_items, response.data_size());
+    for (int i = 0; i < response.fd_size(); ++i)
+        EXPECT_EQ(native_handle->fd[i], response.fd(i));
+    for (int i = 0; i < response.data_size(); ++i)
+        EXPECT_EQ(native_handle->data[i], response.data(i));
+
+#if 0
     ASSERT_NE(nullptr, package);
     ASSERT_EQ(native_handle->data_items, static_cast<int>(package->ipc_data.size()));
     ASSERT_EQ(native_handle->fd_items, static_cast<int>(package->ipc_fds.size()));
@@ -172,6 +184,6 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
     for(auto i=0; i < native_handle->data_items; i++)
     {
         EXPECT_EQ(native_handle->data[i], package->ipc_data[i]);
-
     }
+#endif
 }

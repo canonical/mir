@@ -49,8 +49,8 @@ public:
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     
     EGLNativeDisplayType shell_egl_display();
-    std::shared_ptr<MirBufferPackage> create_buffer_ipc_package(
-            std::shared_ptr<compositor::Buffer> const& buffer) const;
+
+    void fill_ipc_package(protobuf::Buffer* response, std::shared_ptr<compositor::Buffer> const& buffer) const;
 
     /* From DRMAuthenticator */
     void drm_auth_magic(drm_magic_t magic);

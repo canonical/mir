@@ -28,6 +28,10 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class Buffer;
+}
 namespace compositor
 {
 class GraphicBufferAllocator;
@@ -57,7 +61,7 @@ public:
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
     virtual std::shared_ptr<Display> create_display() = 0;
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
-    virtual std::shared_ptr<MirBufferPackage> create_buffer_ipc_package(
+    virtual void fill_ipc_package(protobuf::Buffer* response,
             std::shared_ptr<compositor::Buffer> const& buffer) const = 0;
     
     virtual EGLNativeDisplayType shell_egl_display() = 0;

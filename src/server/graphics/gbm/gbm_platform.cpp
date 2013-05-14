@@ -106,10 +106,9 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-std::shared_ptr<MirBufferPackage> mgg::GBMPlatform::create_buffer_ipc_package(
-    std::shared_ptr<mc::Buffer> const& buffer) const
+void mgg::GBMPlatform::fill_ipc_package(protobuf::Buffer* /*response*/, std::shared_ptr<compositor::Buffer> const& /*buffer*/) const
 {
-    return buffer->native_buffer_handle();
+//    return buffer->native_buffer_handle();
 }
 
 void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)

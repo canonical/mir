@@ -360,10 +360,8 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return static_cast<EGLNativeDisplayType>(0);
         }
 
-        std::shared_ptr<mc::BufferIPCPackage> create_buffer_ipc_package(
-                std::shared_ptr<mc::Buffer> const&) const
+        void fill_ipc_package(mir::protobuf::Buffer*, std::shared_ptr<mc::Buffer> const&) const
         {
-            return std::make_shared<mc::BufferIPCPackage>();
         }
     };
 
@@ -497,10 +495,9 @@ struct BufferCounterConfig : TestingServerConfiguration
         {
             return (EGLNativeDisplayType) 0;
         }
-        std::shared_ptr<mc::BufferIPCPackage> create_buffer_ipc_package(
-                std::shared_ptr<mc::Buffer> const&) const
+
+        void fill_ipc_package(mir::protobuf::Buffer*, std::shared_ptr<mc::Buffer> const&) const
         {
-            return std::make_shared<mc::BufferIPCPackage>();
         }
     };
 

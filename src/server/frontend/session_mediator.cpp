@@ -129,16 +129,9 @@ void mir::frontend::SessionMediator::create_surface(
 
         if (!client_tracker->client_has(id))
         {
-            auto ipc_package = graphics_platform->create_buffer_ipc_package(buffer_resource);
-
-            for (auto i=0; i < ipc_package->data_items; i++)
-                buffer->add_data(ipc_package->data[i]);
-            for (auto i=0; i < ipc_package->fd_items; i++)
-                buffer->add_fd(ipc_package->fd[i]);
-
-            buffer->set_stride(ipc_package->stride);
-
-            resource_cache->save_resource(response, ipc_package);
+            graphics_platform->fill_ipc_package(buffer, buffer_resource);
+//???
+//            resource_cache->save_resource(response, ipc_package);
         }
         client_tracker->add(id);
     }
@@ -166,16 +159,10 @@ void mir::frontend::SessionMediator::next_buffer(
 
     if (!client_tracker->client_has(id))
     {
-        auto ipc_package = graphics_platform->create_buffer_ipc_package(buffer_resource);
+        graphics_platform->fill_ipc_package(response, buffer_resource);
 
-        for (auto i=0; i < ipc_package->data_items; i++)
-            response->add_data(ipc_package->data[i]);
-        for (auto i=0; i < ipc_package->fd_items; i++)
-            response->add_fd(ipc_package->fd[i]);
-
-        response->set_stride(ipc_package->stride);
-
-        resource_cache->save_resource(response, ipc_package);
+//this should save the buffer! YAY
+//        resource_cache->save_resource(response, ipc_package);
     }
     client_tracker->add(id);
     done->Run();
