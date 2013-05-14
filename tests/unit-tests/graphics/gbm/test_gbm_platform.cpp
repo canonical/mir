@@ -20,6 +20,7 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir_test_doubles/mock_buffer.h"
 
 #include "mir/graphics/null_display_report.h"
 
@@ -138,4 +139,39 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     EXPECT_THROW({
         authenticator->drm_auth_magic(magic);
     }, std::runtime_error);
+}
+
+/* ipc packaging tests */
+TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
+{
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>();
+    int dummy_stride = 4390;
+
+    auto native_handle = std::make_shared<MirBufferPackage>();
+    native_handle->data_items = 4;
+    native_handle->fd_items = 2;
+
+    EXPECT_CALL(*mock_buffer, native_buffer_handle())
+        .WillOnce(testing::Return(native_handle));
+    EXPECT_CALL(*mock_buffer, stride())
+        .WillOnce(testing::Return(mir::geometry::Stride{dummy_stride}));
+
+    auto platform = create_platform();
+    auto package = platform->create_buffer_ipc_package(mock_buffer);
+
+    ASSERT_NE(nullptr, package);
+    ASSERT_EQ(native_handle->data_items, static_cast<int>(package->ipc_data.size()));
+    ASSERT_EQ(native_handle->fd_items, static_cast<int>(package->ipc_fds.size()));
+    EXPECT_EQ(dummy_stride, package->stride);
+
+    for(auto i=0; i < native_handle->fd_items; i++)
+    {
+        EXPECT_EQ(native_handle->fd[i], package->ipc_fds[i]);
+    }
+
+    for(auto i=0; i < native_handle->data_items; i++)
+    {
+        EXPECT_EQ(native_handle->data[i], package->ipc_data[i]);
+
+    }
 }

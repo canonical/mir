@@ -49,7 +49,7 @@ public:
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     
     EGLNativeDisplayType shell_egl_display();
-    std::shared_ptr<compositor::BufferIPCPackage> create_buffer_ipc_package(
+    std::shared_ptr<MirBufferPackage> create_buffer_ipc_package(
             std::shared_ptr<compositor::Buffer> const& buffer) const;
 
     /* From DRMAuthenticator */

@@ -124,9 +124,9 @@ class StubGraphicPlatform : public mg::Platform
         return (EGLNativeDisplayType) 0;
     }
     
-    std::shared_ptr<mc::BufferIPCPackage> create_buffer_ipc_package(std::shared_ptr<mc::Buffer> const&) const
+    std::shared_ptr<MirBufferPackage> create_buffer_ipc_package(std::shared_ptr<mc::Buffer> const&) const
     {
-        return std::make_shared<mc::BufferIPCPackage>();
+        return std::make_shared<MirBufferPackage>();
     }
 };
 

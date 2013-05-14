@@ -131,11 +131,10 @@ void mir::frontend::SessionMediator::create_surface(
         {
             auto ipc_package = graphics_platform->create_buffer_ipc_package(buffer_resource);
 
-            for (auto& data : ipc_package->ipc_data)
-                buffer->add_data(data);
-
-            for (auto& ipc_fds : ipc_package->ipc_fds)
-                buffer->add_fd(ipc_fds);
+            for (auto i=0; i < ipc_package->data_items; i++)
+                buffer->add_data(ipc_package->data[i]);
+            for (auto i=0; i < ipc_package->fd_items; i++)
+                buffer->add_fd(ipc_package->fd[i]);
 
             buffer->set_stride(ipc_package->stride);
 
@@ -169,11 +168,10 @@ void mir::frontend::SessionMediator::next_buffer(
     {
         auto ipc_package = graphics_platform->create_buffer_ipc_package(buffer_resource);
 
-        for (auto& data : ipc_package->ipc_data)
-            response->add_data(data);
-
-        for (auto& ipc_fds : ipc_package->ipc_fds)
-            response->add_fd(ipc_fds);
+        for (auto i=0; i < ipc_package->data_items; i++)
+            response->add_data(ipc_package->data[i]);
+        for (auto i=0; i < ipc_package->fd_items; i++)
+            response->add_fd(ipc_package->fd[i]);
 
         response->set_stride(ipc_package->stride);
 
