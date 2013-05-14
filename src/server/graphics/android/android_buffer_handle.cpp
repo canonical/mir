@@ -35,28 +35,6 @@ mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(std::shared_ptr<ANat
 
 void mga::AndroidBufferHandleDefault::pack_ipc_package()
 {
-    ipc_package = std::make_shared<mc::BufferIPCPackage>();
-
-    const native_handle_t *native_handle = anw_buffer->handle;
-
-    /* pack int data */
-    ipc_package->ipc_data.resize(native_handle->numInts);
-    int fd_offset = native_handle->numFds;
-    for(auto it=ipc_package->ipc_data.begin(); it != ipc_package->ipc_data.end(); it++)
-    {
-        *it = native_handle->data[fd_offset++];
-    }
-
-    /* pack fd data */
-    ipc_package->ipc_fds.resize(native_handle->numFds);
-    int offset = 0;
-    for(auto it=ipc_package->ipc_fds.begin(); it != ipc_package->ipc_fds.end(); it++)
-    {
-        *it = native_handle->data[offset++];
-    }
-
-    /* pack platform independent data */
-    ipc_package->stride = anw_buffer->stride;
 }
 
 

@@ -26,6 +26,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer_ipc_package.h"
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -60,9 +61,28 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
 }
 
 std::shared_ptr<mc::BufferIPCPackage> mga::AndroidPlatform::create_buffer_ipc_package(
-    std::shared_ptr<mc::Buffer> const& /*buffer*/) const
+    std::shared_ptr<mc::Buffer> const& buffer) const
 {
-    return std::shared_ptr<mc::BufferIPCPackage>();
+    auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
+
+    const native_handle_t *native_handle = buffer->native_buffer_handle()->handle;
+
+    ipc_package->ipc_fds.resize(native_handle->numFds);
+    int offset = 0;
+    for(auto it=ipc_package->ipc_fds.begin(); it != ipc_package->ipc_fds.end(); it++)
+    {
+        *it = native_handle->data[offset++];
+    }
+
+    ipc_package->ipc_data.resize(native_handle->numInts);
+    for(auto it=ipc_package->ipc_data.begin(); it != ipc_package->ipc_data.end(); it++)
+    {
+        *it = native_handle->data[offset++];
+    }
+
+    ipc_package->stride = buffer->stride().as_uint32_t();
+
+    return ipc_package;
 }
 
 EGLNativeDisplayType mga::AndroidPlatform::shell_egl_display()
