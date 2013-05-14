@@ -139,3 +139,5 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
         authenticator->drm_auth_magic(magic);
     }, std::runtime_error);
 }
+
+TEST_F(
