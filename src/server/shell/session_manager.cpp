@@ -57,6 +57,22 @@ msh::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& 
 
 msh::SessionManager::~SessionManager()
 {
+    /*
+     * Close all open sessions. We need to do this manually here
+     * to break the cyclic dependency between msh::Session
+     * and msh::InputTargetListener, since our implementations
+     * of these interfaces keep strong references to each other.
+     * TODO: Investigate other solutions (e.g. weak_ptr)
+     */
+    std::vector<std::shared_ptr<msh::Session>> sessions;
+
+    app_container->for_each([&](std::shared_ptr<Session> const& session)
+    {
+        sessions.push_back(session);
+    });
+
+    for (auto& session : sessions)
+        close_session(session);
 }
 
 std::shared_ptr<mf::Session> msh::SessionManager::open_session(
