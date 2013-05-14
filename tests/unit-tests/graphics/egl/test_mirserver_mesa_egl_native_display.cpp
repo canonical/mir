@@ -136,24 +136,36 @@ TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_get_current_buffer)
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
     auto buffer = std::make_shared<mtd::MockBuffer>(geom::Size(), geom::Stride(), geom::PixelFormat());
     
-    mc::BufferIPCPackage test_buffer_package;
+    MirBufferPackage test_buffer_package;
     
-    test_buffer_package.ipc_data = {1, 2};
-    test_buffer_package.ipc_fds = {2, 3};
+    test_buffer_package.data_items = 2;
+    test_buffer_package.data[0] = 1;
+    test_buffer_package.data[1] = 2;
+    test_buffer_package.fd_items = 2;
+    test_buffer_package.fd[0] = 3;
+    test_buffer_package.fd[1] = 4;
     test_buffer_package.stride = 77;
 
     auto display = mgeglm::create_native_display(mt::fake_shared(mock_graphics_platform));
     
     EXPECT_CALL(surface, client_buffer()).Times(1)
         .WillOnce(Return(buffer));
-    EXPECT_CALL(*buffer, get_ipc_package()).Times(1)
+    EXPECT_CALL(*buffer, native_buffer_handle()).Times(1)
         .WillOnce(Return(mt::fake_shared(test_buffer_package)));
     
     MirBufferPackage buffer_package;
     memset(&buffer_package, 0, sizeof(MirBufferPackage));
     display->surface_get_current_buffer(
         display.get(), static_cast<MirEGLNativeWindowType>(&surface), &buffer_package);
-    EXPECT_THAT(buffer_package, AllOf(PackageMatches(test_buffer_package), StrideMatches(test_buffer_package)));
+
+    //TODO: generalize matcher
+    EXPECT_EQ(test_buffer_package.data_items, buffer_package.data_items);
+    EXPECT_EQ(test_buffer_package.data[0], buffer_package.data[0]);
+    EXPECT_EQ(test_buffer_package.data[1], buffer_package.data[1]);
+    EXPECT_EQ(test_buffer_package.fd_items, buffer_package.fd_items);
+    EXPECT_EQ(test_buffer_package.fd[0], buffer_package.fd[0]);
+    EXPECT_EQ(test_buffer_package.fd[1], buffer_package.fd[1]);
+    EXPECT_EQ(test_buffer_package.stride, buffer_package.stride);
 }
 
 TEST_F(MirServerMesaEGLNativeDisplaySetup, surface_advance_buffer)
