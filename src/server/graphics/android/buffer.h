@@ -21,8 +21,9 @@
 #define MIR_GRAPHICS_ANDROID_BUFFER_H_
 
 #include "mir/compositor/buffer_basic.h"
-#include "android_buffer_handle.h"
 
+#include "buffer_usage.h"
+#include <system/window.h>
 #include <map>
 
 #define GL_GLEXT_PROTOTYPES
@@ -41,7 +42,7 @@ class GraphicAllocAdaptor;
 class Buffer: public compositor::BufferBasic 
 {
 public:
-    Buffer(const std::shared_ptr<GraphicAllocAdaptor>& device,
+    Buffer(std::shared_ptr<GraphicAllocAdaptor> const& device,
                   geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
     ~Buffer();
 
@@ -56,7 +57,7 @@ private:
 
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
-    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
+    std::shared_ptr<ANativeWindowBuffer> native_window_buffer_handle;
 };
 
 }
