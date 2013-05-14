@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
@@ -86,6 +87,11 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
     EGLNativeDisplayType shell_egl_display()
     {
         return static_cast<EGLNativeDisplayType>(0);
+    }
+
+    std::shared_ptr<mc::BufferIPCPackage> create_buffer_ipc_package(std::shared_ptr<mc::Buffer> const&) const
+    {
+        return std::make_shared<mc::BufferIPCPackage>();
     }
 
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));

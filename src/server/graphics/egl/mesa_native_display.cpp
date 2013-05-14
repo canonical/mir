@@ -26,6 +26,7 @@
 
 #include "mir_toolkit/mesa/native_display.h"
 
+#include <cstring>
 #include <mutex>
 #include <set>
 
@@ -76,18 +77,8 @@ public:
         auto mir_surface = static_cast<mf::Surface*>(surface);
 
         auto buffer = mir_surface->client_buffer();
-        auto buffer_package = buffer->get_ipc_package();
-        package->data_items = buffer_package->ipc_data.size();
-        for (int i = 0; i < package->data_items; i++)
-        {
-            package->data[i] = buffer_package->ipc_data[i];
-        }
-        package->fd_items = buffer_package->ipc_fds.size();
-        for (int i = 0; i < package->fd_items; i++)
-        {
-            package->fd[i] = buffer_package->ipc_fds[i];
-        }
-        package->stride = buffer_package->stride;
+        auto buffer_package = buffer->native_buffer_handle();
+        memcpy(package, buffer_package.get(), sizeof(MirBufferPackage));
     }
 
     static void native_display_surface_get_parameters(MirMesaEGLNativeDisplay* /* display  */, 

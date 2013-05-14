@@ -145,8 +145,8 @@ TEST_F(GBMGraphicBufferBasic, buffer_native_handle_has_correct_size)
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
     auto native_handle = buffer->native_buffer_handle();
-    EXPECT_EQ(1, ipc_package->fd_items);
-    EXPECT_EQ(0, ipc_package->data_items);
+    EXPECT_EQ(1, native_handle->fd_items);
+    EXPECT_EQ(0, native_handle->data_items);
 }
 
 MATCHER_P(GEMFlinkHandleIs, value, "")
@@ -179,8 +179,8 @@ TEST_F(GBMGraphicBufferBasic, buffer_native_handle_contains_correct_data)
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
     auto handle = buffer->native_buffer_handle();
-    EXPECT_EQ(prime_fd, handle->ipc_fds[0]);
-    EXPECT_EQ(stride.as_uint32_t(), handle->stride);
+    EXPECT_EQ(prime_fd, static_cast<unsigned int>(handle->fd[0]));
+    EXPECT_EQ(stride.as_uint32_t(), static_cast<unsigned int>(handle->stride));
 }
 
 TEST_F(GBMGraphicBufferBasic, buffer_creation_throws_on_prime_fd_failure)
