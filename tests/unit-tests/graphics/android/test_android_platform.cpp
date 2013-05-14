@@ -75,6 +75,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 
     auto package = platform.create_buffer_ipc_package(mock_buffer);
 
+    ASSERT_NE(nullptr, package);
     ASSERT_EQ(num_ints, package->ipc_data.size());
     ASSERT_EQ(num_fds, package->ipc_fds.size());
 

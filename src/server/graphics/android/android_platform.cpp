@@ -59,6 +59,12 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
+std::shared_ptr<mc::BufferIPCPackage> mga::AndroidPlatform::create_buffer_ipc_package(
+    std::shared_ptr<mc::Buffer> const& /*buffer*/) const
+{
+    return std::shared_ptr<mc::BufferIPCPackage>();
+}
+
 EGLNativeDisplayType mga::AndroidPlatform::shell_egl_display()
 {
     // TODO: Implement
