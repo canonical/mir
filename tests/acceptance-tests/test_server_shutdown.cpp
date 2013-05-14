@@ -20,6 +20,7 @@
 #include "mir/graphics/renderer.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test/fake_event_hub_input_configuration.h"
 
 #include <gtest/gtest.h>
 
@@ -28,7 +29,10 @@
 #include <fcntl.h>
 
 namespace mg = mir::graphics;
+namespace mi = mir::input;
+namespace mia = mir::input::android;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -188,10 +192,24 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
     Flag resources_freed_success{"resources_free_success_7e9c69fc.tmp"};
     Flag resources_freed_failure{"resources_free_failure_7e9c69fc.tmp"};
 
-    /* Use the real input manager */
+    /* Use the real input manager, but with a fake event hub */
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mir::input::InputManager> the_input_manager() override
+        std::shared_ptr<mia::InputConfiguration> the_input_configuration() override
+        {
+            if (!input_configuration)
+            {
+                input_configuration =
+                    std::make_shared<mtd::FakeEventHubInputConfiguration>(
+                        std::initializer_list<std::shared_ptr<mi::EventFilter> const>{},
+                        the_viewable_area(),
+                        std::shared_ptr<mi::CursorListener>());
+            }
+
+            return input_configuration;
+        }
+
+        std::shared_ptr<mi::InputManager> the_input_manager() override
         {
             return DefaultServerConfiguration::the_input_manager();
         }
@@ -200,6 +218,8 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
         {
             return DefaultServerConfiguration::the_input_target_listener();
         }
+
+        std::shared_ptr<mia::InputConfiguration> input_configuration;
     };
 
     auto server_config = std::make_shared<ServerConfig>();
