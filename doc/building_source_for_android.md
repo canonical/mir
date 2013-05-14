@@ -47,7 +47,7 @@ From within the armhf system:
 Cross Compile
 -------------
 
-This method uses a cross compiler (e.g., the `g++-4.7-arm-linux-gnueabihf`
+This method uses a cross compiler (e.g., the `g++-arm-linux-gnueabihf`
 ubuntu package) to produce armhf code. This is typically the quickest way to
 compile and run code, and is well suited for a development workflow.
 
@@ -56,7 +56,7 @@ compile and run code, and is well suited for a development workflow.
    targeting a raring phablet image) You can specify the toolchain version
    thusly:
 
-        $ apt-get install g++-4.7-arm-linux-gnueabihf/raring
+        $ apt-get install g++-arm-linux-gnueabihf/raring
 
 -  Get access to armhf packages via apt-get. On an amd64/ia32 system, you can
    do this by adding a file like the one below to /etc/apt/sources.list.d/
