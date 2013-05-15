@@ -21,7 +21,6 @@
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/internal_client.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
-#include "mir_test_doubles/stub_surface.h"
 
 #include "mir/graphics/null_display_report.h"
 
@@ -148,12 +147,11 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
  */
 TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
 {
-    auto stub_surface = std::make_shared<mtd::StubSurface>();
     MirMesaEGLNativeDisplay* native_display = nullptr;
     EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
     {
         auto platform = create_platform();
-        auto client = platform->create_internal_client(stub_surface);
+        auto client = platform->create_internal_client();
         native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
         EXPECT_EQ(1, mir_server_internal_display_is_valid(native_display));
     }

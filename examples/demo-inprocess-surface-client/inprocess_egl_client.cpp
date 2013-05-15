@@ -91,8 +91,8 @@ void me::InprocessEGLClient::thread_loop()
             std::bind(std::mem_fn(&me::InprocessEGLClient::handle_event), this, std::placeholders::_1));
     input_thread->start();
 
-    auto internal_client = graphics_platform->create_internal_client(surface);
-    me::EGLHelper helper(internal_client->egl_native_display(), internal_client->egl_native_window());
+    auto internal_client = graphics_platform->create_internal_client();
+    me::EGLHelper helper(internal_client->egl_native_display(), internal_client->egl_native_window(surface));
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
     assert(rc == EGL_TRUE);

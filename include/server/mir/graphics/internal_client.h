@@ -22,15 +22,21 @@
 
 #include <EGL/egl.h>
 
+#include <memory>
+
 namespace mir
 {
+namespace frontend
+{
+class Surface;
+}
 namespace graphics
 {
 class InternalClient
 {
 public:
     virtual EGLNativeDisplayType egl_native_display() = 0;
-    virtual EGLNativeWindowType egl_native_window() = 0;
+    virtual EGLNativeWindowType egl_native_window(std::shared_ptr<frontend::Surface> const&) = 0;
 protected:
     InternalClient() = default;
     virtual ~InternalClient() = default;

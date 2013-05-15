@@ -48,7 +48,7 @@ class StubPlatform : public graphics::Platform
         return std::make_shared<graphics::PlatformIPCPackage>();
     }
  
-    std::shared_ptr<graphics::InternalClient> create_internal_client(std::shared_ptr<frontend::Surface> const&)
+    std::shared_ptr<graphics::InternalClient> create_internal_client()
     {
         return std::shared_ptr<graphics::InternalClient>();   
     } 

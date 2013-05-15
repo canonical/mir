@@ -61,10 +61,9 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client(
-    std::shared_ptr<mf::Surface> const& surface)
+std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client()
 {
-    return std::make_shared<mga::InternalClient>(surface);
+    return std::make_shared<mga::InternalClient>();
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)
