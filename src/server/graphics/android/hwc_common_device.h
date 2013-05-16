@@ -31,6 +31,7 @@ namespace graphics
 namespace android
 {
 
+class HWCVsyncCoordinator;
 class HWCCommonDevice;
 struct HWCCallbacks
 {
@@ -51,10 +52,13 @@ public:
     virtual void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
 
+    void notify_vsync();
 protected:
-    HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device);
+    HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                    std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
+    std::shared_ptr<HWCVsyncCoordinator> const coordinator;
 private:
     HWCCallbacks callbacks;
     std::mutex vsync_wait_mutex;

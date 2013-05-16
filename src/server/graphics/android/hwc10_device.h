@@ -28,7 +28,6 @@ namespace android
 {
 class HWCLayerOrganizer;
 class DisplaySupportProvider;
-class HWCVsyncCoordinator;
 
 class HWC10Device : public HWCCommonDevice
 {
