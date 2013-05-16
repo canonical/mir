@@ -18,6 +18,7 @@
  */
 
 #include "hwc10_device.h"
+#include "hwc_vsync_coordinator.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -78,4 +79,6 @@ void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
+
+    coordinator->wait_for_vsync();
 }
