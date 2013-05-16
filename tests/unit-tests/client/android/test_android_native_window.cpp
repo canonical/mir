@@ -42,6 +42,7 @@ public:
     MOCK_METHOD2(driver_returns_buffer, void(ANativeWindowBuffer*, std::shared_ptr<mga::SyncObject>const& ));
     MOCK_METHOD1(dispatch_driver_request_format, void(int));
     MOCK_CONST_METHOD1(driver_requests_info, int(int));
+    MOCK_METHOD1(sync_to_display, void(bool));
 };
 }
 
@@ -77,7 +78,7 @@ TEST_F(AndroidNativeWindowTest, native_window_swapinterval)
 
     EXPECT_CALL(*mock_driver_interpreter, sync_to_display(false))
         .Times(1);
-    window->setSwapInterval(window.get, 0);
+    window->setSwapInterval(window.get(), 0);
 }
 
 /* Query hook tests */
