@@ -97,6 +97,7 @@ find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(XKBCOMMON REQUIRED)
+find_package(LTTngUST REQUIRED)
 
 include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})

@@ -20,6 +20,7 @@ Build-Depends: cmake,
                pkg-config,
                libhybris-dev [armhf],
                libgoogle-glog-dev,
+               liblttng-ust-dev,
                libxkbcommon-dev
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
