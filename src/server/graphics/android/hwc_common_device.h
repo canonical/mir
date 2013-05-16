@@ -46,13 +46,10 @@ public:
     /* from HWCDevice */
     geometry::PixelFormat display_format() const;
     unsigned int number_of_framebuffers_available() const; 
-    void wait_for_vsync();
 
     virtual geometry::Size display_size() const = 0;
     virtual void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer) = 0;
     virtual void commit_frame(EGLDisplay dpy, EGLSurface sur) = 0;
-
-    void notify_vsync();
 
 protected:
     HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device);

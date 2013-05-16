@@ -22,6 +22,7 @@
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test/egl_mock.h"
 #include <gtest/gtest.h>
 
@@ -37,9 +38,11 @@ protected:
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_display_support_provider = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
         mock_organizer = std::make_shared<testing::NiceMock<mtd::MockHWCOrganizer>>();
+        mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_egl.silence_uninteresting();
     }
 
+    std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCOrganizer> mock_organizer;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_support_provider;
@@ -63,7 +66,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_empty_layerlist)
 {
     using namespace testing;
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
 
     mga::LayerList empty_list;
     EXPECT_CALL(*mock_organizer, native_list())
@@ -83,7 +86,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_gets_layerlist)
 {
     using namespace testing;
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
 
     mga::LayerList fb_list;
     fb_list.push_back(std::make_shared<HWCDummyLayer>());
@@ -103,7 +106,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_error)
 {
     using namespace testing;
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
     mga::LayerList fb_list;
     fb_list.push_back(std::make_shared<HWCDummyLayer>());
 
@@ -126,7 +129,7 @@ TEST_F(HWC11Device, test_hwc_gles_commit_swapbuffers_failure)
         .Times(1)
         .WillOnce(Return(EGL_FALSE));
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
 
     EXPECT_THROW({
         device.commit_frame(dpy, surf);
@@ -137,7 +140,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set)
 {
     using namespace testing;
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
 
     mga::LayerList fb_list;
     fb_list.push_back(std::make_shared<HWCDummyLayer>());
@@ -167,7 +170,7 @@ TEST_F(HWC11Device, test_hwc_device_display_config)
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<2>(hwc_configs), Return(0)));
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
 }
 
 //apparently this can happen if the display is in the 'unplugged state'
@@ -180,7 +183,7 @@ TEST_F(HWC11Device, test_hwc_device_display_config_failure_throws)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+        mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
     }, std::runtime_error);
 }
 
@@ -210,7 +213,7 @@ TEST_F(HWC11Device, test_hwc_device_display_width_height)
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<2>(hwc_configs), Return(0)));
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
  
     EXPECT_CALL(*mock_device, getDisplayAttributes_interface(mock_device.get(), HWC_DISPLAY_PRIMARY,hwc_configs,_,_))
         .Times(1)
@@ -228,7 +231,7 @@ TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_adds_to_layerlist)
     EXPECT_CALL(*this->mock_organizer, set_fb_target(mock_buffer))
         .Times(1);
  
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
     device.set_next_frontbuffer(mock_buffer);
 }
 
@@ -238,6 +241,6 @@ TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_posts)
     EXPECT_CALL(*this->mock_display_support_provider, set_next_frontbuffer(mock_buffer))
         .Times(1);
 
-    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider);
+    mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
     device.set_next_frontbuffer(mock_buffer);
 }

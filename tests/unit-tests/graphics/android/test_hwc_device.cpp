@@ -19,8 +19,10 @@
 #include "src/server/graphics/android/hwc10_device.h"
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
+#include "src/server/graphics/android/hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
+#include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
 
@@ -38,7 +40,7 @@ template<class T>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                                                 std::shared_ptr<mga::HWCLayerOrganizer> const& organizer,
                                                 std::shared_ptr<mga::DisplaySupportProvider> const& fbdev,
-                                                std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
+                                                std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator);
 
 template <>
 std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HWC10Device>(
@@ -70,12 +72,6 @@ struct HWCDummyLayer : public mga::HWCDefaultLayer
     }
 };
 
-struct MockVsyncCoordinator
-{
-    MOCK_METHOD0(wait_for_vsync, void());
-    MOCK_METHOD0(notify_vsync, void());
-};
-
 }
 
 template<typename T>
@@ -89,14 +85,14 @@ protected:
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_organizer = std::make_shared<testing::NiceMock<mtd::MockHWCOrganizer>>();
         mock_fbdev = std::make_shared<testing::NiceMock<mtd::MockDisplaySupportProvider>>();
-        mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsync>>();
+        mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         ON_CALL(*mock_fbdev, number_of_framebuffers_available())
             .WillByDefault(Return(2u));
         ON_CALL(*mock_fbdev, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
     }
 
-    std::shared_ptr<MockVsyncCoordinator> mock_vsync;
+    std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCOrganizer> mock_organizer;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fbdev;
@@ -219,8 +215,8 @@ TYPED_TEST(HWCCommon, callback_calls_hwcvsync)
                                              this->mock_fbdev, this->mock_vsync);
 
     EXPECT_CALL(*this->mock_vsync, notify_vsync())
-        .Times(1)
-     procs->vsync(procs, 0, 0);
+        .Times(1);
+    procs->vsync(procs, 0, 0);
 }
 
 

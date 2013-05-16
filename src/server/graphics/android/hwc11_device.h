@@ -28,14 +28,15 @@ namespace graphics
 namespace android
 {
 class HWCLayerOrganizer;
-
+class HWCVsyncCoordinator;
 
 class HWC11Device : public HWCCommonDevice
 {
 public:
     HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                 std::shared_ptr<HWCLayerOrganizer> const& organizer,
-                std::shared_ptr<DisplaySupportProvider> const& fbdev);
+                std::shared_ptr<DisplaySupportProvider> const& fbdev,
+                std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
     ~HWC11Device() noexcept;
 
     geometry::Size display_size() const; 

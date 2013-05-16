@@ -30,10 +30,10 @@ static void invalidate_hook(const struct hwc_procs* /*procs*/)
 {
 }
 
-static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t /*timestamp*/)
+static void vsync_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int64_t /*timestamp*/)
 {
-    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self;
-    self->notify_vsync();
+//    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self;
+//    self->notify_vsync();
 }
 
 static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*connected*/)
@@ -79,6 +79,7 @@ unsigned int mga::HWCCommonDevice::number_of_framebuffers_available() const
     return 2u;
 }
 
+#if 0
 void mga::HWCCommonDevice::wait_for_vsync()
 {
     std::unique_lock<std::mutex> lk(vsync_wait_mutex);
@@ -95,3 +96,4 @@ void mga::HWCCommonDevice::notify_vsync()
     vsync_occurred = true;
     vsync_trigger.notify_all();
 }
+#endif

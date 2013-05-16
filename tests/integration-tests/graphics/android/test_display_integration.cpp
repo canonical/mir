@@ -137,7 +137,8 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
-    auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device);
+    auto syncer = std::shared_ptr<mga::HWCVsyncCoordinator>();
+    auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
     auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
@@ -161,7 +162,8 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
-    auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device);
+    auto syncer = std::shared_ptr<mga::HWCVsyncCoordinator>();
+    auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device, syncer);
     auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
