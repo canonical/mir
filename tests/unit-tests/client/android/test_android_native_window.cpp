@@ -58,6 +58,28 @@ protected:
     std::shared_ptr<MockAndroidDriverInterpreter> mock_driver_interpreter;
 };
 
+TEST_F(AndroidNativeWindowTest, native_window_swapinterval)
+{
+    using namespace testing;
+
+    std::shared_ptr<ANativeWindow> window = std::make_shared<mga::MirNativeWindow>(mock_driver_interpreter);
+
+    ASSERT_NE(nullptr, window->setSwapInterval);
+    EXPECT_CALL(*mock_driver_interpreter, sync_to_display(true))
+        .Times(1);
+    window->setSwapInterval(window.get(), 1);
+    Mock::VerifyAndClearExpectations(window.get());
+
+    EXPECT_CALL(*mock_driver_interpreter, sync_to_display(true))
+        .Times(1);
+    window->setSwapInterval(window.get(), 2);
+    Mock::VerifyAndClearExpectations(window.get());
+
+    EXPECT_CALL(*mock_driver_interpreter, sync_to_display(false))
+        .Times(1);
+    window->setSwapInterval(window.get, 0);
+}
+
 /* Query hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_query_hook)
 {

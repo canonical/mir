@@ -41,6 +41,7 @@ public:
     geometry::PixelFormat display_format() const;
     unsigned int number_of_framebuffers_available() const;
     void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
+    void sync_to_display(bool sync);
  
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
 private:

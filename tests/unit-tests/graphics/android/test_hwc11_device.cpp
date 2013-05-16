@@ -169,7 +169,7 @@ TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set_no_vsync)
     using namespace testing;
 
     mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
-    device->sync_to_display(false);
+    device.sync_to_display(false);
 
     mga::LayerList fb_list;
     fb_list.push_back(std::make_shared<HWCDummyLayer>());
@@ -283,6 +283,6 @@ TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_posts_no_sync)
         .Times(0);
 
     mga::HWC11Device device(mock_device, mock_organizer, mock_display_support_provider, mock_vsync);
-    device->sync_to_display(false);
+    device.sync_to_display(false);
     device.set_next_frontbuffer(mock_buffer);
 }

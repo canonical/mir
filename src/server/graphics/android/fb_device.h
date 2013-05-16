@@ -40,6 +40,7 @@ public:
     unsigned int number_of_framebuffers_available() const;
 
     void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
+    void sync_to_display(bool sync);
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
 };

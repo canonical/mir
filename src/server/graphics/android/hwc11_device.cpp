@@ -113,3 +113,7 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 
     coordinator->wait_for_vsync();
 }
+
+void mga::HWC11Device::sync_to_display(bool )//sync)
+{
+}

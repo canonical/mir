@@ -60,3 +60,8 @@ unsigned int mga::FBDevice::number_of_framebuffers_available() const
     auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
     return std::max(2u, fb_num);
 }
+
+void mga::FBDevice::sync_to_display(bool )//sync)
+{
+
+}
