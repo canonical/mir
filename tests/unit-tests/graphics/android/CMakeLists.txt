@@ -22,6 +22,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_server_interpreter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_pixel_format.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_interpreter_buffer_cache.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_vsync.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

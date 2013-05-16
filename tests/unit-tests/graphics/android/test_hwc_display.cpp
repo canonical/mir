@@ -59,8 +59,6 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
     testing::InSequence sequence_enforcer;
     EXPECT_CALL(*mock_hwc_device, commit_frame(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
         .Times(1);
-    EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
-        .Times(1);
 
     display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {

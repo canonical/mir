@@ -22,6 +22,7 @@
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
 #include "src/server/graphics/android/hwc_display.h"
+#include "src/server/graphics/android/hwc_vsync.h"
 #include "src/server/graphics/android/default_framebuffer_factory.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/graphics/android/fb_device.h"
@@ -137,7 +138,7 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
-    auto syncer = std::shared_ptr<mga::HWCVsyncCoordinator>();
+    auto syncer = std::make_shared<mga::HWCVsync>();
     auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
     auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
@@ -162,7 +163,7 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
     auto layerlist = std::make_shared<mga::HWCLayerList>();
 
-    auto syncer = std::shared_ptr<mga::HWCVsyncCoordinator>();
+    auto syncer = std::make_shared<mga::HWCVsync>();
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device, syncer);
     auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
 
