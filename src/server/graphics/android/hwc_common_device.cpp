@@ -85,22 +85,3 @@ void mga::HWCCommonDevice::notify_vsync()
 {
     coordinator->notify_vsync();
 }
-#if 0
-      vsync_occurred(false)
-void mga::HWCCommonDevice::wait_for_vsync()
-{
-    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
-    vsync_occurred = false;
-    while(!vsync_occurred)
-    {
-        vsync_trigger.wait(lk);
-    }
-}
-
-void mga::HWCCommonDevice::notify_vsync()
-{
-    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
-    vsync_occurred = true;
-    vsync_trigger.notify_all();
-}
-#endif

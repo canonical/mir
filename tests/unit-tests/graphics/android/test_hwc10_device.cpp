@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;

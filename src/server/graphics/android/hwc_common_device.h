@@ -21,8 +21,6 @@
 #include "hwc_device.h"
 
 #include <hardware/hwcomposer.h>
-#include <mutex>
-#include <condition_variable>
 
 namespace mir
 {
@@ -61,9 +59,6 @@ protected:
     std::shared_ptr<HWCVsyncCoordinator> const coordinator;
 private:
     HWCCallbacks callbacks;
-    std::mutex vsync_wait_mutex;
-    std::condition_variable vsync_trigger;
-    bool vsync_occurred;
 };
 
 }
