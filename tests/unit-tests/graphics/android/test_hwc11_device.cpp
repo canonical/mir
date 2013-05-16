@@ -156,6 +156,8 @@ TEST_F(HWC11Device, test_hwc_gles_set_commits_via_swapbuffers_then_set)
         .WillOnce(ReturnRef(fb_list));
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), HWC_NUM_DISPLAY_TYPES, _))
         .Times(1);
+    EXPECT_CALL(*mock_vsync, wait_for_vsync())
+        .Times(1);
 
     device.commit_frame(dpy, surf);
 

@@ -111,6 +111,8 @@ TEST_F(HWC10Device, hwc10_commit_frame)
         .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
+    EXPECT_CALL(*mock_vsync, wait_for_vsync())
+        .Times(1);
 
     mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
 

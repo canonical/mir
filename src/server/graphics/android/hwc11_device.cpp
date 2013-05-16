@@ -19,6 +19,7 @@
 
 #include "hwc11_device.h"
 #include "hwc_layerlist.h"
+#include "hwc_vsync_coordinator.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -109,4 +110,6 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
 
     if (hwc_display->retireFenceFd > 0)
         close(hwc_display->retireFenceFd);
+
+    coordinator->wait_for_vsync();
 }
