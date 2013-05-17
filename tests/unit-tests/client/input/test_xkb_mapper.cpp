@@ -35,6 +35,7 @@ static int map_key(mircv::XKBMapper &mapper, MirKeyAction action, int scan_code)
     MirKeyEvent ev;
     ev.action = action;
     ev.scan_code = scan_code;
+    ev.repeat_count = 0;
     
     mapper.update_state_and_map_event(ev);
     return ev.key_code;
@@ -45,6 +46,7 @@ static int map_repeated_key(mircv::XKBMapper &mapper, MirKeyAction action, int s
     MirKeyEvent ev;
     ev.action = action;
     ev.scan_code = scan_code;
+    ev.repeat_count = 1;
     
     mapper.update_state_and_map_event(ev);
     return ev.key_code;

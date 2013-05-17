@@ -97,6 +97,9 @@ void mircv::XKBMapper::update_state_and_map_event(MirKeyEvent &key_ev)
     else // mir_key_action_multiple does not correspond to a physical keypress
         update_state = false;
     
+    if (key_ev.repeat_count > 0)
+        update_state = false;
+    
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code);
     if (update_state)
         xkb_state_update_key(state.get(), xkb_scan_code, direction);
