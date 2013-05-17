@@ -22,9 +22,9 @@
 #include "src/server/graphics/gbm/internal_client.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer_packer.h"
 
 #include "mir/graphics/null_display_report.h"
-#include "mir_protobuf.pb.h"
 
 #include <gtest/gtest.h>
 
@@ -36,7 +36,6 @@
 
 #include <stdexcept>
 
-namespace mp = mir::protobuf;
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mtd = mir::test::doubles;
@@ -148,11 +147,16 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
 TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
 {
     auto mock_buffer = std::make_shared<mtd::MockBuffer>();
-    int dummy_stride = 4390;
+    mir::geometry::Stride dummy_stride(4390);
 
     auto native_handle = std::make_shared<MirBufferPackage>();
     native_handle->data_items = 4;
     native_handle->fd_items = 2;
+    for(auto i=0; i<mir_buffer_package_max; i++)
+    {
+        native_handle->fd[i] = i; 
+        native_handle->data[i] = i; 
+    }
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .WillOnce(testing::Return(native_handle));
@@ -161,15 +165,21 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
 
     auto platform = create_platform();
 
-    mp::Buffer response;
-    platform->fill_ipc_package(&response, mock_buffer);
+    auto mock_packer = std::make_shared<mtd::MockPacker>();
+    for(auto i=0; i < native_handle->fd_items; i++)
+    {
+        EXPECT_CALL(*mock_packer, pack_fd(native_handle->fd[i]))
+            .Times(1);
+    } 
+    for(auto i=0; i < native_handle->data_items; i++)
+    {
+        EXPECT_CALL(*mock_packer, pack_data(native_handle->data[i]))
+            .Times(1);
+    }
+    EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
+        .Times(1);
 
-    EXPECT_EQ(native_handle->fd_items, response.fd_size());
-    EXPECT_EQ(native_handle->data_items, response.data_size());
-    for (int i = 0; i < response.fd_size(); ++i)
-        EXPECT_EQ(native_handle->fd[i], response.fd(i));
-    for (int i = 0; i < response.data_size(); ++i)
-        EXPECT_EQ(native_handle->data[i], response.data(i));
+    platform->fill_ipc_package(mock_packer, mock_buffer);
 }
 
 /* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different

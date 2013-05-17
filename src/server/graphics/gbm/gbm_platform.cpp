@@ -24,7 +24,7 @@
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir_protobuf.pb.h"
+#include "mir/compositor/buffer_ipc_packer.h"
 
 #include <xf86drm.h>
 
@@ -114,19 +114,20 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-void mgg::GBMPlatform::fill_ipc_package(protobuf::Buffer* response, std::shared_ptr<compositor::Buffer> const& buffer) const
+void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+                                        std::shared_ptr<compositor::Buffer> const& buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
     for(auto i=0; i<native_handle->data_items; i++)
     {
-        response->add_data(native_handle->data[i]);
+        packer->pack_data(native_handle->data[i]);
     }    
     for(auto i=0; i<native_handle->fd_items; i++)
     {
-        response->add_fd(native_handle->fd[i]);
+        packer->pack_fd(native_handle->fd[i]);
     }
 
-    response->set_stride(buffer->stride().as_uint32_t()); 
+    packer->pack_stride(buffer->stride()); 
 }
 
 void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)

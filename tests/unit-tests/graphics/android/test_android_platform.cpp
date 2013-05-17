@@ -20,10 +20,10 @@
 #include "src/server/graphics/android/android_platform.h"
 #include "mir/compositor/buffer_ipc_packer.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer_packer.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
-namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
@@ -70,35 +70,20 @@ protected:
     unsigned int num_ints, num_fds;
 };
 
-namespace
-{
-struct MockPacker : public mc::BufferIPCPacker
-{
-    ~MockPacker() noexcept {}
-    MOCK_METHOD1(pack_fd, void(int));
-    MOCK_METHOD1(pack_data, void(int));
-    MOCK_METHOD1(pack_id, void(mc::BufferID));
-    MOCK_METHOD1(pack_stride, void(geom::Stride));
-};
-}
-
 /* ipc packaging tests */
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
     auto mock_buffer = std::make_shared<mtd::MockBuffer>();
     geom::Stride dummy_stride(4390);
-    mc::BufferID dummy_id(444);
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .WillOnce(testing::Return(anwb));
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(testing::Return(dummy_stride));
-    EXPECT_CALL(*mock_buffer, id())
-        .WillOnce(testing::Return(dummy_id));
 
     auto platform = mg::create_platform(stub_display_report);
 
-    auto mock_packer = std::make_shared<MockPacker>();
+    auto mock_packer = std::make_shared<mtd::MockPacker>();
     int offset = 0;
     for(auto i=0u; i<num_fds; i++)
     {
@@ -110,8 +95,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
         EXPECT_CALL(*mock_packer, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
     }
-    EXPECT_CALL(*mock_packer, pack_id(dummy_id))
-        .Times(1); 
     EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
         .Times(1);
 
