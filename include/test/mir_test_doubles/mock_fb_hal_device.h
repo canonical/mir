@@ -68,7 +68,14 @@ public:
         return mocker->post_interface(mock_fb, handle);
     }
 
+    static int hook_setSwapInterval(struct framebuffer_device_t* mock_fb, int interval)
+    {
+        MockFBHalDevice* mocker = static_cast<MockFBHalDevice*>(mock_fb);
+        return mocker->setSwapInterval_interface(mock_fb, interval); 
+    }
+
     MOCK_METHOD2(post_interface, int(struct framebuffer_device_t*, buffer_handle_t));
+    MOCK_METHOD2(setSwapInterval_interface, int(struct framebuffer_device_t*, int));
     
     hw_device_t empty_module;
 };

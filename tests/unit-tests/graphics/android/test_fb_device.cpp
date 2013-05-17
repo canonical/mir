@@ -109,3 +109,16 @@ TEST_F(FBDevice, determine_pixformat)
     mga::FBDevice fbdev(fb_hal_mock);
     EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
 }
+
+TEST_F(FBDevice, set_swapinterval)
+{
+    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
+        .Times(1);
+    mga::FBDevice fbdev(fb_hal_mock);
+
+    testing::Mock::VerifyAndClearExpectations(fb_hal_mock.get());
+
+    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 0))
+        .Times(1);
+    fbdev.sync_to_display(false);
+}
