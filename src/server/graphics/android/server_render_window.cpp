@@ -87,7 +87,7 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
     }
 }
 
-void mga::ServerRenderWindow::sync_to_display(bool)//; sync)
+void mga::ServerRenderWindow::sync_to_display(bool sync)
 {
-
+    poster->sync_to_display(sync);
 }

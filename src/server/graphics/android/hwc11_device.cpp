@@ -33,7 +33,8 @@ mga::HWC11Device::HWC11Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
       layer_organizer(organizer),
-      fb_device(fbdev)
+      fb_device(fbdev),
+      wait_for_vsync(true)
 {
     size_t num_configs = 1;
     auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
@@ -77,7 +78,11 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
 void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buffer)
 {
     layer_organizer->set_fb_target(buffer);
-    fb_device->set_next_frontbuffer(buffer);
+
+    if (wait_for_vsync)
+    {
+        fb_device->set_next_frontbuffer(buffer);
+    }
 }
 
 void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
@@ -111,9 +116,13 @@ void mga::HWC11Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     if (hwc_display->retireFenceFd > 0)
         close(hwc_display->retireFenceFd);
 
-    coordinator->wait_for_vsync();
+    if (wait_for_vsync)
+    {
+        coordinator->wait_for_vsync();
+    }
 }
 
-void mga::HWC11Device::sync_to_display(bool )//sync)
+void mga::HWC11Device::sync_to_display(bool sync)
 {
+    wait_for_vsync = sync;
 }

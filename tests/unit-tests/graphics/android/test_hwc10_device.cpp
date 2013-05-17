@@ -98,7 +98,7 @@ TEST_F(HWC10Device, hwc10_set_next_frontbuffer)
     device.set_next_frontbuffer(mock_buffer);
 }
 
-TEST_F(HWC10Device, hwc10_commit_frame)
+TEST_F(HWC10Device, hwc10_commit_frame_sync)
 {
     using namespace testing;
 
@@ -131,6 +131,28 @@ TEST_F(HWC10Device, hwc10_commit_frame)
     EXPECT_EQ(-1, mock_device->display0_prepare_content.retireFenceFd);
     EXPECT_EQ(0u, mock_device->display0_prepare_content.flags);
     EXPECT_EQ(0u, mock_device->display0_prepare_content.numHwLayers);
+}
+
+TEST_F(HWC10Device, hwc10_commit_frame_async)
+{
+    using namespace testing;
+
+    EGLDisplay dpy = nullptr;
+    EGLSurface sur = nullptr;
+
+    InSequence inseq;
+
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(1);
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
+        .Times(1);
+    EXPECT_CALL(*mock_vsync, wait_for_vsync())
+        .Times(0);
+
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
+    device.sync_to_display(false);
+
+    device.commit_frame(dpy, sur);
 }
 
 TEST_F(HWC10Device, hwc10_prepare_frame_failure)

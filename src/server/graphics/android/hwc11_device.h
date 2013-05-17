@@ -51,6 +51,7 @@ private:
     std::shared_ptr<HWCLayerOrganizer> const layer_organizer;
     std::shared_ptr<DisplaySupportProvider> const fb_device;
     unsigned int primary_display_config;
+    bool wait_for_vsync;
 };
 
 }
