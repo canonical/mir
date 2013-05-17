@@ -70,27 +70,43 @@ protected:
     unsigned int num_ints, num_fds;
 };
 
+namespace
+{
+struct MockPacker : public mtd::BufferIPCPacker
+{
+    MOCK_METHOD1(pack_fd, void(int));
+    MOCK_METHOD1(pack_ints, void(int));
+    MOCK_METHOD1(pack_id, void(mc::BufferID));
+    MOCK_METHOD1(pack_stride, void(geom::Stride));
+};
+}
+
 /* ipc packaging tests */
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
     auto mock_buffer = std::make_shared<mtd::MockBuffer>();
-    int dummy_stride = 4390;
+    geom::Stride dummy_stride(4390);
+    mc::BufferId dummy_id(444);
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .WillOnce(testing::Return(anwb));
     EXPECT_CALL(*mock_buffer, stride())
-        .WillOnce(testing::Return(mir::geometry::Stride{dummy_stride}));
+        .WillOnce(testing::Return(dummy_stride));
+    EXPECT_CALL(*mock_buffer, id())
+        .WillOnce(testing::Return(dummy_id));
 
     auto platform = mg::create_platform(stub_display_report);
 
-    mp::Buffer response;
-    platform->fill_ipc_package(&response, mock_buffer);
+    auto mock_packer = std::make_shared<MockPacker>();
+    platform->fill_ipc_package(mock_packer, mock_buffer);
 
-    EXPECT_EQ(native_buffer_handle->numFds, response.fd_size());
-    EXPECT_EQ(native_buffer_handle->numInts, response.data_size());
     int offset = 0;
-    for (int i = 0; i < response.fd_size(); ++i)
-        EXPECT_EQ(native_buffer_handle->data[offset++], response.fd(i));
-    for (int i = 0; i < response.data_size(); ++i)
-        EXPECT_EQ(native_buffer_handle->data[offset++], response.data(i));
+    EXPECT_CALL(*mock_packer, pack_fd(native_buffer_handle->data[offset++]))
+        .Times(num_fds); 
+    EXPECT_CALL(*mock_packer, pack_ints(native_buffer_handle->data[offset++]))
+        .Times(num_ints);
+    EXPECT_CALL(*mock_packer, pack_id(dummy_id))
+        .Times(1); 
+    EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
+        .Times(1); 
 }
