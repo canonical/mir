@@ -27,14 +27,51 @@
 
 namespace mircv = mir::input::receiver;
 
+namespace
+{
+static MirKeyEvent key_press_event(int scan_code)
+{
+    MirKeyEvent ev;
+    ev.action = mir_key_action_down;
+    ev.scan_code = scan_code;
+    return ev;
+}
+static MirKeyEvent key_release_event(int scan_code)
+{
+    MirKeyEvent ev;
+    ev.action = mir_key_action_up;
+    ev.scan_code = scan_code;
+    return ev;
+}
+}
+
 TEST(XKBMapper, maps_generic_us_english_keys)
 {
     mircv::XKBMapper mapper;
 
-    EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_4), mapper.press_and_map_key(KEY_4));
-    EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_Shift_L), mapper.press_and_map_key(KEY_LEFTSHIFT));
-    EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_dollar), mapper.press_and_map_key(KEY_4));
-    EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_dollar), mapper.release_and_map_key(KEY_4));
-    EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_Shift_L), mapper.release_and_map_key(KEY_LEFTSHIFT));
-    EXPECT_EQ(static_cast<xkb_keysym_t>(XKB_KEY_4), mapper.press_and_map_key(KEY_4));
+    // TODO: Cleanup ~racarr
+    
+    auto ev = key_press_event(KEY_4);
+    mapper.update_state_and_map_event(ev);
+    EXPECT_EQ(XKB_KEY_4, ev.key_code);
+
+    ev = key_press_event(KEY_LEFTSHIFT);
+    mapper.update_state_and_map_event(ev);
+    EXPECT_EQ(XKB_KEY_Shift_L, ev.key_code);
+
+    ev = key_press_event(KEY_4);
+    mapper.update_state_and_map_event(ev);
+    EXPECT_EQ(XKB_KEY_dollar, ev.key_code);
+
+    ev = key_release_event(KEY_4);
+    mapper.update_state_and_map_event(ev);
+    EXPECT_EQ(XKB_KEY_dollar, ev.key_code);
+
+    ev = key_release_event(KEY_LEFTSHIFT);
+    mapper.update_state_and_map_event(ev);
+    EXPECT_EQ(XKB_KEY_Shift_L, ev.key_code);
+
+    ev = key_press_event(KEY_4);
+    mapper.update_state_and_map_event(ev);
+    EXPECT_EQ(XKB_KEY_4, ev.key_code);
 }
