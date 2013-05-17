@@ -148,6 +148,8 @@ TEST_F(HWC10Device, hwc10_commit_frame_async)
         .Times(1);
     EXPECT_CALL(*mock_vsync, wait_for_vsync())
         .Times(0);
+    EXPECT_CALL(*mock_fbdev, sync_to_display(false))
+        .Times(1);
 
     mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
     device.sync_to_display(false);

@@ -122,3 +122,10 @@ TEST_F(FBDevice, set_swapinterval)
         .Times(1);
     fbdev.sync_to_display(false);
 }
+
+TEST_F(FBDevice, set_swapinterval_with_nullhook)
+{
+    fb_hal_mock->setSwapInterval = nullptr;
+    mga::FBDevice fbdev(fb_hal_mock);
+    fbdev.sync_to_display(false);
+}
