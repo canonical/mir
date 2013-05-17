@@ -70,17 +70,17 @@ TEST(XKBMapper, key_action_multiple_does_not_update_modifier_state)
 {
     mircv::XKBMapper mapper;
 
-    EXPECT_EQ(XKB_KEY_Shift_L, map_key(mapper, mir_key_action_multiple, KEY_LEFTSHIFT));
-    EXPECT_EQ(XKB_KEY_4, map_key(mapper, mir_key_action_down, KEY_4));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(mapper, mir_key_action_multiple, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_7, map_key(mapper, mir_key_action_down, KEY_7));
 }
 
 TEST(XKBMapper, key_repeats_do_not_recurse_modifier_state)
 {
     mircv::XKBMapper mapper;
 
-    EXPECT_EQ(XKB_KEY_Shift_L, map_key(mapper, mir_key_action_down, KEY_LEFTSHIFT));
-    EXPECT_EQ(XKB_KEY_Shift_L, map_repeated_key(mapper, mir_key_action_down, KEY_LEFTSHIFT));
-    EXPECT_EQ(XKB_KEY_dollar, map_key(mapper, mir_key_action_down, KEY_4));
-    EXPECT_EQ(XKB_KEY_Shift_L, map_key(mapper, mir_key_action_up, KEY_LEFTSHIFT));
-    EXPECT_EQ(XKB_KEY_4, map_key(mapper, mir_key_action_down, KEY_4));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(mapper, mir_key_action_down, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_repeated_key(mapper, mir_key_action_down, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_ampersand, map_key(mapper, mir_key_action_down, KEY_7));
+    EXPECT_EQ(XKB_KEY_Shift_R, map_key(mapper, mir_key_action_up, KEY_RIGHTSHIFT));
+    EXPECT_EQ(XKB_KEY_7, map_key(mapper, mir_key_action_down, KEY_7));
 }
