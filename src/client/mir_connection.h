@@ -28,7 +28,6 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "client_platform.h"
 #include "client_context.h"
@@ -88,10 +87,6 @@ public:
 
     MirWaitHandle* disconnect();
 
-    MirWaitHandle* drm_auth_magic(unsigned int magic,
-                                  mir_drm_auth_magic_callback callback,
-                                  void* context);
-
     void populate(MirPlatformPackage& platform_package);
     void populate(MirDisplayInfo& display_info);
 
@@ -114,7 +109,6 @@ private:
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
-    mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
@@ -126,7 +120,6 @@ private:
 
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
-    MirWaitHandle drm_auth_magic_wait_handle;
 
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
@@ -142,7 +135,6 @@ private:
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
-    void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

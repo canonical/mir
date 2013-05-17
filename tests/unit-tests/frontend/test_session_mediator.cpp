@@ -182,13 +182,6 @@ TEST_F(SessionMediatorTest, calling_methods_before_connect_throws)
     }, std::logic_error);
 
     EXPECT_THROW({
-        mp::DRMMagic request;
-        mp::DRMAuthMagicStatus response;
-
-        mediator.drm_auth_magic(nullptr, &request, &response, null_callback.get());
-    }, std::logic_error);
-
-    EXPECT_THROW({
         mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
     }, std::logic_error);
 }
@@ -248,13 +241,6 @@ TEST_F(SessionMediatorTest, calling_methods_after_disconnect_throws)
         mp::SurfaceId request;
 
         mediator.release_surface(nullptr, &request, nullptr, null_callback.get());
-    }, std::logic_error);
-
-    EXPECT_THROW({
-        mp::DRMMagic request;
-        mp::DRMAuthMagicStatus response;
-
-        mediator.drm_auth_magic(nullptr, &request, &response, null_callback.get());
     }, std::logic_error);
 
     EXPECT_THROW({
