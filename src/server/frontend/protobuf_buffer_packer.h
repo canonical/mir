@@ -35,7 +35,6 @@ public:
     ProtobufBufferPacker(protobuf::Buffer*);
     void pack_fd(int);
     void pack_data(int);
-    void pack_id(compositor::BufferID);
     void pack_stride(geometry::Stride);
 private:
     protobuf::Buffer* buffer_response;

@@ -79,7 +79,6 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIP
     }    
 
     packer->pack_stride(buffer->stride());
-    packer->pack_id(buffer->id());
 }
 
 std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client()

@@ -35,11 +35,6 @@ void mfd::ProtobufBufferPacker::pack_data(int data)
     buffer_response->add_data(data);
 }
 
-void mfd::ProtobufBufferPacker::pack_id(compositor::BufferID id)
-{
-    buffer_response->set_buffer_id(id.as_uint32_t());
-}
-
 void mfd::ProtobufBufferPacker::pack_stride(geometry::Stride stride)
 {
     buffer_response->set_stride(stride.as_uint32_t());

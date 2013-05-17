@@ -29,7 +29,6 @@ namespace geom=mir::geometry;
 TEST(ProtobufBufferPacker, packing)
 {
     geom::Stride dummy_stride(4);
-    mc::BufferID dummy_id(3);
 
     mp::Buffer response;
     mfd::ProtobufBufferPacker packer(&response);
@@ -41,7 +40,6 @@ TEST(ProtobufBufferPacker, packing)
         packer.pack_data(i);
 
     packer.pack_stride(dummy_stride);
-    packer.pack_id(dummy_id);
 
     EXPECT_EQ(num_fd, response.fd_size());
     EXPECT_EQ(num_int, response.data_size());
@@ -50,5 +48,4 @@ TEST(ProtobufBufferPacker, packing)
     for (int i = 0; i < response.data_size(); ++i)
         EXPECT_EQ(i, response.data(i));
     EXPECT_EQ(dummy_stride.as_uint32_t(), static_cast<unsigned int>(response.stride()));
-    EXPECT_EQ(dummy_id.as_uint32_t(), static_cast<unsigned int>(response.buffer_id()));
 }

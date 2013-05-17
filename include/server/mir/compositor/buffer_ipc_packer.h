@@ -19,7 +19,6 @@
 #ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
 #define MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
 
-#include "buffer_id.h"
 #include "mir/geometry/dimensions.h"
 
 namespace mir
@@ -34,7 +33,6 @@ public:
     virtual ~BufferIPCPacker() = default;
     virtual void pack_fd(int) = 0;
     virtual void pack_data(int) = 0;
-    virtual void pack_id(BufferID) = 0;
     virtual void pack_stride(geometry::Stride) = 0;
 };
 
