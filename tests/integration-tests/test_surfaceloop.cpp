@@ -356,7 +356,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return std::make_shared<mg::PlatformIPCPackage>();
         }
 
-        std::shared_ptr<mg::InternalClient> create_internal_client(std::shared_ptr<mf::Surface> const&)
+        std::shared_ptr<mg::InternalClient> create_internal_client()
         {
             return std::shared_ptr<mg::InternalClient>();   
         }
@@ -492,7 +492,7 @@ struct BufferCounterConfig : TestingServerConfiguration
             return std::make_shared<mg::PlatformIPCPackage>();
         }
 
-        std::shared_ptr<mg::InternalClient> create_internal_client(std::shared_ptr<mf::Surface> const&)
+        std::shared_ptr<mg::InternalClient> create_internal_client()
         {
             return std::shared_ptr<mg::InternalClient>();   
         }

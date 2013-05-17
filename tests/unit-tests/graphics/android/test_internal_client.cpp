@@ -68,15 +68,15 @@ class StubSurface : public mir::frontend::Surface
 TEST(InternalClient, native_display)
 {
     auto surface = std::make_shared<StubSurface>();
-    mga::InternalClient client(surface);
+    mga::InternalClient client;
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, client.egl_native_display());
 }
 
 TEST(InternalClient, native_window)
 {
     auto surface = std::make_shared<StubSurface>();
-    mga::InternalClient client(surface);
-    ANativeWindow* native_window = static_cast<ANativeWindow*>(client.egl_native_window());
+    mga::InternalClient client;
+    ANativeWindow* native_window = static_cast<ANativeWindow*>(client.egl_native_window(surface));
 
     /* check for basic window sanity */
     ASSERT_NE(nullptr, native_window);

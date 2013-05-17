@@ -37,9 +37,9 @@ class MirNativeWindow;
 class InternalClient : public mir::graphics::InternalClient
 {
 public:
-    InternalClient(std::shared_ptr<frontend::Surface> const&);
+    InternalClient();
     EGLNativeDisplayType egl_native_display();
-    EGLNativeWindowType egl_native_window();
+    EGLNativeWindowType egl_native_window(std::shared_ptr<frontend::Surface> const&);
 
 private:
     std::shared_ptr<MirNativeWindow> client_window;

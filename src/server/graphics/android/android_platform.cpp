@@ -81,10 +81,9 @@ void mga::AndroidPlatform::fill_ipc_package(mp::Buffer* response, std::shared_pt
     response->set_stride(buffer->stride().as_uint32_t()); 
 }
 
-std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client(
-    std::shared_ptr<mf::Surface> const& surface)
+std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client()
 {
-    return std::make_shared<mga::InternalClient>(surface);
+    return std::make_shared<mga::InternalClient>();
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)

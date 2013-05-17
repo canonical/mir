@@ -48,7 +48,7 @@ public:
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
     std::shared_ptr<Display> create_display();
     std::shared_ptr<PlatformIPCPackage> get_ipc_package(); 
-    std::shared_ptr<InternalClient> create_internal_client(std::shared_ptr<frontend::Surface> const&);
+    std::shared_ptr<InternalClient> create_internal_client();
 
     void fill_ipc_package(protobuf::Buffer* response, std::shared_ptr<compositor::Buffer> const& buffer) const;
 

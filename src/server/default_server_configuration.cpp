@@ -137,10 +137,10 @@ private:
     }
 };
 
-char const* const log_app_mediator = "log-app-mediator";
-char const* const log_msg_processor = "log-msg-processor";
-char const* const log_display      = "log-display";
-char const* const log_input        = "log-input";
+char const* const session_mediator_report_opt = "session-mediator-report";
+char const* const msg_processor_report_opt    = "msg-processor-report";
+char const* const display_report_opt          = "display-report";
+char const* const input_report_opt            = "input-report";
 
 char const* const glog                 = "glog";
 char const* const glog_stderrthreshold = "glog-stderrthreshold";
@@ -148,6 +148,9 @@ char const* const glog_minloglevel     = "glog-minloglevel";
 char const* const glog_log_dir         = "glog-log-dir";
 
 bool const enable_input_default = true;
+
+char const* const off_opt_value = "off";
+char const* const log_opt_value = "log";
 
 void parse_arguments(
     boost::program_options::options_description desc,
@@ -203,26 +206,37 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     namespace po = boost::program_options;
 
     add_options()
-        ("file,f", po::value<std::string>(),    "Socket filename")
-        ("enable-input,i", po::value<bool>(),   "Enable input. [bool:default=true]")
-        (log_display, po::value<bool>(),        "Log the Display report. [bool:default=false]")
-        (log_input, po::value<bool>(),          "Log the input stack. [bool:default=false]")
-        (log_app_mediator, po::value<bool>(),   "Log the ApplicationMediator report. [bool:default=false]")
-        (log_msg_processor, po::value<bool>(), "log the MessageProcessor report")
-        (glog,                                  "Use google::GLog for logging")
-        (glog_stderrthreshold, po::value<int>(),"Copy log messages at or above this level "
-                                                "to stderr in addition to logfiles. The numbers "
-                                                "of severity levels INFO, WARNING, ERROR, and "
-                                                "FATAL are 0, 1, 2, and 3, respectively."
-                                                " [int:default=2]")
-        (glog_minloglevel, po::value<int>(),    "Log messages at or above this level. The numbers "
-                                                "of severity levels INFO, WARNING, ERROR, and "
-                                                "FATAL are 0, 1, 2, and 3, respectively."
-                                                " [int:default=0]")
-        (glog_log_dir, po::value<std::string>(),"If specified, logfiles are written into this "
-                                                "directory instead of the default logging directory."
-                                                " [string:default=\"\"]")
-        ("ipc-thread-pool", po::value<int>(),   "threads in frontend thread pool. [int:default=10]");
+        ("file,f", po::value<std::string>(),
+            "Socket filename")
+        ("enable-input,i", po::value<bool>(),
+            "Enable input. [bool:default=true]")
+        (display_report_opt, po::value<std::string>(),
+            "How to handle the Display report. [{log,off}:default=off]")
+        (input_report_opt, po::value<std::string>(),
+            "How to handle the Input report. [{log,off}:default=off]")
+        (session_mediator_report_opt, po::value<std::string>(),
+            "How to handle the SessionMediator report. [{log,off}:default=off]")
+        (msg_processor_report_opt, po::value<std::string>(),
+            "How to handle the MessageProcessor report. [{log,off}:default=off]")
+        (glog,
+            "Use google::GLog for logging")
+        (glog_stderrthreshold, po::value<int>(),
+            "Copy log messages at or above this level "
+            "to stderr in addition to logfiles. The numbers "
+            "of severity levels INFO, WARNING, ERROR, and "
+            "FATAL are 0, 1, 2, and 3, respectively."
+            " [int:default=2]")
+        (glog_minloglevel, po::value<int>(),
+            "Log messages at or above this level. The numbers "
+            "of severity levels INFO, WARNING, ERROR, and "
+            "FATAL are 0, 1, 2, and 3, respectively."
+            " [int:default=0]")
+        (glog_log_dir, po::value<std::string>(),
+            "If specified, logfiles are written into this "
+            "directory instead of the default logging directory."
+            " [string:default=\"\"]")
+        ("ipc-thread-pool", po::value<int>(),
+            "threads in frontend thread pool. [int:default=10]");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
@@ -257,7 +271,7 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
     return display_report(
         [this]() -> std::shared_ptr<graphics::DisplayReport>
         {
-            if (the_options()->get(log_display, false))
+            if (the_options()->get(display_report_opt, off_opt_value) == log_opt_value)
             {
                 return std::make_shared<ml::DisplayReport>(the_logger());
             }
@@ -435,7 +449,7 @@ mir::DefaultServerConfiguration::the_input_manager()
         {
             if (the_options()->get("enable-input", enable_input_default))
             {
-                if (the_options()->get(log_input, false))
+                if (the_options()->get(input_report_opt, off_opt_value) == log_opt_value)
                     ml::input_report::initialize(the_logger());
                 return std::make_shared<mia::InputManager>(the_input_configuration());
             }
@@ -585,7 +599,7 @@ mir::DefaultServerConfiguration::the_session_mediator_report()
     return session_mediator_report(
         [this]() -> std::shared_ptr<mf::SessionMediatorReport>
         {
-            if (the_options()->get(log_app_mediator, false))
+            if (the_options()->get(session_mediator_report_opt, off_opt_value) == log_opt_value)
             {
                 return std::make_shared<ml::SessionMediatorReport>(the_logger());
             }
@@ -602,7 +616,7 @@ mir::DefaultServerConfiguration::the_message_processor_report()
     return message_processor_report(
         [this]() -> std::shared_ptr<mf::MessageProcessorReport>
         {
-            if (the_options()->get(log_msg_processor, false))
+            if (the_options()->get(msg_processor_report_opt, off_opt_value) == log_opt_value)
             {
                 return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_time_source());
             }

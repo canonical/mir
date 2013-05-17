@@ -93,7 +93,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
 
     auto report = std::shared_ptr<mg::NullDisplayReport>(); 
     auto platform = mg::create_platform(report);
-    auto internal_client = platform->create_internal_client(mir_surface);
+    auto internal_client = platform->create_internal_client();
 
     int major, minor, n;
     EGLContext egl_context;
@@ -116,7 +116,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     rc = eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
     EXPECT_EQ(EGL_TRUE, rc);
 
-    egl_surface = eglCreateWindowSurface(egl_display, egl_config, internal_client->egl_native_window(), NULL);
+    egl_surface = eglCreateWindowSurface(egl_display, egl_config, internal_client->egl_native_window(mir_surface), NULL);
     EXPECT_NE(EGL_NO_SURFACE, egl_surface);
 
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
