@@ -31,7 +31,8 @@ mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_
                               std::shared_ptr<DisplaySupportProvider> const& fbdev,
                               std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : HWCCommonDevice(hwc_device, coordinator),
-      fb_device(fbdev)
+      fb_device(fbdev),
+      wait_for_vsync(true)
 {
 }
 
@@ -80,10 +81,14 @@ void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
 
-    coordinator->wait_for_vsync();
+    if (wait_for_vsync)
+    {
+        coordinator->wait_for_vsync();
+    }
 }
 
-void mga::HWC10Device::sync_to_display(bool )//sync)
+void mga::HWC10Device::sync_to_display(bool sync)
 {
-
+    wait_for_vsync = sync;
+    fb_device->sync_to_display(sync);
 }

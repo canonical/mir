@@ -46,6 +46,7 @@ public:
     void commit_frame(EGLDisplay dpy, EGLSurface sur);
 private:
     std::shared_ptr<DisplaySupportProvider> const fb_device;
+    bool wait_for_vsync;
 };
 
 }

@@ -141,15 +141,14 @@ TEST_F(HWC10Device, hwc10_commit_frame_async)
     EGLSurface sur = nullptr;
 
     InSequence inseq;
-
+    EXPECT_CALL(*mock_fbdev, sync_to_display(false))
+        .Times(1);
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
         .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
     EXPECT_CALL(*mock_vsync, wait_for_vsync())
         .Times(0);
-    EXPECT_CALL(*mock_fbdev, sync_to_display(false))
-        .Times(1);
 
     mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
     device.sync_to_display(false);
