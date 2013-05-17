@@ -73,6 +73,13 @@ pushd ${1} > /dev/null
         libgles2-mesa-dev
         libxkbcommon0
         libxkbcommon-dev
+        liblttng-ust0
+        liburcu1
+        libuuid1
+        liblttng-ust-dev
+        liburcu-dev
+        uuid-dev
+        systemtap-sdt-dev
         zlib1g)
 
     declare -a PACKAGES_ALL=(libglm-dev)
