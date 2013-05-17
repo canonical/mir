@@ -94,7 +94,7 @@ void mircv::XKBMapper::update_state_and_map_event(MirKeyEvent &key_ev)
         direction = XKB_KEY_UP;
     else if (key_ev.action == mir_key_action_down)
         direction = XKB_KEY_DOWN;
-    else // Ignore synthetic events such as long press TODO: Test this
+    else // mir_key_action_multiple does not correspond to a physical keypress
         update_state = false;
     
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code);

@@ -53,3 +53,11 @@ TEST(XKBMapper, maps_generic_us_english_keys)
     EXPECT_EQ(XKB_KEY_Shift_L, map_scancode(mapper, mir_key_action_up, KEY_LEFTSHIFT));
     EXPECT_EQ(XKB_KEY_4, map_scancode(mapper, mir_key_action_down, KEY_4));
 }
+
+TEST(XKBMapper, key_action_multiple_does_not_update_modifier_state)
+{
+    mircv::XKBMapper mapper;
+
+    EXPECT_EQ(XKB_KEY_Shift_L, map_scancode(mapper, mir_key_action_multiple, KEY_LEFTSHIFT));
+    EXPECT_EQ(XKB_KEY_4, map_scancode(mapper, mir_key_action_down, KEY_4));
+}
