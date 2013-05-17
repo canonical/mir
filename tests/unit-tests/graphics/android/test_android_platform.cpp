@@ -18,12 +18,12 @@
 
 #include "mir/graphics/null_display_report.h"
 #include "src/server/graphics/android/android_platform.h"
+#include "mir/compositor/buffer_ipc_packer.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_protobuf.pb.h"
 #include <system/window.h>
 #include <gtest/gtest.h>
 
-namespace mp=mir::protobuf;
+namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
@@ -72,10 +72,11 @@ protected:
 
 namespace
 {
-struct MockPacker : public mtd::BufferIPCPacker
+struct MockPacker : public mc::BufferIPCPacker
 {
+    ~MockPacker() noexcept {}
     MOCK_METHOD1(pack_fd, void(int));
-    MOCK_METHOD1(pack_ints, void(int));
+    MOCK_METHOD1(pack_data, void(int));
     MOCK_METHOD1(pack_id, void(mc::BufferID));
     MOCK_METHOD1(pack_stride, void(geom::Stride));
 };
@@ -86,7 +87,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
 {
     auto mock_buffer = std::make_shared<mtd::MockBuffer>();
     geom::Stride dummy_stride(4390);
-    mc::BufferId dummy_id(444);
+    mc::BufferID dummy_id(444);
 
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .WillOnce(testing::Return(anwb));
@@ -98,15 +99,22 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
     auto platform = mg::create_platform(stub_display_report);
 
     auto mock_packer = std::make_shared<MockPacker>();
-    platform->fill_ipc_package(mock_packer, mock_buffer);
-
     int offset = 0;
-    EXPECT_CALL(*mock_packer, pack_fd(native_buffer_handle->data[offset++]))
-        .Times(num_fds); 
-    EXPECT_CALL(*mock_packer, pack_ints(native_buffer_handle->data[offset++]))
-        .Times(num_ints);
+    for(auto i=0u; i<num_fds; i++)
+    {
+        EXPECT_CALL(*mock_packer, pack_fd(native_buffer_handle->data[offset++]))
+            .Times(1);
+    } 
+    for(auto i=0u; i<num_ints; i++)
+    {
+        EXPECT_CALL(*mock_packer, pack_data(native_buffer_handle->data[offset++]))
+            .Times(1);
+    }
     EXPECT_CALL(*mock_packer, pack_id(dummy_id))
         .Times(1); 
     EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
-        .Times(1); 
+        .Times(1);
+
+    platform->fill_ipc_package(mock_packer, mock_buffer);
+
 }

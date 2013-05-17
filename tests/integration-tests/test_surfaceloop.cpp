@@ -38,7 +38,6 @@
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 
-namespace mp = mir::protobuf;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -361,7 +360,8 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return std::shared_ptr<mg::InternalClient>();   
         }
  
-        void fill_ipc_package(mp::Buffer*, std::shared_ptr<mc::Buffer> const&) const
+        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                              std::shared_ptr<mc::Buffer> const&) const
         {
         }
     };
@@ -497,7 +497,8 @@ struct BufferCounterConfig : TestingServerConfiguration
             return std::shared_ptr<mg::InternalClient>();   
         }
 
-        void fill_ipc_package(mp::Buffer*, std::shared_ptr<mc::Buffer> const&) const
+        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                              std::shared_ptr<mc::Buffer> const&) const
         {
         }
     };

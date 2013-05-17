@@ -34,8 +34,12 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
 #include "client_buffer_tracker.h"
+#include "protobuf_buffer_packer.h"
 
 #include <boost/throw_exception.hpp>
+
+namespace mf=mir::frontend;
+namespace mfd=mir::frontend::detail;
 
 mir::frontend::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
@@ -128,7 +132,8 @@ void mir::frontend::SessionMediator::create_surface(
 
         if (!client_tracker->client_has(id))
         {
-            graphics_platform->fill_ipc_package(buffer, buffer_resource);
+            auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
+            graphics_platform->fill_ipc_package(packer, buffer_resource);
 
             //TODO: (kdub) here, we should hold onto buffer_resource. so ms::Surface doesn't have
             // to worry about it. ms::Surface guarentees the resource will be there until the end
@@ -160,7 +165,8 @@ void mir::frontend::SessionMediator::next_buffer(
 
     if (!client_tracker->client_has(id))
     {
-        graphics_platform->fill_ipc_package(response, buffer_resource);
+        auto packer = std::make_shared<mfd::ProtobufBufferPacker>(response);
+        graphics_platform->fill_ipc_package(packer, buffer_resource);
 
         //TODO: (kdub) here, we should hold onto buffer_resource. so ms::Surface doesn't have
         // to worry about it. ms::Surface guarentees the resource will be there until the end

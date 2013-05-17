@@ -53,7 +53,8 @@ class StubPlatform : public graphics::Platform
         return std::shared_ptr<graphics::InternalClient>();   
     }
  
-    void fill_ipc_package(protobuf::Buffer*, std::shared_ptr<compositor::Buffer> const&) const
+    void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const&,
+                          std::shared_ptr<compositor::Buffer> const&) const
     {
     }
 };

@@ -27,9 +27,8 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
-#include "mir_protobuf.pb.h"
+#include "mir/compositor/buffer_ipc_packer.h"
 
-namespace mp=mir::protobuf;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
@@ -63,7 +62,8 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::fill_ipc_package(mp::Buffer* response, std::shared_ptr<mc::Buffer> const& buffer) const
+void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+                                            std::shared_ptr<mc::Buffer> const& buffer) const
 {
     auto native_buffer = buffer->native_buffer_handle();
     auto buffer_handle = native_buffer->handle;
@@ -71,14 +71,15 @@ void mga::AndroidPlatform::fill_ipc_package(mp::Buffer* response, std::shared_pt
     int offset = 0;
     for(auto i=0; i<buffer_handle->numFds; i++)
     {
-        response->add_fd(buffer_handle->data[offset++]);
+        packer->pack_fd(buffer_handle->data[offset++]);
     }    
     for(auto i=0; i<buffer_handle->numInts; i++)
     {
-        response->add_data(buffer_handle->data[offset++]);
+        packer->pack_data(buffer_handle->data[offset++]);
     }    
 
-    response->set_stride(buffer->stride().as_uint32_t()); 
+    packer->pack_stride(buffer->stride());
+    packer->pack_id(buffer->id());
 }
 
 std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client()

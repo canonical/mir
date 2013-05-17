@@ -24,10 +24,6 @@
 
 namespace mir
 {
-namespace protobuf
-{
-class Buffer;
-}
 namespace frontend
 {
 class Surface;
@@ -36,6 +32,7 @@ namespace compositor
 {
 class GraphicBufferAllocator;
 class Buffer;
+class BufferIPCPacker;
 }
 
 /// Graphics subsystem. Mediates interaction between core system and
@@ -61,8 +58,8 @@ public:
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
     virtual std::shared_ptr<Display> create_display() = 0;
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
-    virtual void fill_ipc_package(protobuf::Buffer* response,
-            std::shared_ptr<compositor::Buffer> const& buffer) const = 0;
+    virtual void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+                                  std::shared_ptr<compositor::Buffer> const& buffer) const = 0;
     
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 };
