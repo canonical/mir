@@ -21,16 +21,18 @@
 #define TRACEPOINT_DEFINE
 #include "message_processor_report_tp.h"
 
+#include "mir_tracepoint.h"
+
 void mir::lttng::MessageProcessorReport::received_invocation(
     void const* mediator, int id, std::string const& method)
 {
-    tracepoint(mir_server_msgproc, received_invocation, mediator, id, method.c_str());
+    mir_tracepoint(mir_server_msgproc, received_invocation, mediator, id, method.c_str());
 }
 
 void mir::lttng::MessageProcessorReport::completed_invocation(
     void const* mediator, int id, bool result)
 {
-    tracepoint(mir_server_msgproc, completed_invocation, mediator, id, result);
+    mir_tracepoint(mir_server_msgproc, completed_invocation, mediator, id, result);
 }
 
 void mir::lttng::MessageProcessorReport::unknown_method(
