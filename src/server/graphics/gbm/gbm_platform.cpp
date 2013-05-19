@@ -113,11 +113,6 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
-{
-    drm.auth_magic(magic);
-}
-
 std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
 {
     if (!internal_native_display)

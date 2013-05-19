@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_GBM_GBM_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "gbm_display_helpers.h"
 
 #include "mir_toolkit/mesa/native_display.h"
@@ -35,7 +34,6 @@ namespace gbm
 class VirtualTerminal;
 class InternalNativeDisplay;
 class GBMPlatform : public Platform,
-                    public DRMAuthenticator,
                     public std::enable_shared_from_this<GBMPlatform>
 {
 public:
@@ -49,9 +47,6 @@ public:
     std::shared_ptr<Display> create_display();
     std::shared_ptr<PlatformIPCPackage> get_ipc_package(); 
     std::shared_ptr<InternalClient> create_internal_client();
-
-    /* From DRMAuthenticator */
-    void drm_auth_magic(drm_magic_t magic);
 
     helpers::DRMHelper drm;
     helpers::GBMHelper gbm;
