@@ -68,10 +68,10 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const frontend::Surf
 
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(
-            params.name,
+            params.name, params.top_left,
             buffer_bundle_factory->create_buffer_bundle(buffer_properties),
             [this]() { emit_change_notification(); }));
-
+    
     {
         std::lock_guard<std::mutex> lg(guard);
         surfaces.push_back(surface);

@@ -20,6 +20,8 @@
 #define MIR_FRONTEND_SURFACE_CREATION_PARAMETERS_H_
 
 #include "mir/geometry/pixel_format.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
 
 #include <memory>
@@ -39,6 +41,8 @@ struct SurfaceCreationParameters
     SurfaceCreationParameters& of_size(geometry::Size new_size);
 
     SurfaceCreationParameters& of_size(geometry::Width::ValueType width, geometry::Height::ValueType height);
+    
+    SurfaceCreationParameters& of_position(geometry::Point const& top_left);
 
     SurfaceCreationParameters& of_buffer_usage(compositor::BufferUsage new_buffer_usage);
 
@@ -46,6 +50,7 @@ struct SurfaceCreationParameters
 
     std::string name;
     geometry::Size size;
+    geometry::Point top_left;
     compositor::BufferUsage buffer_usage;
     geometry::PixelFormat pixel_format;
 };
