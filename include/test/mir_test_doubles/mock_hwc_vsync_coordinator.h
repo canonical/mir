@@ -32,6 +32,7 @@ namespace doubles
 
 struct MockVsyncCoordinator : public graphics::android::HWCVsyncCoordinator
 {
+    ~MockVsyncCoordinator() noexcept {}
     MOCK_METHOD0(wait_for_vsync, void());
     MOCK_METHOD0(notify_vsync, void());
 };

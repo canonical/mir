@@ -168,7 +168,8 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
     if (interval == 0)
     {
         driver_interpreter->sync_to_display(false);
-    } else 
+    }
+    else 
     {
         driver_interpreter->sync_to_display(true);
     }

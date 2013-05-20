@@ -29,11 +29,15 @@ namespace android
 class HWCVsyncCoordinator
 {
 public:
-    HWCVsyncCoordinator() {}
-    ~HWCVsyncCoordinator() = default;
+    virtual ~HWCVsyncCoordinator() = default;
     
     virtual void wait_for_vsync() = 0;
     virtual void notify_vsync() = 0;
+
+protected:
+    HWCVsyncCoordinator() = default;
+    HWCVsyncCoordinator(HWCVsyncCoordinator const&) = delete;
+    HWCVsyncCoordinator& operator=(HWCVsyncCoordinator const&) = delete;
 };
 
 }
