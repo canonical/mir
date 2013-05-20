@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,36 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
+#include "protobuf_buffer_packer.h"
 
-#include "mir/surfaces/graphic_region.h"
-#include "mir_toolkit/mir_native_buffer.h"
+namespace mfd=mir::frontend::detail;
 
-#include <memory>
-
-namespace mir
+mfd::ProtobufBufferPacker::ProtobufBufferPacker(protobuf::Buffer* response)
+    : buffer_response(response)
 {
-namespace compositor
-{
-struct BufferIPCPackage;
-class BufferID;
-
-class Buffer : public surfaces::GraphicRegion
-{
-public:
-    virtual ~Buffer() {}
-
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const = 0;
-    virtual BufferID id() const = 0;
-
-protected:
-    Buffer() = default;
-};
-
 }
+
+void mfd::ProtobufBufferPacker::pack_fd(int fd)
+{
+    buffer_response->add_fd(fd);
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+
+void mfd::ProtobufBufferPacker::pack_data(int data)
+{
+    buffer_response->add_data(data);
+}
+
+void mfd::ProtobufBufferPacker::pack_stride(geometry::Stride stride)
+{
+    buffer_response->set_stride(stride.as_uint32_t());
+}

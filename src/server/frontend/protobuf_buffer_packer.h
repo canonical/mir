@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,36 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_H_
-#define MIR_COMPOSITOR_BUFFER_H_
+#ifndef MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
+#define MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 
-#include "mir/surfaces/graphic_region.h"
-#include "mir_toolkit/mir_native_buffer.h"
-
-#include <memory>
+#include "mir/compositor/buffer_ipc_packer.h"
+#include "mir_protobuf.pb.h"
 
 namespace mir
 {
-namespace compositor
+namespace frontend
 {
-struct BufferIPCPackage;
-class BufferID;
+namespace detail
+{
 
-class Buffer : public surfaces::GraphicRegion
+class ProtobufBufferPacker : public compositor::BufferIPCPacker
 {
 public:
-    virtual ~Buffer() {}
-
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const = 0;
-    virtual BufferID id() const = 0;
-
-protected:
-    Buffer() = default;
+    ProtobufBufferPacker(protobuf::Buffer*);
+    void pack_fd(int);
+    void pack_data(int);
+    void pack_stride(geometry::Stride);
+private:
+    protobuf::Buffer* buffer_response;
 };
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_H_
+}
+
+#endif /* MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_ */

@@ -22,10 +22,10 @@
 #include "mir/graphics/platform.h"
 #include "mir/frontend/surface.h"
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 
+#include <cstring>
 #include <mutex>
 #include <set>
 
@@ -43,6 +43,17 @@ mgg::InternalNativeDisplay::InternalNativeDisplay(std::shared_ptr<mg::PlatformIP
     this->surface_advance_buffer = &InternalNativeDisplay::native_display_surface_advance_buffer;
 }
 
+void mgg::InternalNativeDisplay::native_display_surface_get_current_buffer(MirMesaEGLNativeDisplay*, 
+                                                      MirEGLNativeWindowType surface,
+                                                      MirBufferPackage* package)
+{
+        auto mir_surface = static_cast<mf::Surface*>(surface);
+
+        auto buffer = mir_surface->client_buffer();
+        auto buffer_package = buffer->native_buffer_handle();
+        memcpy(package, buffer_package.get(), sizeof(MirBufferPackage));
+}
+
 void mgg::InternalNativeDisplay::native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package)
 {
     auto native_disp = static_cast<InternalNativeDisplay*>(display);
@@ -57,27 +68,6 @@ void mgg::InternalNativeDisplay::native_display_get_platform(MirMesaEGLNativeDis
         package->fd[i] = native_disp->platform_package->ipc_fds[i];
     }
 
-}
-
-void mgg::InternalNativeDisplay::native_display_surface_get_current_buffer(MirMesaEGLNativeDisplay*, 
-                                                      MirEGLNativeWindowType surface,
-                                                      MirBufferPackage* package)
-{
-    auto mir_surface = static_cast<mf::Surface*>(surface);
-
-    auto buffer = mir_surface->client_buffer();
-    auto buffer_package = buffer->get_ipc_package();
-    package->data_items = buffer_package->ipc_data.size();
-    for (int i = 0; i < package->data_items; i++)
-    {
-        package->data[i] = buffer_package->ipc_data[i];
-    }
-    package->fd_items = buffer_package->ipc_fds.size();
-    for (int i = 0; i < package->fd_items; i++)
-    {
-        package->fd[i] = buffer_package->ipc_fds[i];
-    }
-    package->stride = buffer_package->stride;
 }
 
 void mgg::InternalNativeDisplay::native_display_surface_get_parameters(MirMesaEGLNativeDisplay*, 

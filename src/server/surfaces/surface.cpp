@@ -19,7 +19,6 @@
  */
 
 #include "mir/surfaces/surface.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/surfaces/buffer_bundle.h"
 
 #include <cassert>

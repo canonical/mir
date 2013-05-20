@@ -38,7 +38,6 @@ public:
     geometry::PixelFormat pixel_format() const;
     BufferID id() const;
     void bind_to_texture();
-    std::shared_ptr<BufferIPCPackage> get_ipc_package() const;
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
 protected:

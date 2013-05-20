@@ -25,7 +25,6 @@
 #include "src/server/graphics/gbm/gbm_buffer.h"
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
@@ -139,14 +138,14 @@ TEST_F(GBMGraphicBufferBasic, stride_has_sane_value)
     ASSERT_LE(minimum, buffer->stride());
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_has_correct_size)
+TEST_F(GBMGraphicBufferBasic, buffer_native_handle_has_correct_size)
 {
     using namespace testing;
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
-    auto ipc_package = buffer->get_ipc_package();
-    ASSERT_EQ(size_t(1), ipc_package->ipc_fds.size());
-    ASSERT_TRUE(ipc_package->ipc_data.empty());
+    auto native_handle = buffer->native_buffer_handle();
+    EXPECT_EQ(1, native_handle->fd_items);
+    EXPECT_EQ(0, native_handle->data_items);
 }
 
 MATCHER_P(GEMFlinkHandleIs, value, "")
@@ -161,7 +160,7 @@ ACTION_P(SetGEMFlinkName, value)
     flink->name = value;
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_data)
+TEST_F(GBMGraphicBufferBasic, buffer_native_handle_contains_correct_data)
 {
     using namespace testing;
 
@@ -177,15 +176,13 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_contains_correct_data)
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<3>(prime_fd), Return(0)));
 
-    EXPECT_NO_THROW({
-        auto buffer = allocator->alloc_buffer(buffer_properties);
-        auto ipc_package = buffer->get_ipc_package();
-        ASSERT_EQ(prime_fd, static_cast<uint32_t>(ipc_package->ipc_fds[0]));
-        ASSERT_EQ(stride.as_uint32_t(), static_cast<uint32_t>(ipc_package->stride));
-    });
+    auto buffer = allocator->alloc_buffer(buffer_properties);
+    auto handle = buffer->native_buffer_handle();
+    EXPECT_EQ(prime_fd, static_cast<unsigned int>(handle->fd[0]));
+    EXPECT_EQ(stride.as_uint32_t(), static_cast<unsigned int>(handle->stride));
 }
 
-TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_throws_on_prime_fd_failure)
+TEST_F(GBMGraphicBufferBasic, buffer_creation_throws_on_prime_fd_failure)
 {
     using namespace testing;
 
@@ -195,7 +192,6 @@ TEST_F(GBMGraphicBufferBasic, buffer_ipc_package_throws_on_prime_fd_failure)
 
     EXPECT_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        auto ipc_package = buffer->get_ipc_package();
     }, std::runtime_error);
 }
 
