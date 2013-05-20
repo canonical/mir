@@ -313,3 +313,23 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
 
     stack.destroy_surface(surface);
 }
+
+TEST(SurfaceStack, surface_is_created_at_requested_position)
+{
+    using namespace ::testing;
+    
+    geom::Point const requested_top_left{geom::X{50},
+                                         geom::Y{17}};
+    geom::Size const requested_size{geom::Width{1024}, 
+                                    geom::Height{768}};
+    
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    
+    auto s = stack.create_surface(
+        mf::a_surface().of_size(requested_size).of_position(requested_top_left));
+    
+    {
+        auto surface = s.lock();
+        EXPECT_EQ(requested_top_left, surface->top_left());
+    }
+}
