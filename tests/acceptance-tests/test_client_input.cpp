@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/viewable_area.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_dispatcher_controller.h"
@@ -43,6 +44,8 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
 namespace msh = mir::shell;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
@@ -452,4 +455,57 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
         }
     } client_config;
     launch_client_process(client_config);
+}
+
+namespace
+{
+class StubViewableArea : public mg::ViewableArea
+{
+    StubViewableArea(int width, int height) :
+        width(width),
+        height(height),
+        x(0),
+        y(0)
+    {
+    }
+    
+    geom::Rectangle view_area() const
+    {
+        return geom::Rectangle{geom::Point{x, y},
+            geom::Size{width, height}};
+    }
+    
+    geom::Width const width;
+    geom::Height const height;
+    geom::X const x;
+    geom::Y const y;
+};
+
+
+
+}
+
+TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
+{
+    using namespace ::testing;
+    
+    int const screen_width = 1000;
+    int const screen_height = 800;
+    int const client_width = screen_width/2;
+    int const client_height = screen_height/2;
+    
+    MirSurfaceParameters const surface1_params =
+        {
+            "1",
+            client_width, client_height,
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware
+        };    
+    MirSurfaceParameters const surface2_params =
+        {
+            "2",
+            client_width, client_height,
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware
+        };
 }
