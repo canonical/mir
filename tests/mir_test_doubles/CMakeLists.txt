@@ -13,11 +13,22 @@ set(
   test_protobuf_socket_server.cpp
 )
 
+set(
+  MIR_TEST_DOUBLES_PLATFORM_SRCS
+
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_egl.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
+)
+
 if (MIR_PLATFORM STREQUAL "gbm")
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
-list(APPEND TEST_UTILS_SRCS 
+list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
+)
+elseif (MIR_PLATFORM STREQUAL "android")
+list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_android_hw.cpp
 )
 endif()
 
@@ -35,6 +46,19 @@ target_link_libraries(
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+add_library(
+  mir-test-doubles-platform STATIC
+  ${MIR_TEST_DOUBLES_PLATFORM_SRCS})
+
+target_link_libraries(
+  mir-test-doubles-platform
+
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}

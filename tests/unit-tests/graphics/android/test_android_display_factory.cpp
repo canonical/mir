@@ -26,13 +26,12 @@
 
 #include "mir_test_doubles/mock_display_support_provider.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test/hw_mock.h"
+#include "mir_test_doubles/mock_android_hw.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>
 
-namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
@@ -116,7 +115,7 @@ public:
     std::shared_ptr<MockFNWFactory> mock_fnw_factory;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fb_device;
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
-    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
+    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
 };
 }
 
@@ -170,7 +169,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_module_unopenable_uses_gpu)
     EXPECT_CALL(*mock_display_allocator, create_hwc_display(_,_,_))
         .Times(0);
     
-    mt::FailingHardwareModuleStub failing_hwc_module_stub;
+    mtd::FailingHardwareModuleStub failing_hwc_module_stub;
 
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
         .Times(1)
@@ -250,7 +249,7 @@ TEST_F(AndroidDisplayFactoryTest, hwc_with_hwc_device_version_11_success)
 TEST_F(AndroidDisplayFactoryTest, gpu_logging)
 {
     using namespace testing;
-    mt::FailingHardwareModuleStub failing_hwc_module_stub;
+    mtd::FailingHardwareModuleStub failing_hwc_module_stub;
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID),_))
         .Times(1)
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));

@@ -23,20 +23,19 @@
 #include "mir_test_doubles/mock_client_surface.h"
 
 #ifdef ANDROID
-#include "mir_test/hw_mock.h"
+#include "mir_test_doubles/mock_android_hw.h"
 #endif
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
-namespace mt = mir::test;
-namespace mtd = mt::doubles;
+namespace mtd = mir::test::doubles;
 
 class ClientPlatformTest : public ::testing::Test
 {
 #ifdef ANDROID
-    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
+    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
 #endif
 };
 

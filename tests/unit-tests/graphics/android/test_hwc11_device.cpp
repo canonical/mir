@@ -22,7 +22,7 @@
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test/egl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
 #include <gtest/gtest.h>
 
 namespace mc=mir::compositor;
@@ -45,7 +45,7 @@ protected:
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_support_provider;
     EGLDisplay dpy;
     EGLSurface surf;
-    mir::EglMock mock_egl;
+    mtd::MockEGL mock_egl;
 };
 
 namespace

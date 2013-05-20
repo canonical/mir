@@ -21,7 +21,7 @@
 #include "mir_test_doubles/mock_hwc_interface.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test/egl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <memory>
 
@@ -47,7 +47,7 @@ protected:
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
     std::shared_ptr<mtd::MockHWCInterface> mock_hwc_device;
 
-    mir::EglMock mock_egl;
+    mtd::MockEGL mock_egl;
 };
 
 TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)

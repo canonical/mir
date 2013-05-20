@@ -20,8 +20,8 @@
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 
-#include "mir_test/egl_mock.h"
-#include "mir_test/gl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
@@ -121,8 +121,8 @@ public:
     }
 
 
-    testing::NiceMock<mir::EglMock> mock_egl;
-    testing::NiceMock<mir::GLMock> mock_gl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::MockDRM> mock_drm;
     testing::NiceMock<mtd::MockGBM> mock_gbm;
 
