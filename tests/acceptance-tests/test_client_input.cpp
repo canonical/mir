@@ -18,6 +18,8 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
+#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/placement_strategy.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_dispatcher_controller.h"
@@ -39,10 +41,12 @@
 
 #include <thread>
 #include <functional>
+#include <map>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -459,7 +463,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 
 namespace
 {
-class StubViewableArea : public mg::ViewableArea
+struct StubViewableArea : public mg::ViewableArea
 {
     StubViewableArea(int width, int height) :
         width(width),
@@ -481,7 +485,23 @@ class StubViewableArea : public mg::ViewableArea
     geom::Y const y;
 };
 
+typedef std::map<std::string, geom::Point> PositionList;
 
+struct StaticPlacementStrategy : public msh::PlacementStrategy
+{
+    StaticPlacementStrategy(PositionList positions)
+        : surface_positions_by_name(positions)
+    {
+    }
+
+    mf::SurfaceCreationParameters place(mf::SurfaceCreationParameters const& request_parameters)
+    {
+        auto placed = request_parameters;
+        placed.top_left = surface_positions_by_name[request_parameters.name];
+        return placed;
+    }
+    PositionList surface_positions_by_name;
+};
 
 }
 
@@ -492,18 +512,44 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     int const screen_width = 1000;
     int const screen_height = 800;
     int const client_width = screen_width/2;
-    int const client_height = screen_height/2;
+    int const client_height = screen_height;
+    std::string const surface1_name = "1";
+    std::string const surface2_name = "2";
+    
+    PositionList positions;
+    positions[surface1_name] = geom::Point{geom::X{0}, geom::Y{0}};
+    positions[surface2_name] = geom::Point{geom::X{screen_width/2}, geom::Y{0}};
+
+    struct TestServerConfiguration : FakeInputServerConfiguration
+    {
+        TestServerConfiguration(int screen_width, int screen_height, PositionList positions)
+            : screen_width(screen_width),
+              screen_height(screen_height),
+              positions(positions)
+        {
+        }
+        std::shared_ptr<mg::ViewableArea> the_viewable_area() override
+        {
+            return std::make_shared<StubViewableArea>(screen_width, screen_height);
+        }
+        std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
+        {
+            return std::make_shared<StaticPlacementStrategy>(positions);
+        }
+        int screen_width, screen_height;
+        PositionList positions;
+    } server_config(screen_width, screen_height, positions);
     
     MirSurfaceParameters const surface1_params =
         {
-            "1",
+            surface1_name.c_str(),
             client_width, client_height,
             mir_pixel_format_abgr_8888,
             mir_buffer_usage_hardware
         };    
     MirSurfaceParameters const surface2_params =
         {
-            "2",
+            surface2_name.c_str(),
             client_width, client_height,
             mir_pixel_format_abgr_8888,
             mir_buffer_usage_hardware
