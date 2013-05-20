@@ -22,14 +22,14 @@
 #include "client_buffer.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
-#include "input/input_receiver_thread.h"
-#include "input/input_platform.h"
+#include "mir/input/input_receiver_thread.h"
+#include "mir/input/input_platform.h"
 
 #include <cassert>
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
-namespace mcli = mir::client::input;
+namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
@@ -38,7 +38,7 @@ MirSurface::MirSurface(
     mp::DisplayServer::Stub & server,
     std::shared_ptr<mir::client::Logger> const& logger,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    std::shared_ptr<mcli::InputPlatform> const& input_platform,
+    std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
     mir_surface_lifecycle_callback callback, void * context)
     : server(server),
@@ -195,10 +195,10 @@ MirWaitHandle* MirSurface::release_surface(
     return connection->release_surface(this, callback, context);
 }
 
-std::shared_ptr<MirBufferPackage> MirSurface::get_current_buffer_package()
+std::shared_ptr<MirNativeBuffer> MirSurface::get_current_buffer_package()
 {
-    auto buffer = buffer_depository->current_buffer();
-    return buffer->get_buffer_package();
+    auto buffer = get_current_buffer();
+    return buffer->native_buffer_handle();
 }
 
 std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
@@ -320,4 +320,10 @@ void MirSurface::handle_event(MirEvent const& e)
 
     if (handle_event_callback)
         handle_event_callback(&e);
+}
+
+MirPlatformType MirSurface::platform_type()
+{
+    auto platform = connection->get_client_platform();
+    return platform->platform_type();
 }

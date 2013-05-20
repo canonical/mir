@@ -84,7 +84,7 @@ class MockDRM
 {
 public:
     MockDRM();
-    ~MockDRM();
+    ~MockDRM() noexcept;
 
     MOCK_METHOD2(drmOpen, int(const char *name, const char *busid));
     MOCK_METHOD1(drmClose, int(int fd));
@@ -120,6 +120,9 @@ public:
 
     MOCK_METHOD1(drmSetMaster, int(int fd));
     MOCK_METHOD1(drmDropMaster, int(int fd));
+
+    MOCK_METHOD5(drmModeSetCursor, int (int fd, uint32_t crtcId, uint32_t bo_handle, uint32_t width, uint32_t height));
+    MOCK_METHOD4(drmModeMoveCursor,int (int fd, uint32_t crtcId, int x, int y));
 
     FakeDRMResources fake_drm;
 };

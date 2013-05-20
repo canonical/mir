@@ -24,13 +24,13 @@
 #include <androidfw/KeyLayoutMap.h>
 #include <androidfw/KeyCharacterMap.h>
 #include <androidfw/VirtualKeyMap.h>
-#include ANDROIDFW_UTILS(String8.h)
-#include ANDROIDFW_UTILS(Mutex.h)
-#include ANDROIDFW_UTILS(List.h)
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(PropertyMap.h)
-#include ANDROIDFW_UTILS(Vector.h)
-#include ANDROIDFW_UTILS(KeyedVector.h)
+#include <std/String8.h>
+#include <std/Mutex.h>
+#include <std/List.h>
+#include <std/Errors.h>
+#include <std/PropertyMap.h>
+#include <std/Vector.h>
+#include <std/KeyedVector.h>
 
 #include <linux/input.h>
 #include <sys/epoll.h>
@@ -236,6 +236,9 @@ public:
 
     /* Called by the heatbeat to ensures that the reader has not deadlocked. */
     virtual void monitor() = 0;
+
+    /* Flush all pending events not yet read from the input devices */
+    virtual void flush() = 0;
 };
 
 class EventHub : public EventHubInterface
@@ -293,6 +296,7 @@ public:
 
     virtual void dump(String8& dump);
     virtual void monitor();
+    virtual void flush();
 
 protected:
     virtual ~EventHub();

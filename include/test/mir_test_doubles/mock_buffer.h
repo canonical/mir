@@ -59,12 +59,15 @@ struct MockBuffer : public compositor::Buffer
                 .WillByDefault(Return(empty_package));
         ON_CALL(*this, id())
                 .WillByDefault(Return(compositor::BufferID{4}));
+        ON_CALL(*this, native_buffer_handle())
+                .WillByDefault(Return(std::shared_ptr<MirNativeBuffer>()));
     }
 
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(stride, geometry::Stride());
     MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
     MOCK_CONST_METHOD0(get_ipc_package, std::shared_ptr<compositor::BufferIPCPackage>());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
 
     MOCK_METHOD0(bind_to_texture, void());
     MOCK_CONST_METHOD0(id, compositor::BufferID());

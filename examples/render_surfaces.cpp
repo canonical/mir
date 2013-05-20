@@ -22,6 +22,7 @@
 #include "mir/frontend/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
 #include "mir/input/null_input_manager.h"
 #include "mir/shell/surface_builder.h"
@@ -76,7 +77,63 @@ namespace mt = mir::tools;
 
 namespace
 {
+bool input_is_on = false;
+std::weak_ptr<mg::Cursor> cursor;
+static const uint32_t bg_color = 0x00000000;
+static const uint32_t fg_color = 0xffdd4814;
+
+void update_cursor(uint32_t bg_color, uint32_t fg_color)
+{
+    if (auto cursor = ::cursor.lock())
+    {
+        static const int width = 64;
+        static const int height = 64;
+        std::vector<uint32_t> image(height * width, bg_color);
+        for (int i = 0; i != width-1; ++i)
+        {
+            if (i < 16)
+            {
+                image[0 * height + i] = fg_color;
+                image[1 * height + i] = fg_color;
+                image[i * height + 0] = fg_color;
+                image[i * height + 1] = fg_color;
+            }
+            image[i * height + i] = fg_color;
+            image[(i+1) * height + i] = fg_color;
+            image[i * height + i + 1] = fg_color;
+        }
+        cursor->set_image(
+            image.data(),
+            geom::Size{ geom::Width(width), geom::Height(height) });
+    }
+}
+
+void animate_cursor()
+{
+    if (!input_is_on)
+    {
+        if (auto cursor = ::cursor.lock())
+        {
+            static int cursor_pos = 0;
+            if (++cursor_pos == 300)
+            {
+                cursor_pos = 0;
+
+                static const uint32_t fg_colors[3] = { fg_color, 0xffffffff, 0x3f000000 };
+                static int fg_color = 0;
+
+                if (++fg_color == 3) fg_color = 0;
+
+                update_cursor(bg_color, fg_colors[fg_color]);
+            }
+
+            cursor->move_to(geom::Point{geom::X(cursor_pos), geom::Y(cursor_pos)});
+        }
+    }
+}
+
 char const* const surfaces_to_render = "surfaces-to-render";
+char const* const display_cursor     = "display-cursor";
 
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
@@ -195,13 +252,16 @@ class RenderSurfacesServerConfiguration : public mir::DefaultServerConfiguration
 {
 public:
     RenderSurfacesServerConfiguration(int argc, char const** argv)
-        : mir::DefaultServerConfiguration{argc, argv}
+        : mir::DefaultServerConfiguration(argc, argv)
     {
         namespace po = boost::program_options;
 
         add_options()
             (surfaces_to_render, po::value<int>(),  "Number of surfaces to render"
-                                                    " [int:default=5]");
+                                                    " [int:default=5]")
+            (display_cursor, po::value<bool>(), "Display test cursor. (If input is "
+                                                "disabled it gets animated.) "
+                                                "[bool:default=false]");
     }
 
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
@@ -215,12 +275,6 @@ public:
         };
 
         return std::make_shared<NullCommunicator>();
-    }
-
-    // Stub out input.
-    std::shared_ptr<mi::InputManager> the_input_manager() override
-    {
-        return std::make_shared<mi::NullInputManager>();
     }
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 
@@ -273,6 +327,7 @@ public:
 
             void render(mg::DisplayBuffer& display_buffer)
             {
+                animate_cursor();
                 stop_watch.stop();
                 if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
                 {
@@ -354,6 +409,23 @@ public:
         }
     }
 
+    bool input_is_on()
+    {
+        return the_options()->get("enable-input", ::input_is_on);
+    }
+
+    std::weak_ptr<mg::Cursor> the_cursor()
+    {
+        if (the_options()->get(display_cursor, false))
+        {
+            return the_display()->the_cursor();
+        }
+        else
+        {
+            return {};
+        }
+    }
+
 private:
     std::vector<Moveable> moveables;
 };
@@ -366,7 +438,14 @@ try
     ///\internal [main_tag]
     RenderSurfacesServerConfiguration conf{argc, argv};
 
-    mir::run_mir(conf, [&](mir::DisplayServer&) {conf.create_surfaces();});
+    mir::run_mir(conf, [&](mir::DisplayServer&)
+    {
+        conf.create_surfaces();
+
+        cursor = conf.the_cursor();
+
+        input_is_on = conf.input_is_on();
+    });
     ///\internal [main_tag]
 
     return 0;

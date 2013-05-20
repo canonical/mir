@@ -76,26 +76,6 @@ int mggh::DRMHelper::get_authenticated_fd()
     return auth_fd;
 }
 
-void mggh::DRMHelper::auth_magic(drm_magic_t magic) const
-{
-    /* We must have our own device fd first, so that it has become the DRM master */
-    if (fd < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error(
-                "Tried to authenticate magic cookie before setting up the DRM master"));
-    }
-
-    int ret = drmAuthMagic(fd, magic);
-
-    if (ret < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(ret));
-    }
-}
-
 void mggh::DRMHelper::drop_master() const
 {
     /* We must have our own device fd first, so that it has become the DRM master */
@@ -316,4 +296,9 @@ void mggh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to choose ARGB EGL config"));
     }
+}
+
+void mggh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f)
+{
+    f(egl_display, egl_config);
 }

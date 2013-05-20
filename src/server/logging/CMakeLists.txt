@@ -6,6 +6,7 @@ set(
   session_mediator_report.cpp
   message_processor_report.cpp
   display_report.cpp
+  input_report.cpp
 )
 
 add_library(

@@ -19,17 +19,17 @@
 
 #include <androidfw/Input.h>
 #include <androidfw/InputTransport.h>
-#include ANDROIDFW_UTILS(KeyedVector.h)
-#include ANDROIDFW_UTILS(Vector.h)
-#include ANDROIDFW_UTILS(Timers.h)
-#include ANDROIDFW_UTILS(RefBase.h)
-#include ANDROIDFW_UTILS(String8.h)
-#include ANDROIDFW_UTILS(Looper.h)
-#include ANDROIDFW_UTILS(BitSet.h)
-#include ANDROIDFW_CUTILS(atomic.h)
-#include ANDROIDFW_UTILS(Condition.h)
-#include ANDROIDFW_UTILS(Thread.h)
-#include ANDROIDFW_UTILS(Mutex.h)
+#include <std/KeyedVector.h>
+#include <std/Vector.h>
+#include <std/Timers.h>
+#include <std/RefBase.h>
+#include <std/String8.h>
+#include <std/Looper.h>
+#include <std/BitSet.h>
+#include <std/atomic.h>
+#include <std/Condition.h>
+#include <std/Thread.h>
+#include <std/Mutex.h>
 
 #include <stddef.h>
 #include <unistd.h>

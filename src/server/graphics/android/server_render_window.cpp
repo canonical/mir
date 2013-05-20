@@ -21,12 +21,12 @@
 #include "server_render_window.h"
 #include "display_support_provider.h"
 #include "fb_swapper.h"
-#include "android_buffer.h"
+#include "buffer.h"
 #include "android_format_conversion-inl.h"
+#include "interpreter_resource_cache.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-
 
 #include <thread>
 #include <chrono>
@@ -35,9 +35,11 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::ServerRenderWindow::ServerRenderWindow(std::shared_ptr<mga::FBSwapper> const& swapper,
-                                            std::shared_ptr<mga::DisplaySupportProvider> const& display_poster)
+                                            std::shared_ptr<mga::DisplaySupportProvider> const& display_poster,
+                                            std::shared_ptr<InterpreterResourceCache> const& cache)
     : swapper(swapper),
       poster(display_poster),
+      resource_cache(cache),
       format(mga::to_android_format(poster->display_format()))
 {
 }
@@ -46,22 +48,14 @@ ANativeWindowBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 {
     auto buffer = swapper->compositor_acquire();
     auto handle = buffer->native_buffer_handle().get();
-    buffers_in_driver[handle] = buffer;
-
+    resource_cache->store_buffer(buffer, handle);
     return handle;
 }
 
 //sync object could be passed to hwc. we don't need to that yet though
 void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* returned_handle, std::shared_ptr<SyncObject> const&)
 {
-    auto buffer_it = buffers_in_driver.find(returned_handle); 
-    if (buffer_it == buffers_in_driver.end())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("driver is returning buffers it never was given!"));
-    }
-
-    auto buffer = buffer_it->second;
-    buffers_in_driver.erase(buffer_it);
+    auto buffer = resource_cache->retrieve_buffer(returned_handle); 
     poster->set_next_frontbuffer(buffer);
     swapper->compositor_release(buffer);
 }

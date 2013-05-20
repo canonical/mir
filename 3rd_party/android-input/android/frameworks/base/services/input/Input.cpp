@@ -21,7 +21,7 @@
 #include <limits.h>
 
 #include <androidfw/Input.h>
-#include ANDROIDFW_UTILS(Log.h)
+#include <std/Log.h>
 
 #include <android/keycodes.h>
 

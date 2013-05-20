@@ -5,8 +5,8 @@ set(MIR_NDK_PATH $ENV{MIR_NDK_PATH} CACHE STRING "path of mir android bundle")
 set(MIR_ARM_EABI "arm-linux-gnueabihf")
 set (MIR_USES_BIONIC false CACHE BOOL "use the bionic libc/libstdc++")
 
-set(CMAKE_C_COMPILER   /usr/bin/${MIR_ARM_EABI}-gcc-${MIR_GCC_VERSION})
-set(CMAKE_CXX_COMPILER /usr/bin/${MIR_ARM_EABI}-g++-${MIR_GCC_VERSION})
+set(CMAKE_C_COMPILER   /usr/bin/${MIR_ARM_EABI}-gcc)
+set(CMAKE_CXX_COMPILER /usr/bin/${MIR_ARM_EABI}-g++)
 
 # where too look to find dependencies in the target environment 
 set(CMAKE_FIND_ROOT_PATH  "${MIR_NDK_PATH}")

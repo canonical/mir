@@ -30,7 +30,8 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
  : creation_package(package),
    buffer_registrar(registrar),
    rect({{geom::X(0),geom::Y(0)}, size}),
-   buffer_pf(pf)
+   buffer_pf(pf),
+   native_window_buffer(std::make_shared<ANativeWindowBuffer>())
 {
     creation_package = std::move(package);
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(creation_package));
@@ -45,17 +46,17 @@ static void incRef(android_native_base_t*)
 }
 void mcla::AndroidClientBuffer::pack_native_window_buffer()
 {
-    native_window_buffer.height = static_cast<int32_t>(rect.size.height.as_uint32_t());
-    native_window_buffer.width =  static_cast<int32_t>(rect.size.width.as_uint32_t());
-    native_window_buffer.stride = creation_package->stride;
-    native_window_buffer.usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
+    native_window_buffer->height = static_cast<int32_t>(rect.size.height.as_uint32_t());
+    native_window_buffer->width =  static_cast<int32_t>(rect.size.width.as_uint32_t());
+    native_window_buffer->stride = creation_package->stride;
+    native_window_buffer->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
 
-    native_window_buffer.handle = native_handle.get();
-    native_window_buffer.common.incRef = &incRef;
-    native_window_buffer.common.decRef = &incRef;
+    native_window_buffer->handle = native_handle.get();
+    native_window_buffer->common.incRef = &incRef;
+    native_window_buffer->common.decRef = &incRef;
 }
 
-mcla::AndroidClientBuffer::~AndroidClientBuffer()
+mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept
 {
     buffer_registrar->unregister_buffer(native_handle.get());
 }
@@ -112,12 +113,7 @@ geom::PixelFormat mcla::AndroidClientBuffer::pixel_format() const
     return buffer_pf;
 }
 
-MirNativeBuffer mcla::AndroidClientBuffer::get_native_handle()
+std::shared_ptr<ANativeWindowBuffer> mcla::AndroidClientBuffer::native_buffer_handle() const
 {
-    return &native_window_buffer;
-}
-
-std::shared_ptr<MirBufferPackage> mcla::AndroidClientBuffer::get_buffer_package() const
-{
-    return creation_package;
+    return native_window_buffer;
 }

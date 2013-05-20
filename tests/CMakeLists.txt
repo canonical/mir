@@ -10,21 +10,14 @@ else()
   message(STATUS "Tests are run with real input.")
 endif()
 
-option(
-  MIR_ENABLE_DEATH_TESTS
-  "Option to control whether to run death tests"
-  ON
-)
-
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # Avoid clang complaints about poor quality gmock/gtest/cucumber headers
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
-endif ()
-
-if(MIR_ENABLE_DEATH_TESTS)
-  add_definitions(-DMIR_DEATH_TESTS_ENABLED)
-endif(MIR_ENABLE_DEATH_TESTS)
+else ()
+  # GCC 4.8 dislikes the gmock headers…
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-local-typedefs")
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include/server)
 include_directories(${PROJECT_SOURCE_DIR}/include/client)
@@ -42,11 +35,6 @@ add_subdirectory(mir_test_doubles/)
 add_subdirectory(draw/)
 add_subdirectory(client-language/)
 add_subdirectory(behavior-tests/)
-
-if(MIR_ENABLE_DEATH_TESTS)
-  add_subdirectory(death-tests/)
-else()
-  message(STATUS "Death tests are disabled and are not run.")
-endif(MIR_ENABLE_DEATH_TESTS)
+add_subdirectory(death-tests/)
 
 mir_add_memcheck_test()

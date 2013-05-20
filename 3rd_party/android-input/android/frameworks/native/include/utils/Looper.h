@@ -19,12 +19,12 @@
 
 #include <androidfw/Input.h>
 
-#include ANDROIDFW_UTILS(Mutex.h)
-#include ANDROIDFW_UTILS(Condition.h)
-#include ANDROIDFW_UTILS(Thread.h)
-#include ANDROIDFW_UTILS(RefBase.h)
-#include ANDROIDFW_UTILS(KeyedVector.h)
-#include ANDROIDFW_UTILS(Timers.h)
+#include <std/Mutex.h>
+#include <std/Condition.h>
+#include <std/Thread.h>
+#include <std/RefBase.h>
+#include <std/KeyedVector.h>
+#include <std/Timers.h>
 
 #include <android/looper.h>
 

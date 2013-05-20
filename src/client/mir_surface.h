@@ -24,6 +24,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
@@ -34,14 +35,17 @@
 
 namespace mir
 {
-namespace client
-{
-class ClientBuffer;
 namespace input
+{
+namespace receiver
 {
 class InputPlatform;
 class InputReceiverThread;
 }
+}
+namespace client
+{
+class ClientBuffer;
 
 struct MemoryRegion;
 }
@@ -58,7 +62,7 @@ public:
         mir::protobuf::DisplayServer::Stub & server,
         std::shared_ptr<mir::client::Logger> const& logger,
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
-        std::shared_ptr<mir::client::input::InputPlatform> const& input_platform,
+        std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceParameters const& params,
         mir_surface_lifecycle_callback callback, void * context);
 
@@ -75,7 +79,8 @@ public:
     MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 
-    std::shared_ptr<MirBufferPackage> get_current_buffer_package();
+    std::shared_ptr<MirNativeBuffer> get_current_buffer_package();
+    MirPlatformType platform_type();
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();
@@ -108,7 +113,7 @@ private:
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
-    std::shared_ptr<mir::client::input::InputPlatform> const input_platform;
+    std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
 
     std::shared_ptr<mir::client::Logger> logger;
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
@@ -119,7 +124,7 @@ private:
     int attrib_cache[mir_surface_attrib_arraysize_];
 
     std::function<void(MirEvent const*)> handle_event_callback;
-    std::shared_ptr<mir::client::input::InputReceiverThread> input_thread;
+    std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

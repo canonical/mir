@@ -20,6 +20,7 @@
 #include "page_flipper.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/exception/info.hpp>
 
 #include <stdexcept>
 #include <vector>
@@ -166,6 +167,47 @@ void mgg::KMSOutput::wait_for_page_flip()
         BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
 
     page_flipper->wait_for_flip(current_crtc->crtc_id);
+}
+
+void mgg::KMSOutput::set_cursor(gbm_bo* buffer)
+{
+    if (current_crtc)
+    {
+        if (auto result = drmModeSetCursor(
+                drm_fd,
+                current_crtc->crtc_id,
+                gbm_bo_get_handle(buffer).u32,
+                gbm_bo_get_width(buffer),
+                gbm_bo_get_height(buffer)))
+        {
+            BOOST_THROW_EXCEPTION(
+                ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
+                    << (boost::error_info<KMSOutput, decltype(result)>(result)));
+        }
+    }
+}
+
+void mgg::KMSOutput::move_cursor(geometry::Point destination)
+{
+    if (current_crtc)
+    {
+        if (auto result = drmModeMoveCursor(drm_fd, current_crtc->crtc_id,
+                                            destination.x.as_uint32_t(),
+                                            destination.y.as_uint32_t()))
+        {
+            BOOST_THROW_EXCEPTION(
+                ::boost::enable_error_info(std::runtime_error("drmModeMoveCursor() failed"))
+                    << (boost::error_info<KMSOutput, decltype(result)>(result)));
+        }
+    }
+}
+
+void mgg::KMSOutput::clear_cursor()
+{
+    if (current_crtc)
+    {
+        drmModeSetCursor(drm_fd, current_crtc->crtc_id, 0, 0, 0);
+    }
 }
 
 bool mgg::KMSOutput::ensure_crtc()

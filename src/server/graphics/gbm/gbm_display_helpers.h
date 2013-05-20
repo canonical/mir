@@ -55,7 +55,6 @@ public:
 
     void setup();
     int get_authenticated_fd();
-    void auth_magic(drm_magic_t magic) const;
 
     void drop_master() const;
     void set_master() const;
@@ -104,6 +103,7 @@ public:
 
     EGLContext context() { return egl_context; }
 
+    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
 private:
     void setup_internal(GBMHelper const& gbm, bool initialize);
 

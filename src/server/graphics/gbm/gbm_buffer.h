@@ -54,6 +54,7 @@ public:
     virtual geometry::PixelFormat pixel_format() const;
 
     virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
+    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
     virtual void bind_to_texture();
 

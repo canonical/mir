@@ -43,6 +43,7 @@ namespace gbm
 class GBMPlatform;
 class KMSOutput;
 class GBMDisplayBuffer;
+class GBMCursor;
 
 class GBMDisplay : public Display
 {
@@ -64,6 +65,8 @@ public:
     void pause();
     void resume();
 
+    std::weak_ptr<Cursor> the_cursor();
+
 private:
     void configure(std::shared_ptr<DisplayConfiguration> const& conf);
 
@@ -72,6 +75,7 @@ private:
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;
     KMSOutputContainer output_container;
+    std::shared_ptr<GBMCursor> cursor;
 };
 
 }

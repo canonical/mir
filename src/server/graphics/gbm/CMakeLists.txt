@@ -16,6 +16,7 @@ add_library(
   gbm_platform.cpp
   gbm_buffer_allocator.cpp
   gbm_buffer.cpp
+  gbm_cursor.cpp
   gbm_display_helpers.cpp
   gbm_display.cpp
   kms_display_configuration.cpp
@@ -25,6 +26,8 @@ add_library(
   kms_output_container.cpp
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
+  internal_native_display.cpp
+  internal_client.cpp
 )
 
 target_link_libraries(

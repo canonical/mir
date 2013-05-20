@@ -27,12 +27,12 @@
 #include <limits.h>
 
 #include <androidfw/VelocityTracker.h>
-#include ANDROIDFW_UTILS(BitSet.h)
-#include ANDROIDFW_UTILS(String8.h)
-#include ANDROIDFW_UTILS(Timers.h)
-#include ANDROIDFW_UTILS(Log.h)
+#include <std/BitSet.h>
+#include <std/String8.h>
+#include <std/Timers.h>
+#include <std/Log.h>
 
-#include ANDROIDFW_CUTILS(properties.h)
+#include <std/properties.h>
 
 namespace android {
 

@@ -101,6 +101,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
+    display_report->report_egl_configuration(egl_display, egl_config);
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
@@ -177,4 +178,10 @@ void mga::AndroidDisplay::make_current()
 void mga::AndroidDisplay::release_current()
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
+
+
+auto mga::AndroidDisplay::the_cursor() -> std::weak_ptr<Cursor>
+{
+    return std::weak_ptr<Cursor>();
 }

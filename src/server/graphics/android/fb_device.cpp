@@ -19,13 +19,14 @@
 #include "mir/compositor/buffer.h"
 
 #include "fb_device.h"
-#include "android_buffer.h"
+#include "buffer.h"
 #include "android_format_conversion-inl.h"
 
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
  
@@ -34,7 +35,7 @@ mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
 {
 }
 
-void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<AndroidBuffer> const& buffer)
+void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
     if (fb_device->post(fb_device.get(), handle->handle) != 0)

@@ -19,9 +19,9 @@
 
 #include <androidfw/Input.h>
 
-#include ANDROIDFW_UTILS(RefBase.h)
-#include ANDROIDFW_UTILS(Timers.h)
-#include ANDROIDFW_UTILS(String8.h)
+#include <std/RefBase.h>
+#include <std/Timers.h>
+#include <std/String8.h>
 
 namespace android {
 

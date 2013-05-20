@@ -30,8 +30,8 @@
 #include <androidfw/GenericKeyMap.h>
 // </mir changes>
 
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(Log.h)
+#include <std/Errors.h>
+#include <std/Log.h>
 #include <cutils/properties.h>
 
 namespace android {

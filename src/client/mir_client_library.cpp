@@ -18,7 +18,6 @@
 
 #include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
@@ -183,19 +182,15 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buffer_package_out)
+MirPlatformType mir_surface_get_platform_type(MirSurface * surface)
+{
+    return surface->platform_type();
+}
+
+void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buffer_package_out)
 {
     auto package = surface->get_current_buffer_package();
-
-    buffer_package_out->data_items = package->data_items;
-    buffer_package_out->fd_items = package->fd_items;
-    for(auto i=0; i<mir_buffer_package_max; i++)
-    {
-        buffer_package_out->data[i] = package->data[i];
-        buffer_package_out->fd[i] = package->fd[i];
-    }
-
-    buffer_package_out->stride = package->stride;
+    *buffer_package_out = package.get();
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
@@ -234,14 +229,6 @@ void mir_wait_for(MirWaitHandle* wait_handle)
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
 {
     return surface->generate_native_window();
-}
-
-MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
-                                             unsigned int magic,
-                                             mir_drm_auth_magic_callback callback,
-                                             void* context)
-{
-    return connection->drm_auth_magic(magic, callback, context);
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,

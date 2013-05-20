@@ -42,12 +42,12 @@ From within the armhf system:
 
        $ bzr branch lp:mir
        $ mkdir mir/build; cd mir/build
-       $ cmake -DBoost_COMPILER=-gcc -DMIR_ENABLE_DEATH_TESTS=NO -DMIR_PLATFORM=android ..
+       $ cmake -DBoost_COMPILER=-gcc -DMIR_PLATFORM=android ..
 
 Cross Compile
 -------------
 
-This method uses a cross compiler (e.g., the `g++-4.7-arm-linux-gnueabihf`
+This method uses a cross compiler (e.g., the `g++-arm-linux-gnueabihf`
 ubuntu package) to produce armhf code. This is typically the quickest way to
 compile and run code, and is well suited for a development workflow.
 
@@ -56,7 +56,7 @@ compile and run code, and is well suited for a development workflow.
    targeting a raring phablet image) You can specify the toolchain version
    thusly:
 
-        $ apt-get install g++-4.7-arm-linux-gnueabihf/raring
+        $ apt-get install g++-arm-linux-gnueabihf/raring
 
 -  Get access to armhf packages via apt-get. On an amd64/ia32 system, you can
    do this by adding a file like the one below to /etc/apt/sources.list.d/
@@ -83,5 +83,5 @@ compile and run code, and is well suited for a development workflow.
    and then runs build commands similar to this:
 
         $ mkdir mir/build; cd mir/build
-        $ MIR_NDK_PATH=/path/to/depenendcies/chroot cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake -DBoost_COMPILER=-gcc -DMIR_ENABLE_DEATH_TESTS=NO -DMIR_PLATFORM=android ..
+        $ MIR_NDK_PATH=/path/to/depenendcies/chroot cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake -DBoost_COMPILER=-gcc -DMIR_PLATFORM=android ..
         $ make

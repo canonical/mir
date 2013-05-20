@@ -61,6 +61,7 @@ class StubDisplay : public mg::Display
     }
     void pause() {}
     void resume() {}
+    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 
 private:
     std::vector<mtd::NullDisplayBuffer> buffers;
@@ -87,6 +88,7 @@ class StubDisplayWithMockBuffers : public mg::Display
     }
     void pause() {}
     void resume() {}
+    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 
     void for_each_mock_buffer(std::function<void(mtd::MockDisplayBuffer&)> const& f)
     {

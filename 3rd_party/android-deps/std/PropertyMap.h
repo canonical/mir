@@ -20,8 +20,8 @@
 #ifndef MIR_ANDROID_UBUNTU_PROPERTYMAP_H_
 #define MIR_ANDROID_UBUNTU_PROPERTYMAP_H_
 
-#include ANDROIDFW_UTILS(String8.h)
-#include ANDROIDFW_UTILS(Errors.h)
+#include <std/String8.h>
+#include <std/Errors.h>
 
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>

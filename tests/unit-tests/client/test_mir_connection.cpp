@@ -47,11 +47,7 @@ struct MockRpcChannel : public mir::client::MirBasicRpcChannel
                     google::protobuf::Message* response,
                     google::protobuf::Closure* complete)
     {
-        if (method->name() == "drm_auth_magic")
-        {
-            drm_auth_magic(static_cast<const mp::DRMMagic*>(parameters));
-        }
-        else if (method->name() == "connect")
+        if (method->name() == "connect")
         {
             static_cast<mp::Connection*>(response)->clear_error();
             connect(static_cast<mp::ConnectParameters const*>(parameters),
@@ -61,7 +57,6 @@ struct MockRpcChannel : public mir::client::MirBasicRpcChannel
         complete->Run();
     }
 
-    MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
 
     void set_event_handler(mir::events::EventSink *) {}
@@ -80,6 +75,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
             .WillByDefault(Return(native_display));
     }
 
+    MOCK_CONST_METHOD0(platform_type, MirPlatformType()); 
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::ClientSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
@@ -102,12 +98,6 @@ struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
 
 void connected_callback(MirConnection* /*connection*/, void * /*client_context*/)
 {
-}
-
-void drm_auth_magic_callback(int status, void* client_context)
-{
-    auto status_ptr = static_cast<int*>(client_context);
-    *status_ptr = status;
 }
 
 }
@@ -157,28 +147,6 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
 MATCHER_P(has_drm_magic, magic, "")
 {
     return arg->magic() == magic;
-}
-
-TEST_F(MirConnectionTest, client_drm_auth_magic_calls_server_drm_auth_magic)
-{
-    using namespace testing;
-
-    unsigned int const drm_magic{0x10111213};
-
-    EXPECT_CALL(*mock_channel, drm_auth_magic(has_drm_magic(drm_magic)))
-        .Times(1);
-
-    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
-                                                     connected_callback, 0);
-    wait_handle->wait_for_result();
-
-    int const no_error{0};
-    int status{67};
-
-    wait_handle = connection->drm_auth_magic(drm_magic, drm_auth_magic_callback, &status);
-    wait_handle->wait_for_result();
-
-    EXPECT_EQ(no_error, status);
 }
 
 namespace

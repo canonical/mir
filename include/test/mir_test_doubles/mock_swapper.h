@@ -32,6 +32,7 @@ namespace doubles
 struct MockSwapper : public compositor::BufferSwapper
 {
 public:
+    MockSwapper() {}
     MockSwapper(std::shared_ptr<compositor::Buffer> buffer)
         : default_buffer(buffer)
     {

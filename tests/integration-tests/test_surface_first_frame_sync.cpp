@@ -139,6 +139,7 @@ public:
 
     void pause() {}
     void resume() {}
+    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 
 private:
     StubDisplayBuffer display_buffer;

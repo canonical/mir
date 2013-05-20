@@ -17,7 +17,6 @@
 #ifndef _ANDROIDFW_KEYCODE_LABELS_H
 #define _ANDROIDFW_KEYCODE_LABELS_H
 
-#include <androidfw/Platform.h>
 
 #include <android/keycodes.h>
 
