@@ -66,11 +66,7 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
     if (ev.type != mir_event_type_key)
         return;
     
-    if (ev.key.action == mir_key_action_up)
-        ev.key.key_code = xkb_mapper->release_and_map_key(ev.key.scan_code);
-    else 
-        ev.key.key_code = xkb_mapper->press_and_map_key(ev.key.scan_code);
-        
+    xkb_mapper->update_state_and_map_event(ev.key);
 }
 
 }
