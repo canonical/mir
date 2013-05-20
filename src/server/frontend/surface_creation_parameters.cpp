@@ -23,7 +23,7 @@ namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
 mf::SurfaceCreationParameters::SurfaceCreationParameters()
-    : name(), size(), buffer_usage(mc::BufferUsage::undefined),
+    : name(), size(), top_left(), buffer_usage(mc::BufferUsage::undefined),
       pixel_format(geom::PixelFormat::invalid)
 {
 }
@@ -48,6 +48,13 @@ mf::SurfaceCreationParameters& mf::SurfaceCreationParameters::of_size(
     geometry::Height::ValueType height)
 {
     return of_size(geometry::Size(geometry::Width(width), geometry::Height(height)));
+}
+
+mf::SurfaceCreationParameters& mf::SurfaceCreationParameters::of_position(geometry::Point const& new_top_left)
+{
+    top_left = new_top_left;
+    
+    return *this;
 }
 
 mf::SurfaceCreationParameters& mf::SurfaceCreationParameters::of_buffer_usage(
