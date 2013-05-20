@@ -19,6 +19,8 @@
 #ifndef MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 #define MIR_INPUT_RECEIVER_XKB_MAPPER_H_
 
+#include "mir_toolkit/event.h"
+
 #include <xkbcommon/xkbcommon.h>
 
 #include <memory>
@@ -36,8 +38,7 @@ public:
     XKBMapper();
     virtual ~XKBMapper() = default;
     
-    xkb_keysym_t press_and_map_key(int scan_code);
-    xkb_keysym_t release_and_map_key(int scan_code);
+    void update_state_and_map_event(MirKeyEvent& key_ev);
 
 protected:
     XKBMapper(XKBMapper const&) = delete;

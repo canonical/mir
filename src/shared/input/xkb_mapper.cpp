@@ -85,18 +85,24 @@ static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_cod
 
 }
 
-xkb_keysym_t mircv::XKBMapper::press_and_map_key(int scan_code)
+void mircv::XKBMapper::update_state_and_map_event(MirKeyEvent &key_ev)
 {
-    uint32_t xkb_scan_code = to_xkb_scan_code(scan_code);
-    xkb_state_update_key(state.get(), xkb_scan_code, XKB_KEY_DOWN);
-    
-    return keysym_for_scan_code(state.get(), xkb_scan_code);
-}
+    xkb_key_direction direction;
 
-xkb_keysym_t mircv::XKBMapper::release_and_map_key(int scan_code)
-{
-    uint32_t xkb_scan_code = to_xkb_scan_code(scan_code);
-    xkb_state_update_key(state.get(), xkb_scan_code, XKB_KEY_UP);
+    bool update_state = true;
+    if (key_ev.action == mir_key_action_up)
+        direction = XKB_KEY_UP;
+    else if (key_ev.action == mir_key_action_down)
+        direction = XKB_KEY_DOWN;
+    else // mir_key_action_multiple does not correspond to a physical keypress
+        update_state = false;
     
-    return keysym_for_scan_code(state.get(), xkb_scan_code);
+    if (key_ev.repeat_count > 0)
+        update_state = false;
+    
+    uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code);
+    if (update_state)
+        xkb_state_update_key(state.get(), xkb_scan_code, direction);
+    
+    key_ev.key_code = keysym_for_scan_code(state.get(), xkb_scan_code);
 }
