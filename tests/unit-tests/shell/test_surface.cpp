@@ -56,7 +56,8 @@ public:
 
     std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& )
     {
-        dummy_surface = std::make_shared<ms::Surface>(msh::a_surface().name, msh::a_surface().top_left, buffer_bundle, []{});
+        dummy_surface = std::make_shared<ms::Surface>(msh::a_surface().name, msh::a_surface().top_left, buffer_bundle, 
+            std::shared_ptr<mi::InputChannel>(), []{});
         return dummy_surface;
     }
 

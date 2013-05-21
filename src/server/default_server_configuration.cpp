@@ -491,7 +491,7 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
     return surface_stack(
         [this]()
         {
-            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory());
         });
 }
 
@@ -501,7 +501,7 @@ mir::DefaultServerConfiguration::the_renderables()
     return surface_stack(
         [this]()
         {
-            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory());
         });
 }
 

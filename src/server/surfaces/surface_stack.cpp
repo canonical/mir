@@ -24,6 +24,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/input/input_channel_factory.h"
 
 #include <algorithm>
 #include <cassert>
@@ -33,10 +34,13 @@
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory)
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
+                               std::shared_ptr<mi::InputChannelFactory> const& input_factory)
     : buffer_bundle_factory{bb_factory},
+      input_factory{input_factory},
       notify_change{[]{}}
 {
     assert(buffer_bundle_factory);
@@ -70,6 +74,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         new ms::Surface(
             params.name, params.top_left,
             buffer_bundle_factory->create_buffer_bundle(buffer_properties),
+            input_factory->make_input_channel(), // TODO: Test ~racarr
             [this]() { emit_change_notification(); }));
     
     {

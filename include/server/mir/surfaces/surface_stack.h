@@ -40,6 +40,11 @@ namespace frontend
 struct SurfaceCreationParameters;
 }
 
+namespace input // TODO: Remove ~racarr
+{
+class InputChannelFactory;
+}
+
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
@@ -50,7 +55,8 @@ class Surface;
 class SurfaceStack : public compositor::Renderables, public SurfaceStackModel
 {
 public:
-    explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory);
+    explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
+                          std::shared_ptr<input::InputChannelFactory> const& input_factory);
     virtual ~SurfaceStack() = default;
 
     // From Renderables
@@ -70,6 +76,7 @@ private:
 
     std::mutex guard;
     std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
+    std::shared_ptr<input::InputChannelFactory> const input_factory;
     std::vector<std::shared_ptr<Surface>> surfaces;
     std::mutex notify_change_mutex;
     std::function<void()> notify_change;
