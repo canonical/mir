@@ -38,12 +38,9 @@ public:
     {
         using namespace testing;
 
-        mock_buffer_handle = std::make_shared<NiceMock<mtd::MockBufferHandle>>();
-        ON_CALL(*mock_buffer_handle, native_buffer_handle())
-            .WillByDefault(Return(stub_buffer)); 
         mock_alloc_dev = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
         ON_CALL(*mock_alloc_dev, alloc_buffer(_,_,_))
-            .WillByDefault(Return(mock_buffer_handle));
+            .WillByDefault(Return(stub_buffer)); 
 
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::abgr_8888;
@@ -64,7 +61,6 @@ public:
     mir::GLMock gl_mock;
     mir::EglMock egl_mock;
     std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_dev;
-    std::shared_ptr<mtd::MockBufferHandle> mock_buffer_handle;
     std::shared_ptr<ANativeWindowBuffer> stub_buffer;
 };
 
@@ -204,13 +200,8 @@ TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
 TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
 {
     using namespace testing;
-    auto fake_native_handle = std::make_shared<ANativeWindowBuffer>();
 
-    EXPECT_CALL(*mock_buffer_handle, native_buffer_handle())
-        .Times(Exactly(1))
-        .WillOnce(Return(fake_native_handle));
-
-    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,fake_native_handle.get(),_))
+    EXPECT_CALL(egl_mock, eglCreateImageKHR(_,_,_,stub_buffer.get(),_))
     .Times(Exactly(1));
     buffer->bind_to_texture();
 }

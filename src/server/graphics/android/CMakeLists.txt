@@ -10,7 +10,6 @@ add_library(
   android_platform.cpp
   android_buffer_allocator.cpp
   buffer.cpp
-  android_buffer_handle.cpp
   android_display.cpp
   hwc_display.cpp
   hwc_layerlist.cpp

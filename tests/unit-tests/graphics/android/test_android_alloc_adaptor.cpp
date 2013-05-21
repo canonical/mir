@@ -27,7 +27,6 @@
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
@@ -58,7 +57,6 @@ public:
 
     geom::PixelFormat pf;
     geom::Size size;
-    std::shared_ptr<mga::AndroidBufferHandle> buffer_data;
     mga::BufferUsage usage;
     int const fb_usage_flags;
     int const hw_usage_flags;
@@ -75,7 +73,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
                   Return(-1)));
 
     EXPECT_THROW({
-        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage);
+        alloc_adaptor->alloc_buffer(size, pf, usage);
     }, std::runtime_error);
 }
 
@@ -89,7 +87,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_stride)
                   Return(0)));
 
     EXPECT_THROW({
-        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage);
+        alloc_adaptor->alloc_buffer(size, pf, usage);
     }, std::runtime_error);
 }
 
@@ -103,7 +101,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_null_handle)
                   Return(0)));
 
     EXPECT_THROW({
-        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage);
+        alloc_adaptor->alloc_buffer(size, pf, usage);
     }, std::runtime_error);
 }
 
@@ -184,36 +182,17 @@ TEST_F(AdaptorICSTest, handle_size_is_correct)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
 
-    EXPECT_EQ(size.width.as_uint32_t(), handle->width);
-    EXPECT_EQ(size.height.as_uint32_t(), handle->height);
+    EXPECT_EQ(static_cast<int>(size.width.as_uint32_t()), handle->width);
+    EXPECT_EQ(static_cast<int>(size.height.as_uint32_t()), handle->height);
 }
-
-#if 0
-TEST_F(AdaptorICSTest, handle_usage_is_correct)
-{
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-
-    auto android_usage = usage_to_android(
-    EXPECT_EQ(handle->usage, usage);
-}
-#endif
 
 TEST_F(AdaptorICSTest, handle_stride_is_correct)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
 
-    EXPECT_EQ(mock_alloc_device->fake_stride, handle->stride);
+    EXPECT_EQ(static_cast<int>(mock_alloc_device->fake_stride), handle->stride);
 }
 
-#if 0
-TEST_F(AdaptorICSTest, handle_buffer_is_correct)
-{
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    EXPECT_EQ(mock_alloc_device->buffer_handle, buffer->handle);
-}
-#endif
 TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_abgr_8888)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);

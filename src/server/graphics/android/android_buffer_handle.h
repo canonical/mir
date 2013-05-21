@@ -39,13 +39,6 @@ namespace graphics
 namespace android
 {
 
-enum class BufferUsage : uint32_t
-{
-    use_hardware, //buffer supports usage as a gles render target, and a gles texture
-    use_software, //buffer supports usage as a cpu render target, and a gles texture
-    use_framebuffer_gles //buffer supports usage as a gles render target, hwc layer, and is postable to framebuffer
-};
-
 class AndroidBufferHandle
 {
 public:

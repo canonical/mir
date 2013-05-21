@@ -40,7 +40,7 @@ protected:
         mock_buffer_handle->width = 44;
         mock_buffer_handle->height = 45;
         mock_buffer_handle->stride = 46;
-        mock_buffer_handle->format = HAL_PIXEL_FORMAT_RGBA8888;
+        mock_buffer_handle->format = HAL_PIXEL_FORMAT_RGBA_8888;
 
         mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
         ON_CALL(*mock_alloc_device, alloc_buffer(_,_,_))
@@ -52,7 +52,7 @@ protected:
     }
 
     std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_device;
-    std::shared_ptr<mtd::MockBufferHandle> mock_buffer_handle;
+    std::shared_ptr<ANativeWindowBuffer> mock_buffer_handle;
     geom::PixelFormat pf;
     geom::Size size;
     mga::BufferUsage default_use;

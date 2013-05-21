@@ -35,13 +35,10 @@ mga::AndroidBufferHandleDefault::AndroidBufferHandleDefault(std::shared_ptr<ANat
 
 geom::Size mga::AndroidBufferHandleDefault::size() const
 {
-    return geom::Size{geom::Width{anw_buffer->width},
-                      geom::Height{anw_buffer->height}};
 }
 
 geom::Stride mga::AndroidBufferHandleDefault::stride() const
 {
-    return geom::Stride(anw_buffer->stride);
 }
 
 geom::PixelFormat mga::AndroidBufferHandleDefault::format() const
