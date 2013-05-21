@@ -52,7 +52,7 @@ void mia::InputTargeter::focus_cleared()
     input_dispatcher->setInputWindows(empty_windows);
 }
 
-void mia::InputTargeter::focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface)
+void mia::InputTargeter::focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface)
 {
     auto window_handle = input_registrar->handle_for_surface(surface);
 

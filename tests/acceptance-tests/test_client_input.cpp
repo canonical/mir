@@ -74,7 +74,7 @@ struct FocusNotifyingInputTargeter : public mia::InputTargeter
     }
     virtual ~FocusNotifyingInputTargeter() noexcept(true) {}
     
-    void focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface) override
+    void focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface) override
     {
         InputTargeter::focus_changed(surface);
         

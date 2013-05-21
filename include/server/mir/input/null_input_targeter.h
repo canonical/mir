@@ -32,13 +32,7 @@ public:
     NullInputTargeter() {};
     virtual ~NullInputTargeter() noexcept(true) {}
     
-    virtual void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
-    {
-    }
-    virtual void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)
-    {
-    }
-    virtual void focus_changed(std::shared_ptr<input::SurfaceTarget> const&)
+    virtual void focus_changed(std::shared_ptr<input::SurfaceTarget const> const&)
     {
     }
     virtual void focus_cleared()

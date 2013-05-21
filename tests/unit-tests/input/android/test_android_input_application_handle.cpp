@@ -36,7 +36,7 @@ struct MockSurfaceHandle : public mi::SurfaceTarget
     MOCK_CONST_METHOD0(server_input_fd, int());
     MOCK_CONST_METHOD0(top_left, geom::Point());
     MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(name, std::string const&());
 };
 }
 
@@ -44,11 +44,11 @@ struct MockSurfaceHandle : public mi::SurfaceTarget
 TEST(AndroidInputApplicationHandle, takes_name_from_surface_and_specifies_max_timeout)
 {
     using namespace ::testing;
-    std::string const testing_surface_name = "Cats";
+    std::string testing_surface_name = "Cats";
     auto surface = std::make_shared<MockSurfaceHandle>();
 
     EXPECT_CALL(*surface, name()).Times(AtLeast(1))
-        .WillRepeatedly(Return(testing_surface_name));
+        .WillRepeatedly(ReturnRef(testing_surface_name));
     mia::InputApplicationHandle application_handle(surface);
     EXPECT_TRUE(application_handle.updateInfo());
     auto info = application_handle.getInfo();
@@ -63,7 +63,7 @@ TEST(AndroidInputApplicationHandle, does_not_own_surface)
     
     auto surface = std::make_shared<MockSurfaceHandle>();
     EXPECT_CALL(*surface, name()).Times(AtLeast(1))
-        .WillRepeatedly(Return(testing_surface_name));
+        .WillRepeatedly(ReturnRef(testing_surface_name));
     
     mia::InputApplicationHandle application_handle(surface);
     EXPECT_TRUE(application_handle.updateInfo());

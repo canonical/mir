@@ -23,7 +23,6 @@
 #include "mir/frontend/surface.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/surfaces/surface.h"
-#include "mir/input/surface_target.h"
 
 #include "mir_toolkit/common.h"
 
@@ -35,16 +34,13 @@ namespace events
 {
 class EventSink;
 }
-namespace frontend
-{
-}
 
 namespace shell
 {
 class SurfaceBuilder;
 struct SurfaceCreationParameters;
 
-class Surface : public frontend::Surface, public input::SurfaceTarget
+class Surface : public frontend::Surface
 {
 public:
     Surface(
@@ -85,6 +81,11 @@ public:
     virtual int configure(MirSurfaceAttrib attrib, int value);
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
+
+    friend class SessionManager;
+
+protected:
+    virtual std::shared_ptr<surfaces::Surface const> internal_surface();
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes

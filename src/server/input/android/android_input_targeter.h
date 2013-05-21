@@ -54,7 +54,7 @@ public:
                            std::shared_ptr<shell::InputRegistrar> const& input_registrar);
     virtual ~InputTargeter() noexcept(true) {}
     
-    void focus_changed(std::shared_ptr<input::SurfaceTarget> const& focus_surface);
+    void focus_changed(std::shared_ptr<input::SurfaceTarget const> const& focus_surface);
     void focus_cleared();
 
 protected:

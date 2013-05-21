@@ -67,7 +67,7 @@ void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTar
 }
 
 // TODO: Test behavior ~racarr
-droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::SurfaceTarget> const& surface)
+droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface)
 {
     if (window_handles.find(surface) == window_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("Requesting handle for an unregistered surface"));

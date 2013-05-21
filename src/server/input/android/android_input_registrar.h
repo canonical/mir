@@ -57,12 +57,12 @@ protected:
     InputRegistrar(const InputRegistrar&) = delete;
     InputRegistrar& operator=(const InputRegistrar&) = delete;
     
-    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::SurfaceTarget> const& surface);
+    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface);
 
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
 
-    std::map<std::shared_ptr<input::SurfaceTarget>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
+    std::map<std::shared_ptr<input::SurfaceTarget const>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
 
     std::mutex handles_mutex;
 };

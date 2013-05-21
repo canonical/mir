@@ -22,6 +22,7 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir/input/surface_target.h"
 
 #include <memory>
 #include <string>
@@ -46,7 +47,7 @@ class BufferBundle;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
-class Surface : public graphics::Renderable
+class Surface : public graphics::Renderable, public input::SurfaceTarget
 {
 public:
     Surface(const std::string& name, geometry::Point const& top_left,

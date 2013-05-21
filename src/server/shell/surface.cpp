@@ -30,6 +30,7 @@
 namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
+namespace ms = mir::surfaces;
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
@@ -287,4 +288,9 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 
         event_sink->handle_event(e);
     }
+}
+
+std::shared_ptr<ms::Surface const> msh::Surface::internal_surface()
+{
+    return surface.lock();
 }
