@@ -534,7 +534,7 @@ mir::DefaultServerConfiguration::the_overlay_renderer()
 {
     struct NullOverlayRenderer : public mc::OverlayRenderer
     {
-        virtual void render(mg::DisplayBuffer&) {}
+        virtual void render(geom::Rectangle const&) {}
     };
     return overlay_renderer(
         [this]()

@@ -21,9 +21,9 @@
 
 namespace mir
 {
-namespace graphics
+namespace geometry
 {
-class DisplayBuffer;
+class Rectangle;
 }
 
 namespace compositor
@@ -32,9 +32,9 @@ namespace compositor
 class OverlayRenderer
 {
 public:
-    virtual ~OverlayRenderer() {}
+    virtual ~OverlayRenderer() = default;
 
-    virtual void render(graphics::DisplayBuffer& display_buffer) = 0;
+    virtual void render(geometry::Rectangle const& view_area) = 0;
 
 protected:
     OverlayRenderer() = default;

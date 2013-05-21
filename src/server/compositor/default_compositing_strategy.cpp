@@ -65,17 +65,21 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 }
 
-void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
+void mc::DefaultCompositingStrategy::composite_renderables(mir::geometry::Rectangle const& view_area)
 {
     RenderingOperator applicator(*renderer);
-    FilterForVisibleRenderablesInRegion selector(display_buffer.view_area());
+    FilterForVisibleRenderablesInRegion selector(view_area);
+    renderables->for_each_if(selector, applicator);
 
+    overlay_renderer->render(view_area);
+}
+
+void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
+{
     display_buffer.make_current();
     display_buffer.clear();
 
-    renderables->for_each_if(selector, applicator);
-
-    overlay_renderer->render(display_buffer);
+    composite_renderables(display_buffer.view_area());
 
     display_buffer.post_update();
 }

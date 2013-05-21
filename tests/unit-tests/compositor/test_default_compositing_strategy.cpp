@@ -47,7 +47,9 @@ struct MockRenderables : mc::Renderables
 
 struct MockOverlayRenderer : public mc::OverlayRenderer
 {
-    MOCK_METHOD1(render, void(mg::DisplayBuffer&));
+    MOCK_METHOD1(render, void(geom::Rectangle const&));
+
+    ~MockOverlayRenderer() noexcept {}
 };
 
 struct FakeRenderables : mc::Renderables
