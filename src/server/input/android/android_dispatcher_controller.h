@@ -19,7 +19,8 @@
 #ifndef MIR_INPUT_ANDROID_DISPATCHER_CONTROLLER_H_
 #define MIR_INPUT_ANDROID_DISPATCHER_CONTROLLER_H_
 
-#include "mir/shell/input_target_listener.h"
+#include "mir/shell/input_targeter.h"
+#include "mir/shell/input_registrar.h"
 
 #include <utils/StrongPointer.h>
 
@@ -42,7 +43,7 @@ namespace android
 {
 class InputConfiguration;
 
-class DispatcherController : public shell::InputTargetListener
+class DispatcherController : public shell::InputTargeter, public shell::InputRegistrar
 {
 public:
     explicit DispatcherController(std::shared_ptr<InputConfiguration> const& input_configuration);

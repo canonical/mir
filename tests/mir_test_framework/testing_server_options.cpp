@@ -29,7 +29,8 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
-#include "mir/input/null_input_target_listener.h"
+#include "mir/input/null_input_targeter.h"
+#include "mir/input/null_input_registrar.h"
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_dispatcher_controller.h"
 
@@ -186,14 +187,24 @@ std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_man
         return std::make_shared<StubInputManager>();
 }
 
-std::shared_ptr<msh::InputTargetListener> mtf::TestingServerConfiguration::the_input_target_listener()
+std::shared_ptr<msh::InputTargeter> mtf::TestingServerConfiguration::the_input_targeter()
 {
     auto options = the_options();
  
    if (options->get("tests-use-real-input", false))
         return std::make_shared<mia::DispatcherController>(the_input_configuration());
     else
-        return std::make_shared<mi::NullInputTargetListener>();
+        return std::make_shared<mi::NullInputTargeter>();
+}
+
+std::shared_ptr<msh::InputRegistrar> mtf::TestingServerConfiguration::the_input_registrar()
+{
+    auto options = the_options();
+ 
+   if (options->get("tests-use-real-input", false))
+        return std::make_shared<mia::DispatcherController>(the_input_configuration());
+    else
+        return std::make_shared<mi::NullInputRegistrar>();
 }
 
 std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_platform()

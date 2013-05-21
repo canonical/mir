@@ -24,7 +24,7 @@
 #include "mir/shell/focus_setter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
-#include "mir/shell/input_target_listener.h"
+#include "mir/shell/input_targeter.h"
 #include "mir/shell/session_listener.h"
 
 #include <memory>
@@ -38,20 +38,20 @@ msh::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& 
     std::shared_ptr<msh::SessionContainer> const& container,
     std::shared_ptr<msh::FocusSequence> const& sequence,
     std::shared_ptr<msh::FocusSetter> const& focus_setter,
-    std::shared_ptr<msh::InputTargetListener> const& input_target_listener,
+    std::shared_ptr<msh::InputTargeter> const& input_targeter,
     std::shared_ptr<msh::SessionListener> const& session_listener) :
     surface_factory(surface_factory),
     app_container(container),
     focus_sequence(sequence),
     focus_setter(focus_setter),
-    input_target_listener(input_target_listener),
+    input_targeter(input_targeter),
     session_listener(session_listener)
 {
     assert(surface_factory);
     assert(sequence);
     assert(container);
     assert(focus_setter);
-    assert(input_target_listener);
+    assert(input_targeter);
     assert(session_listener);
 }
 
@@ -60,7 +60,7 @@ msh::SessionManager::~SessionManager()
     /*
      * Close all open sessions. We need to do this manually here
      * to break the cyclic dependency between msh::Session
-     * and msh::InputTargetListener, since our implementations
+     * and msh::InputTargeter, since our implementations
      * of these interfaces keep strong references to each other.
      * TODO: Investigate other solutions (e.g. weak_ptr)
      */
@@ -79,7 +79,7 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(
     std::string const& name,
     std::shared_ptr<events::EventSink> const& sink)
 {
-    std::shared_ptr<msh::Session> new_session = std::make_shared<msh::ApplicationSession>(surface_factory, input_target_listener, name, sink);
+    std::shared_ptr<msh::Session> new_session = std::make_shared<msh::ApplicationSession>(surface_factory, name, sink);
 
     app_container->insert_session(new_session);
     
@@ -98,9 +98,9 @@ inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex
     focus_setter->set_focus_to(shell_session);
 
     if (shell_session && shell_session->default_surface())
-        input_target_listener->focus_changed(shell_session->default_surface());
+        input_targeter->focus_changed(shell_session->default_surface());
     else if (shell_session == old_focus || !shell_session)
-        input_target_listener->focus_cleared();
+        input_targeter->focus_cleared();
 }
 
 void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
@@ -143,7 +143,6 @@ mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Sessio
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
     auto id = shell_session->create_surface(params);
 
-    input_target_listener->input_surface_opened(std::dynamic_pointer_cast<msh::Surface>(shell_session->get_surface(id)));
     set_focus_to_locked(std::unique_lock<std::mutex>(mutex), shell_session);
 
     return id;

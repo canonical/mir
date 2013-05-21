@@ -16,21 +16,21 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_NULL_INPUT_TARGET_LISTENER_H_
-#define MIR_INPUT_NULL_INPUT_TARGET_LISTENER_H_
+#ifndef MIR_INPUT_NULL_INPUT_TARGETER_H_
+#define MIR_INPUT_NULL_INPUT_TARGETER_H_
 
-#include "mir/shell/input_target_listener.h"
+#include "mir/shell/input_targeter.h"
 
 namespace mir
 {
 namespace input
 {
 
-class NullInputTargetListener : public shell::InputTargetListener
+class NullInputTargeter : public shell::InputTargeter
 {
 public:
-    NullInputTargetListener() {};
-    virtual ~NullInputTargetListener() noexcept(true) {}
+    NullInputTargeter() {};
+    virtual ~NullInputTargeter() noexcept(true) {}
     
     virtual void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
     {
@@ -46,11 +46,11 @@ public:
     }
 
 protected:
-    NullInputTargetListener(const NullInputTargetListener&) = delete;
-    NullInputTargetListener& operator=(const NullInputTargetListener&) = delete;
+    NullInputTargeter(const NullInputTargeter&) = delete;
+    NullInputTargeter& operator=(const NullInputTargeter&) = delete;
 };
 
 }
 }
 
-#endif // MIR_INPUT_NULL_INPUT_TARGET_LISTENER_H_
+#endif // MIR_INPUT_NULL_INPUT_TARGETER_H_

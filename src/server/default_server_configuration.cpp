@@ -49,7 +49,8 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_manager.h"
-#include "mir/input/null_input_target_listener.h"
+#include "mir/input/null_input_registrar.h"
+#include "mir/input/null_input_targeter.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_dispatcher_controller.h"
@@ -386,7 +387,7 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
-                the_input_target_listener(),
+                the_input_targeter(),
                 the_shell_session_listener());
         });
 }
@@ -653,15 +654,27 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_manager();
 }
 
-std::shared_ptr<msh::InputTargetListener> mir::DefaultServerConfiguration::the_input_target_listener()
+std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_targeter()
 {
-    return input_target_listener(
-        [&]() -> std::shared_ptr<msh::InputTargetListener>
+    return input_targeter(
+        [&]() -> std::shared_ptr<msh::InputTargeter>
         {
             if (the_options()->get("enable-input", enable_input_default))
                 return std::make_shared<mia::DispatcherController>(the_input_configuration());
             else
-                return std::make_shared<mi::NullInputTargetListener>();
+                return std::make_shared<mi::NullInputTargeter>();
+        });
+}
+
+std::shared_ptr<msh::InputRegistrar> mir::DefaultServerConfiguration::the_input_registrar()
+{
+    return input_registrar(
+        [&]() -> std::shared_ptr<msh::InputRegistrar>
+        {
+            if (the_options()->get("enable-input", enable_input_default))
+                return std::make_shared<mia::DispatcherController>(the_input_configuration());
+            else
+                return std::make_shared<mi::NullInputRegistrar>();
         });
 }
 

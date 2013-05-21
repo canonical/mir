@@ -34,7 +34,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/stub_input_target_listener.h"
+#include "mir_test_doubles/stub_input_targeter.h"
 
 namespace mc = mir::compositor;
 namespace me = mir::events;
@@ -53,7 +53,7 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     msh::RegistrationOrderFocusSequence sequence(container);
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
-    mtd::StubInputTargetListener input_target_listener;
+    mtd::StubInputTargeter input_targeter;
     msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager(
@@ -61,7 +61,7 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
             container,
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
-            mt::fake_shared(input_target_listener),
+            mt::fake_shared(input_targeter),
             mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
@@ -98,7 +98,7 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
     msh::RegistrationOrderFocusSequence sequence(container);
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
-    mtd::StubInputTargetListener input_target_listener;
+    mtd::StubInputTargeter input_targeter;
     msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager(
@@ -106,7 +106,7 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
             container,
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
-            mt::fake_shared(input_target_listener),
+            mt::fake_shared(input_targeter),
             mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);

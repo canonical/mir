@@ -16,37 +16,35 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_LISTENER_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_LISTENER_H_
+#ifndef MIR_INPUT_NULL_INPUT_REGISTRAR_H_
+#define MIR_INPUT_NULL_INPUT_REGISTRAR_H_
 
-#include "mir/shell/input_target_listener.h"
+#include "mir/shell/input_registrar.h"
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct StubInputTargetListener : public shell::InputTargetListener
+class NullInputRegistrar : public shell::InputRegistrar
 {
-    void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
-    {
-    }
-    void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)
-    {
-    }
-    void focus_changed(std::shared_ptr<input::SurfaceTarget> const&)
-    {
-    }
+public:
+    NullInputRegistrar() {};
+    virtual ~NullInputRegistrar() noexcept(true) {}
     
-    void focus_cleared()
+    virtual void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
     {
     }
+    virtual void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)
+    {
+    }
+
+protected:
+    NullInputRegistrar(const NullInputRegistrar&) = delete;
+    NullInputRegistrar& operator=(const NullInputRegistrar&) = delete;
 };
 
 }
 }
-} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_LISTENER_H_
+#endif // MIR_INPUT_NULL_INPUT_REGISTRAR_H_

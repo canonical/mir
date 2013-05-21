@@ -51,7 +51,9 @@ namespace shell
 {
 class SurfaceFactory;
 class SurfaceBuilder;
-class InputTargetListener;
+// TODO: Move ~racarr
+class InputRegistrar;
+class InputTargeter;
 class SessionContainer;
 class FocusSetter;
 class FocusSequence;
@@ -185,7 +187,8 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
-    virtual std::shared_ptr<shell::InputTargetListener> the_input_target_listener();
+    virtual std::shared_ptr<shell::InputRegistrar> the_input_registrar();
+    virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     /** @} */
 
     /** @name logging configuration - customization
@@ -212,7 +215,8 @@ protected:
     CachedPtr<shell::SessionManager> session_manager;
     std::shared_ptr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
-    CachedPtr<shell::InputTargetListener> input_target_listener;
+    CachedPtr<shell::InputRegistrar> input_registrar;
+    CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;

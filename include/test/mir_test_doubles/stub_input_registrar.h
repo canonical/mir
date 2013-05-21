@@ -16,12 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_TARGET_LISTENER_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_TARGET_LISTENER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
 
-#include "mir/shell/input_target_listener.h"
-
-#include <gmock/gmock.h>
+#include "mir/shell/input_registrar.h"
 
 namespace mir
 {
@@ -30,17 +28,18 @@ namespace test
 namespace doubles
 {
 
-struct MockInputTargetListener : public shell::InputTargetListener
+struct StubInputRegistrar : public shell::InputRegistrar
 {
-    virtual ~MockInputTargetListener() noexcept(true) {}
-    MOCK_METHOD1(input_surface_opened, void(std::shared_ptr<input::SurfaceTarget> const& opened_surface));
-    MOCK_METHOD1(input_surface_closed, void(std::shared_ptr<input::SurfaceTarget> const& closed_surface));
-    MOCK_METHOD1(focus_changed, void(std::shared_ptr<input::SurfaceTarget> const& focus_surface));
-    MOCK_METHOD0(focus_cleared, void());
+    void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
+    {
+    }
+    void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)
+    {
+    }
 };
 
 }
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_TARGET_LISTENER_H_
+#endif // MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
