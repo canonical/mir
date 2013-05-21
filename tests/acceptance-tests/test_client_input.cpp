@@ -22,7 +22,7 @@
 #include "mir/shell/placement_strategy.h"
 
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_dispatcher_controller.h"
+#include "src/server/input/android/android_input_targeter.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -62,20 +62,21 @@ namespace
 namespace
 {
 
-struct FocusNotifyingDispatcherController : public mia::DispatcherController
+struct FocusNotifyingInputTargeter : public mia::InputTargeter
 {
-    FocusNotifyingDispatcherController(std::shared_ptr<mia::InputConfiguration> const& configuration,
-                                       std::function<void(void)> const& focus_set)
-      : DispatcherController(configuration),
+    FocusNotifyingInputTargeter(std::shared_ptr<mia::InputConfiguration> const& configuration,
+                                std::shared_ptr<msh::InputRegistrar> const& registrar,
+                                std::function<void(void)> const& focus_set)
+      : InputTargeter(configuration, registrar),
         focus_set(focus_set)
     {
 
     }
-    virtual ~FocusNotifyingDispatcherController() noexcept(true) {}
+    virtual ~FocusNotifyingInputTargeter() noexcept(true) {}
     
     void focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface) override
     {
-        DispatcherController::focus_changed(surface);
+        InputTargeter::focus_changed(surface);
         
         // We need a synchronization primitive inorder to halt test event injection
         // until after a surface has taken focus (lest the events be discarded).
@@ -108,12 +109,11 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     
     std::shared_ptr<mi::InputManager> the_input_manager() override
     {
-        return input_manager(
-            [&]()
-            {
-                // Force usage of real input even in case of tests-use-real-input = false.
-                return std::make_shared<mia::InputManager>(the_input_configuration());
-            });
+        return DefaultServerConfiguration::the_input_manager();
+    }
+    std::shared_ptr<msh::InputRegistrar> the_input_registrar() override
+    {        
+        return DefaultServerConfiguration::the_input_registrar();
     }
 
     std::shared_ptr<msh::InputTargeter>
@@ -122,7 +122,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
         return input_targeter(
             [this]()
             {
-                return std::make_shared<FocusNotifyingDispatcherController>(mt::fake_shared(input_config), std::bind(std::mem_fn(&FakeInputServerConfiguration::inject_input_after_focus), this));
+                return std::make_shared<FocusNotifyingInputTargeter>(mt::fake_shared(input_config), the_input_registrar(), std::bind(std::mem_fn(&FakeInputServerConfiguration::inject_input_after_focus), this));
             });
     }
 

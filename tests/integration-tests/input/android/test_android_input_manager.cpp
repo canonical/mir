@@ -23,7 +23,8 @@
 
 #include "src/server/input/android/default_android_input_configuration.h"
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_dispatcher_controller.h"
+#include "src/server/input/android/android_input_targeter.h"
+#include "src/server/input/android/android_input_registrar.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/fake_shared.h"
@@ -248,10 +249,8 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
             .WillByDefault(Return(default_view_area));
         input_manager = std::make_shared<mia::InputManager>(configuration);
         
-        // TODO: Remove ~racarr
-        auto dispatcher_controller = std::make_shared<mia::DispatcherController>(configuration);
-        input_targeter = dispatcher_controller;
-        input_registrar = dispatcher_controller;
+        input_registrar = std::make_shared<mia::InputRegistrar>(configuration);
+        input_targeter = std::make_shared<mia::InputTargeter>(configuration, input_registrar);
 
         dispatcher_policy = configuration->the_mock_dispatcher_policy();
 

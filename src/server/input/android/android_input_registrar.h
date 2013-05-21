@@ -16,10 +16,9 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_DISPATCHER_CONTROLLER_H_
-#define MIR_INPUT_ANDROID_DISPATCHER_CONTROLLER_H_
+#ifndef MIR_INPUT_ANDROID_REGISTRAR_H_
+#define MIR_INPUT_ANDROID_REGISTRAR_H_
 
-#include "mir/shell/input_targeter.h"
 #include "mir/shell/input_registrar.h"
 
 #include <utils/StrongPointer.h>
@@ -42,22 +41,23 @@ namespace input
 namespace android
 {
 class InputConfiguration;
+class InputTargeter;
 
-class DispatcherController : public shell::InputTargeter, public shell::InputRegistrar
+class InputRegistrar : public shell::InputRegistrar
 {
 public:
-    explicit DispatcherController(std::shared_ptr<InputConfiguration> const& input_configuration);
-    virtual ~DispatcherController() noexcept(true) {}
+    explicit InputRegistrar(std::shared_ptr<InputConfiguration> const& input_configuration);
+    virtual ~InputRegistrar() noexcept(true) {}
     
     void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface);
     void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface);
 
-    void focus_changed(std::shared_ptr<input::SurfaceTarget> const& focus_surface);
-    void focus_cleared();
-
+    friend InputTargeter;
 protected:
-    DispatcherController(const DispatcherController&) = delete;
-    DispatcherController& operator=(const DispatcherController&) = delete;
+    InputRegistrar(const InputRegistrar&) = delete;
+    InputRegistrar& operator=(const InputRegistrar&) = delete;
+    
+    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::SurfaceTarget> const& surface);
 
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
@@ -71,4 +71,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_INPUT_ANDROID_DISPATCHER_CONTROLLER_H_
+#endif // MIR_INPUT_ANDROID_REGISTRAR_H_

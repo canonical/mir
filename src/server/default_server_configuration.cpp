@@ -53,7 +53,8 @@
 #include "mir/input/null_input_targeter.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
-#include "input/android/android_dispatcher_controller.h"
+#include "input/android/android_input_targeter.h"
+#include "input/android/android_input_registrar.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -660,7 +661,7 @@ std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_t
         [&]() -> std::shared_ptr<msh::InputTargeter>
         {
             if (the_options()->get("enable-input", enable_input_default))
-                return std::make_shared<mia::DispatcherController>(the_input_configuration());
+                return std::make_shared<mia::InputTargeter>(the_input_configuration(), the_input_registrar());
             else
                 return std::make_shared<mi::NullInputTargeter>();
         });
@@ -672,7 +673,7 @@ std::shared_ptr<msh::InputRegistrar> mir::DefaultServerConfiguration::the_input_
         [&]() -> std::shared_ptr<msh::InputRegistrar>
         {
             if (the_options()->get("enable-input", enable_input_default))
-                return std::make_shared<mia::DispatcherController>(the_input_configuration());
+                return std::make_shared<mia::InputRegistrar>(the_input_configuration());
             else
                 return std::make_shared<mi::NullInputRegistrar>();
         });

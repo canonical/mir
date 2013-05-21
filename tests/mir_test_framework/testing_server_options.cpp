@@ -32,7 +32,8 @@
 #include "mir/input/null_input_targeter.h"
 #include "mir/input/null_input_registrar.h"
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_dispatcher_controller.h"
+#include "src/server/input/android/android_input_registrar.h"
+#include "src/server/input/android/android_input_targeter.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
@@ -192,7 +193,7 @@ std::shared_ptr<msh::InputTargeter> mtf::TestingServerConfiguration::the_input_t
     auto options = the_options();
  
    if (options->get("tests-use-real-input", false))
-        return std::make_shared<mia::DispatcherController>(the_input_configuration());
+        return std::make_shared<mia::InputTargeter>(the_input_configuration(), the_input_registrar());
     else
         return std::make_shared<mi::NullInputTargeter>();
 }
@@ -202,7 +203,7 @@ std::shared_ptr<msh::InputRegistrar> mtf::TestingServerConfiguration::the_input_
     auto options = the_options();
  
    if (options->get("tests-use-real-input", false))
-        return std::make_shared<mia::DispatcherController>(the_input_configuration());
+        return std::make_shared<mia::InputRegistrar>(the_input_configuration());
     else
         return std::make_shared<mi::NullInputRegistrar>();
 }

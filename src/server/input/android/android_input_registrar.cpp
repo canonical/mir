@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "android_dispatcher_controller.h"
+#include "android_input_registrar.h"
 
 #include "android_input_window_handle.h"
 #include "android_input_application_handle.h"
@@ -33,12 +33,12 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::DispatcherController::DispatcherController(std::shared_ptr<mia::InputConfiguration> const& config) :
+mia::InputRegistrar::InputRegistrar(std::shared_ptr<mia::InputConfiguration> const& config) :
     input_dispatcher(config->the_dispatcher())
 {
 }
 
-void mia::DispatcherController::input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface)
+void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface)
 {
     std::unique_lock<std::mutex> lock(handles_mutex);
 
@@ -55,7 +55,7 @@ void mia::DispatcherController::input_surface_opened(std::shared_ptr<input::Surf
     window_handles[opened_surface] = window_handle;
 }
 
-void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
+void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
 {
     std::unique_lock<std::mutex> lock(handles_mutex);
     auto it = window_handles.find(closed_surface);
@@ -66,29 +66,10 @@ void mia::DispatcherController::input_surface_closed(std::shared_ptr<input::Surf
     window_handles.erase(it);
 }
 
-void mia::DispatcherController::focus_cleared()
+// TODO: Test behavior ~racarr
+droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::SurfaceTarget> const& surface)
 {
-    droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> empty_windows;
-    droidinput::sp<droidinput::InputApplicationHandle> null_application = nullptr;
-    
-    input_dispatcher->setFocusedApplication(null_application);
-    input_dispatcher->setInputWindows(empty_windows);
-}
-
-void mia::DispatcherController::focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface)
-{
-    std::unique_lock<std::mutex> lock(handles_mutex);
-
-    auto window_handle = window_handles[surface];
-
-    if (!window_handle.get())
-        BOOST_THROW_EXCEPTION(std::logic_error("Focus changed to an unopened surface"));
-    auto application_handle = window_handle->inputApplicationHandle;
-    
-    input_dispatcher->setFocusedApplication(application_handle);
-
-    droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> windows;
-    windows.push_back(window_handle);
-
-    input_dispatcher->setInputWindows(windows);
+    if (window_handles.find(surface) == window_handles.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("Requesting handle for an unregistered surface"));
+    return window_handles[surface];
 }
