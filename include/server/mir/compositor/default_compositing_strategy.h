@@ -44,7 +44,7 @@ public:
         std::shared_ptr<graphics::Renderer> const& renderer,
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
-    virtual void composite_renderables(mir::geometry::Rectangle const& view_area);
+    virtual void compose_renderables(mir::geometry::Rectangle const& view_area);
 
 private:
     std::shared_ptr<Renderables> const renderables;

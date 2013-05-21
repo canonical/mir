@@ -62,7 +62,7 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 }
 
-void mc::DefaultCompositingStrategy::composite_renderables(mir::geometry::Rectangle const& view_area)
+void mc::DefaultCompositingStrategy::compose_renderables(mir::geometry::Rectangle const& view_area)
 {
     renderer->clear();
 
