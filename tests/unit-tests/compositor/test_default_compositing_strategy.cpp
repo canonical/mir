@@ -18,6 +18,7 @@
 
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/overlay_renderer.h"
+#include "mir/compositor/renderables.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 #include "mir/geometry/rectangle.h"

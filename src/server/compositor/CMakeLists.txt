@@ -1,6 +1,7 @@
 set(
   MIR_COMPOSITOR_SRCS
 
+  basic_compositing_strategy.cpp
   default_compositing_strategy.cpp
   buffer_basic.cpp
   temporary_buffers.cpp

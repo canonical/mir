@@ -21,13 +21,10 @@
 #include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 
 #include <cassert>
-#include <functional>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -74,13 +71,4 @@ void mc::DefaultCompositingStrategy::composite_renderables(mir::geometry::Rectan
     renderables->for_each_if(selector, applicator);
 
     overlay_renderer->render(view_area);
-}
-
-void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
-{
-    display_buffer.make_current();
-
-    composite_renderables(display_buffer.view_area());
-
-    display_buffer.post_update();
 }
