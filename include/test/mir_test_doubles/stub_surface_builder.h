@@ -22,7 +22,7 @@
 
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/null_buffer_bundle.h"
 
@@ -42,7 +42,7 @@ public:
     {
     }
 
-    std::weak_ptr<surfaces::Surface> create_surface(frontend::SurfaceCreationParameters const& param)
+    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const& param)
     {
         dummy_surface = std::make_shared<surfaces::Surface>(param.name, param.top_left, buffer_bundle, []{});
         return dummy_surface;

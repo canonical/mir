@@ -28,19 +28,17 @@ namespace events
 {
 class EventSink;
 }
-namespace frontend
-{
-struct SurfaceCreationParameters;
-}
 
 namespace shell
 {
 class Surface;
+struct SurfaceCreationParameters;
+
 class SurfaceFactory
 {
 public:
     virtual std::shared_ptr<Surface> create_surface(
-        frontend::SurfaceCreationParameters const& params,
+        SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink) = 0;
 

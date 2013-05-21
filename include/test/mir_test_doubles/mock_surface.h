@@ -21,7 +21,7 @@
 
 #include "mir/shell/surface.h"
 
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 
@@ -37,7 +37,7 @@ namespace doubles
 struct MockSurface : public shell::Surface
 {
     MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder) :
-        shell::Surface(builder, frontend::a_surface(), std::shared_ptr<input::InputChannel>())
+        shell::Surface(builder, shell::a_surface(), std::shared_ptr<input::InputChannel>())
     {
     }
 

@@ -20,7 +20,7 @@
 
 #include <mir/shell/organising_surface_factory.h>
 #include <mir/shell/placement_strategy.h>
-#include <mir/frontend/surface_creation_parameters.h>
+#include <mir/shell/surface_creation_parameters.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,7 +36,7 @@ namespace
 
 struct MockPlacementStrategy : public msh::PlacementStrategy
 {
-    MOCK_METHOD1(place, mf::SurfaceCreationParameters(mf::SurfaceCreationParameters const&));
+    MOCK_METHOD1(place, msh::SurfaceCreationParameters(msh::SurfaceCreationParameters const&));
 };
 
 struct OrganisingSurfaceFactorySetup : public testing::Test
@@ -65,9 +65,9 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
 
     EXPECT_CALL(*underlying_surface_factory, create_surface(_, _, _)).Times(1);
 
-    auto params = mf::a_surface();
+    auto params = msh::a_surface();
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
-        .WillOnce(Return(mf::a_surface()));
+        .WillOnce(Return(msh::a_surface()));
 
     factory.create_surface(params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
 }
@@ -78,7 +78,7 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
 
     msh::OrganisingSurfaceFactory factory(underlying_surface_factory, placement_strategy);
 
-    auto params = mf::a_surface();
+    auto params = msh::a_surface();
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 

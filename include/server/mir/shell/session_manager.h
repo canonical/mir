@@ -29,10 +29,6 @@
 
 namespace mir
 {
-namespace frontend
-{
-struct SurfaceCreationParameters;
-}
 
 /// Management of sessions and surfaces
 namespace shell
@@ -44,6 +40,7 @@ class FocusSetter;
 class Session;
 class InputTargetListener;
 class SessionListener;
+struct SurfaceCreationParameters;
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
@@ -60,7 +57,7 @@ public:
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
-                                 frontend::SurfaceCreationParameters const& params);
+                                 SurfaceCreationParameters const& params);
 
     void focus_next();
 

@@ -7,7 +7,6 @@ set(
   null_message_processor_report.cpp
   protobuf_message_processor.cpp
   null_message_processor.cpp
-  surface_creation_parameters.cpp
   event_pipe.cpp
 
   resource_cache.cpp
