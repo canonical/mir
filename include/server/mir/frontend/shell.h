@@ -28,10 +28,13 @@ namespace events
 {
 class EventSink;
 }
+namespace shell
+{
+struct SurfaceCreationParameters;
+}
 namespace frontend
 {
 class Session;
-struct SurfaceCreationParameters;
 
 class Shell
 {
@@ -42,7 +45,7 @@ public:
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
     virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
-                                         SurfaceCreationParameters const& params) = 0;
+                                         shell::SurfaceCreationParameters const& params) = 0;
 
 protected:
     Shell() = default;

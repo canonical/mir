@@ -19,7 +19,7 @@
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/default_session_container.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/stub_input_target_listener.h"

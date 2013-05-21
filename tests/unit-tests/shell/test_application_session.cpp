@@ -18,7 +18,7 @@
 
 #include "mir/shell/application_session.h"
 #include "mir/compositor/buffer.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_surface.h"
@@ -56,7 +56,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
     mtd::StubInputTargetListener input_listener;
     msh::ApplicationSession session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo");
 
-    mf::SurfaceCreationParameters params;
+    msh::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
 
     session.destroy_surface(surf);
@@ -81,7 +81,7 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     mtd::StubInputTargetListener input_listener;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), mt::fake_shared(input_listener), "Foo");
 
-    mf::SurfaceCreationParameters params;
+    msh::SurfaceCreationParameters params;
     auto id1 = app_session.create_surface(params);
     auto id2 = app_session.create_surface(params);
     auto id3 = app_session.create_surface(params);
@@ -121,7 +121,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
         EXPECT_CALL(*mock_surface, destroy()).Times(1);
     }
 
-    mf::SurfaceCreationParameters params;
+    msh::SurfaceCreationParameters params;
     auto surf = app_session.create_surface(params);
 
     app_session.hide();

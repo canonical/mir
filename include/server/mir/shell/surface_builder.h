@@ -24,15 +24,16 @@
 
 namespace mir
 {
-namespace frontend { struct SurfaceCreationParameters; }
 namespace surfaces { class Surface; }
 
 namespace shell
 {
+struct SurfaceCreationParameters;
+
 class SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<surfaces::Surface> create_surface(frontend::SurfaceCreationParameters const& params) = 0;
+    virtual std::weak_ptr<surfaces::Surface> create_surface(SurfaceCreationParameters const& params) = 0;
 
     virtual void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
 protected:

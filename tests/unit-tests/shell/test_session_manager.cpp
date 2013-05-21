@@ -25,7 +25,7 @@
 #include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
 #include "mir/shell/null_session_listener.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel.h"
 
@@ -119,7 +119,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
        Return(std::make_shared<msh::Surface>(
            mt::fake_shared(surface_builder),
-           mf::a_surface(),
+           msh::a_surface(),
            null_input_channel)));
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
@@ -131,7 +131,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
 
     auto session = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
-    session->create_surface(mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    session->create_surface(msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     session_manager.close_session(session);
 }
@@ -155,7 +155,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
         Return(std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel)));
 
     // Once for session creation and once for surface creation
@@ -168,7 +168,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     }
 
     auto session1 = session_manager.open_session("Weather Report", std::shared_ptr<me::EventSink>());
-    session_manager.create_surface_for(session1, mf::a_surface());
+    session_manager.create_surface_for(session1, msh::a_surface());
 }
 
 namespace
@@ -207,7 +207,7 @@ TEST_F(SessionManagerInputTargetListenerSetup, input_listener_is_notified_of_ses
     ON_CALL(surface_factory, create_surface(_,_,_)).WillByDefault(
        Return(std::make_shared<msh::Surface>(
            mt::fake_shared(surface_builder),
-           mf::a_surface(),
+           msh::a_surface(),
            null_input_channel)));
     EXPECT_CALL(surface_factory, create_surface(_,_,_)).Times(1);
 
@@ -227,7 +227,7 @@ TEST_F(SessionManagerInputTargetListenerSetup, input_listener_is_notified_of_ses
 
     {
         auto session = session_manager.open_session("test", std::shared_ptr<me::EventSink>());
-        auto surf = session_manager.create_surface_for(session, mf::a_surface());
+        auto surf = session_manager.create_surface_for(session, msh::a_surface());
         session->destroy_surface(surf);
         session_manager.close_session(session);
     }

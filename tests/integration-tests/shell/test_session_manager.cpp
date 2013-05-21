@@ -26,7 +26,7 @@
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

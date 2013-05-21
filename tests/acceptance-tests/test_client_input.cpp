@@ -18,7 +18,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
 
 #include "src/server/input/android/android_input_manager.h"
@@ -495,7 +495,7 @@ struct StaticPlacementStrategy : public msh::PlacementStrategy
     {
     }
 
-    mf::SurfaceCreationParameters place(mf::SurfaceCreationParameters const& request_parameters)
+    msh::SurfaceCreationParameters place(msh::SurfaceCreationParameters const& request_parameters)
     {
         auto placed = request_parameters;
         placed.top_left = surface_positions_by_name[request_parameters.name];

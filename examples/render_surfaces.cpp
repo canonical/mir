@@ -19,7 +19,7 @@
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/frontend/communicator.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/cursor.h"
@@ -49,6 +49,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace mf = mir::frontend;
+namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::tools;
@@ -381,7 +382,7 @@ public:
         for (auto& m : moveables)
         {
             std::shared_ptr<ms::Surface> s = surface_builder->create_surface(
-                    mf::a_surface().of_size(surface_size)
+                    msh::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
                                    .of_buffer_usage(mc::BufferUsage::hardware)
                     ).lock();

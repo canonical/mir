@@ -18,7 +18,7 @@
  */
 
 #include "mir/input/event_filter.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/android/android_input_configuration.h"
 
 #include "src/server/input/android/default_android_input_configuration.h"

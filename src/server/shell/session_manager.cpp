@@ -140,7 +140,7 @@ void msh::SessionManager::focus_next()
 }
 
 mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
-    mf::SurfaceCreationParameters const& params)
+    msh::SurfaceCreationParameters const& params)
 {
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
     auto id = shell_session->create_surface(params);
