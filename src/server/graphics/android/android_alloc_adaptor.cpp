@@ -18,7 +18,6 @@
  */
 
 #include "android_alloc_adaptor.h"
-#include "android_buffer_handle_default.h"
 #include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
@@ -26,7 +25,6 @@
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 namespace

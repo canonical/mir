@@ -38,6 +38,7 @@ public:
     {
         using namespace testing;
 
+        stub_buffer = std::make_shared<ANativeWindowBuffer>();
         mock_alloc_dev = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
         ON_CALL(*mock_alloc_dev, alloc_buffer(_,_,_))
             .WillByDefault(Return(stub_buffer)); 
