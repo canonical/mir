@@ -32,7 +32,7 @@ class Renderable;
 class Renderer
 {
 public:
-    virtual ~Renderer() {}
+    virtual ~Renderer() = default;
 
     virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable) = 0;
     virtual void ensure_no_live_buffers_bound() = 0;

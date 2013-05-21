@@ -39,6 +39,8 @@ public:
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable);
     void ensure_no_live_buffers_bound();
 
+    ~GLRenderer() noexcept {}
+
 private:
     class Resources
     {
