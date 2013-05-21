@@ -34,11 +34,9 @@ namespace mi = mir::input;
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
     shell::SurfaceCreationParameters const& params,
-    std::shared_ptr<input::InputChannel> const& input_channel,
     frontend::SurfaceId id,
     std::shared_ptr<events::EventSink> const& sink)
   : builder(builder),
-    input_channel(input_channel),
     surface(builder->create_surface(params)),
     id(id),
     event_sink(sink),
@@ -49,10 +47,8 @@ msh::Surface::Surface(
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
-    shell::SurfaceCreationParameters const& params,
-    std::shared_ptr<input::InputChannel> const& input_channel)
+    shell::SurfaceCreationParameters const& params)
   : builder(builder),
-    input_channel(input_channel),
     surface(builder->create_surface(params)),
     id(),
     event_sink(),
@@ -166,25 +162,41 @@ std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
     }
 }
 
+// TODO: Update these tests ~racarr
 bool msh::Surface::supports_input() const
 {
-    if (input_channel)
-        return true;
-    return false;
+    if (auto const& s = surface.lock())
+    {
+        return s->supports_input();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
 }
 
 int msh::Surface::client_input_fd() const
 {
-    if (!supports_input())
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return input_channel->client_fd();
+    if (auto const& s = surface.lock())
+    {
+        return s->client_input_fd();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
 }
 
 int msh::Surface::server_input_fd() const
 {
-    if (!supports_input())
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return input_channel->server_fd();
+    if (auto const& s = surface.lock())
+    {
+        return s->server_input_fd();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
 }
 
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)

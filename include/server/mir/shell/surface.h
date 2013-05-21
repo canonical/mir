@@ -38,10 +38,6 @@ class EventSink;
 namespace frontend
 {
 }
-namespace input
-{
-class InputChannel;
-}
 
 namespace shell
 {
@@ -53,13 +49,11 @@ class Surface : public frontend::Surface, public input::SurfaceTarget
 public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
-        SurfaceCreationParameters const& params,
-        std::shared_ptr<input::InputChannel> const& input_channel);
+        SurfaceCreationParameters const& params);
 
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
         SurfaceCreationParameters const& params,
-        std::shared_ptr<input::InputChannel> const& input_channel,
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink);
 
@@ -98,7 +92,6 @@ private:
     void notify_change(MirSurfaceAttrib attrib, int value);
 
     std::shared_ptr<SurfaceBuilder> const builder;
-    std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
     frontend::SurfaceId const id;

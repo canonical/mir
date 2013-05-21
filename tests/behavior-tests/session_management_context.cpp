@@ -25,7 +25,6 @@
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/shell/session_container.h"
 #include "mir/frontend/shell.h"
-#include "mir/input/input_channel.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/graphics/display.h"
 #include "mir/default_server_configuration.h"
@@ -39,7 +38,6 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtc = mir::test::cucumber;
@@ -73,7 +71,6 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
         return std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
             params,
-            std::shared_ptr<mir::input::InputChannel>(),
             id,
             sink);
     }
