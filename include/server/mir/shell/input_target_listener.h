@@ -37,11 +37,7 @@ class InputTargetListener
 public:
     virtual ~InputTargetListener() = default;
     
-    virtual void input_application_opened(std::shared_ptr<input::SessionTarget> const& application) = 0;
-    virtual void input_application_closed(std::shared_ptr<input::SessionTarget> const& application) = 0;
-
-    virtual void input_surface_opened(std::shared_ptr<input::SessionTarget> const& application,
-                                      std::shared_ptr<input::SurfaceTarget> const& opened_surface) = 0;
+    virtual void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface) = 0;
     virtual void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface) = 0;
 
     virtual void focus_changed(std::shared_ptr<input::SurfaceTarget> const& focus_surface) = 0;

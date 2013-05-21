@@ -38,32 +38,9 @@ mia::DispatcherController::DispatcherController(std::shared_ptr<mia::InputConfig
 {
 }
 
-void mia::DispatcherController::input_application_opened(std::shared_ptr<mi::SessionTarget> const& session)
-{
-    (void) session;
-//    std::unique_lock<std::mutex> lock(handles_mutex);
-//    if (application_handles.find(session) != application_handles.end())
-//        BOOST_THROW_EXCEPTION(std::logic_error("An application was opened twice"));
-//    application_handles[session] = new mia::InputApplicationHandle(session);
-}
-
-void mia::DispatcherController::input_application_closed(std::shared_ptr<mi::SessionTarget> const& session)
-{
-    (void) session;
-//    std::unique_lock<std::mutex> lock(handles_mutex);
-//    if (application_handles.find(session) == application_handles.end())
-//        BOOST_THROW_EXCEPTION(std::logic_error("An application was closed twice"));
-//    application_handles.erase(session);
-}
-
-void mia::DispatcherController::input_surface_opened(std::shared_ptr<mi::SessionTarget> const& session,
-                                                     std::shared_ptr<input::SurfaceTarget> const& opened_surface)
+void mia::DispatcherController::input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface)
 {
     std::unique_lock<std::mutex> lock(handles_mutex);
-/*    auto application_handle = application_handles.find(session);
-    if (application_handle == application_handles.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened for an unopened application"));*/
-    (void) session;
     
     auto application_handle = new mia::InputApplicationHandle(opened_surface);
     if (window_handles.find(opened_surface) != window_handles.end())

@@ -30,14 +30,7 @@ namespace doubles
 
 struct StubInputTargetListener : public shell::InputTargetListener
 {
-    void input_application_opened(std::shared_ptr<input::SessionTarget> const&)
-    {
-    }
-    void input_application_closed(std::shared_ptr<input::SessionTarget> const&)
-    {
-    }
-    void input_surface_opened(std::shared_ptr<input::SessionTarget> const&,
-                              std::shared_ptr<input::SurfaceTarget> const&)
+    void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
     {
     }
     void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)

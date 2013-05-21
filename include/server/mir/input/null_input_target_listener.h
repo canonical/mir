@@ -32,14 +32,7 @@ public:
     NullInputTargetListener() {};
     virtual ~NullInputTargetListener() noexcept(true) {}
     
-    virtual void input_application_opened(std::shared_ptr<input::SessionTarget> const&)
-    {
-    }
-    virtual void input_application_closed(std::shared_ptr<input::SessionTarget> const&)
-    {
-    }
-    virtual void input_surface_opened(std::shared_ptr<input::SessionTarget> const&,
-                                      std::shared_ptr<input::SurfaceTarget> const&)
+    virtual void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
     {
     }
     virtual void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)

@@ -184,9 +184,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
             if (!expected)
             {
                 
-                EXPECT_CALL(*target_listener, input_application_opened(_)).Times(AtLeast(0));
-                EXPECT_CALL(*target_listener, input_application_closed(_)).Times(AtLeast(0));
-                EXPECT_CALL(*target_listener, input_surface_opened(_,_)).Times(AtLeast(0));
+                EXPECT_CALL(*target_listener, input_surface_opened(_)).Times(AtLeast(0));
                 EXPECT_CALL(*target_listener, input_surface_closed(_)).Times(AtLeast(0));
                 EXPECT_CALL(*target_listener, focus_cleared()).Times(AtLeast(0));
 

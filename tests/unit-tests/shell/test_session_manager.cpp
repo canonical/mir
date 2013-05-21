@@ -215,13 +215,9 @@ TEST_F(SessionManagerInputTargetListenerSetup, input_listener_is_notified_of_ses
     {
         InSequence seq;
 
-        EXPECT_CALL(input_target_listener, input_application_opened(_))
-            .Times(1);
-        EXPECT_CALL(input_target_listener, input_surface_opened(_, _)).Times(1);
+        EXPECT_CALL(input_target_listener, input_surface_opened(_)).Times(1);
         EXPECT_CALL(input_target_listener, focus_changed(_)).Times(1);
         EXPECT_CALL(input_target_listener, input_surface_closed(_)).Times(1);
-        EXPECT_CALL(input_target_listener, input_application_closed(_))
-            .Times(1);
         EXPECT_CALL(input_target_listener, focus_cleared()).Times(1);
     }
 

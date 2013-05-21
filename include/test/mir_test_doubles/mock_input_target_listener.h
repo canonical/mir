@@ -33,10 +33,7 @@ namespace doubles
 struct MockInputTargetListener : public shell::InputTargetListener
 {
     virtual ~MockInputTargetListener() noexcept(true) {}
-    MOCK_METHOD1(input_application_opened, void(std::shared_ptr<input::SessionTarget> const& application));
-    MOCK_METHOD1(input_application_closed, void(std::shared_ptr<input::SessionTarget> const& application));
-    MOCK_METHOD2(input_surface_opened, void(std::shared_ptr<input::SessionTarget> const& application,
-        std::shared_ptr<input::SurfaceTarget> const& opened_surface));
+    MOCK_METHOD1(input_surface_opened, void(std::shared_ptr<input::SurfaceTarget> const& opened_surface));
     MOCK_METHOD1(input_surface_closed, void(std::shared_ptr<input::SurfaceTarget> const& closed_surface));
     MOCK_METHOD1(focus_changed, void(std::shared_ptr<input::SurfaceTarget> const& focus_surface));
     MOCK_METHOD0(focus_cleared, void());
