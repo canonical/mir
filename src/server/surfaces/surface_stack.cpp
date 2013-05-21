@@ -25,6 +25,8 @@
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/input/input_channel_factory.h"
+// TODO: Move ~racarr
+#include "mir/shell/input_registrar.h"
 
 #include <algorithm>
 #include <cassert>
@@ -35,12 +37,15 @@ namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace msh = mir::shell; // TODO: Remove ~racarr
 namespace geom = mir::geometry;
 
 ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
-                               std::shared_ptr<mi::InputChannelFactory> const& input_factory)
+                               std::shared_ptr<mi::InputChannelFactory> const& input_factory,
+                               std::shared_ptr<msh::InputRegistrar> const& input_registrar)
     : buffer_bundle_factory{bb_factory},
       input_factory{input_factory},
+      input_registrar{input_registrar},
       notify_change{[]{}}
 {
     assert(buffer_bundle_factory);
@@ -81,6 +86,8 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         std::lock_guard<std::mutex> lg(guard);
         surfaces.push_back(surface);
     }
+    // TODO: Test ~racarr
+    input_registrar->input_surface_opened(surface);
 
     emit_change_notification();
 
@@ -93,7 +100,10 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         std::lock_guard<std::mutex> lg(guard);
 
         auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
-
+        
+        // TODO: Test ~racarr
+        input_registrar->input_surface_closed(*p);
+        
         if (p != surfaces.end()) surfaces.erase(p);
         // else; TODO error logging
     }
