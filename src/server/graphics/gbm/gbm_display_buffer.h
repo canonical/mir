@@ -54,7 +54,6 @@ public:
     geometry::Rectangle view_area() const;
     void make_current();
     void release_current();
-    void clear();
     void post_update();
 
     void schedule_set_crtc();

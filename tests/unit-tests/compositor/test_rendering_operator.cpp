@@ -43,6 +43,8 @@ public:
     {
     }
 
+    void clear() {}
+
     void ensure_no_live_buffers_bound()
     {
     }
@@ -80,6 +82,7 @@ class MockRenderer : public mg::Renderer
 public:
     MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&));
     MOCK_METHOD0(ensure_no_live_buffers_bound, void());
+    MOCK_METHOD0(clear, void ());
 
     ~MockRenderer() noexcept {}
 };

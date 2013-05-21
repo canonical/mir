@@ -67,6 +67,8 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 void mc::DefaultCompositingStrategy::composite_renderables(mir::geometry::Rectangle const& view_area)
 {
+    renderer->clear();
+
     RenderingOperator applicator(*renderer);
     FilterForVisibleRenderablesInRegion selector(view_area);
     renderables->for_each_if(selector, applicator);
@@ -77,7 +79,6 @@ void mc::DefaultCompositingStrategy::composite_renderables(mir::geometry::Rectan
 void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
 {
     display_buffer.make_current();
-    display_buffer.clear();
 
     composite_renderables(display_buffer.view_area());
 

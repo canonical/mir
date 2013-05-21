@@ -118,7 +118,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
 
     ensure_egl_image_extensions();
 
-    clear();
+    glClear(GL_COLOR_BUFFER_BIT);
 
     if (!egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
@@ -159,11 +159,6 @@ mgg::GBMDisplayBuffer::~GBMDisplayBuffer()
 geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
 {
     return {{geom::X(0), geom::Y(0)}, size};
-}
-
-void mgg::GBMDisplayBuffer::clear()
-{
-    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void mgg::GBMDisplayBuffer::post_update()

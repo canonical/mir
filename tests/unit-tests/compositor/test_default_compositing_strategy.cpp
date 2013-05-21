@@ -103,9 +103,6 @@ TEST(DefaultCompositingStrategy, render)
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
 
-    EXPECT_CALL(display_buffer, clear())
-        .Times(1);
-
     EXPECT_CALL(display_buffer, post_update())
             .Times(1);
 

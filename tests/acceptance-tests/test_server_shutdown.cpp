@@ -54,6 +54,8 @@ public:
     void ensure_no_live_buffers_bound()
     {
     }
+
+    void clear() {}
 };
 
 void null_surface_callback(MirSurface*, void*)
