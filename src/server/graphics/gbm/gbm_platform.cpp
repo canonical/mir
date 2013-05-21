@@ -24,6 +24,7 @@
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/compositor/buffer_ipc_packer.h"
 
 #include <xf86drm.h>
 
@@ -111,6 +112,22 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
 {
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
+}
+
+void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+                                        std::shared_ptr<compositor::Buffer> const& buffer) const
+{
+    auto native_handle = buffer->native_buffer_handle();
+    for(auto i=0; i<native_handle->data_items; i++)
+    {
+        packer->pack_data(native_handle->data[i]);
+    }    
+    for(auto i=0; i<native_handle->fd_items; i++)
+    {
+        packer->pack_fd(native_handle->fd[i]);
+    }
+
+    packer->pack_stride(buffer->stride()); 
 }
 
 std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()

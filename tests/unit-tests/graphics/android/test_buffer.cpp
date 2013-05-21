@@ -17,7 +17,6 @@
  */
 
 #include "src/server/graphics/android/buffer.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 
 #include <hardware/gralloc.h>
@@ -118,21 +117,6 @@ TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
     mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 
     EXPECT_EQ(expected_pf, buffer.pixel_format());
-}
-
-TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_ipc_ptr)
-{
-    using namespace testing;
-
-    auto expected_ipc_package = std::make_shared<mc::BufferIPCPackage>();
-
-    EXPECT_CALL(*mock_buffer_handle, get_ipc_package())
-        .Times(Exactly(1))
-        .WillOnce(Return(expected_ipc_package));
-
-    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
-
-    EXPECT_EQ(expected_ipc_package, buffer.get_ipc_package());
 }
 
 TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_native_handle)

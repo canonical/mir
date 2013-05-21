@@ -114,11 +114,13 @@ int queueBuffer_static(struct ANativeWindow* window,
 
 }
 
-/* setSwapInterval, lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
-int setSwapInterval_static (struct ANativeWindow* /*window*/, int /*interval*/)
+int setSwapInterval_static (struct ANativeWindow* window, int interval)
 {
-    return 0;
+    auto self = static_cast<mga::MirNativeWindow*>(window);
+    return self->setSwapInterval(interval);
 }
+
+/* lockBuffer, and cancelBuffer don't seem to being called by the driver. for now just return without calling into MirNativeWindow */
 
 int lockBuffer_static(struct ANativeWindow* /*window*/,
                       struct ANativeWindowBuffer* /*buffer*/)
@@ -159,6 +161,19 @@ mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> 
 
     const_cast<int&>(ANativeWindow::minSwapInterval) = 0;
     const_cast<int&>(ANativeWindow::maxSwapInterval) = 1;
+}
+
+int mga::MirNativeWindow::setSwapInterval(int interval)
+{
+    if (interval == 0)
+    {
+        driver_interpreter->sync_to_display(false);
+    }
+    else 
+    {
+        driver_interpreter->sync_to_display(true);
+    }
+    return 0;
 }
 
 int mga::MirNativeWindow::dequeueBuffer (struct ANativeWindowBuffer** buffer_to_driver)

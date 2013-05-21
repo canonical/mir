@@ -77,3 +77,8 @@ int mga::InternalClientWindow::driver_requests_info(int key) const
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
     }
 }
+
+void mga::InternalClientWindow::sync_to_display(bool)
+{
+    //note: clients run with the swapinterval of the display. ignore their request for now
+}

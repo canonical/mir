@@ -216,3 +216,13 @@ TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
         render_window.driver_requests_info(NATIVE_WINDOW_CONSUMER_RUNNING_BEHIND);
     }, std::runtime_error);
 }
+
+TEST_F(ServerRenderWindowTest, driver_swapinterval_request)
+{
+    mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
+
+    EXPECT_CALL(*mock_display_poster, sync_to_display(false))
+        .Times(1);
+
+    render_window.sync_to_display(false);
+}

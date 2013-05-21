@@ -19,7 +19,6 @@
 #include "src/server/graphics/gbm/internal_native_display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 
@@ -41,6 +40,7 @@ namespace mtd = mt::doubles;
 
 namespace
 {
+
 struct InternalNativeDisplay : public testing::Test
 {
     InternalNativeDisplay()
@@ -114,24 +114,35 @@ TEST_F(InternalNativeDisplay, surface_get_current_buffer)
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
     auto buffer = std::make_shared<mtd::MockBuffer>(geom::Size(), geom::Stride(), geom::PixelFormat());
     
-    auto test_buffer_package = std::make_shared<mc::BufferIPCPackage>();
+    auto test_buffer_package = std::make_shared<MirBufferPackage>();
     
-    test_buffer_package->ipc_data = {1, 2};
-    test_buffer_package->ipc_fds = {2, 3};
+    test_buffer_package->data_items = 2;
+    test_buffer_package->data[0] = 1;
+    test_buffer_package->data[1] = 2;
+    test_buffer_package->fd_items = 2;
+    test_buffer_package->fd[0] = 3;
+    test_buffer_package->fd[1] = 4;
     test_buffer_package->stride = 77;
 
     mgg::InternalNativeDisplay native_display(platform_package); 
     
+    EXPECT_CALL(*buffer, native_buffer_handle())
+        .WillOnce(Return(test_buffer_package)); 
     EXPECT_CALL(surface, client_buffer()).Times(1)
         .WillOnce(Return(buffer));
-    EXPECT_CALL(*buffer, get_ipc_package()).Times(1)
-        .WillOnce(Return(test_buffer_package));
-    
+ 
     MirBufferPackage buffer_package;
     memset(&buffer_package, 0, sizeof(MirBufferPackage));
     native_display.surface_get_current_buffer(
         &native_display, static_cast<MirEGLNativeWindowType>(&surface), &buffer_package);
-    EXPECT_THAT(buffer_package, AllOf(PackageMatches(test_buffer_package), StrideMatches(test_buffer_package)));
+
+    EXPECT_EQ(test_buffer_package->data_items, buffer_package.data_items);
+    EXPECT_EQ(test_buffer_package->data[0], buffer_package.data[0]);
+    EXPECT_EQ(test_buffer_package->data[1], buffer_package.data[1]);
+    EXPECT_EQ(test_buffer_package->fd_items, buffer_package.fd_items);
+    EXPECT_EQ(test_buffer_package->fd[0], buffer_package.fd[0]);
+    EXPECT_EQ(test_buffer_package->fd[1], buffer_package.fd[1]);
+    EXPECT_EQ(test_buffer_package->stride, buffer_package.stride);
 }
 
 TEST_F(InternalNativeDisplay, surface_advance_buffer)

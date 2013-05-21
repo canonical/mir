@@ -20,7 +20,6 @@
 
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include <fcntl.h>
 #include <xf86drm.h>
@@ -113,16 +112,6 @@ geom::PixelFormat mgg::GBMBuffer::pixel_format() const
     return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle.get()));
 }
 
-std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
-{
-    auto temp = std::make_shared<mc::BufferIPCPackage>();
-
-    temp->ipc_fds.push_back(prime_fd);
-    temp->stride = stride().as_uint32_t();
-
-    return temp;
-}
-
 void mgg::GBMBuffer::bind_to_texture()
 {
     texture_binder->bind_to_texture();
@@ -130,5 +119,10 @@ void mgg::GBMBuffer::bind_to_texture()
 
 std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
 {
-    return std::make_shared<MirNativeBuffer>();
+    auto temp = std::make_shared<MirNativeBuffer>();
+
+    temp->fd_items = 1;
+    temp->fd[0] = prime_fd;
+    temp->stride = stride().as_uint32_t();
+    return temp;
 }

@@ -104,6 +104,10 @@ public:
     {
         return std::shared_ptr<mg::InternalClient>();
     }
+    
+    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&, std::shared_ptr<mc::Buffer> const&) const
+    {
+    }
 };
 
 class GBMBufferIntegration : public ::testing::Test
