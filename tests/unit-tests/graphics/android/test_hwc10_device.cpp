@@ -21,7 +21,9 @@
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_organizer.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
@@ -39,6 +41,7 @@ protected:
         test_numfb = 558u;
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fbdev = std::make_shared<mtd::MockDisplaySupportProvider>();
+        mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         ON_CALL(*mock_fbdev, display_size())
             .WillByDefault(Return(test_size)); 
         ON_CALL(*mock_fbdev, display_format())
@@ -52,13 +55,14 @@ protected:
     unsigned int test_numfb;
     std::shared_ptr<mtd::MockHWCComposerDevice1> mock_device;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_fbdev;
+    std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
 };
 
 TEST_F(HWC10Device, hwc10_gets_size_from_fb_dev)
 {
     EXPECT_CALL(*mock_fbdev, display_size())
         .Times(1);
-    mga::HWC10Device device(mock_device, mock_fbdev);
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
 
     auto size = device.display_size();
     EXPECT_EQ(test_size, size);
@@ -68,7 +72,7 @@ TEST_F(HWC10Device, hwc10_gets_format_from_fb_dev)
 {
     EXPECT_CALL(*mock_fbdev, display_format())
         .Times(1);
-    mga::HWC10Device device(mock_device, mock_fbdev);
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
 
     auto pf = device.display_format();
     EXPECT_EQ(test_pf, pf);
@@ -78,7 +82,7 @@ TEST_F(HWC10Device, hwc10_gets_numfb_from_fb_dev)
 {
     EXPECT_CALL(*mock_fbdev, number_of_framebuffers_available())
         .Times(1);
-    mga::HWC10Device device(mock_device, mock_fbdev);
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
 
     auto numfb = device.number_of_framebuffers_available();
     EXPECT_EQ(test_numfb, numfb);
@@ -90,11 +94,11 @@ TEST_F(HWC10Device, hwc10_set_next_frontbuffer)
     EXPECT_CALL(*mock_fbdev, set_next_frontbuffer(mock_buffer))
         .Times(1);
 
-    mga::HWC10Device device(mock_device, mock_fbdev);
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
     device.set_next_frontbuffer(mock_buffer);
 }
 
-TEST_F(HWC10Device, hwc10_commit_frame)
+TEST_F(HWC10Device, hwc10_commit_frame_sync)
 {
     using namespace testing;
 
@@ -107,8 +111,10 @@ TEST_F(HWC10Device, hwc10_commit_frame)
         .Times(1);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
         .Times(1);
+    EXPECT_CALL(*mock_vsync, wait_for_vsync())
+        .Times(1);
 
-    mga::HWC10Device device(mock_device, mock_fbdev);
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
 
     device.commit_frame(dpy, sur);
 
@@ -127,6 +133,29 @@ TEST_F(HWC10Device, hwc10_commit_frame)
     EXPECT_EQ(0u, mock_device->display0_prepare_content.numHwLayers);
 }
 
+TEST_F(HWC10Device, hwc10_commit_frame_async)
+{
+    using namespace testing;
+
+    EGLDisplay dpy = nullptr;
+    EGLSurface sur = nullptr;
+
+    InSequence inseq;
+    EXPECT_CALL(*mock_fbdev, sync_to_display(false))
+        .Times(1);
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
+        .Times(1);
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
+        .Times(1);
+    EXPECT_CALL(*mock_vsync, wait_for_vsync())
+        .Times(0);
+
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
+    device.sync_to_display(false);
+
+    device.commit_frame(dpy, sur);
+}
+
 TEST_F(HWC10Device, hwc10_prepare_frame_failure)
 {
     using namespace testing;
@@ -137,7 +166,7 @@ TEST_F(HWC10Device, hwc10_prepare_frame_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mga::HWC10Device device(mock_device, mock_fbdev);
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
 
     EXPECT_THROW({
         device.commit_frame(dpy, sur);
@@ -154,7 +183,7 @@ TEST_F(HWC10Device, hwc10_commit_frame_failure)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mga::HWC10Device device(mock_device, mock_fbdev);
+    mga::HWC10Device device(mock_device, mock_fbdev, mock_vsync);
 
     EXPECT_THROW({
         device.commit_frame(dpy, sur);

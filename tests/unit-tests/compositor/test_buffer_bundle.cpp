@@ -94,18 +94,3 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
 
     auto buffer_resource = buffer_bundle.secure_client_buffer();
 }
-
-TEST_F(BufferBundleTest, client_requesting_package_gets_buffers_package)
-{
-    using namespace testing;
-
-    std::shared_ptr<mc::BufferIPCPackage> dummy_ipc_package = std::make_shared<mc::BufferIPCPackage>();
-    EXPECT_CALL(*mock_buffer, get_ipc_package())
-    .Times(1)
-    .WillOnce(Return(dummy_ipc_package));
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
-
-    std::shared_ptr<mc::Buffer> buffer_resource = buffer_bundle.secure_client_buffer();
-    auto buffer_package = buffer_resource->get_ipc_package();
-    EXPECT_EQ(buffer_package, dummy_ipc_package);
-}

@@ -20,6 +20,7 @@
 #include "hwc11_device.h"
 #include "hwc10_device.h"
 #include "hwc_layerlist.h"
+#include "hwc_vsync.h"
 
 namespace mga=mir::graphics::android;
 
@@ -28,12 +29,14 @@ std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_1(
     std::shared_ptr<mga::DisplaySupportProvider> const& fb_device) const
 {
     auto layer_list = std::make_shared<mga::HWCLayerList>();
-    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fb_device);
+    auto syncer = std::make_shared<mga::HWCVsync>();
+    return std::make_shared<mga::HWC11Device>(hwc_device, layer_list, fb_device, syncer);
 }
 
 std::shared_ptr<mga::HWCDevice> mga::AndroidHWCFactory::create_hwc_1_0(
     std::shared_ptr<hwc_composer_device_1> const& hwc_device,
     std::shared_ptr<mga::DisplaySupportProvider> const& fb_device) const
 {
-    return std::make_shared<mga::HWC10Device>(hwc_device, fb_device);
+    auto syncer = std::make_shared<mga::HWCVsync>();
+    return std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
 }

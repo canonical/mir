@@ -20,7 +20,6 @@
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_basic.h"
@@ -359,7 +358,12 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
         std::shared_ptr<mg::InternalClient> create_internal_client()
         {
             return std::shared_ptr<mg::InternalClient>();   
-        } 
+        }
+ 
+        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                              std::shared_ptr<mc::Buffer> const&) const
+        {
+        }
     };
 
     std::shared_ptr<mg::Platform> the_graphics_platform()
@@ -491,6 +495,11 @@ struct BufferCounterConfig : TestingServerConfiguration
         std::shared_ptr<mg::InternalClient> create_internal_client()
         {
             return std::shared_ptr<mg::InternalClient>();   
+        }
+
+        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                              std::shared_ptr<mc::Buffer> const&) const
+        {
         }
     };
 

@@ -24,7 +24,6 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir_toolkit/common.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer.h"
 #include "mir/surfaces/buffer_bundle.h"
@@ -35,11 +34,13 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
 #include "client_buffer_tracker.h"
+#include "protobuf_buffer_packer.h"
 
 #include <boost/throw_exception.hpp>
 
 namespace msh = mir::shell;
-namespace mf = mir::frontend;
+namespace mf=mir::frontend;
+namespace mfd=mir::frontend::detail;
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
@@ -132,17 +133,12 @@ void mf::SessionMediator::create_surface(
 
         if (!client_tracker->client_has(id))
         {
-            auto ipc_package = buffer_resource->get_ipc_package();
+            auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
+            graphics_platform->fill_ipc_package(packer, buffer_resource);
 
-            for (auto& data : ipc_package->ipc_data)
-                buffer->add_data(data);
-
-            for (auto& ipc_fds : ipc_package->ipc_fds)
-                buffer->add_fd(ipc_fds);
-
-            buffer->set_stride(ipc_package->stride);
-
-            resource_cache->save_resource(response, ipc_package);
+            //TODO: (kdub) here, we should hold onto buffer_resource. so ms::Surface doesn't have
+            // to worry about it. ms::Surface guarentees the resource will be there until the end
+            // of the ipc request
         }
         client_tracker->add(id);
     }
@@ -170,17 +166,12 @@ void mf::SessionMediator::next_buffer(
 
     if (!client_tracker->client_has(id))
     {
-        auto ipc_package = buffer_resource->get_ipc_package();
+        auto packer = std::make_shared<mfd::ProtobufBufferPacker>(response);
+        graphics_platform->fill_ipc_package(packer, buffer_resource);
 
-        for (auto& data : ipc_package->ipc_data)
-            response->add_data(data);
-
-        for (auto& ipc_fds : ipc_package->ipc_fds)
-            response->add_fd(ipc_fds);
-
-        response->set_stride(ipc_package->stride);
-
-        resource_cache->save_resource(response, ipc_package);
+        //TODO: (kdub) here, we should hold onto buffer_resource. so ms::Surface doesn't have
+        // to worry about it. ms::Surface guarentees the resource will be there until the end
+        // of the ipc request
     }
     client_tracker->add(id);
     done->Run();

@@ -27,6 +27,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer_ipc_packer.h"
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -59,6 +60,25 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
 {
     return std::make_shared<mg::PlatformIPCPackage>();
+}
+
+void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+                                            std::shared_ptr<mc::Buffer> const& buffer) const
+{
+    auto native_buffer = buffer->native_buffer_handle();
+    auto buffer_handle = native_buffer->handle;
+
+    int offset = 0;
+    for(auto i=0; i<buffer_handle->numFds; i++)
+    {
+        packer->pack_fd(buffer_handle->data[offset++]);
+    }    
+    for(auto i=0; i<buffer_handle->numInts; i++)
+    {
+        packer->pack_data(buffer_handle->data[offset++]);
+    }    
+
+    packer->pack_stride(buffer->stride());
 }
 
 std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client()

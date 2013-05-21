@@ -16,36 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
+#define MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 
-#include "display_support_provider.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
- 
+#include "mir/compositor/buffer_ipc_packer.h"
+#include "mir_protobuf.pb.h"
+
 namespace mir
 {
-namespace graphics
+namespace frontend
 {
-namespace android
+namespace detail
 {
 
-class FBDevice : public DisplaySupportProvider 
+class ProtobufBufferPacker : public compositor::BufferIPCPacker
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
-
-    geometry::Size display_size() const; 
-    geometry::PixelFormat display_format() const; 
-    unsigned int number_of_framebuffers_available() const;
-
-    void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
-    void sync_to_display(bool sync);
+    ProtobufBufferPacker(protobuf::Buffer*);
+    void pack_fd(int);
+    void pack_data(int);
+    void pack_stride(geometry::Stride);
 private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
+    protobuf::Buffer* buffer_response;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+
+#endif /* MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_ */

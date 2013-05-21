@@ -25,7 +25,6 @@
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
@@ -124,6 +123,11 @@ class StubGraphicPlatform : public mg::Platform
     std::shared_ptr<mg::InternalClient> create_internal_client()
     {
         return std::shared_ptr<mg::InternalClient>();   
+    }
+    
+    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                          std::shared_ptr<mc::Buffer> const&) const
+    {
     }
 };
 

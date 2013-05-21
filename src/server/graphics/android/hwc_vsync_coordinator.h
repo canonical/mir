@@ -16,13 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_VSYNC_COORDINATOR_H_
+#define MIR_GRAPHICS_ANDROID_HWC_VSYNC_COORDINATOR_H_
 
-#include "display_support_provider.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
- 
 namespace mir
 {
 namespace graphics
@@ -30,22 +26,21 @@ namespace graphics
 namespace android
 {
 
-class FBDevice : public DisplaySupportProvider 
+class HWCVsyncCoordinator
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
+    virtual ~HWCVsyncCoordinator() = default;
+    
+    virtual void wait_for_vsync() = 0;
+    virtual void notify_vsync() = 0;
 
-    geometry::Size display_size() const; 
-    geometry::PixelFormat display_format() const; 
-    unsigned int number_of_framebuffers_available() const;
-
-    void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
-    void sync_to_display(bool sync);
-private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
+protected:
+    HWCVsyncCoordinator() = default;
+    HWCVsyncCoordinator(HWCVsyncCoordinator const&) = delete;
+    HWCVsyncCoordinator& operator=(HWCVsyncCoordinator const&) = delete;
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_VSYNC_COORDINATOR_H_ */

@@ -16,36 +16,29 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_HWC_VSYNC_COORDINATOR_H_
+#define MIR_TEST_DOUBLES_MOCK_HWC_VSYNC_COORDINATOR_H_
 
-#include "display_support_provider.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
- 
+#include "src/server/graphics/android/hwc_vsync_coordinator.h"
+
+#include <gmock/gmock.h>
+
 namespace mir
 {
-namespace graphics
+namespace test
 {
-namespace android
+namespace doubles
 {
 
-class FBDevice : public DisplaySupportProvider 
+struct MockVsyncCoordinator : public graphics::android::HWCVsyncCoordinator
 {
-public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
-
-    geometry::Size display_size() const; 
-    geometry::PixelFormat display_format() const; 
-    unsigned int number_of_framebuffers_available() const;
-
-    void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
-    void sync_to_display(bool sync);
-private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
+    ~MockVsyncCoordinator() noexcept {}
+    MOCK_METHOD0(wait_for_vsync, void());
+    MOCK_METHOD0(notify_vsync, void());
 };
 
+
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_HWC_VSYNC_COORDINATOR_H_ */

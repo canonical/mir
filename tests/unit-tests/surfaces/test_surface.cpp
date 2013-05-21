@@ -252,7 +252,6 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
 {
     using namespace testing;
 
-    auto ipc_package = std::make_shared<mc::BufferIPCPackage>();
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
 
     ms::Surface surf(surface_name, geom::Point(), mock_buffer_bundle, null_change_cb);

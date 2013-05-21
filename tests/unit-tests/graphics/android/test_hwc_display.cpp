@@ -59,26 +59,6 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
     testing::InSequence sequence_enforcer;
     EXPECT_CALL(*mock_hwc_device, commit_frame(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
         .Times(1);
-    EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
-        .Times(1);
-
-    display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
-    {
-        buffer.post_update();
-    });
-}
-
-TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
-{
-    using namespace testing;
-
-    mga::HWCDisplay display(native_win, mock_hwc_device, mock_display_report);
-
-    testing::InSequence sequence_enforcer;
-    EXPECT_CALL(*mock_hwc_device, commit_frame(_,_))
-        .Times(1);
-    EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
-        .Times(1);
 
     display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
