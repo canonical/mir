@@ -41,7 +41,10 @@ mia::DispatcherController::DispatcherController(std::shared_ptr<mia::InputConfig
 void mia::DispatcherController::input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface)
 {
     std::unique_lock<std::mutex> lock(handles_mutex);
-    
+
+    // TODO: We don't have much use for InputApplicationHandle so we simply use one per surface.
+    // it is only used in droidinput for logging and determining application not responding (ANR),
+    // we determine ANR on a per surface basis. ~racarr
     auto application_handle = new mia::InputApplicationHandle(opened_surface);
     if (window_handles.find(opened_surface) != window_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened twice"));

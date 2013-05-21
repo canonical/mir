@@ -20,7 +20,6 @@
 
 #include "mir_test_doubles/mock_input_configuration.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/stub_session_target.h"
 #include "mir_test_doubles/stub_surface_target.h"
 
 #include "mir_test/fake_shared.h"
