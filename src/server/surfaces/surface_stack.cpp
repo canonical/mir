@@ -101,10 +101,12 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
 
         auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
         
-        // TODO: Test ~racarr
-        input_registrar->input_surface_closed(*p);
-        
-        if (p != surfaces.end()) surfaces.erase(p);
+        if (p != surfaces.end())
+        {
+            // TODO: Test ~racarr
+            input_registrar->input_surface_closed(*p);
+            surfaces.erase(p);
+        }
         // else; TODO error logging
     }
 

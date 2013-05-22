@@ -193,10 +193,10 @@ bool ms::Surface::supports_input() const
 // TODO: Test, perhaps restore exceptions ~racarr
 int ms::Surface::client_input_fd() const
 {
-    return input_channel && input_channel->client_fd();
+    return input_channel->client_fd();
 }
 
 int ms::Surface::server_input_fd() const
 {
-    return input_channel && input_channel->server_fd();
+    return input_channel->server_fd();
 }

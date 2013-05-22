@@ -59,9 +59,10 @@ namespace
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
+#include "mir/input/surface_target.h"
+
 namespace
 {
-
 struct FocusNotifyingInputTargeter : public mia::InputTargeter
 {
     FocusNotifyingInputTargeter(std::shared_ptr<mia::InputConfiguration> const& configuration,
@@ -77,7 +78,7 @@ struct FocusNotifyingInputTargeter : public mia::InputTargeter
     void focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface) override
     {
         InputTargeter::focus_changed(surface);
-        
+
         // We need a synchronization primitive inorder to halt test event injection
         // until after a surface has taken focus (lest the events be discarded).
         focus_set();
