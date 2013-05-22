@@ -17,25 +17,27 @@
  * Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test/egl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
 #include "gtest/gtest.h"
+
+namespace mtd = mir::test::doubles;
 
 TEST(EglMock, demo)
 {
     using namespace ::testing;
 
-    mir::EglMock mock;
+    mtd::MockEGL mock;
     EXPECT_CALL(mock, eglGetError()).Times(Exactly(1));
     eglGetError();
 }
 
-#define EGL_MOCK_TEST(test, egl_call, egl_mock_call)                   \
+#define EGL_MOCK_TEST(test, egl_call, mock_egl_call)                   \
     TEST(EglMock, test_##test)                                         \
     {                                                                  \
         using namespace ::testing;                                     \
                                                                        \
-    mir::EglMock mock;                                                 \
-    EXPECT_CALL(mock, egl_mock_call).Times(Exactly(1));                \
+    mtd::MockEGL mock;                                                 \
+    EXPECT_CALL(mock, mock_egl_call).Times(Exactly(1));                \
     egl_call;                                                          \
     }                                                                  \
 

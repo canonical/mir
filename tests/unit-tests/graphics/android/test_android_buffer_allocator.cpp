@@ -17,7 +17,7 @@
  */
 
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
-#include "mir_test/hw_mock.h"
+#include "mir_test_doubles/mock_android_hw.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_properties.h"
 
@@ -30,7 +30,6 @@
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
-namespace mt = mir::test;
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 
@@ -42,7 +41,7 @@ struct AndroidGraphicBufferAllocatorTest : public ::testing::Test
     }
 
     std::shared_ptr<mg::BufferInitializer> const null_buffer_initializer;
-    testing::NiceMock<mt::HardwareAccessMock> hw_access_mock;
+    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
 };
 
 TEST_F(AndroidGraphicBufferAllocatorTest, allocator_accesses_gralloc_module)

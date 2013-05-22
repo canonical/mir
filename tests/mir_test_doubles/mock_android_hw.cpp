@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test/hw_mock.h"
+#include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 
 #include <atomic>
@@ -29,18 +29,18 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-mt::HardwareAccessMock* global_hw_mock = NULL;
+mtd::HardwareAccessMock* global_mock_android_hw = NULL;
 std::atomic<int> open_count;
 }
 
-mt::HardwareModuleStub::HardwareModuleStub(hw_device_t& device)
+mtd::HardwareModuleStub::HardwareModuleStub(hw_device_t& device)
     : mock_hw_device(device)
 {
     gr_methods.open = hw_open;
     methods = &gr_methods;
 }
 
-int mt::HardwareModuleStub::hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device)
+int mtd::HardwareModuleStub::hw_open(const struct hw_module_t* module, const char*, struct hw_device_t** device)
 {
     auto self = static_cast<HardwareModuleStub const*>(module);
     self->mock_hw_device.close = hw_close;
@@ -49,39 +49,39 @@ int mt::HardwareModuleStub::hw_open(const struct hw_module_t* module, const char
     return 0;
 }
 
-int mt::HardwareModuleStub::hw_close(struct hw_device_t*)
+int mtd::HardwareModuleStub::hw_close(struct hw_device_t*)
 {
     open_count--;
     return 0;
 }
 
-mt::FailingHardwareModuleStub::FailingHardwareModuleStub()
+mtd::FailingHardwareModuleStub::FailingHardwareModuleStub()
 {
     gr_methods.open = hw_open;
     methods = &gr_methods; 
 }
 
-int mt::FailingHardwareModuleStub::hw_open(const struct hw_module_t*, const char*, struct hw_device_t**)
+int mtd::FailingHardwareModuleStub::hw_open(const struct hw_module_t*, const char*, struct hw_device_t**)
 {
     return -1;
 }
 
-int mt::FailingHardwareModuleStub::hw_close(struct hw_device_t*)
+int mtd::FailingHardwareModuleStub::hw_close(struct hw_device_t*)
 {
     return 0;
 }
 
-mt::HardwareAccessMock::HardwareAccessMock()
+mtd::HardwareAccessMock::HardwareAccessMock()
 {
     using namespace testing;
-    assert(global_hw_mock == NULL && "Only one mock object per process is allowed");
-    global_hw_mock = this;
+    assert(global_mock_android_hw == NULL && "Only one mock object per process is allowed");
+    global_mock_android_hw = this;
 
     mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocDevice>>();
-    mock_gralloc_module = std::make_shared<mt::HardwareModuleStub>(mock_alloc_device->common);
+    mock_gralloc_module = std::make_shared<mtd::HardwareModuleStub>(mock_alloc_device->common);
 
     mock_hwc_device = std::make_shared<NiceMock<mtd::MockHWCComposerDevice1>>();
-    mock_hwc_module = std::make_shared<mt::HardwareModuleStub>(mock_hwc_device->common);
+    mock_hwc_module = std::make_shared<mtd::HardwareModuleStub>(mock_hwc_device->common);
 
     ON_CALL(*this, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID),_))
         .WillByDefault(DoAll(SetArgPointee<1>(mock_gralloc_module.get()), Return(0)));
@@ -91,23 +91,23 @@ mt::HardwareAccessMock::HardwareAccessMock()
     open_count.store(0);
 }
 
-bool mt::HardwareAccessMock::open_count_matches_close()
+bool mtd::HardwareAccessMock::open_count_matches_close()
 {
     return (open_count == 0);
 }
 
-mt::HardwareAccessMock::~HardwareAccessMock()
+mtd::HardwareAccessMock::~HardwareAccessMock()
 {
-    global_hw_mock = NULL;
+    global_mock_android_hw = NULL;
 }
 
 int hw_get_module(const char *id, const struct hw_module_t **module)
 {
-    if (!global_hw_mock)
+    if (!global_mock_android_hw)
     {
         ADD_FAILURE_AT(__FILE__,__LINE__); \
         return -1;
     }
-    int rc =  global_hw_mock->hw_get_module(id, module);
+    int rc =  global_mock_android_hw->hw_get_module(id, module);
     return rc;
 }

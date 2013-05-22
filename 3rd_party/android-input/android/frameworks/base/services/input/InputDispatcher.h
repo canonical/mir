@@ -785,7 +785,7 @@ private:
         virtual ~Connection();
 
     public:
-        enum Status {
+        enum ConnStatus {
             // Everything is peachy.
             STATUS_NORMAL,
             // An unrecoverable communication error has occurred.
@@ -794,7 +794,7 @@ private:
             STATUS_ZOMBIE
         };
 
-        Status status;
+        ConnStatus status;
         sp<InputChannel> inputChannel; // never null
         sp<InputWindowHandle> inputWindowHandle; // may be null
         bool monitor;
