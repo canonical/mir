@@ -89,7 +89,7 @@ public:
 
 }
 
-TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
+TEST(RenderingOperator, render_operator_saves_resources)
 {
     using namespace testing;
 
@@ -100,14 +100,22 @@ TEST(RenderingOperator, render_operator_holds_resources_over_its_lifetime)
     auto use_count_before1 = stub_renderer.resource1.use_count();
     auto use_count_before2 = stub_renderer.resource2.use_count();
     {
-        mc::RenderingOperator rendering_operator(stub_renderer);
+        std::vector<std::shared_ptr<void>> saved_resources;
 
-        rendering_operator(mock_renderable);
-        rendering_operator(mock_renderable);
-        rendering_operator(mock_renderable);
+        {
+            mc::RenderingOperator rendering_operator(
+                stub_renderer,
+                [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); });
+
+            rendering_operator(mock_renderable);
+            rendering_operator(mock_renderable);
+            rendering_operator(mock_renderable);
+        }
+
         EXPECT_EQ(use_count_before0 + 1, stub_renderer.resource0.use_count());
         EXPECT_EQ(use_count_before1 + 1, stub_renderer.resource1.use_count());
         EXPECT_EQ(use_count_before2 + 1, stub_renderer.resource2.use_count());
+        EXPECT_EQ(3u, saved_resources.size());
     }
 
     EXPECT_EQ(use_count_before0, stub_renderer.resource0.use_count());
@@ -120,5 +128,5 @@ TEST(RenderingOperator, render_operator_ensures_no_live_texture_bound)
     MockRenderer mock_renderer;
     EXPECT_CALL(mock_renderer, ensure_no_live_buffers_bound())
         .Times(1);
-    mc::RenderingOperator rendering_operator(mock_renderer);
+    mc::RenderingOperator rendering_operator(mock_renderer, [](std::shared_ptr<void> const&) {});
 }

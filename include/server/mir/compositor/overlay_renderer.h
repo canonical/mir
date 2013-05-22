@@ -19,6 +19,9 @@
 #ifndef MIR_COMPOSITOR_OVERLAY_RENDERER_H_
 #define MIR_COMPOSITOR_OVERLAY_RENDERER_H_
 
+#include <functional>
+#include <memory>
+
 namespace mir
 {
 namespace geometry
@@ -34,7 +37,9 @@ class OverlayRenderer
 public:
     virtual ~OverlayRenderer() = default;
 
-    virtual void render(geometry::Rectangle const& view_area) = 0;
+    virtual void render(
+        geometry::Rectangle const& view_area,
+        std::function<void(std::shared_ptr<void> const&)> save_resource) = 0;
 
 protected:
     OverlayRenderer() = default;

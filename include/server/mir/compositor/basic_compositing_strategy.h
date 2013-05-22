@@ -22,6 +22,9 @@
 
 #include "mir/compositor/compositing_strategy.h"
 
+#include <functional>
+#include <memory>
+
 namespace mir
 {
 namespace graphics
@@ -41,9 +44,9 @@ class BasicCompositingStrategy : public CompositingStrategy
 public:
 
     virtual void render(graphics::DisplayBuffer& display_buffer);
-    virtual void compose_renderables(mir::geometry::Rectangle const& view_area) = 0;
-
-private:
+    virtual void compose_renderables(
+        mir::geometry::Rectangle const& view_area,
+        std::function<void(std::shared_ptr<void> const&)> save_resource) = 0;
 };
 }
 }

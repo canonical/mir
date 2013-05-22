@@ -48,7 +48,7 @@ struct MockRenderables : mc::Renderables
 
 struct MockOverlayRenderer : public mc::OverlayRenderer
 {
-    MOCK_METHOD1(render, void(geom::Rectangle const&));
+    MOCK_METHOD2(render, void(geom::Rectangle const&, std::function<void(std::shared_ptr<void> const&)>));
 
     ~MockOverlayRenderer() noexcept {}
 };
@@ -128,7 +128,7 @@ TEST(DefaultCompositingStrategy, render_overlay)
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(geom::Rectangle()));
     
-    EXPECT_CALL(overlay_renderer, render(_)).Times(1);
+    EXPECT_CALL(overlay_renderer, render(_, _)).Times(1);
 
     comp.render(display_buffer);
 }

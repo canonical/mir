@@ -20,6 +20,8 @@
 
 #include "mir/graphics/display_buffer.h"
 
+#include <vector>
+
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
@@ -29,9 +31,13 @@ namespace mg = mir::graphics;
 //      much churn for this refactoring.
 void mc::BasicCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
 {
+    // preserves buffers used in rendering until after post_update()
+    std::vector<std::shared_ptr<void>> saved_resources;
+    auto save_resource = [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); };
+
     display_buffer.make_current();
 
-    compose_renderables(display_buffer.view_area());
+    compose_renderables(display_buffer.view_area(), save_resource);
 
     display_buffer.post_update();
 }

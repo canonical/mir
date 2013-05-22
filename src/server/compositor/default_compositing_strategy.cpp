@@ -62,13 +62,15 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 }
 
-void mc::DefaultCompositingStrategy::compose_renderables(mir::geometry::Rectangle const& view_area)
+void mc::DefaultCompositingStrategy::compose_renderables(
+    mir::geometry::Rectangle const& view_area,
+    std::function<void(std::shared_ptr<void> const&)> save_resource)
 {
     renderer->clear();
 
-    RenderingOperator applicator(*renderer);
+    RenderingOperator applicator(*renderer, save_resource);
     FilterForVisibleRenderablesInRegion selector(view_area);
     renderables->for_each_if(selector, applicator);
 
-    overlay_renderer->render(view_area);
+    overlay_renderer->render(view_area, save_resource);
 }
