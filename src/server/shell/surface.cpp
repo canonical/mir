@@ -163,7 +163,6 @@ std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
     }
 }
 
-// TODO: Update these tests ~racarr
 bool msh::Surface::supports_input() const
 {
     if (auto const& s = surface.lock())

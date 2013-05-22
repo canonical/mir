@@ -344,6 +344,22 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
     });
 }
 
+TEST_F(ShellSurface, input_fds_throw_behavior)
+{
+    msh::Surface test(
+            mt::fake_shared(surface_builder),
+            msh::a_surface());
+
+    surface_builder.reset_surface();
+
+    EXPECT_THROW({
+            test.server_input_fd();
+    }, std::runtime_error);
+    EXPECT_THROW({
+            test.client_input_fd();
+    }, std::runtime_error);
+}
+
 TEST_F(ShellSurface, attributes)
 {
     using namespace testing;
