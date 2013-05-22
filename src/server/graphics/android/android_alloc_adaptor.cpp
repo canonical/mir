@@ -31,7 +31,7 @@ namespace
 {
 struct AndroidBufferHandleDeleter
 {
-    AndroidBufferHandleDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
+    AndroidBufferHandleDeleter(std::shared_ptr<alloc_device_t> const& alloc_dev)
         : alloc_device(alloc_dev)
     {}
 
@@ -41,7 +41,7 @@ struct AndroidBufferHandleDeleter
         delete t;
     }
 private:
-    std::shared_ptr<alloc_device_t> alloc_device;
+    std::shared_ptr<alloc_device_t> const alloc_device;
 };
 
 static void incRef(android_native_base_t*)
