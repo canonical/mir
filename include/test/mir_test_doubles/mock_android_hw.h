@@ -15,8 +15,8 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_HWC_DEVICE_H_
-#define MIR_TEST_DOUBLES_MOCK_ANDROID_HWC_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_HW_H_
+#define MIR_TEST_DOUBLES_MOCK_ANDROID_HW_H_
 
 #include "mir_test_doubles/mock_android_alloc_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
@@ -28,6 +28,8 @@
 namespace mir
 {
 namespace test
+{
+namespace doubles
 {
 
 typedef struct hw_module_t hw_module;
@@ -70,5 +72,6 @@ public:
 
 }
 }
+}
 
-#endif /* MIR_TEST_DOUBLES_MOCK_ANDROID_HWC_DEVICE_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_ANDROID_HW_H_ */

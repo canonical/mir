@@ -24,8 +24,8 @@
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
-#include "mir_test/egl_mock.h"
-#include "mir_test/gl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_buffer_initializer.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir/graphics/null_display_report.h"
@@ -59,7 +59,7 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
 
-        typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+        typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
 
         ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
@@ -82,8 +82,8 @@ protected:
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
-    ::testing::NiceMock<mir::EglMock> mock_egl;
-    ::testing::NiceMock<mir::GLMock> mock_gl;
+    ::testing::NiceMock<mtd::MockEGL> mock_egl;
+    ::testing::NiceMock<mtd::MockGL> mock_gl;
     std::shared_ptr<mgg::GBMPlatform> platform;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferInitializer>> mock_buffer_initializer;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
@@ -230,7 +230,7 @@ TEST_F(GBMBufferAllocatorTest, throws_on_buffer_creation_failure)
 TEST_F(GBMBufferAllocatorTest, constructor_throws_if_egl_image_not_supported)
 {
     using namespace testing;
-    typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+    typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
 
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
@@ -245,7 +245,7 @@ TEST_F(GBMBufferAllocatorTest, constructor_throws_if_egl_image_not_supported)
 TEST_F(GBMBufferAllocatorTest, constructor_throws_if_gl_oes_egl_image_not_supported)
 {
     using namespace testing;
-    typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+    typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
 
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));

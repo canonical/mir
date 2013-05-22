@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_MIR_TEST_GL_MOCK_H_
-#define MIR_MIR_TEST_GL_MOCK_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_GL_H_
+#define MIR_TEST_DOUBLES_MOCK_GL_H_
 
 #include <gmock/gmock.h>
 
@@ -28,11 +28,16 @@
 
 namespace mir
 {
-class GLMock
+namespace test
+{
+namespace doubles
+{
+
+class MockGL
 {
 public:
-    GLMock();
-    ~GLMock();
+    MockGL();
+    ~MockGL();
     void silence_uninteresting();
 
     MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
@@ -68,6 +73,9 @@ public:
     MOCK_METHOD4(glGetProgramInfoLog, void (GLuint, GLsizei, GLsizei *, GLchar *));
     MOCK_METHOD9(glTexImage2D, void(GLenum,GLint,GLint,GLsizei,GLsizei,GLint,GLenum,GLenum,const GLvoid*));
 };
+
+}
+}
 }
 
-#endif /* MIR_MIR_TEST_GL_MOCK_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_GL_H_ */

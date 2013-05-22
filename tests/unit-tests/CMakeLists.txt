@@ -34,10 +34,9 @@ target_link_libraries(
   mirlogging
 
   mir-test-doubles
+  mir-test-doubles-platform
 
   3rd_party
-
-  mirtest_eglmock
 
   ${PROTOBUF_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
