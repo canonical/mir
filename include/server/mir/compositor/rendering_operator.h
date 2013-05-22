@@ -20,7 +20,9 @@
 
 #include "mir/graphics/renderer.h"
 #include "mir/compositor/renderables.h"
-#include <vector>
+
+#include <functional>
+#include <memory>
 
 namespace mir
 {
@@ -32,15 +34,14 @@ class Renderable;
 class RenderingOperator : public OperatorForRenderables
 {
 public:
-    explicit RenderingOperator(graphics::Renderer& renderer);
+    explicit RenderingOperator(graphics::Renderer& renderer, std::function<void(std::shared_ptr<void> const&)> save_resource);
     ~RenderingOperator();
 
     void operator()(graphics::Renderable& renderable);
 
 private:
     graphics::Renderer& renderer;
-
-    std::vector<std::shared_ptr<void>> resources;
+    std::function<void(std::shared_ptr<void> const&)> save_resource;
 };
 
 }

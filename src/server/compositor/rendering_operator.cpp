@@ -20,8 +20,11 @@
 
 namespace mc=mir::compositor;
 
-mc::RenderingOperator::RenderingOperator(graphics::Renderer& renderer)
-    : renderer(renderer)
+mc::RenderingOperator::RenderingOperator(
+    graphics::Renderer& renderer,
+    std::function<void(std::shared_ptr<void> const&)> save_resource) :
+    renderer(renderer),
+    save_resource(save_resource)
 {
 }
 
@@ -32,7 +35,5 @@ mc::RenderingOperator::~RenderingOperator()
 
 void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
 {
-    renderer.render(
-        [&](std::shared_ptr<void> const& r) { resources.push_back(r); },
-        renderable);
+    renderer.render(save_resource, renderable);
 }

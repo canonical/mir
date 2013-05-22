@@ -87,6 +87,8 @@ public:
     {
     }
 
+    void clear() {}
+
     void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&)
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;

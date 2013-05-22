@@ -255,3 +255,9 @@ void mg::GLRenderer::ensure_no_live_buffers_bound()
     static int emptytexture;
     glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE, &emptytexture);
 }
+
+void mg::GLRenderer::clear()
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+

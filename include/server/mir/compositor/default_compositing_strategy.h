@@ -19,8 +19,7 @@
 #ifndef MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
 #define MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
 
-#include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/basic_compositing_strategy.h"
 
 #include <memory>
 
@@ -35,16 +34,19 @@ class Renderer;
 namespace compositor
 {
 class OverlayRenderer;
+class Renderables;
 
-class DefaultCompositingStrategy : public CompositingStrategy
+class DefaultCompositingStrategy : public BasicCompositingStrategy
 {
 public:
-    explicit DefaultCompositingStrategy(
+    DefaultCompositingStrategy(
         std::shared_ptr<Renderables> const& renderables,
         std::shared_ptr<graphics::Renderer> const& renderer,
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
-    virtual void render(graphics::DisplayBuffer& display_buffer);
+    void compose_renderables(
+        mir::geometry::Rectangle const& view_area,
+        std::function<void(std::shared_ptr<void> const&)> save_resource);
 
 private:
     std::shared_ptr<Renderables> const renderables;

@@ -122,7 +122,7 @@ class StubGraphicPlatform : public mg::Platform
     {
         return std::shared_ptr<mg::InternalClient>();   
     }
-    
+
     void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
                           std::shared_ptr<mc::Buffer> const&) const
     {
@@ -137,10 +137,12 @@ public:
         // Need to acquire the texture to cycle buffers
         r.graphic_region();
     }
-    
+
     void ensure_no_live_buffers_bound()
     {
     }
+
+    void clear() {}
 };
 
 struct StubInputChannel : public mi::InputChannel

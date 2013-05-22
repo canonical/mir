@@ -46,7 +46,6 @@ public:
                std::shared_ptr<DisplayReport> const&);
 
     geometry::Rectangle view_area() const;
-    void clear();
     void post_update();
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
     std::shared_ptr<DisplayConfiguration> configuration();
