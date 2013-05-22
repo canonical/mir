@@ -219,7 +219,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (session_mediator_report_opt, po::value<std::string>(),
             "How to handle the SessionMediator report. [{log,off}:default=off]")
         (msg_processor_report_opt, po::value<std::string>(),
-            "How to handle the MessageProcessor report. [{log,off}:default=off]")
+            "How to handle the MessageProcessor report. [{log,lttng,off}:default=off]")
         (glog,
             "Use google::GLog for logging")
         (glog_stderrthreshold, po::value<int>(),
