@@ -625,7 +625,7 @@ mir::DefaultServerConfiguration::the_message_processor_report()
             }
             else if (mp_report == lttng_opt_value)
             {
-                return std::make_shared<mir::lttng::MessageProcessorReport>();
+                return std::make_shared<mir::lttng::MessageProcessorReport>(the_logger());
             }
             else
             {
