@@ -44,7 +44,8 @@ void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::SurfaceTar
 
     // TODO: We don't have much use for InputApplicationHandle so we simply use one per surface.
     // it is only used in droidinput for logging and determining application not responding (ANR),
-    // we determine ANR on a per surface basis. ~racarr
+    // we determine ANR on a per surface basis. When we have time we should factor InputApplicationHandle out
+    // of the input stack (merging it's state with WindowHandle). ~racarr
     if (window_handles.find(opened_surface) != window_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened twice"));
 
