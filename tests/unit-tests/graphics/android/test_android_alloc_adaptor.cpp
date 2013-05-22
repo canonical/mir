@@ -27,7 +27,6 @@
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
@@ -58,7 +57,6 @@ public:
 
     geom::PixelFormat pf;
     geom::Size size;
-    std::shared_ptr<mga::AndroidBufferHandle> buffer_data;
     mga::BufferUsage usage;
     int const fb_usage_flags;
     int const hw_usage_flags;
@@ -75,7 +73,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_ret)
                   Return(-1)));
 
     EXPECT_THROW({
-        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage);
+        alloc_adaptor->alloc_buffer(size, pf, usage);
     }, std::runtime_error);
 }
 
@@ -89,7 +87,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_stride)
                   Return(0)));
 
     EXPECT_THROW({
-        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage);
+        alloc_adaptor->alloc_buffer(size, pf, usage);
     }, std::runtime_error);
 }
 
@@ -103,7 +101,7 @@ TEST_F(AdaptorICSTest, resource_type_test_fail_null_handle)
                   Return(0)));
 
     EXPECT_THROW({
-        buffer_data = alloc_adaptor->alloc_buffer(size, pf, usage);
+        alloc_adaptor->alloc_buffer(size, pf, usage);
     }, std::runtime_error);
 }
 
@@ -184,104 +182,67 @@ TEST_F(AdaptorICSTest, handle_size_is_correct)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
 
-    EXPECT_EQ(size, handle->size());
-}
-
-TEST_F(AdaptorICSTest, handle_usage_is_correct)
-{
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-
-    EXPECT_EQ(usage, handle->usage());
-}
-
-TEST_F(AdaptorICSTest, handle_format_is_correct)
-{
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-
-    EXPECT_EQ(pf, handle->format());
+    EXPECT_EQ(static_cast<int>(size.width.as_uint32_t()), handle->width);
+    EXPECT_EQ(static_cast<int>(size.height.as_uint32_t()), handle->height);
 }
 
 TEST_F(AdaptorICSTest, handle_stride_is_correct)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
 
-    EXPECT_EQ(mock_alloc_device->fake_stride, handle->stride().as_uint32_t());
-}
-
-TEST_F(AdaptorICSTest, handle_buffer_is_correct)
-{
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    EXPECT_EQ(mock_alloc_device->buffer_handle, buffer->handle);
+    EXPECT_EQ(static_cast<int>(mock_alloc_device->fake_stride), handle->stride);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_abgr_8888)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, buffer->format);
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, handle->format);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_pf_is_converted_to_android_xbgr_8888)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, geom::PixelFormat::xbgr_8888, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, buffer->format);
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, handle->format);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    EXPECT_EQ(hw_usage_flags, buffer->usage);
+    EXPECT_EQ(hw_usage_flags, handle->usage);
 }
 
 TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_fb)
 {
     auto handle = alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
-    auto buffer = handle->native_buffer_handle();
-
-    EXPECT_EQ(fb_usage_flags, buffer->usage);
+    EXPECT_EQ(fb_usage_flags, handle->usage);
 }
 
 TEST_F(AdaptorICSTest, handle_has_reffable_incref)
 {
     struct android_native_base_t *native_base = nullptr;
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    ASSERT_NE(nullptr, buffer->common.incRef);
-    buffer->common.incRef(native_base);
+    ASSERT_NE(nullptr, handle->common.incRef);
+    handle->common.incRef(native_base);
 }
 
 TEST_F(AdaptorICSTest, handle_has_reffable_decref)
 {
     struct android_native_base_t *native_base = nullptr;
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    ASSERT_NE(nullptr, buffer->common.decRef);
-    buffer->common.decRef(native_base);
+    ASSERT_NE(nullptr, handle->common.decRef);
+    handle->common.decRef(native_base);
 }
 
 TEST_F(AdaptorICSTest, handle_has_right_magic)
 {
     int magic = ANDROID_NATIVE_MAKE_CONSTANT('_','b','f','r');  /* magic value shared by JB and ICS */
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    EXPECT_EQ(magic, buffer->common.magic);
+    EXPECT_EQ(magic, handle->common.magic);
 }
 
 TEST_F(AdaptorICSTest, handle_has_version)
 {
     int version = 96;  /* version value shared by JB and ICS */
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
-    auto buffer = handle->native_buffer_handle();
-
-    EXPECT_EQ(version, buffer->common.version);
+    EXPECT_EQ(version, handle->common.version);
 }

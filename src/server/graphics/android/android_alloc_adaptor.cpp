@@ -18,7 +18,6 @@
  */
 
 #include "android_alloc_adaptor.h"
-#include "android_buffer_handle_default.h"
 #include "android_format_conversion-inl.h"
 
 #include <boost/throw_exception.hpp>
@@ -26,32 +25,23 @@
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 namespace
 {
-struct AndroidBufferHandleDefaultDeleter
+struct AndroidBufferHandleDeleter
 {
-    AndroidBufferHandleDefaultDeleter(std::shared_ptr<alloc_device_t> alloc_dev)
+    AndroidBufferHandleDeleter(std::shared_ptr<alloc_device_t> const& alloc_dev)
         : alloc_device(alloc_dev)
     {}
 
-    void operator()(mga::AndroidBufferHandleDefault* t)
+    void operator()(ANativeWindowBuffer* t)
     {
-        auto anw_buffer = t->native_buffer_handle();
-        alloc_device->free(alloc_device.get(), anw_buffer->handle);
+        alloc_device->free(alloc_device.get(), t->handle);
         delete t;
     }
 private:
-    std::shared_ptr<alloc_device_t> alloc_device;
-};
-
-struct AndroidBufferHandleEmptyDeleter
-{
-    void operator()(mga::AndroidBufferHandle*)
-    {
-    }
+    std::shared_ptr<alloc_device_t> const alloc_device;
 };
 
 static void incRef(android_native_base_t*)
@@ -60,12 +50,11 @@ static void incRef(android_native_base_t*)
 }
 
 mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device)
-    :
-    alloc_dev(alloc_device)
+    : alloc_dev(alloc_device)
 {
 }
 
-std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer(
+std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     geometry::Size size, geometry::PixelFormat pf, BufferUsage usage)
 {
     buffer_handle_t buf_handle = NULL;
@@ -83,7 +72,7 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     }
 
     /* pack ANativeWindow buffer for the handle */
-    auto buffer = std::make_shared<ANativeWindowBuffer>();
+    auto buffer =  new ANativeWindowBuffer;
     buffer->width = width;
     buffer->height = height;
     buffer->stride = stride;
@@ -98,9 +87,8 @@ std::shared_ptr<mga::AndroidBufferHandle> mga::AndroidAllocAdaptor::alloc_buffer
     buffer->common.magic = ANDROID_NATIVE_BUFFER_MAGIC;
     buffer->common.version = sizeof(ANativeWindowBuffer);
 
-    AndroidBufferHandleDefaultDeleter del(alloc_dev);
-    auto handle = std::shared_ptr<mga::AndroidBufferHandle>(
-                      new mga::AndroidBufferHandleDefault(buffer, pf, usage), del);
+    AndroidBufferHandleDeleter del(alloc_dev);
+    auto handle = std::shared_ptr<ANativeWindowBuffer>(buffer, del);
 
     return handle;
 }

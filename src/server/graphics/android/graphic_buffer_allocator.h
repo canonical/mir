@@ -21,7 +21,7 @@
 #define MIR_GRAPHICS_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "android_buffer_handle.h"
+#include "buffer_usage.h"
 
 namespace mir
 {
