@@ -18,18 +18,33 @@
 
 #include "mir/surfaces/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/input/input_channel.h"
+
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <stdexcept>
 
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
+
+namespace
+{
+struct MockInputChannel : public mi::InputChannel
+{
+    MOCK_CONST_METHOD0(server_fd, int());
+    MOCK_CONST_METHOD0(client_fd, int());
+};
+}
 
 TEST(SurfaceCreationParametersTest, default_creation_parameters)
 {
@@ -403,5 +418,29 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
     ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
     surf.force_requests_to_complete();
+}
 
+TEST_F(SurfaceCreation, input_fds)
+{
+    using namespace testing;
+    
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb};
+    EXPECT_THROW({
+            surf.server_input_fd();
+    }, std::logic_error);
+    EXPECT_THROW({
+            surf.client_input_fd();
+    }, std::logic_error);
+
+    MockInputChannel channel;
+    int const client_fd = 13;
+    int const server_fd = 19;
+    EXPECT_CALL(channel, client_fd()).Times(1).WillOnce(Return(client_fd));
+    EXPECT_CALL(channel, server_fd()).Times(1).WillOnce(Return(server_fd));
+
+    ms::Surface input_surf{surface_name, geom::Point(), mock_buffer_bundle,
+        mt::fake_shared(channel), mock_change_cb};
+    EXPECT_EQ(client_fd, input_surf.client_input_fd());
+    EXPECT_EQ(server_fd, input_surf.server_input_fd());
 }

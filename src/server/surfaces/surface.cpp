@@ -190,13 +190,16 @@ bool ms::Surface::supports_input() const
     return false;
 }
 
-// TODO: Test, perhaps restore exceptions ~racarr
 int ms::Surface::client_input_fd() const
 {
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return input_channel->client_fd();
 }
 
 int ms::Surface::server_input_fd() const
 {
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return input_channel->server_fd();
 }

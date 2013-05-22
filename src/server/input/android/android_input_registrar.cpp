@@ -67,7 +67,6 @@ void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTar
     window_handles.erase(it);
 }
 
-// TODO: Test behavior ~racarr
 droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface)
 {
     if (window_handles.find(surface) == window_handles.end())
