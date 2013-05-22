@@ -18,13 +18,14 @@
 
 #include "mir/logging/display_report.h"
 #include "mir/logging/logger.h"
-#include "mir_test/egl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <string>
 
 namespace ml  = mir::logging;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -47,7 +48,7 @@ struct DisplayReport : public testing::Test
     }
 
     std::shared_ptr<MockLogger> logger;
-    mir::EglMock mock_egl;
+    mtd::MockEGL mock_egl;
 };
 
 char const* const component = "graphics";

@@ -19,7 +19,7 @@
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "src/server/graphics/android/fb_device.h"
-#include "mir_test/hw_mock.h"
+#include "mir_test_doubles/mock_android_hw.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -54,7 +54,7 @@ struct FBDevice : public ::testing::Test
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<ANativeWindowBuffer> dummy_buffer;
-    mt::HardwareAccessMock hw_access_mock;
+    mtd::HardwareAccessMock hw_access_mock;
 };
 
 TEST_F(FBDevice, set_next_frontbuffer_ok)

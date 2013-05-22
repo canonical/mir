@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
 
-#include "mir_test/hw_mock.h"
+#include "mir_test_doubles/mock_android_hw.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -68,7 +68,7 @@ public:
     std::shared_ptr<MockAndroidGraphicBufferAllocator> mock_buffer_allocator;
     std::shared_ptr<mtd::MockDisplaySupportProvider> mock_display_info_provider;
     unsigned int const fake_fb_num;
-    mt::HardwareAccessMock hw_access_mock;
+    mtd::HardwareAccessMock hw_access_mock;
 };
 
 TEST_F(FBFactory, test_native_window_creation_figures_out_fb_number)
