@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_MIR_TEST_EGL_MOCK_H_
-#define MIR_MIR_TEST_EGL_MOCK_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_EGL_H_
+#define MIR_TEST_DOUBLES_MOCK_EGL_H_
 
 #include <gmock/gmock.h>
 
@@ -28,11 +28,16 @@
 
 namespace mir
 {
-class EglMock
+namespace test
+{
+namespace doubles
+{
+
+class MockEGL
 {
 public:
-    EglMock();
-    ~EglMock();
+    MockEGL();
+    ~MockEGL();
     void silence_uninteresting();
 
     typedef void (*generic_function_pointer_t)(void);
@@ -91,6 +96,9 @@ public:
     EGLImageKHR fake_egl_image;
     int fake_visual_id;
 };
+
+}
+}
 }
 
-#endif /* MIR_MIR_TEST_EGL_MOCK_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_EGL_H_ */

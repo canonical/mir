@@ -20,15 +20,15 @@
 #include "mir/graphics/platform.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir_test/egl_mock.h"
-#include "mir_test/gl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 #else
-#include "mir_test/hw_mock.h"
+#include "mir_test_doubles/mock_android_hw.h"
 #endif
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -61,7 +61,7 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 
-        typedef mir::EglMock::generic_function_pointer_t func_ptr_t;
+        typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
 
         ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
             .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
@@ -86,10 +86,10 @@ public:
     std::shared_ptr<ml::Logger> logger;
     std::shared_ptr<mg::BufferInitializer> buffer_initializer;
 
-    ::testing::NiceMock<mir::EglMock> mock_egl;
-    ::testing::NiceMock<mir::GLMock> mock_gl;
+    ::testing::NiceMock<mtd::MockEGL> mock_egl;
+    ::testing::NiceMock<mtd::MockGL> mock_gl;
 #ifdef ANDROID
-    ::testing::NiceMock<mir::test::HardwareAccessMock> hw_access_mock;
+    ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
 #else
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
