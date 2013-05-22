@@ -42,9 +42,8 @@ public:
     TestGrallocMapper();
     TestGrallocMapper(const hw_module_t *hw_module, alloc_device_t* alloc_dev);
     ~TestGrallocMapper();
-    std::shared_ptr<MirGraphicsRegion> get_graphic_region_from_package(
-                            const std::shared_ptr<compositor::BufferIPCPackage>& package,
-                            geometry::Size sz);
+    std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(
+                            std::shared_ptr<ANativeWindowBuffer> const& package);
 
 private:
     TestGrallocMapper(TestGrallocMapper const&) = delete;

@@ -38,6 +38,8 @@ public:
     void driver_returns_buffer(MirNativeBuffer*, std::shared_ptr<graphics::android::SyncObject> const&);
     void dispatch_driver_request_format(int format);
     int  driver_requests_info(int key) const;
+    void sync_to_display(bool);
+
 private:
     ClientSurface& surface;
     int driver_pixel_format;

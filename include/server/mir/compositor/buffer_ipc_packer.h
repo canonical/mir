@@ -16,36 +16,27 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
+#define MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
 
-#include "display_support_provider.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
- 
+#include "mir/geometry/dimensions.h"
+
 namespace mir
 {
-namespace graphics
-{
-namespace android
+namespace compositor
 {
 
-class FBDevice : public DisplaySupportProvider 
+class BufferIPCPacker
 {
 public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
-
-    geometry::Size display_size() const; 
-    geometry::PixelFormat display_format() const; 
-    unsigned int number_of_framebuffers_available() const;
-
-    void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
-    void sync_to_display(bool sync);
-private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
+    BufferIPCPacker() {};
+    virtual ~BufferIPCPacker() = default;
+    virtual void pack_fd(int) = 0;
+    virtual void pack_data(int) = 0;
+    virtual void pack_stride(geometry::Stride) = 0;
 };
 
 }
 }
-}
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+
+#endif /* MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_ */

@@ -17,6 +17,7 @@
  */
 
 #include "hwc_common_device.h"
+#include "hwc_vsync_coordinator.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -41,9 +42,10 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 }
 }
 
-mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device)
-    : hwc_device(hwc_device), 
-      vsync_occurred(false)
+mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+                                      std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
+    : hwc_device(hwc_device),
+      coordinator(coordinator) 
 {
     callbacks.hooks.invalidate = invalidate_hook;
     callbacks.hooks.vsync = vsync_hook;
@@ -79,19 +81,7 @@ unsigned int mga::HWCCommonDevice::number_of_framebuffers_available() const
     return 2u;
 }
 
-void mga::HWCCommonDevice::wait_for_vsync()
-{
-    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
-    vsync_occurred = false;
-    while(!vsync_occurred)
-    {
-        vsync_trigger.wait(lk);
-    }
-}
-
 void mga::HWCCommonDevice::notify_vsync()
 {
-    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
-    vsync_occurred = true;
-    vsync_trigger.notify_all();
+    coordinator->notify_vsync();
 }

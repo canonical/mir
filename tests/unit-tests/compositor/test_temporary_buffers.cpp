@@ -149,15 +149,6 @@ TEST_F(TemporaryBuffersTest, base_bind_to_texture)
     proxy_buffer.bind_to_texture();
 }
 
-TEST_F(TemporaryBuffersTest, base_get_ipc_package)
-{
-    TemporaryTestBuffer proxy_buffer(mock_buffer);
-    EXPECT_CALL(*mock_buffer, get_ipc_package())
-        .Times(1);
-
-    proxy_buffer.get_ipc_package();
-}
-
 TEST_F(TemporaryBuffersTest, base_test_id)
 {
     TemporaryTestBuffer proxy_buffer(mock_buffer);

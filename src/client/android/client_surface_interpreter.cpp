@@ -51,7 +51,7 @@ void mcla::ClientSurfaceInterpreter::dispatch_driver_request_format(int format)
     driver_pixel_format = format;
 }
 
-int  mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
+int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
 {
     switch (key)
     {
@@ -68,4 +68,9 @@ int  mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
         default:
             throw std::runtime_error("driver requested unsupported query");
     }
+}
+
+void mcla::ClientSurfaceInterpreter::sync_to_display(bool)
+{
+    //note: clients run with the swapinterval of the display. ignore their request for now
 }

@@ -16,36 +16,30 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
-#define MIR_GRAPHICS_ANDROID_FB_DEVICE_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
+#define MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
 
-#include "display_support_provider.h"
-#include <hardware/gralloc.h>
-#include <hardware/fb.h>
- 
+#include "mir/compositor/buffer_ipc_packer.h"
+
+#include <gmock/gmock.h>
+
 namespace mir
 {
-namespace graphics
+namespace test
 {
-namespace android
+namespace doubles
 {
 
-class FBDevice : public DisplaySupportProvider 
+struct MockPacker : public compositor::BufferIPCPacker
 {
-public:
-    FBDevice(std::shared_ptr<framebuffer_device_t> const&);
-
-    geometry::Size display_size() const; 
-    geometry::PixelFormat display_format() const; 
-    unsigned int number_of_framebuffers_available() const;
-
-    void set_next_frontbuffer(std::shared_ptr<compositor::Buffer> const& buffer);
-    void sync_to_display(bool sync);
-private:
-    std::shared_ptr<framebuffer_device_t> const fb_device;
+    ~MockPacker() noexcept {}
+    MOCK_METHOD1(pack_fd, void(int));
+    MOCK_METHOD1(pack_data, void(int));
+    MOCK_METHOD1(pack_stride, void(geometry::Stride));
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_FB_DEVICE_H_ */
+
+#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_ */

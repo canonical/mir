@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,29 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- * Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
-#define MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_
+#include "hwc_vsync.h"
+namespace mga=mir::graphics::android;
 
-#include <vector>
-
-namespace mir
+mga::HWCVsync::HWCVsync()
+    : vsync_occurred(false)
 {
-namespace compositor
-{
-
-struct BufferIPCPackage
-{
-    virtual ~BufferIPCPackage() {}
-    std::vector<int32_t> ipc_data;
-    std::vector<int32_t> ipc_fds;
-    int32_t stride;
-};
-
 }
+    
+void mga::HWCVsync::wait_for_vsync()
+{
+    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
+    vsync_occurred = false;
+    while(!vsync_occurred)
+    {
+        vsync_trigger.wait(lk);
+    }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_IPC_PACKAGE_H_ */
+void mga::HWCVsync::notify_vsync()
+{
+    std::unique_lock<std::mutex> lk(vsync_wait_mutex);
+    vsync_occurred = true;
+    vsync_trigger.notify_all();
+}
