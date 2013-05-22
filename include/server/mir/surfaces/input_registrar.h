@@ -21,8 +21,6 @@
 
 #include <memory>
 
-// TODO: Move to surfaces namespace ~racarr
-
 namespace mir
 {
 namespace input
