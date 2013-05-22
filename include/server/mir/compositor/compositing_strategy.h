@@ -28,7 +28,7 @@ class DisplayBuffer;
 }
 namespace geometry
 {
-class Rectangle;
+struct Rectangle;
 }
 
 namespace compositor
