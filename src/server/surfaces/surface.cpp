@@ -182,7 +182,6 @@ void ms::Surface::flag_for_render()
     buffer_is_valid = true;
 }
 
-// TODO: Test ~racarr
 bool ms::Surface::supports_input() const
 {
     if (input_channel)

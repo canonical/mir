@@ -24,9 +24,8 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
-#include "mir/input/input_channel_factory.h"
-// TODO: Move ~racarr
 #include "mir/surfaces/input_registrar.h"
+#include "mir/input/input_channel_factory.h"
 
 #include <algorithm>
 #include <cassert>
@@ -37,7 +36,6 @@ namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-namespace msh = mir::shell; // TODO: Remove ~racarr
 namespace geom = mir::geometry;
 
 ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
