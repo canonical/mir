@@ -77,7 +77,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         new ms::Surface(
             params.name, params.top_left,
             buffer_bundle_factory->create_buffer_bundle(buffer_properties),
-            input_factory->make_input_channel(), // TODO: Test ~racarr
+            input_factory->make_input_channel(),
             [this]() { emit_change_notification(); }));
     
     {

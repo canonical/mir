@@ -28,6 +28,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel_factory.h"
+#include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test_doubles/stub_input_registrar.h"
@@ -117,6 +118,32 @@ struct StubInputChannelFactory : public mi::InputChannelFactory
     {
         return std::shared_ptr<mi::InputChannel>();
     }
+};
+
+struct StubInputChannel : public mi::InputChannel
+{
+    StubInputChannel(int server_fd, int client_fd)
+        : s_fd(server_fd),
+          c_fd(client_fd)
+    {
+    }
+    
+    int client_fd() const
+    {
+        return c_fd;
+    }
+    int server_fd() const
+    {
+        return s_fd;
+    }
+
+    int const s_fd;    
+    int const c_fd;
+};
+
+struct MockInputChannelFactory : public mi::InputChannelFactory
+{
+    MOCK_METHOD0(make_input_channel, std::shared_ptr<mi::InputChannel>());
 };
 
 }
@@ -385,4 +412,25 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     
     auto s = stack.create_surface(msh::a_surface());
     stack.destroy_surface(s);
+}
+
+TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
+{
+    using namespace ::testing;
+
+    int const server_input_fd = 11;
+    int const client_input_fd = 7;
+    
+    mtd::StubInputRegistrar registrar;
+    StubInputChannel input_channel(server_input_fd, client_input_fd);
+    MockInputChannelFactory input_factory;
+    
+    EXPECT_CALL(input_factory, make_input_channel()).Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+        mt::fake_shared(input_factory),
+            std::make_shared<mtd::StubInputRegistrar>()};
+
+    auto surface = stack.create_surface(msh::a_surface()).lock();
+    EXPECT_EQ(server_input_fd, surface->server_input_fd());
+    EXPECT_EQ(client_input_fd, surface->client_input_fd());
 }
