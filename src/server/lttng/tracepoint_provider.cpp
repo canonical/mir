@@ -39,7 +39,7 @@ mir::lttng::TracepointProvider::TracepointProvider()
     }
 }
 
-mir::lttng::TracepointProvider::~TracepointProvider()
+mir::lttng::TracepointProvider::~TracepointProvider() noexcept
 {
     dlclose(lib);
 }

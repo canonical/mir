@@ -28,7 +28,7 @@ class TracepointProvider
 {
 public:
     TracepointProvider();
-    ~TracepointProvider();
+    ~TracepointProvider() noexcept;
 
 private:
     void* lib;

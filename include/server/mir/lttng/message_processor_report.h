@@ -30,8 +30,6 @@ namespace lttng
 class MessageProcessorReport : public mir::frontend::MessageProcessorReport
 {
 public:
-    ~MessageProcessorReport() noexcept {}
-
     void received_invocation(void const* mediator, int id, std::string const& method);
     void completed_invocation(void const* mediator, int id, bool result);
     void unknown_method(void const* mediator, int id, std::string const& method);
