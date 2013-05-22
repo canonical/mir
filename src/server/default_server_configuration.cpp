@@ -60,6 +60,7 @@
 #include "mir/logging/session_mediator_report.h"
 #include "mir/logging/message_processor_report.h"
 #include "mir/logging/display_report.h"
+#include "mir/lttng/message_processor_report.h"
 #include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
@@ -151,6 +152,7 @@ bool const enable_input_default = true;
 
 char const* const off_opt_value = "off";
 char const* const log_opt_value = "log";
+char const* const lttng_opt_value = "lttng";
 
 void parse_arguments(
     boost::program_options::options_description desc,
@@ -217,7 +219,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (session_mediator_report_opt, po::value<std::string>(),
             "How to handle the SessionMediator report. [{log,off}:default=off]")
         (msg_processor_report_opt, po::value<std::string>(),
-            "How to handle the MessageProcessor report. [{log,off}:default=off]")
+            "How to handle the MessageProcessor report. [{log,lttng,off}:default=off]")
         (glog,
             "Use google::GLog for logging")
         (glog_stderrthreshold, po::value<int>(),
@@ -618,9 +620,14 @@ mir::DefaultServerConfiguration::the_message_processor_report()
     return message_processor_report(
         [this]() -> std::shared_ptr<mf::MessageProcessorReport>
         {
-            if (the_options()->get(msg_processor_report_opt, off_opt_value) == log_opt_value)
+            auto mp_report = the_options()->get(msg_processor_report_opt, off_opt_value);
+            if (mp_report == log_opt_value)
             {
                 return std::make_shared<ml::MessageProcessorReport>(the_logger(), the_time_source());
+            }
+            else if (mp_report == lttng_opt_value)
+            {
+                return std::make_shared<mir::lttng::MessageProcessorReport>();
             }
             else
             {
