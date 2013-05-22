@@ -218,7 +218,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
         {
             return DefaultServerConfiguration::the_input_targeter();
         }
-        std::shared_ptr<mir::shell::InputRegistrar> the_input_registrar() override
+        std::shared_ptr<mir::surfaces::InputRegistrar> the_input_registrar() override
         {
             return DefaultServerConfiguration::the_input_registrar();
         }

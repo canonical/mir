@@ -45,16 +45,12 @@ namespace input // TODO: Remove ~racarr
 class InputChannelFactory;
 }
 
-namespace shell
-{
-class InputRegistrar; // TODO: Move to surfaces namespace
-}
-
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
 class BufferBundleFactory;
+class InputRegistrar;
 class Surface;
 
 class SurfaceStack : public compositor::Renderables, public SurfaceStackModel
@@ -62,7 +58,7 @@ class SurfaceStack : public compositor::Renderables, public SurfaceStackModel
 public:
     explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
                           std::shared_ptr<input::InputChannelFactory> const& input_factory,
-                          std::shared_ptr<shell::InputRegistrar> const& input_registrar);
+                          std::shared_ptr<InputRegistrar> const& input_registrar);
     virtual ~SurfaceStack() = default;
 
     // From Renderables
@@ -83,7 +79,7 @@ private:
     std::mutex guard;
     std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
-    std::shared_ptr<shell::InputRegistrar> const input_registrar;
+    std::shared_ptr<InputRegistrar> const input_registrar;
     std::vector<std::shared_ptr<Surface>> surfaces;
     std::mutex notify_change_mutex;
     std::function<void()> notify_change;

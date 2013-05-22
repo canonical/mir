@@ -36,7 +36,7 @@ namespace droidinput = android;
 
 namespace mir
 {
-namespace shell
+namespace surfaces
 {
 class InputRegistrar;
 }
@@ -51,7 +51,7 @@ class InputTargeter : public shell::InputTargeter
 {
 public:
     explicit InputTargeter(std::shared_ptr<InputConfiguration> const& input_configuration,
-                           std::shared_ptr<shell::InputRegistrar> const& input_registrar);
+                           std::shared_ptr<surfaces::InputRegistrar> const& input_registrar);
     virtual ~InputTargeter() noexcept(true) {}
     
     void focus_changed(std::shared_ptr<input::SurfaceTarget const> const& focus_surface);

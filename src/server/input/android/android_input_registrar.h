@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_ANDROID_REGISTRAR_H_
 #define MIR_INPUT_ANDROID_REGISTRAR_H_
 
-#include "mir/shell/input_registrar.h"
+#include "mir/surfaces/input_registrar.h"
 
 #include <utils/StrongPointer.h>
 
@@ -43,7 +43,7 @@ namespace android
 class InputConfiguration;
 class InputTargeter;
 
-class InputRegistrar : public shell::InputRegistrar
+class InputRegistrar : public surfaces::InputRegistrar
 {
 public:
     explicit InputRegistrar(std::shared_ptr<InputConfiguration> const& input_configuration);

@@ -50,6 +50,7 @@ namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -284,7 +285,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
     std::shared_ptr<mia::InputManager> input_manager;
-    std::shared_ptr<msh::InputRegistrar> input_registrar;
+    std::shared_ptr<ms::InputRegistrar> input_registrar;
     std::shared_ptr<msh::InputTargeter> input_targeter;
 };
 

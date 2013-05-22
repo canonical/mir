@@ -666,10 +666,10 @@ std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_t
         });
 }
 
-std::shared_ptr<msh::InputRegistrar> mir::DefaultServerConfiguration::the_input_registrar()
+std::shared_ptr<ms::InputRegistrar> mir::DefaultServerConfiguration::the_input_registrar()
 {
     return input_registrar(
-        [&]() -> std::shared_ptr<msh::InputRegistrar>
+        [&]() -> std::shared_ptr<ms::InputRegistrar>
         {
             if (the_options()->get("enable-input", enable_input_default))
                 return std::make_shared<mia::InputRegistrar>(the_input_configuration());

@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_INPUT_REGISTRAR_H_
-#define MIR_SHELL_INPUT_REGISTRAR_H_
+#ifndef MIR_SURFACES_INPUT_REGISTRAR_H_
+#define MIR_SURFACES_INPUT_REGISTRAR_H_
 
 #include <memory>
 
@@ -31,7 +31,7 @@ class SessionTarget;
 class SurfaceTarget;
 }
 
-namespace shell
+namespace surfaces
 {
 
 class InputRegistrar
@@ -51,4 +51,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_SHELL_INPUT_REGISTRAR_H_
+#endif // MIR_SURFACES_INPUT_REGISTRAR_H_

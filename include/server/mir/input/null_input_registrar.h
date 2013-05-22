@@ -19,14 +19,14 @@
 #ifndef MIR_INPUT_NULL_INPUT_REGISTRAR_H_
 #define MIR_INPUT_NULL_INPUT_REGISTRAR_H_
 
-#include "mir/shell/input_registrar.h"
+#include "mir/surfaces/input_registrar.h"
 
 namespace mir
 {
 namespace input
 {
 
-class NullInputRegistrar : public shell::InputRegistrar
+class NullInputRegistrar : public surfaces::InputRegistrar
 {
 public:
     NullInputRegistrar() {};

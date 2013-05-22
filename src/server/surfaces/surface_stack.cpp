@@ -26,7 +26,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/input/input_channel_factory.h"
 // TODO: Move ~racarr
-#include "mir/shell/input_registrar.h"
+#include "mir/surfaces/input_registrar.h"
 
 #include <algorithm>
 #include <cassert>
@@ -42,7 +42,7 @@ namespace geom = mir::geometry;
 
 ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
                                std::shared_ptr<mi::InputChannelFactory> const& input_factory,
-                               std::shared_ptr<msh::InputRegistrar> const& input_registrar)
+                               std::shared_ptr<ms::InputRegistrar> const& input_registrar)
     : buffer_bundle_factory{bb_factory},
       input_factory{input_factory},
       input_registrar{input_registrar},

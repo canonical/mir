@@ -45,6 +45,7 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace ms = mir::surfaces;
 namespace mia = mir::input::android;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
@@ -202,7 +203,7 @@ std::shared_ptr<msh::InputTargeter> mtf::TestingServerConfiguration::the_input_t
         return std::make_shared<mi::NullInputTargeter>();
 }
 
-std::shared_ptr<msh::InputRegistrar> mtf::TestingServerConfiguration::the_input_registrar()
+std::shared_ptr<ms::InputRegistrar> mtf::TestingServerConfiguration::the_input_registrar()
 {
     auto options = the_options();
  

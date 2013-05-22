@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_INPUT_REGISTRAR_H_
 #define MIR_TEST_DOUBLES_MOCK_INPUT_REGISTRAR_H_
 
-#include "mir/shell/input_registrar.h"
+#include "mir/surfaces/input_registrar.h"
 
 #include <gmock/gmock.h>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockInputRegistrar : public shell::InputRegistrar
+struct MockInputRegistrar : public surfaces::InputRegistrar
 {
     virtual ~MockInputRegistrar() noexcept(true) {}
     MOCK_METHOD1(input_surface_opened, void(std::shared_ptr<input::SurfaceTarget> const& opened_surface));

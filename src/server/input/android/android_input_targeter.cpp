@@ -33,10 +33,10 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace msh = mir::shell;
+namespace ms = mir::surfaces;
 
 mia::InputTargeter::InputTargeter(std::shared_ptr<mia::InputConfiguration> const& config,
-                                  std::shared_ptr<msh::InputRegistrar> const& input_registrar) :
+                                  std::shared_ptr<ms::InputRegistrar> const& input_registrar) :
     input_dispatcher(config->the_dispatcher()),
     input_registrar(std::dynamic_pointer_cast<mia::InputRegistrar>(input_registrar))
 {

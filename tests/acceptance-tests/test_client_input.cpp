@@ -48,6 +48,7 @@ namespace mia = mi::android;
 namespace mis = mi::synthesis;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -66,7 +67,7 @@ namespace
 struct FocusNotifyingInputTargeter : public mia::InputTargeter
 {
     FocusNotifyingInputTargeter(std::shared_ptr<mia::InputConfiguration> const& configuration,
-                                std::shared_ptr<msh::InputRegistrar> const& registrar,
+                                std::shared_ptr<ms::InputRegistrar> const& registrar,
                                 std::function<void(void)> const& focus_set)
       : InputTargeter(configuration, registrar),
         focus_set(focus_set)
@@ -112,7 +113,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     {
         return DefaultServerConfiguration::the_input_manager();
     }
-    std::shared_ptr<msh::InputRegistrar> the_input_registrar() override
+    std::shared_ptr<ms::InputRegistrar> the_input_registrar() override
     {        
         return DefaultServerConfiguration::the_input_registrar();
     }
