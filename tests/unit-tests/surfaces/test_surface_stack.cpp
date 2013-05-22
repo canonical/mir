@@ -31,6 +31,7 @@
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test_doubles/stub_input_registrar.h"
+#include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
@@ -368,4 +369,20 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
         auto surface = s.lock();
         EXPECT_EQ(requested_top_left, surface->top_left());
     }
+}
+
+TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
+{
+    using namespace ::testing;
+
+    mtd::MockInputRegistrar registrar;
+    EXPECT_CALL(registrar, input_surface_opened(_)).Times(1);
+    EXPECT_CALL(registrar, input_surface_closed(_)).Times(1);
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            mt::fake_shared(registrar)};
+    
+    auto s = stack.create_surface(msh::a_surface());
+    stack.destroy_surface(s);
 }

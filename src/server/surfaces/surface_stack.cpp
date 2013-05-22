@@ -84,7 +84,6 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         std::lock_guard<std::mutex> lg(guard);
         surfaces.push_back(surface);
     }
-    // TODO: Test ~racarr
     input_registrar->input_surface_opened(surface);
 
     emit_change_notification();
@@ -101,7 +100,6 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         
         if (p != surfaces.end())
         {
-            // TODO: Test ~racarr
             input_registrar->input_surface_closed(*p);
             surfaces.erase(p);
         }
