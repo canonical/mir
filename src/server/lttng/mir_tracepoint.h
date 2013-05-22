@@ -29,11 +29,11 @@
  */
 
 #ifdef __clang__
-namespace
+namespace mir_systemtap_bug_13974
 {
-void mir_tracepoint_consume_args(int, ...) {}
+inline void mir_tracepoint_consume_args(int, ...) {}
 }
-#define mir_tracepoint(c, e, ...) mir_tracepoint_consume_args(0, __VA_ARGS__)
+#define mir_tracepoint(c, e, ...) ::mir_systemtap_bug_13974::mir_tracepoint_consume_args(0, __VA_ARGS__)
 #pragma message "Building with clang: Disabling LTTng tracepoints."
 #else
 #define mir_tracepoint(c, e, ...) tracepoint(c, e, __VA_ARGS__)
