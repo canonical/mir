@@ -35,9 +35,6 @@ namespace events
 {
 class EventSink;
 }
-namespace frontend
-{
-}
 namespace input
 {
 class InputChannel;
