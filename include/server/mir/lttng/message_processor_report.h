@@ -22,21 +22,14 @@
 #include "mir/frontend/message_processor_report.h"
 #include "mir/lttng/tracepoint_provider.h"
 
-#include <memory>
-
 namespace mir
 {
-namespace logging
-{
-class Logger;
-}
 namespace lttng
 {
 
 class MessageProcessorReport : public mir::frontend::MessageProcessorReport
 {
 public:
-    MessageProcessorReport(std::shared_ptr<mir::logging::Logger> const& logger);
     ~MessageProcessorReport() noexcept {}
 
     void received_invocation(void const* mediator, int id, std::string const& method);

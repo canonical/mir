@@ -18,6 +18,9 @@
 
 #include "mir/lttng/tracepoint_provider.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 #include <dlfcn.h>
 
 namespace
@@ -28,15 +31,15 @@ char const* const tracepoint_provider_library = "libmirserverlttng.so";
 mir::lttng::TracepointProvider::TracepointProvider()
     : lib{dlopen(tracepoint_provider_library, RTLD_NOW)}
 {
+    if (lib == nullptr)
+    {
+        std::string msg{"Failed to load tracepoint provider: "};
+        msg += dlerror();
+        BOOST_THROW_EXCEPTION(std::runtime_error(msg));
+    }
 }
 
 mir::lttng::TracepointProvider::~TracepointProvider()
 {
-    if (lib)
-        dlclose(lib);
-}
-
-bool mir::lttng::TracepointProvider::loaded()
-{
-    return lib != nullptr;
+    dlclose(lib);
 }

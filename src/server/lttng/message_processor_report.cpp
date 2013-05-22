@@ -17,27 +17,12 @@
  */
 
 #include "mir/lttng/message_processor_report.h"
-#include "mir/logging/logger.h"
 
 #define TRACEPOINT_DEFINE
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
 #include "message_processor_report_tp.h"
 
 #include "mir_tracepoint.h"
-
-namespace ml = mir::logging;
-
-mir::lttng::MessageProcessorReport::MessageProcessorReport(
-        std::shared_ptr<ml::Logger> const& logger)
-{
-    if (!tp_provider.loaded())
-    {
-        logger->log<ml::Logger::warning>(
-            "Couldn't load LTTng tracepoint provider. "
-            "No events will be recorded!",
-            "lttng");
-    }
-}
 
 void mir::lttng::MessageProcessorReport::received_invocation(
     void const* mediator, int id, std::string const& method)

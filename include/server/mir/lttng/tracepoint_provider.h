@@ -30,8 +30,6 @@ public:
     TracepointProvider();
     ~TracepointProvider();
 
-    bool loaded();
-
 private:
     void* lib;
 };
