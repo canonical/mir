@@ -1,8 +1,8 @@
-usr/bin/mir_demo_shell
 usr/bin/mir_demo_server
+usr/bin/mir_demo_server_shell
 usr/bin/mir_demo_client
 usr/bin/mir_demo_client_unaccelerated
 usr/bin/mir_demo_client_accelerated
-usr/bin/mir_eglflash
-usr/bin/mir_egltriangle
-usr/bin/mir_eglplasma
+usr/bin/mir_demo_client_eglflash
+usr/bin/mir_demo_client_egltriangle
+usr/bin/mir_demo_client_eglplasma
