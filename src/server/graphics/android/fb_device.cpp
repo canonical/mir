@@ -33,6 +33,10 @@ namespace geom=mir::geometry;
 mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev)
     : fb_device(fbdev)
 {
+    if (fb_device->setSwapInterval)
+    {
+        fb_device->setSwapInterval(fb_device.get(), 1);
+    }
 }
 
 void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buffer)
@@ -59,4 +63,19 @@ unsigned int mga::FBDevice::number_of_framebuffers_available() const
 {
     auto fb_num = static_cast<unsigned int>(fb_device->numFramebuffers);
     return std::max(2u, fb_num);
+}
+
+void mga::FBDevice::sync_to_display(bool sync)
+{
+    if (!fb_device->setSwapInterval)
+        return;
+
+    if (sync)
+    {
+        fb_device->setSwapInterval(fb_device.get(), 1);
+    }
+    else
+    {
+        fb_device->setSwapInterval(fb_device.get(), 0);
+    }
 }

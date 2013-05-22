@@ -17,7 +17,6 @@
  */
 
 #include "src/server/graphics/android/android_buffer_handle_default.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir_test_doubles/mock_alloc_adaptor.h"
 #include "mir_test_doubles/mock_android_alloc_device.h"
 
@@ -113,63 +112,4 @@ TEST_F(AdaptorNativeWinProduction, returns_handle_with_no_modifications)
     EXPECT_EQ(anwb->format, handle->format);
     EXPECT_EQ(anwb->handle, handle->handle);
 
-}
-
-TEST_F(AdaptorNativeWinProduction, ipc_package_request_is_not_null)
-{
-    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    auto ipc_package = buffer_handle->get_ipc_package();
-    ASSERT_NE(nullptr, ipc_package);
-}
-
-/* ipc packaging tests */
-TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_size)
-{
-    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    auto package = buffer_handle->get_ipc_package();
-
-    EXPECT_EQ(package->ipc_data.size(), static_cast<uint32_t>(anwb->handle->numInts));
-}
-
-TEST_F(AdaptorNativeWinProduction, test_ipc_data_packed_with_correct_data)
-{
-    using namespace testing;
-
-    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    auto package = buffer_handle->get_ipc_package();
-
-    int fd_offset = anwb->handle->numFds;
-    for(auto it= package->ipc_data.begin(); it != package->ipc_data.end(); it++)
-    {
-        EXPECT_EQ(anwb->handle->data[fd_offset++], *it);
-    }
-}
-
-TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_size)
-{
-    using namespace testing;
-    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    auto package = buffer_handle->get_ipc_package();
-
-    EXPECT_EQ(anwb->handle->numFds, static_cast<int>(package->ipc_fds.size()));
-}
-
-TEST_F(AdaptorNativeWinProduction, test_ipc_fd_packed_with_correct_fds)
-{
-    using namespace testing;
-    buffer_handle = std::make_shared<mga::AndroidBufferHandleDefault>(anwb, pf, usage );
-    auto package = buffer_handle->get_ipc_package();
-
-    int offset = 0;
-    for(auto it=package->ipc_fds.begin(); it != package->ipc_fds.end(); it++)
-    {
-        EXPECT_EQ(anwb->handle->data[offset++], *it);
-    }
-}
-
-TEST_F(AdaptorNativeWinProduction, test_native_handle_is_returned_correctly)
-{
-    mga::AndroidBufferHandleDefault buffer_handle(anwb, pf, usage );
-    auto native_handle = buffer_handle.native_buffer_handle();
-    EXPECT_EQ(anwb, native_handle);
 }

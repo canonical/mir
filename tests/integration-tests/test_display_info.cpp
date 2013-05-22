@@ -20,7 +20,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -108,7 +107,12 @@ public:
     std::shared_ptr<mg::InternalClient> create_internal_client()
     {
         return std::shared_ptr<mg::InternalClient>();   
-    } 
+    }
+
+    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                          std::shared_ptr<mc::Buffer> const&) const
+    {
+    }
 };
 
 void connection_callback(MirConnection* connection, void* context)

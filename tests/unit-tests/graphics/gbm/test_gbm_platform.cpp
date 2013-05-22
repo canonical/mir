@@ -20,6 +20,8 @@
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/internal_client.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_buffer_packer.h"
 
 #include "mir/graphics/null_display_report.h"
 
@@ -107,6 +109,45 @@ TEST_F(GBMGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_er
     }
 
     FAIL() << "Expected an exception to be thrown.";
+}
+
+/* ipc packaging tests */
+TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
+{
+    auto mock_buffer = std::make_shared<mtd::MockBuffer>();
+    mir::geometry::Stride dummy_stride(4390);
+
+    auto native_handle = std::make_shared<MirBufferPackage>();
+    native_handle->data_items = 4;
+    native_handle->fd_items = 2;
+    for(auto i=0; i<mir_buffer_package_max; i++)
+    {
+        native_handle->fd[i] = i; 
+        native_handle->data[i] = i; 
+    }
+
+    EXPECT_CALL(*mock_buffer, native_buffer_handle())
+        .WillOnce(testing::Return(native_handle));
+    EXPECT_CALL(*mock_buffer, stride())
+        .WillOnce(testing::Return(mir::geometry::Stride{dummy_stride}));
+
+    auto platform = create_platform();
+
+    auto mock_packer = std::make_shared<mtd::MockPacker>();
+    for(auto i=0; i < native_handle->fd_items; i++)
+    {
+        EXPECT_CALL(*mock_packer, pack_fd(native_handle->fd[i]))
+            .Times(1);
+    } 
+    for(auto i=0; i < native_handle->data_items; i++)
+    {
+        EXPECT_CALL(*mock_packer, pack_data(native_handle->data[i]))
+            .Times(1);
+    }
+    EXPECT_CALL(*mock_packer, pack_stride(dummy_stride))
+        .Times(1);
+
+    platform->fill_ipc_package(mock_packer, mock_buffer);
 }
 
 /* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different

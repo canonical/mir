@@ -48,6 +48,9 @@ public:
     std::shared_ptr<PlatformIPCPackage> get_ipc_package(); 
     std::shared_ptr<InternalClient> create_internal_client();
 
+    void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+                          std::shared_ptr<compositor::Buffer> const& buffer) const;
+
     helpers::DRMHelper drm;
     helpers::GBMHelper gbm;
 

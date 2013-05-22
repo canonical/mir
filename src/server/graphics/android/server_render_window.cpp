@@ -86,3 +86,8 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             BOOST_THROW_EXCEPTION(std::runtime_error("driver requests info we dont provide. key: " + key));
     }
 }
+
+void mga::ServerRenderWindow::sync_to_display(bool sync)
+{
+    poster->sync_to_display(sync);
+}

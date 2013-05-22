@@ -54,6 +54,7 @@ public:
     void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
     void dispatch_driver_request_format(int format);
     int driver_requests_info(int key) const;
+    void sync_to_display(bool sync);
 
 private:
     std::shared_ptr<FBSwapper> const swapper;

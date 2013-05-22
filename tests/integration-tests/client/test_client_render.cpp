@@ -18,7 +18,6 @@
 
 #include "mir_test_framework/process.h"
 
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
@@ -109,7 +108,7 @@ struct TestClient
 
         auto graphics_region = std::make_shared<MirGraphicsRegion>();
         /* grab a buffer*/
-        mir_surface_get_graphics_region( surface, graphics_region.get());
+        mir_surface_get_graphics_region(surface, graphics_region.get());
 
         /* render pattern */
         mtd::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
@@ -310,11 +309,11 @@ struct TestClient
 /* server code */
 struct StubServerGenerator : public mt::StubServerTool
 {
-    StubServerGenerator(const std::shared_ptr<mc::BufferIPCPackage>& pack, int id)
-     : package(pack),
-        next_received(false),
-        next_allowed(false),
-        package_id(id)
+    StubServerGenerator(std::shared_ptr<MirNativeBuffer> const& handle, int id)
+     : handle(handle),
+       next_received(false),
+       next_allowed(false),
+       handle_id(id)
     {
 
     }
@@ -328,15 +327,15 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_width(test_width);
         response->set_height(test_height);
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(package_id);
-        response->mutable_buffer()->set_stride(package->stride);
+        response->mutable_buffer()->set_buffer_id(handle_id);
+        response->mutable_buffer()->set_stride(handle->stride);
 
-        unsigned int i;
         response->mutable_buffer()->set_fds_on_side_channel(1);
-        for(i=0; i<package->ipc_fds.size(); i++)
-            response->mutable_buffer()->add_fd(package->ipc_fds[i]);
-        for(i=0; i<package->ipc_data.size(); i++)
-            response->mutable_buffer()->add_data(package->ipc_data[i]);
+        native_handle_t const* native_handle = handle->handle;
+        for(auto i=0; i<native_handle->numFds; i++)
+            response->mutable_buffer()->add_fd(native_handle->data[i]);
+        for(auto i=0; i<native_handle->numInts; i++)
+            response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
 
         std::unique_lock<std::mutex> lock(guard);
         surface_name = request->surface_name();
@@ -362,14 +361,15 @@ struct StubServerGenerator : public mt::StubServerTool
             next_allowed = false;
         }
 
-        response->set_buffer_id(package_id);
-        unsigned int i;
+        response->set_buffer_id(handle_id);
+
         response->set_fds_on_side_channel(1);
-        for(i=0; i<package->ipc_fds.size(); i++)
-            response->add_fd(package->ipc_fds[i]);
-        for(i=0; i<package->ipc_data.size(); i++)
-            response->add_data(package->ipc_data[i]);
-        response->set_stride(package->stride);
+        native_handle_t const* native_handle = handle->handle;
+        response->set_stride(handle->stride);
+        for(auto i=0; i<native_handle->numFds; i++)
+            response->add_fd(native_handle->data[i]);
+        for(auto i=0; i<native_handle->numInts; i++)
+            response->add_data(native_handle->data[native_handle->numFds+i]);
 
         done->Run();
     }
@@ -390,13 +390,14 @@ struct StubServerGenerator : public mt::StubServerTool
         lk.unlock();
     }
 
-    void set_package(const std::shared_ptr<mc::BufferIPCPackage>& pack, int id)
+    void set_handle(std::shared_ptr<MirNativeBuffer> const& pack, int id)
     {
-        package = pack;
-        package_id = id;
+        handle = pack;
+        handle_id = id;
     }
 
-    std::shared_ptr<mc::BufferIPCPackage> package;
+private:
+    std::shared_ptr<MirNativeBuffer> handle;
 
     std::mutex next_guard;
     std::condition_variable next_cv;
@@ -404,7 +405,7 @@ struct StubServerGenerator : public mt::StubServerTool
     bool next_received;
     bool next_allowed;
 
-    int package_id;
+    int handle_id;
 };
 
 
@@ -456,11 +457,11 @@ struct TestClientIPCRender : public testing::Test
 
         buffer_converter = std::make_shared<mtd::TestGrallocMapper>();
 
-        package = android_buffer->get_ipc_package();
-        second_package = second_android_buffer->get_ipc_package();
+        handle = android_buffer->native_buffer_handle();
+        second_handle = second_android_buffer->native_buffer_handle();
 
         /* start a server */
-        mock_server = std::make_shared<mt::StubServerGenerator>(package, 14);
+        mock_server = std::make_shared<mt::StubServerGenerator>(handle, 14);
         test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server);
         test_server->comm->start();
     }
@@ -482,8 +483,8 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
     std::shared_ptr<mtf::Process> client_process;
 
-    std::shared_ptr<mc::BufferIPCPackage> package;
-    std::shared_ptr<mc::BufferIPCPackage> second_package;
+    std::shared_ptr<MirNativeBuffer> handle;
+    std::shared_ptr<MirNativeBuffer> second_handle;
 
     std::shared_ptr<mc::Buffer> android_buffer;
     std::shared_ptr<mc::Buffer> second_android_buffer;
@@ -511,7 +512,7 @@ TEST_F(TestClientIPCRender, test_render_single)
     EXPECT_TRUE(render_single_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->get_graphic_region_from_package(package, size);
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(rendered_pattern.check(region));
 }
 
@@ -524,16 +525,16 @@ TEST_F(TestClientIPCRender, test_render_double)
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
-    auto region = buffer_converter->get_graphic_region_from_package(package, size);
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(rendered_pattern0.check(region));
 
-    mock_server->set_package(second_package, 15);
-
+    mock_server->set_handle(second_handle, 15);
     mock_server->allow_next_continue();
+
     /* wait for client to finish */
     EXPECT_TRUE(render_double_client_process->wait_for_termination().succeeded());
 
-    auto second_region = buffer_converter->get_graphic_region_from_package(second_package, size);
+    auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
     EXPECT_TRUE(rendered_pattern1.check(second_region));
 }
 
@@ -551,7 +552,7 @@ TEST_F(TestClientIPCRender, test_second_render_with_same_buffer)
     EXPECT_TRUE(second_render_with_same_buffer_client_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->get_graphic_region_from_package(package, size);
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(rendered_pattern.check(region));
 }
 
@@ -570,7 +571,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
     EXPECT_TRUE(render_accelerated_process->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->get_graphic_region_from_package(package, size);
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(red_pattern.check(region));
 }
 
@@ -583,7 +584,7 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
 
     /* wait for next buffer */
     mock_server->wait_on_next_buffer();
-    mock_server->set_package(second_package, 15);
+    mock_server->set_handle(second_handle, 15);
     mock_server->allow_next_continue();
 
     mock_server->wait_on_next_buffer();
@@ -593,9 +594,9 @@ TEST_F(TestClientIPCRender, test_accelerated_render_double)
     EXPECT_TRUE(render_accelerated_process_double->wait_for_termination().succeeded());
 
     /* check content */
-    auto region = buffer_converter->get_graphic_region_from_package(package, size);
+    auto region = buffer_converter->graphic_region_from_handle(handle);
     EXPECT_TRUE(red_pattern.check(region));
 
-    auto second_region = buffer_converter->get_graphic_region_from_package(second_package, size);
+    auto second_region = buffer_converter->graphic_region_from_handle(second_handle);
     EXPECT_TRUE(green_pattern.check(second_region));
 }
