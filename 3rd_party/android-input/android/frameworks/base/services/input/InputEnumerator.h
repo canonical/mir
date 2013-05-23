@@ -31,7 +31,7 @@ class InputWindowHandle;
 
 class InputEnumerator : public RefBase {
 public:
-    void for_each(std::function<void(sp<InputWindowHandle> const&)> const& callback);
+    virtual void for_each(std::function<void(sp<InputWindowHandle> const&)> const& callback) = 0;
 
 protected:
     InputEnumerator() = default;

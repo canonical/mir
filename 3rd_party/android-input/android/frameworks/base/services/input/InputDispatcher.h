@@ -308,6 +308,8 @@ public:
      *
      * This method may be called on any thread (usually by the input manager).
      */
+    virtual void setKeyboardFocus(const sp<InputWindowHandle>& windowHandle) = 0;
+    virtual void notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle) = 0;
     virtual void setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles) = 0;
 
     /* Sets the focused application.
@@ -923,7 +925,7 @@ private:
     bool mDispatchFrozen;
     bool mInputFilterEnabled;
 
-    Vector<sp<InputWindowHandle> > mWindowHandles;
+    sp<InputEnumerator> mEnumerator;
 
     sp<InputWindowHandle> getWindowHandleLocked(const sp<InputChannel>& inputChannel) const;
     bool hasWindowHandleLocked(const sp<InputWindowHandle>& windowHandle) const;
