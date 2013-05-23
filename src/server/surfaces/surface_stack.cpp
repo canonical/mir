@@ -84,6 +84,9 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         std::lock_guard<std::mutex> lg(guard);
         surfaces.push_back(surface);
     }
+
+    // TODO: It might be a nice refactoring to combine this with input channel creation
+    // i.e. client_fd = registrar->register_for_input(surface). ~racarr
     input_registrar->input_surface_opened(surface);
 
     emit_change_notification();

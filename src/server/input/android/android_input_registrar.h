@@ -19,6 +19,8 @@
 #ifndef MIR_INPUT_ANDROID_REGISTRAR_H_
 #define MIR_INPUT_ANDROID_REGISTRAR_H_
 
+#include "android_window_handle_repository.h"
+
 #include "mir/surfaces/input_registrar.h"
 
 #include <utils/StrongPointer.h>
@@ -43,22 +45,20 @@ namespace android
 class InputConfiguration;
 class InputTargeter;
 
-class InputRegistrar : public surfaces::InputRegistrar
+class InputRegistrar : public surfaces::InputRegistrar, public WindowHandleRepository
 {
 public:
     explicit InputRegistrar(std::shared_ptr<InputConfiguration> const& input_configuration);
     virtual ~InputRegistrar() noexcept(true) {}
-    
+
     void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface);
     void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface);
 
-    friend InputTargeter;
+
+    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface);
 protected:
     InputRegistrar(const InputRegistrar&) = delete;
     InputRegistrar& operator=(const InputRegistrar&) = delete;
-    
-    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface);
-
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
 
