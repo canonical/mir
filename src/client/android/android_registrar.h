@@ -35,6 +35,8 @@ namespace android
 class AndroidRegistrar
 {
 public:
+	virtual ~AndroidRegistrar() = default;
+
     virtual void register_buffer(const native_handle_t *handle) = 0;
     virtual void unregister_buffer(const native_handle_t *handle) = 0;
     virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
