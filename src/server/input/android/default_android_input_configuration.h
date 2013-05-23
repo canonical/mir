@@ -55,6 +55,8 @@ class CursorListener;
 
 namespace android
 {
+class InputRegistrar;
+class WindowHandleRepository;
 
 class DefaultInputConfiguration : public InputConfiguration
 {
@@ -82,6 +84,8 @@ public:
     void set_input_targets(std::shared_ptr<input::InputTargets> const& targets);
 
 protected:
+    std::shared_ptr<WindowHandleRepository> the_window_handle_repository();
+
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;
     DefaultInputConfiguration& operator=(DefaultInputConfiguration const&) = delete;
 
@@ -114,7 +118,7 @@ private:
 
     CachedPtr<InputThread> dispatcher_thread;
     CachedPtr<InputThread> reader_thread;
-    CachedPtr<surfaces::InputRegistrar> input_registrar;
+    CachedPtr<InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;

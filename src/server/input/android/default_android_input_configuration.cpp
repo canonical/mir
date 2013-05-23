@@ -163,13 +163,22 @@ std::shared_ptr<ms::InputRegistrar> mia::DefaultInputConfiguration::the_input_re
         });
 }
 
+std::shared_ptr<mia::WindowHandleRepository> mia::DefaultInputConfiguration::the_window_handle_repository()
+{
+    return input_registrar(
+        [this]()
+        {
+            return std::make_shared<mia::InputRegistrar>(the_dispatcher());
+        }); // TODO: Dedupe, racarr
+}
+
 std::shared_ptr<msh::InputTargeter> mia::DefaultInputConfiguration::the_input_targeter()
 {
     return input_targeter(
         [this]()
         {
             // TODO: Use the_window_handle_repository ~racarr
-            return std::make_shared<mia::InputTargeter>(the_dispatcher(), the_input_registrar());
+            return std::make_shared<mia::InputTargeter>(the_dispatcher(), the_window_handle_repository());
         });
 }
 

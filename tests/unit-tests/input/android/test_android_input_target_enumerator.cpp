@@ -66,7 +66,7 @@ struct StubInputWindowHandle : public droidinput::InputWindowHandle
     }
 };
 
-struct StubWindowHandleRepository : public mia::WindowHandleRepository // TODO: In implementation this will be registrar
+struct StubWindowHandleRepository : public mia::WindowHandleRepository
 {
     droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<mi::SurfaceTarget const> const& surface)
     {

@@ -64,12 +64,11 @@ namespace
 
 namespace
 {
-struct FocusNotifyingInputTargeter : public mia::InputTargeter
+struct FocusNotifyingInputTargeter : public msh::InputTargeter
 {
-    FocusNotifyingInputTargeter(std::shared_ptr<mia::InputConfiguration> const& configuration,
-                                std::shared_ptr<ms::InputRegistrar> const& registrar,
+    FocusNotifyingInputTargeter(std::shared_ptr<msh::InputTargeter> const& real_targeter,
                                 std::function<void(void)> const& focus_set)
-      : InputTargeter(configuration, registrar),
+      : real_targeter(real_targeter),
         focus_set(focus_set)
     {
 
@@ -78,13 +77,18 @@ struct FocusNotifyingInputTargeter : public mia::InputTargeter
     
     void focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface) override
     {
-        InputTargeter::focus_changed(surface);
+        real_targeter->focus_changed(surface);
 
         // We need a synchronization primitive inorder to halt test event injection
         // until after a surface has taken focus (lest the events be discarded).
         focus_set();
     }
+    void focus_cleared()
+    {
+        real_targeter->focus_cleared();
+    }
 
+    std::shared_ptr<msh::InputTargeter> const real_targeter;
     std::function<void(void)> focus_set;
 };
 
@@ -124,7 +128,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
         return input_targeter(
             [this]()
             {
-                return std::make_shared<FocusNotifyingInputTargeter>(mt::fake_shared(input_config), the_input_registrar(), std::bind(std::mem_fn(&FakeInputServerConfiguration::inject_input_after_focus), this));
+                return std::make_shared<FocusNotifyingInputTargeter>(DefaultServerConfiguration::the_input_targeter(), std::bind(std::mem_fn(&FakeInputServerConfiguration::inject_input_after_focus), this));
             });
     }
 
