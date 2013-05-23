@@ -107,7 +107,7 @@ droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfigurat
     return dispatcher(
         [this]()
         {
-            return new droidinput::InputDispatcher(the_dispatcher_policy());
+            return new droidinput::InputDispatcher(the_dispatcher_policy(), droidinput::sp<droidinput::InputEnumerator>());
         });
 }
 

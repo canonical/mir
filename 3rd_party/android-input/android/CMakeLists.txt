@@ -28,7 +28,6 @@ add_library(
   frameworks/base/services/input/InputApplication.cpp
   frameworks/base/services/input/InputDispatcher.cpp
   frameworks/base/services/input/InputListener.cpp
-  frameworks/base/services/input/InputManager.cpp
   frameworks/base/services/input/InputReader.cpp
   frameworks/base/services/input/InputTransport.cpp
   frameworks/base/services/input/InputWindow.cpp

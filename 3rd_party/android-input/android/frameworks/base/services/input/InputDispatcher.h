@@ -38,6 +38,7 @@
 #include "InputWindow.h"
 #include "InputApplication.h"
 #include "InputListener.h"
+#include "InputEnumerator.h"
 
 
 namespace android {
@@ -367,7 +368,7 @@ protected:
     virtual ~InputDispatcher();
 
 public:
-    explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy);
+    explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, sp<InputEnumerator> const& enumerator);
 
     virtual void dump(String8& dump);
     virtual void monitor();

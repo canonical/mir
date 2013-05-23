@@ -65,37 +65,5 @@ if(MIR_PLATFORM STREQUAL "android")
     )
 endif()
 
-###### dispatcher-check
-
-add_executable(
-  dispatcher-check
-  dispatcher_check.cpp
-  )
-
-set_target_properties(
-  dispatcher-check
-  PROPERTIES
-  COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
-  )
-
-if(MIR_PLATFORM STREQUAL "gbm")
-  target_link_libraries(
-    dispatcher-check
-    android-input
-    -lrt
-    -lpthread
-    )
-endif()
-
-if(MIR_PLATFORM STREQUAL "android")
-  target_link_libraries(
-    dispatcher-check
-    android-input
-    )
-endif()
-
-
 target_link_libraries(cooked-event-printer    ${Boost_LIBRARIES})
 target_link_libraries(raw-event-printer       ${Boost_LIBRARIES})
-target_link_libraries(dispatcher-check        ${Boost_LIBRARIES})
-

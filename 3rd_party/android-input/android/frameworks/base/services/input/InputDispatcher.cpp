@@ -167,7 +167,7 @@ static bool validateMotionEvent(int32_t action, size_t pointerCount,
 
 // --- InputDispatcher ---
 
-InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy) :
+InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, sp<InputEnumerator> const& enumerator) :
     mPolicy(policy),
     mPendingEvent(NULL), mAppSwitchSawKeyDown(false), mAppSwitchDueTime(LONG_LONG_MAX),
     mNextUnblockedEvent(NULL),
@@ -178,6 +178,8 @@ InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& polic
     mKeyRepeatState.lastKeyEntry = NULL;
 
     policy->getDispatcherConfiguration(&mConfig);
+    
+    (void) enumerator; // TODO
 }
 
 InputDispatcher::~InputDispatcher() {
