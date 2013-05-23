@@ -35,6 +35,7 @@ class AndroidRegistrarGralloc : public AndroidRegistrar
 {
 public:
     AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gralloc_dev);
+    virtual ~AndroidRegistrarGralloc();
 
     void register_buffer(const native_handle_t *handle);
     void unregister_buffer(const native_handle_t *handle);
