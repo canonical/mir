@@ -18,8 +18,9 @@
  */
 
 #include "mir/input/event_filter.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/input/input_targets.h"
 #include "mir/input/android/android_input_configuration.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include "src/server/input/android/default_android_input_configuration.h"
 #include "src/server/input/android/android_input_manager.h"
@@ -39,6 +40,7 @@
 
 #include <EventHub.h>
 #include <InputDispatcher.h>
+#include <InputEnumerator.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -68,6 +70,13 @@ static const geom::Rectangle default_view_area =
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
+struct StubInputTargets : public mi::InputTargets
+{
+    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const&)
+    {
+    }
+};
+
 class AndroidInputManagerAndEventFilterDispatcherSetup : public testing::Test
 {
 public:
@@ -79,7 +88,10 @@ public:
             .WillByDefault(Return(default_view_area));
 
         fake_event_hub = configuration->the_fake_event_hub();
-
+        
+        stub_targets = std::make_shared<StubInputTargets>();
+        configuration->set_input_targets(stub_targets);
+        
         input_manager = std::make_shared<mia::InputManager>(configuration);
 
         input_manager->start();
@@ -96,6 +108,7 @@ public:
     std::shared_ptr<mia::InputManager> input_manager;
     std::shared_ptr<MockEventFilter> event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
+    std::shared_ptr<StubInputTargets> stub_targets;
 };
 
 }
