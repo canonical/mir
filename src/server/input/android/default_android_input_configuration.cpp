@@ -154,3 +154,9 @@ bool mia::DefaultInputConfiguration::is_key_repeat_enabled()
 {
     return true;
 }
+
+void mia::DefaultInputConfiguration::set_input_targets(std::shared_ptr<input::InputTargets> const& targets)
+{
+    (void) targets;
+    // TODO: ~racarr
+}

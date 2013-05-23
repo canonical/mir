@@ -71,6 +71,8 @@ public:
     virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
     
     virtual bool is_key_repeat_enabled();
+    
+    void set_input_targets(std::shared_ptr<input::InputTargets> const& targets);
 
 protected:
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;
