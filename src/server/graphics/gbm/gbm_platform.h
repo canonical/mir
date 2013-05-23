@@ -39,7 +39,7 @@ class GBMPlatform : public Platform,
 public:
     explicit GBMPlatform(std::shared_ptr<DisplayReport> const& reporter,
                          std::shared_ptr<VirtualTerminal> const& vt);
-    ~GBMPlatform();
+    virtual ~GBMPlatform();
 
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(

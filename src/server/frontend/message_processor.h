@@ -55,6 +55,7 @@ protected:
 struct NullMessageProcessor : MessageProcessor
 {
     bool process_message(std::istream&);
+    virtual ~NullMessageProcessor() = default;
 };
 
 }
