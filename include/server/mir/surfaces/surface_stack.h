@@ -21,6 +21,7 @@
 
 #include "surface_stack_model.h"
 #include "mir/compositor/renderables.h"
+#include "mir/input/input_targets.h"
 
 #include <memory>
 #include <vector>
@@ -43,6 +44,7 @@ struct SurfaceCreationParameters;
 namespace input // TODO: Remove ~racarr
 {
 class InputChannelFactory;
+class SurfaceTarget;
 }
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
@@ -53,17 +55,20 @@ class BufferBundleFactory;
 class InputRegistrar;
 class Surface;
 
-class SurfaceStack : public compositor::Renderables, public SurfaceStackModel
+class SurfaceStack : public compositor::Renderables, public input::InputTargets, public SurfaceStackModel
 {
 public:
     explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
                           std::shared_ptr<input::InputChannelFactory> const& input_factory,
                           std::shared_ptr<InputRegistrar> const& input_registrar);
-    virtual ~SurfaceStack() = default;
+    virtual ~SurfaceStack() noexcept(true) {}
 
     // From Renderables
     virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
     virtual void set_change_callback(std::function<void()> const& f);
+    
+    // From InputTargets
+    void for_each(std::function<void(std::shared_ptr<input::SurfaceTarget> const&)> const& callback);
 
     // From SurfaceStackModel
     virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);

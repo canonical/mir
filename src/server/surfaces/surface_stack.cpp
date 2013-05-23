@@ -117,3 +117,9 @@ void ms::SurfaceStack::emit_change_notification()
     std::lock_guard<std::mutex> lock{notify_change_mutex};
     notify_change();
 }
+
+void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback)
+{
+    for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        callback(*it);
+}
