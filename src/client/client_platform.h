@@ -38,7 +38,7 @@ public:
     ClientPlatform(const ClientPlatform& p) = delete;
     ClientPlatform& operator=(const ClientPlatform& p) = delete;
 
-    virtual ~ClientPlatform() = 0;
+    virtual ~ClientPlatform() = default;
 
     virtual MirPlatformType platform_type() const = 0; 
     virtual std::shared_ptr<ClientBufferFactory> create_buffer_factory() = 0;
