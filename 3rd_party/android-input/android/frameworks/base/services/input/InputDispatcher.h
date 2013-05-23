@@ -390,6 +390,13 @@ public:
             uint32_t policyFlags);
 
     virtual void setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles);
+
+    // TODO: ~racarr
+    virtual void setKeyboardFocus(const sp<InputWindowHandle>& windowHandle);
+    virtual void notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle);
+    // TODO: ~racarr
+
+
     virtual void setFocusedApplication(const sp<InputApplicationHandle>& inputApplicationHandle);
     virtual void setInputDispatchMode(bool enabled, bool frozen);
     virtual void setInputFilterEnabled(bool enabled);
@@ -1090,6 +1097,8 @@ private:
     // Statistics gathering.
     void updateDispatchStatisticsLocked(nsecs_t currentTime, const EventEntry* entry,
             int32_t injectionResult, nsecs_t timeSpentWaitingForApplication);
+
+    void setKeyboardFocusLocked(const sp<InputWindowHandle>& windowHandle);
 };
 
 /* Enqueues and dispatches input events, endlessly. */

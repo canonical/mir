@@ -488,9 +488,12 @@ std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {
     return surface_stack(
-        [this]()
+        [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            // TODO: Dedupe ~racarr
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            the_input_configuration()->set_input_targets(ss);
+            return ss;
         });
 }
 
@@ -498,9 +501,11 @@ std::shared_ptr<mc::Renderables>
 mir::DefaultServerConfiguration::the_renderables()
 {
     return surface_stack(
-        [this]()
+        [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            the_input_configuration()->set_input_targets(ss);
+            return ss;
         });
 }
 

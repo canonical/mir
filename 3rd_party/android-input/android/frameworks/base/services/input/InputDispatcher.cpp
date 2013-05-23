@@ -2678,58 +2678,49 @@ bool InputDispatcher::hasWindowHandleLocked(
     return false;
 }
 
-void InputDispatcher::setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles) {
+void InputDispatcher::setKeyboardFocus(const sp<InputWindowHandle>& newFocusedWindowHandle)
+{
+    {
+        AutoMutex _l(mLock);
+        setKeyboardFocusLocked(newFocusedWindowHandle);
+    }
+    mLooper->wake();
+}
+
+void InputDispatcher::setKeyboardFocusLocked(const sp<InputWindowHandle>& newFocusedWindowHandle)
+{
+    // TODO: We need an update info or something ~racarr
+    if (mFocusedWindowHandle != newFocusedWindowHandle) {
+        if (mFocusedWindowHandle != NULL) {
 #if DEBUG_FOCUS
-    ALOGD("setInputWindows");
+            ALOGD("Focus left window: %s",
+                  c_str(mFocusedWindowHandle->getName()));
 #endif
+            sp<InputChannel> focusedInputChannel = mFocusedWindowHandle->getInputChannel();
+            if (focusedInputChannel != NULL) {
+                CancelationOptions options(CancelationOptions::CANCEL_NON_POINTER_EVENTS,
+                                           "focus left window");
+                synthesizeCancelationEventsForInputChannelLocked(
+                                                                 focusedInputChannel, options);
+            }
+        }
+        if (newFocusedWindowHandle != NULL) {
+#if DEBUG_FOCUS
+            ALOGD("Focus entered window: %s",
+                  c_str(newFocusedWindowHandle->getName()));
+#endif
+        }
+        mFocusedWindowHandle = newFocusedWindowHandle;
+    }
+}
+
+void InputDispatcher::notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle)
+{
     { // acquire lock
         AutoMutex _l(mLock);
 
-        Vector<sp<InputWindowHandle> > oldWindowHandles = mWindowHandles;
-        mWindowHandles = inputWindowHandles;
-
-        sp<InputWindowHandle> newFocusedWindowHandle;
-        bool foundHoveredWindow = false;
-        for (size_t i = 0; i < mWindowHandles.size(); i++) {
-            const sp<InputWindowHandle>& windowHandle = mWindowHandles.itemAt(i);
-            if (!windowHandle->updateInfo() || windowHandle->getInputChannel() == NULL) {
-                mWindowHandles.removeAt(i--);
-                continue;
-            }
-            if (windowHandle->getInfo()->hasFocus) {
-                newFocusedWindowHandle = windowHandle;
-            }
-            if (windowHandle == mLastHoverWindowHandle) {
-                foundHoveredWindow = true;
-            }
-        }
-
-        if (!foundHoveredWindow) {
+        if (windowHandle == mLastHoverWindowHandle)
             mLastHoverWindowHandle = NULL;
-        }
-
-        if (mFocusedWindowHandle != newFocusedWindowHandle) {
-            if (mFocusedWindowHandle != NULL) {
-#if DEBUG_FOCUS
-                ALOGD("Focus left window: %s",
-                    c_str(mFocusedWindowHandle->getName()));
-#endif
-                sp<InputChannel> focusedInputChannel = mFocusedWindowHandle->getInputChannel();
-                if (focusedInputChannel != NULL) {
-                    CancelationOptions options(CancelationOptions::CANCEL_NON_POINTER_EVENTS,
-                            "focus left window");
-                    synthesizeCancelationEventsForInputChannelLocked(
-                            focusedInputChannel, options);
-                }
-            }
-            if (newFocusedWindowHandle != NULL) {
-#if DEBUG_FOCUS
-                ALOGD("Focus entered window: %s",
-                    c_str(newFocusedWindowHandle->getName()));
-#endif
-            }
-            mFocusedWindowHandle = newFocusedWindowHandle;
-        }
 
         for (size_t i = 0; i < mTouchState.windows.size(); i++) {
             TouchedWindow& touchedWindow = mTouchState.windows.editItemAt(i);
@@ -2742,18 +2733,33 @@ void InputDispatcher::setInputWindows(const Vector<sp<InputWindowHandle> >& inpu
                         touchedWindow.windowHandle->getInputChannel();
                 if (touchedInputChannel != NULL) {
                     CancelationOptions options(CancelationOptions::CANCEL_POINTER_EVENTS,
-                            "touched window was removed");
+                        "touched window was removed");
                     synthesizeCancelationEventsForInputChannelLocked(
-                            touchedInputChannel, options);
+                        touchedInputChannel, options);
                 }
                 mTouchState.windows.removeAt(i--);
             }
         }
 
+        if (windowHandle == mFocusedWindowHandle)
+            setKeyboardFocusLocked(NULL);
+
+    } // release lock
+    mLooper->wake();
+    // TODO: Do we unregister the input channel here? ~racarr
+}
+    
+void InputDispatcher::setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles) {
+#if DEBUG_FOCUS
+    ALOGD("setInputWindows");
+#endif
+    { // acquire lock
+
+
     } // release lock
 
     // Wake up poll loop since it may need to make new input dispatching choices.
-    mLooper->wake();
+
 }
 
 void InputDispatcher::setFocusedApplication(
