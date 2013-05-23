@@ -34,6 +34,7 @@ namespace doubles
 struct MockInputDispatcher : public droidinput::InputDispatcherInterface
 {
     // droidinput::InputDispatcher interface
+    MOCK_METHOD1(setInputEnumerator, void(droidinput::sp<droidinput::InputEnumerator> const&));
     MOCK_METHOD1(dump, void(droidinput::String8&));
     MOCK_METHOD0(monitor, void());
     MOCK_METHOD0(dispatchOnce, void());

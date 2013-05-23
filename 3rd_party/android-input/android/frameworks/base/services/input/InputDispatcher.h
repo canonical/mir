@@ -275,6 +275,9 @@ protected:
     virtual ~InputDispatcherInterface() { }
 
 public:
+    // TODO: Comment me and add asserts ~racarr
+    virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator) = 0;
+
     /* Dumps the state of the input dispatcher.
      *
      * This method may be called on any thread (usually by the input manager). */
@@ -368,7 +371,8 @@ protected:
     virtual ~InputDispatcher();
 
 public:
-    explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, sp<InputEnumerator> const& enumerator);
+    explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy);
+    virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator);
 
     virtual void dump(String8& dump);
     virtual void monitor();

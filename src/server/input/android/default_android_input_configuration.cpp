@@ -22,6 +22,7 @@
 #include "android_input_thread.h"
 #include "android_input_registrar.h"
 #include "android_input_targeter.h"
+#include "android_input_target_enumerator.h"
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
@@ -111,7 +112,7 @@ droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfigurat
     return dispatcher(
         [this]()
         {
-            return new droidinput::InputDispatcher(the_dispatcher_policy(), droidinput::sp<droidinput::InputEnumerator>());
+            return new droidinput::InputDispatcher(the_dispatcher_policy());
         });
 }
 
@@ -189,6 +190,6 @@ bool mia::DefaultInputConfiguration::is_key_repeat_enabled()
 
 void mia::DefaultInputConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& targets)
 {
-    (void) targets;
-    // TODO: ~racarr
+    // TODO: Cleanup, might crash? ~racarr
+    the_dispatcher()->setInputEnumerator(new mia::InputTargetEnumerator(targets, the_window_handle_repository()));
 }
