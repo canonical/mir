@@ -10,6 +10,7 @@ set(
   organising_surface_factory.cpp
   surface_source.cpp
   surface.cpp
+  surface_creation_parameters.cpp
 )
 
 add_library(

@@ -8,7 +8,6 @@ set(
   protobuf_message_processor.cpp
   protobuf_buffer_packer.cpp
   null_message_processor.cpp
-  surface_creation_parameters.cpp
   event_pipe.cpp
 
   resource_cache.cpp

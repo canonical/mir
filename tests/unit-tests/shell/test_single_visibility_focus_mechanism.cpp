@@ -22,7 +22,7 @@
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/shell/session.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test/fake_shared.h"
@@ -44,7 +44,7 @@ namespace mtd = mir::test::doubles;
 
 struct MockShellSession : public msh::Session
 {
-    MOCK_METHOD1(create_surface, mf::SurfaceId(mf::SurfaceCreationParameters const&));
+    MOCK_METHOD1(create_surface, mf::SurfaceId(msh::SurfaceCreationParameters const&));
     MOCK_METHOD1(destroy_surface, void(mf::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<mf::Surface>(mf::SurfaceId));
 

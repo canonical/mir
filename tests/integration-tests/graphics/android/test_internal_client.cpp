@@ -31,7 +31,7 @@
 #include "mir/surfaces/surface_controller.h"
 #include "mir/shell/surface_source.h"
 #include "mir/shell/surface.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/input/input_channel_factory.h"
 
@@ -74,7 +74,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto size = geom::Size{geom::Width{334},
                       geom::Height{122}};
     auto pf  = geom::PixelFormat::abgr_8888;
-    mf::SurfaceCreationParameters params;
+    msh::SurfaceCreationParameters params;
     params.name = std::string("test");
     params.size = size; 
     params.pixel_format = pf;

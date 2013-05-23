@@ -58,7 +58,7 @@ public:
     virtual void set_change_callback(std::function<void()> const& f);
 
     // From SurfaceStackModel
-    virtual std::weak_ptr<Surface> create_surface(const frontend::SurfaceCreationParameters& params);
+    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 

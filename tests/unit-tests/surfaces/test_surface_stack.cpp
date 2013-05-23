@@ -23,7 +23,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/renderables.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
@@ -40,6 +40,7 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
+namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -125,7 +126,7 @@ TEST(
 
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     stack.destroy_surface(surface);
 }
@@ -172,11 +173,11 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -210,11 +211,11 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
 
     auto surface1 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface2 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
     auto surface3 = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -254,7 +255,7 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 
     ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        mf::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
+        msh::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
 
     stack.destroy_surface(surface);
 }
@@ -291,7 +292,7 @@ TEST(SurfaceStack, create_surface_notifies_changes)
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 }
 
 TEST(SurfaceStack, destroy_surface_notifies_changes)
@@ -306,10 +307,30 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        mf::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     Mock::VerifyAndClearExpectations(&mock_cb);
     EXPECT_CALL(mock_cb, call()).Times(1);
 
     stack.destroy_surface(surface);
+}
+
+TEST(SurfaceStack, surface_is_created_at_requested_position)
+{
+    using namespace ::testing;
+    
+    geom::Point const requested_top_left{geom::X{50},
+                                         geom::Y{17}};
+    geom::Size const requested_size{geom::Width{1024}, 
+                                    geom::Height{768}};
+    
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    
+    auto s = stack.create_surface(
+        msh::a_surface().of_size(requested_size).of_position(requested_top_left));
+    
+    {
+        auto surface = s.lock();
+        EXPECT_EQ(requested_top_left, surface->top_left());
+    }
 }

@@ -18,11 +18,11 @@
 
 #include "fullscreen_placement_strategy.h"
 
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 namespace me = mir::examples;
-namespace mf = mir::frontend;
+namespace msh = mir::shell;
 namespace mg = mir::graphics;
 
 me::FullscreenPlacementStrategy::FullscreenPlacementStrategy(std::shared_ptr<mg::ViewableArea> const& display_area)
@@ -30,7 +30,7 @@ me::FullscreenPlacementStrategy::FullscreenPlacementStrategy(std::shared_ptr<mg:
 {
 }
 
-mf::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(mf::SurfaceCreationParameters const& request_parameters)
+msh::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(msh::SurfaceCreationParameters const& request_parameters)
 {
     auto placed_parameters = request_parameters;
 

@@ -45,7 +45,8 @@ class BufferBundle;
 class Surface : public graphics::Renderable
 {
 public:
-    Surface(const std::string& name, std::shared_ptr<BufferBundle> buffer_bundle,
+    Surface(const std::string& name, geometry::Point const& top_left,
+            std::shared_ptr<BufferBundle> buffer_bundle,
             std::function<void()> const& change_callback);
 
     ~Surface();
@@ -75,10 +76,11 @@ public:
 
 private:
     std::string surface_name;
+    geometry::Point top_left_point;
+
     std::shared_ptr<BufferBundle> buffer_bundle;
 
     std::shared_ptr<compositor::Buffer> client_buffer_resource;
-    geometry::Point top_left_point;
     glm::mat4 rotation_matrix;
     float alpha_value;
 

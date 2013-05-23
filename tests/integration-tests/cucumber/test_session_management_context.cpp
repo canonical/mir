@@ -20,7 +20,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/graphics/viewable_area.h"
 
 #include "mir_test_doubles/mock_session.h"

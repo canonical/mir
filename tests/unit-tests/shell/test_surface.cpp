@@ -18,7 +18,7 @@
 
 #include "mir/shell/surface.h"
 #include "mir/surfaces/surface.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/input/input_channel.h"
 #include "mir/shell/surface_builder.h"
@@ -54,9 +54,9 @@ public:
     {
     }
 
-    std::weak_ptr<ms::Surface> create_surface(mf::SurfaceCreationParameters const& )
+    std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& )
     {
-        dummy_surface = std::make_shared<ms::Surface>(mf::a_surface().name, buffer_bundle, []{});
+        dummy_surface = std::make_shared<ms::Surface>(msh::a_surface().name, msh::a_surface().top_left, buffer_bundle, []{});
         return dummy_surface;
     }
 
@@ -88,7 +88,7 @@ public:
             WillByDefault(Invoke(&self, &StubSurfaceBuilder::destroy_surface));
     }
 
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const mf::SurfaceCreationParameters&));
+    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const msh::SurfaceCreationParameters&));
 
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
 
@@ -128,7 +128,7 @@ TEST_F(ShellSurface, creation_and_destruction)
 {
     using namespace testing;
 
-    mf::SurfaceCreationParameters const params;
+    msh::SurfaceCreationParameters const params;
     MockSurfaceBuilder surface_builder;
 
     InSequence sequence;
@@ -145,7 +145,7 @@ TEST_F(ShellSurface, creation_throws_means_no_destroy)
 {
     using namespace testing;
 
-    mf::SurfaceCreationParameters const params;
+    msh::SurfaceCreationParameters const params;
     MockSurfaceBuilder surface_builder;
 
     InSequence sequence;
@@ -172,7 +172,7 @@ TEST_F(ShellSurface, destroy)
 
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     Mock::VerifyAndClearExpectations(&test);
@@ -189,7 +189,7 @@ TEST_F(ShellSurface, client_buffer_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -207,7 +207,7 @@ TEST_F(ShellSurface, size_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -225,7 +225,7 @@ TEST_F(ShellSurface, top_left_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -243,7 +243,7 @@ TEST_F(ShellSurface, name_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -261,7 +261,7 @@ TEST_F(ShellSurface, pixel_format_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -279,7 +279,7 @@ TEST_F(ShellSurface, hide_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -297,7 +297,7 @@ TEST_F(ShellSurface, show_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -315,7 +315,7 @@ TEST_F(ShellSurface, destroy_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -333,7 +333,7 @@ TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -351,7 +351,7 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_NO_THROW({
@@ -371,8 +371,8 @@ TEST_F(ShellSurface, surfaces_with_input_channel_supports_input)
     const int testing_client_fd = 17;
 
     MockInputChannel mock_package;
-    msh::Surface proxy_surface(mt::fake_shared(surface_builder), mf::a_surface(), null_input_channel);
-    msh::Surface input_proxy_surface(mt::fake_shared(surface_builder), mf::a_surface(), mt::fake_shared(mock_package));
+    msh::Surface proxy_surface(mt::fake_shared(surface_builder), msh::a_surface(), null_input_channel);
+    msh::Surface input_proxy_surface(mt::fake_shared(surface_builder), msh::a_surface(), mt::fake_shared(mock_package));
 
     EXPECT_CALL(mock_package, client_fd()).Times(1).WillOnce(Return(testing_client_fd));
 
@@ -392,7 +392,7 @@ TEST_F(ShellSurface, attributes)
 
     msh::Surface surf(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_THROW({
@@ -406,7 +406,7 @@ TEST_F(ShellSurface, types)
 
     msh::Surface surf(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_EQ(mir_surface_type_normal, surf.type());
@@ -441,7 +441,7 @@ TEST_F(ShellSurface, states)
 
     msh::Surface surf(
             mt::fake_shared(surface_builder),
-            mf::a_surface(),
+            msh::a_surface(),
             null_input_channel);
 
     EXPECT_EQ(mir_surface_state_restored, surf.state());

@@ -30,7 +30,7 @@ namespace doubles
 
 struct StubSession : public frontend::Session
 {
-    frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& /* params */)
+    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */)
     {
         return frontend::SurfaceId{0};
     }

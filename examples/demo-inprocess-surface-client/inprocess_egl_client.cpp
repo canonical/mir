@@ -22,7 +22,7 @@
 #include "mir/main_loop.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/surface.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
@@ -76,7 +76,7 @@ void me::InprocessEGLClient::thread_loop()
                                                geom::Height{512}};
 
     ///\internal [setup_tag]
-    auto params = mf::a_surface().of_name("Inprocess EGL Demo")
+    auto params = msh::a_surface().of_name("Inprocess EGL Demo")
         .of_size(surface_size)
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);

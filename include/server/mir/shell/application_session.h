@@ -49,7 +49,7 @@ public:
 
     ~ApplicationSession();
 
-    frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
+    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& params);
     void destroy_surface(frontend::SurfaceId surface);
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 

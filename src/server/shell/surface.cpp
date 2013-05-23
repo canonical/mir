@@ -33,7 +33,7 @@ namespace mi = mir::input;
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
-    frontend::SurfaceCreationParameters const& params,
+    shell::SurfaceCreationParameters const& params,
     std::shared_ptr<input::InputChannel> const& input_channel,
     frontend::SurfaceId id,
     std::shared_ptr<events::EventSink> const& sink)
@@ -49,7 +49,7 @@ msh::Surface::Surface(
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
-    frontend::SurfaceCreationParameters const& params,
+    shell::SurfaceCreationParameters const& params,
     std::shared_ptr<input::InputChannel> const& input_channel)
   : builder(builder),
     input_channel(input_channel),

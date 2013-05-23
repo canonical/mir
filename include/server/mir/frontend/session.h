@@ -29,18 +29,21 @@
 
 namespace mir
 {
+namespace shell
+{
+struct SurfaceCreationParameters;
+}
 
 namespace frontend
 {
 class Surface;
-struct SurfaceCreationParameters;
 
 class Session
 {
 public:
     virtual ~Session() {}
 
-    virtual SurfaceId create_surface(SurfaceCreationParameters const& params) = 0;
+    virtual SurfaceId create_surface(shell::SurfaceCreationParameters const& params) = 0;
     virtual void destroy_surface(SurfaceId surface) = 0;
     virtual std::shared_ptr<Surface> get_surface(SurfaceId surface) const = 0;
 

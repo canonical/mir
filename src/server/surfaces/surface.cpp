@@ -30,10 +30,12 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
-    const std::string& name,
+    std::string const& name,
+    geom::Point const& top_left,
     std::shared_ptr<BufferBundle> buffer_bundle,
     std::function<void()> const& change_callback) :
     surface_name(name),
+    top_left_point(top_left),
     buffer_bundle(buffer_bundle),
     client_buffer_resource(buffer_bundle->secure_client_buffer()),
     alpha_value(1.0f),

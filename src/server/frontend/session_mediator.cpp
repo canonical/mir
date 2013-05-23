@@ -21,7 +21,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir_toolkit/common.h"
 #include "mir/compositor/buffer_id.h"
@@ -38,10 +38,11 @@
 
 #include <boost/throw_exception.hpp>
 
-namespace mf=mir::frontend;
+namespace msh = mir::shell;
+namespace mf = mir::frontend;
 namespace mfd=mir::frontend::detail;
 
-mir::frontend::SessionMediator::SessionMediator(
+mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<graphics::ViewableArea> const& viewable_area,
@@ -60,7 +61,7 @@ mir::frontend::SessionMediator::SessionMediator(
 {
 }
 
-void mir::frontend::SessionMediator::connect(
+void mf::SessionMediator::connect(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::ConnectParameters* request,
     ::mir::protobuf::Connection* response,
@@ -93,7 +94,7 @@ void mir::frontend::SessionMediator::connect(
     done->Run();
 }
 
-void mir::frontend::SessionMediator::create_surface(
+void mf::SessionMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceParameters* request,
     mir::protobuf::Surface* response,
@@ -105,7 +106,7 @@ void mir::frontend::SessionMediator::create_surface(
     report->session_create_surface_called(session->name());
 
     auto const id = shell->create_surface_for(session,
-        SurfaceCreationParameters()
+        msh::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
@@ -145,7 +146,7 @@ void mir::frontend::SessionMediator::create_surface(
     done->Run();
 }
 
-void mir::frontend::SessionMediator::next_buffer(
+void mf::SessionMediator::next_buffer(
     ::google::protobuf::RpcController* /*controller*/,
     ::mir::protobuf::SurfaceId const* request,
     ::mir::protobuf::Buffer* response,
@@ -176,7 +177,7 @@ void mir::frontend::SessionMediator::next_buffer(
     done->Run();
 }
 
-void mir::frontend::SessionMediator::release_surface(
+void mf::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
@@ -194,7 +195,7 @@ void mir::frontend::SessionMediator::release_surface(
     done->Run();
 }
 
-void mir::frontend::SessionMediator::disconnect(
+void mf::SessionMediator::disconnect(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::Void* /*request*/,
     mir::protobuf::Void* /*response*/,
@@ -211,7 +212,7 @@ void mir::frontend::SessionMediator::disconnect(
     done->Run();
 }
 
-void mir::frontend::SessionMediator::configure_surface(
+void mf::SessionMediator::configure_surface(
     google::protobuf::RpcController*, // controller,
     const mir::protobuf::SurfaceSetting* request,
     mir::protobuf::SurfaceSetting* response,

@@ -19,7 +19,7 @@
 #include "mir_test_cucumber/session_management_context.h"
 
 #include "mir/frontend/surface.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
@@ -66,7 +66,7 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
     {
     }
 
-    std::shared_ptr<msh::Surface> create_surface(const mf::SurfaceCreationParameters& params,
+    std::shared_ptr<msh::Surface> create_surface(const msh::SurfaceCreationParameters& params,
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink) override
     {
@@ -156,7 +156,7 @@ mtc::SessionManagementContext::SessionManagementContext(
 // TODO: This will be less awkward with the ApplicationWindow class.
 bool mtc::SessionManagementContext::open_window_consuming(std::string const& window_name)
 {
-    auto const params = mf::a_surface().of_name(window_name);
+    auto const params = msh::a_surface().of_name(window_name);
     auto session = shell->open_session(window_name, std::shared_ptr<mir::events::EventSink>());
     auto const surface_id = session->create_surface(params);
 
@@ -168,7 +168,7 @@ bool mtc::SessionManagementContext::open_window_consuming(std::string const& win
 bool mtc::SessionManagementContext::open_window_with_size(std::string const& window_name,
                                                           geom::Size const& size)
 {
-    auto const params = mf::a_surface().of_name(window_name).of_size(size);
+    auto const params = msh::a_surface().of_name(window_name).of_size(size);
     auto session = shell->open_session(window_name, std::shared_ptr<mir::events::EventSink>());
     auto const surface_id = session->create_surface(params);
 

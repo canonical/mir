@@ -40,7 +40,7 @@ msh::SurfaceSource::SurfaceSource(
 }
 
 std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
-    frontend::SurfaceCreationParameters const& params,
+    shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<events::EventSink> const& sink)
 {
