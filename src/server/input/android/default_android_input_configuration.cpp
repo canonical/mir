@@ -21,6 +21,7 @@
 #include "android_input_reader_policy.h"
 #include "android_input_thread.h"
 #include "android_input_registrar.h"
+#include "android_input_targeter.h"
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
@@ -35,6 +36,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
+namespace msh = mir::shell;
 
 namespace
 {
@@ -158,6 +160,16 @@ std::shared_ptr<ms::InputRegistrar> mia::DefaultInputConfiguration::the_input_re
         [this]()
         {
             return std::make_shared<mia::InputRegistrar>(the_dispatcher());
+        });
+}
+
+std::shared_ptr<msh::InputTargeter> mia::DefaultInputConfiguration::the_input_targeter()
+{
+    return input_targeter(
+        [this]()
+        {
+            // TODO: Use the_window_handle_repository ~racarr
+            return std::make_shared<mia::InputTargeter>(the_dispatcher(), the_input_registrar());
         });
 }
 

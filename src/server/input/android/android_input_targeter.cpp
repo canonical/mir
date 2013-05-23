@@ -35,12 +35,11 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace ms = mir::surfaces;
 
-mia::InputTargeter::InputTargeter(std::shared_ptr<mia::InputConfiguration> const& config,
-                                  std::shared_ptr<ms::InputRegistrar> const& input_registrar) :
-    input_dispatcher(config->the_dispatcher()),
-    input_registrar(std::dynamic_pointer_cast<mia::InputRegistrar>(input_registrar))
+mia::InputTargeter::InputTargeter(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher,
+                                  std::shared_ptr<mia::WindowHandleRepository> const& repository) :
+    input_dispatcher(input_dispatcher),
+    repository(repository)
 {
-    assert(input_registrar);
 }
 
 void mia::InputTargeter::focus_cleared()
@@ -54,7 +53,7 @@ void mia::InputTargeter::focus_cleared()
 
 void mia::InputTargeter::focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface)
 {
-    auto window_handle = input_registrar->handle_for_surface(surface);
+    auto window_handle = repository->handle_for_surface(surface);
 
     if (!window_handle.get())
         BOOST_THROW_EXCEPTION(std::logic_error("Focus changed to an unopened surface"));

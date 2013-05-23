@@ -36,22 +36,18 @@ namespace droidinput = android;
 
 namespace mir
 {
-namespace surfaces
-{
-class InputRegistrar;
-}
 namespace input
 {
 namespace android
 {
 class InputConfiguration;
-class InputRegistrar;
+class WindowHandleRepository;
 
 class InputTargeter : public shell::InputTargeter
 {
 public:
-    explicit InputTargeter(std::shared_ptr<InputConfiguration> const& input_configuration,
-                           std::shared_ptr<surfaces::InputRegistrar> const& input_registrar);
+    explicit InputTargeter(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher,
+                           std::shared_ptr<WindowHandleRepository> const& repository);
     virtual ~InputTargeter() noexcept(true) {}
     
     void focus_changed(std::shared_ptr<input::SurfaceTarget const> const& focus_surface);
@@ -64,7 +60,7 @@ protected:
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
 
-    std::shared_ptr<InputRegistrar> const input_registrar;
+    std::shared_ptr<WindowHandleRepository> const repository;
 };
 
 }

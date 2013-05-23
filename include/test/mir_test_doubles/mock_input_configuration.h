@@ -42,6 +42,7 @@ struct MockInputConfiguration : public input::android::InputConfiguration
     MOCK_METHOD0(the_reader_thread, std::shared_ptr<input::android::InputThread>());
     
     MOCK_METHOD0(the_input_registrar, std::shared_ptr<surfaces::InputRegistrar>());
+    MOCK_METHOD0(the_input_targeter, std::shared_ptr<shell::InputTargeter>());
 
     MOCK_METHOD1(set_input_targets, void(std::shared_ptr<input::InputTargets> const&));
 };

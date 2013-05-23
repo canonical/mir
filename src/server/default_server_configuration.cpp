@@ -659,7 +659,7 @@ std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_t
         [&]() -> std::shared_ptr<msh::InputTargeter>
         {
             if (the_options()->get("enable-input", enable_input_default))
-                return std::make_shared<mia::InputTargeter>(the_input_configuration(), the_input_registrar());
+                return the_input_configuration()->the_input_targeter();
             else
                 return std::make_shared<mi::NullInputTargeter>();
         });

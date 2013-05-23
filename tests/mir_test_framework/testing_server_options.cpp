@@ -200,9 +200,9 @@ std::shared_ptr<msh::InputTargeter> mtf::TestingServerConfiguration::the_input_t
     auto options = the_options();
  
    if (options->get("tests-use-real-input", false))
-        return std::make_shared<mia::InputTargeter>(the_input_configuration(), the_input_registrar());
-    else
-        return std::make_shared<mi::NullInputTargeter>();
+       return the_input_configuration()->the_input_targeter();
+   else
+       return std::make_shared<mi::NullInputTargeter>();
 }
 
 std::shared_ptr<ms::InputRegistrar> mtf::TestingServerConfiguration::the_input_registrar()

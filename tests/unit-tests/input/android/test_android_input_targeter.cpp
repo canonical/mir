@@ -19,7 +19,6 @@
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
 
-#include "mir_test_doubles/mock_input_configuration.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test_doubles/stub_surface_target.h"
 
@@ -42,7 +41,7 @@ namespace
 {
 
 // TODO: It would be nice if it were possible to mock the interface between
-// droidinput::InputChannel and droidinput::InputDispatcher rather than use
+// droidinput::InputChannel and rather than use
 // valid fds to allow non-throwing construction of a real input channel.
 struct AndroidInputTargeterFdSetup : public testing::Test
 {
@@ -58,7 +57,6 @@ struct AndroidInputTargeterFdSetup : public testing::Test
     }
     int test_input_fd;
     droidinput::sp<mtd::MockInputDispatcher> dispatcher;
-    mtd::MockInputConfiguration config;
 };
 
 static bool
