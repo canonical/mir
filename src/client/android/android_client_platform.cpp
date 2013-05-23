@@ -50,6 +50,10 @@ mcl::NativeClientPlatformFactory::create_client_platform(mcl::ClientContext* /*c
     return std::make_shared<mcla::AndroidClientPlatform>();
 }
 
+mcla::AndroidClientPlatform::~AndroidClientPlatform()
+{
+}
+
 std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_buffer_factory()
 {
     const hw_module_t *hw_module;
