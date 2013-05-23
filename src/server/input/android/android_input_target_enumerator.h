@@ -60,7 +60,7 @@ protected:
     InputTargetEnumerator& operator=(const InputTargetEnumerator&) = delete;
     
 private:
-    std::shared_ptr<input::InputTargets> const targets;
+    std::weak_ptr<input::InputTargets> const targets;
     std::shared_ptr<input::android::WindowHandleRepository> const repository;
 };
 

@@ -44,25 +44,17 @@ mia::InputTargeter::InputTargeter(droidinput::sp<droidinput::InputDispatcherInte
 
 void mia::InputTargeter::focus_cleared()
 {
-    droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> empty_windows;
-    droidinput::sp<droidinput::InputApplicationHandle> null_application = nullptr;
+    droidinput::sp<droidinput::InputWindowHandle> null_window = nullptr;
     
-    input_dispatcher->setFocusedApplication(null_application);
-    input_dispatcher->setInputWindows(empty_windows);
+    input_dispatcher->setKeyboardFocus(null_window);
 }
 
 void mia::InputTargeter::focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface)
 {
     auto window_handle = repository->handle_for_surface(surface);
-
-    if (!window_handle.get())
-        BOOST_THROW_EXCEPTION(std::logic_error("Focus changed to an unopened surface"));
-    auto application_handle = window_handle->inputApplicationHandle;
     
-    input_dispatcher->setFocusedApplication(application_handle);
-
-    droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> windows;
-    windows.push_back(window_handle);
-
-    input_dispatcher->setInputWindows(windows);
+    if (window_handle == NULL)
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set keyboard focus to an unregistered surface"));
+    
+    input_dispatcher->setKeyboardFocus(window_handle);
 }
