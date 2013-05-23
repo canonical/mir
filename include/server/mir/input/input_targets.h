@@ -35,7 +35,7 @@ class InputTargets
 public:
     virtual ~InputTargets() = default;
 
-    void for_each(std::function<void(std::shared_ptr<input::SurfaceTarget> const&)> const& callback);
+    virtual void for_each(std::function<void(std::shared_ptr<input::SurfaceTarget> const&)> const& callback) = 0;
 
 protected:
     InputTargets() = default;

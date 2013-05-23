@@ -21,6 +21,9 @@
 
 #include <utils/StrongPointer.h>
 
+#include <memory>
+#include <functional>
+
 namespace android
 {
 class InputWindowHandle;
@@ -48,7 +51,7 @@ public:
                                    std::shared_ptr<WindowHandleRepository> const& repository);
     virtual ~InputTargetEnumerator() noexcept(true) {}
     
-    void for_each(std::function<void(droidinput::sp<droidinput::InputWindowHandle>)> const& callback);
+    void for_each(std::function<void(droidinput::sp<droidinput::InputWindowHandle> const&)> const& callback);
     
 protected:
     InputTargetEnumerator(const InputTargetEnumerator&) = delete;

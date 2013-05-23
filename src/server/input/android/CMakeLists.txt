@@ -11,6 +11,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_window_handle.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_registrar.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_targeter.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_target_enumerator.cpp
 )
 
 set(

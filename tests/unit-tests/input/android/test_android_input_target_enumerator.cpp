@@ -34,6 +34,7 @@
 
 #include <string>
 #include <initializer_list>
+#include <map>
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
@@ -54,10 +55,9 @@ struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
 struct StubInputWindowHandle : public droidinput::InputWindowHandle
 {
     StubInputWindowHandle(std::string const& name)
-        : droidinput::InputWindowHandle(new StubInputApplicationHandle),
-          info_owner(std::make_shared<droidinput::InputWindowInfo>())
+        : droidinput::InputWindowHandle(new StubInputApplicationHandle)
     {
-        mInfo = info_owner.get();
+        mInfo = new droidinput::InputWindowInfo();
         mInfo->name = droidinput::String8(name);
     }
           
@@ -65,15 +65,18 @@ struct StubInputWindowHandle : public droidinput::InputWindowHandle
     {
         return true;
     }
-    std::shared_ptr<droidinput::InputWindowInfo> info_owner;
 };
 
 struct StubWindowHandleRepository : public mia::WindowHandleRepository // TODO: In implementation this will be registrar
 {
     droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<mi::SurfaceTarget const> const& surface)
     {
-        return new StubInputWindowHandle(surface->name());
+        if (handles.find(surface) == handles.end())
+            handles[surface] = new StubInputWindowHandle(surface->name());
+        
+        return handles[surface];
     }
+    std::map<std::shared_ptr<mi::SurfaceTarget const>, droidinput::sp<droidinput::InputWindowHandle>> handles;
 };
 
 struct StubSurfaceTarget : public mi::SurfaceTarget
@@ -110,7 +113,7 @@ struct StubInputTargets : public mi::InputTargets
     {
     }
     
-    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> callback)
+    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback) override
     {
         for (auto target : targets)
             callback(target);
