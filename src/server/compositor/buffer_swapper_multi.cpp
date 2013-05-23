@@ -38,7 +38,7 @@ void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
 mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list)
  : in_use_by_client(0),
    swapper_size(buffer_list.size()),
-   clients_trying_to_acquire(0)
+   force_clients_to_complete(false)
 {
     initialize_queues(buffer_list);
 }
@@ -46,7 +46,7 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<composito
 mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
     in_use_by_client(0),
     swapper_size(buffer_list.size()),
-    clients_trying_to_acquire(0)
+    force_clients_to_complete(false)
 {
     initialize_queues(buffer_list);
 }
@@ -55,22 +55,25 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    clients_trying_to_acquire++;
-
     /*
      * Don't allow the client to acquire all the buffers, because then the
      * compositor won't have a buffer to display.
      */
-    while (client_queue.empty() || in_use_by_client == swapper_size - 1)
+    while ((!force_clients_to_complete) &&
+            (client_queue.empty() || (in_use_by_client == swapper_size - 1)))
     {
         client_available_cv.wait(lk);
+    }
+
+    if (force_clients_to_complete)
+    {
+        force_clients_to_complete = false;
+        BOOST_THROW_EXCEPTION(std::logic_error("forced completion"));
     }
 
     auto dequeued_buffer = client_queue.front();
     client_queue.pop_front();
     in_use_by_client++;
-
-    clients_trying_to_acquire--;
 
     return dequeued_buffer;
 }
@@ -122,6 +125,9 @@ void mc::BufferSwapperMulti::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
+    force_clients_to_complete = true;
+    client_available_cv.notify_all();
+#if 0
     if (in_use_by_client == swapper_size - 1 && clients_trying_to_acquire > 0)
     {
         BOOST_THROW_EXCEPTION(
@@ -144,4 +150,5 @@ void mc::BufferSwapperMulti::force_requests_to_complete()
     }
 
     client_available_cv.notify_all();
+#endif
 }
