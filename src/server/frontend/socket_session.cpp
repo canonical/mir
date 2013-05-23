@@ -27,6 +27,9 @@ namespace bs = boost::system;
 
 namespace mfd = mir::frontend::detail;
 
+mfd::SocketSession::~SocketSession()
+{
+}
 
 void mfd::SocketSession::send(std::string const& body)
 {
