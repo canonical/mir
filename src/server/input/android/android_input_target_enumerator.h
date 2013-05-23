@@ -19,6 +19,8 @@
 #ifndef MIR_INPUT_ANDROID_TARGET_ENUMERATOR_H_
 #define MIR_INPUT_ANDROID_TARGET_ENUMERATOR_H_
 
+#include <InputEnumerator.h>
+
 #include <utils/StrongPointer.h>
 
 #include <memory>
@@ -44,7 +46,7 @@ namespace android
 {
 class WindowHandleRepository;
 
-class InputTargetEnumerator
+class InputTargetEnumerator : public droidinput::InputEnumerator
 {
 public:
     explicit InputTargetEnumerator(std::shared_ptr<input::InputTargets> const& targets,
