@@ -250,7 +250,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
             .WillByDefault(Return(default_view_area));
         input_manager = std::make_shared<mia::InputManager>(configuration);
         
-        input_registrar = std::make_shared<mia::InputRegistrar>(configuration);
+        input_registrar = std::make_shared<mia::InputRegistrar>(configuration->the_dispatcher());
         input_targeter = std::make_shared<mia::InputTargeter>(configuration, input_registrar);
 
         dispatcher_policy = configuration->the_mock_dispatcher_policy();

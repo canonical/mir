@@ -20,6 +20,7 @@
 #include "event_filter_dispatcher_policy.h"
 #include "android_input_reader_policy.h"
 #include "android_input_thread.h"
+#include "android_input_registrar.h"
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
@@ -33,6 +34,7 @@ namespace droidinput = android;
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
 
 namespace
 {
@@ -150,12 +152,21 @@ std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thr
         });
 }
 
+std::shared_ptr<ms::InputRegistrar> mia::DefaultInputConfiguration::the_input_registrar()
+{
+    return input_registrar(
+        [this]()
+        {
+            return std::make_shared<mia::InputRegistrar>(the_dispatcher());
+        });
+}
+
 bool mia::DefaultInputConfiguration::is_key_repeat_enabled()
 {
     return true;
 }
 
-void mia::DefaultInputConfiguration::set_input_targets(std::shared_ptr<input::InputTargets> const& targets)
+void mia::DefaultInputConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& targets)
 {
     (void) targets;
     // TODO: ~racarr

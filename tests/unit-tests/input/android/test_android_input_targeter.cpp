@@ -117,7 +117,7 @@ TEST_F(AndroidInputTargeterFdSetup, on_focus_cleared)
     EXPECT_CALL(*dispatcher, setFocusedApplication(droidinput::sp<droidinput::InputApplicationHandle>(0))).Times(1);
     EXPECT_CALL(*dispatcher, setInputWindows(EmptyVector())).Times(1);
 
-    mia::InputTargeter targeter(mt::fake_shared(config), std::make_shared<mia::InputRegistrar>(mt::fake_shared(config)));
+    mia::InputTargeter targeter(mt::fake_shared(config), config.the_input_registrar());
     
     targeter.focus_cleared();
 }
@@ -139,8 +139,8 @@ TEST_F(AndroidInputTargeterFdSetup, on_focus_changed)
         EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(surface))).Times(1);
     }
 
-    // TODO: The coupling between registrar and targeter is tight here.
-    auto registrar = std::make_shared<mia::InputRegistrar>(mt::fake_shared(config));
+    // TODO: The coupling between registrar and targeter is tight here. ~racarr
+    auto registrar = config.the_input_registrar();
     mia::InputTargeter targeter(mt::fake_shared(config), registrar);
     
     registrar->input_surface_opened(surface);
@@ -156,7 +156,7 @@ TEST_F(AndroidInputTargeterFdSetup, on_focus_changed_throw_behavior)
 
     auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
 
-    mia::InputTargeter targeter(mt::fake_shared(config), std::make_shared<mia::InputRegistrar>(mt::fake_shared(config)));
+    mia::InputTargeter targeter(mt::fake_shared(config), config.the_input_registrar());
 
     EXPECT_THROW({
             // We can't focus surfaces which never opened

@@ -33,8 +33,8 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputRegistrar::InputRegistrar(std::shared_ptr<mia::InputConfiguration> const& config) :
-    input_dispatcher(config->the_dispatcher())
+mia::InputRegistrar::InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher)
+    : input_dispatcher(input_dispatcher)
 {
 }
 

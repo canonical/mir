@@ -69,6 +69,8 @@ public:
 
     virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
+
+    std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     
     virtual bool is_key_repeat_enabled();
     
@@ -107,6 +109,7 @@ private:
 
     CachedPtr<InputThread> dispatcher_thread;
     CachedPtr<InputThread> reader_thread;
+    CachedPtr<surfaces::InputRegistrar> input_registrar;
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
     CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;

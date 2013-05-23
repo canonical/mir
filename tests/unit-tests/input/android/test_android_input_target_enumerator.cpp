@@ -16,7 +16,6 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/server/input/android/android_input_registrar.h"
 #include "src/server/input/android/android_input_target_enumerator.h"
 #include "src/server/input/android/android_window_handle_repository.h"
 

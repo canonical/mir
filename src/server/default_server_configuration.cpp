@@ -54,7 +54,6 @@
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_input_targeter.h"
-#include "input/android/android_input_registrar.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -672,7 +671,7 @@ std::shared_ptr<ms::InputRegistrar> mir::DefaultServerConfiguration::the_input_r
         [&]() -> std::shared_ptr<ms::InputRegistrar>
         {
             if (the_options()->get("enable-input", enable_input_default))
-                return std::make_shared<mia::InputRegistrar>(the_input_configuration());
+                return the_input_configuration()->the_input_registrar();
             else
                 return std::make_shared<mi::NullInputRegistrar>();
         });

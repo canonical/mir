@@ -30,6 +30,8 @@
 #include "mir/input/input_manager.h"
 #include "mir/input/null_input_targeter.h"
 #include "mir/input/null_input_registrar.h"
+#include "mir/input/android/android_input_configuration.h"
+
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_registrar.h"
 #include "src/server/input/android/android_input_targeter.h"
@@ -208,7 +210,7 @@ std::shared_ptr<ms::InputRegistrar> mtf::TestingServerConfiguration::the_input_r
     auto options = the_options();
  
    if (options->get("tests-use-real-input", false))
-        return std::make_shared<mia::InputRegistrar>(the_input_configuration());
+        return the_input_configuration()->the_input_registrar();
     else
         return std::make_shared<mi::NullInputRegistrar>();
 }

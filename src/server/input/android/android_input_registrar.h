@@ -48,7 +48,7 @@ class InputTargeter;
 class InputRegistrar : public surfaces::InputRegistrar, public WindowHandleRepository
 {
 public:
-    explicit InputRegistrar(std::shared_ptr<InputConfiguration> const& input_configuration);
+    explicit InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher);
     virtual ~InputRegistrar() noexcept(true) {}
 
     void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface);
@@ -56,9 +56,11 @@ public:
 
 
     virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface);
+
 protected:
     InputRegistrar(const InputRegistrar&) = delete;
     InputRegistrar& operator=(const InputRegistrar&) = delete;
+
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
 
