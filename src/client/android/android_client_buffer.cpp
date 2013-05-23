@@ -41,6 +41,10 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
     pack_native_window_buffer();
 }
 
+mcla::AndroidClientBuffer::~AndroidClientBuffer()
+{
+}
+
 static void incRef(android_native_base_t*)
 {
 }
