@@ -77,6 +77,11 @@ struct StubWindowHandleRepository : public mia::WindowHandleRepository
         return new StubInputWindowHandle(surface->name());
     }
 };
+struct MockWindowHandleRepository : public mia::WindowHandleRepository
+{
+    ~MockWindowHandleRepository() noexcept(true) {};
+    MOCK_METHOD1(handle_for_surface, droidinput::sp<droidinput::InputWindowHandle>(std::shared_ptr<mi::SurfaceTarget const> const& surface));
+};
 
 struct StubSurfaceTarget : public mi::SurfaceTarget
 {
@@ -106,15 +111,6 @@ struct StubSurfaceTarget : public mi::SurfaceTarget
 };
 
 static bool
-application_handle_matches_surface(droidinput::sp<droidinput::InputApplicationHandle> const& handle,
-                                   std::shared_ptr<mi::SurfaceTarget> const& surface)
-{
-   if (handle->getName() != droidinput::String8(surface->name().c_str()))
-        return false;
-   return true;
-}
-
-static bool
 window_handle_matches_surface(droidinput::sp<droidinput::InputWindowHandle> const& handle,
                               std::shared_ptr<mi::SurfaceTarget> const& surface)
 {
@@ -126,11 +122,6 @@ window_handle_matches_surface(droidinput::sp<droidinput::InputWindowHandle> cons
 MATCHER_P(WindowHandleFor, surface, "")
 {
     return window_handle_matches_surface(arg, surface);
-}
-
-MATCHER_P(ApplicationHandleFor, surface, "")
-{
-    return application_handle_matches_surface(arg, surface);
 }
 
 MATCHER_P(VectorContainingWindowHandleFor, surface, "")
@@ -174,7 +165,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed)
     auto surface = std::make_shared<StubSurfaceTarget>("test_focus_changed");
     {
         InSequence seq;
-        EXPECT_CALL(*dispatcher, setFocusedApplication(ApplicationHandleFor(surface))).Times(1);
+        EXPECT_CALL(*dispatcher, setFocusedApplication(_)).Times(1);
         EXPECT_CALL(*dispatcher, setInputWindows(VectorContainingWindowHandleFor(surface))).Times(1);
     }
 
@@ -189,11 +180,13 @@ TEST(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
     using namespace ::testing;
 
     droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
-    StubWindowHandleRepository repository;
+    MockWindowHandleRepository repository;
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
 
     auto surface = std::make_shared<StubSurfaceTarget>("test_focus_changed_throw");
 
+    EXPECT_CALL(repository, handle_for_surface(_)).Times(1)
+        .WillOnce(Return(droidinput::sp<droidinput::InputWindowHandle>()));
     EXPECT_THROW({
             // We can't focus surfaces which never opened
             targeter.focus_changed(surface);
