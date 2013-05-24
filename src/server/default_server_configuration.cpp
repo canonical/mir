@@ -492,7 +492,6 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            // TODO: Dedupe ~racarr
             auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;

@@ -27,8 +27,6 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-// TODO: Investigate shutdown and ownership cycle ~racarr
-
 mia::InputTargetEnumerator::InputTargetEnumerator(std::shared_ptr<mi::InputTargets> const& targets,
                                                   std::shared_ptr<mia::WindowHandleRepository> const& repository)
     : targets(targets),

@@ -41,7 +41,7 @@ namespace frontend
 struct SurfaceCreationParameters;
 }
 
-namespace input // TODO: Remove ~racarr
+namespace input
 {
 class InputChannelFactory;
 class SurfaceTarget;

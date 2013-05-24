@@ -68,9 +68,16 @@ public:
                               std::shared_ptr<graphics::ViewableArea> const& view_area,
                               std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~DefaultInputConfiguration();
-    
-    // TODO: ~racarr
 
+    std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
+    std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    std::shared_ptr<input::InputManager> the_input_manager();
+    
+    void set_input_targets(std::shared_ptr<input::InputTargets> const& targets);
+
+    virtual bool is_key_repeat_enabled();
+    
+protected:
     virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub();
     virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
     virtual droidinput::sp<droidinput::InputReaderInterface> the_reader();
@@ -81,20 +88,10 @@ public:
     virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
 
-    std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
-    std::shared_ptr<shell::InputTargeter> the_input_targeter();
-    std::shared_ptr<input::InputManager> the_input_manager();
-    
-    virtual bool is_key_repeat_enabled();
-    
-    void set_input_targets(std::shared_ptr<input::InputTargets> const& targets);
-
-protected:
     std::shared_ptr<WindowHandleRepository> the_window_handle_repository();
 
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;
     DefaultInputConfiguration& operator=(DefaultInputConfiguration const&) = delete;
-
 private:
     template <typename Type>
     class CachedAndroidPtr

@@ -171,7 +171,7 @@ std::shared_ptr<mia::WindowHandleRepository> mia::DefaultInputConfiguration::the
         [this]()
         {
             return std::make_shared<mia::InputRegistrar>(the_dispatcher());
-        }); // TODO: Dedupe, racarr
+        });
 }
 
 std::shared_ptr<msh::InputTargeter> mia::DefaultInputConfiguration::the_input_targeter()
