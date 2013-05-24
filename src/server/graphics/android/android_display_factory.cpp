@@ -38,6 +38,7 @@ std::shared_ptr<hwc_composer_device_1> setup_hwc_dev()
     int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &module);
     if ((rc != 0) || (module == nullptr))
     {
+        // this is nonfatal, we'll just create the backup display
         return {};
     }
 
@@ -58,14 +59,13 @@ std::shared_ptr<hwc_composer_device_1> setup_hwc_dev()
         return {};
     }
 
-    return std::shared_ptr<hwc_composer_device_1>(hwc_device_raw,
-                  [](hwc_composer_device_1* device)
-                  {
-                     device->common.close((hw_device_t*) device);
-                  });
+    return std::shared_ptr<hwc_composer_device_1>(
+        hwc_device_raw,
+        [](hwc_composer_device_1* device) { device->common.close((hw_device_t*) device); });
 }
 }
 
+// TODO this whole class seems to be a dismembered function call - replace with a function
 mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
                                                   std::shared_ptr<HWCFactory> const& hwc_factory,
                                                   std::shared_ptr<FramebufferFactory> const& fb_factory,
