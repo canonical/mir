@@ -30,7 +30,7 @@
 #include "mir/input/input_manager.h"
 #include "mir/input/null_input_targeter.h"
 #include "mir/input/null_input_registrar.h"
-#include "mir/input/android/android_input_configuration.h"
+#include "mir/input/input_configuration.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"

@@ -22,8 +22,6 @@
 #include "android_input_window_handle.h"
 #include "android_input_application_handle.h"
 
-#include "mir/input/android/android_input_configuration.h"
-
 #include <InputDispatcher.h>
 
 #include <boost/throw_exception.hpp>

@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_ANDROID_DEFAULT_ANDROID_INPUT_CONFIGURATION_H_
 #define MIR_INPUT_ANDROID_DEFAULT_ANDROID_INPUT_CONFIGURATION_H_
 
-#include "mir/input/android/android_input_configuration.h"
+#include "mir/input/input_configuration.h"
 
 #include "mir/cached_ptr.h"
 
@@ -35,6 +35,8 @@ namespace android
 class InputReaderInterface;
 class InputReaderPolicyInterface;
 class InputDispatcherPolicyInterface;
+class InputDispatcherInterface;
+class EventHubInterface;
 }
 
 namespace mir
@@ -57,8 +59,9 @@ namespace android
 {
 class InputRegistrar;
 class WindowHandleRepository;
+class InputThread;
 
-class DefaultInputConfiguration : public InputConfiguration
+class DefaultInputConfiguration : public input::InputConfiguration
 {
 public:
     DefaultInputConfiguration(std::initializer_list<std::shared_ptr<EventFilter> const> const& filters,

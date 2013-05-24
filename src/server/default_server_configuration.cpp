@@ -411,7 +411,7 @@ mir::DefaultServerConfiguration::the_event_filters()
     return empty_filter_list;
 }
 
-std::shared_ptr<mia::InputConfiguration>
+std::shared_ptr<mi::InputConfiguration>
 mir::DefaultServerConfiguration::the_input_configuration()
 {
     if (!input_configuration)

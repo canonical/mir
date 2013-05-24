@@ -103,7 +103,7 @@ struct FakeInputServerConfiguration : public mir_test_framework::TestingServerCo
     {
     }
     
-    std::shared_ptr<mia::InputConfiguration> the_input_configuration() override
+    std::shared_ptr<mi::InputConfiguration> the_input_configuration() override
     {
         fake_event_hub = input_config.the_fake_event_hub();
         fake_event_hub->synthesize_builtin_keyboard_added();

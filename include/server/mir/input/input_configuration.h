@@ -16,20 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_ANDROID_INPUT_CONFIGURATION_H_
-
-#include <utils/StrongPointer.h>
+#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
+#define MIR_INPUT_INPUT_CONFIGURATION_H_
 
 #include <memory>
-
-namespace droidinput = android;
-
-namespace android
-{
-class EventHubInterface;
-class InputDispatcherInterface;
-}
 
 namespace mir
 {
@@ -46,16 +36,11 @@ namespace input
 class InputTargets;
 class InputManager;
 
-namespace android
-{
-class InputThread;
-
 class InputConfiguration
 {
 public:
     virtual ~InputConfiguration() {}
 
-    // Perhaps these belong to a more general mi:: (rather than mia::) configuration interface.
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar() = 0;
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
@@ -68,7 +53,6 @@ protected:
     InputConfiguration& operator=(InputConfiguration const&) = delete;
 };
 }
-}
 } // namespace mir
 
-#endif // MIR_INPUT_ANDROID_INPUT_CONFIGURATION_H_
+#endif // MIR_INPUT_INPUT_CONFIGURATION_H_

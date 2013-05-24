@@ -19,10 +19,8 @@
 
 #include "mir/input/event_filter.h"
 #include "mir/input/input_targets.h"
-#include "mir/input/android/android_input_configuration.h"
 #include "mir/shell/surface_creation_parameters.h"
 
-#include "src/server/input/android/default_android_input_configuration.h"
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"

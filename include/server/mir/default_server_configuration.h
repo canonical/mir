@@ -85,12 +85,8 @@ namespace input
 {
 class InputManager;
 class EventFilter;
-// TODO: Remove ~racarr?
 class InputChannelFactory;
-namespace android
-{
 class InputConfiguration;
-}
 }
 
 namespace logging
@@ -185,7 +181,7 @@ public:
 
     /** @name input configuration
      *  @{ */
-    virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
+    virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
@@ -213,7 +209,7 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
-    std::shared_ptr<input::android::InputConfiguration> input_configuration;
+    std::shared_ptr<input::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<surfaces::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
