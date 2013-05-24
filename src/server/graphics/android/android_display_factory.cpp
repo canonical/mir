@@ -32,19 +32,30 @@ namespace mga=mir::graphics::android;
 
 namespace
 {
-std::shared_ptr<hwc_composer_device_1> setup_hwc_dev(const hw_module_t* module)
+std::shared_ptr<hwc_composer_device_1> setup_hwc_dev()
 {
+    const hw_module_t *module;
+    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &module);
+    if ((rc != 0) || (module == nullptr))
+    {
+        return {};
+    }
+
     if ((!module->methods) || !(module->methods->open))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
+        // TODO: log "display factory cannot create hwc display".
+        // this is nonfatal, we'll just create the backup display
+        return {};
     }
 
     hwc_composer_device_1* hwc_device_raw = nullptr;
-    int rc = module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
+    rc = module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
 
     if ((rc != 0) || (hwc_device_raw == nullptr))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display hwc module unusable"));
+        // TODO: log "display hwc module unusable".
+        // this is nonfatal, we'll just create the backup display
+        return {};
     }
 
     return std::shared_ptr<hwc_composer_device_1>(hwc_device_raw,
@@ -63,22 +74,9 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
       hwc_factory(hwc_factory),
       fb_factory(fb_factory),
       fb_dev(fb_factory->create_fb_device()),
-      display_report(display_report)
+      display_report(display_report),
+      hwc_dev(setup_hwc_dev())
 {
-    const hw_module_t *hw_module;
-    int rc = hw_get_module(HWC_HARDWARE_MODULE_ID, &hw_module);    
-    if ((rc != 0) || (hw_module == nullptr))
-    {
-        return;
-    }
-
-    try
-    {
-        hwc_dev = setup_hwc_dev(hw_module);
-    } catch (std::runtime_error &e)
-    {
-        /* TODO: log error. this is nonfatal, we'll just create the backup display */
-    }
 }
 
 std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
