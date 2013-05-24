@@ -52,7 +52,7 @@ public:
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();
 
-    BufferUsage convert_from_compositor_usage(compositor::BufferUsage usage);
+    static BufferUsage convert_from_compositor_usage(compositor::BufferUsage usage);
 
 private:
     const hw_module_t    *hw_module;

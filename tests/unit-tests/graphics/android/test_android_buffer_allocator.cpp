@@ -119,11 +119,8 @@ TEST_F(AndroidGraphicBufferAllocatorTest, alloc_buffer_platform_calls_initialize
 
 TEST_F(AndroidGraphicBufferAllocatorTest, buffer_usage_converter)
 {
-    auto buffer_initializer = std::make_shared<mtd::MockBufferInitializer>();
-    mga::AndroidGraphicBufferAllocator allocator{buffer_initializer};
-
     EXPECT_EQ(mga::BufferUsage::use_hardware,
-              allocator.convert_from_compositor_usage(mc::BufferUsage::hardware));
+        mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mc::BufferUsage::hardware));
     EXPECT_EQ(mga::BufferUsage::use_software,
-              allocator.convert_from_compositor_usage(mc::BufferUsage::software));
+        mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mc::BufferUsage::software));
 }
