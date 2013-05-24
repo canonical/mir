@@ -65,13 +65,15 @@ public:
                               std::shared_ptr<graphics::ViewableArea> const& view_area,
                               std::shared_ptr<CursorListener> const& cursor_listener);
     virtual ~DefaultInputConfiguration();
+    
+    // TODO: ~racarr
 
-    droidinput::sp<droidinput::EventHubInterface> the_event_hub();
-    droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
-    droidinput::sp<droidinput::InputReaderInterface> the_reader();
+    virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub();
+    virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
+    virtual droidinput::sp<droidinput::InputReaderInterface> the_reader();
 
-    std::shared_ptr<InputThread> the_dispatcher_thread();
-    std::shared_ptr<InputThread> the_reader_thread();
+    virtual std::shared_ptr<InputThread> the_dispatcher_thread();
+    virtual std::shared_ptr<InputThread> the_reader_thread();
 
     virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();

@@ -55,11 +55,6 @@ class InputConfiguration
 public:
     virtual ~InputConfiguration() {}
 
-    virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub() = 0;
-    virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() = 0;
-    virtual std::shared_ptr<InputThread> the_dispatcher_thread() = 0;
-    virtual std::shared_ptr<InputThread> the_reader_thread() = 0;
-
     // Perhaps these belong to a more general mi:: (rather than mia::) configuration interface.
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar() = 0;
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter() = 0;
