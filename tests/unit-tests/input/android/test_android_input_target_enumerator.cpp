@@ -148,8 +148,11 @@ TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
     StubSurfaceTarget t1(surface1_name), t2(surface2_name);
     StubInputTargets targets({mt::fake_shared(t1), mt::fake_shared(t2)});
     StubWindowHandleRepository handles;
+    
+    // The InputTargetEnumerator only holds a weak reference to the targets so we need to hold a shared pointer.
+    auto shared_targets = mt::fake_shared(targets);
 
-    mia::InputTargetEnumerator enumerator(mt::fake_shared(targets), mt::fake_shared(handles));
+    mia::InputTargetEnumerator enumerator(shared_targets, mt::fake_shared(handles));
     enumerator.for_each([&observer](droidinput::sp<droidinput::InputWindowHandle> const& handle)
         {
             observer.see(handle);
