@@ -17,10 +17,11 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
-#include "mir/input/event_filter.h"
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/default_android_input_configuration.h"
+#include "mir/input/event_filter.h"
 #include "mir/input/cursor_listener.h"
+#include "mir/input/input_targets.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
@@ -48,6 +49,13 @@ using mtd::MockEventFilter;
 namespace
 {
 using namespace ::testing;
+
+struct StubInputTargets : public mi::InputTargets
+{
+    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const&)
+    {
+    }
+};
 
 struct MockCursorListener : public mi::CursorListener
 {
@@ -79,6 +87,9 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 
         input_manager = configuration->the_input_manager();
 
+        stub_targets = std::make_shared<StubInputTargets>();
+        configuration->set_input_targets(stub_targets);
+
         input_manager->start();
     }
 
@@ -93,6 +104,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     NiceMock<mtd::MockViewableArea> viewable_area;
     std::shared_ptr<mi::InputManager> input_manager;
     MockCursorListener cursor_listener;
+    std::shared_ptr<StubInputTargets> stub_targets;
 };
 
 }

@@ -151,8 +151,9 @@ TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
     
     // The InputTargetEnumerator only holds a weak reference to the targets so we need to hold a shared pointer.
     auto shared_targets = mt::fake_shared(targets);
+    auto shared_handles = mt::fake_shared(handles);
 
-    mia::InputTargetEnumerator enumerator(shared_targets, mt::fake_shared(handles));
+    mia::InputTargetEnumerator enumerator(shared_targets, shared_handles);
     enumerator.for_each([&observer](droidinput::sp<droidinput::InputWindowHandle> const& handle)
         {
             observer.see(handle);

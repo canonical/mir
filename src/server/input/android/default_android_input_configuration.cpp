@@ -111,7 +111,7 @@ droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::DefaultInputConf
 droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfiguration::the_dispatcher()
 {
     return dispatcher(
-        [this]()
+        [this]() -> droidinput::sp<droidinput::InputDispatcherInterface>
         {
             return new droidinput::InputDispatcher(the_dispatcher_policy());
         });
@@ -200,6 +200,5 @@ bool mia::DefaultInputConfiguration::is_key_repeat_enabled()
 
 void mia::DefaultInputConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& targets)
 {
-    // TODO: Cleanup, might crash? ~racarr
     the_dispatcher()->setInputEnumerator(new mia::InputTargetEnumerator(targets, the_window_handle_repository()));
 }

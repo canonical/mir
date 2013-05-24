@@ -87,10 +87,10 @@ public:
 
         fake_event_hub = configuration->the_fake_event_hub();
         
+        input_manager = configuration->the_input_manager();
+
         stub_targets = std::make_shared<StubInputTargets>();
         configuration->set_input_targets(stub_targets);
-        
-        input_manager = configuration->the_input_manager();
 
         input_manager->start();
     }
@@ -266,6 +266,8 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
         dispatcher_policy = configuration->the_mock_dispatcher_policy();
 
+        stub_targets = std::make_shared<StubInputTargets>();
+        configuration->set_input_targets(stub_targets);
     }
 
     ~AndroidInputManagerDispatcherInterceptSetup()
@@ -294,6 +296,8 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     std::shared_ptr<TestingInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
+
+    std::shared_ptr<StubInputTargets> stub_targets;
 
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<ms::InputRegistrar> input_registrar;

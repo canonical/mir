@@ -61,7 +61,7 @@ protected:
     
 private:
     std::weak_ptr<input::InputTargets> const targets;
-    std::shared_ptr<input::android::WindowHandleRepository> const repository;
+    std::weak_ptr<input::android::WindowHandleRepository> const repository;
 };
 
 }

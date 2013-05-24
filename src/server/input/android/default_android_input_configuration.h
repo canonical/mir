@@ -121,7 +121,7 @@ private:
     std::shared_ptr<EventFilterChain> const filter_chain;
     std::shared_ptr<graphics::ViewableArea> const view_area;
     std::shared_ptr<CursorListener> const cursor_listener;
-
+    
     CachedPtr<InputThread> dispatcher_thread;
     CachedPtr<InputThread> reader_thread;
     CachedPtr<InputRegistrar> input_registrar;

@@ -2784,6 +2784,9 @@ void InputDispatcher::setInputDispatchMode(bool enabled, bool frozen) {
     ALOGD("setInputDispatchMode: enabled=%d, frozen=%d", enabled, frozen);
 #endif
 
+    if (enabled)
+        assert(mEnumerator != NULL);
+
     bool changed;
     { // acquire lock
         AutoMutex _l(mLock);
