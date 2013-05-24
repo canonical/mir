@@ -30,6 +30,31 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
+namespace
+{
+std::shared_ptr<hwc_composer_device_1> setup_hwc_dev(const hw_module_t* module)
+{
+    if ((!module->methods) || !(module->methods->open))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
+    }
+
+    hwc_composer_device_1* hwc_device_raw = nullptr;
+    int rc = module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
+
+    if ((rc != 0) || (hwc_device_raw == nullptr))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display hwc module unusable"));
+    }
+
+    return std::shared_ptr<hwc_composer_device_1>(hwc_device_raw,
+                  [](hwc_composer_device_1* device)
+                  {
+                     device->common.close((hw_device_t*) device);
+                  });
+}
+}
+
 mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
                                                   std::shared_ptr<HWCFactory> const& hwc_factory,
                                                   std::shared_ptr<FramebufferFactory> const& fb_factory,
@@ -49,33 +74,11 @@ mga::AndroidDisplayFactory::AndroidDisplayFactory(std::shared_ptr<DisplayAllocat
 
     try
     {
-        setup_hwc_dev(hw_module);
+        hwc_dev = setup_hwc_dev(hw_module);
     } catch (std::runtime_error &e)
     {
         /* TODO: log error. this is nonfatal, we'll just create the backup display */
     }
-}
-
-void mga::AndroidDisplayFactory::setup_hwc_dev(const hw_module_t* module)
-{
-    if ((!module->methods) || !(module->methods->open))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display factory cannot create hwc display"));
-    }
-
-    hwc_composer_device_1* hwc_device_raw = nullptr;
-    int rc = module->methods->open(module, HWC_HARDWARE_COMPOSER, reinterpret_cast<hw_device_t**>(&hwc_device_raw));
-
-    if ((rc != 0) || (hwc_device_raw == nullptr))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display hwc module unusable"));
-    }
-
-    hwc_dev = std::shared_ptr<hwc_composer_device_1>(hwc_device_raw,
-                  [](hwc_composer_device_1* device)
-                  {
-                     device->common.close((hw_device_t*) device);
-                  });
 }
 
 std::shared_ptr<mg::Display> mga::AndroidDisplayFactory::create_display() const
