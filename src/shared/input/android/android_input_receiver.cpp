@@ -85,14 +85,27 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
         looper->addFd(fd(), fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
         fd_added = true;
     }
+
+   if(input_consumer->consume(&event_factory, true,
+        -1, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
+    {
+        mia::Lexicon::translate(android_event, ev);
+
+        map_key_event(xkb_mapper, ev);
+
+        input_consumer->sendFinishedSignal(event_sequence_id, true);
+        handled_event = true;
+        return true;
+    }
+
     
     auto result = looper->pollOnce(timeout.count());
     if (result == ALOOPER_POLL_WAKE)
         return false;
-    else if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
-        return false;
+    if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
+       return false;
 
-    if(input_consumer->consume(&event_factory, true,
+   if(input_consumer->consume(&event_factory, true,
         -1, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
     {
         mia::Lexicon::translate(android_event, ev);

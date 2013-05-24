@@ -601,7 +601,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     struct InputClientOne : ParameterizedClient
     {
         InputClientOne(MirSurfaceParameters params) :
-            ParameterizedClient(params, 2)
+            ParameterizedClient(params, 3)
         {
         }
         
@@ -611,7 +611,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1).WillOnce(Return(true));
             EXPECT_CALL(*handler, handle_input(
                 MotionEventWithPosition(params.width - 1, 0))).Times(1).WillOnce(Return(true));
-//            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1).WillOnce(Return(true));
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1).WillOnce(Return(true));
         }
     } client_1(surface1_params);
     struct InputClientTwo : ParameterizedClient
