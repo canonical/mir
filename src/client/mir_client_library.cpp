@@ -96,7 +96,7 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
-    if (is_valid(connection))
+    if (MirConnection::is_valid(connection))
     {
         auto wait_handle = connection->disconnect();
         wait_handle->wait_for_result();
