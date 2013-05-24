@@ -28,9 +28,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
-#include "mir/input/null_input_targeter.h"
-#include "mir/input/null_input_registrar.h"
-#include "mir/input/input_configuration.h"
+#include "mir/input/null_input_configuration.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
@@ -180,34 +178,14 @@ mtf::TestingServerConfiguration::TestingServerConfiguration() :
         ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
 }
 
-
-std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager()
+std::shared_ptr<mi::InputConfiguration> mtf::TestingServerConfiguration::the_input_configuration()
 {
     auto options = the_options();
+
     if (options->get("tests-use-real-input", false))
-        return the_input_configuration()->the_input_manager();
+        return DefaultServerConfiguration::the_input_configuration();
     else
-        return std::make_shared<StubInputManager>();
-}
-
-std::shared_ptr<msh::InputTargeter> mtf::TestingServerConfiguration::the_input_targeter()
-{
-    auto options = the_options();
- 
-   if (options->get("tests-use-real-input", false))
-       return the_input_configuration()->the_input_targeter();
-   else
-       return std::make_shared<mi::NullInputTargeter>();
-}
-
-std::shared_ptr<ms::InputRegistrar> mtf::TestingServerConfiguration::the_input_registrar()
-{
-    auto options = the_options();
- 
-   if (options->get("tests-use-real-input", false))
-        return the_input_configuration()->the_input_registrar();
-    else
-        return std::make_shared<mi::NullInputRegistrar>();
+        return std::make_shared<mi::NullInputConfiguration>();
 }
 
 std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_platform()

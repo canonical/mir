@@ -48,9 +48,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/null_input_manager.h"
-#include "mir/input/null_input_registrar.h"
-#include "mir/input/null_input_targeter.h"
+#include "mir/input/null_input_configuration.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_input_targeter.h"
@@ -434,10 +432,17 @@ mir::DefaultServerConfiguration::the_input_configuration()
             std::weak_ptr<mg::Cursor> const cursor;
         };
 
-        input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
-            the_event_filters(),
-            the_display(),
-            std::make_shared<DefaultCursorListener>(the_display()->the_cursor()));
+        if (the_options()->get("enable-input", enable_input_default))
+        {
+            input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
+                the_event_filters(),
+                the_display(),
+                std::make_shared<DefaultCursorListener>(the_display()->the_cursor()));
+        }
+        else
+        {
+            input_configuration = std::make_shared<mi::NullInputConfiguration>();
+        }
     }
     return input_configuration;
 }
@@ -448,14 +453,9 @@ mir::DefaultServerConfiguration::the_input_manager()
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get("enable-input", enable_input_default))
-            {
-                if (the_options()->get(input_report_opt, off_opt_value) == log_opt_value)
-                    ml::input_report::initialize(the_logger());
-                return the_input_configuration()->the_input_manager();
-            }
-            else 
-                return std::make_shared<mi::NullInputManager>();
+            if (the_options()->get(input_report_opt, off_opt_value) == log_opt_value)
+                ml::input_report::initialize(the_logger());
+            return the_input_configuration()->the_input_manager();
         });
 }
 
@@ -663,10 +663,7 @@ std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_t
     return input_targeter(
         [&]() -> std::shared_ptr<msh::InputTargeter>
         {
-            if (the_options()->get("enable-input", enable_input_default))
-                return the_input_configuration()->the_input_targeter();
-            else
-                return std::make_shared<mi::NullInputTargeter>();
+            return the_input_configuration()->the_input_targeter();
         });
 }
 
@@ -675,10 +672,7 @@ std::shared_ptr<ms::InputRegistrar> mir::DefaultServerConfiguration::the_input_r
     return input_registrar(
         [&]() -> std::shared_ptr<ms::InputRegistrar>
         {
-            if (the_options()->get("enable-input", enable_input_default))
-                return the_input_configuration()->the_input_registrar();
-            else
-                return std::make_shared<mi::NullInputRegistrar>();
+            return the_input_configuration()->the_input_registrar();
         });
 }
 
