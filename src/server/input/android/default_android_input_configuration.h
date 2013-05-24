@@ -78,6 +78,7 @@ public:
 
     std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    std::shared_ptr<input::InputManager> the_input_manager();
     
     virtual bool is_key_repeat_enabled();
     
@@ -119,7 +120,10 @@ private:
     CachedPtr<InputThread> dispatcher_thread;
     CachedPtr<InputThread> reader_thread;
     CachedPtr<InputRegistrar> input_registrar;
+
     CachedPtr<shell::InputTargeter> input_targeter;
+    CachedPtr<input::InputManager> input_manager;
+
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
     CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;

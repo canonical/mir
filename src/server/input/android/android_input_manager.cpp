@@ -36,11 +36,14 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputManager::InputManager(std::shared_ptr<mia::InputConfiguration> const& config)
-  : event_hub(config->the_event_hub()),
-    dispatcher(config->the_dispatcher()),
-    reader_thread(config->the_reader_thread()),
-    dispatcher_thread(config->the_dispatcher_thread())
+mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> const& event_hub,
+    droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
+    std::shared_ptr<InputThread> const& reader_thread,
+    std::shared_ptr<InputThread> const& dispatcher_thread)
+  : event_hub(event_hub),
+    dispatcher(dispatcher),
+    reader_thread(reader_thread),
+    dispatcher_thread(dispatcher_thread)
 {
 }
 

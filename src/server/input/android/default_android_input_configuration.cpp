@@ -23,6 +23,7 @@
 #include "android_input_registrar.h"
 #include "android_input_targeter.h"
 #include "android_input_target_enumerator.h"
+#include "android_input_manager.h"
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
@@ -178,8 +179,17 @@ std::shared_ptr<msh::InputTargeter> mia::DefaultInputConfiguration::the_input_ta
     return input_targeter(
         [this]()
         {
-            // TODO: Use the_window_handle_repository ~racarr
             return std::make_shared<mia::InputTargeter>(the_dispatcher(), the_window_handle_repository());
+        });
+}
+
+std::shared_ptr<mi::InputManager> mia::DefaultInputConfiguration::the_input_manager()
+{
+    return input_manager(
+        [this]()
+        {
+            return std::make_shared<mia::InputManager>(the_event_hub(), the_dispatcher(),
+                                                       the_reader_thread(), the_dispatcher_thread());
         });
 }
 

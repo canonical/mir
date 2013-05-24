@@ -77,7 +77,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 
         fake_event_hub = configuration->the_fake_event_hub();
 
-        input_manager = std::make_shared<mia::InputManager>(configuration);
+        input_manager = configuration->the_input_manager();
 
         input_manager->start();
     }
@@ -91,7 +91,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<MockEventFilter> event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
-    std::shared_ptr<mia::InputManager> input_manager;
+    std::shared_ptr<mi::InputManager> input_manager;
     MockCursorListener cursor_listener;
 };
 

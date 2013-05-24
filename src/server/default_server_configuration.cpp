@@ -452,7 +452,7 @@ mir::DefaultServerConfiguration::the_input_manager()
             {
                 if (the_options()->get(input_report_opt, off_opt_value) == log_opt_value)
                     ml::input_report::initialize(the_logger());
-                return std::make_shared<mia::InputManager>(the_input_configuration());
+                return the_input_configuration()->the_input_manager();
             }
             else 
                 return std::make_shared<mi::NullInputManager>();

@@ -92,7 +92,7 @@ public:
         stub_targets = std::make_shared<StubInputTargets>();
         configuration->set_input_targets(stub_targets);
         
-        input_manager = std::make_shared<mia::InputManager>(configuration);
+        input_manager = configuration->the_input_manager();
 
         input_manager->start();
     }
@@ -105,7 +105,7 @@ public:
   protected:
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
-    std::shared_ptr<mia::InputManager> input_manager;
+    std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<MockEventFilter> event_filter;
     NiceMock<mtd::MockViewableArea> viewable_area;
     std::shared_ptr<StubInputTargets> stub_targets;
@@ -261,7 +261,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
-        input_manager = std::make_shared<mia::InputManager>(configuration);
+        input_manager = configuration->the_input_manager();
         
         input_registrar = configuration->the_input_registrar();
         input_targeter = configuration->the_input_targeter();
@@ -297,7 +297,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     mia::FakeEventHub* fake_event_hub;
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
-    std::shared_ptr<mia::InputManager> input_manager;
+    std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<ms::InputRegistrar> input_registrar;
     std::shared_ptr<msh::InputTargeter> input_targeter;
 };

@@ -32,10 +32,6 @@
 #include "mir/input/null_input_registrar.h"
 #include "mir/input/android/android_input_configuration.h"
 
-#include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_input_registrar.h"
-#include "src/server/input/android/android_input_targeter.h"
-
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_display.h"
@@ -48,7 +44,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace ms = mir::surfaces;
-namespace mia = mir::input::android;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -190,7 +185,7 @@ std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_man
 {
     auto options = the_options();
     if (options->get("tests-use-real-input", false))
-        return std::make_shared<mia::InputManager>(the_input_configuration());
+        return the_input_configuration()->the_input_manager();
     else
         return std::make_shared<StubInputManager>();
 }
