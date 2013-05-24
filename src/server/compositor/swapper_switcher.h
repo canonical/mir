@@ -41,6 +41,9 @@ public:
     void force_requests_to_complete();
 
     void switch_swapper(std::shared_ptr<BufferSwapper> const& new_swapper);
+
+private:
+    std::shared_ptr<BufferSwapper> swapper;
 #if 0
 protected:
     SwapperSwitcher() = default;
