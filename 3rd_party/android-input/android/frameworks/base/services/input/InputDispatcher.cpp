@@ -2681,6 +2681,9 @@ bool InputDispatcher::hasWindowHandleLocked(
 
 void InputDispatcher::setKeyboardFocus(const sp<InputWindowHandle>& newFocusedWindowHandle)
 {
+#if DEBUG_FOCUS
+    ALOGD("setKeyboardFocus");
+#endif
     {
         AutoMutex _l(mLock);
         setKeyboardFocusLocked(newFocusedWindowHandle);
@@ -2716,6 +2719,9 @@ void InputDispatcher::setKeyboardFocusLocked(const sp<InputWindowHandle>& newFoc
 
 void InputDispatcher::notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle)
 {
+#if DEBUG_FOCUS
+    ALOGD("notifyWindowRemoved");
+#endif
     { // acquire lock
         AutoMutex _l(mLock);
 
