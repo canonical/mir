@@ -28,6 +28,8 @@ namespace graphics
 class DisplayReport;
 namespace android
 {
+class GraphicBufferAllocator;
+class FramebufferFactory;
 
 class AndroidPlatform : public Platform
 {
@@ -44,6 +46,13 @@ public:
                           std::shared_ptr<compositor::Buffer> const& buffer) const;
 
 private:
+    // TODO a design that has this and create_buffer_allocator is missing simplicity
+    virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
+        const std::shared_ptr<BufferInitializer>& buffer_initializer);
+    // TODO made virtual as a customization point
+    virtual std::shared_ptr<FramebufferFactory> create_frame_buffer_factory(
+        const std::shared_ptr<GraphicBufferAllocator>& buffer_allocator);
+
     std::shared_ptr<DisplayReport> const display_report;
 };
 
