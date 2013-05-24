@@ -37,6 +37,33 @@ std::unordered_set<MirConnection*> MirConnection::valid_connections;
 
 namespace
 {
+class ConnectionList
+{
+public:
+    void insert(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.insert(connection);
+    }
+
+    void remove(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.erase(connection);
+    }
+
+    bool contains(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        return connections.count(connection);
+    }
+
+private:
+std::mutex connection_guard;
+std::unordered_set<MirConnection*> connections;
+};
+
+ConnectionList error_connections;
 
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void *result, void **context)
@@ -67,6 +94,7 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     catch (std::exception const& x)
     {
         MirConnection* error_connection = new MirConnection();
+        error_connections.insert(error_connection);
         error_connection->set_error_message(x.what());
         callback(error_connection, context);
         return 0;
@@ -101,6 +129,7 @@ void mir_connection_release(MirConnection * connection)
         auto wait_handle = connection->disconnect();
         wait_handle->wait_for_result();
     }
+    error_connections.remove(connection);
 
     delete connection;
 }
@@ -116,7 +145,7 @@ MirWaitHandle* mir_connection_create_surface(
     mir_surface_lifecycle_callback callback,
     void* context)
 {
-    if (! MirConnection::is_valid(connection)) return 0;
+    if (error_connections.contains(connection)) return 0;
 
     try
     {
