@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/compositor/swapper_switcher.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_swapper.h"
 
@@ -35,16 +36,17 @@ struct SwapperSwitcherTest : public ::testing::Test
 
     std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
     std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
-    std::shared_ptr<mtd::StubBuffer> stub_buffer;
+    std::shared_ptr<mc::Buffer> stub_buffer;
 };
 
 TEST_F(SwapperSwitcherTest, client_acquire_basic)
 {
+    using namespace testing;
     mc::SwapperSwitcher switcher(mock_default_swapper);
 
     EXPECT_CALL(*mock_default_swapper, client_acquire())
         .Times(1)
-        .WillOnce(Return(stub_buffer);
+        .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_default_swapper, client_release(stub_buffer))
         .Times(1);
 
@@ -54,11 +56,12 @@ TEST_F(SwapperSwitcherTest, client_acquire_basic)
 
 TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
 {
+    using namespace testing;
     mc::SwapperSwitcher switcher(mock_default_swapper);
 
     EXPECT_CALL(*mock_default_swapper, client_acquire())
         .Times(1)
-        .WillOnce(Return(stub_buffer);
+        .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_secondary_swapper, client_release(stub_buffer))
         .Times(1);
 
@@ -71,11 +74,12 @@ TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
 
 TEST_F(SwapperSwitcherTest, compositor_acquire_basic)
 {
+    using namespace testing;
     mc::SwapperSwitcher switcher(mock_default_swapper);
 
     EXPECT_CALL(*mock_default_swapper, compositor_acquire())
         .Times(1)
-        .WillOnce(Return(stub_buffer);
+        .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_default_swapper, compositor_release(stub_buffer))
         .Times(1);
 
@@ -85,11 +89,13 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_basic)
 
 TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
 {
+    using namespace testing;
+
     mc::SwapperSwitcher switcher(mock_default_swapper);
 
     EXPECT_CALL(*mock_default_swapper, compositor_acquire())
         .Times(1)
-        .WillOnce(Return(stub_buffer);
+        .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_secondary_swapper, compositor_release(stub_buffer))
         .Times(1);
 
