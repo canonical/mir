@@ -2690,7 +2690,6 @@ void InputDispatcher::setKeyboardFocus(const sp<InputWindowHandle>& newFocusedWi
 
 void InputDispatcher::setKeyboardFocusLocked(const sp<InputWindowHandle>& newFocusedWindowHandle)
 {
-    // TODO: We need an update info or something ~racarr
     if (mFocusedWindowHandle != newFocusedWindowHandle) {
         if (mFocusedWindowHandle != NULL) {
 #if DEBUG_FOCUS
@@ -2747,7 +2746,6 @@ void InputDispatcher::notifyWindowRemoved(const sp<InputWindowHandle>& windowHan
 
     } // release lock
     mLooper->wake();
-    // TODO: Do we unregister the input channel here? ~racarr
 }
     
 void InputDispatcher::setFocusedApplication(
