@@ -19,6 +19,7 @@
 
 #include "buffer.h"
 #include "graphic_alloc_adaptor.h"
+#include "android_format_conversion-inl.h"
 
 #include <system/window.h>
 #include <GLES2/gl2.h>
@@ -38,9 +39,11 @@ mga::Buffer::Buffer(const std::shared_ptr<GraphicAllocAdaptor>& alloc_dev,
     if (!alloc_device)
         BOOST_THROW_EXCEPTION(std::runtime_error("No allocation device for graphics buffer"));
 
-    native_window_buffer_handle = alloc_device->alloc_buffer(size, pf, use);
+    native_buffer = alloc_device->alloc_buffer(size, pf, use);
 
-    if (!native_window_buffer_handle.get())
+    //TODO: we could make the native buffer itself a constructor dependency and move creation
+    //      failures to the factory
+    if (!native_buffer.get())
         BOOST_THROW_EXCEPTION(std::runtime_error("Graphics buffer allocation failed"));
 
 }
@@ -57,17 +60,18 @@ mga::Buffer::~Buffer()
 
 geom::Size mga::Buffer::size() const
 {
-    return native_window_buffer_handle->size();
+    return geom::Size{geom::Width{native_buffer->width},
+                      geom::Height{native_buffer->height}};
 }
 
 geom::Stride mga::Buffer::stride() const
 {
-    return native_window_buffer_handle->stride();
+    return geom::Stride{native_buffer->stride};
 }
 
 geom::PixelFormat mga::Buffer::pixel_format() const
 {
-    return native_window_buffer_handle->format();
+    return mga::to_mir_format(native_buffer->format);
 }
 
 void mga::Buffer::bind_to_texture()
@@ -85,9 +89,8 @@ void mga::Buffer::bind_to_texture()
     auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
-        auto buffer = native_window_buffer_handle->native_buffer_handle();
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
-                                  buffer.get(), image_attrs);
+                                  native_buffer.get(), image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error binding buffer to texture\n"));
@@ -106,5 +109,5 @@ void mga::Buffer::bind_to_texture()
  
 std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
 {
-    return native_window_buffer_handle->native_buffer_handle();
+    return native_buffer; 
 }

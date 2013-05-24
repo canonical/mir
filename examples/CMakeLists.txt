@@ -8,22 +8,22 @@ target_link_libraries(eglapp
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
 )
-add_executable(mir_eglflash
+add_executable(mir_demo_client_eglflash
   eglflash.c
 )
-target_link_libraries(mir_eglflash
+target_link_libraries(mir_demo_client_eglflash
   eglapp
 )
-add_executable(mir_egltriangle
+add_executable(mir_demo_client_egltriangle
   egltriangle.c
 )
-target_link_libraries(mir_egltriangle
+target_link_libraries(mir_demo_client_egltriangle
   eglapp
 )
-add_executable(mir_eglplasma
+add_executable(mir_demo_client_eglplasma
   eglplasma.c
 )
-target_link_libraries(mir_eglplasma
+target_link_libraries(mir_demo_client_eglplasma
   eglapp
 )
 
@@ -40,8 +40,8 @@ target_link_libraries(mir_demo_client
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_executable(mir_multiwin multiwin.c)
-target_link_libraries(mir_multiwin mirclient)
+add_executable(mir_demo_client_multiwin multiwin.c)
+target_link_libraries(mir_demo_client_multiwin mirclient)
 
 add_executable(mir_demo_client_unaccelerated
   demo_client_unaccelerated.c
@@ -83,11 +83,11 @@ include_directories(
 )
 
 set(RENDER_TO_FB_SOURCES render_to_fb.cpp)
-add_executable(render_to_fb 
+add_executable(mir_demo_standalone_render_to_fb 
   ${RENDER_TO_FB_SOURCES}
 )
 
-target_link_libraries(render_to_fb
+target_link_libraries(mir_demo_standalone_render_to_fb
     mirserver
     mirlogging
     mirdraw
@@ -95,18 +95,18 @@ target_link_libraries(render_to_fb
 )
 
 set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)
-add_executable(render_surfaces ${RENDER_SURFACES_SOURCES})
-target_link_libraries(render_surfaces
+add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
+target_link_libraries(mir_demo_standalone_render_surfaces
     mirserver
     mirshell
     ${Boost_LIBRARIES}
 )
 
-add_executable(mir_demo_input_filter
+add_executable(mir_demo_standalone_input_filter
   demo_input_filter.cpp
 )
 
-target_link_libraries(mir_demo_input_filter  
+target_link_libraries(mir_demo_standalone_input_filter  
   mirserver
 )
 
@@ -114,10 +114,10 @@ set (DEMO_CLIENTS
   mir_demo_client
   mir_demo_client_unaccelerated
   mir_demo_client_accelerated
-  mir_demo_input_filter
-  mir_eglflash
-  mir_egltriangle
-  mir_eglplasma
+  mir_demo_standalone_input_filter
+  mir_demo_client_eglflash
+  mir_demo_client_egltriangle
+  mir_demo_client_eglplasma
 )
 
 add_subdirectory(demo-inprocess-surface-client)

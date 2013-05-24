@@ -70,7 +70,6 @@ int main(int, char**)
         display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
             buffer.make_current();
-            buffer.clear();
 
             gl_animation.render_gl();
 

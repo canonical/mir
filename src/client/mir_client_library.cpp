@@ -37,7 +37,33 @@ std::unordered_set<MirConnection*> MirConnection::valid_connections;
 
 namespace
 {
-MirConnection error_connection;
+class ConnectionList
+{
+public:
+    void insert(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.insert(connection);
+    }
+
+    void remove(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.erase(connection);
+    }
+
+    bool contains(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        return connections.count(connection);
+    }
+
+private:
+    std::mutex connection_guard;
+    std::unordered_set<MirConnection*> connections;
+};
+
+ConnectionList error_connections;
 
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void *result, void **context)
@@ -67,8 +93,10 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     }
     catch (std::exception const& x)
     {
-        error_connection.set_error_message(x.what());
-        callback(&error_connection, context);
+        MirConnection* error_connection = new MirConnection();
+        error_connections.insert(error_connection);
+        error_connection->set_error_message(x.what());
+        callback(error_connection, context);
         return 0;
     }
 }
@@ -96,10 +124,15 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
-    if (&error_connection == connection) return;
-
-    auto wait_handle = connection->disconnect();
-    wait_handle->wait_for_result();
+    if (!error_connections.contains(connection))
+    {
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_result();
+    }
+    else
+    {
+        error_connections.remove(connection);
+    }
 
     delete connection;
 }
@@ -115,7 +148,7 @@ MirWaitHandle* mir_connection_create_surface(
     mir_surface_lifecycle_callback callback,
     void* context)
 {
-    if (&error_connection == connection) return 0;
+    if (error_connections.contains(connection)) return 0;
 
     try
     {
@@ -130,7 +163,7 @@ MirWaitHandle* mir_connection_create_surface(
 }
 
 MirSurface* mir_connection_create_surface_sync(
-    MirConnection* connection, 
+    MirConnection* connection,
     MirSurfaceParameters const* params)
 {
     MirSurface *surface = nullptr;

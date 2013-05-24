@@ -101,6 +101,26 @@ from dying at the same time.
  - \ref using_mir_on_pc
  - \ref using_mir_on_android
 
+LTTng support
+-------------
+
+Mir provides LTTng tracepoints for various interesting events. You can enable
+LTTng tracing for a Mir component by using the corresponding command-line
+option or environment variable (see `--help` for more):
+
+    $ lttng create mirsession -o /tmp/mirsession
+    $ lttng enable-event -u -a
+    $ lttng start
+    $ mir_demo_server --msg-processor-report=lttng
+    $ lttng stop
+    $ babeltrace /tmp/mirsession/<trace-subdir>
+
+LTTng-UST versions up to and including 2.1.2, and up to and including 2.2-rc2
+contain a bug (lttng #538) that prevents event recording if the tracepoint
+provider is dlopen()-ed at runtime, like in the case of Mir. If you have a
+version of LTTng affected by this bug, you need to run:
+
+    $ LD_PRELOAD=libmirserverlttng.so mir_demo_server --msg-processor-report=lttng
 
 Documentation
 -------------

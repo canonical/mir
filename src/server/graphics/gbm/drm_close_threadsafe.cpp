@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,27 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/rendering_operator.h"
+#include "drm_close_threadsafe.h"
 
-namespace mc=mir::compositor;
+#include <mutex>
 
-mc::RenderingOperator::RenderingOperator(
-    graphics::Renderer& renderer,
-    std::function<void(std::shared_ptr<void> const&)> save_resource) :
-    renderer(renderer),
-    save_resource(save_resource)
+#include <xf86drm.h>
+
+namespace mgg = mir::graphics::gbm;
+
+int mgg::drm_close_threadsafe(int fd)
 {
-}
+    static std::mutex m;
+    std::lock_guard<std::mutex> lg{m};
 
-mc::RenderingOperator::~RenderingOperator()
-{
-    renderer.ensure_no_live_buffers_bound();
-}
-
-void mc::RenderingOperator::operator()(graphics::Renderable& renderable)
-{
-    renderer.render(save_resource, renderable);
+    return drmClose(fd);
 }

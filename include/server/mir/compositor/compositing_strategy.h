@@ -26,6 +26,10 @@ namespace graphics
 {
 class DisplayBuffer;
 }
+namespace geometry
+{
+struct Rectangle;
+}
 
 namespace compositor
 {
@@ -33,7 +37,7 @@ namespace compositor
 class CompositingStrategy
 {
 public:
-    virtual ~CompositingStrategy() {}
+    virtual ~CompositingStrategy() = default;
 
     virtual void render(graphics::DisplayBuffer& display_buffer) = 0;
 
