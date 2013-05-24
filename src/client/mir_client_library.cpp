@@ -124,12 +124,15 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
-    if (MirConnection::is_valid(connection))
+    if (!error_connections.contains(connection))
     {
         auto wait_handle = connection->disconnect();
         wait_handle->wait_for_result();
     }
-    error_connections.remove(connection);
+    else
+    {
+        error_connections.remove(connection);
+    }
 
     delete connection;
 }
