@@ -42,7 +42,7 @@ mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mg::DisplayReport> const& 
 std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
-    return create_mga_buffer_allocator(buffer_initializer);
+    return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
 }
 
 std::shared_ptr<mga::GraphicBufferAllocator> mga::AndroidPlatform::create_mga_buffer_allocator(

@@ -107,6 +107,8 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
     {
         return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(::buffer_properties));
     }
+
+    ~MockGraphicBufferAllocator() noexcept {}
 };
 
 }
