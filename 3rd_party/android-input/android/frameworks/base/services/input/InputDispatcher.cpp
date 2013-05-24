@@ -1585,17 +1585,19 @@ bool InputDispatcher::checkInjectionPermission(const sp<InputWindowHandle>& wind
 bool InputDispatcher::isWindowObscuredAtPointLocked(
         const sp<InputWindowHandle>& windowHandle, int32_t x, int32_t y) const {
     bool obscured = false;
+    bool seen_handle = false;
     
-    // TODO: Is this backwards? ~racarr
     mEnumerator->for_each([&](sp<InputWindowHandle> const& otherHandle){
         if (otherHandle == windowHandle) {
+            seen_handle = true;
             return;
         }
-
-        const InputWindowInfo* otherInfo = otherHandle->getInfo();
-        if (otherInfo->visible && ! otherInfo->isTrustedOverlay()
+        if (seen_handle) {
+            const InputWindowInfo* otherInfo = otherHandle->getInfo();
+            if (otherInfo->visible && ! otherInfo->isTrustedOverlay()
                 && otherInfo->frameContainsPoint(x, y)) {
-            obscured = true;
+                obscured = true;
+            }
         }
     });
     return obscured;
