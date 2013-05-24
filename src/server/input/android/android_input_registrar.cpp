@@ -69,6 +69,7 @@ void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTar
 
 droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface)
 {
+    std::unique_lock<std::mutex> lock(handles_mutex);
     if (window_handles.find(surface) == window_handles.end())
         BOOST_THROW_EXCEPTION(std::logic_error("Requesting handle for an unregistered surface"));
     return window_handles[surface];
