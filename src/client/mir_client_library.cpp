@@ -59,8 +59,8 @@ public:
     }
 
 private:
-std::mutex connection_guard;
-std::unordered_set<MirConnection*> connections;
+    std::mutex connection_guard;
+    std::unordered_set<MirConnection*> connections;
 };
 
 ConnectionList error_connections;
