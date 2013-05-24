@@ -310,7 +310,6 @@ public:
      */
     virtual void setKeyboardFocus(const sp<InputWindowHandle>& windowHandle) = 0;
     virtual void notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle) = 0;
-    virtual void setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles) = 0;
 
     /* Sets the focused application.
      *
@@ -390,8 +389,6 @@ public:
     virtual int32_t injectInputEvent(const InputEvent* event,
             int32_t injectorPid, int32_t injectorUid, int32_t syncMode, int32_t timeoutMillis,
             uint32_t policyFlags);
-
-    virtual void setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles);
 
     // TODO: ~racarr
     virtual void setKeyboardFocus(const sp<InputWindowHandle>& windowHandle);

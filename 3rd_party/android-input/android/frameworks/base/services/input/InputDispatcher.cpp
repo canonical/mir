@@ -2748,19 +2748,6 @@ void InputDispatcher::notifyWindowRemoved(const sp<InputWindowHandle>& windowHan
     // TODO: Do we unregister the input channel here? ~racarr
 }
     
-void InputDispatcher::setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles) {
-#if DEBUG_FOCUS
-    ALOGD("setInputWindows");
-#endif
-    { // acquire lock
-
-
-    } // release lock
-
-    // Wake up poll loop since it may need to make new input dispatching choices.
-
-}
-
 void InputDispatcher::setFocusedApplication(
         const sp<InputApplicationHandle>& inputApplicationHandle) {
 #if DEBUG_FOCUS

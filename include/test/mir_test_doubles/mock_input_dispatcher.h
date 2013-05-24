@@ -39,7 +39,6 @@ struct MockInputDispatcher : public droidinput::InputDispatcherInterface
     MOCK_METHOD0(monitor, void());
     MOCK_METHOD0(dispatchOnce, void());
     MOCK_METHOD6(injectInputEvent, int32_t(droidinput::InputEvent const*, int32_t, int32_t, int32_t, int32_t, uint32_t));
-    MOCK_METHOD1(setInputWindows, void(droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> const&));
     MOCK_METHOD1(setFocusedApplication, void(droidinput::sp<droidinput::InputApplicationHandle> const&));
     MOCK_METHOD2(setInputDispatchMode, void(bool, bool));
     MOCK_METHOD1(setInputFilterEnabled, void(bool));
