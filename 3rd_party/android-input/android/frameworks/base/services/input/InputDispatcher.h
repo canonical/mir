@@ -275,7 +275,11 @@ protected:
     virtual ~InputDispatcherInterface() { }
 
 public:
-    // TODO: Comment me and add asserts ~racarr
+    /* 
+     * Sets the enumerator of input targets. This must be called prior to enabling input dispatch.
+     *
+     * This method may be called by any thread.
+     */
     virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator) = 0;
 
     /* Dumps the state of the input dispatcher.
@@ -304,11 +308,17 @@ public:
             int32_t injectorPid, int32_t injectorUid, int32_t syncMode, int32_t timeoutMillis,
             uint32_t policyFlags) = 0;
 
-    /* Sets the list of input windows.
+    /* 
+     * Sets the keyboard focus target.
      *
-     * This method may be called on any thread (usually by the input manager).
+     * This method may be called on any thread.
      */
     virtual void setKeyboardFocus(const sp<InputWindowHandle>& windowHandle) = 0;
+    /*
+     * Notify that a window handle is about to vanish
+
+     * This method may be called on any thread.
+     */
     virtual void notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle) = 0;
 
     /* Sets the focused application.
@@ -390,11 +400,8 @@ public:
             int32_t injectorPid, int32_t injectorUid, int32_t syncMode, int32_t timeoutMillis,
             uint32_t policyFlags);
 
-    // TODO: ~racarr
     virtual void setKeyboardFocus(const sp<InputWindowHandle>& windowHandle);
     virtual void notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle);
-    // TODO: ~racarr
-
 
     virtual void setFocusedApplication(const sp<InputApplicationHandle>& inputApplicationHandle);
     virtual void setInputDispatchMode(bool enabled, bool frozen);
