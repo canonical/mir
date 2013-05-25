@@ -20,6 +20,7 @@
 #ifndef MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
 #define MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
 
+#include "rw_lock.h"
 #include <memory>
 
 namespace mir
@@ -44,6 +45,7 @@ public:
 
 private:
     std::shared_ptr<BufferSwapper> swapper;
+    RWLockWriterBias rw_lock;
 #if 0
 protected:
     SwapperSwitcher() = default;

@@ -105,7 +105,3 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
  
     switcher.compositor_release(buffer); 
 }
-
-TEST_F(SwapperSwitcherTest, nonblocking)
-{
-}

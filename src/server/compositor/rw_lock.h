@@ -20,6 +20,9 @@
 #ifndef MIR_COMPOSITOR_RW_LOCK_H_
 #define MIR_COMPOSITOR_RW_LOCK_H_
 
+#include <mutex>
+#include <condition_variable>
+
 namespace mir
 {
 namespace compositor
@@ -28,48 +31,54 @@ namespace compositor
 class RWLockWriterBias
 {
 public:
+    RWLockWriterBias();
     void rd_lock();
     void rd_unlock();
     void wr_lock();
     void wr_unlock();
-protected:
-    RWLockWriterBias();
+
+private:
+    std::mutex mut;
+    std::condition_variable reader_cv, writer_cv;
+    unsigned int readers;
+    unsigned int writers;
+    unsigned int waiting_writers;
 };
 
-class ReadLock : public RWLockWriterBias
+class ReadLock
 {
 public:
+    ReadLock(RWLockWriterBias& rwlock)
+        : rwl(rwlock) {}
     void lock()
     {
-        rd_lock();
+        rwl.rd_lock();
     }
     void unlock()
     {
-        rd_unlock();
+        rwl.rd_unlock();
     }
-protected:
-    ReadLock();
+private:
+    RWLockWriterBias& rwl;
 };
 
-class WriteLock : public RWLockWriterBias
+class WriteLock
 {
 public:
+    WriteLock(RWLockWriterBias& rwlock)
+        : rwl(rwlock) {}
     void lock()
     {
-        wr_lock();
+        rwl.wr_lock();
     }
     void unlock()
     {
-        wr_unlock();
+        rwl.wr_unlock();
     }
-protected:
-    WriteLock();
+private:
+    RWLockWriterBias& rwl;
 };
 
-class RWLock : public virtual ReadLock,
-               public virtual WriteLock
-{
-};
 
 }
 }
