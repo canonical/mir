@@ -88,6 +88,7 @@ void SnippetTextResponse::accept(WireResponseVisitor *visitor) const {
 
 class CommandDecoder {
 public:
+    virtual ~CommandDecoder() = default;
     virtual WireCommand *decode(const mValue & jsonArgs) const = 0;
 };
 
