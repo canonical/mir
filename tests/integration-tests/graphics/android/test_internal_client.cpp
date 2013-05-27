@@ -35,6 +35,8 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/input/input_channel_factory.h"
 
+#include "mir_test_doubles/stub_input_registrar.h"
+
 #include <EGL/egl.h>
 #include <gtest/gtest.h>
 
@@ -49,6 +51,7 @@ namespace ms=mir::surfaces;
 namespace msh=mir::shell;
 namespace mf=mir::frontend;
 namespace mi=mir::input;
+namespace mtd=mir::test::doubles;
 
 namespace
 {
@@ -82,13 +85,14 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto id = mf::SurfaceId{4458};
 
     auto stub_input_factory = std::make_shared<StubInputFactory>();
+    auto stub_input_registrar = std::make_shared<mtd::StubInputRegistrar>();
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     auto buffer_bundle_factory = std::make_shared<mc::BufferBundleManager>(strategy);
-    auto ss = std::make_shared<ms::SurfaceStack>(buffer_bundle_factory);
+    auto ss = std::make_shared<ms::SurfaceStack>(buffer_bundle_factory, stub_input_factory, stub_input_registrar);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
-    auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller, stub_input_factory);
+    auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller);
     auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());
 
     auto report = std::shared_ptr<mg::NullDisplayReport>(); 
