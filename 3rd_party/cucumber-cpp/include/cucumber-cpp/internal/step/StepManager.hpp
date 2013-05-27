@@ -111,6 +111,7 @@ public:
 
 class BasicStep {
 public:
+    virtual ~BasicStep() = default;
     InvokeResult invoke(const InvokeArgs *pArgs);
 
 protected:
