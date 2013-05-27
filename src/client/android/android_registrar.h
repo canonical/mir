@@ -35,7 +35,7 @@ namespace android
 class AndroidRegistrar
 {
 public:
-	virtual ~AndroidRegistrar() = default;
+    virtual ~AndroidRegistrar() = default;
 
     virtual void register_buffer(const native_handle_t *handle) = 0;
     virtual void unregister_buffer(const native_handle_t *handle) = 0;
