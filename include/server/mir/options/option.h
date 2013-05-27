@@ -39,7 +39,7 @@ public:
 
 protected:
     Option() = default;
-    ~Option() = default;
+    virtual ~Option() = default;
     Option(Option const&) = delete;
     Option& operator=(Option const&) = delete;
 };
