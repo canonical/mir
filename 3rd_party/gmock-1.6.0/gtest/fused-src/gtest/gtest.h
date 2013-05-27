@@ -10327,6 +10327,7 @@ class TestMetaFactory
   typedef typename TestCase::ParamType ParamType;
 
   TestMetaFactory() {}
+  virtual ~TestMetaFactory() = default;
 
   virtual TestFactoryBase* CreateTestFactory(ParamType parameter) {
     return new ParameterizedTestFactory<TestCase>(parameter);
