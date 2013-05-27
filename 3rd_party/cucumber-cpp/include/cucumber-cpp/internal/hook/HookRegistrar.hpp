@@ -15,6 +15,7 @@ namespace internal {
 
 class CallableStep {
 public:
+    virtual ~CallableStep() = default;
     virtual void call() = 0;
 };
 
