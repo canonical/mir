@@ -26,6 +26,7 @@ TEST(GMock, return_by_move)
 {
     struct Interface
     {
+        virtual ~Interface() = default;
         virtual std::unique_ptr<int> function() const = 0;
     };
 
