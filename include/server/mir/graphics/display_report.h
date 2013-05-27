@@ -46,7 +46,7 @@ public:
 
 protected:
     DisplayReport() = default;
-    ~DisplayReport() = default;
+    virtual ~DisplayReport() = default;
     DisplayReport(const DisplayReport&) = delete;
     DisplayReport& operator=(const DisplayReport&) = delete;
 };
