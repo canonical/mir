@@ -373,7 +373,7 @@ class ParameterizedTestFactory : public TestFactoryBase {
 template <class ParamType>
 class TestMetaFactoryBase {
  public:
-  virtual ~TestMetaFactoryBase() {}
+  virtual ~TestMetaFactoryBase() = default;
 
   virtual TestFactoryBase* CreateTestFactory(ParamType parameter) = 0;
 };
