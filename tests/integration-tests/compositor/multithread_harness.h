@@ -43,8 +43,7 @@ public:
 class SynchronizerSpawned
 {
 public:
-    virtual ~SynchronizedSpawned() = default;
-
+    virtual ~SynchronizerSpawned() = default;
     virtual bool child_enter_wait() = 0;
     virtual bool child_check_wait_request() = 0;
 };
