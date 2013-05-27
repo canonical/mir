@@ -31,6 +31,7 @@ namespace mtd = mir::test::doubles;
 class ANativeWindowInterface
 {
 public:
+    virtual ~ANativeWindowInterface() = default;
     virtual int query_interface(const ANativeWindow* win , int code, int* value) const = 0;
 };
 
