@@ -17,6 +17,7 @@
  */
 
 #include "gbm_platform.h"
+#include "gbm_display_buffer.h"
 
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"

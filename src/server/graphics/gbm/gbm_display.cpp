@@ -64,10 +64,6 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
     shared_egl.make_current();
 }
 
-mgg::GBMDisplay::~GBMDisplay()
-{
-}
-
 geom::Rectangle mgg::GBMDisplay::view_area() const
 {
     return display_buffers[0]->view_area();
