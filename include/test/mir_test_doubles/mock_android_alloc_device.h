@@ -30,6 +30,7 @@ namespace android
 class ICSAllocInterface
 {
 public:
+    virtual ~ICSAllocInterface() = default;
     virtual int alloc_interface(alloc_device_t* dev, int w, int h,
                                 int format, int usage, buffer_handle_t* handle, int* stride) = 0;
     virtual int free_interface(alloc_device_t* dev, buffer_handle_t handle) = 0;
