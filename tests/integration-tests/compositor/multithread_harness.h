@@ -32,6 +32,8 @@ namespace testing
 class SynchronizerController
 {
 public:
+        virtual ~SynchronizerController() = default;
+
         virtual void ensure_child_is_waiting() = 0;
         virtual void activate_waiting_child() = 0;
         virtual void kill_thread() = 0;
