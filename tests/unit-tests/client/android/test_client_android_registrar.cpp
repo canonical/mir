@@ -33,6 +33,8 @@ namespace geom=mir::geometry;
 class ICSRegistrarInterface
 {
 public:
+    virtual ~ICSRegistrarInterface() = default;
+
     virtual int registerBuffer_interface(struct gralloc_module_t const* module, buffer_handle_t handle) const = 0;
     virtual int unregisterBuffer_interface(struct gralloc_module_t const* module, buffer_handle_t handle) const = 0;
     virtual int lock_interface(struct gralloc_module_t const* module, buffer_handle_t handle,
