@@ -36,13 +36,12 @@ struct BufferProperties;
 class BufferAllocationStrategy
 {
 public:
-
     virtual std::unique_ptr<BufferSwapper> create_swapper(
         BufferProperties& actual_buffer_properties,
         BufferProperties const& requested_buffer_properties) = 0;
 
 protected:
-    ~BufferAllocationStrategy() {}
+    virtual ~BufferAllocationStrategy() = default;
     BufferAllocationStrategy() {}
 
     BufferAllocationStrategy(const BufferAllocationStrategy&);
