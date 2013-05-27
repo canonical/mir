@@ -34,7 +34,6 @@ class AndroidPlatform : public Platform
 public:
     /* From Platform */
     AndroidPlatform(std::shared_ptr<DisplayReport> const& display_report);
-    virtual ~AndroidPlatform();
 
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
             std::shared_ptr<BufferInitializer> const& buffer_initializer);

@@ -54,6 +54,8 @@ public:
     Platform(const Platform& p) = delete;
     Platform& operator=(const Platform& p) = delete;
 
+    virtual ~Platform() = default;
+
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
     virtual std::shared_ptr<Display> create_display() = 0;

@@ -37,7 +37,7 @@ struct MessageSender
     virtual void send_fds(std::vector<int32_t> const& fd) = 0;
 protected:
     MessageSender() = default;
-    ~MessageSender() = default;
+    virtual ~MessageSender() = default;
     MessageSender(MessageSender const&) = delete;
     MessageSender& operator=(MessageSender const&) = delete;
 };
@@ -55,7 +55,6 @@ protected:
 struct NullMessageProcessor : MessageProcessor
 {
     bool process_message(std::istream&);
-    virtual ~NullMessageProcessor() = default;
 };
 
 }

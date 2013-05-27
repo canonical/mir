@@ -52,10 +52,6 @@ mcla::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<con
 {
 }
 
-mcla::AndroidRegistrarGralloc::~AndroidRegistrarGralloc()
-{
-}
-
 void mcla::AndroidRegistrarGralloc::register_buffer(const native_handle_t* handle)
 {
     if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )

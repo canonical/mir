@@ -43,8 +43,6 @@ struct SocketSession : public MessageSender
         connected_sessions(connected_sessions),
         processor(std::make_shared<NullMessageProcessor>()) {}
 
-    virtual ~SocketSession();
-
     int id() const { return id_; }
 
     void read_next_message();
