@@ -20,6 +20,7 @@ public:
 
 class Hook {
 public:
+    virtual ~Hook() = default;
     void setTags(const std::string &csvTagNotation);
     virtual void invokeHook(Scenario *scenario);
     virtual void skipHook();
