@@ -14,6 +14,7 @@ namespace internal {
 
 class TagExpression {
 public:
+    virtual ~TagExpression() = default;
     typedef std::vector<std::string> tag_list;
 
     virtual bool matches(const tag_list &tags) = 0;
