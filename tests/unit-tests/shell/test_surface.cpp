@@ -26,6 +26,8 @@
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_input_targeter.h"
+#include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test/fake_shared.h"
 
 #include <stdexcept>
@@ -441,19 +443,32 @@ TEST_F(ShellSurface, states)
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
 }
 
-TEST_F(ShellSurface, internal_surface_throw_behavior)
+TEST_F(ShellSurface, take_input_focus)
 {
-    msh::Surface test(
-            mt::fake_shared(surface_builder),
-            msh::a_surface());
-    
-    EXPECT_NO_THROW({
-            test.internal_surface();
-    });
+    using namespace ::testing;
 
+    msh::Surface test(
+        mt::fake_shared(surface_builder),
+        msh::a_surface());
+    
+    mtd::MockInputTargeter targeter;
+    EXPECT_CALL(targeter, focus_changed(_)).Times(1);
+    
+    test.take_input_focus(mt::fake_shared(targeter));
+}
+
+TEST_F(ShellSurface, take_input_focus_throw_behavior)
+{
+    using namespace ::testing;
+
+    msh::Surface test(
+        mt::fake_shared(surface_builder),
+        msh::a_surface());
     surface_builder.reset_surface();
 
+    mtd::StubInputTargeter targeter;
+    
     EXPECT_THROW({
-            test.internal_surface();
+            test.take_input_focus(mt::fake_shared(targeter));
     }, std::runtime_error);
 }

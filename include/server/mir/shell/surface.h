@@ -37,6 +37,7 @@ class EventSink;
 
 namespace shell
 {
+class InputTargeter;
 class SurfaceBuilder;
 struct SurfaceCreationParameters;
 
@@ -82,7 +83,7 @@ public:
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
-    std::shared_ptr<surfaces::Surface const> internal_surface();
+    virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes

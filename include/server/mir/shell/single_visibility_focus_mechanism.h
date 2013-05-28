@@ -45,7 +45,7 @@ protected:
 
 private:
     std::shared_ptr<SessionContainer> const app_container;
-    std::shared_ptr<InputTargeter> const& input_targeter;
+    std::shared_ptr<InputTargeter> const input_targeter;
 };
 
 }

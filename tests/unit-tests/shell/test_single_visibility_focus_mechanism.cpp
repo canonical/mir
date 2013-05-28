@@ -114,8 +114,7 @@ TEST(SingleVisibilityFocusMechanism, sets_input_focus)
     
     {
         InSequence seq;
-        // When we have a default surface.
-        EXPECT_CALL(targeter, focus_changed(_)).Times(1);
+        EXPECT_CALL(mock_surface, take_input_focus(_)).Times(1);
         // When we have no default surface.
         EXPECT_CALL(targeter, focus_cleared()).Times(1);
         // When we have no session.
@@ -125,5 +124,4 @@ TEST(SingleVisibilityFocusMechanism, sets_input_focus)
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(std::shared_ptr<msh::Session>());
-    
 }

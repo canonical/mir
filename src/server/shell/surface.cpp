@@ -18,9 +18,11 @@
 
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_builder.h"
+#include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
-#include "mir_toolkit/event.h"
 #include "mir/events/event_sink.h"
+
+#include "mir_toolkit/event.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -289,11 +291,11 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
     }
 }
 
-std::shared_ptr<ms::Surface const> msh::Surface::internal_surface()
+void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
 {
     auto s = surface.lock();
     if (s)
-        return s;
+        targeter->focus_changed(s);
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }

@@ -40,9 +40,10 @@ void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<Session> 
         [&](std::shared_ptr<mf::Session> const& session) {
         if (session == focus_session)
         {
-            if (focus_session->default_surface())
+            auto surface = focus_session->default_surface();
+            if (surface)
             {
-                input_targeter->focus_changed(focus_session->default_surface()->internal_surface());
+                surface->take_input_focus(input_targeter);
                 set_input_focus = true;
             }
             session->show();
