@@ -82,10 +82,7 @@ public:
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
-    friend class SessionManager;
-
-protected:
-    virtual std::shared_ptr<surfaces::Surface const> internal_surface();
+    std::shared_ptr<surfaces::Surface const> internal_surface();
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes

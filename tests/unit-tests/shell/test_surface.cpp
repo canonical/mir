@@ -441,3 +441,19 @@ TEST_F(ShellSurface, states)
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
 }
 
+TEST_F(ShellSurface, internal_surface_throw_behavior)
+{
+    msh::Surface test(
+            mt::fake_shared(surface_builder),
+            msh::a_surface());
+    
+    EXPECT_NO_THROW({
+            test.internal_surface();
+    });
+
+    surface_builder.reset_surface();
+
+    EXPECT_THROW({
+            test.internal_surface();
+    }, std::runtime_error);
+}

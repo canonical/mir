@@ -291,5 +291,9 @@ void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 
 std::shared_ptr<ms::Surface const> msh::Surface::internal_surface()
 {
-    return surface.lock();
+    auto s = surface.lock();
+    if (s)
+        return s;
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }
