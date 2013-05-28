@@ -22,9 +22,10 @@
 namespace mcl = mir::client;
 
 std::shared_ptr<mcl::MirBasicRpcChannel>
-mcl::make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log)
+mcl::make_rpc_channel(std::string const& name,
+                      std::shared_ptr<RpcReport> const& rpc_report)
 {
-    return std::make_shared<MirSocketRpcChannel>(name, log);
+    return std::make_shared<MirSocketRpcChannel>(name, rpc_report);
 
 }
 

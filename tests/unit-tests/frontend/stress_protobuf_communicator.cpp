@@ -26,6 +26,8 @@
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_protobuf_server.h"
 
+#include "src/client/null_rpc_report.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -37,15 +39,13 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 
-#include "src/client/mir_logger.h"
-
 namespace
 {
 struct StubProtobufClient
 {
     StubProtobufClient(std::string socket_file, int timeout_ms);
 
-    std::shared_ptr<mir::client::Logger> logger;
+    std::shared_ptr<mir::client::RpcReport> rpc_report;
     std::shared_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectParameters connect_parameters;
@@ -163,8 +163,8 @@ TEST_F(StressProtobufCommunicator, DISABLED_stress_next_buffer)
 StubProtobufClient::StubProtobufClient(
     std::string socket_file,
     int timeout_ms) :
-    logger(std::make_shared<mir::client::NullLogger>()),
-    channel(mir::client::make_rpc_channel(socket_file, logger)),
+    rpc_report(std::make_shared<mir::client::NullRpcReport>()),
+    channel(mir::client::make_rpc_channel(socket_file, rpc_report)),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
