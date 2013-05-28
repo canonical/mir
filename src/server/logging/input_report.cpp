@@ -28,7 +28,7 @@
 #include <mutex>
 
 namespace ml = mir::logging;
-namespace mli = mir::logging::input_report;
+namespace mlil = mir::logging::legacy_input_report;
 
 namespace
 {
@@ -83,7 +83,7 @@ void my_write_to_log(int prio, char const* buffer)
 }
 
 
-void mli::initialize(std::shared_ptr<Logger> const& logger)
+void mlil::initialize(std::shared_ptr<Logger> const& logger)
 {
     std::unique_lock<std::mutex> lock(mutex);
     ::the_legacy_input_report = std::make_shared<LegacyInputReport>(logger);

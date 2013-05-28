@@ -29,7 +29,7 @@ namespace logging
 {
 class Logger;
 
-namespace input_report
+namespace legacy_input_report
 {
 void initialize(std::shared_ptr<Logger> const& logger);
 }
