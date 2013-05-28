@@ -13,11 +13,6 @@ set(MIR_ANDROID_INPUT_COMPILE_FLAGS
 
 add_subdirectory(android)
 
-#we don't have these tools dependencies hybrisized to build the tool
-if(MIR_PLATFORM STREQUAL "gbm")
-  add_subdirectory(tools)
-endif()
-
 # Make those include directories available to mir source code
 list(
   APPEND MIR_ANDROID_INCLUDE_DIRECTORIES

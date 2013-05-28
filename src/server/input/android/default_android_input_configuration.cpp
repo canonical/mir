@@ -91,7 +91,7 @@ droidinput::sp<droidinput::EventHubInterface> mia::DefaultInputConfiguration::th
     return event_hub(
         [this]()
         {
-            return new droidinput::EventHub();
+            return new droidinput::EventHub(input_report);
         });
 }
 
@@ -109,7 +109,7 @@ droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfigurat
     return dispatcher(
         [this]()
         {
-            return new droidinput::InputDispatcher(the_dispatcher_policy());
+            return new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
         });
 }
 
