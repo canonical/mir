@@ -34,7 +34,7 @@ struct BufferProperties;
 class GraphicBufferAllocator
 {
 public:
-    virtual ~GraphicBufferAllocator() {}
+    virtual ~GraphicBufferAllocator() = default;
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         BufferProperties const& buffer_properties) = 0;

@@ -102,6 +102,7 @@ public:
     }
 
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
+    ~MockGraphicBufferAllocator() noexcept {}
 };
 
 class MockPlatform : public mg::Platform
