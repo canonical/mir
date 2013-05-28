@@ -49,6 +49,7 @@ public:
 
     void force_requests_to_complete();
     void transfer_buffers_to(std::shared_ptr<BufferSwapper> const&);
+    void adopt_buffer(std::shared_ptr<compositor::Buffer> const&);
 
 private:
     template<class T>

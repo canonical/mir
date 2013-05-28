@@ -153,7 +153,23 @@ void mc::BufferSwapperMulti::force_requests_to_complete()
 #endif
 }
 
-void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> const&)
+void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper)
 {
+    std::unique_lock<std::mutex> lk(swapper_mutex);
 
+    while(!compositor_queue.empty())
+    {
+        new_swapper->adopt_buffer(compositor_queue.back());
+        compositor_queue.pop_back();
+    }
+
+    while(!client_queue.empty())
+    {
+        new_swapper->adopt_buffer(client_queue.back());
+        client_queue.pop_back();
+    }
+}
+
+void mc::BufferSwapperMulti::adopt_buffer(std::shared_ptr<Buffer> const&)
+{
 }

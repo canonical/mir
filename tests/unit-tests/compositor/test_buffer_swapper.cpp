@@ -135,14 +135,8 @@ TEST_F(BufferSwapperConstruction, buffer_transfer_triple)
     auto dirty_buffer = swapper.client_acquire();
     swapper.client_release(dirty_buffer);
 
-    //tmp_buffer is now dirty. the other two are clean. the swapper is free to choose whichever
-    //buffer to send out first, so compute which ones are clean.
-//    if ( dirty_buffer == buffer_a )
- 
-    EXPECT_CALL(*new_swapper, adopt_dirty_buffer(_))
-        .Times(1);
-    EXPECT_CALL(*new_swapper, adopt_clean_buffer(_))
-        .Times(2);
+    EXPECT_CALL(*new_swapper, adopt_buffer(_))
+        .Times(3);
 
     swapper.transfer_buffers_to(new_swapper);
 }
