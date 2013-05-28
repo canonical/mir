@@ -33,7 +33,13 @@ std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
 {
     ReadLock rw_lk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rw_lk);
-    return swapper->client_acquire();
+    auto buffer = swapper->client_acquire();
+    while(!buffer) )
+    {
+        //request was unservicable at the time
+        cv.wait(lk);
+    }
+    return buffer;
 }
 
 void mc::SwapperSwitcher::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
@@ -59,15 +65,22 @@ void mc::SwapperSwitcher::compositor_release(std::shared_ptr<mc::Buffer> const& 
 
 void mc::SwapperSwitcher::force_requests_to_complete()
 {
+    ReadLock rw_lk(rw_lock);
+    std::unique_lock<mc::ReadLock> lk(rw_lk);
+    swapper->force_requests_to_complete();
 }
 
 void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
 {
+    force_requests_to_complete();
+
     WriteLock wr_lk(rw_lock);
     std::unique_lock<mc::WriteLock> lk(wr_lk);
-    // std::vector<Buffers> dirty, clean
-    // swapper->dump(dirty, clean)
-    // swapper->assume_buffers(dirty, clean)
-    // swapper->force_completion();
+    std::vector<mc::Buffer> dirty, clean;
+
+    swapper->grab_buffers(dirty, clean);
+    new_swapper->adopt_buffers(dirty, clean);
     swapper = new_swapper;
+
+    cv.notify_all();
 }

@@ -105,3 +105,28 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
  
     switcher.compositor_release(buffer); 
 }
+
+TEST_F(SwapperSwitcherTest, switch_sequence)
+{
+    using namespace testing;
+    mc::SwapperSwitcher switcher(mock_default_swapper);
+
+    InSequence seq;
+    EXPECT_CALL(*mock_default_swapper, force_requests_to_complete())
+        .Times(1);
+    EXPECT_CALL(*mock_default_swapper, hand_over_buffers(_,_))
+        .Times(1);
+    EXPECT_CALL(*mock_secondary_swapper, adopt_buffers(_,_))
+        .Times(1);
+}
+
+#if 0
+TEST_F(SwapperSwitcherTest, switch_makes_client_threads_wait_and_wakeup)
+{
+    mc::SwapperSwitcher switcher(mock_default_swapper);
+
+}
+#endif
+
+#if 0
+#endif
