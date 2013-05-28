@@ -40,6 +40,38 @@ TRACEPOINT_EVENT(
      )
 )
 
+TRACEPOINT_EVENT(
+    mir_server_input,
+    published_key_event,
+    TP_ARGS(int, dest_fd, uint32_t, seq_id, int64_t, event_time),
+    TP_FIELDS(
+        ctf_integer(int, dest_fd, dest_fd)
+        ctf_integer(uint32_t, seq_id, seq_id)
+        ctf_integer(int64_t, event_time, event_time)
+     )
+)
+
+TRACEPOINT_EVENT(
+    mir_server_input,
+    published_motion_event,
+    TP_ARGS(int, dest_fd, uint32_t, seq_id, int64_t, event_time),
+    TP_FIELDS(
+        ctf_integer(int, dest_fd, dest_fd)
+        ctf_integer(uint32_t, seq_id, seq_id)
+        ctf_integer(int64_t, event_time, event_time)
+     )
+)
+
+TRACEPOINT_EVENT(
+    mir_server_input,
+    received_event_finished_signal,
+    TP_ARGS(int, src_fd, uint32_t, seq_id),
+    TP_FIELDS(
+        ctf_integer(int, src_fd, src_fd)
+        ctf_integer(uint32_t, seq_id, seq_id)
+    )
+)
+
 
 #endif /* MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_TP_H_ */
 
