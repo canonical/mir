@@ -19,6 +19,8 @@
 #ifndef MIR_LOGGING_INPUT_REPORT_H_
 #define MIR_LOGGING_INPUT_REPORT_H_
 
+#include "mir/input/input_report.h"
+
 #include <memory>
 
 namespace mir
@@ -31,6 +33,29 @@ namespace input_report
 {
 void initialize(std::shared_ptr<Logger> const& logger);
 }
+
+class InputReport : public input::InputReport
+{
+public:
+    InputReport(std::shared_ptr<Logger> const& logger);
+    virtual ~InputReport() noexcept(true) = default;
+    
+    void received_event_from_kernel(int64_t when, int type, int code, int value);
+
+    void published_key_event(int dest_fd, uint32_t seq_id, int64_t event_time);
+    void published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time);
+
+    void received_event_finished_signal(int src_fd, uint32_t seq_id);
+    
+protected:
+    InputReport(InputReport const&) = delete;
+    InputReport& operator=(InputReport const&) = delete;
+    
+private:
+    char const* component();
+    std::shared_ptr<Logger> const logger;
+};
+
 }
 }
 
