@@ -31,6 +31,7 @@ class SurfaceTarget;
 namespace shell
 {
 
+/// An interface used to control the selection of keyboard input focus.
 class InputTargeter
 {
 public:

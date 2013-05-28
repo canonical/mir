@@ -32,6 +32,8 @@ class SurfaceTarget;
 namespace surfaces
 {
 
+/// An interface used to register input targets and take care of input assosciation (i.e.
+/// create input channels).
 class InputRegistrar
 {
 public:
