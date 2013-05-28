@@ -38,6 +38,8 @@ class SurfaceTarget;
 namespace android
 {
 
+/// Interface internal to mir::input::android used for tracking the assosciation between droidinput::InputWindowHandle
+/// and mir::input::SurfaceTarget
 class WindowHandleRepository
 {
 public:
