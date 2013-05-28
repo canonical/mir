@@ -35,10 +35,16 @@ msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_
 
 void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<Session> const& focus_session)
 {
+    bool set_input_focus = false;
     app_container->for_each(
         [&](std::shared_ptr<mf::Session> const& session) {
         if (session == focus_session)
         {
+            if (focus_session->default_surface())
+            {
+                input_targeter->focus_changed(focus_session->default_surface()->internal_surface());
+                set_input_focus = true;
+            }
             session->show();
         }
         else
@@ -46,4 +52,7 @@ void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<Session> 
             session->hide();
         }
     });
+
+    if (set_input_focus == false)
+        input_targeter->focus_cleared();
 }
