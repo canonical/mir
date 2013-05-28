@@ -24,12 +24,14 @@
 #include "mir/shell/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_input_targeter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -70,7 +72,8 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
     ON_CALL(app3, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
 
-    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model));
+    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model),
+                                                        std::make_shared<mtd::StubInputTargeter>());
 
     EXPECT_CALL(app1, show()).Times(1);
     EXPECT_CALL(app2, hide()).Times(1);

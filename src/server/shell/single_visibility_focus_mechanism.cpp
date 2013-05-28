@@ -16,18 +16,20 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/shell/session_container.h"
 #include "mir/frontend/session.h"
+#include "mir/shell/session_container.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
-
+#include "mir/shell/input_targeter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container)
-  : app_container(app_container)
+msh::SingleVisibilityFocusMechanism::SingleVisibilityFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container,
+                                                                    std::shared_ptr<msh::InputTargeter> const& input_targeter)
+  : app_container(app_container),
+    input_targeter(input_targeter)
 {
 }
 

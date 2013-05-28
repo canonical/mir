@@ -341,7 +341,7 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
         [this]
         {
             return std::make_shared<msh::SingleVisibilityFocusMechanism>(
-                the_shell_session_container());
+                the_shell_session_container(), the_input_targeter());
         });
 }
 
