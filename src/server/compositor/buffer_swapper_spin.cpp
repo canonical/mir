@@ -18,39 +18,7 @@
 
 #include "mir/compositor/buffer_swapper_spin.h"
 
-#include <boost/throw_exception.hpp>
-
 namespace mc = mir::compositor;
-
-template<class T>
-void mc::BufferSwapperSpin::initialize_queues(T buffer_list)
-{
-    if (buffer_list.size() != 3)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("BufferSwapperSpin is only validated for 3 buffers"));
-    }
-
-    for (auto& buffer : buffer_list)
-    {
-        buffer_queue.push_back(buffer);
-    }
-}
-
-mc::BufferSwapperSpin::BufferSwapperSpin(
-    std::vector<std::shared_ptr<compositor::Buffer>> buffer_list)
-    : in_use_by_client{0},
-      swapper_size{buffer_list.size()}
-{
-    initialize_queues(buffer_list);
-}
-
-mc::BufferSwapperSpin::BufferSwapperSpin(
-    std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list)
-    : in_use_by_client{0},
-      swapper_size{buffer_list.size()}
-{
-    initialize_queues(buffer_list);
-}
 
 std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::client_acquire()
 {
