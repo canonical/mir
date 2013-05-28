@@ -45,7 +45,7 @@ void mc::RWLockWriterBias::rd_unlock()
     readers--;
     if (readers == 0)
     {
-        writer_cv.notify_one();
+        writer_cv.notify_all();
     }
 }
 
@@ -55,11 +55,11 @@ void mc::RWLockWriterBias::wr_lock()
     waiting_writers++;
     while ((readers > 0) || (writers > 0))
     {
+        printf("wait\n");
         writer_cv.wait(lk);
     }
     waiting_writers--;
     writers++;
-
 }
 
 void mc::RWLockWriterBias::wr_unlock()
@@ -69,5 +69,5 @@ void mc::RWLockWriterBias::wr_unlock()
 
     reader_cv.notify_all();
     if (waiting_writers > 0)
-        writer_cv.notify_one();
+        writer_cv.notify_all();
 }

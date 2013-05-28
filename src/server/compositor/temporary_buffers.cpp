@@ -35,6 +35,7 @@ mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferSwapper> 
 
 mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 {
+    printf("comp release\n");
     if (auto swapper = allocating_swapper.lock())
         swapper->client_release(buffer);
 }
@@ -47,6 +48,7 @@ mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(std::shared_ptr<BufferS
 
 mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
 {
+    printf("client release\n");
     if (auto swapper = allocating_swapper.lock())
         swapper->compositor_release(buffer);
 }

@@ -146,9 +146,7 @@ TEST_F(BufferSwapperDouble, force_requests_to_complete_works_causes_rc_failure)
                     swapper->force_requests_to_complete();
                 });
 
-    EXPECT_THROW({
-        client_buffer = swapper->client_acquire();
-    }, std::logic_error);
+    EXPECT_EQ(nullptr, swapper->client_acquire());
 }
 
 #if 0

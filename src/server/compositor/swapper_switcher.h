@@ -23,6 +23,7 @@
 #include "rw_lock.h"
 #include <condition_variable>
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
@@ -48,6 +49,7 @@ private:
     std::shared_ptr<BufferSwapper> swapper;
     RWLockWriterBias rw_lock;
     std::condition_variable_any cv;
+    std::atomic<bool> should_retry;
 #if 0
 protected:
     SwapperSwitcher() = default;

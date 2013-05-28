@@ -24,11 +24,12 @@ namespace mc = mir::compositor;
 template<class T>
 void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
 {
+#if 0
     if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
     {
         BOOST_THROW_EXCEPTION(std::logic_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
     }
-
+#endif
     for (auto& buffer : buffer_list)
     {
         client_queue.push_back(buffer);
@@ -60,15 +61,15 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
      * compositor won't have a buffer to display.
      */
     while ((!force_clients_to_complete) &&
-            (client_queue.empty() || (in_use_by_client == swapper_size - 1)))
+           (client_queue.empty() || (in_use_by_client == swapper_size - 1)))
     {
         client_available_cv.wait(lk);
     }
 
     if (force_clients_to_complete)
     {
-        force_clients_to_complete = false;
-        BOOST_THROW_EXCEPTION(std::logic_error("forced completion"));
+        /* the swapper has been terminated somehow. we must return error code indicating retry */
+        return std::shared_ptr<mc::Buffer>();
     }
 
     auto dequeued_buffer = client_queue.front();
@@ -121,36 +122,12 @@ void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& r
     client_available_cv.notify_one();
 }
 
+/* todo: GO AWAY */
 void mc::BufferSwapperMulti::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-
     force_clients_to_complete = true;
     client_available_cv.notify_all();
-#if 0
-    if (in_use_by_client == swapper_size - 1 && clients_trying_to_acquire > 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("BufferSwapperMulti is not able to force requests to complete:"
-                             " the client is trying to acquire all buffers"));
-    }
-
-    if (client_queue.empty())
-    {
-        if (compositor_queue.empty())
-        {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("BufferSwapperMulti is not able to force requests to complete:"
-                                 " all buffers are acquired"));
-        }
-
-        auto dequeued_buffer = compositor_queue.front();
-        compositor_queue.pop_front();
-        client_queue.push_back(dequeued_buffer);
-    }
-
-    client_available_cv.notify_all();
-#endif
 }
 
 void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper)
@@ -168,8 +145,14 @@ void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> 
         new_swapper->adopt_buffer(client_queue.back());
         client_queue.pop_back();
     }
+
+    force_clients_to_complete = true;
+    client_available_cv.notify_all();
 }
 
-void mc::BufferSwapperMulti::adopt_buffer(std::shared_ptr<Buffer> const&)
+void mc::BufferSwapperMulti::adopt_buffer(std::shared_ptr<Buffer> const& buffer)
 {
+    std::unique_lock<std::mutex> lk(swapper_mutex);
+    client_queue.push_back(buffer);
+    client_available_cv.notify_one();
 }
