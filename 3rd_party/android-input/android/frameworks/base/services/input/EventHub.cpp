@@ -812,6 +812,9 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                         event->type = iev.type;
                         event->code = iev.code;
                         event->value = iev.value;
+
+                        input_report->received_event_from_kernel(event->when, event->type, event->code, event->value);
+
                         event += 1;
                     }
                     capacity -= count;

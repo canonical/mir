@@ -1852,6 +1852,9 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
                     keyEntry->keyCode, keyEntry->scanCode,
                     keyEntry->metaState, keyEntry->repeatCount, keyEntry->downTime,
                     keyEntry->eventTime);
+            input_report->published_key_event(connection->inputChannel->getFd(),
+                                              dispatchEntry->seq,
+                                              keyEntry->eventTime);
             break;
         }
 
@@ -1899,6 +1902,9 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
                     motionEntry->downTime, motionEntry->eventTime,
                     motionEntry->pointerCount, motionEntry->pointerProperties,
                     usingCoords);
+            input_report->published_motion_event(connection->inputChannel->getFd(),
+                                                 dispatchEntry->seq,
+                                                 motionEntry->eventTime);
             break;
         }
 
@@ -2027,6 +2033,7 @@ int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
                 if (status) {
                     break;
                 }
+                d->input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
                 d->finishDispatchCycleLocked(currentTime, connection, seq, handled);
                 gotOne = true;
             }
