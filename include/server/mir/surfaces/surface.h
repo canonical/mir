@@ -79,7 +79,7 @@ public:
     std::shared_ptr<compositor::Buffer> client_buffer() const;
     void force_requests_to_complete();
     void flag_for_render();
-    
+
     bool supports_input() const;
     int client_input_fd() const;
     int server_input_fd() const;
