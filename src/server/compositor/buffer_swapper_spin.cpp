@@ -28,7 +28,7 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::client_acquire()
      * Don't allow the client to acquire all the buffers, because then the
      * compositor won't have a buffer to display.
      */
-    while (in_use_by_client == swapper_size - 1)
+    if (in_use_by_client == swapper_size - 1)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Client is trying to acquire all buffers at once"));
     }
