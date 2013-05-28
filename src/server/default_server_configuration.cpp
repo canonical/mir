@@ -62,6 +62,7 @@
 #include "mir/logging/message_processor_report.h"
 #include "mir/logging/display_report.h"
 #include "mir/lttng/message_processor_report.h"
+#include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
@@ -217,7 +218,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (display_report_opt, po::value<std::string>(),
             "How to handle the Display report. [{log,off}:default=off]")
         (input_report_opt, po::value<std::string>(),
-            "How to handle to Input report. [{log, off}:default=off]")
+            "How to handle to Input report. [{log,lttng,off}:default=off]")
         (legacy_input_report_opt, po::value<std::string>(),
             "How to handle the Legacy Input report. [{log,off}:default=off]")
         (session_mediator_report_opt, po::value<std::string>(),
@@ -422,9 +423,15 @@ mir::DefaultServerConfiguration::the_input_report()
     return input_report(
         [this]() -> std::shared_ptr<mi::InputReport>
         {
-            if (the_options()->get(input_report_opt, off_opt_value) == log_opt_value)
+            auto opt = the_options()->get(input_report_opt, off_opt_value);
+            
+            if (opt == log_opt_value)
             {
                 return std::make_shared<ml::InputReport>(the_logger());
+            }
+            else if (opt == lttng_opt_value)
+            {
+                return std::make_shared<mir::lttng::InputReport>();
             }
             else
             {
