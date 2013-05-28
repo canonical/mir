@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_test_doubles/mock_swapper.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include <gmock/gmock.h>
@@ -121,4 +122,27 @@ TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
     EXPECT_TRUE((buffer_a == buffer_1) || (buffer_b == buffer_1) || (buffer_c == buffer_1));
     EXPECT_TRUE((buffer_a == buffer_2) || (buffer_b == buffer_2) || (buffer_c == buffer_2));
     EXPECT_TRUE((buffer_a == buffer_3) || (buffer_b == buffer_3) || (buffer_c == buffer_3));
+}
+
+
+TEST_F(BufferSwapperConstruction, buffer_transfer_triple)
+{
+    using namespace testing;
+
+    auto new_swapper = std::make_shared<mtd::MockSwapper>();
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
+
+    auto dirty_buffer = swapper.client_acquire();
+    swapper.client_release(dirty_buffer);
+
+    //tmp_buffer is now dirty. the other two are clean. the swapper is free to choose whichever
+    //buffer to send out first, so compute which ones are clean.
+//    if ( dirty_buffer == buffer_a )
+ 
+    EXPECT_CALL(*new_swapper, adopt_dirty_buffer(_))
+        .Times(1);
+    EXPECT_CALL(*new_swapper, adopt_clean_buffer(_))
+        .Times(2);
+
+    swapper.transfer_buffers_to(new_swapper);
 }

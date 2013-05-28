@@ -45,29 +45,25 @@ std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
 
 void mc::SwapperSwitcher::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    ReadLock rw_lk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rw_lk);
+    std::unique_lock<mc::ReadLock> lk(ReadLock(rw_lock));
     return swapper->client_release(released_buffer);
 }
 
 std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::compositor_acquire()
 {
-    ReadLock rw_lk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rw_lk);
+    std::unique_lock<mc::ReadLock> lk(ReadLock(rw_lock));
     return swapper->compositor_acquire();
 }
 
 void mc::SwapperSwitcher::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    ReadLock rw_lk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rw_lk);
+    std::unique_lock<mc::ReadLock> lk(ReadLock(rw_lock));
     return swapper->compositor_release(released_buffer);
 }
 
 void mc::SwapperSwitcher::force_requests_to_complete()
 {
-    ReadLock rw_lk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rw_lk);
+    std::unique_lock<mc::ReadLock> lk(ReadLock(rw_lock));
     swapper->force_requests_to_complete();
 }
 
@@ -75,8 +71,7 @@ void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> cons
 {
     force_requests_to_complete();
 
-    WriteLock wr_lk(rw_lock);
-    std::unique_lock<mc::WriteLock> lk(wr_lk);
+    std::unique_lock<mc::WriteLock> lk(WriteLock(rw_lock));
     swapper->transfer_buffers_to(new_swapper);
     swapper = new_swapper;
 
