@@ -152,3 +152,8 @@ void mc::BufferSwapperMulti::force_requests_to_complete()
     client_available_cv.notify_all();
 #endif
 }
+
+void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> const&)
+{
+
+}

@@ -114,10 +114,11 @@ TEST_F(SwapperSwitcherTest, switch_sequence)
     InSequence seq;
     EXPECT_CALL(*mock_default_swapper, force_requests_to_complete())
         .Times(1);
-
     std::shared_ptr<mc::BufferSwapper> tmp = mock_secondary_swapper;
     EXPECT_CALL(*mock_default_swapper, transfer_buffers_to(tmp))
         .Times(1);
+
+    switcher.switch_swapper(mock_secondary_swapper);
 }
 
 #if 0

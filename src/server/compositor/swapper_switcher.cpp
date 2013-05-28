@@ -71,18 +71,14 @@ void mc::SwapperSwitcher::force_requests_to_complete()
     swapper->force_requests_to_complete();
 }
 
-void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> const& /*new_swapper*/)
+void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
 {
-#if 0
     force_requests_to_complete();
 
     WriteLock wr_lk(rw_lock);
     std::unique_lock<mc::WriteLock> lk(wr_lk);
-    std::vector<std::shared_ptr<mc::Buffer>> dirty, clean;
-
     swapper->transfer_buffers_to(new_swapper);
     swapper = new_swapper;
 
     cv.notify_all();
-#endif
 }

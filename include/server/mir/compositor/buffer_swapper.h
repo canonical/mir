@@ -67,6 +67,8 @@ public:
      */
     virtual void force_requests_to_complete() = 0;
 
+    virtual void transfer_buffers_to(std::shared_ptr<BufferSwapper> const&) = 0;
+
     virtual ~BufferSwapper() {}
 
 protected:
