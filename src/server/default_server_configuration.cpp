@@ -142,7 +142,8 @@ private:
 char const* const session_mediator_report_opt = "session-mediator-report";
 char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
-char const* const legacy_input_report_opt            = "legacy-input-report";
+char const* const legacy_input_report_opt     = "legacy-input-report";
+char const* const input_report_opt            = "input-report";
 
 char const* const glog                 = "glog";
 char const* const glog_stderrthreshold = "glog-stderrthreshold";
@@ -215,6 +216,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "Enable input. [bool:default=true]")
         (display_report_opt, po::value<std::string>(),
             "How to handle the Display report. [{log,off}:default=off]")
+        (input_report_opt, po::value<std::string>(),
+            "How to handle to Input report. [{log, off}:default=off]")
         (legacy_input_report_opt, po::value<std::string>(),
             "How to handle the Legacy Input report. [{log,off}:default=off]")
         (session_mediator_report_opt, po::value<std::string>(),
@@ -416,7 +419,18 @@ mir::DefaultServerConfiguration::the_event_filters()
 std::shared_ptr<mi::InputReport>
 mir::DefaultServerConfiguration::the_input_report()
 {
-    return std::make_shared<mi::NullInputReport>();
+    return input_report(
+        [this]() -> std::shared_ptr<mi::InputReport>
+        {
+            if (the_options()->get(input_report_opt, off_opt_value) == log_opt_value)
+            {
+                return std::make_shared<ml::InputReport>(the_logger());
+            }
+            else
+            {
+                return std::make_shared<mi::NullInputReport>();
+            }
+        });
 }
 
 std::shared_ptr<mia::InputConfiguration>
