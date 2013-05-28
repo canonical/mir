@@ -387,7 +387,6 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
-                the_input_targeter(),
                 the_shell_session_listener());
         });
 }

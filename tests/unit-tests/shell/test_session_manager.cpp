@@ -21,7 +21,6 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/session.h"
-#include "mir/shell/input_targeter.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
 #include "mir/shell/null_session_listener.h"
@@ -34,8 +33,6 @@
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/stub_surface_builder.h"
-#include "mir_test_doubles/stub_input_targeter.h"
-#include "mir_test_doubles/mock_input_targeter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -74,7 +71,6 @@ struct SessionManagerSetup : public testing::Test
                         mt::fake_shared(container),
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
-                        mt::fake_shared(input_targeter),
                         mt::fake_shared(session_listener))
     {
     }
@@ -84,7 +80,6 @@ struct SessionManagerSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     MockFocusSequence focus_sequence;
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
-    mtd::StubInputTargeter input_targeter;
     msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager;
@@ -166,60 +161,6 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     session_manager.create_surface_for(session1, msh::a_surface());
 }
 
-namespace
-{
-
-struct SessionManagerInputTargeterSetup : public testing::Test
-{
-    SessionManagerInputTargeterSetup()
-      : session_manager(mt::fake_shared(surface_factory),
-                        mt::fake_shared(container),
-                        mt::fake_shared(focus_sequence),
-                        mt::fake_shared(focus_setter),
-                        mt::fake_shared(input_targeter),
-                        mt::fake_shared(session_listener))
-    {
-    }
-
-    mtd::StubSurfaceBuilder surface_builder;
-    mtd::MockSurfaceFactory surface_factory;
-    testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
-    testing::NiceMock<MockFocusSequence> focus_sequence;
-    testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
-    mtd::MockInputTargeter input_targeter;
-    msh::NullSessionListener session_listener;
-
-    msh::SessionManager session_manager;
-};
-
-}
-
-TEST_F(SessionManagerInputTargeterSetup, input_targeter_is_notified_of_focus_changes)
-{
-    using namespace ::testing;
-
-    ON_CALL(surface_factory, create_surface(_,_,_)).WillByDefault(
-       Return(std::make_shared<msh::Surface>(
-           mt::fake_shared(surface_builder),
-           msh::a_surface())));
-    EXPECT_CALL(surface_factory, create_surface(_,_,_)).Times(1);
-
-    EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
-    {
-        InSequence seq;
-
-        EXPECT_CALL(input_targeter, focus_changed(_)).Times(1);
-        EXPECT_CALL(input_targeter, focus_cleared()).Times(1);
-    }
-
-    {
-        auto session = session_manager.open_session("test", std::shared_ptr<me::EventSink>());
-        auto surf = session_manager.create_surface_for(session, msh::a_surface());
-        session->destroy_surface(surf);
-        session_manager.close_session(session);
-    }
-}
-
 namespace 
 {
 
@@ -230,14 +171,13 @@ struct MockSessionListener : public msh::SessionListener
     MOCK_METHOD1(stopping, void(std::shared_ptr<msh::Session> const&));
 };
 
-struct SessionManagerSessionTargeterSetup : public testing::Test
+struct SessionManagerSessionListenerSetup : public testing::Test
 {
-    SessionManagerSessionTargeterSetup()
+    SessionManagerSessionListenerSetup()
       : session_manager(mt::fake_shared(surface_factory),
                         mt::fake_shared(container),
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
-                        mt::fake_shared(input_targeter),
                         mt::fake_shared(session_listener))
     {
     }
@@ -247,14 +187,13 @@ struct SessionManagerSessionTargeterSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<MockFocusSequence> focus_sequence;
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
-    mtd::StubInputTargeter input_targeter;
     MockSessionListener session_listener;
 
     msh::SessionManager session_manager;
 };
 }
 
-TEST_F(SessionManagerSessionTargeterSetup, session_listener_is_notified_of_lifecycle)
+TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifecycle)
 {
     using namespace ::testing;
 

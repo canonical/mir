@@ -38,7 +38,6 @@ class SessionContainer;
 class FocusSequence;
 class FocusSetter;
 class Session;
-class InputTargeter;
 class InputRegistrar;
 class SessionListener;
 struct SurfaceCreationParameters;
@@ -50,7 +49,6 @@ public:
                             std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<FocusSequence> const& focus_sequence,
                             std::shared_ptr<FocusSetter> const& focus_setter,
-                            std::shared_ptr<InputTargeter> const& input_targeter,
                             std::shared_ptr<SessionListener> const& session_listener);
     virtual ~SessionManager();
 
@@ -71,7 +69,6 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
-    std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SessionListener> const session_listener;
 
     std::mutex mutex;
