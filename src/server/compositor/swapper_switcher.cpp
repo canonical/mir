@@ -20,6 +20,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "swapper_switcher.h"
 
+#include <vector>
 #include <mutex>
 
 namespace mc=mir::compositor;
@@ -33,8 +34,8 @@ std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
 {
     ReadLock rw_lk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rw_lk);
-    auto buffer = swapper->client_acquire();
-    while(!buffer) )
+    std::shared_ptr<mc::Buffer> buffer;
+    while(!(buffer = swapper->client_acquire()))
     {
         //request was unservicable at the time
         cv.wait(lk);
@@ -70,17 +71,18 @@ void mc::SwapperSwitcher::force_requests_to_complete()
     swapper->force_requests_to_complete();
 }
 
-void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
+void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> const& /*new_swapper*/)
 {
+#if 0
     force_requests_to_complete();
 
     WriteLock wr_lk(rw_lock);
     std::unique_lock<mc::WriteLock> lk(wr_lk);
-    std::vector<mc::Buffer> dirty, clean;
+    std::vector<std::shared_ptr<mc::Buffer>> dirty, clean;
 
-    swapper->grab_buffers(dirty, clean);
-    new_swapper->adopt_buffers(dirty, clean);
+    swapper->transfer_buffers_to(new_swapper);
     swapper = new_swapper;
 
     cv.notify_all();
+#endif
 }

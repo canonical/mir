@@ -50,6 +50,10 @@ public:
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<compositor::Buffer> const&));
     MOCK_METHOD0(force_requests_to_complete, void());
 
+    MOCK_METHOD1(transfer_buffers_to, void(std::shared_ptr<compositor::BufferSwapper> const&));
+    MOCK_METHOD1(adopt_clean_buffer, void(std::shared_ptr<compositor::Buffer> const&));
+    MOCK_METHOD1(adopt_dirty_buffer, void(std::shared_ptr<compositor::Buffer> const&));
+
 private:
     std::shared_ptr<compositor::Buffer> default_buffer;
 };
