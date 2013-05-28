@@ -16,10 +16,12 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
-#include "mir/input/event_filter.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 #include "src/server/input/android/rudimentary_input_reader_policy.h"
 #include "src/server/input/android/android_input_constants.h"
+
+#include "mir/input/event_filter.h"
+#include "mir/input/null_input_report.h" // TODO: Remove if unused ~racarr
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"

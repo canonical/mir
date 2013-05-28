@@ -50,6 +50,7 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_manager.h"
 #include "mir/input/null_input_target_listener.h"
+#include "mir/input/null_input_report.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_dispatcher_controller.h"
@@ -412,6 +413,12 @@ mir::DefaultServerConfiguration::the_event_filters()
     return empty_filter_list;
 }
 
+std::shared_ptr<mi::InputReport>
+mir::DefaultServerConfiguration::the_input_report()
+{
+    return std::make_shared<mi::NullInputReport>();
+}
+
 std::shared_ptr<mia::InputConfiguration>
 mir::DefaultServerConfiguration::the_input_configuration()
 {
@@ -438,7 +445,8 @@ mir::DefaultServerConfiguration::the_input_configuration()
         input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
             the_event_filters(),
             the_display(),
-            std::make_shared<DefaultCursorListener>(the_display()->the_cursor()));
+            std::make_shared<DefaultCursorListener>(the_display()->the_cursor()),
+            the_input_report());
     }
     return input_configuration;
 }
