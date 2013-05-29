@@ -90,13 +90,7 @@ void mc::SwapperSwitcher::end_responsibility(std::vector<std::shared_ptr<Buffer>
 }
 
 void mc::SwapperSwitcher::change_swapper(std::function<std::shared_ptr<BufferSwapper>
-                                     (std::vector<std::shared_ptr<Buffer>>&, size_t&)>)
-{
-
-}
-
-#if 0
-void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
+                                     (std::vector<std::shared_ptr<Buffer>>&, size_t&)> create_swapper)
 {
     {
         ReadLock rlk(rw_lock);
@@ -107,10 +101,19 @@ void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper>
 
     WriteLock wlk(rw_lock);
     std::unique_lock<mc::WriteLock> lk(wlk);
-    swapper->transfer_buffers_to(new_swapper);
-    swapper = new_swapper;
+
+    std::vector<std::shared_ptr<mc::Buffer>> list;
+    size_t size;
+    swapper->end_responsibility(list, size);
+    swapper = create_swapper(list, size);
 
     cv.notify_all();
+
+}
+
+#if 0
+void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
+{
 }
 void mc::SwapperSwitcher::adopt_buffer(std::shared_ptr<compositor::Buffer> const&)
 {
