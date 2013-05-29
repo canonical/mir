@@ -39,7 +39,7 @@ struct BufferSwapperSpinTriple : testing::Test
           buffer_c{std::make_shared<mtd::StubBuffer>()},
           swapper{std::make_shared<mc::BufferSwapperSpin>(
                       std::initializer_list<std::shared_ptr<mc::Buffer>>(
-                          {buffer_a, buffer_b, buffer_c}))}
+                          {buffer_a, buffer_b, buffer_c}),3)}
     {
     }
 

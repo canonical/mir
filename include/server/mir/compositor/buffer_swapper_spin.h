@@ -48,12 +48,12 @@ class BufferSwapperSpin : public BufferSwapper
 {
 public:
     template<typename BufferPtrContainer>
-    BufferSwapperSpin(BufferPtrContainer const& buffer_list)
+    BufferSwapperSpin(BufferPtrContainer const& buffer_list, size_t swapper_size)
         : buffer_queue{buffer_list.begin(), buffer_list.end()},
           in_use_by_client{0},
-          swapper_size{buffer_queue.size()}
+          swapper_size{swapper_size}
     {
-        if ((swapper_size != 3) && (swapper_size != 0))
+        if (swapper_size != 3)
         {
             BOOST_THROW_EXCEPTION(
                 std::logic_error("BufferSwapperSpin is only validated for 3 buffers"));
