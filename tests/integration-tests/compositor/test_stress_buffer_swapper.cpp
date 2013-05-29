@@ -140,13 +140,13 @@ void BufferSwapperStress::test_distinct_buffers(mc::BufferSwapper& swapper)
 
 TEST_F(BufferSwapperStress, distinct_and_valid_double_buffers_in_client_and_compositor)
 {
-    auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+    auto double_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
     mc::BufferSwapperMulti double_swapper(double_list, double_list.size());
     test_distinct_buffers(double_swapper);
 }
 TEST_F(BufferSwapperStress, distinct_and_valid_triple_buffers_in_client_and_compositor)
 {
-    auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+    auto triple_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
     mc::BufferSwapperMulti triple_swapper(triple_list, triple_list.size());
     test_distinct_buffers(triple_swapper);
 }
@@ -212,7 +212,7 @@ TEST_F(BufferSwapperStress, double_test_wait_situation)
     std::vector<std::shared_ptr<mc::Buffer>> client_buffers;
     std::vector<std::shared_ptr<mc::Buffer>> compositor_buffers;
     /* a double buffered client should stall on the second request without the compositor running */
-    auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+    auto double_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
     mc::BufferSwapperMulti double_swapper(double_list, double_list.size());
     test_wait_situation(compositor_buffers, client_buffers, double_swapper, 2);
 
@@ -223,7 +223,7 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
 {
     std::vector<std::shared_ptr<mc::Buffer>> client_buffers;
     std::vector<std::shared_ptr<mc::Buffer>> compositor_buffers;
-    auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+    auto triple_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
     mc::BufferSwapperMulti triple_swapper(triple_list, triple_list.size());
     /* a triple buffered client should stall on the third request without the compositor running */
     test_wait_situation(compositor_buffers, client_buffers, triple_swapper, 3);
@@ -301,7 +301,7 @@ void BufferSwapperStress::test_last_posted(mc::BufferSwapper& swapper)
 
 TEST_F(BufferSwapperStress, double_test_last_posted)
 {
-    auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+    auto double_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
     mc::BufferSwapperMulti double_swapper(double_list, double_list.size());
     test_last_posted(double_swapper);
 }

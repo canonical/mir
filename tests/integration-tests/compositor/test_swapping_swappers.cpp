@@ -40,7 +40,7 @@ struct SwapperSwappingStress : public ::testing::Test
         buffer_a = std::shared_ptr<mtd::StubBuffer>(std::make_shared<mtd::StubBuffer>());
         buffer_b = std::shared_ptr<mtd::StubBuffer>(std::make_shared<mtd::StubBuffer>());
         buffer_c = std::shared_ptr<mtd::StubBuffer>(std::make_shared<mtd::StubBuffer>());
-        auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+        auto triple_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
         auto first_swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list, triple_list.size());
         swapper_switcher = std::make_shared<mc::SwapperSwitcher>(first_swapper);
     }

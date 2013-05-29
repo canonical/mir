@@ -21,10 +21,12 @@
 
 namespace mc = mir::compositor;
 
-template<class T>
-void mc::BufferSwapperMulti::initialize_queues(T buffer_list, size_t size)
+mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>>& buffer_list, size_t swapper_size)
+ : in_use_by_client(0),
+   swapper_size(swapper_size),
+   force_clients_to_complete(false)
 {
-    if ((size != 2) && (size != 3))
+    if ((swapper_size != 2) && (swapper_size != 3))
     {
         BOOST_THROW_EXCEPTION(std::logic_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
     }
@@ -33,21 +35,6 @@ void mc::BufferSwapperMulti::initialize_queues(T buffer_list, size_t size)
     {
         client_queue.push_back(buffer);
     }
-    swapper_size = size;
-}
-
-mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list, size_t swapper_size)
- : in_use_by_client(0),
-   force_clients_to_complete(false)
-{
-    initialize_queues(buffer_list, swapper_size);
-}
-
-mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list, size_t swapper_size) :
-    in_use_by_client(0),
-    force_clients_to_complete(false)
-{
-    initialize_queues(buffer_list, swapper_size);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
