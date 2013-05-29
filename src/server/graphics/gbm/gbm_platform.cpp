@@ -26,7 +26,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_ipc_packer.h"
 
-#include <xf86drm.h>
+#include "drm_close_threadsafe.h"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -47,7 +47,7 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
     ~GBMPlatformIPCPackage()
     {
         if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
-            drmClose(ipc_fds[0]);
+            mgg::drm_close_threadsafe(ipc_fds[0]);
     }
 };
 

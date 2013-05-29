@@ -28,6 +28,7 @@ add_library(
   linux_virtual_terminal.cpp
   internal_native_display.cpp
   internal_client.cpp
+  drm_close_threadsafe.cpp
 )
 
 target_link_libraries(

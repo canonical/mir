@@ -5,6 +5,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper_double.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper_triple.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper_spin_triple.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_temporary_buffers.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_id.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_properties.cpp

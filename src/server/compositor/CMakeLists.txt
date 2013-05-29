@@ -8,6 +8,7 @@ set(
   buffer_bundle_manager.cpp
   buffer_bundle_surfaces.cpp
   buffer_swapper_multi.cpp
+  buffer_swapper_spin.cpp
   swapper_factory.cpp
   rendering_operator.cpp
   multi_threaded_compositor.cpp
