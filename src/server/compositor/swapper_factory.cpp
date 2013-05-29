@@ -23,6 +23,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
+#include "swapper_switcher.h"
 
 #include <initializer_list>
 #include <vector>
@@ -61,5 +62,6 @@ std::unique_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper(
 
     actual_buffer_properties = BufferProperties{buffers[0]->size(), buffers[0]->pixel_format(), requested_buffer_properties.usage};
 
-    return std::unique_ptr<BufferSwapper>(new mc::BufferSwapperMulti(buffers));
+    auto swapper = std::make_shared<mc::BufferSwapperMulti>(buffers);
+    return std::unique_ptr<BufferSwapper>(new mc::SwapperSwitcher(swapper));
 }
