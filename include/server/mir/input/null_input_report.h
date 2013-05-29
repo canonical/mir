@@ -39,10 +39,6 @@ public:
     void published_motion_event(int dest_fd, uint32_t seq_id, int64_t event_time);
 
     void received_event_finished_signal(int src_fd, uint32_t seq_id);
-    
- protected:
-    NullInputReport(NullInputReport const&) = delete;
-    NullInputReport& operator=(NullInputReport const&) = delete;
 };
 
 }

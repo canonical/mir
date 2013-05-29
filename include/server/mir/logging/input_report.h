@@ -47,10 +47,6 @@ public:
 
     void received_event_finished_signal(int src_fd, uint32_t seq_id);
     
-protected:
-    InputReport(InputReport const&) = delete;
-    InputReport& operator=(InputReport const&) = delete;
-    
 private:
     char const* component();
     std::shared_ptr<Logger> const logger;

@@ -42,8 +42,6 @@ public:
     
 protected:
     InputReport() = default;
-
-private:
     InputReport(InputReport const&) = delete;
     InputReport& operator=(InputReport const&) = delete;
 };
