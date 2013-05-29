@@ -18,7 +18,7 @@
  */
 
 #include "mir/compositor/buffer_bundle_surfaces.h"
-#include "mir/compositor/buffer_swapper.h"
+#include "buffer_swapper_master.h"
 #include "mir/compositor/buffer_properties.h"
 
 #include "temporary_buffers.h"
@@ -28,7 +28,7 @@ namespace geom = mir::geometry;
 namespace ms = mir::surfaces;
 
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
-    std::unique_ptr<BufferSwapper>&& swapper,
+    std::unique_ptr<BufferSwapperMaster>&& swapper,
     BufferProperties const& buffer_properties)
      : swapper(std::move(swapper)),
        size(buffer_properties.size),
@@ -36,7 +36,7 @@ mc::BufferBundleSurfaces::BufferBundleSurfaces(
 {
 }
 
-mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper)
+mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapperMaster>&& swapper)
      : swapper(std::move(swapper)),
        size(),
        pixel_format(geometry::PixelFormat::abgr_8888)

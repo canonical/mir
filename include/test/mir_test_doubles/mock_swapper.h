@@ -19,6 +19,7 @@
 #define MIR_TEST_DOUBLES_MOCK_SWAPPER_H_
 
 #include "mir/compositor/buffer_swapper.h"
+#include "src/server/compositor/buffer_swapper_master.h"
 
 #include <gmock/gmock.h>
 
@@ -42,7 +43,7 @@ public:
             .WillByDefault(Return(default_buffer));
         ON_CALL(*this, client_acquire())
             .WillByDefault(Return(default_buffer));
-    };
+    }
 
     MOCK_METHOD0(client_acquire,     std::shared_ptr<compositor::Buffer>());
     MOCK_METHOD1(client_release,     void(std::shared_ptr<compositor::Buffer> const&));
@@ -50,9 +51,39 @@ public:
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<compositor::Buffer> const&));
     MOCK_METHOD0(force_client_completion, void());
 
-    MOCK_METHOD1(transfer_buffers_to, void(std::shared_ptr<compositor::BufferSwapper> const&));
-    MOCK_METHOD1(adopt_buffer, void(std::shared_ptr<compositor::Buffer> const&));
+    MOCK_METHOD2(end_responsibility, void(std::vector<std::shared_ptr<compositor::Buffer>>&, size_t&));
 
+private:
+    std::shared_ptr<compositor::Buffer> default_buffer;
+};
+
+struct MockSwapperMaster : public compositor::BufferSwapperMaster
+{
+public:
+    MockSwapperMaster()
+    {
+    }
+
+    MockSwapperMaster(std::shared_ptr<compositor::Buffer> buffer)
+        : default_buffer(buffer)
+    {
+        using namespace testing;
+
+        ON_CALL(*this, compositor_acquire())
+            .WillByDefault(Return(default_buffer));
+        ON_CALL(*this, client_acquire())
+            .WillByDefault(Return(default_buffer));
+    };
+
+    MOCK_METHOD0(client_acquire,     std::shared_ptr<compositor::Buffer>());
+    MOCK_METHOD1(client_release,     void(std::shared_ptr<compositor::Buffer> const&));
+    MOCK_METHOD0(compositor_acquire, std::shared_ptr<compositor::Buffer>());
+    MOCK_METHOD1(compositor_release, void(std::shared_ptr<compositor::Buffer> const&));
+    MOCK_METHOD0(force_client_completion, void());
+    MOCK_METHOD2(end_responsibility, void(std::vector<std::shared_ptr<compositor::Buffer>>&, size_t&));
+    MOCK_METHOD1(adopt_buffer, void(std::shared_ptr<compositor::Buffer> const&));
+    MOCK_METHOD1(change_swapper, void(std::function<std::shared_ptr<compositor::BufferSwapper>
+                                         (std::vector<std::shared_ptr<compositor::Buffer>>&, size_t&)>));
 private:
     std::shared_ptr<compositor::Buffer> default_buffer;
 };

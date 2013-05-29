@@ -33,16 +33,16 @@ struct SwapperSwitcherTest : public ::testing::Test
         mock_secondary_swapper = std::make_shared<mtd::MockSwapper>();
         stub_buffer = std::make_shared<mtd::StubBuffer>();
 
-        creation_fn = [this] (std::vector<std::shared_ptr<mc::Buffer>const&>&, size_t&)
+        creation_fn = [this] (std::vector<std::shared_ptr<mc::Buffer>>&, size_t&)
             {
                 return mock_secondary_swapper;
-            }
+            };
     }
 
     std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
     std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
     std::shared_ptr<mc::Buffer> stub_buffer;
-    std::function<std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>const&>&,
+    std::function<std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>>&,
                                                      size_t&)> creation_fn;
 };
 

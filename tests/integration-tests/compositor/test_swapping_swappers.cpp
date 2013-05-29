@@ -82,10 +82,12 @@ TEST_F(SwapperSwappingStress, swapper)
                 {
                     for(auto i=0u; i < 200; i++)
                     {
+#if 0
                         auto list = std::initializer_list<std::shared_ptr<mc::Buffer>>{};
                         auto new_swapper = std::make_shared<mc::BufferSwapperMulti>(list);
                         swapper_switcher->transfer_buffers_to(new_swapper); 
                         std::this_thread::yield();
+#endif
                     } 
                 });
 
@@ -126,12 +128,14 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                 {
                     for(auto i=0u; i < 200; i++)
                     {
+#if 0
                         auto list = std::initializer_list<std::shared_ptr<mc::Buffer>>{};
                         auto new_swapper = std::make_shared<mc::BufferSwapperMulti>(list);
                         swapper_switcher->transfer_buffers_to(new_swapper); 
                         std::this_thread::yield();
                         auto new_async_swapper = std::make_shared<mc::BufferSwapperSpin>(list);
-                        swapper_switcher->transfer_buffers_to(new_async_swapper); 
+                        swapper_switcher->transfer_buffers_to(new_async_swapper);
+#endif 
                     } 
                 });
 

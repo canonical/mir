@@ -48,7 +48,7 @@ mc::SwapperFactory::SwapperFactory(
     assert(gr_alloc);
 }
 
-std::unique_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper(
+std::unique_ptr<mc::BufferSwapperMaster> mc::SwapperFactory::create_swapper_master(
     BufferProperties& actual_buffer_properties,
     BufferProperties const& requested_buffer_properties)
 {
@@ -63,5 +63,5 @@ std::unique_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper(
     actual_buffer_properties = BufferProperties{buffers[0]->size(), buffers[0]->pixel_format(), requested_buffer_properties.usage};
 
     auto swapper = std::make_shared<mc::BufferSwapperMulti>(buffers);
-    return std::unique_ptr<BufferSwapper>(new mc::SwapperSwitcher(swapper));
+    return std::unique_ptr<BufferSwapperMaster>(new mc::SwapperSwitcher(swapper));
 }

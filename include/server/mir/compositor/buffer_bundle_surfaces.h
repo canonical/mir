@@ -31,15 +31,15 @@ namespace compositor
 
 class BufferIDUniqueGenerator;
 struct BufferProperties;
-class BufferSwapper;
+class BufferSwapperMaster;
 
 class BufferBundleSurfaces : public surfaces::BufferBundle
 {
 public:
-    BufferBundleSurfaces(std::unique_ptr<BufferSwapper>&& swapper);
+    BufferBundleSurfaces(std::unique_ptr<BufferSwapperMaster>&& swapper);
 
     BufferBundleSurfaces(
-        std::unique_ptr<BufferSwapper>&& swapper, BufferProperties const& buffer_properties);
+        std::unique_ptr<BufferSwapperMaster>&& swapper, BufferProperties const& buffer_properties);
 
     ~BufferBundleSurfaces();
 
@@ -56,7 +56,7 @@ protected:
     BufferBundleSurfaces& operator=(const BufferBundleSurfaces&) = delete;
 
 private:
-    std::shared_ptr<BufferSwapper> swapper;
+    std::shared_ptr<BufferSwapperMaster> swapper;
     std::map<Buffer*, BufferID> buffer_to_id_map;
     geometry::Size size;
     geometry::PixelFormat pixel_format;

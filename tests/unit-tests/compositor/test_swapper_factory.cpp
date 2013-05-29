@@ -22,6 +22,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "src/server/compositor/buffer_swapper_master.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -82,7 +83,7 @@ TEST_F(SwapperFactoryTest, create_swapper_uses_default_number_of_buffers)
     int default_num_of_buffers = 2;
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
         .Times(default_num_of_buffers);
-    auto swapper = strategy.create_swapper(actual_properties, properties);
+    auto swapper = strategy.create_swapper_master(actual_properties, properties);
 }
 
 TEST_F(SwapperFactoryTest, create_swapper_with_two_makes_double_buffer)
@@ -95,7 +96,7 @@ TEST_F(SwapperFactoryTest, create_swapper_with_two_makes_double_buffer)
     mc::SwapperFactory strategy{stub_allocator, num_of_buffers};
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
         .Times(num_of_buffers);
-    auto swapper = strategy.create_swapper(actual_properties, properties);
+    auto swapper = strategy.create_swapper_master(actual_properties, properties);
 }
 
 TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_triple_buffer)
@@ -108,7 +109,7 @@ TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_triple_buffer)
     mc::SwapperFactory strategy{stub_allocator, num_of_buffers};
     EXPECT_CALL(*stub_allocator, alloc_buffer(_))
         .Times(num_of_buffers);
-    auto swapper = strategy.create_swapper(actual_properties, properties);
+    auto swapper = strategy.create_swapper_master(actual_properties, properties);
 }
 
 TEST_F(SwapperFactoryTest, create_swapper_returns_actual_properties_from_buffer)
@@ -116,7 +117,7 @@ TEST_F(SwapperFactoryTest, create_swapper_returns_actual_properties_from_buffer)
     mc::SwapperFactory strategy{stub_allocator};
     mc::BufferProperties actual_properties;
 
-    auto swapper = strategy.create_swapper(actual_properties, properties);
+    auto swapper = strategy.create_swapper_master(actual_properties, properties);
 
     EXPECT_EQ(buf_size, actual_properties.size);
     EXPECT_EQ(buf_pixel_format, actual_properties.format);

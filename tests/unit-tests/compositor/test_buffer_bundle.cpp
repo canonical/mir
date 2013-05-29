@@ -17,7 +17,6 @@
  */
 
 #include "mir/compositor/buffer_bundle_surfaces.h"
-#include "mir/compositor/buffer_swapper.h"
 
 #include "mir_test_doubles/mock_swapper.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -42,12 +41,12 @@ protected:
         pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
 
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
-        mock_swapper = std::unique_ptr<NiceMock<mtd::MockSwapper>>(
-            new NiceMock<mtd::MockSwapper>(mock_buffer));
+        mock_swapper = std::unique_ptr<NiceMock<mtd::MockSwapperMaster>>(
+            new NiceMock<mtd::MockSwapperMaster>(mock_buffer));
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> mock_buffer;
-    std::unique_ptr<testing::NiceMock<mtd::MockSwapper>> mock_swapper;
+    std::unique_ptr<testing::NiceMock<mtd::MockSwapperMaster>> mock_swapper;
     geom::Size size;
     geom::Stride stride;
     geom::PixelFormat pixel_format;

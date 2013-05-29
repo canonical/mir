@@ -20,6 +20,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_SWAPPER_H_
 #define MIR_COMPOSITOR_BUFFER_SWAPPER_H_
 
+#include <vector>
 #include <memory>
 
 namespace mir
@@ -65,12 +66,7 @@ public:
      * the completion of this call, neither the client, nor the compositor can
      * continue to request or return buffers to this swapper.
      */
-    virtual void transfer_buffers_to(std::shared_ptr<BufferSwapper> const&) = 0;
-
-    /**
-     * Adopt a new buffer into the swapper.
-     */
-    virtual void adopt_buffer(std::shared_ptr<compositor::Buffer> const&) = 0;
+    virtual void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&) = 0;
 
     /**
      * If the swapper has been used, and you want to preserve the buffers that have been used, 

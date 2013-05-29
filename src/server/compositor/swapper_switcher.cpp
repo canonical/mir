@@ -84,6 +84,18 @@ void mc::SwapperSwitcher::force_client_completion()
     swapper->force_client_completion();
 }
 
+void mc::SwapperSwitcher::end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&)
+{
+
+}
+
+void mc::SwapperSwitcher::change_swapper(std::function<std::shared_ptr<BufferSwapper>
+                                     (std::vector<std::shared_ptr<Buffer>>&, size_t&)>)
+{
+
+}
+
+#if 0
 void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
 {
     {
@@ -100,7 +112,8 @@ void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper>
 
     cv.notify_all();
 }
-
 void mc::SwapperSwitcher::adopt_buffer(std::shared_ptr<compositor::Buffer> const&)
 {
 }
+#endif
+

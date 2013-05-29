@@ -28,7 +28,6 @@ namespace compositor
 
 class GraphicBufferAllocator;
 struct BufferProperties;
-
 class SwapperFactory : public BufferAllocationStrategy
 {
 public:
@@ -38,7 +37,7 @@ public:
     explicit SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int number_of_buffers);
 
-    std::unique_ptr<BufferSwapper> create_swapper(
+    std::unique_ptr<BufferSwapperMaster> create_swapper_master(
         BufferProperties& actual_buffer_properties,
         BufferProperties const& requested_buffer_properties);
 

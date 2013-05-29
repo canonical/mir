@@ -129,8 +129,8 @@ TEST_F(BufferSwapperConstruction, buffer_transfer_triple_all_owned)
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
     size_t test_size;
-    std::vector<std::shared_ptr<mc::Buffer> const&> list;
-    swapper.dump_responsibility(list, test_size);
+    std::vector<std::shared_ptr<mc::Buffer>> list;
+    swapper.end_responsibility(list, test_size);
 
     auto res1 = std::find(list.begin(), list.end(), buffer_a);
     auto res2 = std::find(list.begin(), list.end(), buffer_b);
@@ -140,7 +140,7 @@ TEST_F(BufferSwapperConstruction, buffer_transfer_triple_all_owned)
     EXPECT_NE(list.end(), res2);
     EXPECT_NE(list.end(), res3);
 
-    EXPECT_EQ(3u, test_size());
+    EXPECT_EQ(3u, test_size);
 }
 
 TEST_F(BufferSwapperConstruction, buffer_transfer_triple_some_not_owned)
@@ -150,12 +150,12 @@ TEST_F(BufferSwapperConstruction, buffer_transfer_triple_some_not_owned)
     auto acquired_buffer = swapper.client_acquire();
 
     size_t test_size;
-    std::vector<std::shared_ptr<mc::Buffer> const&> list;
+    std::vector<std::shared_ptr<mc::Buffer>> list;
     swapper.end_responsibility(list, test_size);
 
     auto res1 = std::find(list.begin(), list.end(), acquired_buffer);
     EXPECT_EQ(2u, list.size());
     EXPECT_EQ(list.end(), res1); //acquired_buffer should not be in list
 
-    EXPECT_EQ(3u, test_size());
+    EXPECT_EQ(3u, test_size);
 }

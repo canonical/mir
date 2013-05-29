@@ -80,6 +80,21 @@ void mc::BufferSwapperSpin::force_client_completion()
 {
 }
 
+void mc::BufferSwapperSpin::end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers,
+                                                size_t& size)
+{
+    std::unique_lock<std::mutex> lk(swapper_mutex);
+
+    for(auto& buffer : buffer_queue)
+    {
+        buffers.push_back(buffer);
+        buffer_queue.pop_back();
+        swapper_size--;
+    }
+
+    size = swapper_size;
+}
+#if 0
 void mc::BufferSwapperSpin::transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper)
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};
@@ -97,3 +112,4 @@ void mc::BufferSwapperSpin::adopt_buffer(std::shared_ptr<compositor::Buffer> con
     buffer_queue.push_back(buffer);
     swapper_size++;
 }
+#endif

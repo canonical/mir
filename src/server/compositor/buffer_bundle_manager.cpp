@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/buffer_swapper.h"
+#include "buffer_swapper_master.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -48,7 +48,7 @@ std::shared_ptr<ms::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
 {
     BufferProperties actual_buffer_properties;
 
-    auto swapper(buffer_allocation_strategy->create_swapper(actual_buffer_properties,
+    auto swapper(buffer_allocation_strategy->create_swapper_master(actual_buffer_properties,
                                                             buffer_properties));
 
     return std::make_shared<mc::BufferBundleSurfaces>(

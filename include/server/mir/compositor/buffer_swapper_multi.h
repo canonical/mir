@@ -48,8 +48,7 @@ public:
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
 
     void force_client_completion();
-    void transfer_buffers_to(std::shared_ptr<BufferSwapper> const&);
-    void adopt_buffer(std::shared_ptr<compositor::Buffer> const&);
+    void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
 
 private:
     template<class T>

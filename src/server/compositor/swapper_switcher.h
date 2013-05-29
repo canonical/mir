@@ -20,7 +20,7 @@
 #ifndef MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
 #define MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
 
-#include "mir/compositor/buffer_swapper.h"
+#include "buffer_swapper_master.h"
 #include "rw_lock.h"
 #include <condition_variable>
 #include <memory>
@@ -33,7 +33,7 @@ namespace compositor
 class Buffer;
 class BufferSwapper;
 
-class SwapperSwitcher : public BufferSwapper
+class SwapperSwitcher : public BufferSwapperMaster
 {
 public:
     SwapperSwitcher(std::shared_ptr<BufferSwapper> const& initial_swapper);
@@ -43,9 +43,10 @@ public:
     std::shared_ptr<Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
     void force_client_completion();
+    void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
 
-    void transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper);
-    void adopt_buffer(std::shared_ptr<compositor::Buffer> const&);
+    void change_swapper(std::function<std::shared_ptr<BufferSwapper>
+                                         (std::vector<std::shared_ptr<Buffer>>&, size_t&)>);
 
 private:
     std::shared_ptr<BufferSwapper> swapper;

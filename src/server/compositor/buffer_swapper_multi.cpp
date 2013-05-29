@@ -132,6 +132,26 @@ void mc::BufferSwapperMulti::force_client_completion()
     client_available_cv.notify_all();
 }
 
+void mc::BufferSwapperMulti::end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers,
+                                                size_t& size)
+{
+    std::unique_lock<std::mutex> lk(swapper_mutex);
+
+    while(!compositor_queue.empty())
+    {
+        buffers.push_back(compositor_queue.back());
+        compositor_queue.pop_back();
+    }
+
+    while(!client_queue.empty())
+    {
+        buffers.push_back(client_queue.back());
+        client_queue.pop_back();
+    }
+
+    size = swapper_size;
+}
+#if 0
 void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
@@ -158,3 +178,4 @@ void mc::BufferSwapperMulti::adopt_buffer(std::shared_ptr<Buffer> const& buffer)
 
     client_available_cv.notify_one();
 }
+#endif
