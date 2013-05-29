@@ -74,7 +74,7 @@ public:
      * and then transfer_buffers_to(). If these are not called, all buffers within the swapper
      * will be deallocated
      */
-    virtual ~BufferSwapper() {}
+    virtual ~BufferSwapper() = default;
 
 protected:
     BufferSwapper() = default;

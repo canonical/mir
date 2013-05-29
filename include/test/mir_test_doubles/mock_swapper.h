@@ -34,6 +34,8 @@ struct MockSwapper : public compositor::BufferSwapper
 {
 public:
     MockSwapper() {}
+    ~MockSwapper() noexcept {}
+
     MockSwapper(std::shared_ptr<compositor::Buffer> buffer)
         : default_buffer(buffer)
     {
@@ -63,6 +65,7 @@ public:
     MockSwapperMaster()
     {
     }
+    ~MockSwapperMaster() noexcept {}
 
     MockSwapperMaster(std::shared_ptr<compositor::Buffer> buffer)
         : default_buffer(buffer)
