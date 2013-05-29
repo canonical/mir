@@ -52,6 +52,7 @@ class Session;
 class ResourceCache;
 class SessionMediatorReport;
 class ClientBufferTracker;
+class CloggableEventSink;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
@@ -109,7 +110,7 @@ private:
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
 
     std::shared_ptr<SessionMediatorReport> const report;
-    std::shared_ptr<events::EventSink> const event_sink;
+    std::shared_ptr<CloggableEventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 

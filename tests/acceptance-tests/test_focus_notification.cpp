@@ -96,6 +96,7 @@ struct EventReceivingClient : ClientConfigCommon
     {
         auto client = static_cast<EventReceivingClient *>(context);
 
+        printf("Event \n");
         client->handler.handle_event(ev);
     }
     virtual void expect_events(MockEventHandler& /* handler */, mt::WaitCondition* /* all_events_received */)

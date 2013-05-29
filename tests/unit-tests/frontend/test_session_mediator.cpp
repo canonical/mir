@@ -409,13 +409,13 @@ struct EventProducingSession : public StubbedSession
         : event_sink(event_sink)
     {
     }
-    
-    mf::SurfaceId create_surface(msh::SurfaceCreationParameters const& parameters) override
+
+    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
     {
         MirEvent any_event;
         event_sink->handle_event(any_event);
-        return StubbedSession::create_surface(parameters);
-    }
+        return StubbedSession::get_surface(surface);
+    }    
     
     std::shared_ptr<me::EventSink> const event_sink;
 };
@@ -431,6 +431,7 @@ struct SessionMediatorEventTest : public SessionMediatorTest
 
 }
 
+// TODO: Come back ~racarr
 TEST_F(SessionMediatorEventTest, event_sink_is_clogged_during_surface_creation)
 {
     using namespace ::testing;

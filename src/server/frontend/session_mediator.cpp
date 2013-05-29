@@ -33,14 +33,65 @@
 #include "mir/graphics/viewable_area.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
+#include "mir/events/event_sink.h"
+
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
 #include <boost/throw_exception.hpp>
 
+#include <mutex>
+
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
+namespace me = mir::events;
 namespace mfd=mir::frontend::detail;
+
+namespace mir
+{
+namespace frontend
+{
+
+struct CloggableEventSink : public me::EventSink
+{
+    CloggableEventSink(std::shared_ptr<me::EventSink> const& drain)
+        : drain(drain),
+          clogged(false)
+    {
+    }
+    
+    void clog()
+    {
+        std::unique_lock<std::mutex> lg(lock);
+        clogged = true;
+    }
+    void unclog()
+    {
+        std::unique_lock<std::mutex> lg(lock);
+        clogged = false;
+        
+        for (auto const& ev : buffered_events)
+            drain->handle_event(ev);
+    }
+
+    void handle_event(MirEvent const& ev)
+    {
+        if (clogged)
+            buffered_events.push_back(ev);
+        else
+            drain->handle_event(ev);
+    }
+    
+    std::shared_ptr<me::EventSink> const drain;
+    bool clogged;
+    
+    std::vector<MirEvent> buffered_events;
+
+    std::mutex lock;
+};
+
+}
+}
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
@@ -55,7 +106,7 @@ mf::SessionMediator::SessionMediator(
     viewable_area(viewable_area),
     buffer_allocator(buffer_allocator),
     report(report),
-    event_sink(event_sink),
+    event_sink(std::make_shared<mf::CloggableEventSink>(event_sink)),
     resource_cache(resource_cache),
     client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size))
 {
@@ -105,6 +156,7 @@ void mf::SessionMediator::create_surface(
 
     report->session_create_surface_called(session->name());
 
+    event_sink->clog();
     auto const id = shell->create_surface_for(session,
         msh::SurfaceCreationParameters()
         .of_name(request->surface_name())
@@ -144,6 +196,7 @@ void mf::SessionMediator::create_surface(
     }
 
     done->Run();
+    event_sink->unclog();
 }
 
 void mf::SessionMediator::next_buffer(

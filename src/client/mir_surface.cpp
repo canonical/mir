@@ -266,6 +266,7 @@ void MirSurface::on_configured()
         {
         case mir_surface_attrib_type:
         case mir_surface_attrib_state:
+        case mir_surface_attrib_focus:
             if (configure_result.has_ivalue())
                 attrib_cache[a] = configure_result.ivalue();
             else
