@@ -24,12 +24,11 @@ namespace mc = mir::compositor;
 template<class T>
 void mc::BufferSwapperMulti::initialize_queues(T buffer_list, size_t size)
 {
-#if 0
-    if ((buffer_list.size() == 1) || (buffer_list.size() >= 4))
+    if ((size != 2) && (size != 3))
     {
         BOOST_THROW_EXCEPTION(std::logic_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
     }
-#endif
+
     for (auto& buffer : buffer_list)
     {
         client_queue.push_back(buffer);
