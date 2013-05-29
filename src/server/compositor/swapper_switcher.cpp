@@ -110,13 +110,3 @@ void mc::SwapperSwitcher::change_swapper(std::function<std::shared_ptr<BufferSwa
     cv.notify_all();
 
 }
-
-#if 0
-void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
-{
-}
-void mc::SwapperSwitcher::adopt_buffer(std::shared_ptr<compositor::Buffer> const&)
-{
-}
-#endif
-

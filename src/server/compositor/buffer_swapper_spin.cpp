@@ -89,7 +89,6 @@ void mc::BufferSwapperSpin::end_responsibility(std::vector<std::shared_ptr<Buffe
     {
         buffers.push_back(buffer);
         buffer_queue.pop_back();
-        swapper_size--;
     }
 
     size = swapper_size;
