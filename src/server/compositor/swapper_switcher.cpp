@@ -35,17 +35,21 @@ std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
     std::unique_lock<mc::ReadLock> lk(rw_lk);
     std::shared_ptr<mc::Buffer> buffer;
 
-    while(!(buffer = swapper->client_acquire()))
+    mc::BufferSwapper* last_swapper = nullptr;
+    while(swapper.get() != last_swapper)
     {
-        if (should_retry)
+        try
         {
-            //request was unservicable at the time, but should be servicable in the future
+            last_swapper = swapper.get();
+            buffer = swapper->client_acquire();
+        } catch (std::logic_error& e)
+        {
+            /* if failure is non recoverable, rethrow. */
+            if (!should_retry || (e.what() != std::string("forced_completion")))
+                throw e;
+
+            /* wait for the swapper to change before retrying */
             cv.wait(lk);
-        }
-        else
-        {
-            //request will never become servicable
-            BOOST_THROW_EXCEPTION(std::logic_error("forced completion of request"));
         }
     }
     return buffer;

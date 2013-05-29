@@ -18,6 +18,7 @@
 
 
 #include "mir_basic_rpc_channel.h"
+#include "rpc_report.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -28,8 +29,9 @@
 namespace mcl = mir::client;
 namespace mcld = mir::client::detail;
 
-mcld::PendingCallCache::PendingCallCache(std::shared_ptr<Logger> const& log) :
-    log(log)
+mcld::PendingCallCache::PendingCallCache(
+    std::shared_ptr<RpcReport> const& rpc_report)
+    : rpc_report{rpc_report}
 {
 }
 
@@ -41,23 +43,23 @@ mcld::SendBuffer& mcld::PendingCallCache::save_completion_details(
     std::unique_lock<std::mutex> lock(mutex);
 
     auto& current = pending_calls[invoke.id()] = PendingCall(response, complete);
-    log->debug() << "save_completion_details " << invoke.id() << " response " << response << " complete " << complete << std::endl;
     return current.send_buffer;
 }
 
 void mcld::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
 {
     std::unique_lock<std::mutex> lock(mutex);
-    log->debug() << "complete_response for result " << result.id() << std::endl;
     auto call = pending_calls.find(result.id());
     if (call == pending_calls.end())
     {
-        log->error() << "orphaned result: " << result.ShortDebugString() << std::endl;
+        rpc_report->orphaned_result(result);
     }
     else
     {
         auto& completion = call->second;
-        log->debug() << "complete_response for result " << result.id() << " response " << completion.response << " complete " << completion.complete << std::endl;
+
+        rpc_report->complete_response(result);
+
         completion.response->ParseFromString(result.response());
         completion.complete->Run();
         pending_calls.erase(call);

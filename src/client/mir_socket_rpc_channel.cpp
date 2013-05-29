@@ -18,6 +18,7 @@
 
 
 #include "mir_socket_rpc_channel.h"
+#include "rpc_report.h"
 
 #include "mir/protobuf/google_protobuf_guard.h"
 
@@ -32,16 +33,11 @@
 namespace mcl = mir::client;
 namespace mcld = mir::client::detail;
 
-mcl::MirSocketRpcChannel::MirSocketRpcChannel() :
-    pending_calls(std::shared_ptr<Logger>()), work(io_service), socket(io_service)
-{
-}
-
 mcl::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
-    std::shared_ptr<Logger> const& log) :
-    log(log),
-    pending_calls(log),
+    std::shared_ptr<RpcReport> const& rpc_report) :
+    rpc_report(rpc_report),
+    pending_calls(rpc_report),
     work(io_service),
     endpoint(endpoint),
     socket(io_service),
@@ -75,8 +71,6 @@ mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
 void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    log->debug() << __PRETTY_FUNCTION__ << std::endl;
-
     auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
     if (surface)
     {
@@ -84,18 +78,16 @@ void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messag
 
         if (surface->fds_on_side_channel() > 0)
         {
-            log->debug() << __PRETTY_FUNCTION__ << " expect " << surface->fds_on_side_channel() << " file descriptors" << std::endl;
-
             std::vector<int32_t> buf(surface->fds_on_side_channel());
 
             int received = 0;
             while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
                 /* TODO avoid spinning forever */;
 
-            log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
-
             for (int i = 0; i != received; ++i)
                 surface->add_fd(buf[i]);
+
+            rpc_report->file_descriptors_received(*response, buf);
         }
     }
 
@@ -112,18 +104,16 @@ void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messag
 
         if (buffer->fds_on_side_channel() > 0)
         {
-            log->debug() << __PRETTY_FUNCTION__ << " expect " << buffer->fds_on_side_channel() << " file descriptors" << std::endl;
-
             std::vector<int32_t> buf(buffer->fds_on_side_channel());
 
             int received = 0;
             while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
                 /* TODO avoid spinning forever */;
 
-            log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
-
             for (int i = 0; i != received; ++i)
                 buffer->add_fd(buf[i]);
+
+            rpc_report->file_descriptors_received(*response, buf);
         }
     }
 
@@ -141,18 +131,16 @@ void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messag
 
         if (platform->fds_on_side_channel() > 0)
         {
-            log->debug() << __PRETTY_FUNCTION__ << " expect " << platform->fds_on_side_channel() << " file descriptors" << std::endl;
-
             std::vector<int32_t> buf(platform->fds_on_side_channel());
 
             int received = 0;
             while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
                 /* TODO avoid spinning forever */;
 
-            log->debug() << __PRETTY_FUNCTION__ << " received " << received << " file descriptors" << std::endl;
-
             for (int i = 0; i != received; ++i)
                 platform->add_fd(buf[i]);
+
+            rpc_report->file_descriptors_received(*response, buf);
         }
     }
 
@@ -168,6 +156,9 @@ void mcl::MirSocketRpcChannel::CallMethod(
     google::protobuf::Closure* complete)
 {
     mir::protobuf::wire::Invocation invocation = invocation_for(method, parameters);
+
+    rpc_report->invocation_requested(invocation);
+
     std::ostringstream buffer;
     invocation.SerializeToOstream(&buffer);
 
@@ -178,10 +169,13 @@ void mcl::MirSocketRpcChannel::CallMethod(
     auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
-    send_message(buffer.str(), send_buffer);
+    send_message(buffer.str(), send_buffer, invocation);
 }
 
-void mcl::MirSocketRpcChannel::send_message(const std::string& body, detail::SendBuffer& send_buffer)
+void mcl::MirSocketRpcChannel::send_message(
+    std::string const& body,
+    detail::SendBuffer& send_buffer,
+    mir::protobuf::wire::Invocation const& invocation)
 {
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
@@ -198,32 +192,28 @@ void mcl::MirSocketRpcChannel::send_message(const std::string& body, detail::Sen
         socket,
         boost::asio::buffer(send_buffer),
         boost::bind(&MirSocketRpcChannel::on_message_sent, this,
-            boost::asio::placeholders::error));
+            invocation, boost::asio::placeholders::error));
 }
 
-void mcl::MirSocketRpcChannel::on_message_sent(boost::system::error_code const& error)
+void mcl::MirSocketRpcChannel::on_message_sent(
+    mir::protobuf::wire::Invocation const& invocation,
+    boost::system::error_code const& error)
 {
-    log->debug() << __PRETTY_FUNCTION__ << std::endl;
-
     if (error)
-    {
-        log->error() << __PRETTY_FUNCTION__
-            << "\n... " << error.message() << std::endl;
-    }
+        rpc_report->invocation_failed(invocation, error);
+    else
+        rpc_report->invocation_succeeded(invocation);
 }
 
 void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& error)
 {
-    log->debug() << __PRETTY_FUNCTION__ << std::endl;
-
     if (error)
     {
         // If we've not got a response to a call pending
         // then during shutdown we expect to see "eof"
         if (!pending_calls.empty() || error != boost::asio::error::eof)
         {
-            log->error() << __PRETTY_FUNCTION__
-                << "\n... " << error.message() << std::endl;
+            rpc_report->header_receipt_failed(error);
         }
 
         return;
@@ -239,20 +229,25 @@ void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& e
             boost::asio::placeholders::error));
 }
 
-
 void mcl::MirSocketRpcChannel::read_message()
 {
+    mir::protobuf::wire::Result result;
+
     try
     {
-        log->debug() << __PRETTY_FUNCTION__ << std::endl;
         const size_t body_size = read_message_header();
 
-        log->debug() << __PRETTY_FUNCTION__ << " body_size:" << body_size << std::endl;
+        result = read_message_body(body_size);
 
-        mir::protobuf::wire::Result result = read_message_body(body_size);
+        rpc_report->result_receipt_succeeded(result);
+    }
+    catch (std::exception const& x)
+    {
+        rpc_report->result_receipt_failed(x);
+    }
 
-        log->debug() << __PRETTY_FUNCTION__ << " result.id():" << result.id() << std::endl;
-
+    try
+    {
         for (int i = 0; i != result.events_size(); ++i)
         {
             process_event_sequence(result.events(i));
@@ -265,8 +260,7 @@ void mcl::MirSocketRpcChannel::read_message()
     }
     catch (std::exception const& x)
     {
-        log->error() << __PRETTY_FUNCTION__
-            << "\n... " << x.what() << std::endl;
+        rpc_report->result_processing_failed(result, x);
     }
 }
 
@@ -296,13 +290,14 @@ void mcl::MirSocketRpcChannel::process_event_sequence(std::string const& event)
                 // alignment, which is critical on many non-x86
                 // architectures.
                 memcpy(&e, raw_event.data(), sizeof e);
+
+                rpc_report->event_parsing_succeeded(e);
+
                 event_handler->handle_event(e);
             }
             else
             {
-                log->error() << __PRETTY_FUNCTION__
-                             << " Received MirEvent of an unexpected size."
-                             << std::endl;
+                rpc_report->event_parsing_failed(event);
             }
         }
     }

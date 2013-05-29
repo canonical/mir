@@ -59,16 +59,16 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
      * Don't allow the client to acquire all the buffers, because then the
      * compositor won't have a buffer to display.
      */
-    while ((!force_clients_to_complete) &&
+    while ((swapper_size > 0) &&
            (client_queue.empty() || (in_use_by_client == (swapper_size - 1))))
     {
         client_available_cv.wait(lk);
     }
 
-    if (force_clients_to_complete)
+    //we have been forced to shutdown
+    if (swapper_size == 0)
     {
-        /* the swapper has been terminated somehow. we must return error code indicating retry */
-        return std::shared_ptr<mc::Buffer>();
+        BOOST_THROW_EXCEPTION(std::logic_error("forced_completion"));
     }
 
     auto dequeued_buffer = client_queue.front();
@@ -125,7 +125,7 @@ void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& r
 void mc::BufferSwapperMulti::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-    force_clients_to_complete = true;
+    swapper_size = 0;
     client_available_cv.notify_all();
 }
 
@@ -137,14 +137,12 @@ void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> 
     {
         new_swapper->adopt_buffer(compositor_queue.back());
         compositor_queue.pop_back();
-        swapper_size--;
     }
 
     while(!client_queue.empty())
     {
         new_swapper->adopt_buffer(client_queue.back());
         client_queue.pop_back();
-        swapper_size--;
     }
 }
 
@@ -152,7 +150,8 @@ void mc::BufferSwapperMulti::adopt_buffer(std::shared_ptr<Buffer> const& buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     client_queue.push_back(buffer);
-    swapper_size++;
+    //swapper_size++;
+    swapper_size = 3;
 
     client_available_cv.notify_one();
 }
