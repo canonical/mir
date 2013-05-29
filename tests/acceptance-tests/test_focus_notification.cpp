@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test/wait_condition.h"
+#include "mir_test/ipc_checkpoints.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
@@ -157,6 +158,8 @@ MATCHER_P2(SurfaceEvent, attrib, value, "")
 
 TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus)
 {
+    using namespace ::testing;
+
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
 
@@ -169,4 +172,48 @@ TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus
         }
     } client_config;
     launch_client_process(client_config);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and_losing_focus)
+{
+    using namespace ::testing;
+    
+    TestingServerConfiguration server_config;
+    launch_server_process(server_config);
+    
+    static mt::IPCCheckpoints checkpoints{"first_client_focused"};
+
+    struct FocusObservingClientOne : public EventReceivingClient
+    {
+        void expect_events(MockEventHandler& handler, mt::WaitCondition* all_events_received) override
+        {
+            InSequence seq;
+            // We should receive focus as we are created
+            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
+                mir_surface_focused))).Times(1);
+
+            checkpoints.unblock("first_client_focused");
+
+            // And lose it as the second surface is created
+            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
+                mir_surface_unfocused))).Times(1);
+            // And regain it when the second surface is closed
+            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
+                mir_surface_focused))).Times(1).WillOnce(mt::WakeUp(all_events_received));
+        }
+    } client_one_config;
+    launch_client_process(client_one_config);
+
+    struct FocusObservingClientTwo : public EventReceivingClient
+    {
+        void expect_events(MockEventHandler& handler, mt::WaitCondition* all_events_received) override
+        {
+            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
+                mir_surface_focused))).Times(1).WillOnce(mt::WakeUp(all_events_received));
+        }
+    } client_two_config;
+
+    // We need some synchronization to ensure client two does not connect before client one.
+    checkpoints.wait_for_at_most_seconds("first_client_focused", 5);
+    launch_client_process(client_two_config);
 }
