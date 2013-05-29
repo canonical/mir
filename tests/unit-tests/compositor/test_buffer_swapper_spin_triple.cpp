@@ -36,18 +36,17 @@ struct BufferSwapperSpinTriple : testing::Test
     BufferSwapperSpinTriple()
         : buffer_a{std::make_shared<mtd::StubBuffer>()},
           buffer_b{std::make_shared<mtd::StubBuffer>()},
-          buffer_c{std::make_shared<mtd::StubBuffer>()},
-          swapper{std::make_shared<mc::BufferSwapperSpin>(
-                      std::initializer_list<std::shared_ptr<mc::Buffer>>(
-                          {buffer_a, buffer_b, buffer_c}),3)}
+          buffer_c{std::make_shared<mtd::StubBuffer>()}
     {
+          auto list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+          swapper = std::make_shared<mc::BufferSwapperSpin>(list, list.size());
     }
 
     std::shared_ptr<mc::Buffer> const buffer_a;
     std::shared_ptr<mc::Buffer> const buffer_b;
     std::shared_ptr<mc::Buffer> const buffer_c;
 
-    std::shared_ptr<mc::BufferSwapper> const swapper;
+    std::shared_ptr<mc::BufferSwapper> swapper;
 };
 
 }

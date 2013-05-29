@@ -20,6 +20,20 @@
 
 namespace mc = mir::compositor;
 
+
+mc::BufferSwapperSpin::BufferSwapperSpin(
+    std::vector<std::shared_ptr<mc::Buffer>>& buffer_list, size_t swapper_size)
+    : buffer_queue{buffer_list.begin(), buffer_list.end()},
+      in_use_by_client{0},
+      swapper_size{swapper_size}
+{
+    if (swapper_size != 3)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("BufferSwapperSpin is only validated for 3 buffers"));
+    }
+}
+
 std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::client_acquire()
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};

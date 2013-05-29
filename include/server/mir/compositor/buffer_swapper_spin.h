@@ -47,18 +47,7 @@ class Buffer;
 class BufferSwapperSpin : public BufferSwapper
 {
 public:
-    template<typename BufferPtrContainer>
-    BufferSwapperSpin(BufferPtrContainer const& buffer_list, size_t swapper_size)
-        : buffer_queue{buffer_list.begin(), buffer_list.end()},
-          in_use_by_client{0},
-          swapper_size{swapper_size}
-    {
-        if (swapper_size != 3)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("BufferSwapperSpin is only validated for 3 buffers"));
-        }
-    }
+    BufferSwapperSpin(std::vector<std::shared_ptr<compositor::Buffer>>& buffer_list, size_t swapper_size);
 
     std::shared_ptr<Buffer> client_acquire();
     void client_release(std::shared_ptr<Buffer> const& queued_buffer);
