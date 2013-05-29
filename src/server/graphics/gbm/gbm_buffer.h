@@ -44,6 +44,7 @@ public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
               std::unique_ptr<BufferTextureBinder> texture_binder);
     GBMBuffer(const GBMBuffer&) = delete;
+    ~GBMBuffer();
 
     GBMBuffer& operator=(const GBMBuffer&) = delete;
 
