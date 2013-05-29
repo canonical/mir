@@ -32,11 +32,18 @@ struct SwapperSwitcherTest : public ::testing::Test
         mock_default_swapper = std::make_shared<mtd::MockSwapper>();
         mock_secondary_swapper = std::make_shared<mtd::MockSwapper>();
         stub_buffer = std::make_shared<mtd::StubBuffer>();
+
+        creation_fn = [this] (std::vector<std::shared_ptr<mc::Buffer>const&>&, size_t&)
+            {
+                return mock_secondary_swapper;
+            }
     }
 
     std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
     std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
     std::shared_ptr<mc::Buffer> stub_buffer;
+    std::function<std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>const&>&,
+                                                     size_t&)> creation_fn;
 };
 
 TEST_F(SwapperSwitcherTest, client_acquire_basic)
@@ -67,7 +74,7 @@ TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
 
     auto buffer = switcher.client_acquire();
 
-    switcher.transfer_buffers_to(mock_secondary_swapper);
+    switcher.change_swapper(creation_fn);
  
     switcher.client_release(buffer); 
 }
@@ -101,7 +108,7 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
 
     auto buffer = switcher.compositor_acquire();
 
-    switcher.transfer_buffers_to(mock_secondary_swapper);
+    switcher.change_swapper(creation_fn);
  
     switcher.compositor_release(buffer); 
 }
@@ -114,20 +121,8 @@ TEST_F(SwapperSwitcherTest, switch_sequence)
     InSequence seq;
     EXPECT_CALL(*mock_default_swapper, force_client_completion())
         .Times(1);
-    std::shared_ptr<mc::BufferSwapper> tmp = mock_secondary_swapper;
-    EXPECT_CALL(*mock_default_swapper, transfer_buffers_to(tmp))
+    EXPECT_CALL(*mock_default_swapper, end_responsibility(_,_))
         .Times(1);
 
-    switcher.transfer_buffers_to(mock_secondary_swapper);
+    switcher.change_swapper(creation_fn);
 }
-
-#if 0
-TEST_F(SwapperSwitcherTest, switch_makes_client_threads_wait_and_wakeup)
-{
-    mc::SwapperSwitcher switcher(mock_default_swapper);
-
-}
-#endif
-
-#if 0
-#endif

@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_swapper.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include <gmock/gmock.h>
@@ -152,7 +151,7 @@ TEST_F(BufferSwapperConstruction, buffer_transfer_triple_some_not_owned)
 
     size_t test_size;
     std::vector<std::shared_ptr<mc::Buffer> const&> list;
-    swapper.dump_responsibility(list, test_size);
+    swapper.end_responsibility(list, test_size);
 
     auto res1 = std::find(list.begin(), list.end(), acquired_buffer);
     EXPECT_EQ(2u, list.size());
