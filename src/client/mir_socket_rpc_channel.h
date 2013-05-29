@@ -21,7 +21,6 @@
 #define MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_
 
 #include "mir_basic_rpc_channel.h"
-#include "mir_logger.h"
 #include "mir/events/event_sink.h"
 
 #include <boost/asio.hpp>
@@ -45,11 +44,14 @@ class Result;
 
 namespace client
 {
+
+class RpcReport;
+
 class MirSocketRpcChannel : public MirBasicRpcChannel
 {
 public:
-    MirSocketRpcChannel();
-    MirSocketRpcChannel(const std::string& endpoint, const std::shared_ptr<Logger>& log);
+    MirSocketRpcChannel(std::string const& endpoint,
+                        std::shared_ptr<RpcReport> const& rpc_report);
     ~MirSocketRpcChannel();
 
     void set_event_handler(events::EventSink *sink);
@@ -58,7 +60,7 @@ private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
         google::protobuf::Closure* complete);
-    std::shared_ptr<Logger> log;
+    std::shared_ptr<RpcReport> const rpc_report;
     detail::PendingCallCache pending_calls;
     std::thread io_service_thread;
     boost::asio::io_service io_service;
@@ -70,8 +72,10 @@ private:
     unsigned char header_bytes[size_of_header];
 
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
-    void send_message(const std::string& body, detail::SendBuffer& buffer);
-    void on_message_sent(const boost::system::error_code& error);
+    void send_message(std::string const& body, detail::SendBuffer& buffer,
+                      mir::protobuf::wire::Invocation const& invocation);
+    void on_message_sent(mir::protobuf::wire::Invocation const& invocation,
+                         boost::system::error_code const& error);
     void on_header_read(const boost::system::error_code& error);
 
     void read_message();

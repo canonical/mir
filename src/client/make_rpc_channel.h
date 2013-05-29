@@ -25,10 +25,11 @@ namespace mir
 {
 namespace client
 {
-class Logger;
+class RpcReport;
 
 std::shared_ptr<MirBasicRpcChannel>
-make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log);
+make_rpc_channel(std::string const& name,
+                 std::shared_ptr<RpcReport> const& rpc_report);
 }
 }
 

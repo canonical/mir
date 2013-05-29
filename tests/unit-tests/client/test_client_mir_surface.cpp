@@ -19,6 +19,7 @@
 #include "mir_protobuf.pb.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/mir_logger.h"
+#include "src/client/null_rpc_report.h"
 #include "src/client/client_buffer.h"
 #include "src/client/client_buffer_factory.h"
 #include "src/client/client_platform.h"
@@ -286,8 +287,9 @@ struct MirClientSurfaceTest : public testing::Test
 
         /* connect client */
         logger = std::make_shared<mcl::ConsoleLogger>();
+        rpc_report = std::make_shared<mcl::NullRpcReport>();
         platform_factory = std::make_shared<mt::StubClientPlatformFactory>();
-        channel = mcl::make_rpc_channel("./test_socket_surface", logger);
+        channel = mcl::make_rpc_channel("./test_socket_surface", rpc_report);
         connection = std::make_shared<MirConnection>(channel, logger, platform_factory);
         MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                          connected_callback, 0);
@@ -302,6 +304,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<mcl::MirBasicRpcChannel> channel;
     std::shared_ptr<mcl::Logger> logger;
+    std::shared_ptr<mcl::RpcReport> rpc_report;
     std::shared_ptr<mcl::ClientPlatformFactory> platform_factory;
     std::shared_ptr<MirConnection> connection;
 
