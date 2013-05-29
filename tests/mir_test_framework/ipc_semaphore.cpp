@@ -16,34 +16,31 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_IPC_SEMAPHORE_H_
-#define MIR_TEST_IPC_SEMAPHORE_H_
+#include "mir_test_framework/ipc_semaphore.h"
 
-#include <semaphore.h>
+#include <time.h>
 
-#include <initializer_list>
-#include <string>
+namespace mtf = mir_test_framework;
 
-namespace mir_test_framework
+mtf::IPCSemaphore::IPCSemaphore()
 {
+    static int const semaphore_enable_process_shared = 1;
 
-class IPCSemaphore
-{
-public:
-    IPCSemaphore();
-    virtual ~IPCSemaphore();
-    
-    void wake_up_everyone();
-    void wait_for_at_most_seconds(int seconds);
-
-protected:
-    IPCSemaphore(const IPCSemaphore&) = delete;
-    IPCSemaphore& operator=(const IPCSemaphore&) = delete;
-
-private:
-    sem_t sem;
-};
-
+    sem_init(&sem, semaphore_enable_process_shared, 0);
 }
 
-#endif
+mtf::IPCSemaphore::~IPCSemaphore()
+{
+    sem_destroy(&sem);
+}
+
+void mtf::IPCSemaphore::wake_up_everyone()
+{
+    sem_post(&sem);
+}
+
+void mtf::IPCSemaphore::wait_for_at_most_seconds(int seconds)
+{
+    struct timespec abs_timeout = { time(NULL) + seconds, 0 };
+    sem_timedwait(&sem, &abs_timeout);
+}

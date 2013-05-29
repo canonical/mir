@@ -11,6 +11,7 @@ set(
   testing_process_manager.cpp
   display_server_test_fixture.cpp
   process.cpp
+  ipc_semaphore.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS
