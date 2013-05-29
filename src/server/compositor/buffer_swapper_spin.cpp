@@ -80,8 +80,14 @@ void mc::BufferSwapperSpin::force_requests_to_complete()
 {
 }
 
-void mc::BufferSwapperSpin::transfer_buffers_to(std::shared_ptr<BufferSwapper> const&)
+void mc::BufferSwapperSpin::transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper)
 {
+    for(auto& buffer : buffer_queue)
+    {
+        new_swapper->adopt_buffer(buffer);
+        buffer_queue.pop_back();
+        swapper_size--;
+    }
 }
 
 void mc::BufferSwapperSpin::adopt_buffer(std::shared_ptr<compositor::Buffer> const&)

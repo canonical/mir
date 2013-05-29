@@ -79,7 +79,7 @@ private:
     std::shared_ptr<Buffer> last_update_buffer;
     unsigned int in_use_by_client;
     bool client_submitted_new_buffer;
-    size_t const swapper_size;
+    size_t swapper_size;
 };
 
 }
