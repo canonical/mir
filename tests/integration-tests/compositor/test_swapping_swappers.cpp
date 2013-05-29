@@ -21,6 +21,7 @@
 
 #include "src/server/compositor/swapper_switcher.h"
 #include "mir/compositor/buffer_swapper_multi.h"
+#include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 
 #include <future>
@@ -85,6 +86,52 @@ TEST_F(SwapperSwappingStress, swapper)
                         auto new_swapper = std::make_shared<mc::BufferSwapperMulti>(list);
                         swapper_switcher->switch_swapper(new_swapper); 
                         std::this_thread::yield();
+                    } 
+                });
+
+    f.wait();
+    g.wait();
+    h.wait();
+}
+
+TEST_F(SwapperSwappingStress, different_swapper_types)
+{
+    client_thread_done = false;
+
+    auto f = std::async(std::launch::async,
+                [this]
+                {
+                    for(auto i=0u; i < 400; i++)
+                    {
+                        auto b = swapper_switcher->client_acquire();
+                        std::this_thread::yield();
+                        swapper_switcher->client_release(b);
+                    }
+                    client_thread_done = true;
+                });
+
+    auto g = std::async(std::launch::async,
+                [this]
+                {
+                    while(!client_thread_done)
+                    {
+                        auto b = swapper_switcher->compositor_acquire();
+                        std::this_thread::yield();
+                        swapper_switcher->compositor_release(b);
+                    }
+                });
+
+    auto h = std::async(std::launch::async,
+                [this]
+                {
+                    for(auto i=0u; i < 200; i++)
+                    {
+                        auto list = std::initializer_list<std::shared_ptr<mc::Buffer>>{};
+                        auto new_swapper = std::make_shared<mc::BufferSwapperMulti>(list);
+                        swapper_switcher->switch_swapper(new_swapper); 
+                        std::this_thread::yield();
+                        auto new_async_swapper = std::make_shared<mc::BufferSwapperSpin>(list);
+                        swapper_switcher->switch_swapper(new_async_swapper); 
                     } 
                 });
 
