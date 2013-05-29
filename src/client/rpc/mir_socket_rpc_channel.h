@@ -16,12 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
-#ifndef MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_
-#define MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_
+#ifndef MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_
+#define MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_
 
 #include "mir_basic_rpc_channel.h"
-#include "mir/events/event_sink.h"
 
 #include <boost/asio.hpp>
 
@@ -29,7 +27,6 @@
 #include <google/protobuf/descriptor.h>
 
 #include <thread>
-#include <iosfwd>
 
 namespace mir
 {
@@ -43,6 +40,8 @@ class Result;
 }
 
 namespace client
+{
+namespace rpc
 {
 
 class RpcReport;
@@ -90,5 +89,6 @@ private:
 
 }
 }
+}
 
-#endif /* MIR_CLIENT_MIR_SOCKET_RPC_CHANNEL_H_ */
+#endif /* MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_ */

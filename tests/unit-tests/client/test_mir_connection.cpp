@@ -20,7 +20,7 @@
 #include "src/client/client_platform.h"
 #include "src/client/client_platform_factory.h"
 #include "src/client/mir_connection.h"
-#include "src/client/make_rpc_channel.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
 
 #include "mir/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
@@ -39,7 +39,7 @@ namespace mp = mir::protobuf;
 namespace
 {
 
-struct MockRpcChannel : public mir::client::MirBasicRpcChannel
+struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
 {
     void CallMethod(const google::protobuf::MethodDescriptor* method,
                     google::protobuf::RpcController*,

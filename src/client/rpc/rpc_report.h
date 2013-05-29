@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_RPC_REPORT_H_
-#define MIR_CLIENT_RPC_REPORT_H_
+#ifndef MIR_CLIENT_RPC_RPC_REPORT_H_
+#define MIR_CLIENT_RPC_RPC_REPORT_H_
 
 #include <mir_toolkit/event.h>
 #include <boost/system/error_code.hpp>
@@ -36,6 +36,8 @@ class Result;
 }
 }
 namespace client
+{
+namespace rpc
 {
 
 class RpcReport
@@ -72,5 +74,6 @@ protected:
 
 }
 }
+}
 
-#endif /* MIR_CLIENT_RPC_REPORT_H_ */
+#endif /* MIR_CLIENT_RPC_RPC_REPORT_H_ */

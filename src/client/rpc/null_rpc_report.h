@@ -16,14 +16,16 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_CLIENT_NULL_RPC_REPORT_H_
-#define MIR_CLIENT_NULL_RPC_REPORT_H_
+#ifndef MIR_CLIENT_RPC_NULL_RPC_REPORT_H_
+#define MIR_CLIENT_RPC_NULL_RPC_REPORT_H_
 
 #include "rpc_report.h"
 
 namespace mir
 {
 namespace client
+{
+namespace rpc
 {
 
 class NullRpcReport : public RpcReport
@@ -53,5 +55,6 @@ public:
 
 }
 }
+}
 
-#endif /* MIR_CLIENT_NULL_RPC_REPORT_H_ */
+#endif /* MIR_CLIENT_RPC_NULL_RPC_REPORT_H_ */
