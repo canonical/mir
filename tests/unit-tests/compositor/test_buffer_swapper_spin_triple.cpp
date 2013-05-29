@@ -19,6 +19,7 @@
 #include "mir/compositor/buffer_swapper_spin.h"
 
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_swapper.h"
 
 #include <gtest/gtest.h>
 
@@ -177,4 +178,19 @@ TEST_F(BufferSwapperSpinTriple, compositor_release_makes_buffer_available_to_cli
     EXPECT_TRUE(client_buffers[0] == comp_buf ||
                 client_buffers[1] == comp_buf ||
                 client_buffers[2] == comp_buf);
+}
+    
+TEST_F(BufferSwapperSpinTriple, buffer_transfer)
+{
+    using namespace testing;
+
+    auto new_swapper = std::make_shared<mtd::MockSwapper>();
+
+    auto dirty_buffer = swapper->client_acquire();
+    swapper->client_release(dirty_buffer);
+
+    EXPECT_CALL(*new_swapper, adopt_buffer(_))
+        .Times(3);
+
+    swapper->transfer_buffers_to(new_swapper);
 }
