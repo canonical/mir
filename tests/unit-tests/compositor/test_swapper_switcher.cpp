@@ -67,7 +67,7 @@ TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
 
     auto buffer = switcher.client_acquire();
 
-    switcher.switch_swapper(mock_secondary_swapper);
+    switcher.transfer_buffers_to(mock_secondary_swapper);
  
     switcher.client_release(buffer); 
 }
@@ -101,7 +101,7 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
 
     auto buffer = switcher.compositor_acquire();
 
-    switcher.switch_swapper(mock_secondary_swapper);
+    switcher.transfer_buffers_to(mock_secondary_swapper);
  
     switcher.compositor_release(buffer); 
 }
@@ -118,7 +118,7 @@ TEST_F(SwapperSwitcherTest, switch_sequence)
     EXPECT_CALL(*mock_default_swapper, transfer_buffers_to(tmp))
         .Times(1);
 
-    switcher.switch_swapper(mock_secondary_swapper);
+    switcher.transfer_buffers_to(mock_secondary_swapper);
 }
 
 #if 0

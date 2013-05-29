@@ -80,7 +80,7 @@ void mc::SwapperSwitcher::force_requests_to_complete()
     swapper->force_requests_to_complete();
 }
 
-void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
+void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
 {
     {
         ReadLock rlk(rw_lock);
@@ -95,4 +95,8 @@ void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> cons
     swapper = new_swapper;
 
     cv.notify_all();
+}
+
+void mc::SwapperSwitcher::adopt_buffer(std::shared_ptr<compositor::Buffer> const&)
+{
 }

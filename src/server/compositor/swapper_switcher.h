@@ -20,6 +20,7 @@
 #ifndef MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
 #define MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
 
+#include "mir/compositor/buffer_swapper.h"
 #include "rw_lock.h"
 #include <condition_variable>
 #include <memory>
@@ -32,7 +33,7 @@ namespace compositor
 class Buffer;
 class BufferSwapper;
 
-class SwapperSwitcher
+class SwapperSwitcher : public BufferSwapper
 {
 public:
     SwapperSwitcher(std::shared_ptr<BufferSwapper> const& initial_swapper);
@@ -43,19 +44,14 @@ public:
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
     void force_requests_to_complete();
 
-    void switch_swapper(std::shared_ptr<BufferSwapper> const& new_swapper);
+    void transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper);
+    void adopt_buffer(std::shared_ptr<compositor::Buffer> const&);
 
 private:
     std::shared_ptr<BufferSwapper> swapper;
     RWLockWriterBias rw_lock;
     std::condition_variable_any cv;
     std::atomic<bool> should_retry;
-#if 0
-protected:
-    SwapperSwitcher() = default;
-    SwapperSwitcher(SwapperSwitcher const&) = delete;
-    SwapperSwitcher& operator=(SwapperSwitcher const&) = delete;
-#endif
 };
 
 }

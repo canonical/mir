@@ -19,7 +19,6 @@
 
 #include "rw_lock.h"
 
-#include <iostream>
 namespace mc=mir::compositor;
 
 mc::RWLockWriterBias::RWLockWriterBias()
