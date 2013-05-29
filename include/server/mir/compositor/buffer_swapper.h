@@ -32,8 +32,8 @@ class BufferSwapper
 {
 public:
     /* callers of client_acquire are returned a pointer to the
-      currently usable buffer. This call may potentially wait for a
-      buffer to become available */
+      currently usable buffer. Depending on the swapper, this call may potentially wait
+      for a buffer to become available */
     virtual std::shared_ptr<Buffer> client_acquire() = 0;
 
     /* once a client is done with the finished buffer, it must queue
@@ -48,28 +48,36 @@ public:
     virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
 
     /**
-     * Forces requests on the buffer swapper to complete.
+     * Forces client requests on the buffer swapper to complete.
      *
-     * Requests, like client_acquire(), can block waiting for a buffer to
-     * become available. This method tries to force the request to
-     * complete while ensuring that swapper keeps functioning properly.
+     * client_acquire is the only function that can block to provide sync.
+     * This function unblocks client_acquire, generally resulting in an exception
+     * in threads with a waiting client_acquire()
      *
-     * Note that it's not always possible to force a request to complete
-     * without breaking the swapper. It's a logic error to attempt to call
-     * this method if the circumstances don't allow a forced completion.
-     *
-     * To successfully use this method you should ensure that (i.e. the
-     * preconditions for calling this method are):
-     *
-     * - The compositor is not holding any buffers (e.g., it has been stopped).
-     * - The client is trying to acquire at most one buffer at a time (which is
-     *   normal usage, and enforced by the high level API).
+     * After this request, the compositor can keep acquiring and releasing buffers
+     * but the client cannot. This used in shutdown of the swapper, the client cannot
+     * be reactivated after this call completes.
      */
-    virtual void force_requests_to_complete() = 0;
+    virtual void force_client_completion() = 0;
 
+    /**
+     * Transfers all buffers within the swapper to another BufferSwapper. after
+     * the completion of this call, neither the client, nor the compositor can
+     * continue to request or return buffers to this swapper.
+     */
     virtual void transfer_buffers_to(std::shared_ptr<BufferSwapper> const&) = 0;
+
+    /**
+     * Adopt a new buffer into the swapper.
+     */
     virtual void adopt_buffer(std::shared_ptr<compositor::Buffer> const&) = 0;
 
+    /**
+     * If the swapper has been used, and you want to preserve the buffers that have been used, 
+     * it is advisable to shutdown the BufferSwapper  by using force_client_completion()
+     * and then transfer_buffers_to(). If these are not called, all buffers within the swapper
+     * will be deallocated
+     */
     virtual ~BufferSwapper() {}
 
 protected:

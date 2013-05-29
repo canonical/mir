@@ -56,7 +56,7 @@ public:
     virtual void client_release(std::shared_ptr<mc::Buffer> const&) {}
     virtual std::shared_ptr<mc::Buffer> compositor_acquire(){ return std::shared_ptr<mc::Buffer>(); };
     virtual void compositor_release(std::shared_ptr<mc::Buffer> const&){}
-    virtual void force_requests_to_complete() {}
+    virtual void force_client_completion() {}
     void transfer_buffers_to(std::shared_ptr<BufferSwapper> const&) {}
     void adopt_buffer(std::shared_ptr<mc::Buffer> const&) {}
 };

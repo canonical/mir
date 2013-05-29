@@ -76,7 +76,7 @@ void mc::BufferSwapperSpin::compositor_release(std::shared_ptr<Buffer> const& re
         buffer_queue.push_front(released_buffer);
 }
 
-void mc::BufferSwapperSpin::force_requests_to_complete()
+void mc::BufferSwapperSpin::force_client_completion()
 {
 }
 

@@ -76,12 +76,12 @@ void mc::SwapperSwitcher::compositor_release(std::shared_ptr<mc::Buffer> const& 
     return swapper->compositor_release(released_buffer);
 }
 
-void mc::SwapperSwitcher::force_requests_to_complete()
+void mc::SwapperSwitcher::force_client_completion()
 {
     ReadLock rlk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rlk);
     should_retry = false;
-    swapper->force_requests_to_complete();
+    swapper->force_client_completion();
 }
 
 void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper> const& new_swapper)
@@ -90,7 +90,7 @@ void mc::SwapperSwitcher::transfer_buffers_to(std::shared_ptr<mc::BufferSwapper>
         ReadLock rlk(rw_lock);
         std::unique_lock<mc::ReadLock> lk(rlk);
         should_retry = true;
-        swapper->force_requests_to_complete();
+        swapper->force_client_completion();
     }
 
     WriteLock wlk(rw_lock);

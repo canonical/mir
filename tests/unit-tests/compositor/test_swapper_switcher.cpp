@@ -112,7 +112,7 @@ TEST_F(SwapperSwitcherTest, switch_sequence)
     mc::SwapperSwitcher switcher(mock_default_swapper);
 
     InSequence seq;
-    EXPECT_CALL(*mock_default_swapper, force_requests_to_complete())
+    EXPECT_CALL(*mock_default_swapper, force_client_completion())
         .Times(1);
     std::shared_ptr<mc::BufferSwapper> tmp = mock_secondary_swapper;
     EXPECT_CALL(*mock_default_swapper, transfer_buffers_to(tmp))

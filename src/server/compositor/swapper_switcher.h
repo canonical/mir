@@ -42,7 +42,7 @@ public:
     void client_release(std::shared_ptr<Buffer> const& queued_buffer);
     std::shared_ptr<Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
-    void force_requests_to_complete();
+    void force_client_completion();
 
     void transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper);
     void adopt_buffer(std::shared_ptr<compositor::Buffer> const&);

@@ -98,8 +98,12 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    std::shared_ptr<mc::Buffer> dequeued_buffer;
+    if (compositor_queue.empty() && client_queue.empty())
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("forced_completion"));
+    }
 
+    std::shared_ptr<mc::Buffer> dequeued_buffer;
     if (compositor_queue.empty())
     {
         dequeued_buffer = client_queue.back();
@@ -121,8 +125,7 @@ void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& r
     client_available_cv.notify_one();
 }
 
-/* todo: GO AWAY */
-void mc::BufferSwapperMulti::force_requests_to_complete()
+void mc::BufferSwapperMulti::force_client_completion()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     swapper_size = 0;
