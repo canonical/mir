@@ -44,7 +44,7 @@ void mc::RWLockWriterBias::rd_unlock()
     std::unique_lock<std::mutex> lk(mut);
     readers--;
     if (readers == 0)
-    {
+    {   
         writer_cv.notify_all();
     }
 }
@@ -55,7 +55,6 @@ void mc::RWLockWriterBias::wr_lock()
     waiting_writers++;
     while ((readers > 0) || (writers > 0))
     {
-        printf("wait\n");
         writer_cv.wait(lk);
     }
     waiting_writers--;

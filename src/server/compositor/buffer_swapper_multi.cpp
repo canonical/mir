@@ -24,12 +24,11 @@ namespace mc = mir::compositor;
 template<class T>
 void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
 {
-#if 0
-    if ((buffer_list.size() != 2) && (buffer_list.size() != 3))
+    if ((buffer_list.size() == 1) || (buffer_list.size() >= 4))
     {
         BOOST_THROW_EXCEPTION(std::logic_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
     }
-#endif
+
     for (auto& buffer : buffer_list)
     {
         client_queue.push_back(buffer);
@@ -61,7 +60,7 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
      * compositor won't have a buffer to display.
      */
     while ((!force_clients_to_complete) &&
-           (client_queue.empty() || (in_use_by_client == swapper_size - 1)))
+           (client_queue.empty() || (in_use_by_client == (swapper_size - 1))))
     {
         client_available_cv.wait(lk);
     }
@@ -138,21 +137,22 @@ void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> 
     {
         new_swapper->adopt_buffer(compositor_queue.back());
         compositor_queue.pop_back();
+        swapper_size--;
     }
 
     while(!client_queue.empty())
     {
         new_swapper->adopt_buffer(client_queue.back());
         client_queue.pop_back();
+        swapper_size--;
     }
-
-    force_clients_to_complete = true;
-    client_available_cv.notify_all();
 }
 
 void mc::BufferSwapperMulti::adopt_buffer(std::shared_ptr<Buffer> const& buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     client_queue.push_back(buffer);
+    swapper_size++;
+
     client_available_cv.notify_one();
 }

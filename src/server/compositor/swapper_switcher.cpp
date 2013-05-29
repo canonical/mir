@@ -33,7 +33,6 @@ std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
 {
     ReadLock rw_lk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rw_lk);
-    printf("client acquire\n");
     std::shared_ptr<mc::Buffer> buffer;
 
     while(!(buffer = swapper->client_acquire()))
@@ -56,7 +55,6 @@ void mc::SwapperSwitcher::client_release(std::shared_ptr<mc::Buffer> const& rele
 {
     ReadLock rw_lk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rw_lk);
-    printf("client rel\n");
     return swapper->client_release(released_buffer);
 }
 
@@ -64,7 +62,6 @@ std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::compositor_acquire()
 {
     ReadLock rlk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rlk);
-    printf("comp acquire\n");
     return swapper->compositor_acquire();
 }
 
@@ -72,7 +69,6 @@ void mc::SwapperSwitcher::compositor_release(std::shared_ptr<mc::Buffer> const& 
 {
     ReadLock rlk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rlk);
-    printf("comp rel\n");
     return swapper->compositor_release(released_buffer);
 }
 
@@ -80,7 +76,6 @@ void mc::SwapperSwitcher::force_requests_to_complete()
 {
     ReadLock rlk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rlk);
-    printf("force!\n");
     should_retry = false;
     swapper->force_requests_to_complete();
 }
@@ -90,17 +85,14 @@ void mc::SwapperSwitcher::switch_swapper(std::shared_ptr<mc::BufferSwapper> cons
     {
         ReadLock rlk(rw_lock);
         std::unique_lock<mc::ReadLock> lk(rlk);
-        printf("switch!\n");
         should_retry = true;
         swapper->force_requests_to_complete();
     }
 
     WriteLock wlk(rw_lock);
     std::unique_lock<mc::WriteLock> lk(wlk);
-        printf("writelock\n");
     swapper->transfer_buffers_to(new_swapper);
     swapper = new_swapper;
 
     cv.notify_all();
-        printf("writelock done\n");
 }
