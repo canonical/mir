@@ -39,19 +39,31 @@ mga::DefaultFramebufferFactory::DefaultFramebufferFactory(
 {
 }
 
-std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(
+std::vector<std::shared_ptr<mc::Buffer>> mga::DefaultFramebufferFactory::create_buffers(
     std::shared_ptr<DisplaySupportProvider> const& info_provider) const
 {
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();
-    auto num_framebuffers = info_provider->number_of_framebuffers_available(); 
-    std::vector<std::shared_ptr<mc::Buffer>> buffers; 
-    for( auto i = 0u; i < num_framebuffers; ++i)
+    auto num_framebuffers = info_provider->number_of_framebuffers_available();
+    std::vector<std::shared_ptr<mc::Buffer>> buffers;
+    for (auto i = 0u; i < num_framebuffers; ++i)
     {
         buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
     }
+    return buffers;
+}
 
-    auto swapper = std::make_shared<mga::FBSimpleSwapper>(buffers);
+std::shared_ptr<mga::FBSwapper> mga::DefaultFramebufferFactory::create_swapper(
+    std::vector<std::shared_ptr<mc::Buffer>> const& buffers) const
+{
+    return std::make_shared<mga::FBSimpleSwapper>(buffers);
+}
+
+std::shared_ptr<ANativeWindow> mga::DefaultFramebufferFactory::create_fb_native_window(
+    std::shared_ptr<DisplaySupportProvider> const& info_provider) const
+{
+    auto buffers = create_buffers(info_provider);
+    auto swapper = create_swapper(buffers);
     auto cache = std::make_shared<mga::InterpreterCache>();
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(swapper, info_provider, cache);
     return std::make_shared<mga::MirNativeWindow>(interpreter); 
