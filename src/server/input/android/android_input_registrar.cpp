@@ -36,6 +36,10 @@ mia::InputRegistrar::InputRegistrar(droidinput::sp<droidinput::InputDispatcherIn
 {
 }
 
+mia::InputRegistrar::~InputRegistrar() noexcept(true)
+{
+}
+
 void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface)
 {
     std::unique_lock<std::mutex> lock(handles_mutex);

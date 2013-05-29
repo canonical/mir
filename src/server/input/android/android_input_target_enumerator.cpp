@@ -34,6 +34,10 @@ mia::InputTargetEnumerator::InputTargetEnumerator(std::shared_ptr<mi::InputTarge
 {
 }
 
+mia::InputTargetEnumerator::~InputTargetEnumerator() noexcept(true)
+{
+}
+
 void mia::InputTargetEnumerator::for_each(std::function<void(droidinput::sp<droidinput::InputWindowHandle> const&)> const& callback)
 {
     auto t = targets.lock();

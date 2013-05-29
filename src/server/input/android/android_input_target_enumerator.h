@@ -51,7 +51,7 @@ class InputTargetEnumerator : public droidinput::InputEnumerator
 public:
     explicit InputTargetEnumerator(std::shared_ptr<input::InputTargets> const& targets,
                                    std::shared_ptr<WindowHandleRepository> const& repository);
-    virtual ~InputTargetEnumerator() noexcept(true) = default;
+    virtual ~InputTargetEnumerator() noexcept(true);
     
     void for_each(std::function<void(droidinput::sp<droidinput::InputWindowHandle> const&)> const& callback);
     
