@@ -50,6 +50,7 @@ class GBMDisplay : public Display
 public:
     GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                std::shared_ptr<DisplayReport> const& listener);
+	~GBMDisplay();
 
     geometry::Rectangle view_area() const;
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
