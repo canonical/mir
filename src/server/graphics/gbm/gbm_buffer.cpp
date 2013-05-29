@@ -96,6 +96,12 @@ mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
     }
 }
 
+mgg::GBMBuffer::~GBMBuffer()
+{
+    if (prime_fd > 0)
+        close(prime_fd);
+}
+
 geom::Size mgg::GBMBuffer::size() const
 {
     return {geom::Width{gbm_bo_get_width(gbm_handle.get())},
