@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test/wait_condition.h"
+#include "mir_test/event_matchers.h"
 
 #include "mir_test_framework/ipc_semaphore.h"
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -142,18 +143,6 @@ struct EventReceivingClient : ClientConfigCommon
     static int const surface_height = 100;
 };
 
-MATCHER_P2(SurfaceEvent, attrib, value, "")
-{
-    if (arg->type != mir_event_type_surface)
-        return false;
-    auto surface_ev = arg->surface;
-    if (surface_ev.attrib != attrib)
-        return false;
-    if (surface_ev.value != value)
-        return false;
-    return true;
-}
-
 }
 
 TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus)
@@ -167,7 +156,7 @@ TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus
     {
         void expect_events(MockEventHandler& handler, mt::WaitCondition* all_events_received) override
         {
-            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused))).Times(1)
+            EXPECT_CALL(handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))).Times(1)
                 .WillOnce(mt::WakeUp(all_events_received));
         }
     } client_config;
@@ -189,16 +178,16 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
         {
             InSequence seq;
             // We should receive focus as we are created
-            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
-                mir_surface_focused))).Times(1)
+            EXPECT_CALL(handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
+                mir_surface_focused)))).Times(1)
                     .WillOnce(mt::WakeUp(&ready_for_second_client));
 
             // And lose it as the second surface is created
-            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
-                mir_surface_unfocused))).Times(1);
+            EXPECT_CALL(handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
+                mir_surface_unfocused)))).Times(1);
             // And regain it when the second surface is closed
-            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
-                mir_surface_focused))).Times(1).WillOnce(mt::WakeUp(all_events_received));
+            EXPECT_CALL(handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
+                mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
     } client_one_config;
     launch_client_process(client_one_config);
@@ -207,8 +196,8 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
     {
         void expect_events(MockEventHandler& handler, mt::WaitCondition* all_events_received) override
         {
-            EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
-                mir_surface_focused))).Times(1).WillOnce(mt::WakeUp(all_events_received));
+            EXPECT_CALL(handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
+                mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
     } client_two_config;
 

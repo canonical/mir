@@ -22,12 +22,14 @@
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/input/input_channel.h"
 #include "mir/shell/surface_builder.h"
+#include "mir/events/event_sink.h"
 
 #include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/event_matchers.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -45,6 +47,13 @@ namespace mtd = mt::doubles;
 
 namespace
 {
+
+struct MockEventSink : public me::EventSink
+{
+    ~MockEventSink() noexcept(true) {}
+    MOCK_METHOD1(handle_event, void(MirEvent const&));
+};
+
 class StubSurfaceBuilder : public msh::SurfaceBuilder
 {
 public:
@@ -468,5 +477,24 @@ TEST_F(ShellSurface, states)
               surf.configure(mir_surface_attrib_state,
                              mir_surface_state_fullscreen));
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
+}
+
+TEST_F(ShellSurface, focus)
+{
+    using namespace testing;
+
+    MockEventSink sink;
+    
+    {
+        InSequence seq;
+        EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))
+            .Times(1);
+        EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused)))
+            .Times(1);
+    }
+    msh::Surface surf(mt::fake_shared(surface_builder),
+        msh::a_surface(), null_input_channel, mf::SurfaceId{0}, mt::fake_shared(sink));
+    surf.configure(mir_surface_attrib_focus, mir_surface_focused);
+    surf.configure(mir_surface_attrib_focus, mir_surface_unfocused);
 }
 

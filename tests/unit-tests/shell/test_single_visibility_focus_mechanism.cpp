@@ -86,3 +86,30 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
 }
+
+TEST(SingleVisibilityFocusMechanism, mechanism_notifies_default_surface_of_focus_changes)
+{
+    using namespace ::testing;
+
+    NiceMock<MockShellSession> app1, app2;
+    mtd::StubSurfaceBuilder stub_builder;
+    mtd::MockSurface surf1(mt::fake_shared(stub_builder)), surf2(mt::fake_shared(stub_builder));
+    
+    ON_CALL(app1, default_surface()).WillByDefault(Return(mt::fake_shared(surf1)));
+    ON_CALL(app2, default_surface()).WillByDefault(Return(mt::fake_shared(surf2)));
+
+    msh::DefaultSessionContainer model;
+    model.insert_session(mt::fake_shared(app1));
+    model.insert_session(mt::fake_shared(app2));
+    
+    {
+        InSequence seq;
+        EXPECT_CALL(surf1, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
+        EXPECT_CALL(surf1, configure(mir_surface_attrib_focus, mir_surface_unfocused)).Times(1);
+        EXPECT_CALL(surf2, configure(mir_surface_attrib_focus, mir_surface_unfocused)).Times(1);
+    }
+
+    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model));
+    focus_mechanism.set_focus_to(mt::fake_shared(app1));
+    focus_mechanism.set_focus_to(mt::fake_shared(app2));
+}
