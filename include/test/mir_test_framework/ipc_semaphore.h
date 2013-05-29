@@ -41,7 +41,7 @@ protected:
     IPCSemaphore& operator=(const IPCSemaphore&) = delete;
 
 private:
-    sem_t sem;
+    sem_t* sem;
 };
 
 }

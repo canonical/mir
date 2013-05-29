@@ -201,6 +201,8 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
+        if (ev->type == mir_event_type_surface)
+            return;
         if (client->handler->handle_input(ev))
         {
             client->event_received[client->events_received].wake_up_everyone();
