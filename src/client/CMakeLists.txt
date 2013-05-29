@@ -33,6 +33,8 @@ set(
   mir_surface.cpp
   mir_logger.cpp
   mir_basic_rpc_channel.cpp
+  null_rpc_report.cpp
+  logging/rpc_report.cpp
   ${PROTO_SRCS}
 )
 
