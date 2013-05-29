@@ -35,6 +35,7 @@ typedef enum MirSurfaceAttrib
 {
     mir_surface_attrib_type,
     mir_surface_attrib_state,
+    mir_surface_attrib_focus,
     mir_surface_attrib_arraysize_
 } MirSurfaceAttrib;
 
@@ -62,6 +63,13 @@ typedef enum MirSurfaceState
     mir_surface_state_fullscreen,
     mir_surface_state_arraysize_
 } MirSurfaceState;
+
+typedef enum MirSurfaceFocusState
+{
+    mir_surface_focused,
+    mir_surface_unfocused,
+    mir_surface_focus_arraysize_
+} MirSurfaceFocusState;
 
 /**@}*/
 
