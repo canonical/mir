@@ -38,6 +38,15 @@ void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<Session> 
         if (session == focus_session)
         {
             session->show();
+            auto surface = focus_session->default_surface();
+            if (surface)
+            {
+                auto current_focus = focus_surface.lock();
+                if (current_focus)
+                    current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+                surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+                focus_surface = surface;
+            }
         }
         else
         {

@@ -106,7 +106,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_notifies_default_surface_of_focus
         InSequence seq;
         EXPECT_CALL(surf1, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
         EXPECT_CALL(surf1, configure(mir_surface_attrib_focus, mir_surface_unfocused)).Times(1);
-        EXPECT_CALL(surf2, configure(mir_surface_attrib_focus, mir_surface_unfocused)).Times(1);
+        EXPECT_CALL(surf2, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
     }
 
     msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model));

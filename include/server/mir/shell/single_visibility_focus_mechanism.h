@@ -28,6 +28,7 @@ namespace mir
 namespace shell
 {
 class SessionContainer;
+class Surface;
 
 class SingleVisibilityFocusMechanism : public FocusSetter
 {
@@ -42,6 +43,7 @@ protected:
     SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
 private:
     std::shared_ptr<SessionContainer> const app_container;
+    std::weak_ptr<Surface> focus_surface;
 };
 
 }
