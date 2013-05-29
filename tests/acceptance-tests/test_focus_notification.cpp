@@ -19,8 +19,8 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test/wait_condition.h"
-#include "mir_test/ipc_checkpoints.h"
 
+#include "mir_test_framework/ipc_checkpoints.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gtest/gtest.h>
@@ -181,7 +181,8 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
     
-    static mt::IPCCheckpoints checkpoints{"first_client_focused"};
+    static std::string const ready_for_second_client = "first_client_focused";
+    static mtf::IPCCheckpoints checkpoints{ready_for_second_client};
 
     struct FocusObservingClientOne : public EventReceivingClient
     {
@@ -190,9 +191,8 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
             InSequence seq;
             // We should receive focus as we are created
             EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
-                mir_surface_focused))).Times(1);
-
-            checkpoints.unblock("first_client_focused");
+                mir_surface_focused))).Times(1)
+                    .WillOnce(mtf::UnblockCheckpoint(&checkpoints, ready_for_second_client));
 
             // And lose it as the second surface is created
             EXPECT_CALL(handler, handle_event(SurfaceEvent(mir_surface_attrib_focus,
@@ -214,6 +214,6 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
     } client_two_config;
 
     // We need some synchronization to ensure client two does not connect before client one.
-    checkpoints.wait_for_at_most_seconds("first_client_focused", 5);
+    checkpoints.wait_for_at_most_seconds(ready_for_second_client, 5);
     launch_client_process(client_two_config);
 }
