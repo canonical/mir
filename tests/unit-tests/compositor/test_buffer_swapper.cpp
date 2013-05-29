@@ -125,18 +125,38 @@ TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
 }
 
 
-TEST_F(BufferSwapperConstruction, buffer_transfer_triple)
+TEST_F(BufferSwapperConstruction, buffer_transfer_triple_all_owned)
 {
-    using namespace testing;
-
-    auto new_swapper = std::make_shared<mtd::MockSwapper>();
     mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
 
-    auto dirty_buffer = swapper.client_acquire();
-    swapper.client_release(dirty_buffer);
+    size_t test_size;
+    std::vector<std::shared_ptr<mc::Buffer> const&> list;
+    swapper.dump_responsibility(list, test_size);
 
-    EXPECT_CALL(*new_swapper, adopt_buffer(_))
-        .Times(3);
+    auto res1 = std::find(list.begin(), list.end(), buffer_a);
+    auto res2 = std::find(list.begin(), list.end(), buffer_b);
+    auto res3 = std::find(list.begin(), list.end(), buffer_c);
+    EXPECT_EQ(3u, list.size());
+    EXPECT_NE(list.end(), res1);
+    EXPECT_NE(list.end(), res2);
+    EXPECT_NE(list.end(), res3);
 
-    swapper.transfer_buffers_to(new_swapper);
+    EXPECT_EQ(3u, test_size());
+}
+
+TEST_F(BufferSwapperConstruction, buffer_transfer_triple_some_not_owned)
+{
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
+
+    auto acquired_buffer = swapper.client_acquire();
+
+    size_t test_size;
+    std::vector<std::shared_ptr<mc::Buffer> const&> list;
+    swapper.dump_responsibility(list, test_size);
+
+    auto res1 = std::find(list.begin(), list.end(), acquired_buffer);
+    EXPECT_EQ(2u, list.size());
+    EXPECT_EQ(list.end(), res1); //acquired_buffer should not be in list
+
+    EXPECT_EQ(3u, test_size());
 }
