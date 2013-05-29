@@ -49,6 +49,7 @@ namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
+namespace me = mir::events;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
@@ -135,7 +136,7 @@ public:
 
 struct SessionMediatorTest : public ::testing::Test
 {
-    SessionMediatorTest()
+    SessionMediatorTest(std::shared_ptr<StubbedSession> const& stubbed_session, std::shared_ptr<me::EventSink> const& event_sink)
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
           graphics_platform{std::make_shared<MockPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
@@ -144,15 +145,20 @@ struct SessionMediatorTest : public ::testing::Test
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, 
-                   std::make_shared<NullEventSink>(),
+                   event_sink,
                    resource_cache},
-          stubbed_session{std::make_shared<StubbedSession>()},
+          stubbed_session{stubbed_session},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
         using namespace ::testing;
 
         ON_CALL(*shell, open_session(_, _)).WillByDefault(Return(stubbed_session));
         ON_CALL(*shell, create_surface_for(_, _)).WillByDefault(Return(mf::SurfaceId{1}));
+    }
+
+    SessionMediatorTest()
+        : SessionMediatorTest(std::make_shared<StubbedSession>(), std::make_shared<NullEventSink>())
+    {
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
@@ -380,6 +386,84 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[0], null_callback.get());
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[1], null_callback.get());
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[2], null_callback.get());
+    }
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+namespace
+{
+
+struct MockEventSink : public me::EventSink
+{
+    ~MockEventSink() noexcept(true) {}
+    MOCK_METHOD1(handle_event, void(MirEvent const&));
+
+    // Not part of the EventSink interface but used for sequencing expectations.
+    MOCK_METHOD0(closure_run, void());
+};
+
+struct EventProducingSession : public StubbedSession
+{
+    EventProducingSession(std::shared_ptr<me::EventSink> const& event_sink)
+        : event_sink(event_sink)
+    {
+    }
+    
+    mf::SurfaceId create_surface(msh::SurfaceCreationParameters const& parameters) override
+    {
+        MirEvent any_event;
+        event_sink->handle_event(any_event);
+        return StubbedSession::create_surface(parameters);
+    }
+    
+    std::shared_ptr<me::EventSink> const event_sink;
+};
+
+struct SessionMediatorEventTest : public SessionMediatorTest
+{
+    SessionMediatorEventTest()
+        : SessionMediatorTest(std::make_shared<EventProducingSession>(mt::fake_shared(mock_event_sink)), mt::fake_shared(mock_event_sink))
+    {
+    }
+    MockEventSink mock_event_sink;
+};
+
+}
+
+TEST_F(SessionMediatorEventTest, event_sink_is_clogged_during_surface_creation)
+{
+    using namespace ::testing;
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    {
+        InSequence seq;
+
+        // TODO: Some comments ~racarr
+        EXPECT_CALL(mock_event_sink, closure_run()).Times(1);
+        EXPECT_CALL(mock_event_sink, handle_event(_)).Times(1);
+    }
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    struct NotifyingCallback : public google::protobuf::Closure {
+        NotifyingCallback(MockEventSink& event_sink)
+            : event_sink(event_sink)
+        {
+        }
+        void Run() override
+        {
+            event_sink.closure_run();
+        }
+        MockEventSink& event_sink;
+    } notifying_callback(mock_event_sink);
+
+    {
+        mp::SurfaceParameters request;
+        mp::Surface response;
+
+        mediator.create_surface(nullptr, &request, &response, &notifying_callback);
     }
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
