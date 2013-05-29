@@ -2704,7 +2704,7 @@ void InputDispatcher::setKeyboardFocusLocked(const sp<InputWindowHandle>& newFoc
                 CancelationOptions options(CancelationOptions::CANCEL_NON_POINTER_EVENTS,
                                            "focus left window");
                 synthesizeCancelationEventsForInputChannelLocked(
-                                                                 focusedInputChannel, options);
+                    focusedInputChannel, options);
             }
         }
         if (newFocusedWindowHandle != NULL) {
