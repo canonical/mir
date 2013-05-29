@@ -79,3 +79,11 @@ void mc::BufferSwapperSpin::compositor_release(std::shared_ptr<Buffer> const& re
 void mc::BufferSwapperSpin::force_requests_to_complete()
 {
 }
+
+void mc::BufferSwapperSpin::transfer_buffers_to(std::shared_ptr<BufferSwapper> const&)
+{
+}
+
+void mc::BufferSwapperSpin::adopt_buffer(std::shared_ptr<compositor::Buffer> const&)
+{
+}
