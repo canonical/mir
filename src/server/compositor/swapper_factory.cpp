@@ -62,6 +62,6 @@ std::unique_ptr<mc::BufferSwapperMaster> mc::SwapperFactory::create_swapper_mast
 
     actual_buffer_properties = BufferProperties{buffers[0]->size(), buffers[0]->pixel_format(), requested_buffer_properties.usage};
 
-    auto swapper = std::make_shared<mc::BufferSwapperMulti>(buffers);
+    auto swapper = std::make_shared<mc::BufferSwapperMulti>(buffers, number_of_buffers);
     return std::unique_ptr<BufferSwapperMaster>(new mc::SwapperSwitcher(swapper));
 }

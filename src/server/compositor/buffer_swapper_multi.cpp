@@ -22,33 +22,33 @@
 namespace mc = mir::compositor;
 
 template<class T>
-void mc::BufferSwapperMulti::initialize_queues(T buffer_list)
+void mc::BufferSwapperMulti::initialize_queues(T buffer_list, size_t size)
 {
+#if 0
     if ((buffer_list.size() == 1) || (buffer_list.size() >= 4))
     {
         BOOST_THROW_EXCEPTION(std::logic_error("BufferSwapperMulti is only validated for 2 or 3 buffers"));
     }
-
+#endif
     for (auto& buffer : buffer_list)
     {
         client_queue.push_back(buffer);
     }
+    swapper_size = size;
 }
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list)
+mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list, size_t swapper_size)
  : in_use_by_client(0),
-   swapper_size(buffer_list.size()),
    force_clients_to_complete(false)
 {
-    initialize_queues(buffer_list);
+    initialize_queues(buffer_list, swapper_size);
 }
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list) :
+mc::BufferSwapperMulti::BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list, size_t swapper_size) :
     in_use_by_client(0),
-    swapper_size(buffer_list.size()),
     force_clients_to_complete(false)
 {
-    initialize_queues(buffer_list);
+    initialize_queues(buffer_list, swapper_size);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
@@ -59,14 +59,14 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
      * Don't allow the client to acquire all the buffers, because then the
      * compositor won't have a buffer to display.
      */
-    while ((swapper_size > 0) &&
+    while ((!force_clients_to_complete) &&
            (client_queue.empty() || (in_use_by_client == (swapper_size - 1))))
     {
         client_available_cv.wait(lk);
     }
 
     //we have been forced to shutdown
-    if (swapper_size == 0)
+    if (force_clients_to_complete)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("forced_completion"));
     }
@@ -128,7 +128,7 @@ void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& r
 void mc::BufferSwapperMulti::force_client_completion()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-    swapper_size = 0;
+    force_clients_to_complete = true;
     client_available_cv.notify_all();
 }
 
@@ -151,31 +151,3 @@ void mc::BufferSwapperMulti::end_responsibility(std::vector<std::shared_ptr<Buff
 
     size = swapper_size;
 }
-#if 0
-void mc::BufferSwapperMulti::transfer_buffers_to(std::shared_ptr<BufferSwapper> const& new_swapper)
-{
-    std::unique_lock<std::mutex> lk(swapper_mutex);
-
-    while(!compositor_queue.empty())
-    {
-        new_swapper->adopt_buffer(compositor_queue.back());
-        compositor_queue.pop_back();
-    }
-
-    while(!client_queue.empty())
-    {
-        new_swapper->adopt_buffer(client_queue.back());
-        client_queue.pop_back();
-    }
-}
-
-void mc::BufferSwapperMulti::adopt_buffer(std::shared_ptr<Buffer> const& buffer)
-{
-    std::unique_lock<std::mutex> lk(swapper_mutex);
-    client_queue.push_back(buffer);
-    //swapper_size++;
-    swapper_size = 3;
-
-    client_available_cv.notify_one();
-}
-#endif

@@ -106,7 +106,5 @@ void mc::SwapperSwitcher::change_swapper(std::function<std::shared_ptr<BufferSwa
     size_t size;
     swapper->end_responsibility(list, size);
     swapper = create_swapper(list, size);
-
     cv.notify_all();
-
 }

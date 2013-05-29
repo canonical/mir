@@ -39,7 +39,7 @@ struct BufferSwapperTriple : testing::Test
         buffer_c = std::make_shared<mtd::StubBuffer>();
 
         auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
-        swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list);
+        swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list, triple_list.size());
 
     }
 

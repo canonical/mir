@@ -39,8 +39,8 @@ class Buffer;
 class BufferSwapperMulti : public BufferSwapper
 {
 public:
-    explicit BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list);
-    explicit BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list);
+    explicit BufferSwapperMulti(std::initializer_list<std::shared_ptr<compositor::Buffer>> buffer_list, size_t swapper_size);
+    explicit BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>> buffer_list, size_t swapper_size);
 
     std::shared_ptr<Buffer> client_acquire();
     void client_release(std::shared_ptr<Buffer> const& queued_buffer);
@@ -52,7 +52,7 @@ public:
 
 private:
     template<class T>
-    void initialize_queues(T);
+    void initialize_queues(T, size_t);
 
     std::mutex swapper_mutex;
     std::condition_variable client_available_cv;

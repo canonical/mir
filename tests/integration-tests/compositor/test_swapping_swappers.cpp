@@ -41,7 +41,7 @@ struct SwapperSwappingStress : public ::testing::Test
         buffer_b = std::shared_ptr<mtd::StubBuffer>(std::make_shared<mtd::StubBuffer>());
         buffer_c = std::shared_ptr<mtd::StubBuffer>(std::make_shared<mtd::StubBuffer>());
         auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
-        auto first_swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list);
+        auto first_swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list, triple_list.size());
         swapper_switcher = std::make_shared<mc::SwapperSwitcher>(first_swapper);
     }
 
@@ -82,12 +82,13 @@ TEST_F(SwapperSwappingStress, swapper)
                 {
                     for(auto i=0u; i < 200; i++)
                     {
-#if 0
-                        auto list = std::initializer_list<std::shared_ptr<mc::Buffer>>{};
-                        auto new_swapper = std::make_shared<mc::BufferSwapperMulti>(list);
-                        swapper_switcher->transfer_buffers_to(new_swapper); 
+                        swapper_switcher->change_swapper(
+                            [&](std::vector<std::shared_ptr<mc::Buffer>>& buffers, size_t& size)
+                            {
+                               return std::make_shared<mc::BufferSwapperMulti>(buffers, size);
+                            });
+
                         std::this_thread::yield();
-#endif
                     } 
                 });
 
@@ -128,14 +129,21 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                 {
                     for(auto i=0u; i < 200; i++)
                     {
-#if 0
-                        auto list = std::initializer_list<std::shared_ptr<mc::Buffer>>{};
-                        auto new_swapper = std::make_shared<mc::BufferSwapperMulti>(list);
-                        swapper_switcher->transfer_buffers_to(new_swapper); 
+                        swapper_switcher->change_swapper(
+                            [&](std::vector<std::shared_ptr<mc::Buffer>>& buffers, size_t& size)
+                            {
+                               return std::make_shared<mc::BufferSwapperMulti>(buffers, size);
+                            });
+
                         std::this_thread::yield();
-                        auto new_async_swapper = std::make_shared<mc::BufferSwapperSpin>(list);
-                        swapper_switcher->transfer_buffers_to(new_async_swapper);
-#endif 
+
+                        swapper_switcher->change_swapper(
+                            [&](std::vector<std::shared_ptr<mc::Buffer>>& buffers, size_t& size)
+                            {
+                               return std::make_shared<mc::BufferSwapperSpin>(buffers, size);
+                            });
+
+                        std::this_thread::yield();
                     } 
                 });
 

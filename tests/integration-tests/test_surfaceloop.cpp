@@ -79,7 +79,7 @@ struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
         auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
         std::initializer_list<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
         return std::unique_ptr<mc::BufferSwapperMaster>(
-            new mc::SwapperSwitcher(std::make_shared<mc::BufferSwapperMulti>(list)));
+            new mc::SwapperSwitcher(std::make_shared<mc::BufferSwapperMulti>(list, list.size())));
     }
 };
 

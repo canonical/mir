@@ -42,7 +42,7 @@ struct BufferSwapperDouble : testing::Test
         buffer_b = std::make_shared<mtd::StubBuffer>();
 
         auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
-        swapper = std::make_shared<mc::BufferSwapperMulti>(double_list);
+        swapper = std::make_shared<mc::BufferSwapperMulti>(double_list, double_list.size());
 
     }
 

@@ -45,7 +45,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction_vector)
 
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
-    mc::BufferSwapperMulti swapper(buffers);
+    mc::BufferSwapperMulti swapper(buffers, buffers.size());
 
     EXPECT_EQ(buffer_a.use_count(), use_count_before_a + 1);
     EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
@@ -58,7 +58,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction_initializer)
 {
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
-    mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b}, 2);
 
     EXPECT_EQ(buffer_a.use_count(), use_count_before_a + 1);
     EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
@@ -72,7 +72,7 @@ TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
     auto use_count_before_c  = buffer_c.use_count();
-    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c}, 3);
 
     EXPECT_EQ(buffer_a.use_count(), use_count_before_a + 1);
     EXPECT_EQ(buffer_b.use_count(), use_count_before_b + 1);
@@ -82,23 +82,9 @@ TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
     swapper.force_client_completion();
 }
 
-TEST_F(BufferSwapperConstruction, error_construction)
-{
-    /* don't support single buffering with the mc::BufferSwapper interface model */
-    EXPECT_THROW({
-        mc::BufferSwapperMulti({buffer_a});
-    }, std::logic_error);
-
-    /* BufferSwapperMulti algorithm is generic enough to do >=4 buffers. However, we have only tested
-       for 2 or 3 buffers, so we will throw on 4 or greater until 4 or greater buffers is tested*/
-    EXPECT_THROW({
-        mc::BufferSwapperMulti({buffer_a, buffer_b, buffer_c, buffer_b});
-    }, std::logic_error);
-}
-
 TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_double)
 {
-    mc::BufferSwapperMulti swapper({buffer_a, buffer_b});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b}, 2);
 
     auto buffer_1 = swapper.compositor_acquire();
     auto buffer_2 = swapper.client_acquire();
@@ -110,7 +96,7 @@ TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_double)
 
 TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
 {
-    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c}, 3);
 
     auto buffer_1 = swapper.compositor_acquire();
     auto buffer_2 = swapper.client_acquire();
@@ -126,7 +112,7 @@ TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
 
 TEST_F(BufferSwapperConstruction, buffer_transfer_triple_all_owned)
 {
-    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c}, 3);
 
     size_t test_size;
     std::vector<std::shared_ptr<mc::Buffer>> list;
@@ -145,7 +131,7 @@ TEST_F(BufferSwapperConstruction, buffer_transfer_triple_all_owned)
 
 TEST_F(BufferSwapperConstruction, buffer_transfer_triple_some_not_owned)
 {
-    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c});
+    mc::BufferSwapperMulti swapper({buffer_a, buffer_b, buffer_c}, 3);
 
     auto acquired_buffer = swapper.client_acquire();
 
