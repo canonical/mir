@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_IPC_CHECKPOINTS_H_
-#define MIR_TEST_IPC_CHECKPOINTS_H_
+#ifndef MIR_TEST_IPC_SEMAPHORE_H_
+#define MIR_TEST_IPC_SEMAPHORE_H_
 
 #include <semaphore.h>
 
@@ -27,24 +27,19 @@
 namespace mir_test_framework
 {
 
-class IPCCheckpoints
+class IPCSemaphore
 {
 public:
-    IPCCheckpoints(std::initializer_list<std::string> const& checkpoints);
-    virtual ~IPCCheckpoints() = default;
+    IPCSemaphore();
+    virtual ~IPCSemaphore() = default;
     
-    void unblock(std::string const& checkpoint_name);
-    void wait_for_at_most_seconds(std::string const& checkpoint_name, int seconds);
+    void wake_up_everyone();
+    void wait_for_at_most_seconds(int seconds);
 
 protected:
-    IPCCheckpoints(const IPCCheckpoints&) = delete;
-    IPCCheckpoints& operator=(const IPCCheckpoints&) = delete;
+    IPCSemaphore(const IPCSemaphore&) = delete;
+    IPCSemaphore& operator=(const IPCSemaphore&) = delete;
 };
-
-ACTION_P2(UnblockCheckpoint, checkpoints, checkpoint)
-{
-    checkpoints->unblock(checkpoint);
-}
 
 }
 
