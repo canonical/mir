@@ -25,7 +25,8 @@
 namespace mc=mir::compositor;
 
 mc::SwapperSwitcher::SwapperSwitcher(std::shared_ptr<mc::BufferSwapper> const& initial_swapper)
-    : swapper(initial_swapper)
+    : swapper(initial_swapper),
+      should_retry(false)
 {
 }
 
@@ -102,8 +103,8 @@ void mc::SwapperSwitcher::change_swapper(std::function<std::shared_ptr<BufferSwa
     WriteLock wlk(rw_lock);
     std::unique_lock<mc::WriteLock> lk(wlk);
 
-    std::vector<std::shared_ptr<mc::Buffer>> list;
-    size_t size;
+    std::vector<std::shared_ptr<mc::Buffer>> list{};
+    size_t size = 0;
     swapper->end_responsibility(list, size);
     swapper = create_swapper(list, size);
     cv.notify_all();
