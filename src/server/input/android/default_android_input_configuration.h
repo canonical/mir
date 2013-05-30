@@ -48,6 +48,7 @@ namespace input
 class EventFilter;
 class EventFilterChain;
 class CursorListener;
+class InputReport;
 
 namespace android
 {
@@ -57,7 +58,8 @@ class DefaultInputConfiguration : public InputConfiguration
 public:
     DefaultInputConfiguration(std::initializer_list<std::shared_ptr<EventFilter> const> const& filters,
                               std::shared_ptr<graphics::ViewableArea> const& view_area,
-                              std::shared_ptr<CursorListener> const& cursor_listener);
+                              std::shared_ptr<CursorListener> const& cursor_listener,
+                              std::shared_ptr<input::InputReport> const& input_report);
     virtual ~DefaultInputConfiguration();
 
     droidinput::sp<droidinput::EventHubInterface> the_event_hub();
@@ -102,6 +104,7 @@ private:
     std::shared_ptr<EventFilterChain> const filter_chain;
     std::shared_ptr<graphics::ViewableArea> const view_area;
     std::shared_ptr<CursorListener> const cursor_listener;
+    std::shared_ptr<input::InputReport> const input_report;
 
     CachedPtr<InputThread> dispatcher_thread;
     CachedPtr<InputThread> reader_thread;
