@@ -21,10 +21,10 @@
 #define MIR_TEST_TEST_CLIENT_H_
 
 #include "mir_protobuf.pb.h"
-#include "src/client/make_rpc_channel.h"
 
 #include <gmock/gmock.h>
 
+#include <memory>
 #include <atomic>
 
 namespace mir

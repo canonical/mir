@@ -16,10 +16,12 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
-#include "mir/input/event_filter.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 #include "src/server/input/android/rudimentary_input_reader_policy.h"
 #include "src/server/input/android/android_input_constants.h"
+
+#include "mir/input/event_filter.h"
+#include "mir/input/null_input_report.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
@@ -59,7 +61,7 @@ class FakeEventHubSetup : public testing::Test
         event_hub = new mia::FakeEventHub();
         dispatcher_policy = new mia::EventFilterDispatcherPolicy(mt::fake_shared(event_filter), false);
         reader_policy = new mia::RudimentaryInputReaderPolicy();
-        dispatcher = new droidinput::InputDispatcher(dispatcher_policy);
+        dispatcher = new droidinput::InputDispatcher(dispatcher_policy, std::make_shared<mi::NullInputReport>());
         reader = new droidinput::InputReader(event_hub, reader_policy, dispatcher);
         reader_thread = new droidinput::InputReaderThread(reader);
         dispatcher_thread = new droidinput::InputDispatcherThread(dispatcher);

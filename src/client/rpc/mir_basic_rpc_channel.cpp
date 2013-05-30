@@ -16,26 +16,23 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #include "mir_basic_rpc_channel.h"
 #include "rpc_report.h"
 
 #include "mir_protobuf_wire.pb.h"
 
-#include <thread>
-#include <boost/bind.hpp>
 #include <sstream>
 
-namespace mcl = mir::client;
-namespace mcld = mir::client::detail;
+namespace mclr = mir::client::rpc;
+namespace mclrd = mir::client::rpc::detail;
 
-mcld::PendingCallCache::PendingCallCache(
+mclrd::PendingCallCache::PendingCallCache(
     std::shared_ptr<RpcReport> const& rpc_report)
     : rpc_report{rpc_report}
 {
 }
 
-mcld::SendBuffer& mcld::PendingCallCache::save_completion_details(
+mclrd::SendBuffer& mclrd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation& invoke,
     google::protobuf::Message* response,
     std::shared_ptr<google::protobuf::Closure> const& complete)
@@ -46,7 +43,7 @@ mcld::SendBuffer& mcld::PendingCallCache::save_completion_details(
     return current.send_buffer;
 }
 
-void mcld::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
+void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
 {
     std::unique_lock<std::mutex> lock(mutex);
     auto call = pending_calls.find(result.id());
@@ -66,7 +63,7 @@ void mcld::PendingCallCache::complete_response(mir::protobuf::wire::Result& resu
     }
 }
 
-bool mcld::PendingCallCache::empty() const
+bool mclrd::PendingCallCache::empty() const
 {
     std::unique_lock<std::mutex> lock(mutex);
     return pending_calls.empty();
@@ -74,17 +71,17 @@ bool mcld::PendingCallCache::empty() const
 
 
 
-mcl::MirBasicRpcChannel::MirBasicRpcChannel() :
+mclr::MirBasicRpcChannel::MirBasicRpcChannel() :
     next_message_id(0)
 {
 }
 
-mcl::MirBasicRpcChannel::~MirBasicRpcChannel()
+mclr::MirBasicRpcChannel::~MirBasicRpcChannel()
 {
 }
 
 
-mir::protobuf::wire::Invocation mcl::MirBasicRpcChannel::invocation_for(
+mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     const google::protobuf::MethodDescriptor* method,
     const google::protobuf::Message* request)
 {
@@ -100,7 +97,7 @@ mir::protobuf::wire::Invocation mcl::MirBasicRpcChannel::invocation_for(
     return invoke;
 }
 
-int mcl::MirBasicRpcChannel::next_id()
+int mclr::MirBasicRpcChannel::next_id()
 {
     return next_message_id.fetch_add(1);
 }

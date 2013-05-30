@@ -18,68 +18,68 @@
 
 #include "null_rpc_report.h"
 
-namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 
-void mcl::NullRpcReport::invocation_requested(
+void mclr::NullRpcReport::invocation_requested(
     mir::protobuf::wire::Invocation const& /*invocation*/)
 {
 }
 
-void mcl::NullRpcReport::invocation_succeeded(
+void mclr::NullRpcReport::invocation_succeeded(
     mir::protobuf::wire::Invocation const& /*invocation*/)
 {
 }
 
-void mcl::NullRpcReport::invocation_failed(
+void mclr::NullRpcReport::invocation_failed(
     mir::protobuf::wire::Invocation const& /*invocation*/,
     boost::system::error_code const& /*error*/)
 {
 }
 
-void mcl::NullRpcReport::header_receipt_failed(
+void mclr::NullRpcReport::header_receipt_failed(
     boost::system::error_code const& /*error*/)
 {
 }
 
-void mcl::NullRpcReport::result_receipt_succeeded(
+void mclr::NullRpcReport::result_receipt_succeeded(
     mir::protobuf::wire::Result const& /*result*/)
 {
 }
 
-void mcl::NullRpcReport::result_receipt_failed(
+void mclr::NullRpcReport::result_receipt_failed(
     std::exception const& /*ex*/)
 {
 }
 
 
-void mcl::NullRpcReport::event_parsing_succeeded(
+void mclr::NullRpcReport::event_parsing_succeeded(
     MirEvent const& /*event*/)
 {
 }
 
-void mcl::NullRpcReport::event_parsing_failed(
+void mclr::NullRpcReport::event_parsing_failed(
     mir::protobuf::Event const& /*event*/)
 {
 }
 
-void mcl::NullRpcReport::orphaned_result(
+void mclr::NullRpcReport::orphaned_result(
     mir::protobuf::wire::Result const& /*result*/)
 {
 }
 
-void mcl::NullRpcReport::complete_response(
+void mclr::NullRpcReport::complete_response(
     mir::protobuf::wire::Result const& /*result*/)
 {
 
 }
 
-void mcl::NullRpcReport::result_processing_failed(
+void mclr::NullRpcReport::result_processing_failed(
     mir::protobuf::wire::Result const& /*result*/,
     std::exception const& /*ex*/)
 {
 }
 
-void mcl::NullRpcReport::file_descriptors_received(
+void mclr::NullRpcReport::file_descriptors_received(
     google::protobuf::Message const& /*response*/,
     std::vector<int32_t> const& /*fds*/)
 {

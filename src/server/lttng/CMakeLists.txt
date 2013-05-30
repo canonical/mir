@@ -5,6 +5,7 @@ set(
 
   tracepoint_provider.cpp
   message_processor_report.cpp
+  input_report.cpp
 )
 
 add_library(
@@ -17,6 +18,7 @@ set(
   MIR_SERVER_LTTNG_SOURCES
 
   message_processor_report_tp.c
+  input_report_tp.c
 )
 
 add_library(

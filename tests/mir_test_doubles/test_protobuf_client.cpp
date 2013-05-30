@@ -19,6 +19,9 @@
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test_doubles/mock_rpc_report.h"
 
+#include "src/client/rpc/make_rpc_channel.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
+
 #include <thread>
 
 namespace mtd = mir::test::doubles;
@@ -27,7 +30,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     std::string socket_file,
     int timeout_ms) :
     rpc_report(std::make_shared<testing::NiceMock<doubles::MockRpcReport>>()),
-    channel(mir::client::make_rpc_channel(socket_file, rpc_report)),
+    channel(mir::client::rpc::make_rpc_channel(socket_file, rpc_report)),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),

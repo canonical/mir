@@ -82,6 +82,7 @@ class DisplayReport;
 }
 namespace input
 {
+class InputReport;
 class InputManager;
 class EventFilter;
 class InputChannelFactory;
@@ -183,6 +184,7 @@ public:
 
     /** @name input configuration
      *  @{ */
+    virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<shell::InputTargetListener> the_input_target_listener();
@@ -210,6 +212,8 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
+
+    CachedPtr<input::InputReport> input_report;
     std::shared_ptr<input::android::InputConfiguration> input_configuration;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<shell::InputTargetListener> input_target_listener;

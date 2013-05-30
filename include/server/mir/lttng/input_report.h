@@ -16,28 +16,21 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_LOGGING_INPUT_REPORT_H_
-#define MIR_LOGGING_INPUT_REPORT_H_
+#ifndef MIR_LTTNG_INPUT_REPORT_H_
+#define MIR_LTTNG_INPUT_REPORT_H_
 
 #include "mir/input/input_report.h"
-
-#include <memory>
+#include "mir/lttng/tracepoint_provider.h"
 
 namespace mir
 {
-namespace logging
+namespace lttng
 {
-class Logger;
-
-namespace legacy_input_report
-{
-void initialize(std::shared_ptr<Logger> const& logger);
-}
 
 class InputReport : public input::InputReport
 {
 public:
-    InputReport(std::shared_ptr<Logger> const& logger);
+    InputReport() = default;
     virtual ~InputReport() noexcept(true) = default;
     
     void received_event_from_kernel(int64_t when, int type, int code, int value);
@@ -48,12 +41,11 @@ public:
     void received_event_finished_signal(int src_fd, uint32_t seq_id);
     
 private:
-    char const* component();
-    std::shared_ptr<Logger> const logger;
+    TracepointProvider tp_provider;
 };
 
 }
 }
 
 
-#endif /* MIR_LOGGING_INPUT_REPORT_H_ */
+#endif /* MIR_LTTNG_INPUT_REPORT_H_ */

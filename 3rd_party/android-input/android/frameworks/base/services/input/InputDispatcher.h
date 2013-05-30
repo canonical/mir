@@ -39,6 +39,15 @@
 #include "InputApplication.h"
 #include "InputListener.h"
 
+#include <memory>
+
+namespace mir
+{
+namespace input
+{
+class InputReport;
+}
+}
 
 namespace android {
 
@@ -367,7 +376,7 @@ protected:
     virtual ~InputDispatcher();
 
 public:
-    explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy);
+    explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, std::shared_ptr<mir::input::InputReport> const& input_report);
 
     virtual void dump(String8& dump);
     virtual void monitor();
@@ -397,6 +406,8 @@ public:
     virtual status_t unregisterInputChannel(const sp<InputChannel>& inputChannel);
     
 private:
+    std::shared_ptr<mir::input::InputReport> const input_report;
+
     template <typename T>
     struct Link {
         T* next;
