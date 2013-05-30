@@ -20,6 +20,13 @@ list(APPEND FRONTEND_SOURCES
   socket_session.cpp
 )
 
+if (MIR_PLATFORM STREQUAL "android")
+  list(APPEND FRONTEND_SOURCES session_mediator_android.cpp)
+elseif (MIR_PLATFORM STREQUAL "gbm")
+  include_directories(${DRM_INCLUDE_DIRS})
+  list(APPEND FRONTEND_SOURCES session_mediator_gbm.cpp)
+endif()
+
 add_library(
   mirfrontend STATIC
 

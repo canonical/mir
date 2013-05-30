@@ -130,6 +130,11 @@ void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPac
     packer->pack_stride(buffer->stride()); 
 }
 
+void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
+{
+    drm.auth_magic(magic);
+}
+
 std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
 {
     if (!internal_native_display)
