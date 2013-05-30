@@ -111,12 +111,10 @@ namespace
 
             expect_events(&all_events_received);
 
-            mir_wait_for(mir_connect(
-                                     mir_test_socket,
-                                     __PRETTY_FUNCTION__,
-                                     connection_callback,
-                                     this));
+            mir_wait_for(mir_connect(mir_test_socket,
+                __PRETTY_FUNCTION__, connection_callback, this));
             ASSERT_TRUE(connection != NULL);
+
             MirSurfaceParameters const request_params =
                 {
                     __PRETTY_FUNCTION__,
@@ -133,9 +131,7 @@ namespace
 
             mir_surface_set_event_handler(surface, &event_delegate);
 
-            printf("Waiting to receive events \n");
             all_events_received.wait_for_at_most_seconds(5);
-            printf("And received \n");
 
             mir_surface_release_sync(surface);
             mir_connection_release(connection);
@@ -176,7 +172,9 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
     
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
-    
+
+    // We use this for synchronization to ensure the two clients
+    // are launched in a defined order.
     mtf::IPCSemaphore ready_for_second_client;
 
     struct FocusObservingClientOne : public EventReceivingClient
@@ -218,7 +216,6 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
         }
         void expect_events(mt::WaitCondition* all_events_received) override
         {
-            printf("Expecting \n");
             EXPECT_CALL(*handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                                                                         mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
