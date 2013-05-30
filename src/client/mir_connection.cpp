@@ -186,6 +186,32 @@ MirWaitHandle* MirConnection::disconnect()
     return &disconnect_wait_handle;
 }
 
+void MirConnection::done_drm_auth_magic(mir_drm_auth_magic_callback callback,
+                                        void* context)
+{
+    int const status_code{drm_auth_magic_status.status_code()};
+
+    callback(status_code, context);
+    drm_auth_magic_wait_handle.result_received();
+}
+
+MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void* context)
+{
+    mir::protobuf::DRMMagic request;
+    request.set_magic(magic);
+
+    server.drm_auth_magic(
+        0,
+        &request,
+        &drm_auth_magic_status,
+        google::protobuf::NewCallback(this, &MirConnection::done_drm_auth_magic,
+                                      callback, context));
+
+    return &drm_auth_magic_wait_handle;
+}
+
 bool MirConnection::is_valid(MirConnection *connection)
 {
     {
