@@ -20,7 +20,6 @@
 #include "mir/input/event_filter.h"
 #include "mir/input/input_targets.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/input/android/android_input_configuration.h"
 #include "mir/input/null_input_report.h"
 
 #include "src/server/input/android/android_input_manager.h"
