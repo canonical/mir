@@ -8,7 +8,7 @@ set(
   test_client_library.cpp
   test_surfaceloop.cpp
   test_test_framework.cpp
-  test_focus_selection.cpp
+  test_client_focus_selection.cpp
   test_server_shutdown.cpp
   test_focus_notification.cpp
 )

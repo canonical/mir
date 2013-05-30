@@ -30,8 +30,6 @@
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
-// TODO: ~racarr, rename this file?..test_client_focus_notification
-
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();

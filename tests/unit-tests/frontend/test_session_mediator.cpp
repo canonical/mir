@@ -467,23 +467,24 @@ struct SessionMediatorEventTest : public SessionMediatorTest
 
 }
 
-// TODO: Come back ~racarr
 TEST_F(SessionMediatorEventTest, event_sink_is_clogged_during_surface_creation)
 {
     using namespace ::testing;
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
+    // We will inject an event during surface creation and rely on the session 
+    // mediator passing a proxying event pipe through to the shell to 
+    // ensure it is not received until after the completed closure has been run.
+    // This models the case where a surface is configured (generating events) before
+    // the create_surface response has been sent over the wire, creating a confusing
+    // situation for the client library!
     {
         InSequence seq;
 
         EXPECT_CALL(mock_event_sink, closure_run()).Times(1);
         EXPECT_CALL(mock_event_sink, handle_event(_)).Times(1);
     }
-
-    // We will inject an event during surface creation and ensure it is not received until after
-    // the completed closure has been run.
-    // How
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
