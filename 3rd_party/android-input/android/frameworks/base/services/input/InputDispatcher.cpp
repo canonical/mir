@@ -45,6 +45,8 @@
 
 #include "InputDispatcher.h"
 
+#include "mir/input/input_report.h"
+
 #include <cutils/log.h>
 #include <android/keycodes.h>
 
@@ -58,6 +60,8 @@
 #define INDENT2 "    "
 #define INDENT3 "      "
 #define INDENT4 "        "
+
+namespace mi = mir::input;
 
 namespace android {
 
@@ -167,12 +171,14 @@ static bool validateMotionEvent(int32_t action, size_t pointerCount,
 
 // --- InputDispatcher ---
 
-InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy) :
-    mPolicy(policy),
-    mPendingEvent(NULL), mAppSwitchSawKeyDown(false), mAppSwitchDueTime(LONG_LONG_MAX),
-    mNextUnblockedEvent(NULL),
-    mDispatchEnabled(false), mDispatchFrozen(false), mInputFilterEnabled(false),
-    mInputTargetWaitCause(INPUT_TARGET_WAIT_CAUSE_NONE) {
+InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, 
+    std::shared_ptr<mi::InputReport> const& input_report) :
+        input_report(input_report),
+        mPolicy(policy),
+        mPendingEvent(NULL), mAppSwitchSawKeyDown(false), mAppSwitchDueTime(LONG_LONG_MAX),
+        mNextUnblockedEvent(NULL),
+        mDispatchEnabled(false), mDispatchFrozen(false), mInputFilterEnabled(false),
+        mInputTargetWaitCause(INPUT_TARGET_WAIT_CAUSE_NONE) {
     mLooper = new Looper(false);
 
     mKeyRepeatState.lastKeyEntry = NULL;
@@ -1853,6 +1859,9 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
                     keyEntry->keyCode, keyEntry->scanCode,
                     keyEntry->metaState, keyEntry->repeatCount, keyEntry->downTime,
                     keyEntry->eventTime);
+            input_report->published_key_event(connection->inputChannel->getFd(),
+                                              dispatchEntry->seq,
+                                              keyEntry->eventTime);
             break;
         }
 
@@ -1900,6 +1909,9 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
                     motionEntry->downTime, motionEntry->eventTime,
                     motionEntry->pointerCount, motionEntry->pointerProperties,
                     usingCoords);
+            input_report->published_motion_event(connection->inputChannel->getFd(),
+                                                 dispatchEntry->seq,
+                                                 motionEntry->eventTime);
             break;
         }
 
@@ -2028,6 +2040,7 @@ int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
                 if (status) {
                     break;
                 }
+                d->input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
                 d->finishDispatchCycleLocked(currentTime, connection, seq, handled);
                 gotOne = true;
             }

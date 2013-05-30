@@ -47,6 +47,8 @@ public:
     }
     MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
+
+    ~MockGraphicBufferAllocator() noexcept {}
 };
 
 struct SwapperFactoryTest : testing::Test

@@ -79,10 +79,12 @@ private:
 
 mia::DefaultInputConfiguration::DefaultInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
                                                           std::shared_ptr<mg::ViewableArea> const& view_area,
-                                                          std::shared_ptr<mi::CursorListener> const& cursor_listener)
+                                                          std::shared_ptr<mi::CursorListener> const& cursor_listener,
+                                                          std::shared_ptr<mi::InputReport> const& input_report)
   : filter_chain(std::make_shared<mi::EventFilterChain>(filters)),
     view_area(view_area),
-    cursor_listener(cursor_listener)
+    cursor_listener(cursor_listener),
+    input_report(input_report)
 {
 }
 
@@ -95,7 +97,7 @@ droidinput::sp<droidinput::EventHubInterface> mia::DefaultInputConfiguration::th
     return event_hub(
         [this]()
         {
-            return new droidinput::EventHub();
+            return new droidinput::EventHub(input_report);
         });
 }
 
@@ -113,7 +115,7 @@ droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfigurat
     return dispatcher(
         [this]() -> droidinput::sp<droidinput::InputDispatcherInterface>
         {
-            return new droidinput::InputDispatcher(the_dispatcher_policy());
+            return new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
         });
 }
 

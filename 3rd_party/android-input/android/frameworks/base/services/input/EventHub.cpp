@@ -23,6 +23,8 @@
 #define acquire_wake_lock(lock, id) {}
 #define release_wake_lock(id) {}
 
+#include "mir/input/input_report.h"
+
 #include <cutils/properties.h>
 #include <std/Log.h>
 #include <std/Timers.h>
@@ -71,6 +73,7 @@
 #define INDENT2 "    "
 #define INDENT3 "      "
 
+namespace mi = mir::input;
 
 namespace android {
 
@@ -207,7 +210,8 @@ const uint32_t EventHub::EPOLL_ID_WAKE;
 const int EventHub::EPOLL_SIZE_HINT;
 const int EventHub::EPOLL_MAX_EVENTS;
 
-EventHub::EventHub(void) :
+EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
+        input_report(input_report),
         mBuiltInKeyboardId(NO_BUILT_IN_KEYBOARD), mNextDeviceId(1),
         mOpeningDevices(0), mClosingDevices(0),
         mNeedToSendFinishedDeviceScan(false),
@@ -808,6 +812,9 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                         event->type = iev.type;
                         event->code = iev.code;
                         event->value = iev.value;
+
+                        input_report->received_event_from_kernel(event->when, event->type, event->code, event->value);
+
                         event += 1;
                     }
                     capacity -= count;

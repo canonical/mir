@@ -83,6 +83,7 @@ class DisplayReport;
 }
 namespace input
 {
+class InputReport;
 class InputManager;
 class EventFilter;
 class InputChannelFactory;
@@ -181,6 +182,7 @@ public:
 
     /** @name input configuration
      *  @{ */
+    virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
@@ -209,7 +211,11 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
+
+
     std::shared_ptr<input::InputConfiguration> input_configuration;
+
+    CachedPtr<input::InputReport> input_report;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<surfaces::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;

@@ -16,18 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
-#ifndef MIR_CLIENT_MIR_BASIC_RPC_CHANNEL_H_
-#define MIR_CLIENT_MIR_BASIC_RPC_CHANNEL_H_
-
-#include "mir_logger.h"
+#ifndef MIR_CLIENT_RPC_MIR_BASIC_RPC_CHANNEL_H_
+#define MIR_CLIENT_RPC_MIR_BASIC_RPC_CHANNEL_H_
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
 
 #include <memory>
 #include <map>
-#include <iosfwd>
 #include <mutex>
 #include <atomic>
 
@@ -48,6 +44,11 @@ class Result;
 
 namespace client
 {
+namespace rpc
+{
+
+class RpcReport;
+
 namespace detail
 {
 typedef std::vector<char> SendBuffer;
@@ -55,7 +56,7 @@ typedef std::vector<char> SendBuffer;
 class PendingCallCache
 {
 public:
-    PendingCallCache(std::shared_ptr<Logger> const& log);
+    PendingCallCache(std::shared_ptr<RpcReport> const& rpc_report);
 
     SendBuffer& save_completion_details(
         mir::protobuf::wire::Invocation& invoke,
@@ -86,7 +87,7 @@ private:
 
     std::mutex mutable mutex;
     std::map<int, PendingCall> pending_calls;
-    std::shared_ptr<Logger> const log;
+    std::shared_ptr<RpcReport> const rpc_report;
 };
 }
 
@@ -109,5 +110,6 @@ private:
 
 }
 }
+}
 
-#endif /* MIR_CLIENT_MIR_BASIC_RPC_CHANNEL_H_ */
+#endif /* MIR_CLIENT_RPC_MIR_BASIC_RPC_CHANNEL_H_ */

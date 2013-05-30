@@ -24,7 +24,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir_test_doubles/mock_logger.h"
+#include "mir_test_doubles/mock_rpc_report.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_protobuf_server.h"
@@ -150,9 +150,21 @@ TEST_F(ProtobufCommunicator,
     client->wait_for_create_surface();
 }
 
+namespace
+{
+
+MATCHER_P(InvocationMethodEq, name, "")
+{
+    return arg.method_name() == name;
+}
+
+}
+
 TEST_F(ProtobufCommunicator,
        double_disconnection_attempt_has_no_effect)
 {
+    using namespace testing;
+
     EXPECT_CALL(*client, create_surface_done()).Times(1);
     client->display_server.create_surface(
         0,
@@ -171,10 +183,10 @@ TEST_F(ProtobufCommunicator,
 
     client->wait_for_disconnect_done();
 
-    // socket based & binder based rpc fail differently, but either way
-    // the test ensures that nothing horrible happens.
-    EXPECT_CALL(*client->logger, error()).Times(testing::AtMost(3));
-    EXPECT_CALL(*client, disconnect_done()).Times(testing::AtMost(1));
+    Mock::VerifyAndClearExpectations(client.get());
+
+    EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_));
+    EXPECT_CALL(*client, disconnect_done()).Times(0);
 
     // We don't know if this will be called, so it can't auto destruct
     std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
@@ -240,6 +252,25 @@ TEST_F(ProtobufCommunicator,
         google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
 
     client->wait_for_disconnect_done();
+}
+
+TEST_F(ProtobufCommunicator, drm_auth_magic_is_processed_by_the_server)
+{
+    mir::protobuf::DRMMagic magic;
+    mir::protobuf::DRMAuthMagicStatus status;
+    magic.set_magic(0x10111213);
+
+    EXPECT_CALL(*client, drm_auth_magic_done()).Times(1);
+
+    client->display_server.drm_auth_magic(
+        0,
+        &magic,
+        &status,
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::drm_auth_magic_done));
+
+    client->wait_for_drm_auth_magic_done();
+
+    EXPECT_EQ(magic.magic(), stub_server_tool->drm_magic);
 }
 
 namespace

@@ -95,7 +95,7 @@ struct FocusNotifyingInputTargeter : public msh::InputTargeter
 struct FakeInputServerConfiguration : public mir_test_framework::TestingServerConfiguration
 {
     FakeInputServerConfiguration()
-      : input_config(the_event_filters(), the_display(), std::shared_ptr<mi::CursorListener>())
+      : input_config(the_event_filters(), the_display(), std::shared_ptr<mi::CursorListener>(), the_input_report())
     {
     }
 

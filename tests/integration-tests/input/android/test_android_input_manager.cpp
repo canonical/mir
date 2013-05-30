@@ -20,6 +20,8 @@
 #include "mir/input/event_filter.h"
 #include "mir/input/input_targets.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/input/android/android_input_configuration.h"
+#include "mir/input/null_input_report.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
@@ -81,7 +83,7 @@ public:
     AndroidInputManagerAndEventFilterDispatcherSetup()
     {
         event_filter = std::make_shared<MockEventFilter>();
-        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter}, mt::fake_shared(viewable_area), null_cursor_listener);
+        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter}, mt::fake_shared(viewable_area), null_cursor_listener, std::make_shared<mi::NullInputReport>());
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(default_view_area));
 
@@ -230,8 +232,9 @@ struct TestingInputConfiguration : public mtd::FakeEventHubInputConfiguration
 {
     TestingInputConfiguration(std::shared_ptr<mi::EventFilter> const& filter,
                               std::shared_ptr<mg::ViewableArea> const& view_area,
-                              std::shared_ptr<mi::CursorListener> const& cursor_listener)
-        : FakeEventHubInputConfiguration({}, view_area, cursor_listener),
+                              std::shared_ptr<mi::CursorListener> const& cursor_listener,
+                              std::shared_ptr<mi::InputReport> const& input_report)
+        : FakeEventHubInputConfiguration({}, view_area, cursor_listener, input_report),
           dispatcher_policy(new MockDispatcherPolicy(filter))
     {
     }
@@ -254,7 +257,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<TestingInputConfiguration>(
             event_filter,
-            mt::fake_shared(viewable_area), null_cursor_listener);
+            mt::fake_shared(viewable_area), null_cursor_listener, std::make_shared<mi::NullInputReport>());
         fake_event_hub = configuration->the_fake_event_hub();
 
         ON_CALL(viewable_area, view_area())

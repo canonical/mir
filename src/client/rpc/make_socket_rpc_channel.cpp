@@ -15,21 +15,15 @@
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
-#ifndef MIR_CLIENT_MAKE_RPC_CHANNEL_H_
-#define MIR_CLIENT_MAKE_RPC_CHANNEL_H_
 
-#include <memory>
-#include "mir_basic_rpc_channel.h"
+#include "make_rpc_channel.h"
+#include "mir_socket_rpc_channel.h"
 
-namespace mir
+namespace mclr = mir::client::rpc;
+
+std::shared_ptr<mclr::MirBasicRpcChannel>
+mclr::make_rpc_channel(std::string const& name,
+                       std::shared_ptr<RpcReport> const& rpc_report)
 {
-namespace client
-{
-class Logger;
-
-std::shared_ptr<MirBasicRpcChannel>
-make_rpc_channel(std::string const& name, std::shared_ptr<Logger> const& log);
+    return std::make_shared<MirSocketRpcChannel>(name, rpc_report);
 }
-}
-
-#endif /* MIR_CLIENT_MAKE_RPC_CHANNEL_H_ */

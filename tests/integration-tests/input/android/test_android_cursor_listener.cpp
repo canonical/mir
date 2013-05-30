@@ -22,6 +22,7 @@
 #include "mir/input/event_filter.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_targets.h"
+#include "mir/input/null_input_report.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
@@ -78,7 +79,8 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter},
             mt::fake_shared(viewable_area),
-            mt::fake_shared(cursor_listener));
+            mt::fake_shared(cursor_listener),
+            std::make_shared<mi::NullInputReport>());
 
         ON_CALL(viewable_area, view_area())
             .WillByDefault(Return(visible_rectangle));

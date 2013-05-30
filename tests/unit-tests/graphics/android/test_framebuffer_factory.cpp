@@ -42,6 +42,8 @@ public:
     MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&)); 
     MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mga::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
+
+    ~MockAndroidGraphicBufferAllocator() noexcept {}
 };
 }
 

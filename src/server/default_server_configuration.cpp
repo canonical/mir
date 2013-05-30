@@ -60,6 +60,7 @@
 #include "mir/logging/message_processor_report.h"
 #include "mir/logging/display_report.h"
 #include "mir/lttng/message_processor_report.h"
+#include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
@@ -140,6 +141,7 @@ private:
 char const* const session_mediator_report_opt = "session-mediator-report";
 char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
+char const* const legacy_input_report_opt     = "legacy-input-report";
 char const* const input_report_opt            = "input-report";
 
 char const* const glog                 = "glog";
@@ -214,7 +216,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (display_report_opt, po::value<std::string>(),
             "How to handle the Display report. [{log,off}:default=off]")
         (input_report_opt, po::value<std::string>(),
-            "How to handle the Input report. [{log,off}:default=off]")
+            "How to handle to Input report. [{log,lttng,off}:default=off]")
+        (legacy_input_report_opt, po::value<std::string>(),
+            "How to handle the Legacy Input report. [{log,off}:default=off]")
         (session_mediator_report_opt, po::value<std::string>(),
             "How to handle the SessionMediator report. [{log,off}:default=off]")
         (msg_processor_report_opt, po::value<std::string>(),
@@ -410,6 +414,29 @@ mir::DefaultServerConfiguration::the_event_filters()
     return empty_filter_list;
 }
 
+std::shared_ptr<mi::InputReport>
+mir::DefaultServerConfiguration::the_input_report()
+{
+    return input_report(
+        [this]() -> std::shared_ptr<mi::InputReport>
+        {
+            auto opt = the_options()->get(input_report_opt, off_opt_value);
+            
+            if (opt == log_opt_value)
+            {
+                return std::make_shared<ml::InputReport>(the_logger());
+            }
+            else if (opt == lttng_opt_value)
+            {
+                return std::make_shared<mir::lttng::InputReport>();
+            }
+            else
+            {
+                return std::make_shared<mi::NullInputReport>();
+            }
+        });
+}
+
 std::shared_ptr<mi::InputConfiguration>
 mir::DefaultServerConfiguration::the_input_configuration()
 {
@@ -438,7 +465,8 @@ mir::DefaultServerConfiguration::the_input_configuration()
             input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
                 the_event_filters(),
                 the_display(),
-                std::make_shared<DefaultCursorListener>(the_display()->the_cursor()));
+                std::make_shared<DefaultCursorListener>(the_display()->the_cursor()),
+                the_input_report());
         }
         else
         {
@@ -454,8 +482,8 @@ mir::DefaultServerConfiguration::the_input_manager()
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get(input_report_opt, off_opt_value) == log_opt_value)
-                ml::input_report::initialize(the_logger());
+            if (the_options()->get(legacy_input_report_opt, off_opt_value) == log_opt_value)
+                    ml::legacy_input_report::initialize(the_logger());
             return the_input_configuration()->the_input_manager();
         });
 }

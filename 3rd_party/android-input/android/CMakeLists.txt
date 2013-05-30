@@ -5,6 +5,8 @@ include_directories(
   hardware/libhardware_legacy/include
   system/core/include
   system/extras/ext4_utils
+
+  ${PROJECT_SOURCE_DIR}/include/server
 )
 
 add_definitions(

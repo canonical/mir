@@ -18,13 +18,15 @@
 
 #include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
 #include "mir_logger.h"
-#include "make_rpc_channel.h"
+#include "rpc/make_rpc_channel.h"
+#include "logging/rpc_report.h"
 
 #include <set>
 #include <unordered_set>
@@ -82,10 +84,11 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         const std::string sock = socket_file ? socket_file :
                                                mir::default_server_socket;
         auto log = std::make_shared<mcl::ConsoleLogger>();
+        auto rpc_report = std::make_shared<mcl::logging::RpcReport>(log);
         auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
         MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(sock, log),
+            mcl::rpc::make_rpc_channel(sock, rpc_report),
             log,
             client_platform_factory);
 
@@ -262,6 +265,14 @@ void mir_wait_for(MirWaitHandle* wait_handle)
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
 {
     return surface->generate_native_window();
+}
+
+MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
+                                             unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void* context)
+{
+    return connection->drm_auth_magic(magic, callback, context);
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,
