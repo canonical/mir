@@ -49,6 +49,7 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_configuration.h"
+#include "mir/input/null_input_report.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_input_targeter.h"
