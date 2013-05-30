@@ -23,7 +23,7 @@
 #include "client_platform.h"
 #include "client_platform_factory.h"
 #include "client_buffer_depository.h"
-#include "make_rpc_channel.h"
+#include "rpc/mir_basic_rpc_channel.h"
 
 #include "mir/input/input_platform.h"
 
@@ -32,7 +32,6 @@
 
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
-namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
 MirConnection::MirConnection() :
@@ -43,7 +42,7 @@ MirConnection::MirConnection() :
 }
 
 MirConnection::MirConnection(
-    std::shared_ptr<mir::client::MirBasicRpcChannel> const& channel,
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const& channel,
     std::shared_ptr<mcl::Logger> const & log,
     std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
         channel(channel),

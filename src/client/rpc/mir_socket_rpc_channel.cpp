@@ -21,6 +21,7 @@
 #include "rpc_report.h"
 
 #include "mir/protobuf/google_protobuf_guard.h"
+#include "mir/events/event_sink.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -29,11 +30,11 @@
 
 #include <boost/bind.hpp>
 #include <cstring>
+#include <sstream>
 
-namespace mcl = mir::client;
-namespace mcld = mir::client::detail;
+namespace mclr = mir::client::rpc;
 
-mcl::MirSocketRpcChannel::MirSocketRpcChannel(
+mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<RpcReport> const& rpc_report) :
     rpc_report(rpc_report),
@@ -57,7 +58,7 @@ mcl::MirSocketRpcChannel::MirSocketRpcChannel(
             boost::asio::placeholders::error));
 }
 
-mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
+mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
 {
     io_service.stop();
 
@@ -68,7 +69,7 @@ mcl::MirSocketRpcChannel::~MirSocketRpcChannel()
 }
 
 // TODO: This function needs some work.
-void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
+void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
     auto surface = dynamic_cast<mir::protobuf::Surface*>(response);
@@ -148,7 +149,7 @@ void mcl::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messag
     complete->Run();
 }
 
-void mcl::MirSocketRpcChannel::CallMethod(
+void mclr::MirSocketRpcChannel::CallMethod(
     const google::protobuf::MethodDescriptor* method,
     google::protobuf::RpcController*,
     const google::protobuf::Message* parameters,
@@ -172,7 +173,7 @@ void mcl::MirSocketRpcChannel::CallMethod(
     send_message(buffer.str(), send_buffer, invocation);
 }
 
-void mcl::MirSocketRpcChannel::send_message(
+void mclr::MirSocketRpcChannel::send_message(
     std::string const& body,
     detail::SendBuffer& send_buffer,
     mir::protobuf::wire::Invocation const& invocation)
@@ -195,7 +196,7 @@ void mcl::MirSocketRpcChannel::send_message(
             invocation, boost::asio::placeholders::error));
 }
 
-void mcl::MirSocketRpcChannel::on_message_sent(
+void mclr::MirSocketRpcChannel::on_message_sent(
     mir::protobuf::wire::Invocation const& invocation,
     boost::system::error_code const& error)
 {
@@ -205,7 +206,7 @@ void mcl::MirSocketRpcChannel::on_message_sent(
         rpc_report->invocation_succeeded(invocation);
 }
 
-void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& error)
+void mclr::MirSocketRpcChannel::on_header_read(const boost::system::error_code& error)
 {
     if (error)
     {
@@ -229,7 +230,7 @@ void mcl::MirSocketRpcChannel::on_header_read(const boost::system::error_code& e
             boost::asio::placeholders::error));
 }
 
-void mcl::MirSocketRpcChannel::read_message()
+void mclr::MirSocketRpcChannel::read_message()
 {
     mir::protobuf::wire::Result result;
 
@@ -264,7 +265,7 @@ void mcl::MirSocketRpcChannel::read_message()
     }
 }
 
-void mcl::MirSocketRpcChannel::process_event_sequence(std::string const& event)
+void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
 {
     if (!event_handler)
         return;
@@ -303,13 +304,13 @@ void mcl::MirSocketRpcChannel::process_event_sequence(std::string const& event)
     }
 }
 
-size_t mcl::MirSocketRpcChannel::read_message_header()
+size_t mclr::MirSocketRpcChannel::read_message_header()
 {
     const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
     return body_size;
 }
 
-mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const size_t body_size)
+mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const size_t body_size)
 {
     boost::system::error_code error;
     boost::asio::streambuf message;
@@ -325,7 +326,7 @@ mir::protobuf::wire::Result mcl::MirSocketRpcChannel::read_message_body(const si
     return result;
 }
 
-void mcl::MirSocketRpcChannel::set_event_handler(events::EventSink *sink)
+void mclr::MirSocketRpcChannel::set_event_handler(events::EventSink *sink)
 {
     /*
      * Yes, these have to be regular pointers. Because ownership of the object

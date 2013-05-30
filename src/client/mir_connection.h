@@ -43,7 +43,10 @@ namespace client
 class Logger;
 class ClientBufferDepository;
 class ClientPlatformFactory;
+namespace rpc
+{
 class MirBasicRpcChannel;
+}
 }
 
 namespace input
@@ -60,7 +63,7 @@ struct MirConnection : mir::client::ClientContext, private mir::events::EventSin
 public:
     MirConnection();
 
-    MirConnection(std::shared_ptr<mir::client::MirBasicRpcChannel> const& channel,
+    MirConnection(std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const& channel,
                   std::shared_ptr<mir::client::Logger> const & log,
                   std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
     ~MirConnection() noexcept;
