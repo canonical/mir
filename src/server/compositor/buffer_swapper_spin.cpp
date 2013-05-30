@@ -97,11 +97,11 @@ void mc::BufferSwapperSpin::force_client_completion()
 void mc::BufferSwapperSpin::end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers,
                                                 size_t& size)
 {
-    std::unique_lock<std::mutex> lk(swapper_mutex);
+    std::lock_guard<std::mutex> lg{swapper_mutex};
 
-    for(auto& buffer : buffer_queue)
+    while(!buffer_queue.empty())
     {
-        buffers.push_back(buffer);
+        buffers.push_back(buffer_queue.back());
         buffer_queue.pop_back();
     }
 

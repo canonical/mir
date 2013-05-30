@@ -104,7 +104,7 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
     auto f = std::async(std::launch::async,
                 [this]
                 {
-                    for(auto i=0u; i < 400; i++)
+                    for(auto i=0u; i < 40000; i++)
                     {
                         auto b = swapper_switcher->client_acquire();
                         std::this_thread::yield();
@@ -127,7 +127,7 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
     auto h = std::async(std::launch::async,
                 [this]
                 {
-                    for(auto i=0u; i < 200; i++)
+                    for(auto i=0u; i < 20000; i++)
                     {
                         swapper_switcher->change_swapper(
                             [&](std::vector<std::shared_ptr<mc::Buffer>>& buffers, size_t& size)
