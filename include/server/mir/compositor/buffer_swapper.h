@@ -75,7 +75,6 @@ public:
      * will be deallocated
      */
     virtual ~BufferSwapper() = default;
-
 protected:
     BufferSwapper() = default;
     BufferSwapper(BufferSwapper const&) = delete;

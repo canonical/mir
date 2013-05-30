@@ -28,6 +28,7 @@ namespace compositor
 
 class GraphicBufferAllocator;
 struct BufferProperties;
+
 class SwapperFactory : public BufferAllocationStrategy
 {
 public:
