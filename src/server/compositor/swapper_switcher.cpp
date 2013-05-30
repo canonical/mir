@@ -86,7 +86,7 @@ void mc::SwapperSwitcher::force_client_completion()
 
 void mc::SwapperSwitcher::end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&)
 {
-
+    //TODO
 }
 
 void mc::SwapperSwitcher::change_swapper(std::function<std::shared_ptr<BufferSwapper>
