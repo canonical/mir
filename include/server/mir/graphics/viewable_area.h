@@ -34,7 +34,7 @@ public:
 
 protected:
     ViewableArea() = default;
-    virtual ~ViewableArea() = default;
+    virtual ~ViewableArea() { /* TODO: make nothrow */ }
 private:
     ViewableArea(ViewableArea const&) = delete;
     ViewableArea& operator=(ViewableArea const&) = delete;

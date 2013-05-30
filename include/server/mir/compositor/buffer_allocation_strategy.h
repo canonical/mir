@@ -41,7 +41,7 @@ public:
         BufferProperties const& requested_buffer_properties) = 0;
 
 protected:
-    virtual ~BufferAllocationStrategy() = default;
+    virtual ~BufferAllocationStrategy() { /* TODO: make nothrow */ }
     BufferAllocationStrategy() {}
 
     BufferAllocationStrategy(const BufferAllocationStrategy&);

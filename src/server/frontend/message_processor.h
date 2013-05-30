@@ -37,7 +37,7 @@ struct MessageSender
     virtual void send_fds(std::vector<int32_t> const& fd) = 0;
 protected:
     MessageSender() = default;
-    virtual ~MessageSender() = default;
+    virtual ~MessageSender() { /* TODO: make nothrow */ }
     MessageSender(MessageSender const&) = delete;
     MessageSender& operator=(MessageSender const&) = delete;
 };

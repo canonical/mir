@@ -32,7 +32,7 @@ namespace testing
 class SynchronizerController
 {
 public:
-        virtual ~SynchronizerController() = default;
+        virtual ~SynchronizerController() { /* TODO: make nothrow */ }
 
         virtual void ensure_child_is_waiting() = 0;
         virtual void activate_waiting_child() = 0;
@@ -43,7 +43,7 @@ public:
 class SynchronizerSpawned
 {
 public:
-    virtual ~SynchronizerSpawned() = default;
+    virtual ~SynchronizerSpawned() { /* TODO: make nothrow */ }
     virtual bool child_enter_wait() = 0;
     virtual bool child_check_wait_request() = 0;
 };

@@ -41,7 +41,7 @@ public:
     BufferBundleSurfaces(
         std::unique_ptr<BufferSwapper>&& swapper, BufferProperties const& buffer_properties);
 
-    ~BufferBundleSurfaces();
+    virtual ~BufferBundleSurfaces();
 
     std::shared_ptr<Buffer> secure_client_buffer();
 

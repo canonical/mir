@@ -253,7 +253,7 @@ class ActionInterface {
   typedef typename internal::Function<F>::ArgumentTuple ArgumentTuple;
 
   ActionInterface() {}
-  virtual ~ActionInterface() = default;
+  virtual ~ActionInterface() { /* TODO: make nothrow */ }
 
   // Performs the action.  This method is not const, as in general an
   // action can have side effects and be stateful.  For example, a

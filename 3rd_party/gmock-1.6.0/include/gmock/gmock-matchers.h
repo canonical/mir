@@ -109,7 +109,7 @@ inline MatchResultListener::~MatchResultListener() {
 template <typename T>
 class MatcherInterface {
  public:
-  virtual ~MatcherInterface() = default;
+  virtual ~MatcherInterface() { /* TODO: make nothrow */ }
 
   // Returns true iff the matcher matches x; also explains the match
   // result to 'listener', in the form of a non-restrictive relative
