@@ -207,8 +207,9 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
         }
         void expect_events(mt::WaitCondition* all_events_received) override
         {
-            EXPECT_CALL(*handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
-                                                                        mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
+            EXPECT_CALL(*handler, handle_event(Pointee(
+                mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused))))
+                    .Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
     } client_two_config;
 
