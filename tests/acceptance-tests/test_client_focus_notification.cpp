@@ -210,7 +210,7 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
             EXPECT_CALL(*handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                                                                         mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
-    } client_two_config();
+    } client_two_config;
 
     // We need some synchronization to ensure client two does not connect before client one.
     launch_client_process(client_two_config);
