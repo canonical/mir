@@ -58,11 +58,9 @@ TEST(RWLockWriterBiasTest, multi_readers_dont_block)
     }
 }
 
-
-//this test just has a high chance of failure
 TEST(RWLockWriterBiasTest, multi_writers)
 {
-    int const num_asyncs = 10;
+    int const num_asyncs = 10, num_loops = 100;
 
     mc::RWLockWriterBias lock;
     int locked_value = 0;
@@ -75,7 +73,7 @@ TEST(RWLockWriterBiasTest, multi_writers)
             {
                 mc::WriteLock wr_lock(lock);
                 std::unique_lock<mc::WriteLock> lk(wr_lock);
-                for(auto j=0; j<100; j++)
+                for(auto j=0; j < num_loops; j++)
                 {
                     locked_value++;
                 }
@@ -87,7 +85,7 @@ TEST(RWLockWriterBiasTest, multi_writers)
         i.wait(); 
     }
 
-    EXPECT_EQ(num_asyncs *100, locked_value); 
+    EXPECT_EQ(num_asyncs * num_loops, locked_value); 
 }
 
 TEST(RWLockWriterBiasTest, writers_force_wait)
@@ -123,7 +121,7 @@ TEST(RWLockWriterBiasTest, readers_and_writers)
     std::vector<std::future<int>> reader_asyncs;
 
     mc::RWLockWriterBias lock;
-    int before = 66, after = 1066;
+    int const before = 66, after = 1066;
     int locked_value = before;
 
     for(auto i = 0; i < num_asyncs; i++)
