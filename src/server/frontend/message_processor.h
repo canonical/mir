@@ -47,7 +47,7 @@ struct MessageProcessor
     virtual bool process_message(std::istream& msg) = 0;
 protected:
     MessageProcessor() = default;
-    ~MessageProcessor() = default;
+    virtual ~MessageProcessor() = default;
     MessageProcessor(MessageProcessor const&) = delete;
     MessageProcessor& operator=(MessageProcessor const&) = delete;
 };
