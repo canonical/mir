@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_RPC_REPORT_H_
 #define MIR_TEST_DOUBLES_MOCK_RPC_REPORT_H_
 
-#include "src/client/rpc_report.h"
+#include "src/client/rpc/rpc_report.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -32,7 +32,7 @@ namespace test
 namespace doubles
 {
 
-class MockRpcReport : public mir::client::RpcReport
+class MockRpcReport : public mir::client::rpc::RpcReport
 {
 public:
     ~MockRpcReport() noexcept {}

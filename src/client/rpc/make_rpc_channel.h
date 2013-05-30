@@ -15,16 +15,18 @@
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
-#ifndef MIR_CLIENT_MAKE_RPC_CHANNEL_H_
-#define MIR_CLIENT_MAKE_RPC_CHANNEL_H_
+#ifndef MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_
+#define MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_
 
 #include <memory>
-#include "mir_basic_rpc_channel.h"
 
 namespace mir
 {
 namespace client
 {
+namespace rpc
+{
+class MirBasicRpcChannel;
 class RpcReport;
 
 std::shared_ptr<MirBasicRpcChannel>
@@ -32,5 +34,6 @@ make_rpc_channel(std::string const& name,
                  std::shared_ptr<RpcReport> const& rpc_report);
 }
 }
+}
 
-#endif /* MIR_CLIENT_MAKE_RPC_CHANNEL_H_ */
+#endif /* MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_ */

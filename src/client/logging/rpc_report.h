@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_LOGGING_RPC_REPORT_H_
 #define MIR_CLIENT_LOGGING_RPC_REPORT_H_
 
-#include "../rpc_report.h"
+#include "../rpc/rpc_report.h"
 
 #include <memory>
 
@@ -32,7 +32,7 @@ class Logger;
 namespace logging
 {
 
-class RpcReport : public client::RpcReport
+class RpcReport : public rpc::RpcReport
 {
 public:
     RpcReport(std::shared_ptr<client::Logger> const& log);
