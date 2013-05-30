@@ -41,6 +41,8 @@ namespace
 
 struct MockRpcChannel : public mir::client::MirBasicRpcChannel
 {
+    virtual ~MockRpcChannel() {}
+
     void CallMethod(const google::protobuf::MethodDescriptor* method,
                     google::protobuf::RpcController*,
                     const google::protobuf::Message* parameters,
