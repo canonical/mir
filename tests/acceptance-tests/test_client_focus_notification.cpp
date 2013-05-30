@@ -175,14 +175,10 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
 
     // We use this for synchronization to ensure the two clients
     // are launched in a defined order.
-    mtf::IPCSemaphore ready_for_second_client;
+    static mtf::IPCSemaphore ready_for_second_client;
 
     struct FocusObservingClientOne : public EventReceivingClient
     {
-        FocusObservingClientOne(mtf::IPCSemaphore& ready_for_second_client)
-            : ready_for_second_client(ready_for_second_client)
-        {
-        }
         void expect_events(mt::WaitCondition* all_events_received) override
         {
             InSequence seq;
@@ -199,16 +195,11 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
                                                                         mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
 
-        mtf::IPCSemaphore& ready_for_second_client;
-    } client_one_config(ready_for_second_client);
+    } client_one_config;
     launch_client_process(client_one_config);
 
     struct FocusObservingClientTwo : public EventReceivingClient
     {
-        FocusObservingClientTwo(mtf::IPCSemaphore& ready_for_second_client)
-            : ready_for_second_client(ready_for_second_client)
-        {
-        }
         void exec() override
         {
             ready_for_second_client.wait_for_at_most_seconds(5);
@@ -219,8 +210,7 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
             EXPECT_CALL(*handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                                                                         mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
-        mtf::IPCSemaphore& ready_for_second_client;
-    } client_two_config(ready_for_second_client);
+    } client_two_config();
 
     // We need some synchronization to ensure client two does not connect before client one.
     launch_client_process(client_two_config);
