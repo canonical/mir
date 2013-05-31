@@ -28,6 +28,7 @@ set(
   mir_surface.cpp
   mir_logger.cpp
   logging/rpc_report.cpp
+  default_connection_configuration.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")

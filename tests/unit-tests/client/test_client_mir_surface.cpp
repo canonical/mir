@@ -25,6 +25,7 @@
 #include "src/client/client_platform_factory.h"
 #include "src/client/mir_surface.h"
 #include "src/client/mir_connection.h"
+#include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
@@ -254,6 +255,25 @@ struct MockInputReceiverThread : public mircv::InputReceiverThread
     MOCK_METHOD0(join, void());
 };
 
+class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
+{
+public:
+    TestConnectionConfiguration()
+        : DefaultConnectionConfiguration("./test_socket_surface")
+    {
+    }
+
+    std::shared_ptr<mcl::rpc::RpcReport> the_rpc_report() override
+    {
+        return std::make_shared<mcl::rpc::NullRpcReport>();
+    }
+
+    std::shared_ptr<mcl::ClientPlatformFactory> the_client_platform_factory() override
+    {
+        return std::make_shared<StubClientPlatformFactory>();
+    }
+};
+
 }
 }
 
@@ -288,15 +308,14 @@ struct MirClientSurfaceTest : public testing::Test
         connect_parameters.set_application_name("test");
 
         /* connect client */
-        logger = std::make_shared<mcl::ConsoleLogger>();
-        rpc_report = std::make_shared<mcl::rpc::NullRpcReport>();
-        platform_factory = std::make_shared<mt::StubClientPlatformFactory>();
-        channel = mcl::rpc::make_rpc_channel("./test_socket_surface", rpc_report);
-        connection = std::make_shared<MirConnection>(channel, logger, platform_factory);
+        mt::TestConnectionConfiguration conf;
+        connection = std::make_shared<MirConnection>(conf);
         MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                          connected_callback, 0);
         wait_handle->wait_for_result();
-        client_comm_channel = std::make_shared<mir::protobuf::DisplayServer::Stub>(channel.get());
+        client_comm_channel = std::make_shared<mir::protobuf::DisplayServer::Stub>(
+                                  conf.the_rpc_channel().get());
+        logger = conf.the_logger();
     }
 
     void TearDown()
@@ -304,10 +323,7 @@ struct MirClientSurfaceTest : public testing::Test
         test_server.reset();
     }
 
-    std::shared_ptr<mcl::rpc::MirBasicRpcChannel> channel;
     std::shared_ptr<mcl::Logger> logger;
-    std::shared_ptr<mcl::rpc::RpcReport> rpc_report;
-    std::shared_ptr<mcl::ClientPlatformFactory> platform_factory;
     std::shared_ptr<MirConnection> connection;
 
     MirSurfaceParameters params;
