@@ -22,14 +22,13 @@
 #include "mir_logger.h"
 #include "native_client_platform_factory.h"
 #include "mir/input/input_platform.h"
-#include "mir/default_configuration.h"
 #include "logging/rpc_report.h"
 
 namespace mcl = mir::client;
 
 mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
     std::string const& socket_file)
-    : user_socket_file{socket_file}
+    : socket_file{socket_file}
 {
 }
 
@@ -76,10 +75,7 @@ mcl::DefaultConnectionConfiguration::the_input_platform()
 std::string
 mcl::DefaultConnectionConfiguration::the_socket_file()
 {
-    if (user_socket_file.empty())
-        return mir::default_server_socket;
-    else
-        return user_socket_file;
+    return socket_file;
 }
 
 std::shared_ptr<mcl::rpc::RpcReport>

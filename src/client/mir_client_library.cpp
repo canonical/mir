@@ -16,6 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
+#include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 
@@ -78,9 +79,10 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
-        std::string const sock_file{socket_file == nullptr ? "" : socket_file};
+        std::string const sock = socket_file ? socket_file :
+                                               mir::default_server_socket;
 
-        mcl::DefaultConnectionConfiguration conf{sock_file};
+        mcl::DefaultConnectionConfiguration conf{sock};
 
         MirConnection* connection = new MirConnection(conf);
 

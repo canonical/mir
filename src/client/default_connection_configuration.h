@@ -57,7 +57,7 @@ protected:
     CachedPtr<rpc::RpcReport> rpc_report;
 
 private:
-    std::string const user_socket_file;
+    std::string const socket_file;
 };
 
 }
