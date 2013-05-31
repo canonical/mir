@@ -140,8 +140,7 @@ public:
      *
      * Returns OK on success.
      */
-    static status_t openInputChannelPair(const String8& name,
-            sp<InputChannel>& outServerChannel, sp<InputChannel>& outClientChannel);
+    static status_t openInputFdPair(int& server_fd, int& client_fd);
 
     inline String8 getName() const { return mName; }
     inline int getFd() const { return mFd; }

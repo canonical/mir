@@ -24,9 +24,7 @@
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
-#include "mir_logger.h"
-#include "rpc/make_rpc_channel.h"
-#include "logging/rpc_report.h"
+#include "default_connection_configuration.h"
 
 #include <set>
 #include <unordered_set>
@@ -81,16 +79,12 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
-        const std::string sock = socket_file ? socket_file :
+        std::string const sock = socket_file ? socket_file :
                                                mir::default_server_socket;
-        auto log = std::make_shared<mcl::ConsoleLogger>();
-        auto rpc_report = std::make_shared<mcl::logging::RpcReport>(log);
-        auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-        MirConnection* connection = new MirConnection(
-            mcl::rpc::make_rpc_channel(sock, rpc_report),
-            log,
-            client_platform_factory);
+        mcl::DefaultConnectionConfiguration conf{sock};
+
+        MirConnection* connection = new MirConnection(conf);
 
         return connection->connect(name, callback, context);
     }
