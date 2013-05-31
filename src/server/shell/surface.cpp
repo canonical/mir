@@ -224,8 +224,8 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
         result = state();
         break;
     case mir_surface_attrib_focus:
-            notify_change(attrib, value);
-            break;
+        notify_change(attrib, value);
+        break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
