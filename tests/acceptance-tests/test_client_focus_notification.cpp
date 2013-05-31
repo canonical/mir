@@ -37,114 +37,94 @@ namespace
 
 namespace
 {
-
-    struct ClientConfigCommon : TestingClientConfiguration
+struct ClientConfigCommon : TestingClientConfiguration
+{
+    ClientConfigCommon() :
+        connection(0),
+        surface(0)
     {
-        ClientConfigCommon() :
-            connection(0),
-            surface(0)
-        {
-        }
-
-        static void connection_callback(MirConnection* connection, void* context)
-        {
-            ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-            config->connection = connection;
-        }
-
-        static void create_surface_callback(MirSurface* surface, void* context)
-        {
-            ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-            config->surface_created(surface);
-        }
-
-        static void release_surface_callback(MirSurface* surface, void* context)
-        {
-            ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
-            config->surface_released(surface);
-        }
-
-        virtual void connected(MirConnection* new_connection)
-        {
-            connection = new_connection;
-        }
-
-        virtual void surface_created(MirSurface* new_surface)
-        {
-            surface = new_surface;
-        }
-
-        virtual void surface_released(MirSurface* /* released_surface */)
-        {
-            surface = NULL;
-        }
-
-        MirConnection* connection;
-        MirSurface* surface;
-    };
-
-    struct MockEventHandler
+    }
+    static void connection_callback(MirConnection* connection, void* context)
     {
-        MOCK_METHOD1(handle_event, void(MirEvent const*));
-    };
-
-    struct EventReceivingClient : ClientConfigCommon
+        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->connection = connection;
+    }
+    static void create_surface_callback(MirSurface* surface, void* context)
     {
-        EventReceivingClient()
-            : handler(std::make_shared<MockEventHandler>())
-        {
-        }
+        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->surface_created(surface);
+    }
+    static void release_surface_callback(MirSurface* surface, void* context)
+    {
+        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->surface_released(surface);
+    }
+    virtual void connected(MirConnection* new_connection)
+    {
+        connection = new_connection;
+    }
+    virtual void surface_created(MirSurface* new_surface)
+    {
+        surface = new_surface;
+    }
+    virtual void surface_released(MirSurface* /* released_surface */)
+    {
+        surface = NULL;
+    }
+    MirConnection* connection;
+    MirSurface* surface;
+};
+struct MockEventHandler
+{
+    MOCK_METHOD1(handle_event, void(MirEvent const*));
+};
+struct EventReceivingClient : ClientConfigCommon
+{
+    EventReceivingClient()
+        : handler(std::make_shared<MockEventHandler>())
+    {
+    }
+    static void handle_event(MirSurface* /* surface */, MirEvent const* ev, void* context)
+    {
+        auto client = static_cast<EventReceivingClient *>(context);
+         client->handler->handle_event(ev);
+    }
+    virtual void expect_events(mt::WaitCondition* /* all_events_received */)
+    {
+    }
+    void exec()
+    {
+        mt::WaitCondition all_events_received;
+        expect_events(&all_events_received);
+        mir_wait_for(mir_connect(mir_test_socket,
+            __PRETTY_FUNCTION__, connection_callback, this));
+        ASSERT_TRUE(connection != NULL);
+        MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                surface_width, surface_height,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
+        MirEventDelegate const event_delegate =
+            {
+                handle_event,
+                this
+            };
+        mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
+        mir_surface_set_event_handler(surface, &event_delegate);
+        all_events_received.wait_for_at_most_seconds(5);
+        mir_surface_release_sync(surface);
+        mir_connection_release(connection);
 
-        static void handle_event(MirSurface* /* surface */, MirEvent const* ev, void* context)
-        {
-            auto client = static_cast<EventReceivingClient *>(context);
-
-            client->handler->handle_event(ev);
-        }
-        virtual void expect_events(mt::WaitCondition* /* all_events_received */)
-        {
-        }
-
-        void exec()
-        {
-            mt::WaitCondition all_events_received;
-
-            expect_events(&all_events_received);
-
-            mir_wait_for(mir_connect(mir_test_socket,
-                __PRETTY_FUNCTION__, connection_callback, this));
-            ASSERT_TRUE(connection != NULL);
-
-            MirSurfaceParameters const request_params =
-                {
-                    __PRETTY_FUNCTION__,
-                    surface_width, surface_height,
-                    mir_pixel_format_abgr_8888,
-                    mir_buffer_usage_hardware
-                };
-            MirEventDelegate const event_delegate =
-                {
-                    handle_event,
-                    this
-                };
-            mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
-
-            mir_surface_set_event_handler(surface, &event_delegate);
-
-            all_events_received.wait_for_at_most_seconds(5);
-
-            mir_surface_release_sync(surface);
-            mir_connection_release(connection);
-         
-            // The ClientConfig is not destroyed before the testing process 
-            // exits.
-            handler.reset();
-        }
-        std::shared_ptr<MockEventHandler> handler;
-
-        static int const surface_width = 100;
-        static int const surface_height = 100;
-    };
+        // The ClientConfig is not destroyed before the testing process 
+        // exits.
+        handler.reset();
+    }
+    std::shared_ptr<MockEventHandler> handler;
+    static int const surface_width = 100;
+    static int const surface_height = 100;
+};
 
 }
 
