@@ -22,12 +22,9 @@
 #include "mir_surface.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
-#include "client_buffer_depository.h"
 #include "rpc/mir_basic_rpc_channel.h"
+#include "connection_configuration.h"
 
-#include "mir/input/input_platform.h"
-
-#include <thread>
 #include <cstddef>
 
 namespace mcl = mir::client;
@@ -42,14 +39,12 @@ MirConnection::MirConnection() :
 }
 
 MirConnection::MirConnection(
-    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const& channel,
-    std::shared_ptr<mcl::Logger> const & log,
-    std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
-        channel(channel),
+    mir::client::ConnectionConfiguration& conf) :
+        channel(conf.the_rpc_channel()),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
-        log(log),
-        client_platform_factory(client_platform_factory),
-        input_platform(mircv::InputPlatform::create())
+        log(conf.the_logger()),
+        client_platform_factory(conf.the_client_platform_factory()),
+        input_platform(conf.the_input_platform())
 {
     channel->set_event_handler(this);
     {

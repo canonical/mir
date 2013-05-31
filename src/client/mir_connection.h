@@ -41,9 +41,10 @@ namespace mir
 /// The client-side library implementation namespace
 namespace client
 {
+class ConnectionConfiguration;
 class Logger;
-class ClientBufferDepository;
 class ClientPlatformFactory;
+
 namespace rpc
 {
 class MirBasicRpcChannel;
@@ -64,9 +65,7 @@ struct MirConnection : mir::client::ClientContext, private mir::events::EventSin
 public:
     MirConnection();
 
-    MirConnection(std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const& channel,
-                  std::shared_ptr<mir::client::Logger> const & log,
-                  std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
+    MirConnection(mir::client::ConnectionConfiguration& conf);
     ~MirConnection() noexcept;
 
     MirConnection(MirConnection const &) = delete;
@@ -110,7 +109,7 @@ public:
     void handle_event(MirEvent const&);
 
 private:
-    std::shared_ptr<google::protobuf::RpcChannel> channel;
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
     std::shared_ptr<mir::client::Logger> log;
     mir::protobuf::Void void_response;
