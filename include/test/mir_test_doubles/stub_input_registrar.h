@@ -16,30 +16,30 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_SESSION_TARGET_H_
-#define MIR_INPUT_SESSION_TARGET_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
 
-#include <string>
+#include "mir/surfaces/input_registrar.h"
 
 namespace mir
 {
-namespace input
+namespace test
+{
+namespace doubles
 {
 
-class SessionTarget
+struct StubInputRegistrar : public surfaces::InputRegistrar
 {
-public:
-    virtual ~SessionTarget() {}
-
-    virtual std::string name() const = 0;
-
-protected:
-    SessionTarget() = default;
-    SessionTarget(SessionTarget const&) = delete;
-    SessionTarget& operator=(SessionTarget const&) = delete;
+    void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
+    {
+    }
+    void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)
+    {
+    }
 };
 
 }
+}
 } // namespace mir
 
-#endif // MIR_INPUT_SESSION_TARGET_H_
+#endif // MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_

@@ -16,37 +16,34 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_SURFACE_TARGET_H_
-#define MIR_INPUT_SURFACE_TARGET_H_
+#ifndef MIR_INPUT_NULL_INPUT_CONFIGURATION_H_
+#define MIR_INPUT_NULL_INPUT_CONFIGURATION_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
-
-#include <string>
+#include "mir/input/input_configuration.h"
 
 namespace mir
 {
 namespace input
 {
 
-class SurfaceTarget
+class NullInputConfiguration : public InputConfiguration
 {
 public:
-    virtual ~SurfaceTarget() {}
+    NullInputConfiguration() = default;
+    virtual ~NullInputConfiguration() = default;
 
-    virtual geometry::Point top_left() const = 0;
-    virtual geometry::Size size() const = 0;
-    virtual std::string const& name() const = 0;
-
-    virtual int server_input_fd() const = 0;
+    std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
+    std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    std::shared_ptr<InputManager> the_input_manager();
+    
+    void set_input_targets(std::shared_ptr<InputTargets> const& /* targets */);
 
 protected:
-    SurfaceTarget() = default;
-    SurfaceTarget(SurfaceTarget const&) = delete;
-    SurfaceTarget& operator=(SurfaceTarget const&) = delete;
+    NullInputConfiguration(const NullInputConfiguration&) = delete;
+    NullInputConfiguration& operator=(const NullInputConfiguration&) = delete;
 };
 
 }
-} // namespace mir
+}
 
-#endif // MIR_INPUT_SURFACE_TARGET_H_
+#endif // MIR_INPUT_NULL_INPUT_CONFIGURATION

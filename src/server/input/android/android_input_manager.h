@@ -37,10 +37,6 @@ namespace droidinput = android;
 
 namespace mir
 {
-namespace graphics
-{
-class ViewableArea;
-}
 
 namespace input
 {
@@ -49,7 +45,6 @@ class CursorListener;
 namespace android
 {
 class InputThread;
-class InputConfiguration;
 
 /// Encapsulates an instance of the Android input stack, that is to say an EventHub tied
 /// to an InputReader tied to an InputDispatcher. Provides interfaces for controlling input
@@ -57,8 +52,10 @@ class InputConfiguration;
 class InputManager : public mir::input::InputManager
 {
 public:
-    explicit InputManager(
-        std::shared_ptr<InputConfiguration> const& input_configuration);
+    explicit InputManager(droidinput::sp<droidinput::EventHubInterface> const& event_hub,
+                          droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
+                          std::shared_ptr<InputThread> const& reader_thread,
+                          std::shared_ptr<InputThread> const& dispatcher_thread);
     virtual ~InputManager();
 
     void start();

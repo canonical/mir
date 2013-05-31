@@ -54,7 +54,7 @@ struct MockSurfaceTarget : public mi::SurfaceTarget
     MOCK_CONST_METHOD0(server_input_fd, int());
     MOCK_CONST_METHOD0(top_left, geom::Point());
     MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(name, std::string const&());
 };
 
 }
@@ -86,7 +86,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     EXPECT_CALL(surface, top_left()).Times(1)
         .WillOnce(Return(default_surface_top_left));
     EXPECT_CALL(surface, name()).Times(1)
-        .WillOnce(Return(testing_surface_name));
+        .WillOnce(ReturnRef(testing_surface_name));
 
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
                                   mt::fake_shared(surface));

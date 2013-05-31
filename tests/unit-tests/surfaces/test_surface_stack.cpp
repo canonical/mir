@@ -27,8 +27,12 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/input_channel_factory.h"
+#include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test_doubles/stub_input_registrar.h"
+#include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
@@ -42,6 +46,7 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -107,6 +112,40 @@ struct MockOperatorForRenderables : public mc::OperatorForRenderables
     mg::Renderer* renderer;
 };
 
+struct StubInputChannelFactory : public mi::InputChannelFactory
+{
+    std::shared_ptr<mi::InputChannel> make_input_channel()
+    {
+        return std::shared_ptr<mi::InputChannel>();
+    }
+};
+
+struct StubInputChannel : public mi::InputChannel
+{
+    StubInputChannel(int server_fd, int client_fd)
+        : s_fd(server_fd),
+          c_fd(client_fd)
+    {
+    }
+    
+    int client_fd() const
+    {
+        return c_fd;
+    }
+    int server_fd() const
+    {
+        return s_fd;
+    }
+
+    int const s_fd;    
+    int const c_fd;
+};
+
+struct MockInputChannelFactory : public mi::InputChannelFactory
+{
+    MOCK_METHOD0(make_input_channel, std::shared_ptr<mi::InputChannel>());
+};
+
 }
 
 TEST(
@@ -118,13 +157,16 @@ TEST(
     std::unique_ptr<mc::BufferSwapper> swapper_handle;
     mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle));
     MockBufferBundleFactory buffer_bundle_factory;
+    StubInputChannelFactory input_factory;
+    mtd::StubInputRegistrar input_registrar;
 
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_))
             .Times(AtLeast(1));
 
-    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory), 
+        mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
@@ -139,6 +181,8 @@ TEST(
     using namespace ::testing;
 
     MockBufferBundleFactory buffer_bundle_factory;
+    StubInputChannelFactory input_factory;
+    mtd::StubInputRegistrar input_registrar;
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator(&renderer);
@@ -150,7 +194,8 @@ TEST(
         create_buffer_bundle(_)).Times(0);
     EXPECT_CALL(renderer, render(_,_)).Times(0);
 
-    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory), 
+        mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
 
     {
         stack.for_each_if(filter, renderable_operator);
@@ -166,11 +211,15 @@ TEST(
     using namespace ::testing;
 
     MockBufferBundleFactory buffer_bundle_factory;
+    StubInputChannelFactory input_factory;
+    mtd::StubInputRegistrar input_registrar;
+
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
 
-    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory), 
+        mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
 
     auto surface1 = stack.create_surface(
         msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -204,11 +253,15 @@ TEST(
     using namespace ::testing;
 
     MockBufferBundleFactory buffer_bundle_factory;
+    StubInputChannelFactory input_factory;
+    mtd::StubInputRegistrar input_registrar;
+
     EXPECT_CALL(
         buffer_bundle_factory,
         create_buffer_bundle(_)).Times(AtLeast(1));
 
-    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory), 
+        mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
 
     auto surface1 = stack.create_surface(
         msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
@@ -241,6 +294,9 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 
     std::unique_ptr<mc::BufferSwapper> swapper_handle;
     MockBufferBundleFactory buffer_bundle_factory;
+    StubInputChannelFactory input_factory;
+    mtd::StubInputRegistrar input_registrar;
+
 
     geom::Size const size{geom::Size{geom::Width{1024}, geom::Height{768}}};
     geom::PixelFormat const format{geom::PixelFormat::bgr_888};
@@ -253,7 +309,8 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
                     Field(&mc::BufferProperties::usage, usage))))
         .Times(AtLeast(1));
 
-    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory));
+    ms::SurfaceStack stack(mt::fake_shared(buffer_bundle_factory), 
+        mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
         msh::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
 
@@ -288,7 +345,9 @@ TEST(SurfaceStack, create_surface_notifies_changes)
 
     EXPECT_CALL(mock_cb, call()).Times(1);
 
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
@@ -303,7 +362,9 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
 
     EXPECT_CALL(mock_cb, call()).Times(1);
 
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
@@ -324,7 +385,9 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
     geom::Size const requested_size{geom::Width{1024}, 
                                     geom::Height{768}};
     
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>()};
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
     
     auto s = stack.create_surface(
         msh::a_surface().of_size(requested_size).of_position(requested_top_left));
@@ -333,4 +396,41 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
         auto surface = s.lock();
         EXPECT_EQ(requested_top_left, surface->top_left());
     }
+}
+
+TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
+{
+    using namespace ::testing;
+
+    mtd::MockInputRegistrar registrar;
+    EXPECT_CALL(registrar, input_surface_opened(_)).Times(1);
+    EXPECT_CALL(registrar, input_surface_closed(_)).Times(1);
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            mt::fake_shared(registrar)};
+    
+    auto s = stack.create_surface(msh::a_surface());
+    stack.destroy_surface(s);
+}
+
+TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
+{
+    using namespace ::testing;
+
+    int const server_input_fd = 11;
+    int const client_input_fd = 7;
+    
+    mtd::StubInputRegistrar registrar;
+    StubInputChannel input_channel(server_input_fd, client_input_fd);
+    MockInputChannelFactory input_factory;
+    
+    EXPECT_CALL(input_factory, make_input_channel()).Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+        mt::fake_shared(input_factory),
+            std::make_shared<mtd::StubInputRegistrar>()};
+
+    auto surface = stack.create_surface(msh::a_surface()).lock();
+    EXPECT_EQ(server_input_fd, surface->server_input_fd());
+    EXPECT_EQ(client_input_fd, surface->client_input_fd());
 }

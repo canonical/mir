@@ -37,7 +37,7 @@ namespace doubles
 struct MockSurface : public shell::Surface
 {
     MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder) :
-        shell::Surface(builder, shell::a_surface(), std::shared_ptr<input::InputChannel>())
+        shell::Surface(builder, shell::a_surface())
     {
     }
 
@@ -57,6 +57,7 @@ struct MockSurface : public shell::Surface
     MOCK_CONST_METHOD0(server_input_fd, int());
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
+    MOCK_METHOD1(take_input_focus, void(std::shared_ptr<shell::InputTargeter> const&));
 };
 
 }

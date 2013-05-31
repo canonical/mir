@@ -23,7 +23,6 @@
 #include "mir/frontend/surface.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/surfaces/surface.h"
-#include "mir/input/surface_target.h"
 
 #include "mir_toolkit/common.h"
 
@@ -35,28 +34,23 @@ namespace events
 {
 class EventSink;
 }
-namespace input
-{
-class InputChannel;
-}
 
 namespace shell
 {
+class InputTargeter;
 class SurfaceBuilder;
 struct SurfaceCreationParameters;
 
-class Surface : public frontend::Surface, public input::SurfaceTarget
+class Surface : public frontend::Surface
 {
 public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
-        SurfaceCreationParameters const& params,
-        std::shared_ptr<input::InputChannel> const& input_channel);
+        SurfaceCreationParameters const& params);
 
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
         SurfaceCreationParameters const& params,
-        std::shared_ptr<input::InputChannel> const& input_channel,
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink);
 
@@ -89,13 +83,14 @@ public:
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
+    virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
+
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
     void notify_change(MirSurfaceAttrib attrib, int value);
 
     std::shared_ptr<SurfaceBuilder> const builder;
-    std::shared_ptr<mir::input::InputChannel> const input_channel;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
     frontend::SurfaceId const id;

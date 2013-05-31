@@ -78,6 +78,8 @@ private:
     bool fd_added;
 
     std::shared_ptr<XKBMapper> xkb_mapper;
+    
+    bool try_next_event(MirEvent &ev);
 };
 
 }

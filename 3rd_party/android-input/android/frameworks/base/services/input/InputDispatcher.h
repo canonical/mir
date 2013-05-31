@@ -38,6 +38,7 @@
 #include "InputWindow.h"
 #include "InputApplication.h"
 #include "InputListener.h"
+#include "InputEnumerator.h"
 
 #include <memory>
 
@@ -283,6 +284,13 @@ protected:
     virtual ~InputDispatcherInterface() { }
 
 public:
+    /* 
+     * Sets the enumerator of input targets. This must be called prior to enabling input dispatch.
+     *
+     * This method may be called by any thread.
+     */
+    virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator) = 0;
+
     /* Dumps the state of the input dispatcher.
      *
      * This method may be called on any thread (usually by the input manager). */
@@ -309,11 +317,18 @@ public:
             int32_t injectorPid, int32_t injectorUid, int32_t syncMode, int32_t timeoutMillis,
             uint32_t policyFlags) = 0;
 
-    /* Sets the list of input windows.
+    /* 
+     * Sets the keyboard focus target.
      *
-     * This method may be called on any thread (usually by the input manager).
+     * This method may be called on any thread.
      */
-    virtual void setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles) = 0;
+    virtual void setKeyboardFocus(const sp<InputWindowHandle>& windowHandle) = 0;
+    /*
+     * Notify that a window handle is about to vanish
+
+     * This method may be called on any thread.
+     */
+    virtual void notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle) = 0;
 
     /* Sets the focused application.
      *
@@ -378,6 +393,8 @@ protected:
 public:
     explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, std::shared_ptr<mir::input::InputReport> const& input_report);
 
+    virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator);
+
     virtual void dump(String8& dump);
     virtual void monitor();
 
@@ -393,7 +410,9 @@ public:
             int32_t injectorPid, int32_t injectorUid, int32_t syncMode, int32_t timeoutMillis,
             uint32_t policyFlags);
 
-    virtual void setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles);
+    virtual void setKeyboardFocus(const sp<InputWindowHandle>& windowHandle);
+    virtual void notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle);
+
     virtual void setFocusedApplication(const sp<InputApplicationHandle>& inputApplicationHandle);
     virtual void setInputDispatchMode(bool enabled, bool frozen);
     virtual void setInputFilterEnabled(bool enabled);
@@ -922,7 +941,7 @@ private:
     bool mDispatchFrozen;
     bool mInputFilterEnabled;
 
-    Vector<sp<InputWindowHandle> > mWindowHandles;
+    sp<InputEnumerator> mEnumerator;
 
     sp<InputWindowHandle> getWindowHandleLocked(const sp<InputChannel>& inputChannel) const;
     bool hasWindowHandleLocked(const sp<InputWindowHandle>& windowHandle) const;
@@ -1096,6 +1115,8 @@ private:
     // Statistics gathering.
     void updateDispatchStatisticsLocked(nsecs_t currentTime, const EventEntry* entry,
             int32_t injectionResult, nsecs_t timeSpentWaitingForApplication);
+
+    void setKeyboardFocusLocked(const sp<InputWindowHandle>& windowHandle);
 };
 
 /* Enqueues and dispatches input events, endlessly. */

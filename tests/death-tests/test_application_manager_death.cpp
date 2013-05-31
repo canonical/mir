@@ -35,7 +35,6 @@ TEST(SessionManagerDeathTest, DISABLED_class_invariants_not_satisfied_triggers_a
                                                std::shared_ptr<msh::SessionContainer>(),
                                                std::shared_ptr<msh::FocusSequence>(),
                                                std::shared_ptr<msh::FocusSetter>(),
-                                               std::shared_ptr<msh::InputTargetListener>(),
                                                std::shared_ptr<msh::SessionListener>()),
                 ::testing::KilledBySignal(SIGABRT),
                 ".*");
