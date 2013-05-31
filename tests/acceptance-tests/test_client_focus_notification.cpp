@@ -182,6 +182,7 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
     {
         void exec() override
         {
+            // We need some synchronization to ensure client two does not connect before client one.
             ready_for_second_client.wait_for_at_most_seconds(60);
             EventReceivingClient::exec();
         }
@@ -193,6 +194,5 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
         }
     } client_two_config;
 
-    // We need some synchronization to ensure client two does not connect before client one.
     launch_client_process(client_two_config);
 }
