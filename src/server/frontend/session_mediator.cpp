@@ -76,6 +76,7 @@ struct CloggableEventSink : public me::EventSink
 
     void handle_event(MirEvent const& ev)
     {
+        std::unique_lock<std::mutex> lg(lock);
         if (clogged)
             buffered_events.push_back(ev);
         else
