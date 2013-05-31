@@ -37,12 +37,13 @@ namespace
 class TestingInputProducer
 {
 public:
-    TestingInputProducer(droidinput::sp<droidinput::InputChannel> input_channel) :
-        input_publisher(std::make_shared<droidinput::InputPublisher>(input_channel)),
+    TestingInputProducer(int fd) :
+        input_publisher(std::make_shared<droidinput::InputPublisher>(new droidinput::InputChannel("", fd))),
         incrementing_seq_id(1), // Sequence id must be > 0 or publisher will reject
         testing_key_event_scan_code(13)
     {
     }
+                       
 
     // The input publisher does not care about event semantics so we only highlight
     // a few fields for transport verification
@@ -115,23 +116,23 @@ class AndroidInputReceiverSetup : public testing::Test
 public:
     AndroidInputReceiverSetup()
     {
-        droidinput::String8 const testing_channel_name = droidinput::String8("Terrapin");
-        auto status = droidinput::InputChannel::openInputChannelPair(testing_channel_name, 
-                                                                     android_client_channel,
-                                                                     android_server_channel);
-        
+        auto status = droidinput::InputChannel::openInputFdPair(server_fd, client_fd);
         EXPECT_EQ(droidinput::OK, status);
+    }
+    ~AndroidInputReceiverSetup()
+    {
+        close(server_fd);
+        close(client_fd);
     }
     
     void flush_channels()
     {
-        fsync(android_server_channel->getFd());
-        fsync(android_client_channel->getFd());
+        fsync(server_fd);
+        fsync(client_fd);
     }
 
-    droidinput::sp<droidinput::InputChannel> android_client_channel;
-    droidinput::sp<droidinput::InputChannel> android_server_channel;
-    
+    int server_fd, client_fd;
+
     static std::chrono::milliseconds const next_event_timeout;
 };
 
@@ -141,15 +142,15 @@ std::chrono::milliseconds const AndroidInputReceiverSetup::next_event_timeout(10
 
 TEST_F(AndroidInputReceiverSetup, receiever_takes_channel_fd)
 {
-    mircva::InputReceiver receiver(android_client_channel);
+    mircva::InputReceiver receiver(client_fd);
     
-    EXPECT_EQ(android_client_channel->getFd(), receiver.fd());
+    EXPECT_EQ(client_fd, receiver.fd());
 }
 
 TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 {
-    mircva::InputReceiver receiver(android_client_channel);
-    TestingInputProducer producer(android_server_channel);
+    mircva::InputReceiver receiver(client_fd);
+    TestingInputProducer producer(server_fd);
     
     producer.produce_a_key_event();
     
@@ -164,8 +165,8 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 
 TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 {
-    mircva::InputReceiver receiver(android_client_channel);
-    TestingInputProducer producer(android_server_channel);
+    mircva::InputReceiver receiver(client_fd);
+    TestingInputProducer producer(server_fd);
     
     producer.produce_a_key_event();
     flush_channels();
@@ -180,8 +181,8 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 
 TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
 {
-    mircva::InputReceiver receiver(android_client_channel);
-    TestingInputProducer producer(android_server_channel);
+    mircva::InputReceiver receiver(client_fd);
+    TestingInputProducer producer(server_fd);
     
     // Produce 3 motion events before client handles any.
     producer.produce_a_motion_event();

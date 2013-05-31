@@ -20,25 +20,29 @@
 
 #include <androidfw/InputTransport.h>
 
+#include <unistd.h>
+
 namespace mia = mir::input::android;
 namespace droidinput = android;
 
 mia::AndroidInputChannel::AndroidInputChannel()
 {
-    droidinput::InputChannel::openInputChannelPair(droidinput::String8(),
-                                                   server_channel, client_channel);
+    
+    droidinput::InputChannel::openInputFdPair(s_fd, c_fd);
 }
 
 mia::AndroidInputChannel::~AndroidInputChannel()
 {
+    close(s_fd);
+    close(c_fd);
 }
 
 int mia::AndroidInputChannel::client_fd() const
 {
-    return client_channel->getFd();
+    return c_fd;
 }
 
 int mia::AndroidInputChannel::server_fd() const
 {
-    return server_channel->getFd();
+    return s_fd;
 }
