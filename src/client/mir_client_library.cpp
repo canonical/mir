@@ -78,7 +78,9 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
-        mcl::DefaultConnectionConfiguration conf{socket_file};
+        std::string const sock_file{socket_file == nullptr ? "" : socket_file};
+
+        mcl::DefaultConnectionConfiguration conf{sock_file};
 
         MirConnection* connection = new MirConnection(conf);
 
