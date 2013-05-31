@@ -96,6 +96,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
 
 void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
+    auto keep_alive = surface.lock();
     {
         std::lock_guard<std::mutex> lg(guard);
 
@@ -103,12 +104,15 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         
         if (p != surfaces.end())
         {
-            input_registrar->input_surface_closed(*p);
             surfaces.erase(p);
         }
-        // else; TODO error logging
+        else
+        {
+            // else; TODO error logging
+            return;
+        }
     }
-
+    input_registrar->input_surface_closed(keep_alive);
     emit_change_notification();
 }
 
@@ -120,6 +124,7 @@ void ms::SurfaceStack::emit_change_notification()
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback)
 {
+    std::lock_guard<std::mutex> lg(guard);
     for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
         callback(*it);
 }
