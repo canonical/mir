@@ -16,36 +16,37 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_NULL_INPUT_MANAGER_H_
-#define MIR_INPUT_NULL_INPUT_MANAGER_H_
+#ifndef MIR_SHELL_INPUT_TARGETER_H_
+#define MIR_SHELL_INPUT_TARGETER_H_
 
-#include "mir/input/input_manager.h"
+#include <memory>
 
 namespace mir
 {
 namespace input
 {
+class SurfaceTarget;
+}
 
-class NullInputManager : public InputManager
+namespace shell
+{
+
+/// An interface used to control the selection of keyboard input focus.
+class InputTargeter
 {
 public:
-    NullInputManager() {};
-    virtual ~NullInputManager() {}
-
-    void start() {}
-    void stop() {}
-
-    std::shared_ptr<InputChannel> make_input_channel()
-    {
-        return std::shared_ptr<InputChannel>();
-    }
+    virtual ~InputTargeter() = default;
+    
+    virtual void focus_changed(std::shared_ptr<input::SurfaceTarget const> const& focus_surface) = 0;
+    virtual void focus_cleared() = 0;
 
 protected:
-    NullInputManager(const NullInputManager&) = delete;
-    NullInputManager& operator=(const NullInputManager&) = delete;
+    InputTargeter() = default;
+    InputTargeter(InputTargeter const&) = delete;
+    InputTargeter& operator=(InputTargeter const&) = delete;
 };
 
 }
-}
+} // namespace mir
 
-#endif // MIR_INPUT_NULL_INPUT_MANAGER
+#endif // MIR_SHELL_INPUT_TARGETER_H_

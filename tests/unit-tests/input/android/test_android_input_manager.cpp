@@ -21,15 +21,11 @@
 #include "src/server/input/android/android_input_constants.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/input/session_target.h"
 #include "mir/input/surface_target.h"
-#include "mir/input/android/android_input_configuration.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/mock_input_configuration.h"
-#include "mir_test_doubles/stub_session_target.h"
 #include "mir_test_doubles/stub_surface_target.h"
 
 #include <EventHub.h>
@@ -116,33 +112,14 @@ struct AndroidInputManagerSetup : public testing::Test
         dispatcher = new mtd::MockInputDispatcher();
         dispatcher_thread = std::make_shared<MockInputThread>();
         reader_thread = std::make_shared<MockInputThread>();
-
-        ON_CALL(config, the_event_hub()).WillByDefault(Return(event_hub));
-        ON_CALL(config, the_dispatcher()).WillByDefault(Return(dispatcher));
-        ON_CALL(config, the_reader_thread()).WillByDefault(Return(reader_thread));
-        ON_CALL(config, the_dispatcher_thread()).WillByDefault(Return(dispatcher_thread));
     }
     mtd::MockViewableArea view_area;
 
-    testing::NiceMock<mtd::MockInputConfiguration> config;
     droidinput::sp<MockEventHub> event_hub;
     droidinput::sp<mtd::MockInputDispatcher> dispatcher;
     std::shared_ptr<MockInputThread> dispatcher_thread;
     std::shared_ptr<MockInputThread> reader_thread;
 };
-
-}
-
-TEST_F(AndroidInputManagerSetup, takes_input_setup_from_configuration)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(config, the_event_hub()).Times(1);
-    EXPECT_CALL(config, the_dispatcher()).Times(1);
-    EXPECT_CALL(config, the_reader_thread()).Times(1);
-    EXPECT_CALL(config, the_dispatcher_thread()).Times(1);
-
-    mia::InputManager manager(mt::fake_shared(config));
 
 }
 
@@ -180,7 +157,7 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
         EXPECT_CALL(*reader_thread, join());
     }
 
-    mia::InputManager manager(mt::fake_shared(config));
+    mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
 
     manager.start();
     manager.stop();
@@ -188,7 +165,7 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
 
 TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
 {
-    mia::InputManager manager(mt::fake_shared(config));
+    mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
 
     auto package = manager.make_input_channel();
     EXPECT_GT(package->client_fd(), 0);

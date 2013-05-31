@@ -28,6 +28,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "client_platform.h"
 #include "client_context.h"
@@ -40,9 +41,10 @@ namespace mir
 /// The client-side library implementation namespace
 namespace client
 {
+class ConnectionConfiguration;
 class Logger;
-class ClientBufferDepository;
 class ClientPlatformFactory;
+
 namespace rpc
 {
 class MirBasicRpcChannel;
@@ -63,9 +65,7 @@ struct MirConnection : mir::client::ClientContext, private mir::events::EventSin
 public:
     MirConnection();
 
-    MirConnection(std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const& channel,
-                  std::shared_ptr<mir::client::Logger> const & log,
-                  std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
+    MirConnection(mir::client::ConnectionConfiguration& conf);
     ~MirConnection() noexcept;
 
     MirConnection(MirConnection const &) = delete;
@@ -90,6 +90,10 @@ public:
 
     MirWaitHandle* disconnect();
 
+    MirWaitHandle* drm_auth_magic(unsigned int magic,
+                                  mir_drm_auth_magic_callback callback,
+                                  void* context);
+
     void populate(MirPlatformPackage& platform_package);
     void populate(MirDisplayInfo& display_info);
 
@@ -105,13 +109,14 @@ public:
     void handle_event(MirEvent const&);
 
 private:
-    std::shared_ptr<google::protobuf::RpcChannel> channel;
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
     std::shared_ptr<mir::client::Logger> log;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
+    mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
@@ -123,6 +128,7 @@ private:
 
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
+    MirWaitHandle drm_auth_magic_wait_handle;
 
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
@@ -138,6 +144,7 @@ private:
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
+    void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

@@ -197,7 +197,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
     /* Use the real input manager, but with a fake event hub */
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mia::InputConfiguration> the_input_configuration() override
+        std::shared_ptr<mi::InputConfiguration> the_input_configuration() override
         {
             if (!input_configuration)
             {
@@ -205,7 +205,8 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
                     std::make_shared<mtd::FakeEventHubInputConfiguration>(
                         std::initializer_list<std::shared_ptr<mi::EventFilter> const>{},
                         the_viewable_area(),
-                        std::shared_ptr<mi::CursorListener>());
+                        std::shared_ptr<mi::CursorListener>(),
+                        the_input_report());
             }
 
             return input_configuration;
@@ -216,12 +217,16 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
             return DefaultServerConfiguration::the_input_manager();
         }
 
-        std::shared_ptr<mir::shell::InputTargetListener> the_input_target_listener() override
+        std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override
         {
-            return DefaultServerConfiguration::the_input_target_listener();
+            return DefaultServerConfiguration::the_input_targeter();
+        }
+        std::shared_ptr<mir::surfaces::InputRegistrar> the_input_registrar() override
+        {
+            return DefaultServerConfiguration::the_input_registrar();
         }
 
-        std::shared_ptr<mia::InputConfiguration> input_configuration;
+        std::shared_ptr<mi::InputConfiguration> input_configuration;
     };
 
     auto server_config = std::make_shared<ServerConfig>();

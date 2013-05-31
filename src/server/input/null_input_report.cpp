@@ -16,33 +16,24 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CACHED_PTR_H_
-#define MIR_CACHED_PTR_H_
+#include "mir/input/null_input_report.h"
 
-#include <functional>
-#include <memory>
+namespace mi = mir::input;
 
-namespace mir
+void mi::NullInputReport::received_event_from_kernel(int64_t /* when */, int /* type */, int /* code */, int /* value */)
 {
-template<typename Type>
-class CachedPtr
+}
+
+void mi::NullInputReport::published_key_event(int /* dest_fd */, uint32_t /* seq_id */, int64_t /* event_time */)
 {
-    std::weak_ptr<Type> cache;
-    CachedPtr(CachedPtr const&) = delete;
-    CachedPtr& operator=(CachedPtr const&) = delete;
-public:
-    CachedPtr() = default;
+}
 
-    std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
-    {
-        auto result = cache.lock();
-        if (!result)
-        {
-                cache = result = make();
-        }
-        return result;
-    }
-};
-} // namespace mir
+void mi::NullInputReport::published_motion_event(int /* dest_fd */, uint32_t /* seq_id */, int64_t /* event_time */)
+{
+}
 
-#endif // MIR_CACHED_PTR_H_
+void mi::NullInputReport::received_event_finished_signal(int /* src_fd */, uint32_t /* seq_id */)
+{
+}
+
+

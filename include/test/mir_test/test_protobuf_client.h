@@ -53,6 +53,7 @@ struct TestProtobufClient
     MOCK_METHOD0(next_buffer_done, void ());
     MOCK_METHOD0(release_surface_done, void ());
     MOCK_METHOD0(disconnect_done, void ());
+    MOCK_METHOD0(drm_auth_magic_done, void ());
 
     void on_connect_done();
 
@@ -64,6 +65,8 @@ struct TestProtobufClient
 
     void on_disconnect_done();
 
+    void on_drm_auth_magic_done();
+
     void wait_for_connect_done();
 
     void wait_for_create_surface();
@@ -73,6 +76,8 @@ struct TestProtobufClient
     void wait_for_release_surface();
 
     void wait_for_disconnect_done();
+
+    void wait_for_drm_auth_magic_done();
 
     void wait_for_surface_count(int count);
 
@@ -88,6 +93,7 @@ struct TestProtobufClient
     std::atomic<bool> next_buffer_called;
     std::atomic<bool> release_surface_called;
     std::atomic<bool> disconnect_done_called;
+    std::atomic<bool> drm_auth_magic_done_called;
     std::atomic<bool> tfd_done_called;
 
     std::atomic<int> connect_done_count;

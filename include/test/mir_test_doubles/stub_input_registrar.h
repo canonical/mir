@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_LISTENER_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_LISTENER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
 
-#include "mir/shell/input_target_listener.h"
+#include "mir/surfaces/input_registrar.h"
 
 namespace mir
 {
@@ -28,26 +28,12 @@ namespace test
 namespace doubles
 {
 
-struct StubInputTargetListener : public shell::InputTargetListener
+struct StubInputRegistrar : public surfaces::InputRegistrar
 {
-    void input_application_opened(std::shared_ptr<input::SessionTarget> const&)
-    {
-    }
-    void input_application_closed(std::shared_ptr<input::SessionTarget> const&)
-    {
-    }
-    void input_surface_opened(std::shared_ptr<input::SessionTarget> const&,
-                              std::shared_ptr<input::SurfaceTarget> const&)
+    void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
     {
     }
     void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)
-    {
-    }
-    void focus_changed(std::shared_ptr<input::SurfaceTarget> const&)
-    {
-    }
-    
-    void focus_cleared()
     {
     }
 };
@@ -56,4 +42,4 @@ struct StubInputTargetListener : public shell::InputTargetListener
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_LISTENER_H_
+#endif // MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_

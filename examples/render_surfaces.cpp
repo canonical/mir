@@ -24,7 +24,6 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
-#include "mir/input/null_input_manager.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
 #include "mir/default_server_configuration.h"

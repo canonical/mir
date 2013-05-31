@@ -254,6 +254,25 @@ TEST_F(ProtobufCommunicator,
     client->wait_for_disconnect_done();
 }
 
+TEST_F(ProtobufCommunicator, drm_auth_magic_is_processed_by_the_server)
+{
+    mir::protobuf::DRMMagic magic;
+    mir::protobuf::DRMAuthMagicStatus status;
+    magic.set_magic(0x10111213);
+
+    EXPECT_CALL(*client, drm_auth_magic_done()).Times(1);
+
+    client->display_server.drm_auth_magic(
+        0,
+        &magic,
+        &status,
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::drm_auth_magic_done));
+
+    client->wait_for_drm_auth_magic_done();
+
+    EXPECT_EQ(magic.magic(), stub_server_tool->drm_magic);
+}
+
 namespace
 {
 

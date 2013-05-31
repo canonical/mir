@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SESSION_TARGET_H_
-#define MIR_TEST_DOUBLES_STUB_SESSION_TARGET_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_TARGETER_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_TARGETER_H_
 
-#include "mir/input/session_target.h"
+#include "mir/shell/input_targeter.h"
 
 namespace mir
 {
@@ -28,11 +28,13 @@ namespace test
 namespace doubles
 {
 
-struct StubSessionTarget : public input::SessionTarget
+struct StubInputTargeter : public shell::InputTargeter
 {
-    std::string name() const override
+    void focus_changed(std::shared_ptr<input::SurfaceTarget const> const&)
     {
-        return std::string();
+    }
+    void focus_cleared()
+    {
     }
 };
 
@@ -40,5 +42,4 @@ struct StubSessionTarget : public input::SessionTarget
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_SESSION_TARGET_H_
-
+#endif // MIR_TEST_DOUBLES_STUB_INPUT_TARGETER_H_

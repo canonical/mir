@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_INPUT_TARGET_LISTENER_H_
-#define MIR_SHELL_INPUT_TARGET_LISTENER_H_
+#ifndef MIR_SURFACES_INPUT_REGISTRAR_H_
+#define MIR_SURFACES_INPUT_REGISTRAR_H_
 
 #include <memory>
 
@@ -29,31 +29,26 @@ class SessionTarget;
 class SurfaceTarget;
 }
 
-namespace shell
+namespace surfaces
 {
 
-class InputTargetListener
+/// An interface used to register input targets and take care of input assosciation (i.e.
+/// create input channels).
+class InputRegistrar
 {
 public:
-    virtual ~InputTargetListener() = default;
+    virtual ~InputRegistrar() = default;
     
-    virtual void input_application_opened(std::shared_ptr<input::SessionTarget> const& application) = 0;
-    virtual void input_application_closed(std::shared_ptr<input::SessionTarget> const& application) = 0;
-
-    virtual void input_surface_opened(std::shared_ptr<input::SessionTarget> const& application,
-                                      std::shared_ptr<input::SurfaceTarget> const& opened_surface) = 0;
+    virtual void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface) = 0;
     virtual void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface) = 0;
 
-    virtual void focus_changed(std::shared_ptr<input::SurfaceTarget> const& focus_surface) = 0;
-    virtual void focus_cleared() = 0;
-
 protected:
-    InputTargetListener() = default;
-    InputTargetListener(InputTargetListener const&) = delete;
-    InputTargetListener& operator=(InputTargetListener const&) = delete;
+    InputRegistrar() = default;
+    InputRegistrar(InputRegistrar const&) = delete;
+    InputRegistrar& operator=(InputRegistrar const&) = delete;
 };
 
 }
 } // namespace mir
 
-#endif // MIR_SHELL_INPUT_TARGET_LISTENER_H_
+#endif // MIR_SURFACES_INPUT_REGISTRAR_H_

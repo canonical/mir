@@ -71,28 +71,12 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
 
 }
 
-// TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
-// with the existing client io_service ~racarr ~tvoss
-bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
+bool mircva::InputReceiver::try_next_event(MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
-    bool handled_event = false;
 
-    if (!fd_added)
-    {
-        // TODO: Why will this fail from the constructor? ~racarr
-        looper->addFd(fd(), fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
-        fd_added = true;
-    }
-    
-    auto result = looper->pollOnce(timeout.count());
-    if (result == ALOOPER_POLL_WAKE)
-        return false;
-    else if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
-        return false;
-
-    if(input_consumer->consume(&event_factory, true,
+   if(input_consumer->consume(&event_factory, true,
         -1, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
     {
         mia::Lexicon::translate(android_event, ev);
@@ -100,13 +84,33 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
         map_key_event(xkb_mapper, ev);
 
         input_consumer->sendFinishedSignal(event_sequence_id, true);
-        handled_event = true;
-    }
 
-    // So far once we have sent an event to the client there is no chance for redispatch
-    // so the client handles all events.
+        return true;
+    }
+   return false;
+}
+
+// TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
+// with the existing client io_service ~racarr ~tvoss
+bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
+{
+    if (!fd_added)
+    {
+        // TODO: Why will this fail from the constructor? ~racarr
+        looper->addFd(fd(), fd(), ALOOPER_EVENT_INPUT, nullptr, nullptr);
+        fd_added = true;
+    }
     
-    return handled_event;
+    if(try_next_event(ev))
+        return true;
+
+    auto result = looper->pollOnce(timeout.count());
+    if (result == ALOOPER_POLL_WAKE)
+        return false;
+    if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
+       return false;
+
+    return try_next_event(ev);
 }
 
 void mircva::InputReceiver::wake()

@@ -48,11 +48,11 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/null_input_manager.h"
-#include "mir/input/null_input_target_listener.h"
+#include "mir/input/null_input_configuration.h"
+#include "mir/input/null_input_report.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
-#include "input/android/android_dispatcher_controller.h"
+#include "input/android/android_input_targeter.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -61,6 +61,7 @@
 #include "mir/logging/message_processor_report.h"
 #include "mir/logging/display_report.h"
 #include "mir/lttng/message_processor_report.h"
+#include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
@@ -141,6 +142,7 @@ private:
 char const* const session_mediator_report_opt = "session-mediator-report";
 char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
+char const* const legacy_input_report_opt     = "legacy-input-report";
 char const* const input_report_opt            = "input-report";
 
 char const* const glog                 = "glog";
@@ -215,7 +217,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         (display_report_opt, po::value<std::string>(),
             "How to handle the Display report. [{log,off}:default=off]")
         (input_report_opt, po::value<std::string>(),
-            "How to handle the Input report. [{log,off}:default=off]")
+            "How to handle to Input report. [{log,lttng,off}:default=off]")
+        (legacy_input_report_opt, po::value<std::string>(),
+            "How to handle the Legacy Input report. [{log,off}:default=off]")
         (session_mediator_report_opt, po::value<std::string>(),
             "How to handle the SessionMediator report. [{log,off}:default=off]")
         (msg_processor_report_opt, po::value<std::string>(),
@@ -342,7 +346,7 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
         [this]
         {
             return std::make_shared<msh::SingleVisibilityFocusMechanism>(
-                the_shell_session_container());
+                the_shell_session_container(), the_input_targeter());
         });
 }
 
@@ -388,7 +392,6 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
-                the_input_target_listener(),
                 the_shell_session_listener());
         });
 }
@@ -412,7 +415,30 @@ mir::DefaultServerConfiguration::the_event_filters()
     return empty_filter_list;
 }
 
-std::shared_ptr<mia::InputConfiguration>
+std::shared_ptr<mi::InputReport>
+mir::DefaultServerConfiguration::the_input_report()
+{
+    return input_report(
+        [this]() -> std::shared_ptr<mi::InputReport>
+        {
+            auto opt = the_options()->get(input_report_opt, off_opt_value);
+            
+            if (opt == log_opt_value)
+            {
+                return std::make_shared<ml::InputReport>(the_logger());
+            }
+            else if (opt == lttng_opt_value)
+            {
+                return std::make_shared<mir::lttng::InputReport>();
+            }
+            else
+            {
+                return std::make_shared<mi::NullInputReport>();
+            }
+        });
+}
+
+std::shared_ptr<mi::InputConfiguration>
 mir::DefaultServerConfiguration::the_input_configuration()
 {
     if (!input_configuration)
@@ -435,10 +461,18 @@ mir::DefaultServerConfiguration::the_input_configuration()
             std::weak_ptr<mg::Cursor> const cursor;
         };
 
-        input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
-            the_event_filters(),
-            the_display(),
-            std::make_shared<DefaultCursorListener>(the_display()->the_cursor()));
+        if (the_options()->get("enable-input", enable_input_default))
+        {
+            input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
+                the_event_filters(),
+                the_display(),
+                std::make_shared<DefaultCursorListener>(the_display()->the_cursor()),
+                the_input_report());
+        }
+        else
+        {
+            input_configuration = std::make_shared<mi::NullInputConfiguration>();
+        }
     }
     return input_configuration;
 }
@@ -449,14 +483,9 @@ mir::DefaultServerConfiguration::the_input_manager()
     return input_manager(
         [&, this]() -> std::shared_ptr<mi::InputManager>
         {
-            if (the_options()->get("enable-input", enable_input_default))
-            {
-                if (the_options()->get(input_report_opt, off_opt_value) == log_opt_value)
-                    ml::input_report::initialize(the_logger());
-                return std::make_shared<mia::InputManager>(the_input_configuration());
-            }
-            else 
-                return std::make_shared<mi::NullInputManager>();
+            if (the_options()->get(legacy_input_report_opt, off_opt_value) == log_opt_value)
+                    ml::legacy_input_report::initialize(the_logger());
+            return the_input_configuration()->the_input_manager();
         });
 }
 
@@ -489,9 +518,11 @@ std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {
     return surface_stack(
-        [this]()
+        [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            the_input_configuration()->set_input_targets(ss);
+            return ss;
         });
 }
 
@@ -499,9 +530,11 @@ std::shared_ptr<mc::Renderables>
 mir::DefaultServerConfiguration::the_renderables()
 {
     return surface_stack(
-        [this]()
+        [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            return std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            the_input_configuration()->set_input_targets(ss);
+            return ss;
         });
 }
 
@@ -512,8 +545,7 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
         [this]()
         {
             auto surface_source = std::make_shared<msh::SurfaceSource>(
-                the_surface_builder(),
-                the_input_channel_factory());
+                the_surface_builder());
 
             return std::make_shared<msh::OrganisingSurfaceFactory>(
                 surface_source,
@@ -662,15 +694,21 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_manager();
 }
 
-std::shared_ptr<msh::InputTargetListener> mir::DefaultServerConfiguration::the_input_target_listener()
+std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_targeter()
 {
-    return input_target_listener(
-        [&]() -> std::shared_ptr<msh::InputTargetListener>
+    return input_targeter(
+        [&]() -> std::shared_ptr<msh::InputTargeter>
         {
-            if (the_options()->get("enable-input", enable_input_default))
-                return std::make_shared<mia::DispatcherController>(the_input_configuration());
-            else
-                return std::make_shared<mi::NullInputTargetListener>();
+            return the_input_configuration()->the_input_targeter();
+        });
+}
+
+std::shared_ptr<ms::InputRegistrar> mir::DefaultServerConfiguration::the_input_registrar()
+{
+    return input_registrar(
+        [&]() -> std::shared_ptr<ms::InputRegistrar>
+        {
+            return the_input_configuration()->the_input_registrar();
         });
 }
 

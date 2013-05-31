@@ -22,12 +22,9 @@
 #include "mir_surface.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
-#include "client_buffer_depository.h"
 #include "rpc/mir_basic_rpc_channel.h"
+#include "connection_configuration.h"
 
-#include "mir/input/input_platform.h"
-
-#include <thread>
 #include <cstddef>
 
 namespace mcl = mir::client;
@@ -42,14 +39,12 @@ MirConnection::MirConnection() :
 }
 
 MirConnection::MirConnection(
-    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const& channel,
-    std::shared_ptr<mcl::Logger> const & log,
-    std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
-        channel(channel),
+    mir::client::ConnectionConfiguration& conf) :
+        channel(conf.the_rpc_channel()),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
-        log(log),
-        client_platform_factory(client_platform_factory),
-        input_platform(mircv::InputPlatform::create())
+        log(conf.the_logger()),
+        client_platform_factory(conf.the_client_platform_factory()),
+        input_platform(conf.the_input_platform())
 {
     channel->set_event_handler(this);
     {
@@ -183,6 +178,32 @@ MirWaitHandle* MirConnection::disconnect()
         google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
     return &disconnect_wait_handle;
+}
+
+void MirConnection::done_drm_auth_magic(mir_drm_auth_magic_callback callback,
+                                        void* context)
+{
+    int const status_code{drm_auth_magic_status.status_code()};
+
+    callback(status_code, context);
+    drm_auth_magic_wait_handle.result_received();
+}
+
+MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void* context)
+{
+    mir::protobuf::DRMMagic request;
+    request.set_magic(magic);
+
+    server.drm_auth_magic(
+        0,
+        &request,
+        &drm_auth_magic_status,
+        google::protobuf::NewCallback(this, &MirConnection::done_drm_auth_magic,
+                                      callback, context));
+
+    return &drm_auth_magic_wait_handle;
 }
 
 bool MirConnection::is_valid(MirConnection *connection)

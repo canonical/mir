@@ -194,6 +194,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         {
             invoke(&protobuf::DisplayServer::test_file_descriptors, invocation);
         }
+        else if ("drm_auth_magic" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
+        }
         else if ("configure_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::configure_surface, invocation);

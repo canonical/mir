@@ -24,6 +24,8 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/input_registrar.h"
+#include "mir/input/input_channel_factory.h"
 
 #include <algorithm>
 #include <cassert>
@@ -33,10 +35,15 @@
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory)
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
+                               std::shared_ptr<mi::InputChannelFactory> const& input_factory,
+                               std::shared_ptr<ms::InputRegistrar> const& input_registrar)
     : buffer_bundle_factory{bb_factory},
+      input_factory{input_factory},
+      input_registrar{input_registrar},
       notify_change{[]{}}
 {
     assert(buffer_bundle_factory);
@@ -70,12 +77,17 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         new ms::Surface(
             params.name, params.top_left,
             buffer_bundle_factory->create_buffer_bundle(buffer_properties),
+            input_factory->make_input_channel(),
             [this]() { emit_change_notification(); }));
     
     {
         std::lock_guard<std::mutex> lg(guard);
         surfaces.push_back(surface);
     }
+
+    // TODO: It might be a nice refactoring to combine this with input channel creation
+    // i.e. client_fd = registrar->register_for_input(surface). ~racarr
+    input_registrar->input_surface_opened(surface);
 
     emit_change_notification();
 
@@ -88,8 +100,12 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         std::lock_guard<std::mutex> lg(guard);
 
         auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
-
-        if (p != surfaces.end()) surfaces.erase(p);
+        
+        if (p != surfaces.end())
+        {
+            input_registrar->input_surface_closed(*p);
+            surfaces.erase(p);
+        }
         // else; TODO error logging
     }
 
@@ -100,4 +116,10 @@ void ms::SurfaceStack::emit_change_notification()
 {
     std::lock_guard<std::mutex> lock{notify_change_mutex};
     notify_change();
+}
+
+void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback)
+{
+    for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        callback(*it);
 }

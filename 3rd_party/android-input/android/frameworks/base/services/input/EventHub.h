@@ -35,6 +35,16 @@
 #include <linux/input.h>
 #include <sys/epoll.h>
 
+#include <memory>
+
+namespace mir
+{
+namespace input
+{
+class InputReport;
+}
+}
+
 /* Convenience constants. */
 
 #define BTN_FIRST 0x100  // first button code
@@ -244,7 +254,7 @@ public:
 class EventHub : public EventHubInterface
 {
 public:
-    EventHub();
+    EventHub(std::shared_ptr<mir::input::InputReport> const& input_report);
 
     virtual uint32_t getDeviceClasses(int32_t deviceId) const;
 
@@ -302,6 +312,8 @@ protected:
     virtual ~EventHub();
 
 private:
+    std::shared_ptr<mir::input::InputReport> const input_report;
+
     struct Device {
         Device* next;
 

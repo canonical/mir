@@ -27,7 +27,7 @@
 #include <gmock/gmock.h>
 
 namespace ml  = mir::logging;
-namespace mli = mir::logging::input_report;
+namespace mli = mir::logging::legacy_input_report;
 
 namespace
 {

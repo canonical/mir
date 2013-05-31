@@ -29,11 +29,13 @@ namespace shell
 {
 class SessionContainer;
 class Surface;
+class InputTargeter;
 
 class SingleVisibilityFocusMechanism : public FocusSetter
 {
 public:
-    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container);
+    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container,
+                                            std::shared_ptr<InputTargeter> const& input_targeter);
     virtual ~SingleVisibilityFocusMechanism() {}
 
     void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
@@ -41,8 +43,11 @@ public:
 protected:
     SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;
     SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
+
 private:
     std::shared_ptr<SessionContainer> const app_container;
+    std::shared_ptr<InputTargeter> const input_targeter;
+
     std::weak_ptr<Surface> focus_surface;
 };
 
