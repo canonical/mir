@@ -113,7 +113,7 @@ struct EventReceivingClient : ClientConfigCommon
             };
         mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
         mir_surface_set_event_handler(surface, &event_delegate);
-        all_events_received.wait_for_at_most_seconds(5);
+        all_events_received.wait_for_at_most_seconds(60);
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
 
@@ -182,7 +182,7 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
     {
         void exec() override
         {
-            ready_for_second_client.wait_for_at_most_seconds(5);
+            ready_for_second_client.wait_for_at_most_seconds(60);
             EventReceivingClient::exec();
         }
         void expect_events(mt::WaitCondition* all_events_received) override
