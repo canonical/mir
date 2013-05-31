@@ -69,7 +69,7 @@ struct ClientConfigCommon : TestingClientConfiguration
     }
     virtual void surface_released(MirSurface* /* released_surface */)
     {
-        surface = NULL;
+        surface = nullptr;
     }
     MirConnection* connection;
     MirSurface* surface;
