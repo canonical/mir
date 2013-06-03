@@ -23,7 +23,6 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir_test_doubles/mock_logger.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_protobuf_server.h"
