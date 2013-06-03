@@ -32,16 +32,15 @@ mc::SwapperSwitcher::SwapperSwitcher(std::shared_ptr<mc::BufferSwapper> const& i
 
 std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
 {
+    /* lock is for use of 'swapper' below' */
     ReadLock rw_lk(rw_lock);
     std::unique_lock<mc::ReadLock> lk(rw_lk);
-    std::shared_ptr<mc::Buffer> buffer;
 
-    mc::BufferSwapper* last_swapper = nullptr;
-    while(swapper.get() != last_swapper)
+    std::shared_ptr<mc::Buffer> buffer = nullptr;
+    while (!buffer) 
     {
         try
         {
-            last_swapper = swapper.get();
             buffer = swapper->client_acquire();
         } catch (std::logic_error& e)
         {

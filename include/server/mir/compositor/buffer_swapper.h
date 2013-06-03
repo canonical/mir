@@ -62,11 +62,14 @@ public:
     virtual void force_client_completion() = 0;
 
     /**
-     * Transfers all buffers within the swapper to another BufferSwapper. after
-     * the completion of this call, neither the client, nor the compositor can
+     * Ends synchronization of buffers. All buffers owned by the swapper
+     * at the time of this call are transferred to the 'buffers' parameter.
+     * The swapper specifies the number of buffers it was managing (buffers owned by
+     * the swapper plus any outstanding buffers) in 'original_size'. 
+     * After the completion of this call, neither the client, nor the compositor can
      * continue to request or return buffers to this swapper.
      */
-    virtual void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&) = 0;
+    virtual void end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers, size_t& original_size) = 0;
 
     /**
      * If the swapper has been used, and you want to preserve the buffers that have been used, 
