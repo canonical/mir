@@ -24,6 +24,7 @@
 #include "native_client_platform_factory.h"
 #include "mir/input/input_platform.h"
 #include "logging/rpc_report.h"
+#include "lttng/rpc_report.h"
 
 namespace mcl = mir::client;
 
@@ -31,6 +32,7 @@ namespace
 {
 std::string const off_opt_val{"off"};
 std::string const log_opt_val{"log"};
+std::string const lttng_opt_val{"lttng"};
 }
 
 mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
@@ -96,6 +98,8 @@ mcl::DefaultConnectionConfiguration::the_rpc_report()
 
             if (val == log_opt_val)
                 return std::make_shared<mcl::logging::RpcReport>(the_logger());
+            else if (val == lttng_opt_val)
+                return std::make_shared<mcl::lttng::RpcReport>();
             else
                 return std::make_shared<mcl::rpc::NullRpcReport>();
         });
