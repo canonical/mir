@@ -26,7 +26,6 @@ set(
   mir_connection.cpp
   mir_wait_handle.cpp
   mir_surface.cpp
-  mir_logger.cpp
   logging/rpc_report.cpp
   default_connection_configuration.cpp
 )
@@ -82,6 +81,7 @@ set(
 
   mirprotobuf
   mirsharedinput
+  mirsharedlogging
   mirclientrpc
 
   ${DRM_LIBRARIES}

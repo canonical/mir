@@ -32,6 +32,11 @@ class InputPlatform;
 }
 }
 
+namespace logging
+{
+class Logger;
+}
+
 namespace client
 {
 
@@ -49,7 +54,7 @@ public:
     virtual ~ConnectionConfiguration() = default;
 
     virtual std::shared_ptr<rpc::MirBasicRpcChannel> the_rpc_channel() = 0;
-    virtual std::shared_ptr<Logger> the_logger() = 0;
+    virtual std::shared_ptr<mir::logging::Logger> the_logger() = 0;
     virtual std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() = 0;
     virtual std::shared_ptr<input::receiver::InputPlatform> the_input_platform() = 0;
 

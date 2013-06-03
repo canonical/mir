@@ -74,3 +74,4 @@ Working on Mir code
 
  - \ref md_README  "Mir Read me"
  - \ref md_HACKING "Mir hacking guide"
+ - \ref component_reports

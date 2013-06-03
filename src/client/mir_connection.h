@@ -42,7 +42,6 @@ namespace mir
 namespace client
 {
 class ConnectionConfiguration;
-class Logger;
 class ClientPlatformFactory;
 
 namespace rpc
@@ -57,6 +56,11 @@ namespace receiver
 {
 class InputPlatform;
 }
+}
+
+namespace logging
+{
+class Logger;
 }
 }
 
@@ -111,7 +115,7 @@ public:
 private:
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
-    std::shared_ptr<mir::client::Logger> log;
+    std::shared_ptr<mir::logging::Logger> logger;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
