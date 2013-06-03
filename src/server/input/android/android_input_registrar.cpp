@@ -73,7 +73,7 @@ void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTar
         window_handles.erase(it);
         window_handle = it->second;
     }
-    input_dispatcher->unregisterInputChannel(window_handle->inputChannel);
+    input_dispatcher->unregisterInputChannel(window_handle->getInputChannel());
 }
 
 droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface)
