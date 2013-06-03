@@ -23,8 +23,6 @@
 
 #include "mir/frontend/communicator.h"
 
-#include "src/client/mir_logger.h"
-
 #include "mir_protobuf.pb.h"
 
 #include <gtest/gtest.h>

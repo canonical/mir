@@ -18,7 +18,6 @@
 
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/mir_logger.h"
 
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"

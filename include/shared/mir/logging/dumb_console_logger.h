@@ -13,47 +13,26 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Thomas Voß <thomas.voss@canonical.com>
  */
 
+#ifndef MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
+#define MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_
 
-#ifndef MIR_CLIENT_PRIVATE_LOGGER_H_
-#define MIR_CLIENT_PRIVATE_LOGGER_H_
-
-#include <iosfwd>
+#include "mir/logging/logger.h"
 
 namespace mir
 {
-namespace client
+namespace logging
 {
-class Logger
+class DumbConsoleLogger : public Logger
 {
 public:
-    virtual std::ostream& error() = 0;
-    virtual std::ostream& debug() = 0;
+
 protected:
-    Logger() {}
-    virtual ~Logger() {}
-    Logger(Logger const&) = delete;
-    Logger& operator=(Logger const&) = delete;
+    void log(Severity severity, const std::string& message, const std::string& component);
 };
-
-class ConsoleLogger : public Logger
-{
-public:
-    virtual std::ostream& error();
-    virtual std::ostream& debug();
-};
-
-class NullLogger : public Logger
-{
-public:
-    NullLogger() {}
-    virtual std::ostream& error();
-    virtual std::ostream& debug();
-};
-
 }
 }
 
-#endif /* MIR_CLIENT_PRIVATE_LOGGER_H_ */
+#endif // MIR_LOGGING_DUMB_CONSOLE_LOGGER_H_

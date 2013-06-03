@@ -18,99 +18,140 @@
 
 #include "rpc_report.h"
 
-#include "../mir_logger.h"
+#include "mir/logging/logger.h"
 
 #include "mir_protobuf_wire.pb.h"
 
+#include <sstream>
+
+namespace ml = mir::logging;
 namespace mcll = mir::client::logging;
 
-mcll::RpcReport::RpcReport(std::shared_ptr<Logger> const& log)
-    : log{log}
+namespace
+{
+std::string const component{"rpc"};
+}
+
+mcll::RpcReport::RpcReport(std::shared_ptr<ml::Logger> const& logger)
+    : logger{logger}
 {
 }
 
 void mcll::RpcReport::invocation_requested(
     mir::protobuf::wire::Invocation const& invocation)
 {
-    log->debug() << "Invocation request: id: " << invocation.id()
-                 << " method_name: " << invocation.method_name() << std::endl;
+    std::stringstream ss;
+    ss << "Invocation request: id: " << invocation.id()
+       << " method_name: " << invocation.method_name();
+
+    logger->log<ml::Logger::debug>(ss.str(), component);
 }
 
 void mcll::RpcReport::invocation_succeeded(
     mir::protobuf::wire::Invocation const& invocation)
 {
-    log->debug() << "Invocation succeeded: id: " << invocation.id()
-                 << " method_name: " << invocation.method_name() << std::endl;
+    std::stringstream ss;
+    ss << "Invocation succeeded: id: " << invocation.id()
+       << " method_name: " << invocation.method_name();
+
+    logger->log<ml::Logger::debug>(ss.str(), component);
 }
 
 void mcll::RpcReport::invocation_failed(
     mir::protobuf::wire::Invocation const& invocation,
     boost::system::error_code const& error)
 {
-    log->error() << "Invocation failed: id: " << invocation.id()
-                 << " method_name: " << invocation.method_name()
-                 << " error: " << error.message() << std::endl;
+    std::stringstream ss;
+    ss << "Invocation failed: id: " << invocation.id()
+       << " method_name: " << invocation.method_name()
+       << " error: " << error.message();
+
+    logger->log<ml::Logger::error>(ss.str(), component);
 }
 
 void mcll::RpcReport::header_receipt_failed(
     boost::system::error_code const& error)
 {
-    log->error() << "Header receipt failed: "
-                 << " error: " << error.message() << std::endl;
+    std::stringstream ss;
+    ss << "Header receipt failed: " << " error: " << error.message();
+
+    logger->log<ml::Logger::error>(ss.str(), component);
 }
 
 void mcll::RpcReport::result_receipt_succeeded(
     mir::protobuf::wire::Result const& result)
 {
-    log->debug() << "Result received: id: " << result.id() << std::endl;
+    std::stringstream ss;
+    ss << "Result received: id: " << result.id();
+
+    logger->log<ml::Logger::debug>(ss.str(), component);
 }
 
 void mcll::RpcReport::result_receipt_failed(
     std::exception const& ex)
 {
-    log->error() << "Result receipt failed: reason: " << ex.what() << std::endl;
-}
+    std::stringstream ss;
+    ss << "Result receipt failed: reason: " << ex.what();
 
+    logger->log<ml::Logger::error>(ss.str(), component);
+}
 
 void mcll::RpcReport::event_parsing_succeeded(
     MirEvent const& /*event*/)
 {
+    std::stringstream ss;
     /* TODO: Log more information about event */
-    log->error() << "Event parsed" << std::endl;
+    ss << "Event parsed";
+
+    logger->log<ml::Logger::error>(ss.str(), component);
 }
 
 void mcll::RpcReport::event_parsing_failed(
     mir::protobuf::Event const& /*event*/)
 {
+    std::stringstream ss;
     /* TODO: Log more information about event */
-    log->error() << "Event parsing failed" << std::endl;
+    ss << "Event parsing failed";
+
+    logger->log<ml::Logger::warning>(ss.str(), component);
 }
 
 void mcll::RpcReport::orphaned_result(
     mir::protobuf::wire::Result const& result)
 {
-    log->error() << "Orphaned result: " << result.ShortDebugString() << std::endl;
+    std::stringstream ss;
+    ss << "Orphaned result: " << result.ShortDebugString();
+
+    logger->log<ml::Logger::error>(ss.str(), component);
 }
 
 void mcll::RpcReport::complete_response(
     mir::protobuf::wire::Result const& result)
 {
-    log->debug() << "Complete response: id: " << result.id() << std::endl;
+    std::stringstream ss;
+    ss << "Complete response: id: " << result.id();
+
+    logger->log<ml::Logger::debug>(ss.str(), component);
 }
 
 void mcll::RpcReport::result_processing_failed(
     mir::protobuf::wire::Result const& /*result*/,
     std::exception const& ex)
 {
-    log->error() << "Result processing failed: reason: " << ex.what() << std::endl;
+    std::stringstream ss;
+    ss << "Result processing failed: reason: " << ex.what();
+
+    logger->log<ml::Logger::error>(ss.str(), component);
 }
 
 void mcll::RpcReport::file_descriptors_received(
     google::protobuf::Message const& /*response*/,
     std::vector<int32_t> const& fds)
 {
-    log->debug() << "File descriptors received: ";
+    std::stringstream ss;
+    ss << "File descriptors received: ";
     for (auto f : fds)
-        log->debug() << f << " ";
-    log->debug() << std::endl;
+        ss << f << " ";
+
+    logger->log<ml::Logger::debug>(ss.str(), component);
 }
