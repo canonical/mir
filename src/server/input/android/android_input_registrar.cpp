@@ -70,8 +70,8 @@ void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTar
         auto it = window_handles.find(closed_surface);
         if (it == window_handles.end())
             BOOST_THROW_EXCEPTION(std::logic_error("A surface was closed twice"));
-        window_handles.erase(it);
         window_handle = it->second;
+        window_handles.erase(it);
     }
     input_dispatcher->unregisterInputChannel(window_handle->getInputChannel());
 }
