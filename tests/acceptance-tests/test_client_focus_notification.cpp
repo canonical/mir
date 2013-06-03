@@ -87,7 +87,7 @@ struct EventReceivingClient : ClientConfigCommon
     static void handle_event(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<EventReceivingClient *>(context);
-         client->handler->handle_event(ev);
+        client->handler->handle_event(ev);
     }
     virtual void expect_events(mt::WaitCondition* /* all_events_received */)
     {

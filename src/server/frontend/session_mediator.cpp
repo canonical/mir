@@ -72,6 +72,7 @@ struct CloggableEventSink : public me::EventSink
         
         for (auto const& ev : buffered_events)
             drain->handle_event(ev);
+        buffered_events.clear();
     }
 
     void handle_event(MirEvent const& ev)
