@@ -19,12 +19,19 @@
 #include "default_connection_configuration.h"
 
 #include "rpc/make_rpc_channel.h"
-#include "mir_logger.h"
+#include "rpc/null_rpc_report.h"
+#include "mir/logging/dumb_console_logger.h"
 #include "native_client_platform_factory.h"
 #include "mir/input/input_platform.h"
 #include "logging/rpc_report.h"
 
 namespace mcl = mir::client;
+
+namespace
+{
+std::string const off_opt_val{"off"};
+std::string const log_opt_val{"log"};
+}
 
 mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
     std::string const& socket_file)
@@ -42,13 +49,13 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         });
 }
 
-std::shared_ptr<mcl::Logger>
+std::shared_ptr<mir::logging::Logger>
 mcl::DefaultConnectionConfiguration::the_logger()
 {
     return logger(
         []
         {
-            return std::make_shared<mcl::ConsoleLogger>();
+            return std::make_shared<mir::logging::DumbConsoleLogger>();
         });
 }
 
@@ -82,8 +89,14 @@ std::shared_ptr<mcl::rpc::RpcReport>
 mcl::DefaultConnectionConfiguration::the_rpc_report()
 {
     return rpc_report(
-        [this]
+        [this] () -> std::shared_ptr<mcl::rpc::RpcReport>
         {
-            return std::make_shared<mcl::logging::RpcReport>(the_logger());
+            auto val_raw = getenv("MIR_CLIENT_RPC_REPORT");
+            std::string const val{val_raw ? val_raw : off_opt_val};
+
+            if (val == log_opt_val)
+                return std::make_shared<mcl::logging::RpcReport>(the_logger());
+            else
+                return std::make_shared<mcl::rpc::NullRpcReport>();
         });
 }

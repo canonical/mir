@@ -41,7 +41,7 @@ public:
     DefaultConnectionConfiguration(std::string const& socket_file);
 
     std::shared_ptr<rpc::MirBasicRpcChannel> the_rpc_channel();
-    std::shared_ptr<Logger> the_logger();
+    std::shared_ptr<mir::logging::Logger> the_logger();
     std::shared_ptr<ClientPlatformFactory> the_client_platform_factory();
     std::shared_ptr<input::receiver::InputPlatform> the_input_platform();
 
@@ -50,7 +50,7 @@ public:
 
 protected:
     CachedPtr<rpc::MirBasicRpcChannel> rpc_channel;
-    CachedPtr<Logger> logger;
+    CachedPtr<mir::logging::Logger> logger;
     CachedPtr<ClientPlatformFactory> client_platform_factory;
     CachedPtr<input::receiver::InputPlatform> input_platform;
 
