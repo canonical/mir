@@ -33,8 +33,7 @@ mc::SwapperSwitcher::SwapperSwitcher(std::shared_ptr<mc::BufferSwapper> const& i
 std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
 {
     /* lock is for use of 'swapper' below' */
-    ReadLock rw_lk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rw_lk);
+    std::unique_lock<mc::ReadLock> lk(rw_lock);
 
     std::shared_ptr<mc::Buffer> buffer = nullptr;
     while (!buffer) 
@@ -57,29 +56,25 @@ std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
 
 void mc::SwapperSwitcher::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    ReadLock rw_lk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rw_lk);
+    std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->client_release(released_buffer);
 }
 
 std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::compositor_acquire()
 {
-    ReadLock rlk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rlk);
+    std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->compositor_acquire();
 }
 
 void mc::SwapperSwitcher::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    ReadLock rlk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rlk);
+    std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->compositor_release(released_buffer);
 }
 
 void mc::SwapperSwitcher::force_client_completion()
 {
-    ReadLock rlk(rw_lock);
-    std::unique_lock<mc::ReadLock> lk(rlk);
+    std::unique_lock<mc::ReadLock> lk(rw_lock);
     should_retry = false;
     swapper->force_client_completion();
 }
@@ -93,15 +88,12 @@ void mc::SwapperSwitcher::change_swapper(std::function<std::shared_ptr<BufferSwa
                                      (std::vector<std::shared_ptr<Buffer>>&, size_t&)> create_swapper)
 {
     {
-        ReadLock rlk(rw_lock);
-        std::unique_lock<mc::ReadLock> lk(rlk);
+        std::unique_lock<mc::ReadLock> lk(rw_lock);
         should_retry = true;
         swapper->force_client_completion();
     }
 
-    WriteLock wlk(rw_lock);
-    std::unique_lock<mc::WriteLock> lk(wlk);
-
+    std::unique_lock<mc::WriteLock> lk(rw_lock);
     std::vector<std::shared_ptr<mc::Buffer>> list{};
     size_t size = 0;
     swapper->end_responsibility(list, size);
