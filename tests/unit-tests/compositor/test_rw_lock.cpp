@@ -89,25 +89,39 @@ TEST(RWLockWriterBiasTest, multi_writers)
 TEST(RWLockWriterBiasTest, writers_force_wait)
 {
     int const num_asyncs = 100;
-    std::vector<std::future<void>> reader_asyncs;
+    int const before = 66;
+    int const increment = 1000;
+    int const after = before + increment;
+    int locked_value = before;
+    std::vector<std::future<int>> reader_asyncs;
 
     mc::RWLockWriterBias lock;
 
     {
         std::unique_lock<mc::WriteLock> lk(lock);
+        
+        /* since all the readers are fired off while the write lock is held,
+           they should all return the 'after' value*/
         for(auto i = 0; i < num_asyncs; i++)
         {
             reader_asyncs.push_back(std::async(std::launch::async,
                 [&]
                 {
                     std::unique_lock<mc::ReadLock> lk(lock);
+                    return locked_value;
                 }));
         }
+
+        for(auto i=0; i < increment; i++)
+        {
+            locked_value++;
+        } 
     }
 
     for(auto& i : reader_asyncs)
     {
         i.wait();
+        EXPECT_EQ(after, i.get());
     }
 }
 
