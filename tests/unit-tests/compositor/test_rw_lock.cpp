@@ -40,8 +40,7 @@ TEST(RWLockWriterBiasTest, multi_readers_dont_block)
             asyncs.push_back(std::async(std::launch::async,
                 [&]
                 {
-                    mc::ReadLock rd_lk(lock);
-                    std::unique_lock<mc::ReadLock> lk(rd_lk);
+                    std::unique_lock<mc::ReadLock> lk(lock);
                     return locked_value; 
                 }));
         }
@@ -71,8 +70,7 @@ TEST(RWLockWriterBiasTest, multi_writers)
         asyncs.push_back(std::async(std::launch::async,
             [&]
             {
-                mc::WriteLock wr_lock(lock);
-                std::unique_lock<mc::WriteLock> lk(wr_lock);
+                std::unique_lock<mc::WriteLock> lk(lock);
                 for(auto j=0; j < num_loops; j++)
                 {
                     locked_value++;
@@ -96,15 +94,13 @@ TEST(RWLockWriterBiasTest, writers_force_wait)
     mc::RWLockWriterBias lock;
 
     {
-        mc::WriteLock wr_lock(lock);
-        std::unique_lock<mc::WriteLock> lk(wr_lock);
+        std::unique_lock<mc::WriteLock> lk(lock);
         for(auto i = 0; i < num_asyncs; i++)
         {
             reader_asyncs.push_back(std::async(std::launch::async,
                 [&]
                 {
-                    mc::ReadLock rd_lk(lock);
-                    std::unique_lock<mc::ReadLock> lk(rd_lk);
+                    std::unique_lock<mc::ReadLock> lk(lock);
                 }));
         }
     }
@@ -129,8 +125,7 @@ TEST(RWLockWriterBiasTest, readers_and_writers)
         reader_asyncs.push_back(std::async(std::launch::async,
             [&]
             {
-                mc::ReadLock rd_lk(lock);
-                std::unique_lock<mc::ReadLock> lk(rd_lk);
+                std::unique_lock<mc::ReadLock> lk(lock);
                 return locked_value; 
             }));
     }
@@ -138,8 +133,7 @@ TEST(RWLockWriterBiasTest, readers_and_writers)
     auto writer_async = std::async(std::launch::async,
         [&]
         {
-            mc::WriteLock wr_lock(lock);
-            std::unique_lock<mc::WriteLock> lk(wr_lock);
+            std::unique_lock<mc::WriteLock> lk(lock);
             for(auto j=0; j<1000; j++)
             {
                 locked_value++;
@@ -152,8 +146,7 @@ TEST(RWLockWriterBiasTest, readers_and_writers)
         reader_asyncs.push_back(std::async(std::launch::async,
             [&]
             {
-                mc::ReadLock rd_lk(lock);
-                std::unique_lock<mc::ReadLock> lk(rd_lk);
+                std::unique_lock<mc::ReadLock> lk(lock);
                 return locked_value; 
             }));
     }
