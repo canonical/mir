@@ -84,8 +84,8 @@ void mc::SwapperSwitcher::end_responsibility(std::vector<std::shared_ptr<Buffer>
     //TODO
 }
 
-void mc::SwapperSwitcher::change_swapper(std::function<std::shared_ptr<BufferSwapper>
-                                     (std::vector<std::shared_ptr<Buffer>>&, size_t&)> create_swapper)
+void mc::SwapperSwitcher::change_swapper(
+    std::function<std::shared_ptr<BufferSwapper>(std::vector<std::shared_ptr<Buffer>>&, size_t&)> create_swapper)
 {
     {
         std::unique_lock<mc::ReadLock> lk(rw_lock);

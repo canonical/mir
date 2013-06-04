@@ -45,8 +45,8 @@ public:
     void force_client_completion();
     void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
 
-    void change_swapper(std::function<std::shared_ptr<BufferSwapper>
-                                         (std::vector<std::shared_ptr<Buffer>>&, size_t&)>);
+    void change_swapper(
+        std::function<std::shared_ptr<BufferSwapper>(std::vector<std::shared_ptr<Buffer>>&, size_t&)>);
 
 private:
     std::shared_ptr<BufferSwapper> swapper;

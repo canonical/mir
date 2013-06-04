@@ -33,10 +33,9 @@ struct MockSwapperMaster : public compositor::BufferSwapperMaster
 {
 public:
     MockSwapperMaster()
-    {
-    }
-    ~MockSwapperMaster() noexcept {}
-
+    {}
+    ~MockSwapperMaster() noexcept
+    {}
 
     MOCK_METHOD0(client_acquire,     std::shared_ptr<compositor::Buffer>());
     MOCK_METHOD1(client_release,     void(std::shared_ptr<compositor::Buffer> const&));
