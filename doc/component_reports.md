@@ -37,7 +37,7 @@ underscores. The available reports and handlers for the client are:
 
 Report              | Handlers
 ------------------- | --------
-rpc-report          | log
+rpc-report          | log,lttng
 
 For example, to enable the logging RPC report, one should set the
 `MIR_CLIENT_RPC_REPORT=log` environment variable.
@@ -59,7 +59,12 @@ option or environment variable for that component's report:
 LTTng-UST versions up to and including 2.1.2, and up to and including 2.2-rc2
 contain a bug (lttng #538) that prevents event recording if the tracepoint
 provider is dlopen()-ed at runtime, like in the case of Mir. If you have a
-version of LTTng affected by this bug, you need to pre-load the tracepoint
-provider library:
+version of LTTng affected by this bug, you need to pre-load the server
+tracepoint provider library:
 
     $ LD_PRELOAD=libmirserverlttng.so mir_demo_server --msg-processor-report=lttng
+
+The bug also affects client-side LTTng tracing, in which case you need to
+pre-load the client tracepoint provider library:
+
+    $ LD_PRELOAD=libmirclientlttng.so MIR_CLIENT_RPC_REPORT=lttng myclient
