@@ -33,6 +33,9 @@ public:
     ~TracepointProvider() noexcept;
 
 private:
+    TracepointProvider(TracepointProvider const&) = delete;
+    TracepointProvider& operator=(TracepointProvider const&) = delete;
+
     void* lib;
 };
 
