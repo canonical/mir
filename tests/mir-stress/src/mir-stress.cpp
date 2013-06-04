@@ -1,19 +1,32 @@
-// mir-stress.cpp - a stress test client for mir.
+/*
+ * Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Thomi Richards <thomi.richards@canonical.com>
+ */
+
+#include "results.h"
+#include "threading.h"
+
 #include <unistd.h>
-#include <string>
-#include <iostream>
-#include <thread>
-#include <cstdlib>
-#include <vector>
+
 #include <chrono>
 #include <future>
-
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#include "threading.h"
-#include "results.h"
+#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
 
 const std::string option_str("hn:t:p");
 const std::string usage("Usage:\n"
@@ -22,7 +35,6 @@ const std::string usage("Usage:\n"
     "   -t threads  Number of threads to create. Default is the number of cores\n"
     "               on this machine.\n"
     );
-
 
 int main(int argc, char **argv)
 {

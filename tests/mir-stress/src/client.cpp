@@ -1,17 +1,36 @@
-#include <cassert>
-#include <cstring>
-#include <thread>
-#include <iostream>
-#include <sstream>
-#include <unistd.h>
+/*
+ * Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Thomi Richards <thomi.richards@canonical.com>
+ */
 
 #include "client.h"
+
 #include "mir_toolkit/mir_client_library.h"
+
+#include <unistd.h>
+
+#include <cassert>
+#include <cstring>
+#include <iostream>
+
 
 ClientStateMachine::Ptr ClientStateMachine::Create()
 {
     // in the future we can extend this to return different
-    // types of clients.
+    // types of clients. Right now we only return an unaccelerated client.
     return std::make_shared<UnacceleratedClient>();
 }
 
@@ -60,11 +79,6 @@ bool UnacceleratedClient::create_surface()
     return true;
 }
 
-bool UnacceleratedClient::render_surface()
-{
-    return true;
-}
-
 void UnacceleratedClient::release_surface()
 {
     if (surface_ != nullptr)
@@ -78,9 +92,12 @@ void UnacceleratedClient::disconnect()
 {
     if (connection_ != nullptr)
     {
+        // The next three lines are a workaround to prevent the client API
+        // from leaking file descriptors.
         MirPlatformPackage pkg;
         mir_connection_get_platform(connection_, &pkg);
         close(pkg.fd[0]);
+
         mir_connection_release(connection_);
         connection_ = nullptr;
     }
