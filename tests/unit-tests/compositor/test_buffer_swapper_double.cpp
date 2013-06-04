@@ -151,23 +151,10 @@ TEST_F(BufferSwapperDouble, force_client_completion_works_causes_rc_failure)
     }, std::logic_error);
 }
 
-#if 0
 TEST_F(BufferSwapperDouble, force_client_completion_works)
 {
-    auto client_buffer = swapper->client_acquire();
-    swapper->client_release(client_buffer);
+    swapper->client_acquire();
 
-    client_buffer = swapper->client_acquire();
-    swapper->client_release(client_buffer);
-
-    /*
-     * Unblock the the upcoming client_acquire() call. There is no guarantee
-     * that force_client_completion will run after client_acquire() is
-     * blocked, but it doesn't matter. As long as the client uses only one
-     * buffer at a time, BufferSwapperMulti::force_client_completion() ensures
-     * that either a currently blocked request will unblock, or the next
-     * request will not block.
-     */
     auto f = std::async(std::launch::async,
                 [this]
                 {
@@ -175,19 +162,7 @@ TEST_F(BufferSwapperDouble, force_client_completion_works)
                     swapper->force_client_completion();
                 });
 
-    client_buffer = swapper->client_acquire();
-}
-
-TEST_F(BufferSwapperDouble, force_client_completion_throws_if_all_buffers_are_acquired)
-{
-    auto client_buffer = swapper->client_acquire();
-    swapper->client_release(client_buffer);
-
-    client_buffer = swapper->client_acquire();
-    auto comp_buffer = swapper->compositor_acquire();
-
     EXPECT_THROW({
-        swapper->force_client_completion();
+        swapper->client_acquire();
     }, std::logic_error);
 }
-#endif
