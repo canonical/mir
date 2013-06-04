@@ -28,16 +28,10 @@ namespace mir
 namespace compositor
 {
 
-class RWLockWriterBias
+struct RWLockMembers
 {
-public:
-    RWLockWriterBias();
-    void rd_lock();
-    void rd_unlock();
-    void wr_lock();
-    void wr_unlock();
+    RWLockMembers();
 
-private:
     std::mutex mut;
     std::condition_variable reader_cv, writer_cv;
     unsigned int readers;
@@ -48,35 +42,38 @@ private:
 class ReadLock
 {
 public:
-    ReadLock(RWLockWriterBias& rwlock)
-        : rwl(rwlock) {}
-    void lock()
+    void lock();
+    void unlock();
+
+protected:
+    ReadLock(RWLockMembers& lock_data)
+     : impl(lock_data) 
     {
-        rwl.rd_lock();
-    }
-    void unlock()
-    {
-        rwl.rd_unlock();
     }
 private:
-    RWLockWriterBias& rwl;
+    RWLockMembers& impl;
 };
 
 class WriteLock
 {
 public:
-    WriteLock(RWLockWriterBias& rwlock)
-        : rwl(rwlock) {}
-    void lock()
+    void lock();
+    void unlock();
+protected:
+    WriteLock(RWLockMembers& lock_data)
+     : impl(lock_data) 
     {
-        rwl.wr_lock();
-    }
-    void unlock()
-    {
-        rwl.wr_unlock();
     }
 private:
-    RWLockWriterBias& rwl;
+    RWLockMembers& impl;
+};
+
+class RWLockWriterBias : public ReadLock, public WriteLock
+{
+public:
+    RWLockWriterBias();
+private:
+    RWLockMembers lock_members;
 };
 
 
