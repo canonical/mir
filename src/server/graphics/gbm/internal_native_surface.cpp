@@ -38,8 +38,6 @@ void mgg::InternalNativeSurface::advance_buffer_static(MirMesaEGLNativeSurface* 
 
 void mgg::InternalNativeSurface::advance_buffer(MirBufferPackage* package)
 {
-    current_buffer.reset();
-
     /* TODO: kdub has a cleanup branch for the surface interface that will make this less ugly */
     surface->advance_client_buffer();
     current_buffer.reset();
