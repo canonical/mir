@@ -21,14 +21,27 @@ namespace mgg = mir::graphics::gbm;
 
 mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<frontend::Surface> const& /*surface*/)
 {
+    surface_advance_buffer = advance_buffer_static;
+    surface_get_parameters = get_parameters_static; 
 }
 
-void mgg::InternalNativeSurface::native_display_surface_advance_buffer(MirEGLNativeWindowType /*surface*/,
-                                           MirBufferPackage* /*package*/)
+void mgg::InternalNativeSurface::advance_buffer_static(MirMesaEGLNativeSurface* surface,
+                                           MirBufferPackage* package)
+{
+    auto native_surface = static_cast<mgg::InternalNativeSurface*>(surface);
+    native_surface->advance_buffer(package);
+}
+void mgg::InternalNativeSurface::advance_buffer(MirBufferPackage* /*package*/)
 {
 }
 
-void mgg::InternalNativeSurface::native_display_surface_get_parameters(MirEGLNativeWindowType /*surface*/,
-                                           MirSurfaceParameters* /*parameters*/)
+void mgg::InternalNativeSurface::get_parameters_static(MirMesaEGLNativeSurface* surface,
+                                           MirSurfaceParameters* parameters)
+{
+    auto native_surface = static_cast<mgg::InternalNativeSurface*>(surface);
+    native_surface->get_parameters(parameters);
+}
+
+void mgg::InternalNativeSurface::get_parameters(MirSurfaceParameters* /*parameters*/)
 {
 }

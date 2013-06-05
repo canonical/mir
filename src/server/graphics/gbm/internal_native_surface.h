@@ -38,10 +38,14 @@ class InternalNativeSurface : public MirMesaEGLNativeSurface
 public:
     InternalNativeSurface(std::shared_ptr<frontend::Surface> const& surface);
 
-    static void native_display_surface_advance_buffer(MirEGLNativeWindowType surface,
-                                                      MirBufferPackage* package);
-    static void native_display_surface_get_parameters(MirEGLNativeWindowType surface,
-                                                      MirSurfaceParameters* parameters);
+    static void advance_buffer_static(MirMesaEGLNativeSurface* surface,
+                                      MirBufferPackage* package);
+
+    static void get_parameters_static(MirMesaEGLNativeSurface* surface,
+                                      MirSurfaceParameters* parameters);
+
+    void advance_buffer(MirBufferPackage* package);
+    void get_parameters(MirSurfaceParameters* parameters);
 };
 
 }
