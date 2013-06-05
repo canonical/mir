@@ -40,8 +40,8 @@ public:
 };
 
 
-class MirConnection;
-class MirSurface;
+struct MirConnection;
+struct MirSurface;
 
 class UnacceleratedClient: public ClientStateMachine
 {
