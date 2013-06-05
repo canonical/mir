@@ -30,13 +30,15 @@ namespace mc=mir::compositor;
 namespace mgg=mir::graphics::gbm;
 namespace mtd=mir::test::doubles;
 
-TEST(InternalClient, native_display)
+TEST(InternalClient, native_display_sanity)
 {
     auto stub_display = std::make_shared<MirMesaEGLNativeDisplay>();
     mgg::InternalClient client(stub_display);
 
     auto native_display = client.egl_native_display();
     EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(stub_display.get()), native_display);
+//    ASSERT_EQ(nullptr, native_display->native_display_get_platform);
+//    ASSERT_EQ(nullptr, native_display->native_display_swapinterval);
 }
 
 TEST(InternalClient, native_surface_sanity)
