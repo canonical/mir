@@ -150,12 +150,14 @@ TEST_F(InternalNativeSurface, surface_get_parameters)
     geom::Size const test_surface_size = geom::Size{geom::Width{17},
                                                     geom::Height{29}};
     geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
+    EXPECT_CALL(*mock_surface, size())
+        .Times(1)
+        .WillOnce(Return(test_surface_size));
+    EXPECT_CALL(*mock_surface, pixel_format())
+        .Times(1)
+        .WillOnce(Return(test_pixel_format));
 
     mgg::InternalNativeSurface native_surface(mock_surface); 
-
-    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    EXPECT_CALL(surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(test_surface_size));
-    EXPECT_CALL(surface, pixel_format()).Times(AtLeast(1)).WillRepeatedly(Return(test_pixel_format));
     
     MirSurfaceParameters parameters;
     memset(&parameters, 0, sizeof(MirSurfaceParameters));
@@ -163,7 +165,6 @@ TEST_F(InternalNativeSurface, surface_get_parameters)
 
     EXPECT_THAT(parameters, ParametersHaveSize(test_surface_size));
     EXPECT_EQ(parameters.pixel_format, static_cast<MirPixelFormat>(geom::PixelFormat::xrgb_8888));
-
     // TODO: What to do about buffer usage besides hardware? ~racarr
     EXPECT_EQ(parameters.buffer_usage, mir_buffer_usage_hardware);
 }

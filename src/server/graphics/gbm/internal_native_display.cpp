@@ -57,29 +57,3 @@ void mgg::InternalNativeDisplay::native_display_get_platform(MirMesaEGLNativeDis
     }
 
 }
-
-#if 0
-void mgg::InternalNativeDisplay::native_display_surface_get_parameters(MirMesaEGLNativeDisplay*, 
-                                                  MirEGLNativeWindowType surface,
-                                                  MirSurfaceParameters* parameters)
-{
-    auto mir_surface = static_cast<mf::Surface*>(surface);
-
-    parameters->width = mir_surface->size().width.as_uint32_t();
-    parameters->height = mir_surface->size().height.as_uint32_t();
-    parameters->pixel_format = static_cast<MirPixelFormat>(mir_surface->pixel_format());
-    parameters->buffer_usage = mir_buffer_usage_hardware;
-}
-
-void mgg::InternalNativeDisplay::native_display_surface_advance_buffer(
-                                                      MirMesaEGLNativeDisplay*, 
-                                                      MirEGLNativeWindowType surface,
-                                                      MirBufferPackage* package)
-{
-    auto mir_surface = static_cast<mf::Surface*>(surface);
-    auto buffer = mir_surface->next_client_buffer();
-    //should store!
-    auto buffer_package = buffer->native_buffer_handle();
-    memcpy(package, buffer_package.get(), sizeof(MirBufferPackage));
-}
-#endif

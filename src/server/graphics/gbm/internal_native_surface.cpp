@@ -16,10 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/frontend/surface.h"
+#include "mir/compositor/buffer.h"
 #include "internal_native_surface.h"
+#include <cstring>
 namespace mgg = mir::graphics::gbm;
 
-mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<frontend::Surface> const& /*surface*/)
+mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<frontend::Surface> const& surface)
+    : surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;
     surface_get_parameters = get_parameters_static; 
@@ -31,8 +35,18 @@ void mgg::InternalNativeSurface::advance_buffer_static(MirMesaEGLNativeSurface* 
     auto native_surface = static_cast<mgg::InternalNativeSurface*>(surface);
     native_surface->advance_buffer(package);
 }
-void mgg::InternalNativeSurface::advance_buffer(MirBufferPackage* /*package*/)
+
+void mgg::InternalNativeSurface::advance_buffer(MirBufferPackage* package)
 {
+    current_buffer.reset();
+
+    /* TODO: kdub has a cleanup branch for the surface interface that will make this less ugly */
+    surface->advance_client_buffer();
+    current_buffer.reset();
+    current_buffer = surface->client_buffer();
+
+    auto buffer_package = current_buffer->native_buffer_handle();
+    memcpy(package, buffer_package.get(), sizeof(MirBufferPackage));
 }
 
 void mgg::InternalNativeSurface::get_parameters_static(MirMesaEGLNativeSurface* surface,
@@ -42,6 +56,11 @@ void mgg::InternalNativeSurface::get_parameters_static(MirMesaEGLNativeSurface* 
     native_surface->get_parameters(parameters);
 }
 
-void mgg::InternalNativeSurface::get_parameters(MirSurfaceParameters* /*parameters*/)
+void mgg::InternalNativeSurface::get_parameters(MirSurfaceParameters* parameters)
 {
+    auto size = surface->size();
+    parameters->width = size.width.as_uint32_t();
+    parameters->height = size.height.as_uint32_t();
+    parameters->pixel_format = static_cast<MirPixelFormat>(surface->pixel_format());
+    parameters->buffer_usage = mir_buffer_usage_hardware;
 }

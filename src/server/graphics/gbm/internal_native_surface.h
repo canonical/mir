@@ -28,6 +28,10 @@ namespace frontend
 {
 class Surface;
 }
+namespace compositor
+{
+class Buffer;
+}
 namespace graphics
 {
 namespace gbm
@@ -46,6 +50,10 @@ public:
 
     void advance_buffer(MirBufferPackage* package);
     void get_parameters(MirSurfaceParameters* parameters);
+
+private:
+    std::shared_ptr<frontend::Surface> surface;
+    std::shared_ptr<compositor::Buffer> current_buffer;
 };
 
 }
