@@ -16,6 +16,7 @@ include_directories(
 )
 
 add_subdirectory(rpc/)
+add_subdirectory(lttng/)
 
 set(
   CLIENT_SOURCES
@@ -83,6 +84,7 @@ set(
   mirsharedinput
   mirsharedlogging
   mirclientrpc
+  mirclientlttngstatic
 
   ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}

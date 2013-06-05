@@ -1,16 +1,16 @@
 /*
  * Copyright © 2013 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License version 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -23,13 +23,8 @@
 
 #include <dlfcn.h>
 
-namespace
-{
-char const* const tracepoint_provider_library = "libmirserverlttng.so";
-}
-
-mir::lttng::TracepointProvider::TracepointProvider()
-    : lib{dlopen(tracepoint_provider_library, RTLD_NOW)}
+mir::lttng::TracepointProvider::TracepointProvider(std::string const& lib_name)
+    : lib{dlopen(lib_name.c_str(), RTLD_NOW)}
 {
     if (lib == nullptr)
     {

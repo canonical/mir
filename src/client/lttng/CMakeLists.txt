@@ -1,55 +1,41 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LTTNG_UST_INCLUDE_DIRS})
 
-set(
-  LTTNG_SOURCES
+add_library(
+  mirclientlttngstatic STATIC
 
-  server_tracepoint_provider.cpp
-  message_processor_report.cpp
-  input_report.cpp
+  client_tracepoint_provider.cpp
+  rpc_report.cpp
 )
 
 add_library(
-  mirlttng STATIC
+  mirclientlttng SHARED
 
-  ${LTTNG_SOURCES}
-)
-
-set(
-  MIR_SERVER_LTTNG_SOURCES
-
-  message_processor_report_tp.c
-  input_report_tp.c
-)
-
-add_library(
-  mirserverlttng SHARED
-
-  ${MIR_SERVER_LTTNG_SOURCES}
+  rpc_report_tp.c
 )
 
 # Don't treat missing-field-initializers as an error, since
 # the LTTng macros contain code that triggers this (but it's
 # harmless; it concerns a padding field)
 SET_TARGET_PROPERTIES(
-  mirlttng
+  mirclientlttngstatic
 
   PROPERTIES
   COMPILE_FLAGS "-Wno-error=missing-field-initializers"
 )
 
 target_link_libraries(
-  mirlttng
+  mirclientlttngstatic
 
   mirsharedlttng
   -ldl
 )
 
 target_link_libraries(
-  mirserverlttng
+  mirclientlttng
 
   ${LTTNG_UST_LIBRARIES}
 )
 
-install(TARGETS mirserverlttng
+install(TARGETS mirclientlttng
   LIBRARY DESTINATION lib
 )

@@ -17,12 +17,11 @@
  */
 
 #include "mir/lttng/message_processor_report.h"
+#include "mir/lttng/mir_tracepoint.h"
 
 #define TRACEPOINT_DEFINE
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
 #include "message_processor_report_tp.h"
-
-#include "mir_tracepoint.h"
 
 void mir::lttng::MessageProcessorReport::received_invocation(
     void const* mediator, int id, std::string const& method)

@@ -20,7 +20,7 @@
 #define MIR_LTTNG_INPUT_REPORT_H_
 
 #include "mir/input/input_report.h"
-#include "mir/lttng/tracepoint_provider.h"
+#include "mir/lttng/server_tracepoint_provider.h"
 
 namespace mir
 {
@@ -41,7 +41,7 @@ public:
     void received_event_finished_signal(int src_fd, uint32_t seq_id);
     
 private:
-    TracepointProvider tp_provider;
+    ServerTracepointProvider tp_provider;
 };
 
 }
