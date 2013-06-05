@@ -16,9 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/gbm/internal_native_display.h"
+#include "src/server/graphics/gbm/internal_native_surface.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/frontend/surface.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 
@@ -49,7 +50,8 @@ public:
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
-    MOCK_METHOD0(next_client_buffer, std::shared_ptr<mc::Buffer>());
+    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer>());
+    MOCK_METHOD0(advance_client_buffer, void());
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
@@ -91,18 +93,17 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
     test_buffer_package->fd[1] = 4;
     test_buffer_package->stride = 77;
 
-    mgg::InternalNativeSurface native_display(mock_surface); 
+    mgg::InternalNativeSurface native_surface(mock_surface); 
     
     EXPECT_CALL(*buffer, native_buffer_handle())
         .WillOnce(Return(test_buffer_package)); 
-    EXPECT_CALL(*mock_surface, next_client_buffer())
+    EXPECT_CALL(*mock_surface, client_buffer())
         .Times(1)
         .WillOnce(Return(buffer));
  
     MirBufferPackage buffer_package;
     memset(&buffer_package, 0, sizeof(MirBufferPackage));
-    native_display.surface_advance_buffer(
-        &native_display, static_cast<MirEGLNativeWindowType>(mock_surface.get()), &buffer_package);
+    native_surface.surface_advance_buffer(&native_surface, &buffer_package);
 
     EXPECT_EQ(test_buffer_package->data_items, buffer_package.data_items);
     EXPECT_EQ(test_buffer_package->data[0], buffer_package.data[0]);
@@ -116,7 +117,7 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
 TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
 {
     using namespace ::testing; 
-    mgg::InternalNativeSurface native_display(mock_surface); 
+    mgg::InternalNativeSurface native_surface(mock_surface); 
     auto stub_buffer1 = std::make_shared<mtd::MockBuffer>();
     auto stub_buffer2 = std::make_shared<mtd::MockBuffer>();
 
@@ -125,7 +126,7 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
         .WillOnce(Return(test_buffer_package)); 
     EXPECT_CALL(*stub_buffer2, native_buffer_handle())
         .WillOnce(Return(test_buffer_package)); 
-    EXPECT_CALL(*mock_surface, next_client_buffer())
+    EXPECT_CALL(*mock_surface, client_buffer())
         .Times(2)
         .WillOnce(Return(stub_buffer1))
         .WillOnce(Return(stub_buffer2));
@@ -134,12 +135,10 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
     auto use_count_2 = stub_buffer2.use_count();
     
     MirBufferPackage buffer_package;
-    native_display.surface_advance_buffer(
-        &native_display, static_cast<MirEGLNativeWindowType>(mock_surface.get()), &buffer_package);
+    native_surface.surface_advance_buffer(&native_surface, &buffer_package);
     EXPECT_EQ(use_count_1 + 1, stub_buffer1.use_count());
  
-    native_display.surface_advance_buffer(
-        &native_display, static_cast<MirEGLNativeWindowType>(mock_surface.get()), &buffer_package);
+    native_surface.surface_advance_buffer(&native_surface, &buffer_package);
     EXPECT_EQ(use_count_1, stub_buffer1.use_count());
     EXPECT_EQ(use_count_2 + 1, stub_buffer2.use_count());
 }
@@ -152,7 +151,7 @@ TEST_F(InternalNativeSurface, surface_get_parameters)
                                                     geom::Height{29}};
     geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
 
-    mgg::InternalNativeSurface native_display(mock_surface); 
+    mgg::InternalNativeSurface native_surface(mock_surface); 
 
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
     EXPECT_CALL(surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(test_surface_size));
@@ -160,8 +159,7 @@ TEST_F(InternalNativeSurface, surface_get_parameters)
     
     MirSurfaceParameters parameters;
     memset(&parameters, 0, sizeof(MirSurfaceParameters));
-    native_display.surface_get_parameters(
-        &native_display, static_cast<MirEGLNativeWindowType>(&surface), &parameters);
+    native_surface.surface_get_parameters(&native_surface, &parameters);
 
     EXPECT_THAT(parameters, ParametersHaveSize(test_surface_size));
     EXPECT_EQ(parameters.pixel_format, static_cast<MirPixelFormat>(geom::PixelFormat::xrgb_8888));
