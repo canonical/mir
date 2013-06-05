@@ -161,6 +161,7 @@ void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
     if (e.type == mir_event_type_surface)
     {
         send_event(e);
+        report->sent_event(display_server.get(), e.surface);
     }
 }
 
