@@ -92,6 +92,20 @@ struct EventReceivingClient : ClientConfigCommon
     virtual void expect_events(mt::WaitCondition* /* all_events_received */)
     {
     }
+
+    void surface_created(MirSurface *surface_) override
+    {
+        // We need to set the event delegate from the surface_created
+        // callback so we can block the reading of new events
+        // until we are ready
+        MirEventDelegate const event_delegate =
+            {
+                handle_event,
+                this
+            };
+        surface = surface_;
+        mir_surface_set_event_handler(surface, &event_delegate);
+    }
     void exec()
     {
         mt::WaitCondition all_events_received;
@@ -106,13 +120,7 @@ struct EventReceivingClient : ClientConfigCommon
                 mir_pixel_format_abgr_8888,
                 mir_buffer_usage_hardware
             };
-        MirEventDelegate const event_delegate =
-            {
-                handle_event,
-                this
-            };
         mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
-        mir_surface_set_event_handler(surface, &event_delegate);
         all_events_received.wait_for_at_most_seconds(60);
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
