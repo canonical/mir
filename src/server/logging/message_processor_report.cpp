@@ -165,6 +165,6 @@ void ml::MessageProcessorReport::exception_handled(void const* mediator, std::ex
 void ml::MessageProcessorReport::sent_event(void const* mediator, MirSurfaceEvent const& event)
 {
     std::ostringstream out;
-    out << "mediator=" << mediator << ", sent event, id=" << event.id;
+    out << "mediator=" << mediator << ", sent event, surface id=" << event.id;
     log->log<Logger::debug>(out.str(), component);
 }
