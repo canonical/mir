@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     }
 
     std::vector<std::future<ThreadResults>> futures;
-    for (int i = 0; i < num_threads; i++)
+    for (unsigned int i = 0; i < num_threads; i++)
     {
         std::cout << "Creating thread..." << std::endl;
         futures.push_back(

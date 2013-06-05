@@ -1,8 +1,13 @@
 project(mir_stress)
 
-set( CMAKE_CXX_FLAGS "-std=c++11 -ggdb")
+set(SOURCES
+	src/client.cpp
+	src/mir-stress.cpp
+	src/results.cpp
+	src/threading.cpp
+	)
 
-add_executable(mir_stress src/mir-stress.cpp src/client.cpp src/threading.cpp src/results.cpp)
+add_executable(mir_stress ${SOURCES})
 
 target_link_libraries(
   mir_stress
