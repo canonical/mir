@@ -33,6 +33,8 @@ struct MockClientBuffer : public mcl::ClientBuffer
 {
     MockClientBuffer()
     {
+        ON_CALL(*this, native_buffer_handle())
+            .WillByDefault(testing::Return(std::make_shared<MirBufferPackage>()));
     }
     ~MockClientBuffer() noexcept {}
 
@@ -78,8 +80,11 @@ public:
         surf_params.width = 530;
         surf_params.height = 715;
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
+
+        buffer = std::make_shared<MirBufferPackage>();
     }
 
+    std::shared_ptr<MirBufferPackage> buffer;
     MirSurfaceParameters surf_params;
 };
 
@@ -96,6 +101,7 @@ TEST_F(GBMInterpreterTest, basic_advance)
 {
     using namespace testing;
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+
     mclg::GBMNativeSurface interpreter(mock_surface);
 
     EXPECT_CALL(mock_surface, next_buffer(_,_))

@@ -31,6 +31,8 @@ class GBMNativeSurface : public MirMesaEGLNativeSurface
 public:
     explicit GBMNativeSurface(ClientSurface&);
 
+    void advance_buffer(MirBufferPackage* buffer_package);
+    void get_parameters(MirSurfaceParameters* surface_parameters);
 private:
     ClientSurface& surface;
 };

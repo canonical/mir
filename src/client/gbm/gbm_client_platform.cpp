@@ -130,36 +130,6 @@ std::shared_ptr<mcl::ClientBufferFactory> mclg::GBMClientPlatform::create_buffer
     return std::make_shared<mclg::GBMClientBufferFactory>(drm_fd_handler);
 }
 
-#if 0
-namespace 
-{
-//TODO: these functions should be wrapped in a class
-static void buffer_advanced_callback(MirSurface*  /* surface */,
-                                     void*  /* context */)
-{
-}
-static void gbm_egl_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display */,
-                                               MirEGLNativeWindowType, //surface,
-                                               MirBufferPackage*)// buffer_package)
-{
-    MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_wait_for(mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
-
-    /* TODO: clean up api so this isn't so messy */
-    MirBufferPackage * current_package;
-    mir_surface_get_current_buffer(ms, &current_package);
-    memcpy(buffer_package, current_package, sizeof(MirBufferPackage));
-}
-
-static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display */,
-                                           MirEGLNativeWindowType surface,
-                                           MirSurfaceParameters* surface_parameters)
-{
-    MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_surface_get_parameters(ms,  surface_parameters);
-}
-}
-#endif
 std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_window(ClientSurface* client_surface)
 {
     auto window_type = new GBMNativeSurface(*client_surface);
