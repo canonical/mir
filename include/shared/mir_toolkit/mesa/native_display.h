@@ -46,7 +46,6 @@ struct MirMesaEGLNativeSurface
                                    MirBufferPackage* buffer_package);
     void (*surface_get_parameters)(MirMesaEGLNativeSurface* surface,
                                    MirSurfaceParameters* surface_parameters);
-    void *context;
 };
 
 typedef enum mir_display_type

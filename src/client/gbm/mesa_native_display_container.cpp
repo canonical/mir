@@ -40,33 +40,6 @@ static void gbm_egl_display_get_platform(MirMesaEGLNativeDisplay* display,
     mir_connection_get_platform(connection, package);
 }
 
-#if 0
-static void buffer_advanced_callback(MirSurface*  /* surface */,
-                                     void*  /* context */)
-{
-}
-static void gbm_egl_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display */,
-                                               MirEGLNativeWindowType, //surface,
-                                               MirBufferPackage*)// buffer_package)
-{
-    MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_wait_for(mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
-
-    /* TODO: clean up api so this isn't so messy */
-    MirBufferPackage * current_package;
-    mir_surface_get_current_buffer(ms, &current_package);
-    memcpy(buffer_package, current_package, sizeof(MirBufferPackage));
-}
-
-static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display */,
-                                           MirEGLNativeWindowType surface,
-                                           MirSurfaceParameters* surface_parameters)
-{
-    MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_surface_get_parameters(ms,  surface_parameters);
-}
-#endif
-
 int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
     return mcl::EGLNativeDisplayContainer::instance().validate(display);
@@ -102,7 +75,7 @@ bool mclg::MesaNativeDisplayContainer::validate(MirEGLNativeDisplayType display)
 }
 
 MirEGLNativeDisplayType
-mclg::MesaNativeDisplayContainer::create(MirConnection*) //connection)
+mclg::MesaNativeDisplayContainer::create(MirConnection* connection)
 {
     MirMesaEGLNativeDisplay* display = new MirMesaEGLNativeDisplay();
     display->display_get_platform = gbm_egl_display_get_platform;

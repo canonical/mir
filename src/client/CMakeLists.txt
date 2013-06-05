@@ -54,6 +54,7 @@ set(
   gbm/gbm_client_buffer_factory.cpp
   gbm/gbm_client_buffer.cpp
   gbm/mesa_native_display_container.cpp
+  gbm/gbm_native_surface.cpp
   ${CLIENT_SOURCES}
 )
 endif()

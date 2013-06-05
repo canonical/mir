@@ -89,8 +89,10 @@ std::shared_ptr<EGLNativeWindowType> mcla::AndroidClientPlatform::create_egl_nat
 {
     auto anativewindow_interpreter = std::make_shared<mcla::ClientSurfaceInterpreter>(*surface);
     auto mir_native_window = new mga::MirNativeWindow(anativewindow_interpreter);
+    auto egl_native_window = new EGLNativeWindowType;
+    *egl_native_window = mir_native_window;
     MirNativeWindowDeleter deleter = MirNativeWindowDeleter(mir_native_window);
-    return std::shared_ptr<EGLNativeWindowType>(mir_native_window, deleter);
+    return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }
 
 std::shared_ptr<EGLNativeDisplayType>
