@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "src/server/graphics/gbm/internal_native_display.h"
@@ -55,47 +55,16 @@ public:
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
 };
 
-struct InternalNativeDisplay : public testing::Test
+struct InternalNativeSurface : public testing::Test
 {
     void SetUp()
     {
         using namespace ::testing;
-
-        platform_package = std::make_shared<mg::PlatformIPCPackage>();
-        platform_package->ipc_data = {1, 2};
-        platform_package->ipc_fds = {2, 3};
         mock_surface = std::make_shared<MockFrontendSurface>();
     }
 
     std::shared_ptr<MockFrontendSurface> mock_surface;
-    std::shared_ptr<mg::PlatformIPCPackage> platform_package;
 };
-
-MATCHER_P(PackageMatches, package, "")
-{
-    if (arg.data_items != static_cast<int>(package->ipc_data.size()))
-        return false;
-    for (uint i = 0; i < package->ipc_data.size(); i++)
-    {
-        if (arg.data[i] != package->ipc_data[i]) return false;
-    }
-    if (arg.fd_items != static_cast<int>(package->ipc_fds.size()))
-        return false;
-    for (uint i = 0; i < package->ipc_fds.size(); i++)
-    {
-        if (arg.fd[i] != package->ipc_fds[i]) return false;
-    }
-    return true;
-}
-
-MATCHER_P(StrideMatches, package, "")
-{
-    if (arg.stride != package->stride)
-    {
-        return false;
-    }
-    return true;
-}
 
 MATCHER_P(ParametersHaveSize, size, "")
 {
@@ -107,19 +76,7 @@ MATCHER_P(ParametersHaveSize, size, "")
 }
 }
 
-TEST_F(InternalNativeDisplay, display_get_platform_matches_construction_platform)
-{
-    using namespace ::testing;
-    
-    mgg::InternalNativeDisplay native_display(platform_package); 
-    
-    MirPlatformPackage test_package;
-    memset(&test_package, 0, sizeof(MirPlatformPackage));
-    native_display.display_get_platform(&native_display, &test_package);
-    EXPECT_THAT(test_package, PackageMatches(platform_package));
-}
-
-TEST_F(InternalNativeDisplay, surface_advance_buffer_packaging)
+TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
 {
     using namespace ::testing;
     
@@ -134,7 +91,7 @@ TEST_F(InternalNativeDisplay, surface_advance_buffer_packaging)
     test_buffer_package->fd[1] = 4;
     test_buffer_package->stride = 77;
 
-    mgg::InternalNativeDisplay native_display(platform_package); 
+    mgg::InternalNativeSurface native_display(mock_surface); 
     
     EXPECT_CALL(*buffer, native_buffer_handle())
         .WillOnce(Return(test_buffer_package)); 
@@ -156,10 +113,10 @@ TEST_F(InternalNativeDisplay, surface_advance_buffer_packaging)
     EXPECT_EQ(test_buffer_package->stride, buffer_package.stride);
 }
 
-TEST_F(InternalNativeDisplay, surface_advance_buffer_secures_resource)
+TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
 {
     using namespace ::testing; 
-    mgg::InternalNativeDisplay native_display(platform_package); 
+    mgg::InternalNativeSurface native_display(mock_surface); 
     auto stub_buffer1 = std::make_shared<mtd::MockBuffer>();
     auto stub_buffer2 = std::make_shared<mtd::MockBuffer>();
 
@@ -187,7 +144,7 @@ TEST_F(InternalNativeDisplay, surface_advance_buffer_secures_resource)
     EXPECT_EQ(use_count_2 + 1, stub_buffer2.use_count());
 }
 
-TEST_F(InternalNativeDisplay, surface_get_parameters)
+TEST_F(InternalNativeSurface, surface_get_parameters)
 {
     using namespace ::testing;
     
@@ -195,7 +152,7 @@ TEST_F(InternalNativeDisplay, surface_get_parameters)
                                                     geom::Height{29}};
     geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
 
-    mgg::InternalNativeDisplay native_display(platform_package); 
+    mgg::InternalNativeSurface native_display(mock_surface); 
 
     mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
     EXPECT_CALL(surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(test_surface_size));
@@ -211,14 +168,4 @@ TEST_F(InternalNativeDisplay, surface_get_parameters)
 
     // TODO: What to do about buffer usage besides hardware? ~racarr
     EXPECT_EQ(parameters.buffer_usage, mir_buffer_usage_hardware);
-}
-
-TEST(MirServerMesaEGLNativeDisplayInvariants, pixel_format_formats_are_castable)
-{
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::invalid), mir_pixel_format_invalid);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::abgr_8888), mir_pixel_format_abgr_8888);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::xbgr_8888), mir_pixel_format_xbgr_8888);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::argb_8888), mir_pixel_format_argb_8888);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::xrgb_8888), mir_pixel_format_xrgb_8888);
-    EXPECT_EQ(static_cast<MirPixelFormat>(geom::PixelFormat::bgr_888), mir_pixel_format_bgr_888);
 }

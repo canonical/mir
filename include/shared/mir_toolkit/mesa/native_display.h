@@ -31,20 +31,21 @@ extern "C"
 #endif
 
 typedef struct MirMesaEGLNativeDisplay MirMesaEGLNativeDisplay;
+typedef struct MirMesaEGLNativeSurface MirMesaEGLNativeSurface;
 
 struct MirMesaEGLNativeDisplay
 {
     void (*display_get_platform)(MirMesaEGLNativeDisplay* display,
                                  MirPlatformPackage* package);
-    void (*surface_get_current_buffer)(MirMesaEGLNativeDisplay* display,
-                                       MirEGLNativeWindowType surface,
-                                       MirBufferPackage* buffer_package);
-    void (*surface_get_parameters)(MirMesaEGLNativeDisplay* display,
-                                   MirEGLNativeWindowType surface,
-                                   MirSurfaceParameters* surface_parameters);
-    void (*surface_advance_buffer)(MirMesaEGLNativeDisplay* display,
-                                   MirEGLNativeWindowType surface);
+    void *context;
+};
 
+struct MirMesaEGLNativeSurface
+{
+    void (*surface_advance_buffer)(MirMesaEGLNativeSurface* surface,
+                                   MirBufferPackage* buffer_package);
+    void (*surface_get_parameters)(MirMesaEGLNativeSurface* surface,
+                                   MirSurfaceParameters* surface_parameters);
     void *context;
 };
 

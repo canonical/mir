@@ -38,20 +38,8 @@ mgg::InternalNativeDisplay::InternalNativeDisplay(std::shared_ptr<mg::PlatformIP
 {
     context = this;
     this->display_get_platform = &InternalNativeDisplay::native_display_get_platform;
-    this->surface_get_current_buffer = &InternalNativeDisplay::native_display_surface_get_current_buffer;
     this->surface_get_parameters = &InternalNativeDisplay::native_display_surface_get_parameters;
     this->surface_advance_buffer = &InternalNativeDisplay::native_display_surface_advance_buffer;
-}
-
-void mgg::InternalNativeDisplay::native_display_surface_get_current_buffer(MirMesaEGLNativeDisplay*, 
-                                                      MirEGLNativeWindowType surface,
-                                                      MirBufferPackage* package)
-{
-        auto mir_surface = static_cast<mf::Surface*>(surface);
-
-        auto buffer = mir_surface->client_buffer();
-        auto buffer_package = buffer->native_buffer_handle();
-        memcpy(package, buffer_package.get(), sizeof(MirBufferPackage));
 }
 
 void mgg::InternalNativeDisplay::native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package)
@@ -82,9 +70,14 @@ void mgg::InternalNativeDisplay::native_display_surface_get_parameters(MirMesaEG
     parameters->buffer_usage = mir_buffer_usage_hardware;
 }
 
-void mgg::InternalNativeDisplay::native_display_surface_advance_buffer(MirMesaEGLNativeDisplay*, 
-                                                  MirEGLNativeWindowType surface)
+void mgg::InternalNativeDisplay::native_display_surface_advance_buffer(
+                                                      MirMesaEGLNativeDisplay*, 
+                                                      MirEGLNativeWindowType surface,
+                                                      MirBufferPackage* package)
 {
     auto mir_surface = static_cast<mf::Surface*>(surface);
-    mir_surface->advance_client_buffer();
+    auto buffer = mir_surface->next_client_buffer();
+    //should store!
+    auto buffer_package = buffer->native_buffer_handle();
+    memcpy(package, buffer_package.get(), sizeof(MirBufferPackage));
 }
