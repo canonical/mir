@@ -79,9 +79,11 @@ int main(int argc, char **argv)
     {
         results.push_back(t.get());
     }
+    bool success = true;
     for (auto &r: results)
     {
         std::cout << r.summary();
+        success &= r.success();
     }
-    return 0;
+    return success ? 0 : 1;
 }

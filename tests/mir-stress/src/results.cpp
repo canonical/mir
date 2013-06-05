@@ -45,3 +45,8 @@ std::string ThreadResults::summary() const
         << tests_failed_ << " failed." << std::endl;
     return strstr.str();
 }
+
+bool ThreadResults::success() const
+{
+    return tests_failed_ == 0;
+}

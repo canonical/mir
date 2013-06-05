@@ -28,6 +28,7 @@ public:
     void addTestResult(bool passed);
 
     std::string summary() const;
+    bool success() const;
 private:
     std::string thread_id_;
     int tests_passed_;
