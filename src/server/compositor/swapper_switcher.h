@@ -32,6 +32,7 @@ namespace compositor
 {
 class Buffer;
 class BufferSwapper;
+class BufferAllocationStrategy;
 
 class SwapperSwitcher : public BufferSwapperMaster
 {
@@ -49,6 +50,7 @@ public:
     void allow_framedropping(bool dropping_allowed);
 private:
     std::shared_ptr<BufferSwapper> swapper;
+    std::shared_ptr<BufferAllocationStrategy> const swapper_factory;
     RWLockWriterBias rw_lock;
     std::condition_variable_any cv;
     std::atomic<bool> should_retry;

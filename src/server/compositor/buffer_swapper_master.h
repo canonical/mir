@@ -30,8 +30,9 @@ namespace compositor
 class BufferSwapperMaster : public BufferSwapper
 {
 public:
-    virtual void allow_framedropping(bool dropping_allowed) = 0;
     virtual ~BufferSwapperMaster() noexcept {}
+
+    virtual void allow_framedropping(bool dropping_allowed) = 0;
 
 protected:
     BufferSwapperMaster() = default;

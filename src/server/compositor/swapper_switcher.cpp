@@ -24,8 +24,11 @@
 
 namespace mc=mir::compositor;
 
-mc::SwapperSwitcher::SwapperSwitcher(std::shared_ptr<mc::BufferSwapper> const& initial_swapper)
+mc::SwapperSwitcher::SwapperSwitcher(
+    std::shared_ptr<BufferSwapper> const& initial_swapper,
+    std::shared_ptr<BufferAllocationStrategy> const& swapper_factory)
     : swapper(initial_swapper),
+      swapper_factory(swapper_factory),
       should_retry(false)
 {
 }
@@ -84,6 +87,7 @@ void mc::SwapperSwitcher::end_responsibility(std::vector<std::shared_ptr<Buffer>
     //TODO
 }
 
+#if 0
 void mc::SwapperSwitcher::change_swapper(
     std::function<std::shared_ptr<BufferSwapper>(std::vector<std::shared_ptr<Buffer>>&, size_t&)> create_swapper)
 {
@@ -99,4 +103,9 @@ void mc::SwapperSwitcher::change_swapper(
     swapper->end_responsibility(list, size);
     swapper = create_swapper(list, size);
     cv.notify_all();
+}
+#endif
+
+void mc::SwapperSwitcher::allow_framedropping(bool)
+{
 }

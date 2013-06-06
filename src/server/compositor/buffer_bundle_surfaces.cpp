@@ -27,16 +27,17 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace ms = mir::surfaces;
 
+/* TODO: probobly don't need both of these constructors */
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
-    std::unique_ptr<BufferSwapperMaster>&& swapper,
+    std::shared_ptr<BufferSwapperMaster>const& swapper,
     BufferProperties const& buffer_properties)
-     : swapper(std::move(swapper)),
+     : swapper(swapper),
        size(buffer_properties.size),
        pixel_format(buffer_properties.format)
 {
 }
 
-mc::BufferBundleSurfaces::BufferBundleSurfaces(std::unique_ptr<BufferSwapperMaster>&& swapper)
+mc::BufferBundleSurfaces::BufferBundleSurfaces(std::shared_ptr<BufferSwapperMaster> const& swapper)
      : swapper(std::move(swapper)),
        size(),
        pixel_format(geometry::PixelFormat::abgr_8888)

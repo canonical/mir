@@ -36,10 +36,10 @@ class BufferSwapperMaster;
 class BufferBundleSurfaces : public surfaces::BufferBundle
 {
 public:
-    BufferBundleSurfaces(std::unique_ptr<BufferSwapperMaster>&& swapper);
+    BufferBundleSurfaces(std::shared_ptr<BufferSwapperMaster> const& swapper);
 
     BufferBundleSurfaces(
-        std::unique_ptr<BufferSwapperMaster>&& swapper, BufferProperties const& buffer_properties);
+        std::shared_ptr<BufferSwapperMaster>const& swapper, BufferProperties const& buffer_properties);
 
     ~BufferBundleSurfaces();
 

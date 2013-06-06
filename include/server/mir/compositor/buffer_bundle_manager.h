@@ -49,7 +49,7 @@ public:
         BufferProperties const& buffer_properties);
 
 private:
-    std::shared_ptr<BufferAllocationStrategy> buffer_allocation_strategy;
+    std::shared_ptr<BufferAllocationStrategy> swapper_factory;
 
 };
 

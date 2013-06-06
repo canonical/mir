@@ -31,23 +31,42 @@
 
 namespace mc = mir::compositor;
 
-/* todo: once we move to gcc 4.7 it would be slightly better to have a delegated constructor */
 mc::SwapperFactory::SwapperFactory(
-    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
-    gr_allocator(gr_alloc),
-    number_of_buffers(2)
+        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
+        std::shared_ptr<SwapperAllocator> const& sw_alloc,
+        int number_of_buffers)
+    : gr_allocator(gr_alloc),
+      swapper_allocator(sw_alloc),
+      number_of_buffers(number_of_buffers)
 {
     assert(gr_alloc);
 }
 
-mc::SwapperFactory::SwapperFactory(
-    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int number_of_buffers) :
-    gr_allocator(gr_alloc),
-    number_of_buffers(number_of_buffers)
+std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_reuse(
+    std::vector<std::shared_ptr<Buffer>>&, size_t) const
 {
-    assert(gr_alloc);
+    return std::shared_ptr<mc::BufferSwapper>(); 
 }
 
+std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_reuse(
+    std::vector<std::shared_ptr<Buffer>>&, size_t) const
+{
+    return std::shared_ptr<mc::BufferSwapper>(); 
+}
+
+std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_new_buffers(
+    BufferProperties&, BufferProperties const&) const
+{
+    return std::shared_ptr<mc::BufferSwapper>(); 
+}
+
+std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_new_buffers(
+    BufferProperties&, BufferProperties const&) const
+{
+    (void) number_of_buffers;
+    return std::shared_ptr<mc::BufferSwapper>(); 
+}
+#if 0 
 std::unique_ptr<mc::BufferSwapperMaster> mc::SwapperFactory::create_swapper_master(
     BufferProperties& actual_buffer_properties,
     BufferProperties const& requested_buffer_properties)
@@ -65,3 +84,5 @@ std::unique_ptr<mc::BufferSwapperMaster> mc::SwapperFactory::create_swapper_mast
     auto swapper = std::make_shared<mc::BufferSwapperMulti>(buffers, number_of_buffers);
     return std::unique_ptr<BufferSwapperMaster>(new mc::SwapperSwitcher(swapper));
 }
+#endif
+

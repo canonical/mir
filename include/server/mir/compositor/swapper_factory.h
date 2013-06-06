@@ -27,23 +27,29 @@ namespace compositor
 {
 
 class GraphicBufferAllocator;
+class SwapperAllocator;
 struct BufferProperties;
 
 class SwapperFactory : public BufferAllocationStrategy
 {
 public:
-
     explicit SwapperFactory(
-        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
-    explicit SwapperFactory(
-        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int number_of_buffers);
+        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
+        std::shared_ptr<SwapperAllocator> const& sw_alloc,
+        int number_of_buffers = 2);
 
-    std::unique_ptr<BufferSwapperMaster> create_swapper_master(
-        BufferProperties& actual_buffer_properties,
-        BufferProperties const& requested_buffer_properties);
+    std::shared_ptr<BufferSwapper> create_async_swapper_reuse(
+        std::vector<std::shared_ptr<Buffer>>&, size_t) const;
+    std::shared_ptr<BufferSwapper> create_sync_swapper_reuse(
+        std::vector<std::shared_ptr<Buffer>>&, size_t) const;
 
+    std::shared_ptr<BufferSwapper> create_async_swapper_new_buffers(
+        BufferProperties&, BufferProperties const&) const;
+    std::shared_ptr<BufferSwapper> create_sync_swapper_new_buffers(
+        BufferProperties&, BufferProperties const&) const;
 private:
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
+    std::shared_ptr<SwapperAllocator> const swapper_allocator;
     int const number_of_buffers;
 };
 }

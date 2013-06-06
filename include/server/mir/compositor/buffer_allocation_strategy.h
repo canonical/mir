@@ -23,6 +23,7 @@
 
 #include "mir/compositor/buffer.h"
 
+#include <vector>
 #include <memory>
 
 namespace mir
@@ -30,20 +31,25 @@ namespace mir
 namespace compositor
 {
 class GraphicBufferAllocator;
-class BufferSwapperMaster;
+class BufferSwapper;
 struct BufferProperties;
 
 class BufferAllocationStrategy
 {
 public:
+    virtual std::shared_ptr<BufferSwapper> create_async_swapper_reuse(
+        std::vector<std::shared_ptr<Buffer>>&, size_t) const = 0;
+    virtual std::shared_ptr<BufferSwapper> create_sync_swapper_reuse(
+        std::vector<std::shared_ptr<Buffer>>&, size_t) const = 0;
 
-    virtual std::unique_ptr<BufferSwapperMaster> create_swapper_master(
-        BufferProperties& actual_buffer_properties,
-        BufferProperties const& requested_buffer_properties) = 0;
+    virtual std::shared_ptr<BufferSwapper> create_async_swapper_new_buffers(
+        BufferProperties&, BufferProperties const&) const = 0;
+    virtual std::shared_ptr<BufferSwapper> create_sync_swapper_new_buffers(
+        BufferProperties&, BufferProperties const&) const = 0;
 
 protected:
-    ~BufferAllocationStrategy() {}
     BufferAllocationStrategy() {}
+    ~BufferAllocationStrategy() = default;
 
     BufferAllocationStrategy(const BufferAllocationStrategy&);
     BufferAllocationStrategy& operator=(const BufferAllocationStrategy& );
