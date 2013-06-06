@@ -36,5 +36,6 @@ add_subdirectory(draw/)
 add_subdirectory(client-language/)
 add_subdirectory(behavior-tests/)
 add_subdirectory(death-tests/)
+add_subdirectory(mir-stress/)
 
 mir_add_memcheck_test()

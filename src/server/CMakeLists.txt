@@ -43,6 +43,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirgraphics
   mirinput
   mirsharedinput
+  mirsharedlogging
   mirsurfaces
   mirtime
   mirlttng

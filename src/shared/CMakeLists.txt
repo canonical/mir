@@ -7,6 +7,8 @@ if (MIR_PLATFORM STREQUAL "android")
 endif()
 
 add_subdirectory(input)
+add_subdirectory(logging)
+add_subdirectory(lttng)
 
 set(
   MIR_COMMON_PLATFORM_LIBRARIES

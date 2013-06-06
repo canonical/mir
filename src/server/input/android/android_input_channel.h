@@ -51,8 +51,7 @@ protected:
     AndroidInputChannel& operator=(AndroidInputChannel const&) = delete;
 
 private:
-    droidinput::sp<droidinput::InputChannel> client_channel;
-    droidinput::sp<droidinput::InputChannel> server_channel;
+    int s_fd, c_fd;
 };
 
 }

@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/client/mir_logger.h"
 #include "src/client/client_platform.h"
 #include "src/client/client_platform_factory.h"
 #include "src/client/mir_connection.h"
+#include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
 #include "mir/frontend/resource_cache.h" /* needed by test_server.h */
@@ -111,6 +111,33 @@ void drm_auth_magic_callback(int status, void* client_context)
     *status_ptr = status;
 }
 
+class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
+{
+public:
+    TestConnectionConfiguration(
+        std::shared_ptr<mcl::ClientPlatform> const& platform,
+        std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const& channel)
+        : DefaultConnectionConfiguration(""),
+          platform{platform},
+          channel{channel}
+    {
+    }
+
+    std::shared_ptr<mcl::rpc::MirBasicRpcChannel> the_rpc_channel() override
+    {
+        return channel;
+    }
+
+    std::shared_ptr<mcl::ClientPlatformFactory> the_client_platform_factory() override
+    {
+        return std::make_shared<StubClientPlatformFactory>(platform);
+    }
+
+private:
+    std::shared_ptr<mcl::ClientPlatform> const platform;
+    std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const channel;
+};
+
 }
 
 struct MirConnectionTest : public testing::Test
@@ -119,18 +146,15 @@ struct MirConnectionTest : public testing::Test
     {
         using namespace testing;
 
-        logger = std::make_shared<mcl::ConsoleLogger>();
         mock_platform = std::make_shared<NiceMock<MockClientPlatform>>();
-        platform_factory = std::make_shared<StubClientPlatformFactory>(mock_platform);
         mock_channel = std::make_shared<NiceMock<MockRpcChannel>>();
 
-        connection = std::make_shared<MirConnection>(mock_channel, logger,
-                                                     platform_factory);
+        TestConnectionConfiguration conf{mock_platform, mock_channel};
+
+        connection = std::make_shared<MirConnection>(conf);
     }
 
-    std::shared_ptr<mcl::Logger> logger;
     std::shared_ptr<testing::NiceMock<MockClientPlatform>> mock_platform;
-    std::shared_ptr<StubClientPlatformFactory> platform_factory;
     std::shared_ptr<testing::NiceMock<MockRpcChannel>> mock_channel;
     std::shared_ptr<MirConnection> connection;
 };

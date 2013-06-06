@@ -40,33 +40,40 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 {
 }
 
+// Be careful on the locking in these two functions.
 void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface)
 {
-    std::unique_lock<std::mutex> lock(handles_mutex);
+    droidinput::sp<droidinput::InputWindowHandle> window_handle;
+    {
+        std::unique_lock<std::mutex> lock(handles_mutex);
 
-    // TODO: We don't have much use for InputApplicationHandle so we simply use one per surface.
-    // it is only used in droidinput for logging and determining application not responding (ANR),
-    // we determine ANR on a per surface basis. When we have time we should factor InputApplicationHandle out
-    // of the input stack (merging it's state with WindowHandle). ~racarr
-    if (window_handles.find(opened_surface) != window_handles.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened twice"));
+        // TODO: We don't have much use for InputApplicationHandle so we simply use one per surface.
+        // it is only used in droidinput for logging and determining application not responding (ANR),
+        // we determine ANR on a per surface basis. When we have time we should factor InputApplicationHandle out
+        // of the input stack (merging it's state with WindowHandle). ~racarr
+        if (window_handles.find(opened_surface) != window_handles.end())
+            BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened twice"));
 
-    auto application_handle = new mia::InputApplicationHandle(opened_surface);
-    droidinput::sp<droidinput::InputWindowHandle> window_handle = new mia::InputWindowHandle(application_handle, opened_surface);
-    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
+        auto application_handle = new mia::InputApplicationHandle(opened_surface);
+        window_handle = new mia::InputWindowHandle(application_handle, opened_surface);
     
-    window_handles[opened_surface] = window_handle;
+        window_handles[opened_surface] = window_handle;
+    }
+    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
 }
 
 void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
 {
-    std::unique_lock<std::mutex> lock(handles_mutex);
-    auto it = window_handles.find(closed_surface);
-    if (it == window_handles.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("A surface was closed twice"));
-
-    input_dispatcher->unregisterInputChannel(it->second->getInfo()->inputChannel);
-    window_handles.erase(it);
+    droidinput::sp<droidinput::InputWindowHandle> window_handle;
+    {
+        std::unique_lock<std::mutex> lock(handles_mutex);
+        auto it = window_handles.find(closed_surface);
+        if (it == window_handles.end())
+            BOOST_THROW_EXCEPTION(std::logic_error("A surface was closed twice"));
+        window_handle = it->second;
+        window_handles.erase(it);
+    }
+    input_dispatcher->unregisterInputChannel(window_handle->getInputChannel());
 }
 
 droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface)

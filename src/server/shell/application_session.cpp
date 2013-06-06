@@ -93,6 +93,8 @@ std::shared_ptr<mf::Surface> msh::ApplicationSession::get_surface(mf::SurfaceId 
 
 std::shared_ptr<msh::Surface> msh::ApplicationSession::default_surface() const
 {
+    std::unique_lock<std::mutex> lock(surfaces_mutex);
+
     if (surfaces.size())
         return surfaces.begin()->second;
     else

@@ -17,12 +17,11 @@
  */
 
 #include "mir/lttng/input_report.h"
+#include "mir/lttng/mir_tracepoint.h"
 
 #define TRACEPOINT_DEFINE
 #define TRACEPOINT_PROBE_DYNAMIC_LINKAGE
 #include "input_report_tp.h"
-
-#include "mir_tracepoint.h"
 
 void mir::lttng::InputReport::received_event_from_kernel(int64_t when, int type, int code, int value)
 {
