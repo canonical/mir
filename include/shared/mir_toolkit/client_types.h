@@ -55,7 +55,7 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
 /**
  * Callback to be passed when calling:
  *  - mir_connection_create_surface
- *  - mir_surface_next_buffer
+ *  - mir_surface_swap_buffers
  *  - mir_surface_release
  *   \param [in] surface             the surface being updated
  *   \param [in,out] client_context  context provided by client in calling

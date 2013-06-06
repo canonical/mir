@@ -281,7 +281,7 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
             set_flag(surface_created);
             wait_for(do_next_buffer);
 
-            mir_surface_next_buffer_sync(surface);
+            mir_surface_swap_buffers_sync(surface);
 
             set_flag(next_buffer_done);
             wait_for(do_client_finish);
