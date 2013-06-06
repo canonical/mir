@@ -31,7 +31,7 @@
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
-
+#if 0
 namespace
 {
 
@@ -64,3 +64,4 @@ TEST(buffer_manager, create_buffer)
 
     EXPECT_TRUE(bundle.get());
 }
+#endif

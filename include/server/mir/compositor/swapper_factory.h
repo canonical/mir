@@ -33,7 +33,7 @@ struct BufferProperties;
 class SwapperFactory : public BufferAllocationStrategy
 {
 public:
-    explicit SwapperFactory(
+    SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
         std::shared_ptr<SwapperAllocator> const& sw_alloc,
         int number_of_buffers = 2);

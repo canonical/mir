@@ -44,8 +44,7 @@ public:
     MOCK_METHOD0(force_client_completion, void());
     MOCK_METHOD2(end_responsibility, void(std::vector<std::shared_ptr<compositor::Buffer>>&, size_t&));
     MOCK_METHOD1(adopt_buffer, void(std::shared_ptr<compositor::Buffer> const&));
-    MOCK_METHOD1(change_swapper, void(std::function<std::shared_ptr<compositor::BufferSwapper>
-                                         (std::vector<std::shared_ptr<compositor::Buffer>>&, size_t&)>));
+    MOCK_METHOD1(allow_framedropping, void(bool));
 };
 
 }

@@ -58,8 +58,7 @@ public:
     virtual void compositor_release(std::shared_ptr<mc::Buffer> const&){}
     virtual void force_client_completion() {}
     virtual void end_responsibility(std::vector<std::shared_ptr<mc::Buffer>>&, size_t&) {};
-    virtual void change_swapper(std::function<std::shared_ptr<mc::BufferSwapper>
-                                     (std::vector<std::shared_ptr<mc::Buffer>>&, size_t&)>) {}
+    virtual void allow_framedropping(bool) {}
 };
 
 struct MockBufferBundleFactory : public ms::BufferBundleFactory

@@ -17,6 +17,7 @@
  */
 
 #include "src/server/compositor/swapper_switcher.h"
+#include "mir/compositor/swapper_factory.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_swapper.h"
 
@@ -33,18 +34,20 @@ namespace test
 {
 namespace doubles
 {
-class MockSwapperFactory : public mc::SwapperFactory
+class MockSwapperFactory : public mc::BufferAllocationStrategy
 {
+public:
     ~MockSwapperFactory() noexcept {}
-    MOCK_METHOD3(create_async_swapper_reuse,
+
+    MOCK_CONST_METHOD2(create_async_swapper_reuse,
         std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>>&, size_t));
-    MOCK_METHOD3(create_sync_swapper_reuse,
+    MOCK_CONST_METHOD2(create_sync_swapper_reuse,
         std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>>&, size_t));
 
-    MOCK_METHOD3(create_async_swapper_new_buffers,
-        std::shared_ptr<mc::BufferSwapper>(BufferProperties&, BufferProperties const&))
-    MOCK_METHOD3(create_sync_swapper_new_buffers,
-        std::shared_ptr<mc::BufferSwapper>(BufferProperties&, BufferProperties const&))
+    MOCK_CONST_METHOD2(create_async_swapper_new_buffers,
+        std::shared_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
+    MOCK_CONST_METHOD2(create_sync_swapper_new_buffers,
+        std::shared_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
 };
 }
 }
@@ -54,13 +57,14 @@ struct SwapperSwitcherTest : public ::testing::Test
 {
     void SetUp()
     {
-        mock_swapper_factory = std::make_shared<testing::NiceMock<mtd::MockSwapperFactory>();
+        mock_swapper_factory = std::make_shared<testing::NiceMock<mtd::MockSwapperFactory>>();
         mock_default_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         mock_secondary_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         stub_buffer = std::make_shared<mtd::StubBuffer>();
 
     }
 
+    std::shared_ptr<mtd::MockSwapperFactory> mock_swapper_factory;
     std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
     std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
     std::shared_ptr<mc::Buffer> stub_buffer;
@@ -91,22 +95,20 @@ TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_secondary_swapper, client_release(stub_buffer))
         .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_async_swapper(false,_,_))
+    EXPECT_CALL(*mock_swapper_factory, create_async_swapper_reuse(_,_))
         .Times(1)
         .WillOnce(Return(mock_secondary_swapper));
 
     auto buffer = switcher.client_acquire();
     switcher.allow_framedropping(true);
-    switcher.change_swapper(creation_fn);
  
     switcher.client_release(buffer); 
 }
 
-#if 0
 TEST_F(SwapperSwitcherTest, compositor_acquire_basic)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_default_swapper);
+    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
 
     EXPECT_CALL(*mock_default_swapper, compositor_acquire())
         .Times(1)
@@ -122,25 +124,25 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
 {
     using namespace testing;
 
-    mc::SwapperSwitcher switcher(mock_default_swapper);
+    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
 
     EXPECT_CALL(*mock_default_swapper, compositor_acquire())
         .Times(1)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_secondary_swapper, compositor_release(stub_buffer))
         .Times(1);
+    EXPECT_CALL(*mock_swapper_factory, create_async_swapper_reuse(_,_))
+        .Times(1)
+        .WillOnce(Return(mock_secondary_swapper));
 
     auto buffer = switcher.compositor_acquire();
 
-    auto creation_fn = [this] (std::vector<std::shared_ptr<mc::Buffer>>&, size_t&)
-        {
-            return mock_secondary_swapper;
-        };
-    switcher.change_swapper(creation_fn);
+    switcher.allow_framedropping(true);
  
     switcher.compositor_release(buffer); 
 }
 
+#if 0
 TEST_F(SwapperSwitcherTest, switch_sequence)
 {
     using namespace testing;
