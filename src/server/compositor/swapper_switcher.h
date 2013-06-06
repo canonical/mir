@@ -36,7 +36,8 @@ class BufferSwapper;
 class SwapperSwitcher : public BufferSwapperMaster
 {
 public:
-    SwapperSwitcher(std::shared_ptr<BufferSwapper> const& initial_swapper);
+    SwapperSwitcher(std::shared_ptr<BufferSwapper> const& initial_swapper,
+                    std::shared_ptr<BufferAllocationStrategy> const& swapper_factory);
 
     std::shared_ptr<Buffer> client_acquire();
     void client_release(std::shared_ptr<Buffer> const& queued_buffer);
@@ -45,9 +46,7 @@ public:
     void force_client_completion();
     void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
 
-    void change_swapper(
-        std::function<std::shared_ptr<BufferSwapper>(std::vector<std::shared_ptr<Buffer>>&, size_t&)>);
-
+    void allow_framedropping(bool dropping_allowed);
 private:
     std::shared_ptr<BufferSwapper> swapper;
     RWLockWriterBias rw_lock;

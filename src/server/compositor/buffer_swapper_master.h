@@ -30,8 +30,7 @@ namespace compositor
 class BufferSwapperMaster : public BufferSwapper
 {
 public:
-    virtual void change_swapper(
-        std::function<std::shared_ptr<BufferSwapper>(std::vector<std::shared_ptr<Buffer>>&, size_t&)>) = 0;
+    virtual void allow_framedropping(bool dropping_allowed) = 0;
     virtual ~BufferSwapperMaster() noexcept {}
 
 protected:

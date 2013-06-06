@@ -22,9 +22,10 @@
 
 #include <gtest/gtest.h>
 
+#include "mir/compositor/buffer_allocation_strategy.h"
+
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
-
 
 namespace mir
 {
@@ -35,8 +36,15 @@ namespace doubles
 class MockSwapperFactory : public mc::SwapperFactory
 {
     ~MockSwapperFactory() noexcept {}
-    MOCK_METHOD3(create_async_swapper(bool, std::vector<std::shared_ptr<mc::Buffer>>&, size_t))
-    MOCK_METHOD3(create_sync_swapper(bool, std::vector<std::shared_ptr<mc::Buffer>>&, size_t))
+    MOCK_METHOD3(create_async_swapper_reuse,
+        std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>>&, size_t));
+    MOCK_METHOD3(create_sync_swapper_reuse,
+        std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>>&, size_t));
+
+    MOCK_METHOD3(create_async_swapper_new_buffers,
+        std::shared_ptr<mc::BufferSwapper>(BufferProperties&, BufferProperties const&))
+    MOCK_METHOD3(create_sync_swapper_new_buffers,
+        std::shared_ptr<mc::BufferSwapper>(BufferProperties&, BufferProperties const&))
 };
 }
 }
@@ -58,20 +66,10 @@ struct SwapperSwitcherTest : public ::testing::Test
     std::shared_ptr<mc::Buffer> stub_buffer;
 };
 
-TEST_F(SwapperSwitcherTest, swapperswitcher_starts_with_swapinterval1_swapper)
-{
-    std::vector<std::shared_ptr<mc::Buffer>> bufferlist;
-    EXPECT_CALL(*mock_swapper_factory, create_sync_swapper(true, bufferlist, 2))
-        .Times(1)
-        .WillOnce(Return(mock_default_swapper));
-
-    mc::SwapperSwitcher switcher(mock_swapper_factory);
-}
-
 TEST_F(SwapperSwitcherTest, client_acquire_basic)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_swapper_factory);
+    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
 
     EXPECT_CALL(*mock_default_swapper, client_acquire())
         .Times(1)
@@ -86,7 +84,7 @@ TEST_F(SwapperSwitcherTest, client_acquire_basic)
 TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_default_swapper);
+    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
 
     EXPECT_CALL(*mock_default_swapper, client_acquire())
         .Times(1)
