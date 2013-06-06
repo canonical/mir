@@ -21,21 +21,25 @@
 #define MIR_TEST_TEST_CLIENT_H_
 
 #include "mir_protobuf.pb.h"
-#include "src/client/make_rpc_channel.h"
 
-#include "mir_test_doubles/mock_logger.h"
+#include <gmock/gmock.h>
 
+#include <memory>
 #include <atomic>
 
 namespace mir
 {
 namespace test
 {
+namespace doubles
+{
+class MockRpcReport;
+}
 struct TestProtobufClient
 {
     TestProtobufClient(std::string socket_file, int timeout_ms);
 
-    std::shared_ptr<doubles::MockLogger> logger;
+    std::shared_ptr<doubles::MockRpcReport> rpc_report;
     std::shared_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectParameters connect_parameters;

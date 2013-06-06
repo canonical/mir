@@ -18,6 +18,7 @@
 #ifndef MIR_CLIENT_LIBRARY_H
 #define MIR_CLIENT_LIBRARY_H
 
+#include <mir_toolkit/mir_native_buffer.h>
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
 
@@ -176,12 +177,21 @@ char const *mir_surface_get_error_message(MirSurface *surface);
 void mir_surface_get_parameters(MirSurface *surface, MirSurfaceParameters *parameters);
 
 /**
+ * Get the underlying platform type so the buffer obtained in "raw" representation
+ * in mir_surface_get_current_buffer() can be understood 
+ *   \pre                     The surface is valid
+ *   \param [in] surface      The surface
+ *   \return                  One of mir_platform_type_android or mir_platform_type_gbm
+ */
+MirPlatformType mir_surface_get_platform_type(MirSurface *surface);
+
+/**
  * Get a surface's buffer in "raw" representation.
  *   \pre                         The surface is valid
  *   \param [in] surface          The surface
  *   \param [out] buffer_package  Structure to be populated
  */
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage *buffer_package);
+void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer **buffer_package);
 
 /**
  * Get a surface's graphics_region, i.e., map the graphics buffer to main

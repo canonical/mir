@@ -16,13 +16,12 @@
 
 #define LOG_TAG "RefBase"
 
-#include <androidfw/Platform.h>
 
 #include <utils/RefBase.h>
 
 #include <utils/CallStack.h>
-#include <utils/Log.h>
-#include ANDROIDFW_UTILS(TextOutput.h)
+#include <std/Log.h>
+#include <std/TextOutput.h>
 
 #include <stdlib.h>
 #include <stdio.h>

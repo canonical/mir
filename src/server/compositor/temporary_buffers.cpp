@@ -76,8 +76,7 @@ void mc::TemporaryBuffer::bind_to_texture()
     buffer->bind_to_texture();
 }
 
-std::shared_ptr<mc::BufferIPCPackage> mc::TemporaryBuffer::get_ipc_package() const
+std::shared_ptr<MirNativeBuffer> mc::TemporaryBuffer::native_buffer_handle() const
 {
-    return buffer->get_ipc_package();
+    return buffer->native_buffer_handle();
 }
-

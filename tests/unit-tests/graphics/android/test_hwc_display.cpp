@@ -21,7 +21,7 @@
 #include "mir_test_doubles/mock_hwc_interface.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test/egl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <memory>
 
@@ -47,7 +47,7 @@ protected:
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
     std::shared_ptr<mtd::MockHWCInterface> mock_hwc_device;
 
-    mir::EglMock mock_egl;
+    mtd::MockEGL mock_egl;
 };
 
 TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
@@ -58,26 +58,6 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
 
     testing::InSequence sequence_enforcer;
     EXPECT_CALL(*mock_hwc_device, commit_frame(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
-        .Times(1);
-    EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
-        .Times(1);
-
-    display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
-    {
-        buffer.post_update();
-    });
-}
-
-TEST_F(AndroidTestHWCFramebuffer, test_vsync_signal_wait_on_post)
-{
-    using namespace testing;
-
-    mga::HWCDisplay display(native_win, mock_hwc_device, mock_display_report);
-
-    testing::InSequence sequence_enforcer;
-    EXPECT_CALL(*mock_hwc_device, commit_frame(_,_))
-        .Times(1);
-    EXPECT_CALL(*mock_hwc_device, wait_for_vsync())
         .Times(1);
 
     display.for_each_display_buffer([](mg::DisplayBuffer& buffer)

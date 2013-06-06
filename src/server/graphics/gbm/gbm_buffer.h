@@ -44,6 +44,7 @@ public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
               std::unique_ptr<BufferTextureBinder> texture_binder);
     GBMBuffer(const GBMBuffer&) = delete;
+    ~GBMBuffer();
 
     GBMBuffer& operator=(const GBMBuffer&) = delete;
 
@@ -53,7 +54,7 @@ public:
 
     virtual geometry::PixelFormat pixel_format() const;
 
-    virtual std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
+    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
     virtual void bind_to_texture();
 

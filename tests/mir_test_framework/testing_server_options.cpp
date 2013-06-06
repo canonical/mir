@@ -25,13 +25,10 @@
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
-#include "mir/input/null_input_target_listener.h"
-#include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_dispatcher_controller.h"
+#include "mir/input/null_input_configuration.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
@@ -44,7 +41,7 @@ namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
-namespace mia = mir::input::android;
+namespace ms = mir::surfaces;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -119,9 +116,14 @@ class StubGraphicPlatform : public mg::Platform
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    EGLNativeDisplayType shell_egl_display()
+    std::shared_ptr<mg::InternalClient> create_internal_client()
     {
-        return (EGLNativeDisplayType) 0;
+        return std::shared_ptr<mg::InternalClient>();   
+    }
+
+    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                          std::shared_ptr<mc::Buffer> const&) const
+    {
     }
 };
 
@@ -133,10 +135,12 @@ public:
         // Need to acquire the texture to cycle buffers
         r.graphic_region();
     }
-    
+
     void ensure_no_live_buffers_bound()
     {
     }
+
+    void clear() {}
 };
 
 struct StubInputChannel : public mi::InputChannel
@@ -176,24 +180,14 @@ mtf::TestingServerConfiguration::TestingServerConfiguration() :
         ("tests-use-real-input", po::value<bool>(), "Use real input in tests. [bool:default=false]");
 }
 
-
-std::shared_ptr<mi::InputManager> mtf::TestingServerConfiguration::the_input_manager()
+std::shared_ptr<mi::InputConfiguration> mtf::TestingServerConfiguration::the_input_configuration()
 {
     auto options = the_options();
+
     if (options->get("tests-use-real-input", false))
-        return std::make_shared<mia::InputManager>(the_input_configuration());
+        return DefaultServerConfiguration::the_input_configuration();
     else
-        return std::make_shared<StubInputManager>();
-}
-
-std::shared_ptr<msh::InputTargetListener> mtf::TestingServerConfiguration::the_input_target_listener()
-{
-    auto options = the_options();
- 
-   if (options->get("tests-use-real-input", false))
-        return std::make_shared<mia::DispatcherController>(the_input_configuration());
-    else
-        return std::make_shared<mi::NullInputTargetListener>();
+        return std::make_shared<mi::NullInputConfiguration>();
 }
 
 std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_platform()

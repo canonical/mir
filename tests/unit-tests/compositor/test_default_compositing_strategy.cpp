@@ -18,6 +18,7 @@
 
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/overlay_renderer.h"
+#include "mir/compositor/renderables.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 #include "mir/geometry/rectangle.h"
@@ -47,7 +48,9 @@ struct MockRenderables : mc::Renderables
 
 struct MockOverlayRenderer : public mc::OverlayRenderer
 {
-    MOCK_METHOD1(render, void(mg::DisplayBuffer&));
+    MOCK_METHOD2(render, void(geom::Rectangle const&, std::function<void(std::shared_ptr<void> const&)>));
+
+    ~MockOverlayRenderer() noexcept {}
 };
 
 struct FakeRenderables : mc::Renderables
@@ -101,9 +104,6 @@ TEST(DefaultCompositingStrategy, render)
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
 
-    EXPECT_CALL(display_buffer, clear())
-        .Times(1);
-
     EXPECT_CALL(display_buffer, post_update())
             .Times(1);
 
@@ -128,7 +128,7 @@ TEST(DefaultCompositingStrategy, render_overlay)
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(geom::Rectangle()));
     
-    EXPECT_CALL(overlay_renderer, render(_)).Times(1);
+    EXPECT_CALL(overlay_renderer, render(_, _)).Times(1);
 
     comp.render(display_buffer);
 }

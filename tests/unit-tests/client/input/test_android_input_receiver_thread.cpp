@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/client/input/android_input_receiver_thread.h"
-#include "src/client/input/android_input_receiver.h"
+#include "src/shared/input/android/android_input_receiver_thread.h"
+#include "src/shared/input/android/android_input_receiver.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -30,7 +30,7 @@
 
 #include <fcntl.h>
 
-namespace mclia = mir::client::input::android;
+namespace mircva = mir::input::receiver::android;
 
 namespace
 {
@@ -40,7 +40,7 @@ struct MockEventHandler
     MOCK_METHOD1(handle_event, void(MirEvent*));
 };
 
-struct MockInputReceiver : public mclia::InputReceiver
+struct MockInputReceiver : public mircva::InputReceiver
 {
     MockInputReceiver(int fd)
       : InputReceiver(fd)
@@ -77,7 +77,7 @@ TEST_F(AndroidInputReceiverThreadSetup, reads_events_until_stopped)
 {
     using namespace ::testing;
 
-    mclia::InputReceiverThread input_thread(input_receiver, 
+    mircva::InputReceiverThread input_thread(input_receiver, 
         std::function<void(MirEvent*)>());    
     {
         InSequence seq;
@@ -105,7 +105,7 @@ TEST_F(AndroidInputReceiverThreadSetup, receives_and_dispatches_available_events
         MockEventHandler &handler;
     } input_delegate(mock_handler);
 
-    mclia::InputReceiverThread input_thread(input_receiver, input_delegate);
+    mircva::InputReceiverThread input_thread(input_receiver, input_delegate);
     {
         InSequence seq;
 
@@ -138,7 +138,7 @@ TEST_F(AndroidInputReceiverThreadSetup, input_callback_invoked_from_thread)
         std::atomic<bool> &handled;
     } input_delegate(handled);
 
-    mclia::InputReceiverThread input_thread(input_receiver, input_delegate);
+    mircva::InputReceiverThread input_thread(input_receiver, input_delegate);
     {
         InSequence seq;
 

@@ -36,7 +36,7 @@ public:
 
     virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
-    virtual std::string name() const = 0;
+    virtual std::string const& name() const = 0;
 
     virtual int server_input_fd() const = 0;
 

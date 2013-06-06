@@ -17,11 +17,10 @@
 #ifndef _ANDROIDFW_VELOCITY_CONTROL_H
 #define _ANDROIDFW_VELOCITY_CONTROL_H
 
-#include <androidfw/Platform.h>
 
 #include <androidfw/Input.h>
 #include <androidfw/VelocityTracker.h>
-#include ANDROIDFW_UTILS(Timers.h)
+#include <std/Timers.h>
 
 namespace android {
 

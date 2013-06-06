@@ -26,10 +26,10 @@
 #include <binder/Parcel.h>
 #endif
 
-#include ANDROIDFW_UTILS(Log.h)
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(Tokenizer.h)
-#include ANDROIDFW_UTILS(Timers.h)
+#include <std/Log.h>
+#include <std/Errors.h>
+#include <std/Tokenizer.h>
+#include <std/Timers.h>
 
 // Enables debug output for the parser.
 #define DEBUG_PARSER 0

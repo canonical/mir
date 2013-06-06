@@ -38,7 +38,7 @@ public:
     FullscreenPlacementStrategy(std::shared_ptr<graphics::ViewableArea> const& display_area);
     ~FullscreenPlacementStrategy() = default;
     
-    frontend::SurfaceCreationParameters place(frontend::SurfaceCreationParameters const& request_parameters);
+    shell::SurfaceCreationParameters place(shell::SurfaceCreationParameters const& request_parameters);
 
 protected:
     FullscreenPlacementStrategy(FullscreenPlacementStrategy const&) = delete;

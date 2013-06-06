@@ -18,6 +18,7 @@
 #ifndef MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 #define MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 
+#include "mir_toolkit/mir_native_buffer.h"
 #include "mir_toolkit/client_types.h"
 
 #ifdef __cplusplus
@@ -47,7 +48,16 @@ struct MirMesaEGLNativeDisplay
     void *context;
 };
 
+typedef enum mir_display_type
+{
+    MIR_DISPLAY_TYPE_CLIENT,
+    MIR_DISPLAY_TYPE_SERVER_INTERNAL
+} mir_display_type;
+
+mir_display_type mir_get_display_type(MirMesaEGLNativeDisplay* display);
+
 int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display);
+int mir_server_internal_display_is_valid(MirMesaEGLNativeDisplay* display);
 
 #ifdef __cplusplus
 } // extern "C"

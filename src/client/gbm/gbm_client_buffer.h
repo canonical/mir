@@ -43,14 +43,13 @@ public:
                     geometry::Size size,
                     geometry::PixelFormat pf);
 
-    virtual ~GBMClientBuffer();
+    virtual ~GBMClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    std::shared_ptr<MirBufferPackage> get_buffer_package() const;
-    MirNativeBuffer get_native_handle();
+    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
     GBMClientBuffer(const GBMClientBuffer&) = delete;
     GBMClientBuffer& operator=(const GBMClientBuffer&) = delete;

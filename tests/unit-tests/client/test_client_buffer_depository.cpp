@@ -42,7 +42,7 @@ struct MockBuffer : public mcl::AgingBuffer
     }
 
     MOCK_METHOD0(Destroy, void());
-    virtual ~MockBuffer()
+    virtual ~MockBuffer() noexcept
     {
         Destroy();
     }
@@ -52,8 +52,7 @@ struct MockBuffer : public mcl::AgingBuffer
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
-    MOCK_CONST_METHOD0(get_buffer_package, std::shared_ptr<MirBufferPackage>());
-    MOCK_METHOD0(get_native_handle, MirNativeBuffer());
+    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory

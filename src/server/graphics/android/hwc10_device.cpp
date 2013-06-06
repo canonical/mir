@@ -18,17 +18,21 @@
  */
 
 #include "hwc10_device.h"
+#include "hwc_vsync_coordinator.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::HWC10Device::HWC10Device(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<DisplaySupportProvider> const& fbdev)
-    : HWCCommonDevice(hwc_device),
-      fb_device(fbdev)
+                              std::shared_ptr<DisplaySupportProvider> const& fbdev,
+                              std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
+    : HWCCommonDevice(hwc_device, coordinator),
+      fb_device(fbdev),
+      wait_for_vsync(true)
 {
 }
 
@@ -51,7 +55,7 @@ unsigned int mga::HWC10Device::number_of_framebuffers_available() const
     return fb_device->number_of_framebuffers_available();
 }
 
-void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mga::AndroidBuffer> const& buffer)
+void mga::HWC10Device::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buffer)
 {
     fb_device->set_next_frontbuffer(buffer);
 }
@@ -76,4 +80,15 @@ void mga::HWC10Device::commit_frame(EGLDisplay dpy, EGLSurface sur)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error during hwc set()"));
     }
+
+    if (wait_for_vsync)
+    {
+        coordinator->wait_for_vsync();
+    }
+}
+
+void mga::HWC10Device::sync_to_display(bool sync)
+{
+    wait_for_vsync = sync;
+    fb_device->sync_to_display(sync);
 }

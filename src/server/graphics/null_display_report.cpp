@@ -30,3 +30,4 @@ void mg::NullDisplayReport::report_vt_switch_away_failure() {}
 void mg::NullDisplayReport::report_vt_switch_back_failure() {}
 void mg::NullDisplayReport::report_hwc_composition_in_use(int, int) {}
 void mg::NullDisplayReport::report_gpu_composition_in_use() {}
+void mg::NullDisplayReport::report_egl_configuration(EGLDisplay, EGLConfig) {}

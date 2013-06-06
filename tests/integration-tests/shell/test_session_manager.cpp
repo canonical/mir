@@ -26,15 +26,15 @@
 #include "mir/surfaces/buffer_bundle.h"
 #include "mir/surfaces/surface.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/stub_input_target_listener.h"
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
 namespace me = mir::events;
@@ -53,7 +53,6 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     msh::RegistrationOrderFocusSequence sequence(container);
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
-    mtd::StubInputTargetListener input_target_listener;
     msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager(
@@ -61,7 +60,6 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
             container,
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
-            mt::fake_shared(input_target_listener),
             mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
@@ -69,6 +67,8 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
     auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
     auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
+
+    Mock::VerifyAndClearExpectations(&focus_setter);
 
     {
       InSequence seq;
@@ -80,6 +80,11 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     session_manager.focus_next();
     session_manager.focus_next();
     session_manager.focus_next();
+
+    Mock::VerifyAndClearExpectations(&focus_setter);
+
+    // Possible change of focus while sessions are closed on shutdown
+    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(AtLeast(0));
 }
 
 TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
@@ -91,7 +96,6 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
     msh::RegistrationOrderFocusSequence sequence(container);
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
-    mtd::StubInputTargetListener input_target_listener;
     msh::NullSessionListener session_listener;
 
     msh::SessionManager session_manager(
@@ -99,7 +103,6 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
             container,
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
-            mt::fake_shared(input_target_listener),
             mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
@@ -107,6 +110,8 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
     auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
     auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
     auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
+
+    Mock::VerifyAndClearExpectations(&focus_setter);
 
     {
       InSequence seq;
@@ -116,4 +121,9 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
 
     session_manager.close_session(session3);
     session_manager.close_session(session2);
+
+    Mock::VerifyAndClearExpectations(&focus_setter);
+
+    // Possible change of focus while sessions are closed on shutdown
+    EXPECT_CALL(focus_setter, set_focus_to(_)).Times(AtLeast(0));
 }

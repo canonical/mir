@@ -266,6 +266,10 @@ void mia::FakeEventHub::monitor()
 {
 }
 
+void mia::FakeEventHub::flush()
+{
+}
+
 void mia::FakeEventHub::synthesize_builtin_keyboard_added()
 {
     RawEvent event;

@@ -148,9 +148,9 @@ extern "C" void __android_log_assert(const char *cond, const char *tag, const ch
  */
 #define __android_rest(first, ...)               , ## __VA_ARGS__
 
-#define android_printAssert(cond, tag, fmt...) \
+#define android_printAssert(cond, tag, ...) \
     __android_log_assert(cond, tag, \
-        __android_second(0, ## fmt, NULL) __android_rest(fmt))
+        __android_second(0, ## __VA_ARGS__, NULL) __android_rest(__VA_ARGS__))
 
 #define CONDITION(cond)     (__builtin_expect((cond)!=0, 0))
 

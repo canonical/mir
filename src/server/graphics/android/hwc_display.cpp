@@ -40,15 +40,9 @@ geom::Rectangle mga::HWCDisplay::view_area() const
     return geom::Rectangle{origin_pt, size};
 }
 
-void mga::HWCDisplay::clear()
-{
-    AndroidDisplay::clear();
-}
-
 void mga::HWCDisplay::post_update()
 {
     hwc_device->commit_frame(egl_display, egl_surface);
-    hwc_device->wait_for_vsync();
 }
 
 void mga::HWCDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)

@@ -24,8 +24,7 @@
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
-#include "mir_logger.h"
-#include "make_rpc_channel.h"
+#include "default_connection_configuration.h"
 
 #include <set>
 #include <unordered_set>
@@ -38,7 +37,33 @@ std::unordered_set<MirConnection*> MirConnection::valid_connections;
 
 namespace
 {
-MirConnection error_connection;
+class ConnectionList
+{
+public:
+    void insert(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.insert(connection);
+    }
+
+    void remove(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.erase(connection);
+    }
+
+    bool contains(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        return connections.count(connection);
+    }
+
+private:
+    std::mutex connection_guard;
+    std::unordered_set<MirConnection*> connections;
+};
+
+ConnectionList error_connections;
 
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void *result, void **context)
@@ -54,22 +79,21 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
-        const std::string sock = socket_file ? socket_file :
+        std::string const sock = socket_file ? socket_file :
                                                mir::default_server_socket;
-        auto log = std::make_shared<mcl::ConsoleLogger>();
-        auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-        MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(sock, log),
-            log,
-            client_platform_factory);
+        mcl::DefaultConnectionConfiguration conf{sock};
+
+        MirConnection* connection = new MirConnection(conf);
 
         return connection->connect(name, callback, context);
     }
     catch (std::exception const& x)
     {
-        error_connection.set_error_message(x.what());
-        callback(&error_connection, context);
+        MirConnection* error_connection = new MirConnection();
+        error_connections.insert(error_connection);
+        error_connection->set_error_message(x.what());
+        callback(error_connection, context);
         return 0;
     }
 }
@@ -97,10 +121,15 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
-    if (&error_connection == connection) return;
-
-    auto wait_handle = connection->disconnect();
-    wait_handle->wait_for_result();
+    if (!error_connections.contains(connection))
+    {
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_result();
+    }
+    else
+    {
+        error_connections.remove(connection);
+    }
 
     delete connection;
 }
@@ -116,7 +145,7 @@ MirWaitHandle* mir_connection_create_surface(
     mir_surface_lifecycle_callback callback,
     void* context)
 {
-    if (&error_connection == connection) return 0;
+    if (error_connections.contains(connection)) return 0;
 
     try
     {
@@ -131,7 +160,7 @@ MirWaitHandle* mir_connection_create_surface(
 }
 
 MirSurface* mir_connection_create_surface_sync(
-    MirConnection* connection, 
+    MirConnection* connection,
     MirSurfaceParameters const* params)
 {
     MirSurface *surface = nullptr;
@@ -183,19 +212,15 @@ void mir_surface_get_parameters(MirSurface * surface, MirSurfaceParameters *para
     *parameters = surface->get_parameters();
 }
 
-void mir_surface_get_current_buffer(MirSurface *surface, MirBufferPackage * buffer_package_out)
+MirPlatformType mir_surface_get_platform_type(MirSurface * surface)
+{
+    return surface->platform_type();
+}
+
+void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buffer_package_out)
 {
     auto package = surface->get_current_buffer_package();
-
-    buffer_package_out->data_items = package->data_items;
-    buffer_package_out->fd_items = package->fd_items;
-    for(auto i=0; i<mir_buffer_package_max; i++)
-    {
-        buffer_package_out->data[i] = package->data[i];
-        buffer_package_out->fd[i] = package->fd[i];
-    }
-
-    buffer_package_out->stride = package->stride;
+    *buffer_package_out = package.get();
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)

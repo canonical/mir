@@ -144,3 +144,8 @@ std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native
 
     return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(display_container));
 }
+
+MirPlatformType mclg::GBMClientPlatform::platform_type() const
+{
+    return mir_platform_type_gbm; 
+} 

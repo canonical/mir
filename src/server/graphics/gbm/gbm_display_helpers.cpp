@@ -17,6 +17,7 @@
  */
 
 #include "gbm_display_helpers.h"
+#include "drm_close_threadsafe.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -164,7 +165,7 @@ int mggh::DRMHelper::open_drm_device()
 mggh::DRMHelper::~DRMHelper()
 {
     if (fd >= 0)
-        drmClose(fd);
+        mgg::drm_close_threadsafe(fd);
 }
 
 /*************
@@ -316,4 +317,9 @@ void mggh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to choose ARGB EGL config"));
     }
+}
+
+void mggh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f)
+{
+    f(egl_display, egl_config);
 }

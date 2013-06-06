@@ -17,10 +17,11 @@
  */
 
 #include "hwc_layerlist.h"
-#include "android_buffer.h"
+#include "buffer.h"
 
 #include <cstring>
 
+namespace mc=mir::compositor;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -94,7 +95,7 @@ const mga::LayerList& mga::HWCLayerList::native_list() const
     return layer_list;
 }
 
-void mga::HWCLayerList::set_fb_target(std::shared_ptr<mga::AndroidBuffer> const& buffer)
+void mga::HWCLayerList::set_fb_target(std::shared_ptr<mc::Buffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
 

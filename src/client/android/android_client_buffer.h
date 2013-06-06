@@ -40,14 +40,13 @@ public:
     AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const&,
                         std::shared_ptr<MirBufferPackage> const&,
                         geometry::Size size, geometry::PixelFormat pf);
-    ~AndroidClientBuffer();
+    ~AndroidClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    MirNativeBuffer get_native_handle();
-    std::shared_ptr<MirBufferPackage> get_buffer_package() const;
+    std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
 
     AndroidClientBuffer(const AndroidClientBuffer&) = delete;
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
@@ -62,7 +61,7 @@ private:
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
 
-    ANativeWindowBuffer native_window_buffer;
+    std::shared_ptr<ANativeWindowBuffer> native_window_buffer;
 };
 
 }

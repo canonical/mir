@@ -21,7 +21,7 @@
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "mir_test_doubles/mock_hwc_interface.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test/egl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -82,7 +82,7 @@ protected:
 
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
-    mir::EglMock mock_egl;
+    mtd::MockEGL mock_egl;
     int width, height;
 };
 
@@ -523,6 +523,8 @@ TYPED_TEST(AndroidTestFramebufferInit, startup_logging_ok)
 {
     using namespace testing;
     EXPECT_CALL(*this->mock_display_report, report_successful_setup_of_native_resources())
+        .Times(Exactly(1));
+    EXPECT_CALL(*this->mock_display_report, report_egl_configuration(_,_))
         .Times(Exactly(1));
     EXPECT_CALL(*this->mock_display_report, report_successful_egl_make_current_on_construction())
         .Times(Exactly(1));

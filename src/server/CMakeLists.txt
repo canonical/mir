@@ -4,6 +4,7 @@ add_subdirectory(compositor/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(logging/)
+add_subdirectory(lttng/)
 add_subdirectory(surfaces/)
 add_subdirectory(options/)
 add_subdirectory(frontend/)
@@ -42,8 +43,10 @@ list(APPEND MIRSERVER_ARCHIVES
   mirgraphics
   mirinput
   mirsharedinput
+  mirsharedlogging
   mirsurfaces
   mirtime
+  mirlttng
 )
 
 list(APPEND MIRSERVER_LINKS

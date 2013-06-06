@@ -67,8 +67,7 @@ public:
      */
     virtual void force_requests_to_complete() = 0;
 
-    virtual ~BufferSwapper() {}
-
+    virtual ~BufferSwapper() = default;
 protected:
     BufferSwapper() = default;
     BufferSwapper(BufferSwapper const&) = delete;

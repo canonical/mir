@@ -19,7 +19,7 @@
 #ifndef MIR_INPUT_ANDROID_DEFAULT_ANDROID_INPUT_CONFIGURATION_H_
 #define MIR_INPUT_ANDROID_DEFAULT_ANDROID_INPUT_CONFIGURATION_H_
 
-#include "mir/input/android/android_input_configuration.h"
+#include "mir/input/input_configuration.h"
 
 #include "mir/cached_ptr.h"
 
@@ -35,6 +35,8 @@ namespace android
 class InputReaderInterface;
 class InputReaderPolicyInterface;
 class InputDispatcherPolicyInterface;
+class InputDispatcherInterface;
+class EventHubInterface;
 }
 
 namespace mir
@@ -43,39 +45,55 @@ namespace graphics
 {
 class ViewableArea;
 }
+namespace shell
+{
+class InputTargeter;
+}
 namespace input
 {
 class EventFilter;
 class EventFilterChain;
 class CursorListener;
+class InputReport;
 
 namespace android
 {
+class InputRegistrar;
+class WindowHandleRepository;
+class InputThread;
 
-class DefaultInputConfiguration : public InputConfiguration
+class DefaultInputConfiguration : public input::InputConfiguration
 {
 public:
     DefaultInputConfiguration(std::initializer_list<std::shared_ptr<EventFilter> const> const& filters,
                               std::shared_ptr<graphics::ViewableArea> const& view_area,
-                              std::shared_ptr<CursorListener> const& cursor_listener);
+                              std::shared_ptr<CursorListener> const& cursor_listener,
+                              std::shared_ptr<input::InputReport> const& input_report);
     virtual ~DefaultInputConfiguration();
 
-    droidinput::sp<droidinput::EventHubInterface> the_event_hub();
-    droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
-    droidinput::sp<droidinput::InputReaderInterface> the_reader();
+    std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
+    std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    std::shared_ptr<input::InputManager> the_input_manager();
+    
+    void set_input_targets(std::shared_ptr<input::InputTargets> const& targets);
 
-    std::shared_ptr<InputThread> the_dispatcher_thread();
-    std::shared_ptr<InputThread> the_reader_thread();
+    virtual bool is_key_repeat_enabled();
+    
+protected:
+    virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub();
+    virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
+    virtual droidinput::sp<droidinput::InputReaderInterface> the_reader();
+
+    virtual std::shared_ptr<InputThread> the_dispatcher_thread();
+    virtual std::shared_ptr<InputThread> the_reader_thread();
 
     virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
-    
-    virtual bool is_key_repeat_enabled();
 
-protected:
+    std::shared_ptr<WindowHandleRepository> the_window_handle_repository();
+
     DefaultInputConfiguration(DefaultInputConfiguration const&) = delete;
     DefaultInputConfiguration& operator=(DefaultInputConfiguration const&) = delete;
-
 private:
     template <typename Type>
     class CachedAndroidPtr
@@ -102,9 +120,16 @@ private:
     std::shared_ptr<EventFilterChain> const filter_chain;
     std::shared_ptr<graphics::ViewableArea> const view_area;
     std::shared_ptr<CursorListener> const cursor_listener;
+    
+    std::shared_ptr<input::InputReport> const input_report;
 
     CachedPtr<InputThread> dispatcher_thread;
     CachedPtr<InputThread> reader_thread;
+    CachedPtr<InputRegistrar> input_registrar;
+
+    CachedPtr<shell::InputTargeter> input_targeter;
+    CachedPtr<input::InputManager> input_manager;
+
     CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
     CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;

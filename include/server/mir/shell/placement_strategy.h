@@ -21,13 +21,10 @@
 
 namespace mir
 {
-namespace frontend
-{
-struct SurfaceCreationParameters;
-}
 
 namespace shell
 {
+struct SurfaceCreationParameters;
 
 class PlacementStrategy
 {
@@ -35,7 +32,7 @@ public:
     virtual ~PlacementStrategy() {}
     // TODO: It is strange to work in terms of SurfaceCreationParameters here,
     // perhaps a new interface is needed.
-    virtual frontend::SurfaceCreationParameters place(frontend::SurfaceCreationParameters const& request_parameters) = 0;
+    virtual SurfaceCreationParameters place(SurfaceCreationParameters const& request_parameters) = 0;
 
 
 protected:

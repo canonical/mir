@@ -20,7 +20,6 @@
 
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
-#include "mir/compositor/buffer_ipc_package.h"
 
 #include <fcntl.h>
 #include <xf86drm.h>
@@ -80,7 +79,7 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 
 mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
                           std::unique_ptr<BufferTextureBinder> texture_binder)
-    : gbm_handle{handle}, texture_binder{std::move(texture_binder)}
+    : gbm_handle{handle}, texture_binder{std::move(texture_binder)}, prime_fd{-1}
 {
     auto device = gbm_bo_get_device(gbm_handle.get());
     auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
@@ -95,6 +94,12 @@ mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
             boost::enable_error_info(
                 std::runtime_error(msg)) << boost::errinfo_errno(errno));
     }
+}
+
+mgg::GBMBuffer::~GBMBuffer()
+{
+    if (prime_fd > 0)
+        close(prime_fd);
 }
 
 geom::Size mgg::GBMBuffer::size() const
@@ -113,17 +118,17 @@ geom::PixelFormat mgg::GBMBuffer::pixel_format() const
     return gbm_format_to_mir_format(gbm_bo_get_format(gbm_handle.get()));
 }
 
-std::shared_ptr<mc::BufferIPCPackage> mgg::GBMBuffer::get_ipc_package() const
-{
-    auto temp = std::make_shared<mc::BufferIPCPackage>();
-
-    temp->ipc_fds.push_back(prime_fd);
-    temp->stride = stride().as_uint32_t();
-
-    return temp;
-}
-
 void mgg::GBMBuffer::bind_to_texture()
 {
     texture_binder->bind_to_texture();
+}
+
+std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
+{
+    auto temp = std::make_shared<MirNativeBuffer>();
+
+    temp->fd_items = 1;
+    temp->fd[0] = prime_fd;
+    temp->stride = stride().as_uint32_t();
+    return temp;
 }

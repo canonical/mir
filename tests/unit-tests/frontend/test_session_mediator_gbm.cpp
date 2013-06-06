@@ -22,7 +22,6 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/frontend/shell.h"
-#include "mir/frontend/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform.h"
@@ -83,9 +82,14 @@ class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthentica
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    EGLNativeDisplayType shell_egl_display()
+    std::shared_ptr<mg::InternalClient> create_internal_client()
     {
-        return static_cast<EGLNativeDisplayType>(0);
+        return std::shared_ptr<mg::InternalClient>();
+    }
+
+    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                          std::shared_ptr<mc::Buffer> const&) const
+    {
     }
 
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));

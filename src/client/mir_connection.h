@@ -41,15 +41,26 @@ namespace mir
 /// The client-side library implementation namespace
 namespace client
 {
-class Logger;
-class ClientBufferDepository;
+class ConnectionConfiguration;
 class ClientPlatformFactory;
+
+namespace rpc
+{
 class MirBasicRpcChannel;
+}
+}
 
 namespace input
 {
+namespace receiver
+{
 class InputPlatform;
 }
+}
+
+namespace logging
+{
+class Logger;
 }
 }
 
@@ -58,9 +69,7 @@ struct MirConnection : mir::client::ClientContext, private mir::events::EventSin
 public:
     MirConnection();
 
-    MirConnection(std::shared_ptr<mir::client::MirBasicRpcChannel> const& channel,
-                  std::shared_ptr<mir::client::Logger> const & log,
-                  std::shared_ptr<mir::client::ClientPlatformFactory> const& client_platform_factory);
+    MirConnection(mir::client::ConnectionConfiguration& conf);
     ~MirConnection() noexcept;
 
     MirConnection(MirConnection const &) = delete;
@@ -104,9 +113,9 @@ public:
     void handle_event(MirEvent const&);
 
 private:
-    std::shared_ptr<google::protobuf::RpcChannel> channel;
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
-    std::shared_ptr<mir::client::Logger> log;
+    std::shared_ptr<mir::logging::Logger> logger;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
     mir::protobuf::Void ignored;
@@ -117,7 +126,7 @@ private:
     std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
-    std::shared_ptr<mir::client::input::InputPlatform> const input_platform;
+    std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
 
     std::string error_message;
 

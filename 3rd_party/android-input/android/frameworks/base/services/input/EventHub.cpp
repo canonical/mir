@@ -20,20 +20,17 @@
 
 #include "EventHub.h"
 
-#if !defined(ANDROID_USE_STD)
-#include <hardware_legacy/power.h>
-#else
 #define acquire_wake_lock(lock, id) {}
 #define release_wake_lock(id) {}
-#endif
+
+#include "mir/input/input_report.h"
 
 #include <cutils/properties.h>
-#include ANDROIDFW_UTILS(Log.h)
-#include ANDROIDFW_UTILS(Timers.h)
-#include ANDROIDFW_UTILS(Errors.h)
+#include <std/Log.h>
+#include <std/Timers.h>
+#include <std/Errors.h>
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <memory.h>
@@ -44,12 +41,9 @@
 #include <androidfw/KeyCharacterMap.h>
 #include <androidfw/VirtualKeyMap.h>
 
-#if !defined(ANDROID_USE_STD)
-#include <sha1.h>
-#else
 #include <android/keycodes.h>
 #include <boost/uuid/sha1.hpp>
-#endif
+
 #include <string.h>
 #include <stdint.h>
 #include <dirent.h>
@@ -79,44 +73,7 @@
 #define INDENT2 "    "
 #define INDENT3 "      "
 
-#if defined(ANDROID_USE_STD)
-// TODO replace logging with mir reporting subsystem
-extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, ...)
-{
-    if (prio < ANDROID_LOG_INFO) return 0;
-    va_list ap;
-    va_start(ap, fmt);
-    int result = vfprintf(stderr, fmt, ap);
-    fprintf(stderr, "\n");
-    va_end(ap);
-
-    return result;
-}
-
-extern "C" void __android_log_assert(const char *cond, const char *tag,
-              const char *fmt, ...)
-{
-    if (fmt) {
-        va_list ap;
-        va_start(ap, fmt);
-        vfprintf(stderr, fmt, ap);
-        fprintf(stderr, "\n");
-        va_end(ap);
-    } else {
-        /* Msg not provided, log condition.  N.B. Do not use cond directly as
-         * format string as it could contain spurious '%' syntax (e.g.
-         * "%d" in "blocks%devs == 0").
-         */
-        if (cond)
-            fprintf(stderr, "Assertion failed: %s\n", cond);
-        else
-            fprintf(stderr, "Unspecified assertion failed\n");
-    }
-
-    __builtin_trap(); /* trap so we have a chance to debug the situation */
-}
-
-#endif
+namespace mi = mir::input;
 
 namespace android {
 
@@ -136,17 +93,6 @@ static inline const char* toString(bool value) {
 namespace detail
 {
 String8 sha1(const String8& in) {
-#if !defined(ANDROID_USE_STD)
-    SHA1_CTX ctx;
-    SHA1Init(&ctx);
-    SHA1Update(&ctx, reinterpret_cast<const u_char*>(c_str(in)), in.size());
-    u_char digest[SHA1_DIGEST_LENGTH];
-    SHA1Final(digest, &ctx);
-    String8 out;
-    for (size_t i = 0; i < SHA1_DIGEST_LENGTH; i++) {
-        appendFormat(out, "%02x", digest[i]);
-    }
-#else
     boost::uuids::detail::sha1 hasher;
     hasher.process_bytes(in.data(), in.size());
 
@@ -157,7 +103,6 @@ String8 sha1(const String8& in) {
     for(int i : digest) {
         appendFormat(out, "%08x", i);
     }
-#endif
 
     return out;
 }
@@ -265,7 +210,8 @@ const uint32_t EventHub::EPOLL_ID_WAKE;
 const int EventHub::EPOLL_SIZE_HINT;
 const int EventHub::EPOLL_MAX_EVENTS;
 
-EventHub::EventHub(void) :
+EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
+        input_report(input_report),
         mBuiltInKeyboardId(NO_BUILT_IN_KEYBOARD), mNextDeviceId(1),
         mOpeningDevices(0), mClosingDevices(0),
         mNeedToSendFinishedDeviceScan(false),
@@ -866,6 +812,9 @@ size_t EventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t bufferSiz
                         event->type = iev.type;
                         event->code = iev.code;
                         event->value = iev.value;
+
+                        input_report->received_event_from_kernel(event->when, event->type, event->code, event->value);
+
                         event += 1;
                     }
                     capacity -= count;
@@ -1556,5 +1505,22 @@ void EventHub::monitor() {
     mLock.unlock();
 }
 
+void EventHub::flush() {
+    static const int bufferSize = 256;
+
+    AutoMutex _l(mLock);
+
+    char readBuffer[bufferSize];
+    int32_t readSize;
+
+    // Read any pending events from the input devices. Note that
+    // the device fds are in non-blocking mode (see openDeviceLocked).
+    for (size_t i = 0; i < mDevices.size(); i++) {
+        const Device* device = mDevices.valueAt(i);
+        do {
+            readSize = read(device->fd, readBuffer, bufferSize);
+        } while (readSize > 0);
+    }
+}
 
 }; // namespace android

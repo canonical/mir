@@ -101,6 +101,7 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
+    display_report->report_egl_configuration(egl_display, egl_config);
 }
 
 mga::AndroidDisplay::~AndroidDisplay()
@@ -126,11 +127,6 @@ geom::Rectangle mga::AndroidDisplay::view_area() const
     geom::Size sz{w,h};
     geom::Rectangle rect{pt, sz};
     return rect;
-}
-
-void mga::AndroidDisplay::clear()
-{
-    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void mga::AndroidDisplay::post_update()

@@ -20,7 +20,6 @@
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_basic.h"
@@ -42,6 +41,7 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
@@ -107,6 +107,8 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
     {
         return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(::buffer_properties));
     }
+
+    ~MockGraphicBufferAllocator() noexcept {}
 };
 
 }
@@ -355,9 +357,14 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return std::make_shared<mg::PlatformIPCPackage>();
         }
 
-        EGLNativeDisplayType shell_egl_display()
+        std::shared_ptr<mg::InternalClient> create_internal_client()
         {
-            return static_cast<EGLNativeDisplayType>(0);
+            return std::shared_ptr<mg::InternalClient>();   
+        }
+ 
+        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                              std::shared_ptr<mc::Buffer> const&) const
+        {
         }
     };
 
@@ -487,9 +494,14 @@ struct BufferCounterConfig : TestingServerConfiguration
             return std::make_shared<mg::PlatformIPCPackage>();
         }
 
-        EGLNativeDisplayType shell_egl_display()
+        std::shared_ptr<mg::InternalClient> create_internal_client()
         {
-            return (EGLNativeDisplayType) 0;
+            return std::shared_ptr<mg::InternalClient>();   
+        }
+
+        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
+                              std::shared_ptr<mc::Buffer> const&) const
+        {
         }
     };
 

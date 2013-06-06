@@ -24,11 +24,11 @@
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/session_manager.h"
 #include "mir/graphics/display.h"
-#include "mir/shell/input_target_listener.h"
+#include "mir/shell/input_targeter.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/mock_input_target_listener.h"
+#include "mir_test_doubles/mock_input_targeter.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -167,37 +167,33 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mtd::MockInputTargetListener> target_listener;
+        std::shared_ptr<mtd::MockInputTargeter> targeter;
         bool expected;
 
         ServerConfig()
-          : target_listener(std::make_shared<mtd::MockInputTargetListener>()),
+          : targeter(std::make_shared<mtd::MockInputTargeter>()),
             expected(false)
         {
         }
 
-        std::shared_ptr<msh::InputTargetListener>
-        the_input_target_listener() override
+        std::shared_ptr<msh::InputTargeter>
+        the_input_targeter() override
         {
             using namespace ::testing;
 
             if (!expected)
             {
                 
-                EXPECT_CALL(*target_listener, input_application_opened(_)).Times(AtLeast(0));
-                EXPECT_CALL(*target_listener, input_application_closed(_)).Times(AtLeast(0));
-                EXPECT_CALL(*target_listener, input_surface_opened(_,_)).Times(AtLeast(0));
-                EXPECT_CALL(*target_listener, input_surface_closed(_)).Times(AtLeast(0));
-                EXPECT_CALL(*target_listener, focus_cleared()).Times(AtLeast(0));
+                EXPECT_CALL(*targeter, focus_cleared()).Times(AtLeast(0));
 
                 {
                     InSequence seq;
-                    EXPECT_CALL(*target_listener, focus_changed(NonNullSurfaceTarget())).Times(1);
+                    EXPECT_CALL(*targeter, focus_changed(NonNullSurfaceTarget())).Times(1);
                     expected = true;
                 }
             }
 
-            return target_listener;
+            return targeter;
         }
     } server_config;
 

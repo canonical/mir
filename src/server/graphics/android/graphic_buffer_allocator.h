@@ -20,8 +20,12 @@
 #ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
 #define MIR_GRAPHICS_ANDROID_GRAPHIC_BUFFER_ALLOCATOR_H_
 
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "android_buffer_handle.h"
+#include "buffer_usage.h"
+
+#include "mir/geometry/size.h"
+#include "mir/geometry/pixel_format.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -29,21 +33,17 @@ namespace graphics
 {
 namespace android
 {
+class Buffer;
 
-class AndroidBuffer;
-class GraphicBufferAllocator: public compositor::GraphicBufferAllocator
+class GraphicBufferAllocator
 {
 public:
+    virtual std::shared_ptr<Buffer> alloc_buffer_platform(
+        geometry::Size sz, geometry::PixelFormat pf, BufferUsage use) = 0;
+
+protected:
     GraphicBufferAllocator() = default;
     virtual ~GraphicBufferAllocator() = default;
-
-    virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
-        compositor::BufferProperties const& buffer_properties) = 0;
-    virtual std::shared_ptr<AndroidBuffer> alloc_buffer_platform(
-        geometry::Size sz, geometry::PixelFormat pf, BufferUsage use) = 0;
-    virtual std::vector<geometry::PixelFormat> supported_pixel_formats() = 0;
-
-private:
     GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
     GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
 };

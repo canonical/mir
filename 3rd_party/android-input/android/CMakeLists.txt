@@ -5,6 +5,8 @@ include_directories(
   hardware/libhardware_legacy/include
   system/core/include
   system/extras/ext4_utils
+
+  ${PROJECT_SOURCE_DIR}/include/server
 )
 
 add_definitions(
@@ -28,7 +30,6 @@ add_library(
   frameworks/base/services/input/InputApplication.cpp
   frameworks/base/services/input/InputDispatcher.cpp
   frameworks/base/services/input/InputListener.cpp
-  frameworks/base/services/input/InputManager.cpp
   frameworks/base/services/input/InputReader.cpp
   frameworks/base/services/input/InputTransport.cpp
   frameworks/base/services/input/InputWindow.cpp
@@ -45,6 +46,7 @@ add_library(
   frameworks/base/services/input/VelocityControl.cpp
   frameworks/base/services/input/VelocityTracker.cpp
   frameworks/base/services/input/VirtualKeyMap.cpp
+  frameworks/base/services/input/MirLog.cpp
   frameworks/native/libs/utils/Tokenizer.cpp
   frameworks/native/libs/utils/FileMap.cpp
   ${UTIL_SOURCES}

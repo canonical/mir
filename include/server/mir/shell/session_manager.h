@@ -29,10 +29,6 @@
 
 namespace mir
 {
-namespace frontend
-{
-struct SurfaceCreationParameters;
-}
 
 /// Management of sessions and surfaces
 namespace shell
@@ -42,8 +38,9 @@ class SessionContainer;
 class FocusSequence;
 class FocusSetter;
 class Session;
-class InputTargetListener;
+class InputRegistrar;
 class SessionListener;
+struct SurfaceCreationParameters;
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
@@ -52,7 +49,6 @@ public:
                             std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<FocusSequence> const& focus_sequence,
                             std::shared_ptr<FocusSetter> const& focus_setter,
-                            std::shared_ptr<InputTargetListener> const& input_target_listener,
                             std::shared_ptr<SessionListener> const& session_listener);
     virtual ~SessionManager();
 
@@ -60,7 +56,7 @@ public:
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
-                                 frontend::SurfaceCreationParameters const& params);
+                                 SurfaceCreationParameters const& params);
 
     void focus_next();
     std::weak_ptr<Session> focussed_application() const;
@@ -74,7 +70,6 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
-    std::shared_ptr<InputTargetListener> const input_target_listener;
     std::shared_ptr<SessionListener> const session_listener;
 
     std::mutex mutex;

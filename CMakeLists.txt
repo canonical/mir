@@ -15,34 +15,20 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-set(
-  MIR_GCC_VERSION
-  4.7
-  CACHE
-  STRING
-  "Version of gcc/g++"
-)
-cmake_policy(SET CMP0015 NEW)
-
-if (NOT DEFINED CMAKE_C_COMPILER)
-  set (CMAKE_C_COMPILER gcc-${MIR_GCC_VERSION})
-endif ()
-if (NOT DEFINED CMAKE_CXX_COMPILER)
-  set (CMAKE_CXX_COMPILER g++-${MIR_GCC_VERSION})
-endif ()
-
-set(CMAKE_GCOV gcov-${MIR_GCC_VERSION})
+set(CMAKE_GCOV gcov)
 
 project(Mir)
 
 cmake_minimum_required(VERSION 2.8)
+
+cmake_policy(SET CMP0015 NEW)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 0)
-set(MIR_VERSION_PATCH 2)
+set(MIR_VERSION_PATCH 3)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -111,6 +97,7 @@ find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(XKBCOMMON REQUIRED)
+find_package(LTTngUST REQUIRED)
 
 include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})

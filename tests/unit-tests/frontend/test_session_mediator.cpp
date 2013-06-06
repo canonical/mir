@@ -17,7 +17,6 @@
  */
 
 #include "mir/surfaces/buffer_bundle.h"
-#include "mir/compositor/buffer_ipc_package.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/session_mediator.h"
@@ -33,6 +32,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_platform.h"
 #include "mir_test/fake_shared.h"
 #include "mir/events/event_sink.h"
 #include "mir/shell/surface.h"
@@ -102,31 +102,29 @@ public:
     }
 
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
+    ~MockGraphicBufferAllocator() noexcept {}
 };
 
-class StubPlatform : public mg::Platform
+class MockPlatform : public mg::Platform
 {
  public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+    MockPlatform()
     {
-        return std::shared_ptr<mc::GraphicBufferAllocator>();
+        using namespace testing;
+        ON_CALL(*this, create_buffer_allocator(_))
+            .WillByDefault(Return(std::shared_ptr<mc::GraphicBufferAllocator>()));
+        ON_CALL(*this, create_display())
+            .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
+        ON_CALL(*this, get_ipc_package())
+            .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
     }
 
-    std::shared_ptr<mg::Display> create_display()
-    {
-        return std::make_shared<mtd::NullDisplay>();
-    }
-
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
-    }
-    
-    EGLNativeDisplayType shell_egl_display()
-    {
-        return static_cast<EGLNativeDisplayType>(0);
-    }
+    MOCK_METHOD1(create_buffer_allocator, std::shared_ptr<mc::GraphicBufferAllocator>(std::shared_ptr<mg::BufferInitializer> const&));
+    MOCK_METHOD0(create_display, std::shared_ptr<mg::Display>());
+    MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
+    MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
+    MOCK_CONST_METHOD2(fill_ipc_package, void(std::shared_ptr<mc::BufferIPCPacker> const&,
+                                              std::shared_ptr<mc::Buffer> const&));
 };
 
 class NullEventSink : public mir::events::EventSink
@@ -139,7 +137,7 @@ struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
-          graphics_platform{std::make_shared<StubPlatform>()},
+          graphics_platform{std::make_shared<MockPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
@@ -158,7 +156,7 @@ struct SessionMediatorTest : public ::testing::Test
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
-    std::shared_ptr<mg::Platform> const graphics_platform;
+    std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
@@ -377,56 +375,25 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     {
-        auto package = std::make_shared<mc::BufferIPCPackage>();
-        package->ipc_data = std::vector<int32_t>{5, 23, 1};
-        package->ipc_fds = std::vector<int32_t>{2, 1};
-
-        ON_CALL(*stubbed_session->mock_buffer, get_ipc_package())
-            .WillByDefault(Return(package));
-
         EXPECT_CALL(*stubbed_session->mock_buffer, id())
             .WillOnce(Return(mc::BufferID{4}))
             .WillOnce(Return(mc::BufferID{5}))
             .WillOnce(Return(mc::BufferID{4}))
             .WillOnce(Return(mc::BufferID{5}));
 
-        EXPECT_CALL(*stubbed_session->mock_buffer, get_ipc_package())
-            .Times(2);
-
-        mp::SurfaceParameters surface_request;
         mp::Surface surface_response;
         mp::SurfaceId buffer_request;
         mp::Buffer buffer_response[3];
 
+        std::shared_ptr<mc::Buffer> tmp_buffer = stubbed_session->mock_buffer;
+        EXPECT_CALL(*graphics_platform, fill_ipc_package(_, tmp_buffer))
+            .Times(2);
+
+        mp::SurfaceParameters surface_request;
         mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
-        ASSERT_EQ(mc::BufferID{4}.as_uint32_t(), static_cast<uint32_t>(surface_response.buffer().buffer_id()));
-        EXPECT_EQ(2, surface_response.buffer().fd_size());
-        EXPECT_EQ(3, surface_response.buffer().data_size());
-        for (int i = 0; i < surface_response.buffer().fd_size(); ++i)
-            EXPECT_EQ(package->ipc_fds[i], surface_response.buffer().fd(i));
-        for (int i = 0; i < surface_response.buffer().data_size(); ++i)
-            EXPECT_EQ(package->ipc_data[i], surface_response.buffer().data(i));
-
-
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[0], null_callback.get());
-        ASSERT_EQ(mc::BufferID{5}.as_uint32_t(), static_cast<uint32_t>(buffer_response[0].buffer_id()));
-        EXPECT_EQ(2, buffer_response[0].fd_size());
-        EXPECT_EQ(3, buffer_response[0].data_size());
-        for (int i = 0; i < buffer_response[0].fd_size(); ++i)
-            EXPECT_EQ(package->ipc_fds[i], buffer_response[0].fd(i));
-        for (int i = 0; i < buffer_response[0].data_size(); ++i)
-            EXPECT_EQ(package->ipc_data[i], buffer_response[0].data(i));
-
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[1], null_callback.get());
-        ASSERT_EQ(mc::BufferID{4}.as_uint32_t(), static_cast<uint32_t>(buffer_response[1].buffer_id()));
-        EXPECT_EQ(0, buffer_response[1].fd_size());
-        EXPECT_EQ(0, buffer_response[1].data_size());
-
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[2], null_callback.get());
-
-        ASSERT_EQ(mc::BufferID{5}.as_uint32_t(), static_cast<uint32_t>(buffer_response[2].buffer_id()));
-        EXPECT_EQ(0, buffer_response[2].fd_size());
-        EXPECT_EQ(0, buffer_response[2].data_size());
     }
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());

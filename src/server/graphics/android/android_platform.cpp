@@ -23,13 +23,16 @@
 #include "android_display_allocator.h"
 #include "android_display_factory.h"
 #include "default_framebuffer_factory.h"
+#include "internal_client.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
+#include "mir/compositor/buffer_ipc_packer.h"
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
+namespace mf=mir::frontend;
 
 mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mg::DisplayReport> const& display_report)
     : display_report(display_report)
@@ -42,16 +45,28 @@ std::shared_ptr<mc::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
     return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
 }
 
+std::shared_ptr<mga::GraphicBufferAllocator> mga::AndroidPlatform::create_mga_buffer_allocator(
+    const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
+{
+    return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+}
+
+std::shared_ptr<mga::FramebufferFactory> mga::AndroidPlatform::create_frame_buffer_factory(
+    const std::shared_ptr<mga::GraphicBufferAllocator>& buffer_allocator)
+{
+    return std::make_shared<mga::DefaultFramebufferFactory>(buffer_allocator);
+}
+
 std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
 {
     auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
     auto display_allocator = std::make_shared<mga::AndroidDisplayAllocator>();
 
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
-    auto fb_factory = std::make_shared<mga::DefaultFramebufferFactory>(buffer_allocator);
-    auto display_factory = std::make_shared<mga::AndroidDisplayFactory>(display_allocator, hwc_factory, fb_factory, display_report);
-    return display_factory->create_display();
+    auto buffer_allocator = create_mga_buffer_allocator(buffer_initializer);
+    auto fb_factory = create_frame_buffer_factory(buffer_allocator);
+    mga::AndroidDisplayFactory display_factory(display_allocator, hwc_factory, fb_factory, display_report);
+    return display_factory.create_display();
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
@@ -59,10 +74,28 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-EGLNativeDisplayType mga::AndroidPlatform::shell_egl_display()
+void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+                                            std::shared_ptr<mc::Buffer> const& buffer) const
 {
-    // TODO: Implement
-    return static_cast<EGLNativeDisplayType>(0);
+    auto native_buffer = buffer->native_buffer_handle();
+    auto buffer_handle = native_buffer->handle;
+
+    int offset = 0;
+    for(auto i=0; i<buffer_handle->numFds; i++)
+    {
+        packer->pack_fd(buffer_handle->data[offset++]);
+    }    
+    for(auto i=0; i<buffer_handle->numInts; i++)
+    {
+        packer->pack_data(buffer_handle->data[offset++]);
+    }    
+
+    packer->pack_stride(buffer->stride());
+}
+
+std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client()
+{
+    return std::make_shared<mga::InternalClient>();
 }
 
 std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)

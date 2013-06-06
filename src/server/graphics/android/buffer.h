@@ -20,8 +20,8 @@
 #ifndef MIR_GRAPHICS_ANDROID_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_BUFFER_H_
 
-#include "android_buffer.h"
-#include "android_buffer_handle.h"
+#include "mir/compositor/buffer_basic.h"
+#include "buffer_usage.h"
 
 #include <map>
 
@@ -38,28 +38,23 @@ namespace android
 {
 
 class GraphicAllocAdaptor;
-class Buffer: public AndroidBuffer 
+class Buffer: public compositor::BufferBasic 
 {
 public:
     Buffer(const std::shared_ptr<GraphicAllocAdaptor>& device,
                   geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
     ~Buffer();
 
-    /* from BufferBasic */
     geometry::Size size() const;
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
-    std::shared_ptr<compositor::BufferIPCPackage> get_ipc_package() const;
     void bind_to_texture();
-
-    /* android-specific */
     std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
-private:
-    std::shared_ptr<GraphicAllocAdaptor> const alloc_device;
 
+private:
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
-    std::shared_ptr<AndroidBufferHandle> native_window_buffer_handle;
+    std::shared_ptr<ANativeWindowBuffer> native_buffer;
 };
 
 }

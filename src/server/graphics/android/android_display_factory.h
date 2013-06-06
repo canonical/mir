@@ -19,13 +19,15 @@
 #ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_FACTORY_H_
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_FACTORY_H_
 
-#include "display_factory.h"
 #include <hardware/hwcomposer.h>
+
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+class Display;
 class DisplayReport;
 namespace android
 {
@@ -35,7 +37,7 @@ class HWCDevice;
 class DisplayAllocator;
 class DisplaySupportProvider;
 class FramebufferFactory;
-class AndroidDisplayFactory : public DisplayFactory
+class AndroidDisplayFactory
 {
 public:
     AndroidDisplayFactory(std::shared_ptr<DisplayAllocator> const& display_factory,
@@ -46,8 +48,6 @@ public:
     std::shared_ptr<Display> create_display() const;
 
 private:
-    void setup_hwc_dev(const hw_module_t* module);
-
     std::shared_ptr<DisplayAllocator> const display_factory;
     std::shared_ptr<HWCFactory> const hwc_factory;
     std::shared_ptr<FramebufferFactory> const fb_factory;

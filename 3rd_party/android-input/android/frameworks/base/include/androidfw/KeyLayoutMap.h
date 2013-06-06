@@ -17,13 +17,12 @@
 #ifndef _ANDROIDFW_KEY_LAYOUT_MAP_H
 #define _ANDROIDFW_KEY_LAYOUT_MAP_H
 
-#include <androidfw/Platform.h>
 
 #include <stdint.h>
-#include ANDROIDFW_UTILS(Errors.h)
-#include ANDROIDFW_UTILS(KeyedVector.h)
-#include ANDROIDFW_UTILS(Tokenizer.h)
-#include ANDROIDFW_UTILS(RefBase.h)
+#include <std/Errors.h>
+#include <std/KeyedVector.h>
+#include <std/Tokenizer.h>
+#include <std/RefBase.h>
 
 namespace android {
 

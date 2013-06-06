@@ -33,23 +33,20 @@ namespace shell
 {
 class SurfaceFactory;
 class Surface;
-class InputTargetListener;
 
 class ApplicationSession : public Session
 {
 public:
-    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, 
-        std::shared_ptr<InputTargetListener> const& input_target_listener, std::string const& session_name);
+    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
 
     ApplicationSession(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
-        std::shared_ptr<InputTargetListener> const& input_target_listener,
         std::string const& session_name,
         std::shared_ptr<events::EventSink> const& sink);
 
     ~ApplicationSession();
 
-    frontend::SurfaceId create_surface(frontend::SurfaceCreationParameters const& params);
+    frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& params);
     void destroy_surface(frontend::SurfaceId surface);
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 
@@ -70,7 +67,6 @@ protected:
 
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
-    std::shared_ptr<InputTargetListener> const input_target_listener;
     std::string const session_name;
     std::shared_ptr<events::EventSink> const event_sink;
 

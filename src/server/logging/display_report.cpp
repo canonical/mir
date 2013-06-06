@@ -95,3 +95,59 @@ void ml::DisplayReport::report_gpu_composition_in_use()
 {
     logger->log<Logger::informational>("GPU backup in use for display.", component());
 }
+
+void ml::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig config)
+{
+    #define STRMACRO(X) {#X, X}
+    struct {std::string name; EGLint val;} egl_string_mapping [] =
+    {
+        STRMACRO(EGL_BUFFER_SIZE),
+        STRMACRO(EGL_ALPHA_SIZE),
+        STRMACRO(EGL_BLUE_SIZE),
+        STRMACRO(EGL_GREEN_SIZE),
+        STRMACRO(EGL_RED_SIZE),
+        STRMACRO(EGL_DEPTH_SIZE),
+        STRMACRO(EGL_STENCIL_SIZE),
+        STRMACRO(EGL_CONFIG_CAVEAT),
+        STRMACRO(EGL_CONFIG_ID),
+        STRMACRO(EGL_LEVEL),
+        STRMACRO(EGL_MAX_PBUFFER_HEIGHT),
+        STRMACRO(EGL_MAX_PBUFFER_PIXELS),
+        STRMACRO(EGL_MAX_PBUFFER_WIDTH),
+        STRMACRO(EGL_NATIVE_RENDERABLE),
+        STRMACRO(EGL_NATIVE_VISUAL_ID),
+        STRMACRO(EGL_NATIVE_VISUAL_TYPE),
+        STRMACRO(EGL_SAMPLES),
+        STRMACRO(EGL_SAMPLE_BUFFERS),
+        STRMACRO(EGL_SURFACE_TYPE),
+        STRMACRO(EGL_TRANSPARENT_TYPE),
+        STRMACRO(EGL_TRANSPARENT_BLUE_VALUE),
+        STRMACRO(EGL_TRANSPARENT_GREEN_VALUE),
+        STRMACRO(EGL_TRANSPARENT_RED_VALUE),
+        STRMACRO(EGL_BIND_TO_TEXTURE_RGB),
+        STRMACRO(EGL_BIND_TO_TEXTURE_RGBA),
+        STRMACRO(EGL_MIN_SWAP_INTERVAL),
+        STRMACRO(EGL_MAX_SWAP_INTERVAL),
+        STRMACRO(EGL_LUMINANCE_SIZE),
+        STRMACRO(EGL_ALPHA_MASK_SIZE),
+        STRMACRO(EGL_COLOR_BUFFER_TYPE),
+        STRMACRO(EGL_RENDERABLE_TYPE),
+        STRMACRO(EGL_MATCH_NATIVE_PIXMAP),
+        STRMACRO(EGL_CONFORMANT),
+        STRMACRO(EGL_SLOW_CONFIG),
+        STRMACRO(EGL_NON_CONFORMANT_CONFIG),
+        STRMACRO(EGL_TRANSPARENT_RGB),
+        STRMACRO(EGL_RGB_BUFFER),
+        STRMACRO(EGL_LUMINANCE_BUFFER)
+    };
+    #undef STRMACRO
+
+    logger->log<Logger::informational>("Display EGL Configuration:", component());
+    for( auto &i : egl_string_mapping)
+    {
+        EGLint value;
+        eglGetConfigAttrib(disp, config, i.val, &value);
+        logger->log<Logger::informational>(
+            "    [" + i.name + "] : " + std::to_string(value), component());
+    } 
+}

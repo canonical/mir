@@ -20,7 +20,8 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
-#include "mir_native_buffer.h"
+#include "mir_toolkit/mir_native_buffer.h"
+#include "mir_toolkit/common.h"
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/size.h"
 
@@ -51,6 +52,7 @@ struct MemoryRegion
 class ClientBuffer
 {
 public:
+    virtual ~ClientBuffer() = default;
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
@@ -58,9 +60,7 @@ public:
     virtual uint32_t age() const = 0;
     virtual void increment_age() = 0;
     virtual void mark_as_submitted() = 0;
-
-    virtual MirNativeBuffer get_native_handle() = 0;
-    virtual std::shared_ptr<MirBufferPackage> get_buffer_package() const = 0;
+    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const = 0;
 };
 
 }

@@ -17,9 +17,9 @@
  */
 
 #include "mir_test_doubles/mock_fb_hal_device.h"
-#include "mir_test_doubles/mock_android_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "src/server/graphics/android/fb_device.h"
-#include "mir_test/hw_mock.h"
+#include "mir_test_doubles/mock_android_hw.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -42,7 +42,7 @@ struct FBDevice : public ::testing::Test
         format = HAL_PIXEL_FORMAT_RGBA_8888;
 
         fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(width, height, format, fbnum); 
-        mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidBuffer>>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
 
         dummy_buffer = std::make_shared<ANativeWindowBuffer>();
         dummy_buffer->handle = (buffer_handle_t) 0x4893;
@@ -52,9 +52,9 @@ struct FBDevice : public ::testing::Test
 
     unsigned int width, height, format, fbnum;
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
-    std::shared_ptr<mtd::MockAndroidBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<ANativeWindowBuffer> dummy_buffer;
-    mt::HardwareAccessMock hw_access_mock;
+    mtd::HardwareAccessMock hw_access_mock;
 };
 
 TEST_F(FBDevice, set_next_frontbuffer_ok)
@@ -108,4 +108,24 @@ TEST_F(FBDevice, determine_pixformat)
 {
     mga::FBDevice fbdev(fb_hal_mock);
     EXPECT_EQ(geom::PixelFormat::abgr_8888, fbdev.display_format());
+}
+
+TEST_F(FBDevice, set_swapinterval)
+{
+    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
+        .Times(1);
+    mga::FBDevice fbdev(fb_hal_mock);
+
+    testing::Mock::VerifyAndClearExpectations(fb_hal_mock.get());
+
+    EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 0))
+        .Times(1);
+    fbdev.sync_to_display(false);
+}
+
+TEST_F(FBDevice, set_swapinterval_with_nullhook)
+{
+    fb_hal_mock->setSwapInterval = nullptr;
+    mga::FBDevice fbdev(fb_hal_mock);
+    fbdev.sync_to_display(false);
 }

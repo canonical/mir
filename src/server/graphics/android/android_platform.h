@@ -28,6 +28,8 @@ namespace graphics
 class DisplayReport;
 namespace android
 {
+class GraphicBufferAllocator;
+class FramebufferFactory;
 
 class AndroidPlatform : public Platform
 {
@@ -36,13 +38,21 @@ public:
     AndroidPlatform(std::shared_ptr<DisplayReport> const& display_report);
 
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<BufferInitializer>& buffer_initializer);
+            std::shared_ptr<BufferInitializer> const& buffer_initializer);
     std::shared_ptr<Display> create_display();
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
-    
-    EGLNativeDisplayType shell_egl_display();
+    std::shared_ptr<InternalClient> create_internal_client();
+    void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+                          std::shared_ptr<compositor::Buffer> const& buffer) const;
 
 private:
+    // TODO a design that has this and create_buffer_allocator is missing simplicity
+    virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
+        const std::shared_ptr<BufferInitializer>& buffer_initializer);
+    // TODO made virtual as a customization point
+    virtual std::shared_ptr<FramebufferFactory> create_frame_buffer_factory(
+        const std::shared_ptr<GraphicBufferAllocator>& buffer_allocator);
+
     std::shared_ptr<DisplayReport> const display_report;
 };
 

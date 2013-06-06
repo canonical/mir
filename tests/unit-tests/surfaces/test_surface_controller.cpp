@@ -18,14 +18,14 @@
 
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack_model.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mf = mir::frontend;
+namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
 
@@ -33,7 +33,7 @@ namespace
 {
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
 {
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(mf::SurfaceCreationParameters const&));
+    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface>(msh::SurfaceCreationParameters const&));
     MOCK_METHOD1(destroy_surface, void(std::weak_ptr<ms::Surface> const&));
 };
 }
@@ -51,6 +51,6 @@ TEST(SurfaceController, create_and_destroy_surface)
     EXPECT_CALL(model, create_surface(_)).Times(1).WillOnce(Return(null_surface));
     EXPECT_CALL(model, destroy_surface(_)).Times(1);
 
-    auto surface = controller.create_surface(mf::a_surface());
+    auto surface = controller.create_surface(msh::a_surface());
     controller.destroy_surface(surface);
 }
