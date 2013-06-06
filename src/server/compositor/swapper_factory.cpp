@@ -44,7 +44,6 @@ mc::SwapperFactory::SwapperFactory(
 void mc::SwapperFactory::fill_buffer_list(std::vector<std::shared_ptr<mc::Buffer>>& list, int num_buffers,
                                           BufferProperties const& requested_buffer_properties) const
 {
-    printf("NUM %i\n", num_buffers);
     for(auto i=0; i< num_buffers; i++)
     {
         list.push_back(

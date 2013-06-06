@@ -92,7 +92,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     mc::BufferProperties actual;
-    auto swapper = strategy->create_swapper_master(actual, buffer_properties);
+    auto swapper = strategy->create_sync_swapper_new_buffers(actual, buffer_properties);
     auto returned_buffer = swapper->client_acquire();
 
     EXPECT_NE(nullptr, returned_buffer);
