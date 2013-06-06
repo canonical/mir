@@ -79,7 +79,7 @@ struct SwapperFactoryTest : testing::Test
 }
 
 /* default number of buffers is 2 */
-TEST_F(SwapperFactoryTest, create_swapper_uses_default_number_of_buffers)
+TEST_F(SwapperFactoryTest, create_sync_uses_default_number_of_buffers)
 {
     using namespace testing;
 
@@ -91,36 +91,70 @@ TEST_F(SwapperFactoryTest, create_swapper_uses_default_number_of_buffers)
         .Times(default_num_of_buffers);
     EXPECT_CALL(*mock_swapper_factory, create_sync_swapper(_, default_num_of_buffers)
         .Times(1);
-    auto swapper = strategy.create_sync_swapper_new_buffers(properties, properties);
+    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
 }
 
-#if 0
-TEST_F(SwapperFactoryTest, create_swapper_with_two_makes_double_buffer)
+TEST_F(SwapperFactoryTest, create_sync_with_two_makes_double_buffer)
 {
     using namespace testing;
-
-    mc::BufferProperties actual_properties;
 
     int num_of_buffers = 2;
-    mc::SwapperFactory strategy{mock_buffer_allocator, mock_swapper_factory};
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_))
+    mc::SwapperFactory strategy{mock_buffer_allocator, mock_swapper_factory, num_of_buffers};
+    mc::BufferProperties actual_properties;
+
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(num_of_buffers);
-    auto swapper = strategy.create_swapper_master(actual_properties, properties);
+    EXPECT_CALL(*mock_swapper_factory, create_sync_swapper(_, num_of_buffers)
+        .Times(1);
+    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
 }
 
-TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_triple_buffer)
+TEST_F(SwapperFactoryTest, create_sync_with_three_makes_triple_buffer)
 {
     using namespace testing;
 
+    int num_of_buffers = 3;
+    mc::SwapperFactory strategy{mock_buffer_allocator, mock_swapper_factory, num_of_buffers};
+    mc::BufferProperties actual_properties;
+
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
+        .Times(num_of_buffers);
+    EXPECT_CALL(*mock_swapper_factory, create_sync_swapper(_, num_of_buffers)
+        .Times(1);
+    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
+}
+
+TEST_F(SwapperFactoryTest, create_async_ignores_preference)
+{
+    using namespace testing;
+
+    mc::SwapperFactory strategy{mock_buffer_allocator, mock_swapper_factory};
     mc::BufferProperties actual_properties;
 
     int num_of_buffers = 3;
-    mc::SwapperFactory strategy{mock_buffer_allocator, mock_swapper_factory};
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_))
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(num_of_buffers);
-    auto swapper = strategy.create_swapper_master(actual_properties, properties);
+    EXPECT_CALL(*mock_swapper_factory, create_async_swapper(_, num_of_buffers)
+        .Times(1);
+    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
 }
 
+TEST_F(SwapperFactoryTest, create_async_ignores_preference)
+{
+    using namespace testing;
+
+    mc::SwapperFactory strategy{mock_buffer_allocator, mock_swapper_factory, 2};
+    mc::BufferProperties actual_properties;
+
+    int num_of_buffers = 3;
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
+        .Times(num_of_buffers);
+    EXPECT_CALL(*mock_swapper_factory, create_async_swapper(_, num_of_buffers)
+        .Times(1);
+    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
+}
+
+#if 0
 TEST_F(SwapperFactoryTest, create_swapper_returns_actual_properties_from_buffer)
 {
     mc::SwapperFactory strategy{mock_buffer_allocator, mock_swapper_factory};
