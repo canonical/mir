@@ -120,7 +120,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_key_
 
     EXPECT_CALL(
         *event_filter,
-        handles(mt::KeyDownEvent()))
+        handle(mt::KeyDownEvent()))
             .Times(1)
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
 
@@ -141,7 +141,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 
     EXPECT_CALL(
         *event_filter,
-        handles(mt::ButtonDownEvent()))
+        handle(mt::ButtonDownEvent()))
             .Times(1)
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
 
@@ -163,17 +163,17 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
       InSequence seq;
       EXPECT_CALL(
           *event_filter,
-          handles(mt::ButtonDownEvent()))
+          handle(mt::ButtonDownEvent()))
               .Times(1)
               .WillOnce(Return(false));
       EXPECT_CALL(
           *event_filter,
-          handles(mt::ButtonUpEvent()))
+          handle(mt::ButtonUpEvent()))
               .Times(1)
               .WillOnce(Return(false));
       EXPECT_CALL(
           *event_filter,
-          handles(mt::MotionEvent(0,0)))
+          handle(mt::MotionEvent(0,0)))
               .Times(1)
               .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
@@ -198,10 +198,10 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
         InSequence seq;
 
         EXPECT_CALL(*event_filter,
-                    handles(mt::MotionEvent(100, 100)))
+                    handle(mt::MotionEvent(100, 100)))
             .WillOnce(Return(false));
         EXPECT_CALL(*event_filter,
-                    handles(mt::MotionEvent(200, 100)))
+                    handle(mt::MotionEvent(200, 100)))
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
 
@@ -324,7 +324,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     auto input_fd = test_fd();
     mtd::StubSurfaceTarget surface(input_fd);
 
-    EXPECT_CALL(*event_filter, handles(_)).Times(1).WillOnce(Return(false));
+    EXPECT_CALL(*event_filter, handle(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
@@ -354,7 +354,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     input_registrar->input_surface_opened(mt::fake_shared(surface1));
     input_registrar->input_surface_opened(mt::fake_shared(surface2));
 
-    EXPECT_CALL(*event_filter, handles(_)).Times(3).WillRepeatedly(Return(false));
+    EXPECT_CALL(*event_filter, handle(_)).Times(3).WillRepeatedly(Return(false));
 
     {
         InSequence seq;

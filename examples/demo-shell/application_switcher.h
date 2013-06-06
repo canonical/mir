@@ -40,7 +40,7 @@ public:
 
     void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
     
-    bool handles(MirEvent const& event);
+    bool handle(MirEvent const& event) override;
 
 protected:
     ApplicationSwitcher(const ApplicationSwitcher&) = delete;

@@ -57,10 +57,7 @@ bool mia::EventFilterDispatcherPolicy::filterInputEvent(const droidinput::InputE
     
     // TODO: Use XKBMapper
 
-    if (event_filter->handles(mir_ev))
-        return false; /* Do not pass the event on */
-    else
-        return true; /* Pass the event on */
+    return !event_filter->handle(mir_ev);
 }
 
 void mia::EventFilterDispatcherPolicy::interceptKeyBeforeQueueing(const droidinput::KeyEvent* /*key_event*/, uint32_t& policy_flags)
