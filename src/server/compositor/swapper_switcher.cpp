@@ -18,6 +18,7 @@
  */
 
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_allocation_strategy.h"
 #include "swapper_switcher.h"
 
 #include <boost/throw_exception.hpp>
@@ -106,6 +107,23 @@ void mc::SwapperSwitcher::change_swapper(
 }
 #endif
 
-void mc::SwapperSwitcher::allow_framedropping(bool)
+void mc::SwapperSwitcher::allow_framedropping(bool allow_dropping)
 {
+    {
+        std::unique_lock<mc::ReadLock> lk(rw_lock);
+        should_retry = true;
+        swapper->force_client_completion();
+    }
+
+    std::unique_lock<mc::WriteLock> lk(rw_lock);
+    std::vector<std::shared_ptr<mc::Buffer>> list{};
+    size_t size = 0;
+    swapper->end_responsibility(list, size);
+
+    if (allow_dropping)
+        swapper = swapper_factory->create_async_swapper_reuse(list, size); 
+    else
+        swapper = swapper_factory->create_sync_swapper_reuse(list, size); 
+
+    cv.notify_all();
 }
