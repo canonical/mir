@@ -135,11 +135,6 @@ TEST_F(SwapperFactoryTest, create_async_ignores_preference)
 TEST_F(SwapperFactoryTest, creation_returns_new_parameters)
 {
     mc::BufferProperties actual1, actual2;
-
-    int num_of_buffers = 3;
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
-        .Times(num_of_buffers);
-
     mc::SwapperFactory strategy(mock_buffer_allocator);
     strategy.create_async_swapper_new_buffers(actual1, properties);
     strategy.create_sync_swapper_new_buffers(actual2, properties);

@@ -59,10 +59,13 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_reuse
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_new_buffers(
-    BufferProperties&, BufferProperties const& requested_buffer_properties) const
+    BufferProperties& actual_buffer_properties, BufferProperties const& requested_buffer_properties) const
 {
     std::vector<std::shared_ptr<mc::Buffer>> list;
     fill_buffer_list(list, number_of_buffers, requested_buffer_properties);
+
+    actual_buffer_properties = BufferProperties{
+        list[0]->size(), list[0]->pixel_format(), requested_buffer_properties.usage};
     return std::make_shared<mc::BufferSwapperMulti>(list, number_of_buffers); 
 }
 
@@ -73,11 +76,13 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_reus
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_new_buffers(
-    BufferProperties&, BufferProperties const& requested_buffer_properties) const
+    BufferProperties& actual_buffer_properties, BufferProperties const& requested_buffer_properties) const
 {
     int const async_buffer_count = 3; //async only can accept 3 buffers
     std::vector<std::shared_ptr<mc::Buffer>> list;
     fill_buffer_list(list, async_buffer_count, requested_buffer_properties);
+    actual_buffer_properties = BufferProperties{
+        list[0]->size(), list[0]->pixel_format(), requested_buffer_properties.usage};
     return std::make_shared<mc::BufferSwapperSpin>(list, async_buffer_count);; 
 }
 
