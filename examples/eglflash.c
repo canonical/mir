@@ -25,7 +25,7 @@
 
 int main(void)
 {
-    int width = 0, height = 0;  /* Use the full display */
+    unsigned int width = 0, height = 0;
 
     if (!mir_eglapp_init(&width, &height))
     {

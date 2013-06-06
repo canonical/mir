@@ -627,7 +627,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
 {
-    static const int default_display_width = 1600, default_display_height = 1600;
+    static const unsigned int default_display_width = 1600, default_display_height = 1600;
 
     struct ClientConfig : ClientConfigCommon
     {
