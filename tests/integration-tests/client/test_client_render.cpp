@@ -154,7 +154,7 @@ struct TestClient
         mtd::DrawPatternCheckered<2,2> draw_pattern0(mt::pattern0);
         draw_pattern0.draw(graphics_region);
 
-        mir_wait_for(mir_surface_next_buffer(surface, &next_callback, (void*) NULL));
+        mir_wait_for(mir_surface_swap_buffers(surface, &next_callback, (void*) NULL));
         mir_surface_get_graphics_region( surface, graphics_region.get());
         mtd::DrawPatternCheckered<2,2> draw_pattern1(mt::pattern1);
         draw_pattern1.draw(graphics_region);

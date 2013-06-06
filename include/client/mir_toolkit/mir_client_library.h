@@ -206,7 +206,7 @@ void mir_surface_get_graphics_region(
 
 /**
  * Advance a surface's buffer. The returned handle remains valid until the next
- * call to mir_surface_next_buffer, until the surface has been released or the
+ * call to mir_surface_swap_buffers, until the surface has been released or the
  * connection to the server has been released.
  *   \param [in] surface      The surface
  *   \param [in] callback     Callback function to be invoked when the request
@@ -214,17 +214,17 @@ void mir_surface_get_graphics_region(
  *   \param [in,out] context  User data passed to the callback function
  *   \return                  A handle that can be passed to mir_wait_for
  */
-MirWaitHandle *mir_surface_next_buffer(
+MirWaitHandle *mir_surface_swap_buffers(
     MirSurface *surface,
     mir_surface_lifecycle_callback callback,
     void *context);
 
 /**
- * Advance a surface's buffer as in mir_surface_next_buffer(), but also wait
+ * Advance a surface's buffer as in mir_surface_swap_buffers(), but also wait
  * for the operation to complete.
  *   \param [in] surface  The surface whose buffer to advance
  */
-void mir_surface_next_buffer_sync(MirSurface *surface);
+void mir_surface_swap_buffers_sync(MirSurface *surface);
 
 /**
  * Release the supplied surface and any associated buffer. The returned wait
