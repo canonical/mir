@@ -23,6 +23,8 @@
 
 #include <mir_toolkit/event.h>
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 /**
  * \defgroup mir_toolkit MIR graphics tools API
@@ -158,8 +160,9 @@ enum { mir_supported_pixel_format_max = 32 };
  */
 typedef struct MirDisplayInfo
 {
-    int width;
-    int height;
+    uint32_t width;
+    uint32_t height;
+    
     int supported_pixel_format_items;
     MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
