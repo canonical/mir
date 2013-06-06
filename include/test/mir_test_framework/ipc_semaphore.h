@@ -31,7 +31,7 @@ class IPCSemaphore
 {
 public:
     IPCSemaphore();
-    virtual ~IPCSemaphore();
+    ~IPCSemaphore() noexcept(true);
     
     void wake_up_everyone();
     void wait_for_at_most_seconds(int seconds);

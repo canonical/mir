@@ -32,7 +32,7 @@ mtf::IPCSemaphore::IPCSemaphore()
     sem_init(sem, semaphore_enable_process_shared, 0);
 }
 
-mtf::IPCSemaphore::~IPCSemaphore()
+mtf::IPCSemaphore::~IPCSemaphore() noexcept(true)
 {
     sem_destroy(sem);
     munmap(sem, sizeof(sem_t));
