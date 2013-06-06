@@ -24,7 +24,9 @@
 #include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/compositor/swapper_factory.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 
+#include <gmock/gmock.h>
 #include <future>
 #include <thread>
 #include <chrono>
@@ -34,18 +36,31 @@ namespace mt = mir::testing;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+
+struct MockBufferAllocator : public mc::GraphicBufferAllocator
+{
+    MockBufferAllocator()
+    {
+        using namespace testing;
+        ON_CALL(*this, alloc_buffer(_))
+            .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
+    }
+    ~MockBufferAllocator() noexcept{}
+
+    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&));
+    MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
+};
+
 struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        buffer_a = std::shared_ptr<mtd::StubBuffer>(std::make_shared<mtd::StubBuffer>());
-        buffer_b = std::shared_ptr<mtd::StubBuffer>(std::make_shared<mtd::StubBuffer>());
-        buffer_c = std::shared_ptr<mtd::StubBuffer>(std::make_shared<mtd::StubBuffer>());
-        auto triple_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
-
-    //////bad
-        auto factory = std::shared_ptr<mc::SwapperFactory>();
-        auto first_swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list, triple_list.size());
+        mc::BufferProperties dummy;
+        auto allocator = std::make_shared<MockBufferAllocator>();
+        auto factory = std::make_shared<mc::SwapperFactory>(allocator, 3);
+        auto first_swapper = factory->create_async_swapper_new_buffers(dummy, dummy);
         swapper_switcher = std::make_shared<mc::SwapperSwitcher>(first_swapper, factory);
     }
 
@@ -53,6 +68,7 @@ struct SwapperSwappingStress : public ::testing::Test
     std::shared_ptr<mc::SwapperSwitcher> swapper_switcher;
     std::atomic<bool> client_thread_done;
 };
+}
 
 TEST_F(SwapperSwappingStress, swapper)
 {

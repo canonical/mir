@@ -270,20 +270,12 @@ TEST_F(SurfaceLoop,
                 using testing::_;
                 buffer_allocation_strategy = std::make_shared<mtd::MockSwapperFactory>();
 
-#if 0
-                ON_CALL(*buffer_allocation_strategy, create_async_swapper_reuse(_, _))
-                    .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
                 ON_CALL(*buffer_allocation_strategy, create_async_swapper_new_buffers(_, _))
-                    .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
-                ON_CALL(*buffer_allocation_strategy, create_sync_swapper_reuse(_, _))
-                    .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
+                    .WillByDefault(testing::Invoke(this, &ServerConfig::on_create_swapper));
                 ON_CALL(*buffer_allocation_strategy, create_sync_swapper_new_buffers(_, _))
-                    .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
-#endif
+                    .WillByDefault(testing::Invoke(this, &ServerConfig::on_create_swapper));
             }
-     //       EXPECT_CALL(*buffer_allocation_strategy, create_swapper_master(_, buffer_properties)).Times(1);
-
-            return buffer_allocation_strategy;
+                return buffer_allocation_strategy;
         }
 
         std::shared_ptr<mc::BufferSwapperMaster> on_create_swapper(mc::BufferProperties& actual,
