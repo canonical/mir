@@ -20,38 +20,13 @@
 #include "mir/compositor/swapper_factory.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_swapper.h"
+#include "mir_test_doubles/mock_swapper_factory.h"
 
 #include <gtest/gtest.h>
 
-#include "mir/compositor/buffer_allocation_strategy.h"
 
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
-
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
-class MockSwapperFactory : public mc::BufferAllocationStrategy
-{
-public:
-    ~MockSwapperFactory() noexcept {}
-
-    MOCK_CONST_METHOD2(create_async_swapper_reuse,
-        std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>>&, size_t));
-    MOCK_CONST_METHOD2(create_sync_swapper_reuse,
-        std::shared_ptr<mc::BufferSwapper>(std::vector<std::shared_ptr<mc::Buffer>>&, size_t));
-
-    MOCK_CONST_METHOD2(create_async_swapper_new_buffers,
-        std::shared_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
-    MOCK_CONST_METHOD2(create_sync_swapper_new_buffers,
-        std::shared_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
-};
-}
-}
-}
 
 struct SwapperSwitcherTest : public ::testing::Test
 {
