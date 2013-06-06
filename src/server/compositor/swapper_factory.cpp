@@ -19,11 +19,11 @@
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
 #include "swapper_switcher.h"
+#include "swapper_allocator.h"
 
 #include <initializer_list>
 #include <vector>
@@ -42,13 +42,31 @@ mc::SwapperFactory::SwapperFactory(
     assert(gr_alloc);
 }
 
-std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_reuse(
-    std::vector<std::shared_ptr<Buffer>>&, size_t) const
+void mc::SwapperFactory::fill_buffer_list(std::vector<std::shared_ptr<mc::Buffer>>& list, int num_buffers,
+                                          BufferProperties const& requested_buffer_properties) const
 {
-    return std::shared_ptr<mc::BufferSwapper>(); 
+    for(auto i=0; i< num_buffers; i++)
+    {
+        list.push_back(
+            gr_allocator->alloc_buffer(requested_buffer_properties));
+    }
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_reuse(
+    std::vector<std::shared_ptr<Buffer>>& list, size_t buffer_num) const
+{
+    return swapper_allocator->create_sync_swapper(list, buffer_num);; 
+}
+
+std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_new_buffers(
+    BufferProperties&, BufferProperties const& requested_buffer_properties) const
+{
+    std::vector<std::shared_ptr<mc::Buffer>> list;
+    fill_buffer_list(list, number_of_buffers, requested_buffer_properties);
+    return swapper_allocator->create_sync_swapper(list, number_of_buffers);; 
+}
+
+std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_reuse(
     std::vector<std::shared_ptr<Buffer>>&, size_t) const
 {
     return std::shared_ptr<mc::BufferSwapper>(); 
@@ -60,12 +78,6 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_new_
     return std::shared_ptr<mc::BufferSwapper>(); 
 }
 
-std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_new_buffers(
-    BufferProperties&, BufferProperties const&) const
-{
-    (void) number_of_buffers;
-    return std::shared_ptr<mc::BufferSwapper>(); 
-}
 #if 0 
 std::unique_ptr<mc::BufferSwapperMaster> mc::SwapperFactory::create_swapper_master(
     BufferProperties& actual_buffer_properties,

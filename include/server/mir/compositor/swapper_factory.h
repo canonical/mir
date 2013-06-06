@@ -48,6 +48,8 @@ public:
     std::shared_ptr<BufferSwapper> create_sync_swapper_new_buffers(
         BufferProperties&, BufferProperties const&) const;
 private:
+    void fill_buffer_list(std::vector<std::shared_ptr<Buffer>>& list, int num_buffers, BufferProperties const&) const;
+
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
     std::shared_ptr<SwapperAllocator> const swapper_allocator;
     int const number_of_buffers;
