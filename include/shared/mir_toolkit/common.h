@@ -66,8 +66,8 @@ typedef enum MirSurfaceState
 
 typedef enum MirSurfaceFocusState
 {
-    mir_surface_focused,
     mir_surface_unfocused,
+    mir_surface_focused,
     mir_surface_focus_arraysize_
 } MirSurfaceFocusState;
 
