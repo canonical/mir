@@ -36,7 +36,7 @@ void me::ApplicationSwitcher::set_focus_controller(std::shared_ptr<msh::FocusCon
     focus_controller = controller;
 }
 
-bool me::ApplicationSwitcher::handles(MirEvent const& event)
+bool me::ApplicationSwitcher::handle(MirEvent const& event)
 {
     assert(focus_controller);
 
