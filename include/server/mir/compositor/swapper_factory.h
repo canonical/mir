@@ -27,7 +27,6 @@ namespace compositor
 {
 
 class GraphicBufferAllocator;
-class SwapperAllocator;
 struct BufferProperties;
 
 class SwapperFactory : public BufferAllocationStrategy
@@ -35,7 +34,6 @@ class SwapperFactory : public BufferAllocationStrategy
 public:
     SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
-        std::shared_ptr<SwapperAllocator> const& sw_alloc,
         int number_of_buffers = 2);
 
     std::shared_ptr<BufferSwapper> create_async_swapper_reuse(
@@ -51,7 +49,6 @@ private:
     void fill_buffer_list(std::vector<std::shared_ptr<Buffer>>& list, int num_buffers, BufferProperties const&) const;
 
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
-    std::shared_ptr<SwapperAllocator> const swapper_allocator;
     int const number_of_buffers;
 };
 }

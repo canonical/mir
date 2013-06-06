@@ -20,10 +20,11 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_swapper_multi.h"
+#include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
 #include "swapper_switcher.h"
-#include "swapper_allocator.h"
 
 #include <initializer_list>
 #include <vector>
@@ -33,10 +34,8 @@ namespace mc = mir::compositor;
 
 mc::SwapperFactory::SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
-        std::shared_ptr<SwapperAllocator> const& sw_alloc,
         int number_of_buffers)
     : gr_allocator(gr_alloc),
-      swapper_allocator(sw_alloc),
       number_of_buffers(number_of_buffers)
 {
     assert(gr_alloc);
@@ -56,7 +55,7 @@ void mc::SwapperFactory::fill_buffer_list(std::vector<std::shared_ptr<mc::Buffer
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_reuse(
     std::vector<std::shared_ptr<Buffer>>& list, size_t buffer_num) const
 {
-    return swapper_allocator->create_sync_swapper(list, buffer_num);; 
+    return std::make_shared<mc::BufferSwapperMulti>(list, buffer_num); 
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_new_buffers(
@@ -64,13 +63,13 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_new_b
 {
     std::vector<std::shared_ptr<mc::Buffer>> list;
     fill_buffer_list(list, number_of_buffers, requested_buffer_properties);
-    return swapper_allocator->create_sync_swapper(list, number_of_buffers);; 
+    return std::make_shared<mc::BufferSwapperMulti>(list, number_of_buffers); 
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_reuse(
     std::vector<std::shared_ptr<Buffer>>& list, size_t buffer_num) const
 {
-    return swapper_allocator->create_async_swapper(list, buffer_num);; 
+    return std::make_shared<mc::BufferSwapperSpin>(list, buffer_num);; 
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_new_buffers(
@@ -79,7 +78,7 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_new_
     int const async_buffer_count = 3; //async only can accept 3 buffers
     std::vector<std::shared_ptr<mc::Buffer>> list;
     fill_buffer_list(list, async_buffer_count, requested_buffer_properties);
-    return swapper_allocator->create_async_swapper(list, async_buffer_count); 
+    return std::make_shared<mc::BufferSwapperSpin>(list, async_buffer_count);; 
 }
 
 #if 0 
