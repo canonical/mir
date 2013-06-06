@@ -27,7 +27,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace ms = mir::surfaces;
 
-/* TODO: probobly don't need both of these constructors */
+/* TODO: this class could probably be combined with SwapperSwitcher */
 mc::BufferBundleSurfaces::BufferBundleSurfaces(
     std::shared_ptr<BufferSwapperMaster>const& swapper,
     BufferProperties const& buffer_properties)

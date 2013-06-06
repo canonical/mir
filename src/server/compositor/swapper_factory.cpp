@@ -84,24 +84,3 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_new_
         list[0]->size(), list[0]->pixel_format(), requested_buffer_properties.usage};
     return std::make_shared<mc::BufferSwapperSpin>(list, async_buffer_count);; 
 }
-
-#if 0 
-std::unique_ptr<mc::BufferSwapperMaster> mc::SwapperFactory::create_swapper_master(
-    BufferProperties& actual_buffer_properties,
-    BufferProperties const& requested_buffer_properties)
-{
-    std::vector<std::shared_ptr<mc::Buffer>> buffers;
-
-    for(auto i=0; i< number_of_buffers; i++)
-    {
-        buffers.push_back(
-            gr_allocator->alloc_buffer(requested_buffer_properties));
-    }
-
-    actual_buffer_properties = BufferProperties{buffers[0]->size(), buffers[0]->pixel_format(), requested_buffer_properties.usage};
-
-    auto swapper = std::make_shared<mc::BufferSwapperMulti>(buffers, number_of_buffers);
-    return std::unique_ptr<BufferSwapperMaster>(new mc::SwapperSwitcher(swapper));
-}
-#endif
-

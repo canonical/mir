@@ -59,32 +59,6 @@ geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
                                                           geom::Size{geom::Width(1600),
                                                                      geom::Height(1600)}};
 
-#if 0
-struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
-{
-    MockBufferAllocationStrategy()
-    {
-        using testing::_;
-        ON_CALL(*this, create_swapper_master(_, _))
-            .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
-    }
-
-    MOCK_METHOD2(
-        create_swapper_master,
-        std::unique_ptr<mc::BufferSwapperMaster>(mc::BufferProperties&, mc::BufferProperties const&));
-
-    std::unique_ptr<mc::BufferSwapperMaster> on_create_swapper(mc::BufferProperties& actual,
-                                                         mc::BufferProperties const& requested)
-    {
-        actual = requested;
-        auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
-        auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
-        std::vector<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
-        return std::unique_ptr<mc::BufferSwapperMaster>(
-            new mc::SwapperSwitcher(std::make_shared<mc::BufferSwapperMulti>(list, list.size())));
-    }
-};
-#endif
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:

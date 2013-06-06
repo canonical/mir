@@ -27,20 +27,15 @@
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_swapper_factory.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
-#if 0
+namespace mtd = mir::test::doubles;
+
 namespace
 {
-
-struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
-{
-    MOCK_METHOD2(
-        create_swapper_master,
-        std::unique_ptr<mc::BufferSwapperMaster>(mc::BufferProperties&, mc::BufferProperties const&));
-};
 
 geom::Size size{geom::Width{1024}, geom::Height{768}};
 const geom::PixelFormat pixel_format{geom::PixelFormat::abgr_8888};
@@ -53,15 +48,13 @@ TEST(buffer_manager, create_buffer)
 {
     using namespace testing;
 
-    MockBufferAllocationStrategy allocation_strategy;
+    mtd::MockSwapperFactory mock_swapper_factory;
 
-    EXPECT_CALL(allocation_strategy, create_swapper_master(_,buffer_properties))
-        .Times(AtLeast(1));
+    EXPECT_CALL(mock_swapper_factory, create_sync_swapper_new_buffers(_,buffer_properties))
+        .Times(1)
+        .WillOnce(Return(std::shared_ptr<mc::BufferSwapper>()));
 
-    mc::BufferBundleManager buffer_bundle_manager(mt::fake_shared(allocation_strategy));
+    mc::BufferBundleManager buffer_bundle_manager(mt::fake_shared(mock_swapper_factory));
 
     auto bundle = buffer_bundle_manager.create_buffer_bundle(buffer_properties);
-
-    EXPECT_TRUE(bundle.get());
 }
-#endif

@@ -88,25 +88,6 @@ void mc::SwapperSwitcher::end_responsibility(std::vector<std::shared_ptr<Buffer>
     //TODO
 }
 
-#if 0
-void mc::SwapperSwitcher::change_swapper(
-    std::function<std::shared_ptr<BufferSwapper>(std::vector<std::shared_ptr<Buffer>>&, size_t&)> create_swapper)
-{
-    {
-        std::unique_lock<mc::ReadLock> lk(rw_lock);
-        should_retry = true;
-        swapper->force_client_completion();
-    }
-
-    std::unique_lock<mc::WriteLock> lk(rw_lock);
-    std::vector<std::shared_ptr<mc::Buffer>> list{};
-    size_t size = 0;
-    swapper->end_responsibility(list, size);
-    swapper = create_swapper(list, size);
-    cv.notify_all();
-}
-#endif
-
 void mc::SwapperSwitcher::allow_framedropping(bool allow_dropping)
 {
     {

@@ -35,7 +35,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
-//this class is probably trivial
 mc::BufferBundleManager::BufferBundleManager(
     const std::shared_ptr<BufferAllocationStrategy>& strategy)
         : swapper_factory(strategy)

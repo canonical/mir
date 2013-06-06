@@ -64,10 +64,6 @@ struct SwapperFactoryTest : testing::Test
     {
     }
 
-    void SetUp()
-    {
-    }
-
     std::shared_ptr<MockGraphicBufferAllocator> const mock_buffer_allocator;
     geom::Size const size;
     geom::PixelFormat const pf;
@@ -147,7 +143,6 @@ TEST_F(SwapperFactoryTest, creation_returns_new_parameters)
     EXPECT_EQ(usage, actual2.usage);
 }
 
-//reuse
 TEST_F(SwapperFactoryTest, create_async_reuse)
 {
     using namespace testing;
@@ -175,17 +170,3 @@ TEST_F(SwapperFactoryTest, create_sync_reuse)
     mc::SwapperFactory strategy(mock_buffer_allocator);
     auto swapper = strategy.create_sync_swapper_reuse(list, size);
 }
-
-#if 0
-TEST_F(SwapperFactoryTest, create_swapper_returns_actual_properties_from_buffer)
-{
-    mc::SwapperFactory strategy{mock_buffer_allocator};
-    mc::BufferProperties actual_properties;
-
-    auto swapper = strategy.create_swapper_master(actual_properties, properties);
-
-    EXPECT_EQ(buf_size, actual_properties.size);
-    EXPECT_EQ(buf_pixel_format, actual_properties.format);
-    EXPECT_EQ(usage, actual_properties.usage);
-}
-#endif

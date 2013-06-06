@@ -117,22 +117,19 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
     switcher.compositor_release(buffer); 
 }
 
-#if 0
 TEST_F(SwapperSwitcherTest, switch_sequence)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_default_swapper);
+    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
 
     InSequence seq;
     EXPECT_CALL(*mock_default_swapper, force_client_completion())
         .Times(1);
     EXPECT_CALL(*mock_default_swapper, end_responsibility(_,_))
         .Times(1);
+    EXPECT_CALL(*mock_swapper_factory, create_async_swapper_reuse(_,_))
+        .Times(1)
+        .WillOnce(Return(mock_secondary_swapper));
 
-    auto creation_fn = [this] (std::vector<std::shared_ptr<mc::Buffer>>&, size_t&)
-        {
-            return mock_secondary_swapper;
-        };
-    switcher.change_swapper(creation_fn);
+    switcher.allow_framedropping(true);
 }
-#endif
