@@ -74,24 +74,24 @@ struct ClientConfigCommon : TestingClientConfiguration
     MirConnection* connection;
     MirSurface* surface;
 };
-struct MockEventHandler
+struct MockEventObserver
 {
-    MOCK_METHOD1(handle_event, void(MirEvent const*));
+    MOCK_METHOD1(see, void(MirEvent const*));
 };
-struct EventReceivingClient : ClientConfigCommon
+struct EventObservingClient : ClientConfigCommon
 {
-    EventReceivingClient()
-        : handler(std::make_shared<MockEventHandler>())
+    EventObservingClient()
+        : observer(std::make_shared<MockEventObserver>())
     {
     }
+
     static void handle_event(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
-        auto client = static_cast<EventReceivingClient *>(context);
-        client->handler->handle_event(ev);
+        auto client = static_cast<EventObservingClient *>(context);
+        client->observer->see(ev);
     }
-    virtual void expect_events(mt::WaitCondition* /* all_events_received */)
-    {
-    }
+ 
+    virtual void expect_events(mt::WaitCondition* /* all_events_received */) = 0;
 
     void surface_created(MirSurface *surface_) override
     {
@@ -127,9 +127,9 @@ struct EventReceivingClient : ClientConfigCommon
 
         // The ClientConfig is not destroyed before the testing process 
         // exits.
-        handler.reset();
+        observer.reset();
     }
-    std::shared_ptr<MockEventHandler> handler;
+    std::shared_ptr<MockEventObserver> observer;
     static int const surface_width = 100;
     static int const surface_height = 100;
 };
@@ -143,11 +143,11 @@ TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus
     TestingServerConfiguration server_config;
     launch_server_process(server_config);
 
-    struct FocusObservingClient : public EventReceivingClient
+    struct FocusObservingClient : public EventObservingClient
     {
         void expect_events(mt::WaitCondition* all_events_received) override
         {
-            EXPECT_CALL(*handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))).Times(1)
+            EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))).Times(1)
                 .WillOnce(mt::WakeUp(all_events_received));
         }
     } client_config;
@@ -165,38 +165,38 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
     // are launched in a defined order.
     static mtf::IPCSemaphore ready_for_second_client;
 
-    struct FocusObservingClientOne : public EventReceivingClient
+    struct FocusObservingClientOne : public EventObservingClient
     {
         void expect_events(mt::WaitCondition* all_events_received) override
         {
             InSequence seq;
             // We should receive focus as we are created
-            EXPECT_CALL(*handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
+            EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                                                                         mir_surface_focused)))).Times(1)
                 .WillOnce(mt::WakeUp(&ready_for_second_client));
 
             // And lose it as the second surface is created
-            EXPECT_CALL(*handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
+            EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                                                                         mir_surface_unfocused)))).Times(1);
             // And regain it when the second surface is closed
-            EXPECT_CALL(*handler, handle_event(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
+            EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                                                                         mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
 
     } client_one_config;
     launch_client_process(client_one_config);
 
-    struct FocusObservingClientTwo : public EventReceivingClient
+    struct FocusObservingClientTwo : public EventObservingClient
     {
         void exec() override
         {
             // We need some synchronization to ensure client two does not connect before client one.
             ready_for_second_client.wait_for_at_most_seconds(60);
-            EventReceivingClient::exec();
+            EventObservingClient::exec();
         }
         void expect_events(mt::WaitCondition* all_events_received) override
         {
-            EXPECT_CALL(*handler, handle_event(Pointee(
+            EXPECT_CALL(*observer, see(Pointee(
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused))))
                     .Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
