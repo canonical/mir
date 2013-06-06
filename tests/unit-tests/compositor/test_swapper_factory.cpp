@@ -132,6 +132,26 @@ TEST_F(SwapperFactoryTest, create_async_ignores_preference)
     auto swapper = strategy.create_async_swapper_new_buffers(actual_properties, properties);
 }
 
+TEST_F(SwapperFactoryTest, creation_returns_new_parameters)
+{
+    mc::BufferProperties actual1, actual2;
+
+    int num_of_buffers = 3;
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
+        .Times(num_of_buffers);
+
+    mc::SwapperFactory strategy(mock_buffer_allocator);
+    strategy.create_async_swapper_new_buffers(actual1, properties);
+    strategy.create_sync_swapper_new_buffers(actual2, properties);
+
+    EXPECT_EQ(buf_size, actual1.size);
+    EXPECT_EQ(buf_pixel_format, actual1.format);
+    EXPECT_EQ(usage, actual1.usage);
+    EXPECT_EQ(buf_size, actual2.size);
+    EXPECT_EQ(buf_pixel_format, actual2.format);
+    EXPECT_EQ(usage, actual2.usage);
+}
+
 //reuse
 TEST_F(SwapperFactoryTest, create_async_reuse)
 {
