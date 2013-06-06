@@ -158,23 +158,7 @@ TEST_F(SwapperFactoryTest, create_async_ignores_preference)
         .Times(1);
 
     mc::SwapperFactory strategy(mock_buffer_allocator, mock_swapper_factory);
-    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
-}
-
-TEST_F(SwapperFactoryTest, create_sync_ignores_preference)
-{
-    using namespace testing;
-
-    mc::BufferProperties actual_properties;
-
-    int num_of_buffers = 3;
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
-        .Times(num_of_buffers);
-    EXPECT_CALL(*mock_swapper_factory, create_async_swapper(_, num_of_buffers))
-        .Times(1);
-
-    mc::SwapperFactory strategy(mock_buffer_allocator, mock_swapper_factory, 2);
-    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
+    auto swapper = strategy.create_async_swapper_new_buffers(actual_properties, properties);
 }
 
 //reuse

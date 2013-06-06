@@ -45,6 +45,7 @@ mc::SwapperFactory::SwapperFactory(
 void mc::SwapperFactory::fill_buffer_list(std::vector<std::shared_ptr<mc::Buffer>>& list, int num_buffers,
                                           BufferProperties const& requested_buffer_properties) const
 {
+    printf("NUM %i\n", num_buffers);
     for(auto i=0; i< num_buffers; i++)
     {
         list.push_back(
@@ -67,15 +68,18 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_sync_swapper_new_b
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_reuse(
-    std::vector<std::shared_ptr<Buffer>>&, size_t) const
+    std::vector<std::shared_ptr<Buffer>>& list, size_t buffer_num) const
 {
-    return std::shared_ptr<mc::BufferSwapper>(); 
+    return swapper_allocator->create_async_swapper(list, buffer_num);; 
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_async_swapper_new_buffers(
-    BufferProperties&, BufferProperties const&) const
+    BufferProperties&, BufferProperties const& requested_buffer_properties) const
 {
-    return std::shared_ptr<mc::BufferSwapper>(); 
+    int const async_buffer_count = 3; //async only can accept 3 buffers
+    std::vector<std::shared_ptr<mc::Buffer>> list;
+    fill_buffer_list(list, async_buffer_count, requested_buffer_properties);
+    return swapper_allocator->create_async_swapper(list, async_buffer_count); 
 }
 
 #if 0 
