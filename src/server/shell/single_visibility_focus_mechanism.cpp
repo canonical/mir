@@ -45,11 +45,11 @@ void msh::SingleVisibilityFocusMechanism::set_focus_to(std::shared_ptr<Session> 
             auto surface = focus_session->default_surface();
             if (surface)
             {
-                auto current_focus = focus_surface.lock();
+                auto current_focus = currently_focused_surface.lock();
                 if (current_focus)
                     current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
                 surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-                focus_surface = surface;
+                currently_focused_surface = surface;
 
                 surface->take_input_focus(input_targeter);
                 set_input_focus = true;

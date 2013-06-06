@@ -48,7 +48,7 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<InputTargeter> const input_targeter;
 
-    std::weak_ptr<Surface> focus_surface;
+    std::weak_ptr<Surface> currently_focused_surface;
 };
 
 }
