@@ -132,12 +132,12 @@ Depends: ${misc:Depends}
 Description: API documentation for mir
  This package installs the mir API documentation.
 
-Package: mir-stress
+Package: mir-test-tools
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Recommends: mir-demos
-Description: Display Server for Ubuntu - stress tests
+Description: Display Server for Ubuntu - stress tests and other test tools
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
