@@ -60,7 +60,7 @@ static void gbm_egl_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display *
                                            MirEGLNativeWindowType surface)
 {
     MirSurface* ms = static_cast<MirSurface*>(surface);
-    mir_wait_for(mir_surface_next_buffer(ms, buffer_advanced_callback, nullptr));
+    mir_wait_for(mir_surface_swap_buffers(ms, buffer_advanced_callback, nullptr));
 }
 
 static void gbm_egl_surface_get_parameters(MirMesaEGLNativeDisplay* /* display */,

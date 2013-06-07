@@ -40,7 +40,7 @@ class EventFilter
 public:
     virtual ~EventFilter() {}
 
-    virtual bool handles(const MirEvent& event) = 0;
+    virtual bool handle(const MirEvent& event) = 0;
 
 protected:
     EventFilter() = default;

@@ -43,7 +43,7 @@ public:
     void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
     void set_session_manager(std::shared_ptr<shell::SessionManager> const& sm);
     
-    bool handles(MirEvent const& event);
+    bool handle(MirEvent const& event) override;
 
 protected:
     WindowManager(const WindowManager&) = delete;

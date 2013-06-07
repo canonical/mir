@@ -28,10 +28,9 @@
 
 namespace
 {
-int const width = 64;
-int const height = 64;
-const uint32_t bg_color = 0x00000000;
-uint32_t const fg_color = 0xffdd4814;
+#include "black_arrow.c"
+int const width = black_arrow.width;
+int const height = black_arrow.height;
 }
 
 namespace mgg = mir::graphics::gbm;
@@ -57,22 +56,8 @@ mgg::GBMCursor::GBMCursor(
         current_position(),
         buffer(*platform)
 {
-    std::vector<uint32_t> image(height*width, bg_color);
-    for (int i = 0; i != width-1; ++i)
-    {
-        if (i < 16)
-        {
-            image[0 * height + i] = fg_color;
-            image[1 * height + i] = fg_color;
-            image[i * height + 0] = fg_color;
-            image[i * height + 1] = fg_color;
-        }
-        image[i * height + i] = fg_color;
-        image[(i+1) * height + i] = fg_color;
-        image[i * height + i + 1] = fg_color;
-    }
-
-    set_image(image.data(), geometry::Size{geometry::Width(width), geometry::Height(height)});
+    set_image(black_arrow.pixel_data,
+              geometry::Size{geometry::Width(width), geometry::Height(height)});
 
     show_at_last_known_position();
 }

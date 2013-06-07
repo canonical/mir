@@ -45,7 +45,7 @@ void me::WindowManager::set_session_manager(
     session_manager = sm;
 }
 
-bool me::WindowManager::handles(MirEvent const& event)
+bool me::WindowManager::handle(MirEvent const& event)
 {
     assert(focus_controller);
 

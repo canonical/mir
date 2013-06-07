@@ -34,8 +34,8 @@
 /// \snippet demo_client.c connect_tag
 ///\subsection surface_create request and wait for surface handle
 /// \snippet demo_client.c surface_create_tag
-///\subsection next_buffer exchange the current buffer for a new one
-/// \snippet demo_client.c next_buffer_tag
+///\subsection swap_buffers exchange the current buffer for a new one
+/// \snippet demo_client.c swap_buffers_tag
 ///\subsection surface_release We release our surface
 /// \snippet demo_client.c surface_release_tag
 ///\subsection connection_release We release our connection
@@ -73,8 +73,8 @@ static void surface_create_callback(MirSurface *new_surface, void *context)
     ((MirDemoState*)context)->surface = new_surface;
 }
 
-// Callback to update MirDemoState on next_buffer
-static void surface_next_buffer_callback(MirSurface* surface, void *context)
+// Callback to update MirDemoState on swap_buffers
+static void surface_swap_buffers_callback(MirSurface* surface, void *context)
 {
     (void) surface;
     (void) context;
@@ -173,9 +173,9 @@ void demo_client(const char* server, int buffer_swap_count)
             // In a real application we'd render into the current buffer
         }
 
-        ///\internal [next_buffer_tag]
-        mir_wait_for(mir_surface_next_buffer(mcd.surface, surface_next_buffer_callback, &mcd));
-        ///\internal [next_buffer_tag]
+        ///\internal [swap_buffers_tag]
+        mir_wait_for(mir_surface_swap_buffers(mcd.surface, surface_swap_buffers_callback, &mcd));
+        ///\internal [swap_buffers_tag]
     }
 
     ///\internal [surface_release_tag]

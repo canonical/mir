@@ -107,7 +107,7 @@ int main(void)
     };
     GLuint vshader, fshader, prog;
     GLint linked, low_color, high_color, vpos, theta;
-    int width = 0, height = 0;
+    unsigned int width = 0, height = 0;
     GLfloat angle = 0.0f;
 
     if (!mir_eglapp_init(&width, &height))
