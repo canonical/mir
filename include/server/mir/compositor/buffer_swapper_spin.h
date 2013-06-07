@@ -47,25 +47,15 @@ class Buffer;
 class BufferSwapperSpin : public BufferSwapper
 {
 public:
-    template<typename BufferPtrContainer>
-    BufferSwapperSpin(BufferPtrContainer const& buffer_list)
-        : buffer_queue{buffer_list.begin(), buffer_list.end()},
-          in_use_by_client{0},
-          swapper_size{buffer_queue.size()}
-    {
-        if (swapper_size != 3)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error("BufferSwapperSpin is only validated for 3 buffers"));
-        }
-    }
+    BufferSwapperSpin(std::vector<std::shared_ptr<compositor::Buffer>>& buffer_list, size_t swapper_size);
 
     std::shared_ptr<Buffer> client_acquire();
     void client_release(std::shared_ptr<Buffer> const& queued_buffer);
     std::shared_ptr<Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
 
-    void force_requests_to_complete();
+    void force_client_completion();
+    void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
 
 private:
     template<class T>
@@ -74,7 +64,6 @@ private:
     std::mutex swapper_mutex;
 
     std::deque<std::shared_ptr<Buffer>> buffer_queue;
-    std::shared_ptr<Buffer> last_update_buffer;
     unsigned int in_use_by_client;
     bool client_submitted_new_buffer;
     size_t const swapper_size;

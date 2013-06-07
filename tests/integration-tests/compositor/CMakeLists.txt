@@ -1,6 +1,7 @@
 list(
   APPEND INTEGRATION_TESTS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/test_stress_buffer_swapper.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_swapping_swappers.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_synchronizer.cpp
 )
 

@@ -36,13 +36,13 @@ namespace
 {
 struct BufferSwapperDouble : testing::Test
 {
-    BufferSwapperDouble()
+    void SetUp()
     {
         buffer_a = std::make_shared<mtd::StubBuffer>();
         buffer_b = std::make_shared<mtd::StubBuffer>();
 
-        auto double_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
-        swapper = std::make_shared<mc::BufferSwapperMulti>(double_list);
+        auto double_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+        swapper = std::make_shared<mc::BufferSwapperMulti>(double_list, double_list.size());
 
     }
 
@@ -123,7 +123,7 @@ TEST_F(BufferSwapperDouble, test_client_and_compositor_advance_buffers_in_serial
     EXPECT_NE(buffer_2, buffer_4);
 }
 
-TEST_F(BufferSwapperDouble, force_requests_to_complete_works)
+TEST_F(BufferSwapperDouble, force_client_completion_works_causes_rc_failure)
 {
     auto client_buffer = swapper->client_acquire();
     swapper->client_release(client_buffer);
@@ -133,9 +133,9 @@ TEST_F(BufferSwapperDouble, force_requests_to_complete_works)
 
     /*
      * Unblock the the upcoming client_acquire() call. There is no guarantee
-     * that force_requests_to_complete will run after client_acquire() is
+     * that force_client_completion will run after client_acquire() is
      * blocked, but it doesn't matter. As long as the client uses only one
-     * buffer at a time, BufferSwapperMulti::force_requests_to_complete() ensures
+     * buffer at a time, BufferSwapperMulti::force_client_completion() ensures
      * that either a currently blocked request will unblock, or the next
      * request will not block.
      */
@@ -143,21 +143,26 @@ TEST_F(BufferSwapperDouble, force_requests_to_complete_works)
                 [this]
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds{10});
-                    swapper->force_requests_to_complete();
+                    swapper->force_client_completion();
                 });
 
-    client_buffer = swapper->client_acquire();
+    EXPECT_THROW({
+        swapper->client_acquire();
+    }, std::logic_error);
 }
 
-TEST_F(BufferSwapperDouble, force_requests_to_complete_throws_if_all_buffers_are_acquired)
+TEST_F(BufferSwapperDouble, force_client_completion_works)
 {
-    auto client_buffer = swapper->client_acquire();
-    swapper->client_release(client_buffer);
+    swapper->client_acquire();
 
-    client_buffer = swapper->client_acquire();
-    auto comp_buffer = swapper->compositor_acquire();
+    auto f = std::async(std::launch::async,
+                [this]
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds{10});
+                    swapper->force_client_completion();
+                });
 
     EXPECT_THROW({
-        swapper->force_requests_to_complete();
+        swapper->client_acquire();
     }, std::logic_error);
 }

@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/buffer_swapper.h"
+#include "src/server/compositor/buffer_swapper_master.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -38,8 +38,8 @@ namespace
 struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
 {
     MOCK_METHOD2(
-        create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
+        create_swapper_master,
+        std::unique_ptr<mc::BufferSwapperMaster>(mc::BufferProperties&, mc::BufferProperties const&));
 };
 
 geom::Size size{geom::Width{1024}, geom::Height{768}};
@@ -55,7 +55,7 @@ TEST(buffer_manager, create_buffer)
 
     MockBufferAllocationStrategy allocation_strategy;
 
-    EXPECT_CALL(allocation_strategy, create_swapper(_,buffer_properties))
+    EXPECT_CALL(allocation_strategy, create_swapper_master(_,buffer_properties))
         .Times(AtLeast(1));
 
     mc::BufferBundleManager buffer_bundle_manager(mt::fake_shared(allocation_strategy));
