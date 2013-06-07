@@ -20,7 +20,6 @@
 #define MIR_SHELL_SESSION_H_
 
 #include "mir/frontend/session.h"
-#include "mir/input/session_target.h"
 
 namespace mir
 {
@@ -29,7 +28,7 @@ namespace shell
 {
 class Surface;
 
-class Session : public frontend::Session, public input::SessionTarget
+class Session : public frontend::Session
 {
 public:
     virtual std::string name() const = 0;

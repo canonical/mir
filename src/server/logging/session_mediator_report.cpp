@@ -58,6 +58,11 @@ void ml::SessionMediatorReport::session_disconnect_called(std::string const& app
     log->log<Logger::informational>("session_disconnect_called(\"" + app_name + "\")", component);
 }
 
+void ml::SessionMediatorReport::session_drm_auth_magic_called(std::string const& app_name)
+{
+    log->log<Logger::informational>("session_drm_auth_magic_called(\"" + app_name + "\")", component);
+}
+
 void ml::SessionMediatorReport::session_configure_surface_called(std::string const& app_name)
 {
     log->log<Logger::informational>("session_configure_surface_called(\"" + app_name + "\")", component);

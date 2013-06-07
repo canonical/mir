@@ -20,7 +20,6 @@
 #include "mir/geometry/size.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/mir_logger.h"
 #include "src/client/mir_connection.h"
 
 #include "mir_protobuf.pb.h"

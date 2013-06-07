@@ -41,7 +41,7 @@ class EventFilterChain : public EventFilter
 public:
     explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
 
-    virtual bool handles(const MirEvent &event);
+    virtual bool handle(const MirEvent &event);
 
 private:
     typedef std::vector<std::weak_ptr<EventFilter>> EventFilterVector;

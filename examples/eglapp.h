@@ -25,7 +25,7 @@ extern "C" {
 
 typedef int mir_eglapp_bool;
 
-mir_eglapp_bool mir_eglapp_init(int *width, int *height);
+mir_eglapp_bool mir_eglapp_init(unsigned int *width, unsigned int *height);
 void            mir_eglapp_swap_buffers(void);
 mir_eglapp_bool mir_eglapp_running(void);
 void            mir_eglapp_shutdown(void);

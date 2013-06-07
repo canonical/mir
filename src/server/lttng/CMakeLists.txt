@@ -3,7 +3,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LTTNG_UST_INCLUDE_DIRS})
 set(
   LTTNG_SOURCES
 
-  tracepoint_provider.cpp
+  server_tracepoint_provider.cpp
   message_processor_report.cpp
   input_report.cpp
 )
@@ -40,6 +40,7 @@ SET_TARGET_PROPERTIES(
 target_link_libraries(
   mirlttng
 
+  mirsharedlttng
   -ldl
 )
 

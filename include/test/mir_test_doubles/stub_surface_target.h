@@ -47,9 +47,10 @@ struct StubSurfaceTarget : public input::SurfaceTarget
     {
         return geometry::Point();
     }
-    std::string name() const override
+    std::string const& name() const override
     {
-        return std::string();
+        static std::string empty_name;
+        return empty_name;
     }
 
     int input_fd;

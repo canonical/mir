@@ -7,7 +7,8 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_communication_package.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_application_handle.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_window_handle.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_dispatcher_controller.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_targeter.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_android_input_target_enumerator.cpp
 )
 
 set(

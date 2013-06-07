@@ -23,8 +23,6 @@
 
 #include "mir/frontend/communicator.h"
 
-#include "src/client/mir_logger.h"
-
 #include "mir_protobuf.pb.h"
 
 #include <gtest/gtest.h>
@@ -548,7 +546,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             ASSERT_TRUE(surface != NULL);
 
             buffers = 0;
-            mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+            mir_wait_for(mir_surface_swap_buffers(surface, next_buffer_callback, this));
             EXPECT_EQ(buffers, 1);
 
             mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
@@ -588,7 +586,7 @@ TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
-            mir_surface_next_buffer_sync(surface);
+            mir_surface_swap_buffers_sync(surface);
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
@@ -629,7 +627,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
 {
-    static const int default_display_width = 1600, default_display_height = 1600;
+    static const unsigned int default_display_width = 1600, default_display_height = 1600;
 
     struct ClientConfig : ClientConfigCommon
     {
@@ -693,7 +691,7 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
 
             mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 // TODO surface_create needs to fail safe too. After that is done we should add the following:
-// TODO    mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+// TODO    mir_wait_for(mir_surface_swap_buffers(surface, next_buffer_callback, this));
 // TODO    mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
             mir_connection_release(connection);

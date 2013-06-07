@@ -25,7 +25,7 @@ mi::EventFilterChain::EventFilterChain(std::initializer_list<std::shared_ptr<mi:
 {
 }
 
-bool mi::EventFilterChain::handles(const MirEvent &event)
+bool mi::EventFilterChain::handle(const MirEvent &event)
 {
     auto it = filters.begin();
     while (it != filters.end())
@@ -36,7 +36,7 @@ bool mi::EventFilterChain::handles(const MirEvent &event)
             it = filters.erase(it);
             continue;
         }
-        if (filter->handles(event)) return true;
+        if (filter->handle(event)) return true;
         ++it;
     }
     return false;

@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/drm_authenticator.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/internal_client.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
@@ -151,6 +152,37 @@ TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
         .Times(1);
 
     platform->fill_ipc_package(mock_packer, mock_buffer);
+}
+
+TEST_F(GBMGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
+{
+    using namespace testing;
+
+    drm_magic_t const magic{0x10111213};
+
+    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
+        .WillOnce(Return(0));
+
+    auto platform = create_platform();
+    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(platform);
+    authenticator->drm_auth_magic(magic);
+}
+
+TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
+{
+    using namespace testing;
+
+    drm_magic_t const magic{0x10111213};
+
+    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
+        .WillOnce(Return(-1));
+
+    auto platform = create_platform();
+    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(platform);
+
+    EXPECT_THROW({
+        authenticator->drm_auth_magic(magic);
+    }, std::runtime_error);
 }
 
 /* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different

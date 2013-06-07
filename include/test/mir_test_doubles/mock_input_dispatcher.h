@@ -34,17 +34,20 @@ namespace doubles
 struct MockInputDispatcher : public droidinput::InputDispatcherInterface
 {
     // droidinput::InputDispatcher interface
+    MOCK_METHOD1(setInputEnumerator, void(droidinput::sp<droidinput::InputEnumerator> const&));
     MOCK_METHOD1(dump, void(droidinput::String8&));
     MOCK_METHOD0(monitor, void());
     MOCK_METHOD0(dispatchOnce, void());
     MOCK_METHOD6(injectInputEvent, int32_t(droidinput::InputEvent const*, int32_t, int32_t, int32_t, int32_t, uint32_t));
-    MOCK_METHOD1(setInputWindows, void(droidinput::Vector<droidinput::sp<droidinput::InputWindowHandle>> const&));
     MOCK_METHOD1(setFocusedApplication, void(droidinput::sp<droidinput::InputApplicationHandle> const&));
     MOCK_METHOD2(setInputDispatchMode, void(bool, bool));
     MOCK_METHOD1(setInputFilterEnabled, void(bool));
     MOCK_METHOD2(transferTouchFocus, bool(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputChannel> const&));
     MOCK_METHOD3(registerInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&, droidinput::sp<droidinput::InputWindowHandle> const&, bool));
     MOCK_METHOD1(unregisterInputChannel, droidinput::status_t(droidinput::sp<droidinput::InputChannel> const&));
+    
+    MOCK_METHOD1(setKeyboardFocus, void(droidinput::sp<droidinput::InputWindowHandle> const&));
+    MOCK_METHOD1(notifyWindowRemoved, void(droidinput::sp<droidinput::InputWindowHandle> const&));
 
     // droidinput::InputListener interface
     MOCK_METHOD1(notifyConfigurationChanged, void(droidinput::NotifyConfigurationChangedArgs const*));

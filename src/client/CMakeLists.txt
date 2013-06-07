@@ -16,6 +16,7 @@ include_directories(
 )
 
 add_subdirectory(rpc/)
+add_subdirectory(lttng/)
 
 set(
   CLIENT_SOURCES
@@ -26,8 +27,8 @@ set(
   mir_connection.cpp
   mir_wait_handle.cpp
   mir_surface.cpp
-  mir_logger.cpp
   logging/rpc_report.cpp
+  default_connection_configuration.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")
@@ -81,7 +82,9 @@ set(
 
   mirprotobuf
   mirsharedinput
+  mirsharedlogging
   mirclientrpc
+  mirclientlttngstatic
 
   ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}

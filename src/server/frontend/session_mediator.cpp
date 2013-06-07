@@ -40,7 +40,7 @@
 
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
-namespace mfd=mir::frontend::detail;
+namespace mfd = mir::frontend::detail;
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,

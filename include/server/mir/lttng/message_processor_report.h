@@ -20,7 +20,7 @@
 #define MIR_LTTNG_MESSAGE_PROCESSOR_REPORT_H_
 
 #include "mir/frontend/message_processor_report.h"
-#include "mir/lttng/tracepoint_provider.h"
+#include "mir/lttng/server_tracepoint_provider.h"
 
 namespace mir
 {
@@ -37,7 +37,7 @@ public:
     void exception_handled(void const* mediator, std::exception const& error);
 
 private:
-    TracepointProvider tp_provider;
+    ServerTracepointProvider tp_provider;
 };
 
 }

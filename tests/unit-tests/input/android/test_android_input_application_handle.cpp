@@ -18,7 +18,7 @@
 
 #include "src/server/input/android/android_input_application_handle.h"
 
-#include "mir/input/session_target.h"
+#include "mir/input/surface_target.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -27,43 +27,47 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace geom = mir::geometry;
 
 namespace
 {
-struct MockSessionHandle : public mi::SessionTarget
+struct MockSurfaceHandle : public mi::SurfaceTarget
 {
-    MOCK_CONST_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(server_input_fd, int());
+    MOCK_CONST_METHOD0(top_left, geom::Point());
+    MOCK_CONST_METHOD0(size, geom::Size());
+    MOCK_CONST_METHOD0(name, std::string const&());
 };
 }
 
 
-TEST(AndroidInputApplicationHandle, takes_name_from_session_and_specifies_max_timeout)
+TEST(AndroidInputApplicationHandle, takes_name_from_surface_and_specifies_max_timeout)
 {
     using namespace ::testing;
-    std::string const testing_session_name = "Cats";
-    auto session = std::make_shared<MockSessionHandle>();
+    std::string testing_surface_name = "Cats";
+    auto surface = std::make_shared<MockSurfaceHandle>();
 
-    EXPECT_CALL(*session, name()).Times(AtLeast(1))
-        .WillRepeatedly(Return(testing_session_name));
-    mia::InputApplicationHandle application_handle(session);
+    EXPECT_CALL(*surface, name()).Times(AtLeast(1))
+        .WillRepeatedly(ReturnRef(testing_surface_name));
+    mia::InputApplicationHandle application_handle(surface);
     EXPECT_TRUE(application_handle.updateInfo());
     auto info = application_handle.getInfo();
     EXPECT_EQ(INT_MAX, info->dispatchingTimeout);
-    EXPECT_EQ(droidinput::String8(testing_session_name.c_str()), info->name);
+    EXPECT_EQ(droidinput::String8(testing_surface_name.c_str()), info->name);
 }
 
-TEST(AndroidInputApplicationHandle, does_not_own_session)
+TEST(AndroidInputApplicationHandle, does_not_own_surface)
 {
     using namespace ::testing;
-    std::string const testing_session_name = "Let it Grow";
+    std::string const testing_surface_name = "Let it Grow";
     
-    auto session = std::make_shared<MockSessionHandle>();
-    EXPECT_CALL(*session, name()).Times(AtLeast(1))
-        .WillRepeatedly(Return(testing_session_name));
+    auto surface = std::make_shared<MockSurfaceHandle>();
+    EXPECT_CALL(*surface, name()).Times(AtLeast(1))
+        .WillRepeatedly(ReturnRef(testing_surface_name));
     
-    mia::InputApplicationHandle application_handle(session);
+    mia::InputApplicationHandle application_handle(surface);
     EXPECT_TRUE(application_handle.updateInfo());
-    session.reset();
+    surface.reset();
     EXPECT_FALSE(application_handle.updateInfo());
 
 }

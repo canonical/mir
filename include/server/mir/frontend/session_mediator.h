@@ -94,6 +94,12 @@ public:
                     mir::protobuf::Void* response,
                     google::protobuf::Closure* done);
 
+    /* Platform specific requests */
+    void drm_auth_magic(google::protobuf::RpcController* controller,
+                        const mir::protobuf::DRMMagic* request,
+                        mir::protobuf::DRMAuthMagicStatus* response,
+                        google::protobuf::Closure* done);
+
     void configure_surface(google::protobuf::RpcController* controller,
                            const mir::protobuf::SurfaceSetting*,
                            mir::protobuf::SurfaceSetting*,

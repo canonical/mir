@@ -24,12 +24,15 @@
 #include "mir/shell/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_input_targeter.h"
+#include "mir_test_doubles/mock_input_targeter.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -70,7 +73,8 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
     ON_CALL(app3, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
 
-    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model));
+    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model),
+                                                        std::make_shared<mtd::StubInputTargeter>());
 
     EXPECT_CALL(app1, show()).Times(1);
     EXPECT_CALL(app2, hide()).Times(1);
@@ -85,4 +89,39 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     model.insert_session(mt::fake_shared(app3));
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
+}
+
+TEST(SingleVisibilityFocusMechanism, sets_input_focus)
+{
+    using namespace ::testing;
+    
+    NiceMock<MockShellSession> app1;
+    mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
+    {
+        InSequence seq;
+        EXPECT_CALL(app1, default_surface()).Times(1)
+            .WillOnce(Return(mt::fake_shared(mock_surface)));
+        EXPECT_CALL(app1, default_surface()).Times(1)
+            .WillOnce(Return(std::shared_ptr<msh::Surface>()));
+    }
+
+    msh::DefaultSessionContainer model;
+    model.insert_session(mt::fake_shared(app1));
+    mtd::MockInputTargeter targeter;
+    
+    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model),
+        mt::fake_shared(targeter));
+    
+    {
+        InSequence seq;
+        EXPECT_CALL(mock_surface, take_input_focus(_)).Times(1);
+        // When we have no default surface.
+        EXPECT_CALL(targeter, focus_cleared()).Times(1);
+        // When we have no session.
+        EXPECT_CALL(targeter, focus_cleared()).Times(1);
+    }
+    
+    focus_mechanism.set_focus_to(mt::fake_shared(app1));
+    focus_mechanism.set_focus_to(mt::fake_shared(app1));
+    focus_mechanism.set_focus_to(std::shared_ptr<msh::Session>());
 }

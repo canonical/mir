@@ -115,19 +115,16 @@ InputChannel::~InputChannel() {
     ALOGD("Input channel destroyed: name='%s', fd=%d",
         c_str(mName), mFd);
 #endif
-
-    ::close(mFd);
 }
 
-status_t InputChannel::openInputChannelPair(const String8& name,
-        sp<InputChannel>& outServerChannel, sp<InputChannel>& outClientChannel) {
+status_t InputChannel::openInputFdPair(int& server_fd, int& client_fd) {
     int sockets[2];
     if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, sockets)) {
         status_t result = -errno;
-        ALOGE("channel '%s' ~ Could not create socket pair.  errno=%d",
-            c_str(name), errno);
-        outServerChannel.clear();
-        outClientChannel.clear();
+        ALOGE("InputChannel ~ Could not create socket pair.  errno=%d",
+            errno);
+        server_fd = client_fd = 0;
+
         return result;
     }
 
@@ -137,13 +134,9 @@ status_t InputChannel::openInputChannelPair(const String8& name,
     setsockopt(sockets[1], SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(bufferSize));
     setsockopt(sockets[1], SOL_SOCKET, SO_RCVBUF, &bufferSize, sizeof(bufferSize));
 
-    String8 serverChannelName = name;
-    serverChannelName.append(" (server)");
-    outServerChannel = new InputChannel(serverChannelName, sockets[0]);
-
-    String8 clientChannelName = name;
-    clientChannelName.append(" (client)");
-    outClientChannel = new InputChannel(clientChannelName, sockets[1]);
+    server_fd = sockets[0];
+    client_fd = sockets[1];
+    
     return OK;
 }
 
