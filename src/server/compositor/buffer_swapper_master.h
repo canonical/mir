@@ -27,6 +27,8 @@ namespace mir
 namespace compositor
 {
 
+//TODO: this interface is really doing the same thing as BufferBundle. This interface should be eliminated 
+//      in favor of SwapperSwitcher using the BufferBundle interface
 class BufferSwapperMaster : public BufferSwapper
 {
 public:

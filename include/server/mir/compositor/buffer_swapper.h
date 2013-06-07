@@ -74,7 +74,7 @@ public:
     /**
      * If the swapper has been used, and you want to preserve the buffers that have been used, 
      * it is advisable to shutdown the BufferSwapper  by using force_client_completion()
-     * and then transfer_buffers_to(). If these are not called, all buffers within the swapper
+     * and then end_responsibility(). If these are not called, all buffers within the swapper
      * will be deallocated
      */
     virtual ~BufferSwapper() = default;
