@@ -33,8 +33,7 @@ TEST(RWLockWriterBiasTest, multi_readers_dont_block)
     std::vector<std::future<int>> asyncs;
 
     {
-        mc::ReadLock rd_lk(lock);
-        std::unique_lock<mc::ReadLock> lk(rd_lk);
+        std::unique_lock<mc::ReadLock> lk(lock);
         for(auto i = 0; i < num_asyncs; i++)
         {
             asyncs.push_back(std::async(std::launch::async,

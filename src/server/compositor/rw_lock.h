@@ -28,44 +28,38 @@ namespace mir
 namespace compositor
 {
 
-struct RWLockMembers
-{
-    RWLockMembers();
-
-    std::mutex mut;
-    std::condition_variable reader_cv, writer_cv;
-    unsigned int readers;
-    unsigned int writers;
-    unsigned int waiting_writers;
-};
-
 class ReadLock
 {
 public:
-    void lock();
-    void unlock();
-
+    void lock() { read_lock(); }
+    void unlock() { read_unlock(); }
 protected:
-    ReadLock(RWLockMembers& lock_data)
-     : impl(lock_data) 
+    ReadLock()
     {
     }
 private:
-    RWLockMembers& impl;
+    virtual void read_lock() = 0;
+    virtual void read_unlock() = 0;
+
+    ReadLock(ReadLock const&) = delete;
+    ReadLock& operator=(ReadLock const&) = delete;
 };
 
 class WriteLock
 {
 public:
-    void lock();
-    void unlock();
+    void lock() { write_lock(); }
+    void unlock() { write_unlock(); }
 protected:
-    WriteLock(RWLockMembers& lock_data)
-     : impl(lock_data) 
+    WriteLock()
     {
     }
 private:
-    RWLockMembers& impl;
+    virtual void write_lock() = 0;
+    virtual void write_unlock() = 0;
+
+    WriteLock(WriteLock const&) = delete;
+    WriteLock& operator=(WriteLock const&) = delete;
 };
 
 class RWLockWriterBias : public ReadLock, public WriteLock
@@ -73,9 +67,16 @@ class RWLockWriterBias : public ReadLock, public WriteLock
 public:
     RWLockWriterBias();
 private:
-    RWLockMembers lock_members;
+    void write_lock();
+    void write_unlock();
+    void read_lock();
+    void read_unlock();
+    std::mutex mut;
+    std::condition_variable reader_cv, writer_cv;
+    unsigned int readers;
+    unsigned int writers;
+    unsigned int waiting_writers;
 };
-
 
 }
 }

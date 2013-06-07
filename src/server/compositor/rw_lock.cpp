@@ -21,56 +21,51 @@
 
 namespace mc=mir::compositor;
 
-mc::RWLockMembers::RWLockMembers()
+mc::RWLockWriterBias::RWLockWriterBias()
     : readers(0),
       writers(0),
       waiting_writers(0)
 {
 }
 
-mc::RWLockWriterBias::RWLockWriterBias()
-    : ReadLock(lock_members), WriteLock(lock_members)
+void mc::RWLockWriterBias::read_lock()
 {
-}
-
-void mc::ReadLock::lock()
-{
-    std::unique_lock<std::mutex> lk(impl.mut);
-    while ((impl.waiting_writers > 0) || (impl.writers > 0))
+    std::unique_lock<std::mutex> lk(mut);
+    while ((waiting_writers > 0) || (writers > 0))
     {
-        impl.reader_cv.wait(lk);
+        reader_cv.wait(lk);
     }
-    impl.readers++;
+    readers++;
 }
 
-void mc::ReadLock::unlock()
+void mc::RWLockWriterBias::read_unlock()
 {
-    std::unique_lock<std::mutex> lk(impl.mut);
-    impl.readers--;
-    if (impl.readers == 0)
+    std::unique_lock<std::mutex> lk(mut);
+    readers--;
+    if (readers == 0)
     {   
-        impl.writer_cv.notify_all();
+        writer_cv.notify_all();
     }
 }
 
-void mc::WriteLock::lock()
+void mc::RWLockWriterBias::write_lock()
 {    
-    std::unique_lock<std::mutex> lk(impl.mut);
-    impl.waiting_writers++;
-    while ((impl.readers > 0) || (impl.writers > 0))
+    std::unique_lock<std::mutex> lk(mut);
+    waiting_writers++;
+    while ((readers > 0) || (writers > 0))
     {
-        impl.writer_cv.wait(lk);
+        writer_cv.wait(lk);
     }
-    impl.waiting_writers--;
-    impl.writers++;
+    waiting_writers--;
+    writers++;
 }
 
-void mc::WriteLock::unlock()
+void mc::RWLockWriterBias::write_unlock()
 {
-    std::unique_lock<std::mutex> lk(impl.mut);
-    impl.writers--;
+    std::unique_lock<std::mutex> lk(mut);
+    writers--;
 
-    impl.reader_cv.notify_all();
-    if (impl.waiting_writers > 0)
-        impl.writer_cv.notify_all();
+    reader_cv.notify_all();
+    if (waiting_writers > 0)
+        writer_cv.notify_all();
 }
