@@ -17,32 +17,35 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_SWAPPER_MASTER_H_
-#define MIR_COMPOSITOR_BUFFER_SWAPPER_MASTER_H_
+#ifndef MIR_COMPOSITOR_SWAPPER_DIRECTOR_H_
+#define MIR_COMPOSITOR_SWAPPER_DIRECTOR_H_
 
-#include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_properties.h"
 
 namespace mir
 {
 namespace compositor
 {
+class Buffer;
 
-//TODO: this interface is really doing the same thing as BufferBundle. This interface should be eliminated 
-//      in favor of SwapperSwitcher using the BufferBundle interface
-class BufferSwapperMaster : public BufferSwapper
+class SwapperDirector
 {
 public:
-    virtual ~BufferSwapperMaster() noexcept {}
+    virtual ~SwapperDirector() noexcept {}
+    virtual std::shared_ptr<Buffer> client_acquire() = 0;
+    virtual void client_release(std::shared_ptr<Buffer> const&) = 0;
+    virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
+    virtual void compositor_release(std::shared_ptr<Buffer> const&) = 0;
 
+    virtual BufferProperties properties() const = 0;
     virtual void allow_framedropping(bool dropping_allowed) = 0;
-
+    virtual void shutdown() = 0;
 protected:
-    BufferSwapperMaster() = default;
-    BufferSwapperMaster(BufferSwapperMaster const&) = delete;
-    BufferSwapperMaster& operator=(BufferSwapperMaster const&) = delete;
+    SwapperDirector() = default;
+    SwapperDirector(SwapperDirector const&) = delete;
+    SwapperDirector& operator=(SwapperDirector const&) = delete;
 };
-
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_H_ */
+#endif /* MIR_COMPOSITOR_SWAPPER_DIRECTOR_H_ */

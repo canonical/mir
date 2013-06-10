@@ -20,7 +20,7 @@
 #ifndef MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
 #define MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
 
-#include "buffer_swapper_master.h"
+#include "swapper_director.h"
 #include "rw_lock.h"
 #include <condition_variable>
 #include <memory>
@@ -34,20 +34,20 @@ class Buffer;
 class BufferSwapper;
 class BufferAllocationStrategy;
 
-class SwapperSwitcher : public BufferSwapperMaster
+class SwapperSwitcher : public SwapperDirector 
 {
 public:
     SwapperSwitcher(std::shared_ptr<BufferSwapper> const& initial_swapper,
                     std::shared_ptr<BufferAllocationStrategy> const& swapper_factory);
 
-    std::shared_ptr<Buffer> client_acquire();
-    void client_release(std::shared_ptr<Buffer> const& queued_buffer);
-    std::shared_ptr<Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
-    void force_client_completion();
-    void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
+    BufferProperties properties() const;
 
+    std::shared_ptr<Buffer> client_acquire();
+    void client_release(std::shared_ptr<Buffer> const&);
+    std::shared_ptr<Buffer> compositor_acquire();
+    void compositor_release(std::shared_ptr<Buffer> const&);
     void allow_framedropping(bool dropping_allowed);
+    void shutdown();
 private:
     std::shared_ptr<BufferSwapper> swapper;
     std::shared_ptr<BufferAllocationStrategy> const swapper_factory;
