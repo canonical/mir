@@ -79,7 +79,6 @@ TEST_F(BufferBundleTest, shutdown_command)
     buffer_bundle.shutdown();
 }
 
-#if 0
 TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
 {
     using namespace testing;
@@ -123,4 +122,3 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
 
     buffer_bundle.secure_client_buffer();
 }
-#endif
