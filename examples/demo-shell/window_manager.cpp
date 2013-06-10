@@ -93,8 +93,8 @@ bool me::WindowManager::handle(MirEvent const& event)
 
         int fingers = (int)event.motion.pointer_count;
 
-        if (action == mir_motion_action_down)
-            max_fingers = 1;
+        if (action == mir_motion_action_down || fingers > max_fingers)
+            max_fingers = fingers;
 
         if (app)
         {
@@ -106,20 +106,18 @@ bool me::WindowManager::handle(MirEvent const& event)
                 (event.motion.modifiers & mir_key_modifier_alt ||
                  fingers >= 3))
             {
-                if (//event.motion.button_state == 0 ||
+                // Start of a gesture: When the latest finger/button goes down
+                if (action == mir_motion_action_down ||
                     action == mir_motion_action_pointer_down)
                 {
                     relative_click = cursor - surf->top_left();
-                    if (fingers > max_fingers)
-                        max_fingers = fingers;
                 }
-                else if (event.motion.action == mir_motion_action_move ||
-                         event.motion.button_state & mir_motion_button_primary)
-                { // Drag gesture...
-                    if (max_fingers <= 3)  // one mouse or three fingers
+                else if (event.motion.action == mir_motion_action_move)
+                { // Movement is happening with one or more fingers/button down
+                    geometry::Point abs = cursor - relative_click;
+                    if (max_fingers <= 3)  // Avoid accidental movement
                     {
-                        geometry::Point dir = cursor - relative_click;
-                        surf->move_to(dir);
+                        surf->move_to(abs);
                         return true;
                     }
                 }
