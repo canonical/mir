@@ -52,7 +52,6 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
     using namespace mir;
     using namespace geometry;
 
-    Point avg;
     int x = 0, y = 0, count = (int)motion.pointer_count;
 
     for (int i = 0; i < count; i++)
