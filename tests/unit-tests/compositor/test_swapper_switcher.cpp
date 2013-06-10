@@ -57,6 +57,7 @@ TEST_F(SwapperSwitcherTest, sync_swapper_by_default)
     auto actual_properties = mc::BufferProperties{geom::Size{geom::Width{7}, geom::Height{8}},
                                                   geom::PixelFormat::argb_8888, mc::BufferUsage::software};
     EXPECT_CALL(*mock_swapper_factory, create_sync_swapper_new_buffers(_,_))
+        .Times(1)
         .WillOnce(DoAll(SetArgReferee<0>(actual_properties),
                         Return(mock_default_swapper)));
 

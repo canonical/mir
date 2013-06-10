@@ -48,13 +48,12 @@ public:
     void allow_framedropping(bool dropping_allowed);
     void shutdown();
 private:
+    BufferProperties bundle_properties; //must be before swapper
     std::shared_ptr<BufferAllocationStrategy> const swapper_factory;
     std::shared_ptr<BufferSwapper> swapper;
     RWLockWriterBias rw_lock;
     std::condition_variable_any cv;
     std::atomic<bool> should_retry;
-
-    BufferProperties bundle_properties;
 };
 
 }

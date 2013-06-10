@@ -105,5 +105,5 @@ void mc::SwapperSwitcher::allow_framedropping(bool allow_dropping)
 
 mc::BufferProperties mc::SwapperSwitcher::properties() const
 {
-    return mc::BufferProperties{};
+    return bundle_properties;
 }
