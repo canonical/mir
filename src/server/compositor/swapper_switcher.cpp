@@ -76,16 +76,11 @@ void mc::SwapperSwitcher::compositor_release(std::shared_ptr<mc::Buffer> const& 
     return swapper->compositor_release(released_buffer);
 }
 
-void mc::SwapperSwitcher::force_client_completion()
+void mc::SwapperSwitcher::shutdown()
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     should_retry = false;
     swapper->force_client_completion();
-}
-
-void mc::SwapperSwitcher::end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&)
-{
-    //TODO
 }
 
 void mc::SwapperSwitcher::allow_framedropping(bool allow_dropping)
@@ -107,4 +102,9 @@ void mc::SwapperSwitcher::allow_framedropping(bool allow_dropping)
         swapper = swapper_factory->create_sync_swapper_reuse(list, size); 
 
     cv.notify_all();
+}
+
+mc::BufferProperties mc::SwapperSwitcher::properties() const
+{
+    return mc::BufferProperties{};
 }

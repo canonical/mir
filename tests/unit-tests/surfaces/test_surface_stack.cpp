@@ -19,7 +19,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/compositor/buffer_bundle_surfaces.h"
 #include "mir/surfaces/buffer_bundle_factory.h"
-#include "src/server/compositor/buffer_swapper_master.h"
+#include "src/server/compositor/swapper_director.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/renderables.h"
 #include "mir/geometry/rectangle.h"
@@ -54,16 +54,16 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class NullBufferSwapper : public mc::BufferSwapperMaster
+class NullSwapperDirector : public mc::SwapperDirector
 {
 public:
     virtual std::shared_ptr<mc::Buffer> client_acquire() { return std::shared_ptr<mc::Buffer>(); }
     virtual void client_release(std::shared_ptr<mc::Buffer> const&) {}
     virtual std::shared_ptr<mc::Buffer> compositor_acquire(){ return std::shared_ptr<mc::Buffer>(); };
     virtual void compositor_release(std::shared_ptr<mc::Buffer> const&){}
-    virtual void force_client_completion() {}
-    virtual void end_responsibility(std::vector<std::shared_ptr<mc::Buffer>>&, size_t&) {};
+    virtual void shutdown() {}
     virtual void allow_framedropping(bool) {}
+    virtual mc::BufferProperties properties() const { return mc::BufferProperties{}; };
 };
 
 struct MockBufferBundleFactory : public ms::BufferBundleFactory
@@ -77,9 +77,7 @@ struct MockBufferBundleFactory : public ms::BufferBundleFactory
             create_buffer_bundle(_))
                 .WillByDefault(
                     Return(
-                        std::shared_ptr<ms::BufferBundle>(
-                                new mc::BufferBundleSurfaces(
-                                std::unique_ptr<mc::BufferSwapperMaster>(new NullBufferSwapper())))));
+                        std::make_shared<mc::BufferBundleSurfaces>(std::make_shared<NullSwapperDirector>())));
     }
 
     MOCK_METHOD1(
@@ -156,8 +154,8 @@ TEST(
 {
     using namespace ::testing;
 
-    std::unique_ptr<mc::BufferSwapperMaster> swapper_handle;
-    mc::BufferBundleSurfaces buffer_bundle(std::move(swapper_handle));
+    std::shared_ptr<mc::SwapperDirector> swapper_handle;
+    mc::BufferBundleSurfaces buffer_bundle(swapper_handle);
     MockBufferBundleFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
     mtd::StubInputRegistrar input_registrar;
@@ -294,7 +292,6 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 {
     using namespace ::testing;
 
-    std::unique_ptr<mc::BufferSwapper> swapper_handle;
     MockBufferBundleFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
     mtd::StubInputRegistrar input_registrar;
@@ -327,7 +324,7 @@ struct StubBufferBundleFactory : public ms::BufferBundleFactory
     std::shared_ptr<ms::BufferBundle> create_buffer_bundle(mc::BufferProperties const&)
     {
         return std::make_shared<mc::BufferBundleSurfaces>(
-            std::unique_ptr<mc::BufferSwapperMaster>(new NullBufferSwapper()));
+            std::make_shared<NullSwapperDirector>());
     }
 };
 

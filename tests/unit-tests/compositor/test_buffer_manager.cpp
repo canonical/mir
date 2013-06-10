@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "src/server/compositor/buffer_swapper_master.h"
+#include "src/server/compositor/swapper_director.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_bundle_manager.h"
 #include "mir/compositor/graphic_buffer_allocator.h"

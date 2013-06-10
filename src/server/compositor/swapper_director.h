@@ -21,6 +21,7 @@
 #define MIR_COMPOSITOR_SWAPPER_DIRECTOR_H_
 
 #include "mir/compositor/buffer_properties.h"
+#include <memory>
 
 namespace mir
 {

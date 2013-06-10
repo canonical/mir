@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SWAPPER_MASTER_H_
 #define MIR_TEST_DOUBLES_MOCK_SWAPPER_MASTER_H_
 
-#include "src/server/compositor/buffer_swapper_master.h"
+#include "src/server/compositor/swapper_director.h"
 
 #include <gmock/gmock.h>
 
@@ -32,9 +32,9 @@ namespace doubles
 struct MockSwapperDirector : public compositor::SwapperDirector
 {
 public:
-    MockSwapperMaster()
+    MockSwapperDirector()
     {}
-    ~MockSwapperMaster() noexcept
+    ~MockSwapperDirector() noexcept
     {}
 
     MOCK_METHOD0(client_acquire,     std::shared_ptr<compositor::Buffer>());
@@ -43,6 +43,7 @@ public:
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<compositor::Buffer> const&));
     MOCK_METHOD1(allow_framedropping, void(bool));
     MOCK_CONST_METHOD0(properties, compositor::BufferProperties());
+    MOCK_METHOD0(shutdown, void());
 };
 
 }

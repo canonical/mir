@@ -18,8 +18,8 @@
 
 #include "mir/compositor/buffer_bundle_surfaces.h"
 
-#include "mir_test_doubles/mock_swapper_master.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_swapper_master.h"
 #include "mir_test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
@@ -43,30 +43,30 @@ protected:
     std::shared_ptr<mtd::MockSwapperDirector> mock_director;
 };
 
-TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
+TEST_F(BufferBundleTest, size_query)
 {
     geom::Size size{geom::Width{4},geom::Height{5}};
-    mc::BufferProperties properties {size, geom::PixelFormat::abgr_8888, geom::BufferUsage::hardware};
+    mc::BufferProperties properties {size, geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
     EXPECT_CALL(*mock_director, properties())
         .Times(1)
-        .WillOnce(Return(properties));
+        .WillOnce(testing::Return(properties));
 
     mc::BufferBundleSurfaces buffer_bundle(mock_director);
-    auto returned_size = buffer_bundle.size();
+    auto returned_size = buffer_bundle.bundle_size();
     EXPECT_EQ(size, returned_size);
 }
 
-TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
+TEST_F(BufferBundleTest, pixel_format_query)
 {
     geom::PixelFormat format{geom::PixelFormat::abgr_8888};
-    mc::BufferProperties properties {geom::Size size{geom::Width{4},geom::Height{5}},
-                                     format, geom::BufferUsage::hardware};
+    mc::BufferProperties properties {geom::Size{geom::Width{4},geom::Height{5}},
+                                     format, mc::BufferUsage::hardware};
     EXPECT_CALL(*mock_director, properties())
         .Times(1)
-        .WillOnce(Return(properties));
+        .WillOnce(testing::Return(properties));
 
     mc::BufferBundleSurfaces buffer_bundle(mock_director);
-    auto returned_pf = buffer_bundle.pixel_format();
+    auto returned_pf = buffer_bundle.get_bundle_pixel_format();
     EXPECT_EQ(format, returned_pf);
 }
 
@@ -76,7 +76,7 @@ TEST_F(BufferBundleTest, shutdown_command)
         .Times(1);
 
     mc::BufferBundleSurfaces buffer_bundle(mock_director);
-    auto returned_pf = buffer_bundle.shutdown();
+    buffer_bundle.shutdown();
 }
 
 #if 0

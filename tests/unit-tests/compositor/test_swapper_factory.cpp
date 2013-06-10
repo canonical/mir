@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "src/server/compositor/buffer_swapper_master.h"
+#include "src/server/compositor/swapper_director.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

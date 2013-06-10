@@ -229,10 +229,8 @@ void wait_for_surface_release(SurfaceSync* context)
 }
 }
 
-TEST_F(SurfaceLoop,
-       creating_a_client_surface_allocates_buffer_swapper_on_server)
+TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server)
 {
-
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mc::BufferAllocationStrategy> the_buffer_allocation_strategy()
@@ -252,15 +250,14 @@ TEST_F(SurfaceLoop,
                 return buffer_allocation_strategy;
         }
 
-        std::shared_ptr<mc::BufferSwapperMaster> on_create_swapper(mc::BufferProperties& actual,
+        std::shared_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties& actual,
                                                              mc::BufferProperties const& requested)
         {
             actual = requested;
             auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
             auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
             std::vector<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
-            return std::make_shared<mc::SwapperSwitcher>(std::make_shared<mc::BufferSwapperMulti>(list, list.size()),
-                                                         buffer_allocation_strategy);
+            return std::make_shared<mc::BufferSwapperMulti>(list, list.size());
         }
 
         std::shared_ptr<mtd::MockSwapperFactory> buffer_allocation_strategy;
@@ -373,8 +370,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 
 }
 
-TEST_F(SurfaceLoop,
-       creating_a_client_surface_allocates_buffers_on_server)
+TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffers_on_server)
 {
 
     ServerConfigAllocatesBuffersOnServer server_config;

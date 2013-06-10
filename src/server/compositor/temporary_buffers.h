@@ -28,7 +28,7 @@ namespace compositor
 {
 
 class BufferID;
-class BufferSwapper;
+class SwapperDirector;
 
 class TemporaryBuffer : public Buffer
 {
@@ -48,21 +48,21 @@ protected:
 class TemporaryClientBuffer : public TemporaryBuffer
 {
 public:
-    explicit TemporaryClientBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper);
+    explicit TemporaryClientBuffer(std::shared_ptr<SwapperDirector> const& buffer_swapper);
     ~TemporaryClientBuffer();
 
 private:
-    std::weak_ptr<BufferSwapper> const allocating_swapper;
+    std::weak_ptr<SwapperDirector> const allocating_swapper;
 };
 
 class TemporaryCompositorBuffer : public TemporaryBuffer
 {
 public:
-    explicit TemporaryCompositorBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper);
+    explicit TemporaryCompositorBuffer(std::shared_ptr<SwapperDirector> const& buffer_swapper);
     ~TemporaryCompositorBuffer();
 
 private:
-    std::weak_ptr<BufferSwapper> const allocating_swapper;
+    std::weak_ptr<SwapperDirector> const allocating_swapper;
 };
 
 }

@@ -56,7 +56,7 @@ geom::Size mc::BufferBundleSurfaces::bundle_size()
     return director->properties().size; 
 }
 
-void mc::BufferBundleSurfaces::force_requests_to_complete()
+void mc::BufferBundleSurfaces::shutdown()
 {
     director->shutdown();
 }
