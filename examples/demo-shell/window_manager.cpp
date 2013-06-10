@@ -111,6 +111,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                     action == mir_motion_action_pointer_down)
                 {
                     relative_click = cursor - surf->top_left();
+                    click = cursor;
                 }
                 else if (event.motion.action == mir_motion_action_move)
                 { // Movement is happening with one or more fingers/button down
@@ -126,8 +127,8 @@ bool me::WindowManager::handle(MirEvent const& event)
 
         if (max_fingers == 4 && action == mir_motion_action_up)
         { // Four fingers released
-            geometry::Point dir = cursor - relative_click;
-            if (abs(dir.x.as_int()) > 100)  // Fudge sensitivity
+            geometry::Displacement dir = cursor - click;
+            if (abs(dir.dx.as_int()) > 100)  // FIXME: sensitivity fudge
             {
                 focus_controller->focus_next();
                 return true;
