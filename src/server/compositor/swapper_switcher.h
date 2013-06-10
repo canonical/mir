@@ -47,6 +47,7 @@ public:
     void compositor_release(std::shared_ptr<Buffer> const&);
     void allow_framedropping(bool dropping_allowed);
     void shutdown();
+
 private:
     BufferProperties bundle_properties; //must be before swapper
     std::shared_ptr<BufferAllocationStrategy> const swapper_factory;

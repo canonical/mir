@@ -83,7 +83,8 @@ TEST_F(SwapperFactoryTest, create_sync_uses_default_number_of_buffers)
         .Times(default_num_of_buffers);
 
     mc::SwapperFactory strategy(mock_buffer_allocator);
-    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
+    auto swapper = strategy.create_sync_swapper_new_buffers(
+        actual_properties, properties, mc::SwapperType::synchronous);
 }
 
 TEST_F(SwapperFactoryTest, create_sync_with_two_makes_double_buffer)
@@ -97,7 +98,8 @@ TEST_F(SwapperFactoryTest, create_sync_with_two_makes_double_buffer)
         .Times(num_of_buffers);
 
     mc::SwapperFactory strategy(mock_buffer_allocator, num_of_buffers);
-    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
+    auto swapper = strategy.create_sync_swapper_new_buffers(
+        actual_properties, properties, mc::SwapperType::synchronous);
 }
 
 TEST_F(SwapperFactoryTest, create_sync_with_three_makes_triple_buffer)
@@ -111,7 +113,8 @@ TEST_F(SwapperFactoryTest, create_sync_with_three_makes_triple_buffer)
         .Times(num_of_buffers);
 
     mc::SwapperFactory strategy(mock_buffer_allocator, num_of_buffers);
-    auto swapper = strategy.create_sync_swapper_new_buffers(actual_properties, properties);
+    auto swapper = strategy.create_sync_swapper_new_buffers(
+        actual_properties, properties, mc::SwapperType::synchronous);
 }
 
 TEST_F(SwapperFactoryTest, create_async_ignores_preference)
@@ -125,22 +128,19 @@ TEST_F(SwapperFactoryTest, create_async_ignores_preference)
         .Times(num_of_buffers);
 
     mc::SwapperFactory strategy(mock_buffer_allocator);
-    auto swapper = strategy.create_async_swapper_new_buffers(actual_properties, properties);
+    auto swapper = strategy.create_async_swapper_new_buffers(
+        actual_properties, properties, mc::SwapperType::framedropping);
 }
 
 TEST_F(SwapperFactoryTest, creation_returns_new_parameters)
 {
     mc::BufferProperties actual1, actual2;
     mc::SwapperFactory strategy(mock_buffer_allocator);
-    strategy.create_async_swapper_new_buffers(actual1, properties);
-    strategy.create_sync_swapper_new_buffers(actual2, properties);
+    strategy.create_swapper_new_buffers(actual1, properties, mc::SwapperType::synchronous);
 
     EXPECT_EQ(buf_size, actual1.size);
     EXPECT_EQ(buf_pixel_format, actual1.format);
     EXPECT_EQ(usage, actual1.usage);
-    EXPECT_EQ(buf_size, actual2.size);
-    EXPECT_EQ(buf_pixel_format, actual2.format);
-    EXPECT_EQ(usage, actual2.usage);
 }
 
 TEST_F(SwapperFactoryTest, create_async_reuse)
@@ -154,7 +154,7 @@ TEST_F(SwapperFactoryTest, create_async_reuse)
         .Times(0);
 
     mc::SwapperFactory strategy(mock_buffer_allocator);
-    auto swapper = strategy.create_async_swapper_reuse(list, size);
+    auto swapper = strategy.create_swapper_reuse(list, size, mc::SwapperType::framedropping);
 }
 
 TEST_F(SwapperFactoryTest, create_sync_reuse)
@@ -168,5 +168,5 @@ TEST_F(SwapperFactoryTest, create_sync_reuse)
         .Times(0);
 
     mc::SwapperFactory strategy(mock_buffer_allocator);
-    auto swapper = strategy.create_sync_swapper_reuse(list, size);
+    auto swapper = strategy.create_sync_swapper_reuse(list, size, mc::SwapperType::synchronous);
 }
