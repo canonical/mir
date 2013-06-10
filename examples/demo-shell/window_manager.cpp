@@ -26,13 +26,13 @@
 #include <linux/input.h>
 
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
 
 namespace me = mir::examples;
 namespace msh = mir::shell;
 
 me::WindowManager::WindowManager()
+    : max_fingers(0)
 {
 }
 
@@ -80,19 +80,21 @@ bool me::WindowManager::handle(MirEvent const& event)
         return true;
     }
     else if (event.type == mir_event_type_motion &&
-             event.motion.pointer_count == 4 &&
-             (event.motion.action & 0xff) == mir_motion_action_pointer_up)
-    {
-        focus_controller->focus_next();
-        return true;
-    }
-    else if (event.type == mir_event_type_motion &&
              session_manager)
     {
-        printf("vv: motion.action = %d\n", (int)event.motion.action);
+        geometry::Point cursor = average_pointer(event.motion);
+
+        // FIXME: https://bugs.launchpad.net/mir/+bug/1189379
+        MirMotionAction action =
+            (MirMotionAction)(event.motion.action & ~0xff00);
 
         std::shared_ptr<msh::Session> app =
             session_manager->focussed_application().lock();
+
+        int fingers = (int)event.motion.pointer_count;
+
+        if (action == mir_motion_action_down)
+            max_fingers = 1;
 
         if (app)
         {
@@ -102,23 +104,35 @@ bool me::WindowManager::handle(MirEvent const& event)
 
             if (surf &&
                 (event.motion.modifiers & mir_key_modifier_alt ||
-                 event.motion.pointer_count == 3))
+                 fingers >= 3))
             {
-                geometry::Point cursor = average_pointer(event.motion);
-
                 if (//event.motion.button_state == 0 ||
-                    (event.motion.action & 0xff) ==  // FIXME in event.h
-                         mir_motion_action_pointer_down)
+                    action == mir_motion_action_pointer_down)
                 {
                     relative_click = cursor - surf->top_left();
+                    if (fingers > max_fingers)
+                        max_fingers = fingers;
                 }
-                else if ( event.motion.button_state & mir_motion_button_primary
-                       || event.motion.action == mir_motion_action_move)
-                {
-                    geometry::Point dir = cursor - relative_click;
-                    surf->move_to(dir);
-                    return true;
+                else if (event.motion.action == mir_motion_action_move ||
+                         event.motion.button_state & mir_motion_button_primary)
+                { // Drag gesture...
+                    if (max_fingers <= 3)  // one mouse or three fingers
+                    {
+                        geometry::Point dir = cursor - relative_click;
+                        surf->move_to(dir);
+                        return true;
+                    }
                 }
+            }
+        }
+
+        if (max_fingers == 4 && action == mir_motion_action_up)
+        { // Four fingers released
+            geometry::Point dir = cursor - relative_click;
+            if (abs(dir.x.as_int()) > 100)  // Fudge sensitivity
+            {
+                focus_controller->focus_next();
+                return true;
             }
         }
     }
