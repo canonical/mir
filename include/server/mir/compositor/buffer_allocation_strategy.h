@@ -30,14 +30,14 @@ namespace mir
 namespace compositor
 {
 class GraphicBufferAllocator;
-class BufferSwapper;
+class BufferSwapperMaster;
 struct BufferProperties;
 
 class BufferAllocationStrategy
 {
 public:
 
-    virtual std::unique_ptr<BufferSwapper> create_swapper(
+    virtual std::unique_ptr<BufferSwapperMaster> create_swapper_master(
         BufferProperties& actual_buffer_properties,
         BufferProperties const& requested_buffer_properties) = 0;
 

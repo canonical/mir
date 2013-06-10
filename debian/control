@@ -81,6 +81,7 @@ Depends: libmirserver0 (= ${binary:Version}),
          libmirprotobuf-dev (= ${source:Version}),
          mircommon-dev (= ${source:Version}),
          libglm-dev,
+         libboost-program-options-dev,
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,

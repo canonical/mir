@@ -25,6 +25,7 @@
 #include "mir/input/input_platform.h"
 
 #include <cassert>
+#include <unistd.h>
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
@@ -66,6 +67,10 @@ MirSurface::~MirSurface()
         input_thread->stop();
         input_thread->join();
     }
+
+    for (auto i = 0, end = surface.fd_size(); i != end; ++i)
+        close(surface.fd(i));
+
     release_cpu_region();
 }
 

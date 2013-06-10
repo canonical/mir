@@ -12,6 +12,8 @@ set(
   swapper_factory.cpp
   rendering_operator.cpp
   multi_threaded_compositor.cpp
+  swapper_switcher.cpp
+  rw_lock.cpp
 )
 
 ADD_LIBRARY(
