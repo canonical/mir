@@ -24,7 +24,7 @@
 
 #include <gtest/gtest.h>
 
-
+namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 
@@ -32,22 +32,42 @@ struct SwapperSwitcherTest : public ::testing::Test
 {
     void SetUp()
     {
+        using namespace testing;
         mock_swapper_factory = std::make_shared<testing::NiceMock<mtd::MockSwapperFactory>>();
         mock_default_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         mock_secondary_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         stub_buffer = std::make_shared<mtd::StubBuffer>();
+        properties = mc::BufferProperties{geom::Size{geom::Width{4}, geom::Height{2}},
+                                          geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
+
+        ON_CALL(*mock_swapper_factory, create_sync_swapper_new_buffers(_,_))
+            .WillByDefault(Return(mock_default_swapper));
     }
 
     std::shared_ptr<mtd::MockSwapperFactory> mock_swapper_factory;
     std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
     std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
     std::shared_ptr<mc::Buffer> stub_buffer;
+    mc::BufferProperties properties;
 };
+
+TEST_F(SwapperSwitcherTest, sync_swapper_by_default)
+{
+    using namespace testing;
+    auto actual_properties = mc::BufferProperties{geom::Size{geom::Width{7}, geom::Height{8}},
+                                                  geom::PixelFormat::argb_8888, mc::BufferUsage::software};
+    EXPECT_CALL(*mock_swapper_factory, create_sync_swapper_new_buffers(_,_))
+        .WillByDefault(DoAll(SetArgReferee<0>(),
+                       Return(mock_default_swapper)));
+
+    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
+    EXPECT_EQ(actual_properties, switcher.properties());
+}
 
 TEST_F(SwapperSwitcherTest, client_acquire_basic)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
+    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
 
     EXPECT_CALL(*mock_default_swapper, client_acquire())
         .Times(1)
@@ -62,7 +82,7 @@ TEST_F(SwapperSwitcherTest, client_acquire_basic)
 TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
+    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
 
     EXPECT_CALL(*mock_default_swapper, client_acquire())
         .Times(1)
@@ -82,7 +102,7 @@ TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
 TEST_F(SwapperSwitcherTest, compositor_acquire_basic)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
+    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
 
     EXPECT_CALL(*mock_default_swapper, compositor_acquire())
         .Times(1)
@@ -98,7 +118,7 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
 {
     using namespace testing;
 
-    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
+    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
 
     EXPECT_CALL(*mock_default_swapper, compositor_acquire())
         .Times(1)
@@ -119,7 +139,7 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
 TEST_F(SwapperSwitcherTest, switch_sequence)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_default_swapper, mock_swapper_factory);
+    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
 
     InSequence seq;
     EXPECT_CALL(*mock_default_swapper, force_client_completion())
