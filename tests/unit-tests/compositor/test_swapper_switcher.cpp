@@ -36,7 +36,6 @@ struct SwapperSwitcherTest : public ::testing::Test
         mock_default_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         mock_secondary_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         stub_buffer = std::make_shared<mtd::StubBuffer>();
-
     }
 
     std::shared_ptr<mtd::MockSwapperFactory> mock_swapper_factory;

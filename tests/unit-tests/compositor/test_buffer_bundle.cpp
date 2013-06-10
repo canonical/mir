@@ -36,25 +36,61 @@ protected:
     virtual void SetUp()
     {
         mock_buffer = std::make_shared<mtd::StubBuffer>();
-        mock_swapper = std::unique_ptr<mtd::MockSwapperMaster>(
-            new testing::NiceMock<mtd::MockSwapperMaster>());
+        mock_director = std::make_shared<mtd::MockSwapperDirector>();
     }
 
     std::shared_ptr<mtd::StubBuffer> mock_buffer;
-    std::unique_ptr<mtd::MockSwapperMaster> mock_swapper;
+    std::shared_ptr<mtd::MockSwapperDirector> mock_director;
 };
 
 TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
 {
-    using namespace testing;
-
-    EXPECT_CALL(*mock_swapper, compositor_acquire())
+    geom::Size size{geom::Width{4},geom::Height{5}};
+    mc::BufferProperties properties {size, geom::PixelFormat::abgr_8888, geom::BufferUsage::hardware};
+    EXPECT_CALL(*mock_director, properties())
         .Times(1)
-        .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_swapper, compositor_release(_))
+        .WillOnce(Return(properties));
+
+    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    auto returned_size = buffer_bundle.size();
+    EXPECT_EQ(size, returned_size);
+}
+
+TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
+{
+    geom::PixelFormat format{geom::PixelFormat::abgr_8888};
+    mc::BufferProperties properties {geom::Size size{geom::Width{4},geom::Height{5}},
+                                     format, geom::BufferUsage::hardware};
+    EXPECT_CALL(*mock_director, properties())
+        .Times(1)
+        .WillOnce(Return(properties));
+
+    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    auto returned_pf = buffer_bundle.pixel_format();
+    EXPECT_EQ(format, returned_pf);
+}
+
+TEST_F(BufferBundleTest, shutdown_command)
+{
+    EXPECT_CALL(*mock_director, shutdown())
         .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    auto returned_pf = buffer_bundle.shutdown();
+}
+
+#if 0
+TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_director, compositor_acquire())
+        .Times(1)
+        .WillOnce(Return(mock_buffer));
+    EXPECT_CALL(*mock_director, compositor_release(_))
+        .Times(1);
+
+    mc::BufferBundleSurfaces buffer_bundle(mock_director);
 
     buffer_bundle.lock_back_buffer();
 }
@@ -63,13 +99,13 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_swapper, compositor_acquire())
+    EXPECT_CALL(*mock_director, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_swapper, compositor_release(_))
+    EXPECT_CALL(*mock_director, compositor_release(_))
         .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(mock_director);
 
     buffer_bundle.lock_back_buffer();
 }
@@ -78,12 +114,13 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_swapper, client_acquire())
+    EXPECT_CALL(*mock_director, client_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_swapper, client_release(_))
+    EXPECT_CALL(*mock_director, client_release(_))
         .Times(1);
-    mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
+    mc::BufferBundleSurfaces buffer_bundle(mock_director);
 
     buffer_bundle.secure_client_buffer();
 }
+#endif
