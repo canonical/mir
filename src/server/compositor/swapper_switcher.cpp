@@ -26,10 +26,9 @@
 namespace mc=mir::compositor;
 
 mc::SwapperSwitcher::SwapperSwitcher(
-    std::shared_ptr<BufferSwapper> const& initial_swapper,
-    std::shared_ptr<BufferAllocationStrategy> const& swapper_factory)
-    : swapper(initial_swapper),
-      swapper_factory(swapper_factory),
+    std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const& property_request)
+    : swapper_factory(swapper_factory),
+      swapper(swapper_factory->create_sync_swapper_new_buffers(bundle_properties, property_request)),
       should_retry(false)
 {
 }

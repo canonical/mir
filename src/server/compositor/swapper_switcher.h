@@ -37,8 +37,7 @@ class BufferAllocationStrategy;
 class SwapperSwitcher : public SwapperDirector 
 {
 public:
-    SwapperSwitcher(std::shared_ptr<BufferSwapper> const& initial_swapper,
-                    std::shared_ptr<BufferAllocationStrategy> const& swapper_factory);
+    SwapperSwitcher(std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const&);
 
     BufferProperties properties() const;
 
@@ -49,11 +48,13 @@ public:
     void allow_framedropping(bool dropping_allowed);
     void shutdown();
 private:
-    std::shared_ptr<BufferSwapper> swapper;
     std::shared_ptr<BufferAllocationStrategy> const swapper_factory;
+    std::shared_ptr<BufferSwapper> swapper;
     RWLockWriterBias rw_lock;
     std::condition_variable_any cv;
     std::atomic<bool> should_retry;
+
+    BufferProperties bundle_properties;
 };
 
 }

@@ -57,14 +57,13 @@ struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        mc::BufferProperties dummy;
         auto allocator = std::make_shared<MockBufferAllocator>();
         auto factory = std::make_shared<mc::SwapperFactory>(allocator, 3);
-        auto first_swapper = factory->create_async_swapper_new_buffers(dummy, dummy);
-        swapper_switcher = std::make_shared<mc::SwapperSwitcher>(first_swapper, factory);
+        auto properties = mc::BufferProperties{geom::Size{geom::Width{380}, geom::Height{210}},
+                                          geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
+        swapper_switcher = std::make_shared<mc::SwapperSwitcher>(factory, properties);
     }
 
-    std::shared_ptr<mc::Buffer> buffer_a, buffer_b, buffer_c;
     std::shared_ptr<mc::SwapperSwitcher> swapper_switcher;
     std::atomic<bool> client_thread_done;
 };

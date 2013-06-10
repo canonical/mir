@@ -46,10 +46,6 @@ mc::BufferBundleManager::BufferBundleManager(
 std::shared_ptr<ms::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
     mc::BufferProperties const& buffer_properties)
 {
-    BufferProperties actual_buffer_properties;
-    auto default_swapper = swapper_factory->create_sync_swapper_new_buffers(actual_buffer_properties,
-                                                                            buffer_properties);
-
-    auto swapper_switcher = std::make_shared<mc::SwapperSwitcher>(default_swapper, swapper_factory);
+    auto swapper_switcher = std::make_shared<mc::SwapperSwitcher>(swapper_factory, buffer_properties);
     return std::make_shared<mc::BufferBundleSurfaces>(swapper_switcher);
 }
