@@ -30,22 +30,25 @@ namespace mir
 {
 namespace compositor
 {
+
 class GraphicBufferAllocator;
 class BufferSwapper;
 struct BufferProperties;
 
+enum class SwapperType : uint32_t
+{
+    synchronous,
+    framedropping,
+    bypass
+};
+
 class BufferAllocationStrategy
 {
 public:
-    virtual std::shared_ptr<BufferSwapper> create_async_swapper_reuse(
-        std::vector<std::shared_ptr<Buffer>>&, size_t) const = 0;
-    virtual std::shared_ptr<BufferSwapper> create_sync_swapper_reuse(
-        std::vector<std::shared_ptr<Buffer>>&, size_t) const = 0;
-
-    virtual std::shared_ptr<BufferSwapper> create_async_swapper_new_buffers(
-        BufferProperties&, BufferProperties const&) const = 0;
-    virtual std::shared_ptr<BufferSwapper> create_sync_swapper_new_buffers(
-        BufferProperties&, BufferProperties const&) const = 0;
+    virtual std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(
+        std::vector<std::shared_ptr<Buffer>>&, size_t, SwapperType) const = 0;
+    virtual std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
+        BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const = 0;
 
 protected:
     BufferAllocationStrategy() {}

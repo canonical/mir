@@ -33,15 +33,12 @@ class MockSwapperFactory : public compositor::BufferAllocationStrategy
 public:
     ~MockSwapperFactory() noexcept {}
 
-    MOCK_CONST_METHOD2(create_async_swapper_reuse,
-        std::shared_ptr<compositor::BufferSwapper>(std::vector<std::shared_ptr<compositor::Buffer>>&, size_t));
-    MOCK_CONST_METHOD2(create_sync_swapper_reuse,
-        std::shared_ptr<compositor::BufferSwapper>(std::vector<std::shared_ptr<compositor::Buffer>>&, size_t));
-
-    MOCK_CONST_METHOD2(create_async_swapper_new_buffers,
-        std::shared_ptr<compositor::BufferSwapper>(compositor::BufferProperties&, compositor::BufferProperties const&));
-    MOCK_CONST_METHOD2(create_sync_swapper_new_buffers,
-        std::shared_ptr<compositor::BufferSwapper>(compositor::BufferProperties&, compositor::BufferProperties const&));
+    MOCK_CONST_METHOD3(create_swapper_reuse_buffers,
+        std::shared_ptr<compositor::BufferSwapper>(
+            std::vector<std::shared_ptr<compositor::Buffer>>&, size_t, compositor::SwapperType));
+    MOCK_CONST_METHOD3(create_swapper_new_buffers,
+        std::shared_ptr<compositor::BufferSwapper>(
+            compositor::BufferProperties&, compositor::BufferProperties const&, compositor::SwapperType));
 };
 }
 }

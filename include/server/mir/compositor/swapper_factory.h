@@ -36,18 +36,12 @@ public:
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
         int number_of_buffers = 2);
 
-    std::shared_ptr<BufferSwapper> create_async_swapper_reuse(
-        std::vector<std::shared_ptr<Buffer>>&, size_t) const;
-    std::shared_ptr<BufferSwapper> create_sync_swapper_reuse(
-        std::vector<std::shared_ptr<Buffer>>&, size_t) const;
+    std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(
+        std::vector<std::shared_ptr<Buffer>>&, size_t, SwapperType) const;
+    std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
+        BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const;
 
-    std::shared_ptr<BufferSwapper> create_async_swapper_new_buffers(
-        BufferProperties&, BufferProperties const&) const;
-    std::shared_ptr<BufferSwapper> create_sync_swapper_new_buffers(
-        BufferProperties&, BufferProperties const&) const;
 private:
-    void fill_buffer_list(std::vector<std::shared_ptr<Buffer>>& list, int num_buffers, BufferProperties const&) const;
-
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
     int const number_of_buffers;
 };

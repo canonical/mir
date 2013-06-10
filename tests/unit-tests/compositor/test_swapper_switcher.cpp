@@ -40,7 +40,7 @@ struct SwapperSwitcherTest : public ::testing::Test
         properties = mc::BufferProperties{geom::Size{geom::Width{4}, geom::Height{2}},
                                           geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
 
-        ON_CALL(*mock_swapper_factory, create_sync_swapper_new_buffers(_,_))
+        ON_CALL(*mock_swapper_factory, create_swapper_new_buffers(_,_,_))
             .WillByDefault(Return(mock_default_swapper));
     }
 
@@ -56,7 +56,7 @@ TEST_F(SwapperSwitcherTest, sync_swapper_by_default)
     using namespace testing;
     auto actual_properties = mc::BufferProperties{geom::Size{geom::Width{7}, geom::Height{8}},
                                                   geom::PixelFormat::argb_8888, mc::BufferUsage::software};
-    EXPECT_CALL(*mock_swapper_factory, create_sync_swapper_new_buffers(_,_))
+    EXPECT_CALL(*mock_swapper_factory, create_swapper_new_buffers(_,_,mc::SwapperType::synchronous))
         .Times(1)
         .WillOnce(DoAll(SetArgReferee<0>(actual_properties),
                         Return(mock_default_swapper)));
@@ -90,7 +90,7 @@ TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_secondary_swapper, client_release(stub_buffer))
         .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_async_swapper_reuse(_,_))
+    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_))
         .Times(1)
         .WillOnce(Return(mock_secondary_swapper));
 
@@ -126,7 +126,7 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_secondary_swapper, compositor_release(stub_buffer))
         .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_async_swapper_reuse(_,_))
+    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_))
         .Times(1)
         .WillOnce(Return(mock_secondary_swapper));
 
@@ -147,7 +147,7 @@ TEST_F(SwapperSwitcherTest, switch_sequence)
         .Times(1);
     EXPECT_CALL(*mock_default_swapper, end_responsibility(_,_))
         .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_async_swapper_reuse(_,_))
+    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,mc::SwapperType::framedropping))
         .Times(1)
         .WillOnce(Return(mock_secondary_swapper));
 

@@ -242,16 +242,15 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server
                 using testing::_;
                 buffer_allocation_strategy = std::make_shared<mtd::MockSwapperFactory>();
 
-                ON_CALL(*buffer_allocation_strategy, create_async_swapper_new_buffers(_, _))
-                    .WillByDefault(testing::Invoke(this, &ServerConfig::on_create_swapper));
-                ON_CALL(*buffer_allocation_strategy, create_sync_swapper_new_buffers(_, _))
+                ON_CALL(*buffer_allocation_strategy, create_swapper_new_buffers(_,_,_))
                     .WillByDefault(testing::Invoke(this, &ServerConfig::on_create_swapper));
             }
                 return buffer_allocation_strategy;
         }
 
         std::shared_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties& actual,
-                                                             mc::BufferProperties const& requested)
+                                                             mc::BufferProperties const& requested,
+                                                             mc::SwapperType)
         {
             actual = requested;
             auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
