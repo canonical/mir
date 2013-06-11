@@ -128,6 +128,11 @@ void msh::SessionManager::focus_next()
     set_focus_to_locked(lock, focus);
 }
 
+std::weak_ptr<msh::Session> msh::SessionManager::focussed_application() const
+{
+    return focus_application;
+}
+
 mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
     msh::SurfaceCreationParameters const& params)
 {

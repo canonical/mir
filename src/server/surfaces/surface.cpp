@@ -113,8 +113,8 @@ glm::mat4 ms::Surface::transformation() const
 {
     const geom::Size sz = size();
 
-    const glm::vec3 top_left_vec{top_left_point.x.as_uint32_t(),
-                                 top_left_point.y.as_uint32_t(),
+    const glm::vec3 top_left_vec{top_left_point.x.as_int(),
+                                 top_left_point.y.as_int(),
                                  0.0f};
     const glm::vec3 size_vec{sz.width.as_uint32_t(),
                              sz.height.as_uint32_t(),
