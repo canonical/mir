@@ -20,6 +20,7 @@
 #include "hwc_vsync_coordinator.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 #include <stdexcept>
 
 namespace mga=mir::graphics::android;
@@ -58,16 +59,19 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
     if (err)
     {
         BOOST_THROW_EXCEPTION(
-            std::runtime_error("Could not unblank display (error " +
-                               std::to_string(err) + ")"));
+            boost::enable_error_info(
+                std::runtime_error("Could not unblank display")) <<
+            boost::errinfo_errno(-err));
     }
     
     err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
     if (err)
     {
         BOOST_THROW_EXCEPTION(
-            std::runtime_error("Could not enable HWC vsync notifications "
-                               "(error " + std::to_string(err) + ")"));
+            boost::enable_error_info(
+                std::runtime_error("Could not enable HWC vsync "
+                                   "notifications")) <<
+            boost::errinfo_errno(-err));
     }
 }
 
