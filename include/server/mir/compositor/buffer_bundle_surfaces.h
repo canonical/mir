@@ -33,12 +33,12 @@ class BufferIDUniqueGenerator;
 struct BufferProperties;
 class SwapperDirector;
 
-class BufferBundleSurfaces : public surfaces::BufferBundle
+class BufferStreamSurfaces : public surfaces::BufferBundle
 {
 public:
-    BufferBundleSurfaces(std::shared_ptr<SwapperDirector> const& swapper);
+    BufferStreamSurfaces(std::shared_ptr<SwapperDirector> const& swapper);
 
-    ~BufferBundleSurfaces();
+    ~BufferStreamSurfaces();
 
     std::shared_ptr<Buffer> secure_client_buffer();
 
@@ -49,8 +49,8 @@ public:
     void shutdown();
 
 protected:
-    BufferBundleSurfaces(const BufferBundleSurfaces&) = delete;
-    BufferBundleSurfaces& operator=(const BufferBundleSurfaces&) = delete;
+    BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;
+    BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
 
 private:
     std::shared_ptr<SwapperDirector> director;

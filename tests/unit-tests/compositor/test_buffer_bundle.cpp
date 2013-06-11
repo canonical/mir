@@ -51,7 +51,7 @@ TEST_F(BufferBundleTest, size_query)
         .Times(1)
         .WillOnce(testing::Return(properties));
 
-    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_bundle(mock_director);
     auto returned_size = buffer_bundle.bundle_size();
     EXPECT_EQ(size, returned_size);
 }
@@ -65,7 +65,7 @@ TEST_F(BufferBundleTest, pixel_format_query)
         .Times(1)
         .WillOnce(testing::Return(properties));
 
-    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_bundle(mock_director);
     auto returned_pf = buffer_bundle.get_bundle_pixel_format();
     EXPECT_EQ(format, returned_pf);
 }
@@ -75,7 +75,7 @@ TEST_F(BufferBundleTest, shutdown_command)
     EXPECT_CALL(*mock_director, shutdown())
         .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_bundle(mock_director);
     buffer_bundle.shutdown();
 }
 
@@ -89,7 +89,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
     EXPECT_CALL(*mock_director, compositor_release(_))
         .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_bundle(mock_director);
 
     buffer_bundle.lock_back_buffer();
 }
@@ -104,7 +104,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
     EXPECT_CALL(*mock_director, compositor_release(_))
         .Times(1);
 
-    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_bundle(mock_director);
 
     buffer_bundle.lock_back_buffer();
 }
@@ -118,7 +118,7 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
         .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_director, client_release(_))
         .Times(1);
-    mc::BufferBundleSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_bundle(mock_director);
 
     buffer_bundle.secure_client_buffer();
 }

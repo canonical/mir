@@ -77,7 +77,7 @@ struct MockBufferBundleFactory : public ms::BufferBundleFactory
             create_buffer_bundle(_))
                 .WillByDefault(
                     Return(
-                        std::make_shared<mc::BufferBundleSurfaces>(std::make_shared<NullSwapperDirector>())));
+                        std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<NullSwapperDirector>())));
     }
 
     MOCK_METHOD1(
@@ -155,7 +155,7 @@ TEST(
     using namespace ::testing;
 
     std::shared_ptr<mc::SwapperDirector> swapper_handle;
-    mc::BufferBundleSurfaces buffer_bundle(swapper_handle);
+    mc::BufferStreamSurfaces buffer_bundle(swapper_handle);
     MockBufferBundleFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
     mtd::StubInputRegistrar input_registrar;
@@ -323,7 +323,7 @@ struct StubBufferBundleFactory : public ms::BufferBundleFactory
 {
     std::shared_ptr<ms::BufferBundle> create_buffer_bundle(mc::BufferProperties const&)
     {
-        return std::make_shared<mc::BufferBundleSurfaces>(
+        return std::make_shared<mc::BufferStreamSurfaces>(
             std::make_shared<NullSwapperDirector>());
     }
 };
