@@ -62,16 +62,23 @@ TEST(geometry, displacement_point_arithmetic)
     Point const x2y4{X{2}, Y{4}};
     Point const x3y9{X{3}, Y{9}};
     Displacement const dx2dy4{DeltaX{2}, DeltaY{4}};
+    Displacement const dx7dy11{DeltaX{7}, DeltaY{11}};
 
     Point const expected_pd_add{X{5}, Y{13}};
     Point const expected_pd_sub{X{1}, Y{5}};
+    Point const expected_pd_sub2{X{-4}, Y{-2}};
     Displacement const expected_pp_sub{DeltaX{1}, DeltaY{5}};
+    Displacement const expected_pp_sub2{DeltaX{-1}, DeltaY{-5}};
 
     Point const pd_add = x3y9 + dx2dy4;
     Point const pd_sub = x3y9 - dx2dy4;
+    Point const pd_sub2 = x3y9 - dx7dy11;
     Displacement const pp_sub = x3y9 - x2y4;
+    Displacement const pp_sub2 = x2y4 - x3y9;
 
     EXPECT_EQ(expected_pd_add, pd_add);
     EXPECT_EQ(expected_pd_sub, pd_sub);
+    EXPECT_EQ(expected_pd_sub2, pd_sub2);
     EXPECT_EQ(expected_pp_sub, pp_sub);
+    EXPECT_EQ(expected_pp_sub2, pp_sub2);
 }
