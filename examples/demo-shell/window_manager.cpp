@@ -31,6 +31,11 @@
 namespace me = mir::examples;
 namespace msh = mir::shell;
 
+namespace
+{
+const int min_swipe_distance = 100;  // How long must a swipe be to act on?
+}
+
 me::WindowManager::WindowManager()
     : max_fingers(0)
 {
@@ -127,7 +132,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         if (max_fingers == 4 && action == mir_motion_action_up)
         { // Four fingers released
             geometry::Displacement dir = cursor - click;
-            if (abs(dir.dx.as_int()) > 100)  // FIXME: sensitivity fudge
+            if (abs(dir.dx.as_int()) >= min_swipe_distance)
             {
                 focus_controller->focus_next();
                 return true;
