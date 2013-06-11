@@ -36,11 +36,11 @@ protected:
     virtual void SetUp()
     {
         mock_buffer = std::make_shared<mtd::StubBuffer>();
-        mock_director = std::make_shared<mtd::MockSwapperDirector>();
+        mock_director = std::make_shared<mtd::MockBufferBundle>();
     }
 
     std::shared_ptr<mtd::StubBuffer> mock_buffer;
-    std::shared_ptr<mtd::MockSwapperDirector> mock_director;
+    std::shared_ptr<mtd::MockBufferBundle> mock_director;
 };
 
 TEST_F(BufferStreamTest, size_query)

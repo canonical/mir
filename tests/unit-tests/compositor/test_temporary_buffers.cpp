@@ -49,7 +49,7 @@ public:
         buffer_stride = geom::Stride{1024};
         buffer_pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(buffer_size, buffer_stride, buffer_pixel_format);
-        mock_director = std::make_shared<NiceMock<mtd::MockSwapperDirector>>();
+        mock_director = std::make_shared<NiceMock<mtd::MockBufferBundle>>();
 
         ON_CALL(*mock_director, client_acquire())
             .WillByDefault(Return(mock_buffer));
@@ -58,7 +58,7 @@ public:
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    std::shared_ptr<mtd::MockSwapperDirector> mock_director;
+    std::shared_ptr<mtd::MockBufferBundle> mock_director;
     geom::Size buffer_size;
     geom::Stride buffer_stride;
     geom::PixelFormat buffer_pixel_format;

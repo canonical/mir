@@ -27,7 +27,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace ms = mir::surfaces;
 
-mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<SwapperDirector> const& director)
+mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& director)
      : director(director)
 {
 }

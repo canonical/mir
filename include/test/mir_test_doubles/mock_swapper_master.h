@@ -29,12 +29,12 @@ namespace test
 namespace doubles
 {
 
-struct MockSwapperDirector : public compositor::SwapperDirector
+struct MockBufferBundle : public compositor::BufferBundle
 {
 public:
-    MockSwapperDirector()
+    MockBufferBundle()
     {}
-    ~MockSwapperDirector() noexcept
+    ~MockBufferBundle() noexcept
     {}
 
     MOCK_METHOD0(client_acquire,     std::shared_ptr<compositor::Buffer>());

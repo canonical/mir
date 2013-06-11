@@ -54,7 +54,7 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class NullSwapperDirector : public mc::SwapperDirector
+class NullBufferBundle : public mc::BufferBundle
 {
 public:
     virtual std::shared_ptr<mc::Buffer> client_acquire() { return std::shared_ptr<mc::Buffer>(); }
@@ -77,7 +77,7 @@ struct MockBufferStreamFactory : public ms::BufferStreamFactory
             create_buffer_bundle(_))
                 .WillByDefault(
                     Return(
-                        std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<NullSwapperDirector>())));
+                        std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<NullBufferBundle>())));
     }
 
     MOCK_METHOD1(
@@ -154,7 +154,7 @@ TEST(
 {
     using namespace ::testing;
 
-    std::shared_ptr<mc::SwapperDirector> swapper_handle;
+    std::shared_ptr<mc::BufferBundle> swapper_handle;
     mc::BufferStreamSurfaces buffer_bundle(swapper_handle);
     MockBufferStreamFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
@@ -324,7 +324,7 @@ struct StubBufferStreamFactory : public ms::BufferStreamFactory
     std::shared_ptr<ms::BufferStream> create_buffer_bundle(mc::BufferProperties const&)
     {
         return std::make_shared<mc::BufferStreamSurfaces>(
-            std::make_shared<NullSwapperDirector>());
+            std::make_shared<NullBufferBundle>());
     }
 };
 

@@ -29,10 +29,10 @@ namespace compositor
 {
 class Buffer;
 
-class SwapperDirector
+class BufferBundle
 {
 public:
-    virtual ~SwapperDirector() noexcept {}
+    virtual ~BufferBundle() noexcept {}
     virtual std::shared_ptr<Buffer> client_acquire() = 0;
     virtual void client_release(std::shared_ptr<Buffer> const&) = 0;
     virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
@@ -42,9 +42,9 @@ public:
     virtual void allow_framedropping(bool dropping_allowed) = 0;
     virtual void shutdown() = 0;
 protected:
-    SwapperDirector() = default;
-    SwapperDirector(SwapperDirector const&) = delete;
-    SwapperDirector& operator=(SwapperDirector const&) = delete;
+    BufferBundle() = default;
+    BufferBundle(BufferBundle const&) = delete;
+    BufferBundle& operator=(BufferBundle const&) = delete;
 };
 }
 }

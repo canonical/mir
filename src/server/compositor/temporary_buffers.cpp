@@ -27,7 +27,7 @@ mc::TemporaryBuffer::TemporaryBuffer(std::shared_ptr<Buffer> const& real_buffer)
 {
 }
 
-mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<SwapperDirector> const& buffer_swapper)
+mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferBundle> const& buffer_swapper)
     : TemporaryBuffer(buffer_swapper->client_acquire()),
       allocating_swapper(buffer_swapper)
 {
@@ -39,7 +39,7 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
         swapper->client_release(buffer);
 }
 
-mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(std::shared_ptr<SwapperDirector> const& buffer_swapper)
+mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(std::shared_ptr<BufferBundle> const& buffer_swapper)
     : TemporaryBuffer(buffer_swapper->compositor_acquire()),
       allocating_swapper(buffer_swapper)
 {

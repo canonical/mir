@@ -31,12 +31,12 @@ namespace compositor
 
 class BufferIDUniqueGenerator;
 struct BufferProperties;
-class SwapperDirector;
+class BufferBundle;
 
 class BufferStreamSurfaces : public surfaces::BufferStream
 {
 public:
-    BufferStreamSurfaces(std::shared_ptr<SwapperDirector> const& swapper);
+    BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
 
     ~BufferStreamSurfaces();
 
@@ -53,7 +53,7 @@ protected:
     BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
 
 private:
-    std::shared_ptr<SwapperDirector> director;
+    std::shared_ptr<BufferBundle> director;
 };
 
 }
