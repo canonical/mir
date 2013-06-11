@@ -52,7 +52,7 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
     using namespace mir;
     using namespace geometry;
 
-    int x = 0, y = 0, count = (int)motion.pointer_count;
+    int x = 0, y = 0, count = static_cast<int>(motion.pointer_count);
 
     for (int i = 0; i < count; i++)
     {
@@ -90,7 +90,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         std::shared_ptr<msh::Session> app =
             session_manager->focussed_application().lock();
 
-        int fingers = (int)event.motion.pointer_count;
+        int fingers = static_cast<int>(event.motion.pointer_count);
 
         if (action == mir_motion_action_down || fingers > max_fingers)
             max_fingers = fingers;
