@@ -22,8 +22,8 @@
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_builder.h"
 
-#include "mir_test_doubles/null_buffer_bundle.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/null_buffer_stream.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_input_targeter.h"

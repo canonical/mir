@@ -28,10 +28,10 @@
 #include "mir/surfaces/surface.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/null_buffer_bundle.h"
+#include "mir_test_doubles/null_buffer_stream.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 
 #include <gmock/gmock.h>

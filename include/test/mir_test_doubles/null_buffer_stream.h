@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_
-#define MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_
+#ifndef MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
+#define MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
 
 #include <mir/surfaces/buffer_bundle.h>
 #include <mir_test_doubles/stub_buffer.h>
@@ -67,4 +67,4 @@ public:
 }
 } // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_NULL_BUFFER_BUNDLE_H_ */
+#endif /* MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_ */

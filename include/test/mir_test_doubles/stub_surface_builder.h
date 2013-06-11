@@ -24,7 +24,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 
-#include "mir_test_doubles/null_buffer_bundle.h"
+#include "mir_test_doubles/null_buffer_stream.h"
 
 namespace mir
 {
