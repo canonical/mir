@@ -38,7 +38,7 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferStreamFactory> const& bb_factory,
                                std::shared_ptr<mi::InputChannelFactory> const& input_factory,
                                std::shared_ptr<ms::InputRegistrar> const& input_registrar)
     : buffer_bundle_factory{bb_factory},

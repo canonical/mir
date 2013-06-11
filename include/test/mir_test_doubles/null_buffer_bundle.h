@@ -29,10 +29,10 @@ namespace test
 namespace doubles
 {
 
-class NullBufferBundle : public surfaces::BufferBundle
+class NullBufferStream : public surfaces::BufferStream
 {
 public:
-    NullBufferBundle()
+    NullBufferStream()
     {
         stub_buffer = std::make_shared<StubBuffer>();
     }

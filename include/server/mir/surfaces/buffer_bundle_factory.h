@@ -32,20 +32,20 @@ struct BufferProperties;
 
 namespace surfaces
 {
-class BufferBundle;
+class BufferStream;
 
-class BufferBundleFactory
+class BufferStreamFactory
 {
 public:
-    virtual ~BufferBundleFactory() {}
+    virtual ~BufferStreamFactory() {}
 
-    virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
+    virtual std::shared_ptr<BufferStream> create_buffer_bundle(
         compositor::BufferProperties const& buffer_properties) = 0;
 
 protected:
-    BufferBundleFactory() = default;
-    BufferBundleFactory(const BufferBundleFactory&) = delete;
-    BufferBundleFactory& operator=(const BufferBundleFactory&) = delete;
+    BufferStreamFactory() = default;
+    BufferStreamFactory(const BufferStreamFactory&) = delete;
+    BufferStreamFactory& operator=(const BufferStreamFactory&) = delete;
 };
 
 }

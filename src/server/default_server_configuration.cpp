@@ -589,13 +589,13 @@ mir::DefaultServerConfiguration::the_compositing_strategy()
         });
 }
 
-std::shared_ptr<ms::BufferBundleFactory>
+std::shared_ptr<ms::BufferStreamFactory>
 mir::DefaultServerConfiguration::the_buffer_bundle_factory()
 {
     return buffer_bundle_manager(
         [this]()
         {
-            return std::make_shared<mc::BufferBundleManager>(the_buffer_allocation_strategy());
+            return std::make_shared<mc::BufferStreamManager>(the_buffer_allocation_strategy());
         });
 }
 

@@ -38,7 +38,7 @@ namespace geom = mir::geometry;
 ms::Surface::Surface(
     std::string const& name,
     geom::Point const& top_left,
-    std::shared_ptr<BufferBundle> buffer_bundle,
+    std::shared_ptr<BufferStream> buffer_bundle,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
     surface_name(name),

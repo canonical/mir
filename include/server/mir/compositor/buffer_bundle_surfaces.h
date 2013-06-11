@@ -33,7 +33,7 @@ class BufferIDUniqueGenerator;
 struct BufferProperties;
 class SwapperDirector;
 
-class BufferStreamSurfaces : public surfaces::BufferBundle
+class BufferStreamSurfaces : public surfaces::BufferStream
 {
 public:
     BufferStreamSurfaces(std::shared_ptr<SwapperDirector> const& swapper);

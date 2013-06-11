@@ -37,7 +37,7 @@ namespace surfaces
 {
 class GraphicRegion;
 
-class BufferBundle
+class BufferStream
 {
 public:
     virtual std::shared_ptr<compositor::Buffer> secure_client_buffer() = 0;

@@ -165,7 +165,7 @@ struct SurfaceCreation : public ::testing::Test
         pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{43}, geom::Height{420}};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
-        mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
+        mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
         null_change_cb = []{};
         mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
 
@@ -174,7 +174,7 @@ struct SurfaceCreation : public ::testing::Test
     }
 
     std::string surface_name;
-    std::shared_ptr<testing::NiceMock<mtd::MockBufferBundle>> mock_buffer_bundle;
+    std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_bundle;
     geom::PixelFormat pf;
     geom::Stride stride;
     geom::Size size;

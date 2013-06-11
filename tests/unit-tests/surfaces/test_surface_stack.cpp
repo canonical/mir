@@ -66,9 +66,9 @@ public:
     virtual mc::BufferProperties properties() const { return mc::BufferProperties{}; };
 };
 
-struct MockBufferBundleFactory : public ms::BufferBundleFactory
+struct MockBufferStreamFactory : public ms::BufferStreamFactory
 {
-    MockBufferBundleFactory()
+    MockBufferStreamFactory()
     {
         using namespace ::testing;
 
@@ -82,7 +82,7 @@ struct MockBufferBundleFactory : public ms::BufferBundleFactory
 
     MOCK_METHOD1(
         create_buffer_bundle,
-        std::shared_ptr<ms::BufferBundle>(mc::BufferProperties const&));
+        std::shared_ptr<ms::BufferStream>(mc::BufferProperties const&));
 };
 
 struct MockFilterForRenderables : public mc::FilterForRenderables
@@ -156,7 +156,7 @@ TEST(
 
     std::shared_ptr<mc::SwapperDirector> swapper_handle;
     mc::BufferStreamSurfaces buffer_bundle(swapper_handle);
-    MockBufferBundleFactory buffer_bundle_factory;
+    MockBufferStreamFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
     mtd::StubInputRegistrar input_registrar;
 
@@ -180,7 +180,7 @@ TEST(
 {
     using namespace ::testing;
 
-    MockBufferBundleFactory buffer_bundle_factory;
+    MockBufferStreamFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
     mtd::StubInputRegistrar input_registrar;
     mtd::MockSurfaceRenderer renderer;
@@ -210,7 +210,7 @@ TEST(
 {
     using namespace ::testing;
 
-    MockBufferBundleFactory buffer_bundle_factory;
+    MockBufferStreamFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
     mtd::StubInputRegistrar input_registrar;
 
@@ -252,7 +252,7 @@ TEST(
 {
     using namespace ::testing;
 
-    MockBufferBundleFactory buffer_bundle_factory;
+    MockBufferStreamFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
     mtd::StubInputRegistrar input_registrar;
 
@@ -292,7 +292,7 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 {
     using namespace ::testing;
 
-    MockBufferBundleFactory buffer_bundle_factory;
+    MockBufferStreamFactory buffer_bundle_factory;
     StubInputChannelFactory input_factory;
     mtd::StubInputRegistrar input_registrar;
 
@@ -319,9 +319,9 @@ TEST(SurfaceStack, created_buffer_bundle_uses_requested_surface_parameters)
 namespace
 {
 
-struct StubBufferBundleFactory : public ms::BufferBundleFactory
+struct StubBufferStreamFactory : public ms::BufferStreamFactory
 {
-    std::shared_ptr<ms::BufferBundle> create_buffer_bundle(mc::BufferProperties const&)
+    std::shared_ptr<ms::BufferStream> create_buffer_bundle(mc::BufferProperties const&)
     {
         return std::make_shared<mc::BufferStreamSurfaces>(
             std::make_shared<NullSwapperDirector>());
@@ -344,7 +344,7 @@ TEST(SurfaceStack, create_surface_notifies_changes)
 
     EXPECT_CALL(mock_cb, call()).Times(1);
 
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         std::make_shared<StubInputChannelFactory>(),
             std::make_shared<mtd::StubInputRegistrar>()};
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
@@ -361,7 +361,7 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
 
     EXPECT_CALL(mock_cb, call()).Times(1);
 
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         std::make_shared<StubInputChannelFactory>(),
             std::make_shared<mtd::StubInputRegistrar>()};
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
@@ -384,7 +384,7 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
     geom::Size const requested_size{geom::Width{1024}, 
                                     geom::Height{768}};
     
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         std::make_shared<StubInputChannelFactory>(),
             std::make_shared<mtd::StubInputRegistrar>()};
     
@@ -405,7 +405,7 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     EXPECT_CALL(registrar, input_surface_opened(_)).Times(1);
     EXPECT_CALL(registrar, input_surface_closed(_)).Times(1);
 
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         std::make_shared<StubInputChannelFactory>(),
             mt::fake_shared(registrar)};
     
@@ -425,7 +425,7 @@ TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
     MockInputChannelFactory input_factory;
     
     EXPECT_CALL(input_factory, make_input_channel()).Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         mt::fake_shared(input_factory),
             std::make_shared<mtd::StubInputRegistrar>()};
 

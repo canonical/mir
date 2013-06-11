@@ -37,7 +37,7 @@ class StubSurfaceBuilder : public shell::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_bundle(std::make_shared<NullBufferBundle>()),
+        buffer_bundle(std::make_shared<NullBufferStream>()),
         dummy_surface()
     {
     }
@@ -53,7 +53,7 @@ public:
     {
     }
 private:
-    std::shared_ptr<surfaces::BufferBundle> const buffer_bundle;
+    std::shared_ptr<surfaces::BufferStream> const buffer_bundle;
     std::shared_ptr<surfaces::Surface>  dummy_surface;
 };
 }

@@ -35,7 +35,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
-mc::BufferBundleManager::BufferBundleManager(
+mc::BufferStreamManager::BufferStreamManager(
     const std::shared_ptr<BufferAllocationStrategy>& strategy)
         : swapper_factory(strategy)
 {
@@ -43,7 +43,7 @@ mc::BufferBundleManager::BufferBundleManager(
 }
 
 
-std::shared_ptr<ms::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
+std::shared_ptr<ms::BufferStream> mc::BufferStreamManager::create_buffer_bundle(
     mc::BufferProperties const& buffer_properties)
 {
     auto swapper_switcher = std::make_shared<mc::SwapperSwitcher>(swapper_factory, buffer_properties);

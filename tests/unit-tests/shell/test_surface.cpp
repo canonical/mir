@@ -50,7 +50,7 @@ class StubSurfaceBuilder : public msh::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_bundle(new mtd::NullBufferBundle()),
+        buffer_bundle(new mtd::NullBufferStream()),
         dummy_surface()
     {
     }
@@ -73,7 +73,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ms::BufferBundle> const buffer_bundle;
+    std::shared_ptr<ms::BufferStream> const buffer_bundle;
     std::shared_ptr<ms::Surface> dummy_surface;
 };
 
@@ -98,16 +98,16 @@ private:
     StubSurfaceBuilder self;
 };
 
-typedef testing::NiceMock<mtd::MockBufferBundle> StubBufferBundle;
+typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
 
 
 struct ShellSurface : testing::Test
 {
-    std::shared_ptr<StubBufferBundle> const buffer_bundle;
+    std::shared_ptr<StubBufferStream> const buffer_bundle;
     StubSurfaceBuilder surface_builder;
 
     ShellSurface() :
-        buffer_bundle(std::make_shared<StubBufferBundle>())
+        buffer_bundle(std::make_shared<StubBufferStream>())
     {
         using namespace testing;
 

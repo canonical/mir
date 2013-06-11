@@ -30,7 +30,7 @@ namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace ms = mir::surfaces;
 
-class BufferBundleTest : public ::testing::Test
+class BufferStreamTest : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -43,7 +43,7 @@ protected:
     std::shared_ptr<mtd::MockSwapperDirector> mock_director;
 };
 
-TEST_F(BufferBundleTest, size_query)
+TEST_F(BufferStreamTest, size_query)
 {
     geom::Size size{geom::Width{4},geom::Height{5}};
     mc::BufferProperties properties {size, geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
@@ -56,7 +56,7 @@ TEST_F(BufferBundleTest, size_query)
     EXPECT_EQ(size, returned_size);
 }
 
-TEST_F(BufferBundleTest, pixel_format_query)
+TEST_F(BufferStreamTest, pixel_format_query)
 {
     geom::PixelFormat format{geom::PixelFormat::abgr_8888};
     mc::BufferProperties properties {geom::Size{geom::Width{4},geom::Height{5}},
@@ -70,7 +70,7 @@ TEST_F(BufferBundleTest, pixel_format_query)
     EXPECT_EQ(format, returned_pf);
 }
 
-TEST_F(BufferBundleTest, shutdown_command)
+TEST_F(BufferStreamTest, shutdown_command)
 {
     EXPECT_CALL(*mock_director, shutdown())
         .Times(1);
@@ -79,7 +79,7 @@ TEST_F(BufferBundleTest, shutdown_command)
     buffer_bundle.shutdown();
 }
 
-TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
+TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)
 {
     using namespace testing;
 
@@ -94,7 +94,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
     buffer_bundle.lock_back_buffer();
 }
 
-TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
+TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
 {
     using namespace testing;
 
@@ -109,7 +109,7 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
     buffer_bundle.lock_back_buffer();
 }
 
-TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
+TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
 
