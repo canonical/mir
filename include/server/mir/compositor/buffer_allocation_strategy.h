@@ -35,7 +35,7 @@ class GraphicBufferAllocator;
 class BufferSwapper;
 struct BufferProperties;
 
-enum class SwapperType : uint32_t
+enum class SwapperType
 {
     synchronous,
     framedropping,
