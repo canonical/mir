@@ -19,7 +19,7 @@
 
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
-#include "swapper_switcher.h"
+#include "switching_bundle.h"
 
 #include <boost/throw_exception.hpp>
 

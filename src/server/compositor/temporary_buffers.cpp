@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "swapper_director.h"
+#include "buffer_bundle.h"
 #include "temporary_buffers.h"
 
 namespace mc=mir::compositor;

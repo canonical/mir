@@ -5,14 +5,14 @@ set(
   default_compositing_strategy.cpp
   buffer_basic.cpp
   temporary_buffers.cpp
-  buffer_bundle_manager.cpp
-  buffer_bundle_surfaces.cpp
+  buffer_stream_factory.cpp
+  buffer_stream_surfaces.cpp
   buffer_swapper_multi.cpp
   buffer_swapper_spin.cpp
   swapper_factory.cpp
   rendering_operator.cpp
   multi_threaded_compositor.cpp
-  swapper_switcher.cpp
+  switching_bundle.cpp
   rw_lock.cpp
 )
 

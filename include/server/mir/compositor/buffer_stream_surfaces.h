@@ -17,8 +17,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_SURFACES_H_
-#define MIR_COMPOSITOR_BUFFER_BUNDLE_SURFACES_H_
+#ifndef MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
+#define MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
 
 #include "mir/surfaces/buffer_bundle.h"
 
@@ -59,4 +59,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_BUNDLE_SURFACES_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_ */

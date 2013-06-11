@@ -17,9 +17,9 @@
  */
 
 #include "mir/surfaces/surface_stack.h"
-#include "mir/compositor/buffer_bundle_surfaces.h"
+#include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/surfaces/buffer_bundle_factory.h"
-#include "src/server/compositor/swapper_director.h"
+#include "src/server/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/renderables.h"
 #include "mir/geometry/rectangle.h"

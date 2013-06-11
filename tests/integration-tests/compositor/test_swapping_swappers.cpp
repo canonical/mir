@@ -19,10 +19,10 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "multithread_harness.h"
 
-#include "src/server/compositor/swapper_switcher.h"
+#include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_swapper_spin.h"
-#include "mir/compositor/buffer_bundle_surfaces.h"
+#include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
@@ -61,10 +61,10 @@ struct SwapperSwappingStress : public ::testing::Test
         auto factory = std::make_shared<mc::SwapperFactory>(allocator, 3);
         auto properties = mc::BufferProperties{geom::Size{geom::Width{380}, geom::Height{210}},
                                           geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
-        swapper_switcher = std::make_shared<mc::SwitchingBundle>(factory, properties);
+        switching_bundle = std::make_shared<mc::SwitchingBundle>(factory, properties);
     }
 
-    std::shared_ptr<mc::SwitchingBundle> swapper_switcher;
+    std::shared_ptr<mc::SwitchingBundle> switching_bundle;
     std::atomic<bool> client_thread_done;
 };
 }
@@ -78,9 +78,9 @@ TEST_F(SwapperSwappingStress, swapper)
                 {
                     for(auto i=0u; i < 400; i++)
                     {
-                        auto b = swapper_switcher->client_acquire();
+                        auto b = switching_bundle->client_acquire();
                         std::this_thread::yield();
-                        swapper_switcher->client_release(b);
+                        switching_bundle->client_release(b);
                     }
                     client_thread_done = true;
                 });
@@ -90,9 +90,9 @@ TEST_F(SwapperSwappingStress, swapper)
                 {
                     while(!client_thread_done)
                     {
-                        auto b = swapper_switcher->compositor_acquire();
+                        auto b = switching_bundle->compositor_acquire();
                         std::this_thread::yield();
-                        swapper_switcher->compositor_release(b);
+                        switching_bundle->compositor_release(b);
                     }
                 });
 
@@ -101,9 +101,9 @@ TEST_F(SwapperSwappingStress, swapper)
                 {
                     for(auto i=0u; i < 100; i++)
                     {
-                        swapper_switcher->allow_framedropping(true);
+                        switching_bundle->allow_framedropping(true);
                         std::this_thread::yield();
-                        swapper_switcher->allow_framedropping(false);
+                        switching_bundle->allow_framedropping(false);
                         std::this_thread::yield();
                     } 
                 });
@@ -122,9 +122,9 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                 {
                     for(auto i=0u; i < 400; i++)
                     {
-                        auto b = swapper_switcher->client_acquire();
+                        auto b = switching_bundle->client_acquire();
                         std::this_thread::yield();
-                        swapper_switcher->client_release(b);
+                        switching_bundle->client_release(b);
                     }
                     client_thread_done = true;
                 });
@@ -134,9 +134,9 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                 {
                     while(!client_thread_done)
                     {
-                        auto b = swapper_switcher->compositor_acquire();
+                        auto b = switching_bundle->compositor_acquire();
                         std::this_thread::yield();
-                        swapper_switcher->compositor_release(b);
+                        switching_bundle->compositor_release(b);
                     }
                 });
 
@@ -145,9 +145,9 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
                 {
                     for(auto i=0u; i < 200; i++)
                     {
-                        swapper_switcher->allow_framedropping(true);
+                        switching_bundle->allow_framedropping(true);
                         std::this_thread::yield();
-                        swapper_switcher->allow_framedropping(false);
+                        switching_bundle->allow_framedropping(false);
                         std::this_thread::yield();
                     } 
                 });

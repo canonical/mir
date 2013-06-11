@@ -17,8 +17,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_SWAPPER_DIRECTOR_H_
-#define MIR_COMPOSITOR_SWAPPER_DIRECTOR_H_
+#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
+#define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
 #include "mir/compositor/buffer_properties.h"
 #include <memory>
@@ -49,4 +49,4 @@ protected:
 }
 }
 
-#endif /* MIR_COMPOSITOR_SWAPPER_DIRECTOR_H_ */
+#endif /*MIR_COMPOSITOR_BUFFER_BUNDLE_H_*/

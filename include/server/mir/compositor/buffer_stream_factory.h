@@ -18,8 +18,8 @@
  *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_
-#define MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_
+#ifndef MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
+#define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
 #include "mir/compositor/buffer.h"
 #include "mir/surfaces/buffer_bundle_factory.h"
@@ -57,4 +57,4 @@ private:
 }
 
 
-#endif /* MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_ */

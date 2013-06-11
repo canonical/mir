@@ -24,7 +24,7 @@
 #include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
-#include "swapper_switcher.h"
+#include "switching_bundle.h"
 
 #include <initializer_list>
 #include <vector>

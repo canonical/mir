@@ -18,7 +18,7 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/swapper_factory.h"
-#include "src/server/compositor/swapper_switcher.h"
+#include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_id.h"

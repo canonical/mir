@@ -21,7 +21,7 @@
 #include "src/server/graphics/android/interpreter_cache.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/buffer_stream_factory.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/graphics/android/mir_native_window.h"

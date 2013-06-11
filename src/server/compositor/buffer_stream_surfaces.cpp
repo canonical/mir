@@ -17,8 +17,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_bundle_surfaces.h"
-#include "swapper_director.h"
+#include "mir/compositor/buffer_stream_surfaces.h"
+#include "buffer_bundle.h"
 #include "mir/compositor/buffer_properties.h"
 
 #include "temporary_buffers.h"

@@ -19,10 +19,10 @@
  */
 
 #include "mir/compositor/buffer_allocation_strategy.h"
-#include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/buffer_bundle_surfaces.h"
+#include "mir/compositor/buffer_stream_factory.h"
+#include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
-#include "swapper_switcher.h"
+#include "switching_bundle.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -46,6 +46,6 @@ mc::BufferStreamFactory::BufferStreamFactory(
 std::shared_ptr<ms::BufferStream> mc::BufferStreamFactory::create_buffer_bundle(
     mc::BufferProperties const& buffer_properties)
 {
-    auto swapper_switcher = std::make_shared<mc::SwitchingBundle>(swapper_factory, buffer_properties);
-    return std::make_shared<mc::BufferStreamSurfaces>(swapper_switcher);
+    auto switching_bundle = std::make_shared<mc::SwitchingBundle>(swapper_factory, buffer_properties);
+    return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
 }

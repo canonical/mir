@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/compositor/swapper_switcher.h"
+#include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_swapper.h"

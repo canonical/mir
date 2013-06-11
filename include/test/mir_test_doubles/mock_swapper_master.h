@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SWAPPER_MASTER_H_
 #define MIR_TEST_DOUBLES_MOCK_SWAPPER_MASTER_H_
 
-#include "src/server/compositor/swapper_director.h"
+#include "src/server/compositor/buffer_bundle.h"
 
 #include <gmock/gmock.h>
 

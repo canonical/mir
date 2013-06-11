@@ -17,10 +17,10 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
-#define MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
+#ifndef MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
+#define MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
 
-#include "swapper_director.h"
+#include "buffer_bundle.h"
 #include "rw_lock.h"
 #include <condition_variable>
 #include <memory>
@@ -60,4 +60,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_SWAPPER_SWITCHER_H_ */
+#endif /* MIR_COMPOSITOR_SWITCHING_BUNDLE_H_ */
