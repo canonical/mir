@@ -17,8 +17,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_BUFFER_BUNDLE_H_
-#define MIR_SURFACES_BUFFER_BUNDLE_H_
+#ifndef MIR_SURFACES_BUFFER_STREAM_H_
+#define MIR_SURFACES_BUFFER_STREAM_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
@@ -50,4 +50,4 @@ public:
 }
 }
 
-#endif /* MIR_SURFACES_BUFFER_BUNDLE_H_ */
+#endif /* MIR_SURFACES_BUFFER_STREAM_H_ */
