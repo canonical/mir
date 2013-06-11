@@ -31,7 +31,7 @@ namespace compositor
 {
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
-class BufferStreamManager;
+class BufferStreamFactory;
 class Renderables;
 class Drawer;
 class CompositingStrategy;
@@ -229,7 +229,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
-    CachedPtr<compositor::BufferStreamManager> buffer_bundle_manager;
+    CachedPtr<compositor::BufferStreamFactory> buffer_bundle_manager;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<shell::SessionContainer>  shell_session_container;

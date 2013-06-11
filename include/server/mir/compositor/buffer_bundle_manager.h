@@ -35,14 +35,14 @@ class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 struct BufferProperties;
 
-class BufferStreamManager : public surfaces::BufferStreamFactory
+class BufferStreamFactory : public surfaces::BufferStreamFactory
 {
 public:
 
-    explicit BufferStreamManager(
+    explicit BufferStreamFactory(
         const std::shared_ptr<BufferAllocationStrategy>& strategy);
 
-    virtual ~BufferStreamManager() {}
+    virtual ~BufferStreamFactory() {}
 
     // From BufferStreamFactory
     virtual std::shared_ptr<surfaces::BufferStream> create_buffer_bundle(
