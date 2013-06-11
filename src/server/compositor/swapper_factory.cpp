@@ -38,7 +38,12 @@ mc::SwapperFactory::SwapperFactory(
     : gr_allocator(gr_alloc),
       number_of_buffers(number_of_buffers)
 {
-    assert(gr_alloc);
+}
+
+mc::SwapperFactory::SwapperFactory(
+    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc)
+    : SwapperFactory(gr_alloc, 2)
+{
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buffers(
