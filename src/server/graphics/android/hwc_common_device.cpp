@@ -54,14 +54,20 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> con
 
     hwc_device->registerProcs(hwc_device.get(), &callbacks.hooks);
 
-    if (hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0) != 0)
+    int err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0);
+    if (err)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not blank display"));
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Could not unblank display (error " +
+                               std::to_string(err) + ")"));
     }
     
-    if (hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1) != 0)
+    err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
+    if (err)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not enable hwc vsync notifications"));
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Could not enable HWC vsync notifications "
+                               "(error " + std::to_string(err) + ")"));
     }
 }
 
