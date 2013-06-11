@@ -61,10 +61,10 @@ struct SwapperSwappingStress : public ::testing::Test
         auto factory = std::make_shared<mc::SwapperFactory>(allocator, 3);
         auto properties = mc::BufferProperties{geom::Size{geom::Width{380}, geom::Height{210}},
                                           geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
-        swapper_switcher = std::make_shared<mc::SwapperSwitcher>(factory, properties);
+        swapper_switcher = std::make_shared<mc::SwitchingBundle>(factory, properties);
     }
 
-    std::shared_ptr<mc::SwapperSwitcher> swapper_switcher;
+    std::shared_ptr<mc::SwitchingBundle> swapper_switcher;
     std::atomic<bool> client_thread_done;
 };
 }

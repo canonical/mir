@@ -34,10 +34,10 @@ class Buffer;
 class BufferSwapper;
 class BufferAllocationStrategy;
 
-class SwapperSwitcher : public BufferBundle 
+class SwitchingBundle : public BufferBundle 
 {
 public:
-    SwapperSwitcher(std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const&);
+    SwitchingBundle(std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const&);
 
     BufferProperties properties() const;
 

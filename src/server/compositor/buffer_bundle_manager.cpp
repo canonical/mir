@@ -46,6 +46,6 @@ mc::BufferStreamManager::BufferStreamManager(
 std::shared_ptr<ms::BufferStream> mc::BufferStreamManager::create_buffer_bundle(
     mc::BufferProperties const& buffer_properties)
 {
-    auto swapper_switcher = std::make_shared<mc::SwapperSwitcher>(swapper_factory, buffer_properties);
+    auto swapper_switcher = std::make_shared<mc::SwitchingBundle>(swapper_factory, buffer_properties);
     return std::make_shared<mc::BufferStreamSurfaces>(swapper_switcher);
 }

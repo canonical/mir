@@ -28,7 +28,7 @@ namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 
-struct SwapperSwitcherTest : public ::testing::Test
+struct SwitchingBundleTest : public ::testing::Test
 {
     void SetUp()
     {
@@ -51,7 +51,7 @@ struct SwapperSwitcherTest : public ::testing::Test
     mc::BufferProperties properties;
 };
 
-TEST_F(SwapperSwitcherTest, sync_swapper_by_default)
+TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
     using namespace testing;
     auto actual_properties = mc::BufferProperties{geom::Size{geom::Width{7}, geom::Height{8}},
@@ -61,14 +61,14 @@ TEST_F(SwapperSwitcherTest, sync_swapper_by_default)
         .WillOnce(DoAll(SetArgReferee<0>(actual_properties),
                         Return(mock_default_swapper)));
 
-    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
     EXPECT_EQ(actual_properties, switcher.properties());
 }
 
-TEST_F(SwapperSwitcherTest, client_acquire_basic)
+TEST_F(SwitchingBundleTest, client_acquire_basic)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
 
     EXPECT_CALL(*mock_default_swapper, client_acquire())
         .Times(1)
@@ -80,10 +80,10 @@ TEST_F(SwapperSwitcherTest, client_acquire_basic)
     switcher.client_release(buffer); 
 }
 
-TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
+TEST_F(SwitchingBundleTest, client_acquire_with_switch)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
 
     EXPECT_CALL(*mock_default_swapper, client_acquire())
         .Times(1)
@@ -100,10 +100,10 @@ TEST_F(SwapperSwitcherTest, client_acquire_with_switch)
     switcher.client_release(buffer); 
 }
 
-TEST_F(SwapperSwitcherTest, compositor_acquire_basic)
+TEST_F(SwitchingBundleTest, compositor_acquire_basic)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
 
     EXPECT_CALL(*mock_default_swapper, compositor_acquire())
         .Times(1)
@@ -115,11 +115,11 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_basic)
     switcher.compositor_release(buffer); 
 }
 
-TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
+TEST_F(SwitchingBundleTest, compositor_acquire_with_switch)
 {
     using namespace testing;
 
-    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
 
     EXPECT_CALL(*mock_default_swapper, compositor_acquire())
         .Times(1)
@@ -137,10 +137,10 @@ TEST_F(SwapperSwitcherTest, compositor_acquire_with_switch)
     switcher.compositor_release(buffer); 
 }
 
-TEST_F(SwapperSwitcherTest, switch_sequence)
+TEST_F(SwitchingBundleTest, switch_sequence)
 {
     using namespace testing;
-    mc::SwapperSwitcher switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
 
     InSequence seq;
     EXPECT_CALL(*mock_default_swapper, force_client_completion())

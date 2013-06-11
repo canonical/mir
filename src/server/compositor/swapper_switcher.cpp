@@ -25,7 +25,7 @@
 
 namespace mc=mir::compositor;
 
-mc::SwapperSwitcher::SwapperSwitcher(
+mc::SwitchingBundle::SwitchingBundle(
     std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const& property_request)
     : swapper_factory(swapper_factory),
       swapper(swapper_factory->create_swapper_new_buffers(
@@ -34,7 +34,7 @@ mc::SwapperSwitcher::SwapperSwitcher(
 {
 }
 
-std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
+std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
 {
     /* lock is for use of 'swapper' below' */
     std::unique_lock<mc::ReadLock> lk(rw_lock);
@@ -58,32 +58,32 @@ std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::client_acquire()
     return buffer;
 }
 
-void mc::SwapperSwitcher::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
+void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->client_release(released_buffer);
 }
 
-std::shared_ptr<mc::Buffer> mc::SwapperSwitcher::compositor_acquire()
+std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->compositor_acquire();
 }
 
-void mc::SwapperSwitcher::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
+void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->compositor_release(released_buffer);
 }
 
-void mc::SwapperSwitcher::shutdown()
+void mc::SwitchingBundle::shutdown()
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     should_retry = false;
     swapper->force_client_completion();
 }
 
-void mc::SwapperSwitcher::allow_framedropping(bool allow_dropping)
+void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
 {
     {
         std::unique_lock<mc::ReadLock> lk(rw_lock);
@@ -104,7 +104,7 @@ void mc::SwapperSwitcher::allow_framedropping(bool allow_dropping)
     cv.notify_all();
 }
 
-mc::BufferProperties mc::SwapperSwitcher::properties() const
+mc::BufferProperties mc::SwitchingBundle::properties() const
 {
     return bundle_properties;
 }
