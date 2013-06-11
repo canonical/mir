@@ -18,13 +18,13 @@
 
 #include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
-#include "mir_logger.h"
-#include "make_rpc_channel.h"
+#include "default_connection_configuration.h"
 
 #include <set>
 #include <unordered_set>
@@ -37,7 +37,33 @@ std::unordered_set<MirConnection*> MirConnection::valid_connections;
 
 namespace
 {
-MirConnection error_connection;
+class ConnectionList
+{
+public:
+    void insert(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.insert(connection);
+    }
+
+    void remove(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.erase(connection);
+    }
+
+    bool contains(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        return connections.count(connection);
+    }
+
+private:
+    std::mutex connection_guard;
+    std::unordered_set<MirConnection*> connections;
+};
+
+ConnectionList error_connections;
 
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void *result, void **context)
@@ -53,22 +79,21 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
-        const std::string sock = socket_file ? socket_file :
+        std::string const sock = socket_file ? socket_file :
                                                mir::default_server_socket;
-        auto log = std::make_shared<mcl::ConsoleLogger>();
-        auto client_platform_factory = std::make_shared<mcl::NativeClientPlatformFactory>();
 
-        MirConnection* connection = new MirConnection(
-            mcl::make_rpc_channel(sock, log),
-            log,
-            client_platform_factory);
+        mcl::DefaultConnectionConfiguration conf{sock};
+
+        MirConnection* connection = new MirConnection(conf);
 
         return connection->connect(name, callback, context);
     }
     catch (std::exception const& x)
     {
-        error_connection.set_error_message(x.what());
-        callback(&error_connection, context);
+        MirConnection* error_connection = new MirConnection();
+        error_connections.insert(error_connection);
+        error_connection->set_error_message(x.what());
+        callback(error_connection, context);
         return 0;
     }
 }
@@ -96,10 +121,15 @@ char const * mir_connection_get_error_message(MirConnection * connection)
 
 void mir_connection_release(MirConnection * connection)
 {
-    if (&error_connection == connection) return;
-
-    auto wait_handle = connection->disconnect();
-    wait_handle->wait_for_result();
+    if (!error_connections.contains(connection))
+    {
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_result();
+    }
+    else
+    {
+        error_connections.remove(connection);
+    }
 
     delete connection;
 }
@@ -115,7 +145,7 @@ MirWaitHandle* mir_connection_create_surface(
     mir_surface_lifecycle_callback callback,
     void* context)
 {
-    if (&error_connection == connection) return 0;
+    if (error_connections.contains(connection)) return 0;
 
     try
     {
@@ -130,7 +160,7 @@ MirWaitHandle* mir_connection_create_surface(
 }
 
 MirSurface* mir_connection_create_surface_sync(
-    MirConnection* connection, 
+    MirConnection* connection,
     MirSurfaceParameters const* params)
 {
     MirSurface *surface = nullptr;
@@ -208,14 +238,14 @@ void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * g
     surface->get_cpu_region( *graphics_region);
 }
 
-MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     return surface->next_buffer(callback, context);
 }
 
-void mir_surface_next_buffer_sync(MirSurface *surface)
+void mir_surface_swap_buffers_sync(MirSurface *surface)
 {
-    mir_wait_for(mir_surface_next_buffer(surface,
+    mir_wait_for(mir_surface_swap_buffers(surface,
         reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
         nullptr));
 }
@@ -229,6 +259,14 @@ void mir_wait_for(MirWaitHandle* wait_handle)
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
 {
     return surface->generate_native_window();
+}
+
+MirWaitHandle *mir_connection_drm_auth_magic(MirConnection* connection,
+                                             unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void* context)
+{
+    return connection->drm_auth_magic(magic, callback, context);
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface *surf,

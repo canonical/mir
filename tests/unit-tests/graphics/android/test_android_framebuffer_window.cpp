@@ -18,14 +18,15 @@
 
 #include "src/server/graphics/android/android_framebuffer_window.h"
 
-#include "mir_test/egl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <memory>
 #include <system/window.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-namespace mga=mir::graphics::android;
+namespace mga = mir::graphics::android;
+namespace mtd = mir::test::doubles;
 
 class ANativeWindowInterface
 {
@@ -80,7 +81,7 @@ protected:
 
     std::shared_ptr<MockANativeWindow> mock_anw;
     std::shared_ptr<mga::AndroidFramebufferWindow> fb_win;
-    mir::EglMock mock_egl;
+    mtd::MockEGL mock_egl;
 };
 
 TEST_F(AndroidFramebufferWindowConfigSelection, queries_for_native_visual_id)

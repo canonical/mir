@@ -26,7 +26,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_ipc_packer.h"
 
-#include <xf86drm.h>
+#include "drm_close_threadsafe.h"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -47,7 +47,7 @@ struct GBMPlatformIPCPackage : public mg::PlatformIPCPackage
     ~GBMPlatformIPCPackage()
     {
         if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
-            drmClose(ipc_fds[0]);
+            mgg::drm_close_threadsafe(ipc_fds[0]);
     }
 };
 
@@ -128,6 +128,11 @@ void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPac
     }
 
     packer->pack_stride(buffer->stride()); 
+}
+
+void mgg::GBMPlatform::drm_auth_magic(drm_magic_t magic)
+{
+    drm.auth_magic(magic);
 }
 
 std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()

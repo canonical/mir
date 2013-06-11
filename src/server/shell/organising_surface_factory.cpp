@@ -18,7 +18,7 @@
 
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/placement_strategy.h"
-#include "mir/frontend/surface_creation_parameters.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -35,7 +35,7 @@ msh::OrganisingSurfaceFactory::~OrganisingSurfaceFactory()
 }
 
 std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(
-    frontend::SurfaceCreationParameters const& params,
+    shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<events::EventSink> const& sink)
 {

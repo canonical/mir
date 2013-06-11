@@ -36,7 +36,12 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        mock_buffer_handle = std::make_shared<NiceMock<mtd::MockBufferHandle>>();
+        mock_buffer_handle = std::make_shared<ANativeWindowBuffer>();
+        mock_buffer_handle->width = 44;
+        mock_buffer_handle->height = 45;
+        mock_buffer_handle->stride = 46;
+        mock_buffer_handle->format = HAL_PIXEL_FORMAT_RGBA_8888;
+
         mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
         ON_CALL(*mock_alloc_device, alloc_buffer(_,_,_))
             .WillByDefault(Return(mock_buffer_handle));
@@ -47,7 +52,7 @@ protected:
     }
 
     std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_device;
-    std::shared_ptr<mtd::MockBufferHandle> mock_buffer_handle;
+    std::shared_ptr<ANativeWindowBuffer> mock_buffer_handle;
     geom::PixelFormat pf;
     geom::Size size;
     mga::BufferUsage default_use;
@@ -58,92 +63,43 @@ TEST_F(AndroidGraphicBufferBasic, basic_allocation_uses_alloc_device)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, _));
-
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer(size, pf, default_use));
     mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
-}
-
-TEST_F(AndroidGraphicBufferBasic, usage_type_passes_through)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_hardware));
-    mga::Buffer hw_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_hardware);
-    Mock::VerifyAndClearExpectations(mock_alloc_device.get());
-
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_software));
-    mga::Buffer sw_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_software);
-    Mock::VerifyAndClearExpectations(mock_alloc_device.get());
-
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, _, mga::BufferUsage::use_framebuffer_gles));
-    mga::Buffer fb_buffer(mock_alloc_device, size, pf, mga::BufferUsage::use_framebuffer_gles);
-    Mock::VerifyAndClearExpectations(mock_alloc_device.get());
 }
 
 TEST_F(AndroidGraphicBufferBasic, size_query_test)
 {
     using namespace testing;
 
-    geom::Size expected_size{geom::Width{443}, geom::Height{667}};
-
-    EXPECT_CALL(*mock_buffer_handle, size())
-        .Times(Exactly(1))
-        .WillOnce(Return(expected_size));
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( size, _, _ ));
+    EXPECT_CALL(*mock_alloc_device, alloc_buffer(_,_,_));
     mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
 
+    geom::Size expected_size{geom::Width{mock_buffer_handle->width},
+                             geom::Height{mock_buffer_handle->height}};
     EXPECT_EQ(expected_size, buffer.size());
 }
 
-TEST_F(AndroidGraphicBufferBasic, format_passthrough_test)
+TEST_F(AndroidGraphicBufferBasic, format_query_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _, pf, _ ));
     mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
-}
-
-TEST_F(AndroidGraphicBufferBasic, format_queries_handle_test)
-{
-    using namespace testing;
-
-    geom::PixelFormat expected_pf = geom::PixelFormat::bgr_888;
-
-    EXPECT_CALL(*mock_buffer_handle, format())
-    .Times(Exactly(1))
-    .WillOnce(Return(expected_pf));
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer( _ , _, _ ));
-
-    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
-
-    EXPECT_EQ(expected_pf, buffer.pixel_format());
+    EXPECT_EQ(geom::PixelFormat::abgr_8888, buffer.pixel_format());
 }
 
 TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_native_handle)
 {
     using namespace testing;
 
-    auto expected_anwb = std::make_shared<ANativeWindowBuffer>();
-
-    EXPECT_CALL(*mock_buffer_handle, native_buffer_handle())
-        .Times(Exactly(1))
-        .WillOnce(Return(expected_anwb));
-
     mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
-
-    EXPECT_EQ(expected_anwb, buffer.native_buffer_handle());
+    EXPECT_EQ(mock_buffer_handle, buffer.native_buffer_handle());
 }
 
 TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
 {
     using namespace testing;
 
-    geom::Stride expected_stride{43};
-    EXPECT_CALL(*mock_buffer_handle, stride())
-        .Times(Exactly(1))
-        .WillOnce(Return(expected_stride));
-
+    geom::Stride expected_stride{mock_buffer_handle->stride};
     mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
-
     EXPECT_EQ(expected_stride, buffer.stride());
 }

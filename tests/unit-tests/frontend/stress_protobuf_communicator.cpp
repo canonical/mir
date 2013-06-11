@@ -23,8 +23,11 @@
 
 #include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test/stub_server_tool.h"
-#include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_protobuf_server.h"
+
+#include "src/client/rpc/null_rpc_report.h"
+#include "src/client/rpc/make_rpc_channel.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -33,11 +36,10 @@
 #include <stdexcept>
 #include <memory>
 #include <string>
+#include <atomic>
 
 namespace mf = mir::frontend;
 namespace mt = mir::test;
-
-#include "src/client/mir_logger.h"
 
 namespace
 {
@@ -45,7 +47,7 @@ struct StubProtobufClient
 {
     StubProtobufClient(std::string socket_file, int timeout_ms);
 
-    std::shared_ptr<mir::client::Logger> logger;
+    std::shared_ptr<mir::client::rpc::RpcReport> rpc_report;
     std::shared_ptr<google::protobuf::RpcChannel> channel;
     mir::protobuf::DisplayServer::Stub display_server;
     mir::protobuf::ConnectParameters connect_parameters;
@@ -59,6 +61,7 @@ struct StubProtobufClient
     void next_buffer_done();
     void release_surface_done();
     void disconnect_done();
+    void drm_auth_magic_done();
 
     void wait_for_connect_done();
 
@@ -69,6 +72,8 @@ struct StubProtobufClient
     void wait_for_release_surface();
 
     void wait_for_disconnect_done();
+
+    void wait_for_drm_auth_magic_done();
 
     void wait_for_surface_count(int count);
 
@@ -84,6 +89,7 @@ struct StubProtobufClient
     std::atomic<bool> next_buffer_called;
     std::atomic<bool> release_surface_called;
     std::atomic<bool> disconnect_done_called;
+    std::atomic<bool> drm_auth_magic_done_called;
     std::atomic<bool> tfd_done_called;
 
     std::atomic<int> connect_done_count;
@@ -163,8 +169,8 @@ TEST_F(StressProtobufCommunicator, DISABLED_stress_next_buffer)
 StubProtobufClient::StubProtobufClient(
     std::string socket_file,
     int timeout_ms) :
-    logger(std::make_shared<mir::client::NullLogger>()),
-    channel(mir::client::make_rpc_channel(socket_file, logger)),
+    rpc_report(std::make_shared<mir::client::rpc::NullRpcReport>()),
+    channel(mir::client::rpc::make_rpc_channel(socket_file, rpc_report)),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
@@ -220,6 +226,11 @@ void StubProtobufClient::disconnect_done()
     while (!disconnect_done_count.compare_exchange_weak(old, old+1));
 }
 
+void StubProtobufClient::drm_auth_magic_done()
+{
+    drm_auth_magic_done_called.store(true);
+}
+
 void StubProtobufClient::wait_for_connect_done()
 {
     for (int i = 0; !connect_done_called.load() && i < maxwait; ++i)
@@ -270,6 +281,16 @@ void StubProtobufClient::wait_for_disconnect_done()
         std::this_thread::yield();
     }
     disconnect_done_called.store(false);
+}
+
+void StubProtobufClient::wait_for_drm_auth_magic_done()
+{
+    for (int i = 0; !drm_auth_magic_done_called.load() && i < maxwait; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::yield();
+    }
+    drm_auth_magic_done_called.store(false);
 }
 
 void StubProtobufClient::wait_for_surface_count(int count)

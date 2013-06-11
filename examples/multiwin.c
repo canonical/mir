@@ -114,7 +114,7 @@ static void draw_window(Window *win)
 
     mir_surface_get_graphics_region(win->surface, &region);
     clear_region(&region, &win->fill);
-    mir_surface_next_buffer_sync(win->surface);
+    mir_surface_swap_buffers_sync(win->surface);
 }
 
 int main(int argc, char *argv[])

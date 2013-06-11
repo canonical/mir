@@ -33,6 +33,8 @@ struct MockSwapper : public compositor::BufferSwapper
 {
 public:
     MockSwapper() {}
+    ~MockSwapper() noexcept {}
+
     MockSwapper(std::shared_ptr<compositor::Buffer> buffer)
         : default_buffer(buffer)
     {
@@ -42,13 +44,15 @@ public:
             .WillByDefault(Return(default_buffer));
         ON_CALL(*this, client_acquire())
             .WillByDefault(Return(default_buffer));
-    };
+    }
 
     MOCK_METHOD0(client_acquire,     std::shared_ptr<compositor::Buffer>());
     MOCK_METHOD1(client_release,     void(std::shared_ptr<compositor::Buffer> const&));
     MOCK_METHOD0(compositor_acquire, std::shared_ptr<compositor::Buffer>());
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<compositor::Buffer> const&));
-    MOCK_METHOD0(force_requests_to_complete, void());
+    MOCK_METHOD0(force_client_completion, void());
+
+    MOCK_METHOD2(end_responsibility, void(std::vector<std::shared_ptr<compositor::Buffer>>&, size_t&));
 
 private:
     std::shared_ptr<compositor::Buffer> default_buffer;

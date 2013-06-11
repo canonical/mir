@@ -8,7 +8,6 @@ set(
   protobuf_message_processor.cpp
   protobuf_buffer_packer.cpp
   null_message_processor.cpp
-  surface_creation_parameters.cpp
   event_pipe.cpp
 
   resource_cache.cpp
@@ -20,6 +19,13 @@ list(APPEND FRONTEND_SOURCES
   make_protobuf_socket_communicator.cpp
   socket_session.cpp
 )
+
+if (MIR_PLATFORM STREQUAL "android")
+  list(APPEND FRONTEND_SOURCES session_mediator_android.cpp)
+elseif (MIR_PLATFORM STREQUAL "gbm")
+  include_directories(${DRM_INCLUDE_DIRS})
+  list(APPEND FRONTEND_SOURCES session_mediator_gbm.cpp)
+endif()
 
 add_library(
   mirfrontend STATIC

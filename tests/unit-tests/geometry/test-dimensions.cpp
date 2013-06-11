@@ -89,3 +89,47 @@ TEST(geometry, conversions)
     EXPECT_EQ(dx1, dim_cast<DeltaX>(w1));
     EXPECT_NE(dx1, dim_cast<DeltaX>(X()));
 }
+
+TEST(geometry, signed_dimensions)
+{
+    using namespace geom;
+
+    X const x0{0};
+    X const x2{2};
+    X const xn5{-5};
+    Y const y0{0};
+    Y const y3{3};
+    Y const yn6{-6};
+    Y const yn7{-7};
+
+    // Compare against zero to catch regressions of signed->unsigned that
+    // wouldn't be caught using as_*int()...
+    EXPECT_GT(x0, xn5);
+    EXPECT_GT(y0, yn7);
+
+    EXPECT_LT(xn5, x0);
+    EXPECT_LT(xn5, x2);
+    EXPECT_LT(yn7, yn6);
+    EXPECT_LT(yn7, y0);
+    EXPECT_LT(yn7, y3);
+
+    EXPECT_LE(xn5, x0);
+    EXPECT_LE(xn5, x2);
+    EXPECT_LE(yn7, yn6);
+    EXPECT_LE(yn7, y0);
+    EXPECT_LE(yn7, y3);
+    EXPECT_LE(yn7, yn7);
+
+    EXPECT_GT(x0, xn5);
+    EXPECT_GT(x2, xn5);
+    EXPECT_GT(yn6, yn7);
+    EXPECT_GT(y0, yn7);
+    EXPECT_GT(y3, yn7);
+
+    EXPECT_GE(x0, xn5);
+    EXPECT_GE(x2, xn5);
+    EXPECT_GE(yn6, yn7);
+    EXPECT_GE(y0, yn7);
+    EXPECT_GE(y3, yn7);
+    EXPECT_GE(yn7, yn7);
+}

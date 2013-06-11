@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
             render_pattern(&graphics_region, pattern[0]);
         else
             render_pattern(&graphics_region, pattern[1]);
-        mir_surface_next_buffer_sync(surface);
+        mir_surface_swap_buffers_sync(surface);
     }
 
     mir_surface_release_sync(surface);

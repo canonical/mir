@@ -20,6 +20,10 @@
 #include "event_filter_dispatcher_policy.h"
 #include "android_input_reader_policy.h"
 #include "android_input_thread.h"
+#include "android_input_registrar.h"
+#include "android_input_targeter.h"
+#include "android_input_target_enumerator.h"
+#include "android_input_manager.h"
 #include "../event_filter_chain.h"
 
 #include <EventHub.h>
@@ -33,6 +37,8 @@ namespace droidinput = android;
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mg = mir::graphics;
+namespace ms = mir::surfaces;
+namespace msh = mir::shell;
 
 namespace
 {
@@ -73,10 +79,12 @@ private:
 
 mia::DefaultInputConfiguration::DefaultInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
                                                           std::shared_ptr<mg::ViewableArea> const& view_area,
-                                                          std::shared_ptr<mi::CursorListener> const& cursor_listener)
+                                                          std::shared_ptr<mi::CursorListener> const& cursor_listener,
+                                                          std::shared_ptr<mi::InputReport> const& input_report)
   : filter_chain(std::make_shared<mi::EventFilterChain>(filters)),
     view_area(view_area),
-    cursor_listener(cursor_listener)
+    cursor_listener(cursor_listener),
+    input_report(input_report)
 {
 }
 
@@ -89,7 +97,7 @@ droidinput::sp<droidinput::EventHubInterface> mia::DefaultInputConfiguration::th
     return event_hub(
         [this]()
         {
-            return new droidinput::EventHub();
+            return new droidinput::EventHub(input_report);
         });
 }
 
@@ -105,9 +113,9 @@ droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::DefaultInputConf
 droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfiguration::the_dispatcher()
 {
     return dispatcher(
-        [this]()
+        [this]() -> droidinput::sp<droidinput::InputDispatcherInterface>
         {
-            return new droidinput::InputDispatcher(the_dispatcher_policy());
+            return new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
         });
 }
 
@@ -150,7 +158,49 @@ std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thr
         });
 }
 
+std::shared_ptr<ms::InputRegistrar> mia::DefaultInputConfiguration::the_input_registrar()
+{
+    return input_registrar(
+        [this]()
+        {
+            return std::make_shared<mia::InputRegistrar>(the_dispatcher());
+        });
+}
+
+std::shared_ptr<mia::WindowHandleRepository> mia::DefaultInputConfiguration::the_window_handle_repository()
+{
+    return input_registrar(
+        [this]()
+        {
+            return std::make_shared<mia::InputRegistrar>(the_dispatcher());
+        });
+}
+
+std::shared_ptr<msh::InputTargeter> mia::DefaultInputConfiguration::the_input_targeter()
+{
+    return input_targeter(
+        [this]()
+        {
+            return std::make_shared<mia::InputTargeter>(the_dispatcher(), the_window_handle_repository());
+        });
+}
+
+std::shared_ptr<mi::InputManager> mia::DefaultInputConfiguration::the_input_manager()
+{
+    return input_manager(
+        [this]()
+        {
+            return std::make_shared<mia::InputManager>(the_event_hub(), the_dispatcher(),
+                                                       the_reader_thread(), the_dispatcher_thread());
+        });
+}
+
 bool mia::DefaultInputConfiguration::is_key_repeat_enabled()
 {
     return true;
+}
+
+void mia::DefaultInputConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& targets)
+{
+    the_dispatcher()->setInputEnumerator(new mia::InputTargetEnumerator(targets, the_window_handle_repository()));
 }

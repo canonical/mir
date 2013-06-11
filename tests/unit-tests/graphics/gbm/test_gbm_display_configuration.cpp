@@ -22,8 +22,8 @@
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/kms_display_configuration.h"
 
-#include "mir_test/egl_mock.h"
-#include "mir_test/gl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
@@ -102,8 +102,8 @@ public:
             conf_modes0.push_back(conf_mode_from_drm_mode(mode));
     }
 
-    ::testing::NiceMock<mir::EglMock> mock_egl;
-    ::testing::NiceMock<mir::GLMock> mock_gl;
+    ::testing::NiceMock<mtd::MockEGL> mock_egl;
+    ::testing::NiceMock<mtd::MockGL> mock_gl;
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
 

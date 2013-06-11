@@ -33,6 +33,9 @@ struct MockSurfaceRenderer : public graphics::Renderer
 {
     MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, graphics::Renderable&));
     MOCK_METHOD0(ensure_no_live_buffers_bound, void());
+    MOCK_METHOD0(clear, void ());
+
+    ~MockSurfaceRenderer() noexcept {}
 };
 
 }

@@ -8,19 +8,15 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
 )
 
-if(PROTOBUF_FOUND)
-
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-endif()
-
-include_directories(
   ${PROJECT_SOURCE_DIR}/include/client
   ${DRM_INCLUDE_DIRS}
 )
+
+add_subdirectory(rpc/)
+add_subdirectory(lttng/)
 
 set(
   CLIENT_SOURCES
@@ -31,14 +27,8 @@ set(
   mir_connection.cpp
   mir_wait_handle.cpp
   mir_surface.cpp
-  mir_logger.cpp
-  mir_basic_rpc_channel.cpp
-  ${PROTO_SRCS}
-)
-
-list(APPEND CLIENT_SOURCES
-  mir_socket_rpc_channel.cpp
-  make_socket_rpc_channel.cpp
+  logging/rpc_report.cpp
+  default_connection_configuration.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")
@@ -92,6 +82,9 @@ set(
 
   mirprotobuf
   mirsharedinput
+  mirsharedlogging
+  mirclientrpc
+  mirclientlttngstatic
 
   ${DRM_LIBRARIES}
   ${MIR_COMMON_PLATFORM_LIBRARIES}

@@ -16,23 +16,20 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_logger.h"
+#include "mir/logging/logger.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
-#include "client_buffer_depository.h"
-#include "make_rpc_channel.h"
+#include "rpc/mir_basic_rpc_channel.h"
+#include "connection_configuration.h"
 
-#include "mir/input/input_platform.h"
-
-#include <thread>
 #include <cstddef>
+#include <sstream>
 
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
-namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
 MirConnection::MirConnection() :
@@ -43,14 +40,12 @@ MirConnection::MirConnection() :
 }
 
 MirConnection::MirConnection(
-    std::shared_ptr<mir::client::MirBasicRpcChannel> const& channel,
-    std::shared_ptr<mcl::Logger> const & log,
-    std::shared_ptr<mcl::ClientPlatformFactory> const& client_platform_factory) :
-        channel(channel),
+    mir::client::ConnectionConfiguration& conf) :
+        channel(conf.the_rpc_channel()),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
-        log(log),
-        client_platform_factory(client_platform_factory),
-        input_platform(mircv::InputPlatform::create())
+        logger(conf.the_logger()),
+        client_platform_factory(conf.the_client_platform_factory()),
+        input_platform(conf.the_input_platform())
 {
     channel->set_event_handler(this);
     {
@@ -71,8 +66,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_lifecycle_callback callback,
     void * context)
 {
-    auto null_log = std::make_shared<mir::client::NullLogger>();
-    auto surface = new MirSurface(this, server, null_log, platform->create_buffer_factory(), input_platform, params, callback, context);
+    auto surface = new MirSurface(this, server, platform->create_buffer_factory(), input_platform, params, callback, context);
 
     return surface->get_create_wait_handle();
 }
@@ -186,6 +180,32 @@ MirWaitHandle* MirConnection::disconnect()
     return &disconnect_wait_handle;
 }
 
+void MirConnection::done_drm_auth_magic(mir_drm_auth_magic_callback callback,
+                                        void* context)
+{
+    int const status_code{drm_auth_magic_status.status_code()};
+
+    callback(status_code, context);
+    drm_auth_magic_wait_handle.result_received();
+}
+
+MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
+                                             mir_drm_auth_magic_callback callback,
+                                             void* context)
+{
+    mir::protobuf::DRMMagic request;
+    request.set_magic(magic);
+
+    server.drm_auth_magic(
+        0,
+        &request,
+        &drm_auth_magic_status,
+        google::protobuf::NewCallback(this, &MirConnection::done_drm_auth_magic,
+                                      callback, context));
+
+    return &drm_auth_magic_wait_handle;
+}
+
 bool MirConnection::is_valid(MirConnection *connection)
 {
     {
@@ -284,11 +304,13 @@ void MirConnection::handle_event(MirEvent const& e)
             }
             else
             {
-                log->error() << __PRETTY_FUNCTION__
-                             << ": mir_event_type_surface "
-                             << "received for non-existent surface ID "
-                             << id
-                             << ".\n";
+                std::stringstream ss;
+                ss << __PRETTY_FUNCTION__
+                   << ": mir_event_type_surface "
+                   << "received for non-existent surface ID "
+                   << id
+                   << ".\n";
+                logger->log<mir::logging::Logger::error>(ss.str(), "mir_connection");
             }
         }
         break;
@@ -296,11 +318,14 @@ void MirConnection::handle_event(MirEvent const& e)
         // Don't worry. This function only gets called for events from the
         // RPC channel (not input). So you will never see this error unless
         // you make a mistake.
-
-        log->error() << __PRETTY_FUNCTION__
-                     << ": Unsupported event type " 
-                     << e.type
-                     << " received from server.\n";
+        {
+            std::stringstream ss;
+            ss << __PRETTY_FUNCTION__
+               << ": Unsupported event type "
+               << e.type
+               << " received from server.\n";
+            logger->log<mir::logging::Logger::error>(ss.str(), "mir_connection");
+        }
         break;
     }
 }

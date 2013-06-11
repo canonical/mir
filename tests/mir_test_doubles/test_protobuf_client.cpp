@@ -17,6 +17,10 @@
  */
 
 #include "mir_test/test_protobuf_client.h"
+#include "mir_test_doubles/mock_rpc_report.h"
+
+#include "src/client/rpc/make_rpc_channel.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
 
 #include <thread>
 
@@ -25,8 +29,8 @@ namespace mtd = mir::test::doubles;
 mir::test::TestProtobufClient::TestProtobufClient(
     std::string socket_file,
     int timeout_ms) :
-    logger(std::make_shared<mtd::MockLogger>()),
-    channel(mir::client::make_rpc_channel(socket_file, logger)),
+    rpc_report(std::make_shared<testing::NiceMock<doubles::MockRpcReport>>()),
+    channel(mir::client::rpc::make_rpc_channel(socket_file, rpc_report)),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
@@ -49,6 +53,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     ON_CALL(*this, next_buffer_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_next_buffer_done));
     ON_CALL(*this, release_surface_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_release_surface_done));
     ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_disconnect_done));
+    ON_CALL(*this, drm_auth_magic_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_drm_auth_magic_done));
 }
 
 void mir::test::TestProtobufClient::on_connect_done()
@@ -86,6 +91,11 @@ void mir::test::TestProtobufClient::on_disconnect_done()
     auto old = disconnect_done_count.load();
 
     while (!disconnect_done_count.compare_exchange_weak(old, old+1));
+}
+
+void mir::test::TestProtobufClient::on_drm_auth_magic_done()
+{
+    drm_auth_magic_done_called.store(true);
 }
 
 void mir::test::TestProtobufClient::wait_for_connect_done()
@@ -137,6 +147,16 @@ void mir::test::TestProtobufClient::wait_for_disconnect_done()
         std::this_thread::yield();
     }
     disconnect_done_called.store(false);
+}
+
+void mir::test::TestProtobufClient::wait_for_drm_auth_magic_done()
+{
+    for (int i = 0; !drm_auth_magic_done_called.load() && i < maxwait; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::yield();
+    }
+    drm_auth_magic_done_called.store(false);
 }
 
 void mir::test::TestProtobufClient::wait_for_surface_count(int count)

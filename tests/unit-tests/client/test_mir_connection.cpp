@@ -16,11 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/client/mir_logger.h"
 #include "src/client/client_platform.h"
 #include "src/client/client_platform_factory.h"
 #include "src/client/mir_connection.h"
-#include "src/client/make_rpc_channel.h"
+#include "src/client/default_connection_configuration.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
 
 #include "mir/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
@@ -39,7 +39,7 @@ namespace mp = mir::protobuf;
 namespace
 {
 
-struct MockRpcChannel : public mir::client::MirBasicRpcChannel
+struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
 {
     void CallMethod(const google::protobuf::MethodDescriptor* method,
                     google::protobuf::RpcController*,
@@ -47,7 +47,11 @@ struct MockRpcChannel : public mir::client::MirBasicRpcChannel
                     google::protobuf::Message* response,
                     google::protobuf::Closure* complete)
     {
-        if (method->name() == "connect")
+        if (method->name() == "drm_auth_magic")
+        {
+            drm_auth_magic(static_cast<const mp::DRMMagic*>(parameters));
+        }
+        else if (method->name() == "connect")
         {
             static_cast<mp::Connection*>(response)->clear_error();
             connect(static_cast<mp::ConnectParameters const*>(parameters),
@@ -57,6 +61,7 @@ struct MockRpcChannel : public mir::client::MirBasicRpcChannel
         complete->Run();
     }
 
+    MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
 
     void set_event_handler(mir::events::EventSink *) {}
@@ -100,6 +105,39 @@ void connected_callback(MirConnection* /*connection*/, void * /*client_context*/
 {
 }
 
+void drm_auth_magic_callback(int status, void* client_context)
+{
+    auto status_ptr = static_cast<int*>(client_context);
+    *status_ptr = status;
+}
+
+class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
+{
+public:
+    TestConnectionConfiguration(
+        std::shared_ptr<mcl::ClientPlatform> const& platform,
+        std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const& channel)
+        : DefaultConnectionConfiguration(""),
+          platform{platform},
+          channel{channel}
+    {
+    }
+
+    std::shared_ptr<mcl::rpc::MirBasicRpcChannel> the_rpc_channel() override
+    {
+        return channel;
+    }
+
+    std::shared_ptr<mcl::ClientPlatformFactory> the_client_platform_factory() override
+    {
+        return std::make_shared<StubClientPlatformFactory>(platform);
+    }
+
+private:
+    std::shared_ptr<mcl::ClientPlatform> const platform;
+    std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const channel;
+};
+
 }
 
 struct MirConnectionTest : public testing::Test
@@ -108,18 +146,15 @@ struct MirConnectionTest : public testing::Test
     {
         using namespace testing;
 
-        logger = std::make_shared<mcl::ConsoleLogger>();
         mock_platform = std::make_shared<NiceMock<MockClientPlatform>>();
-        platform_factory = std::make_shared<StubClientPlatformFactory>(mock_platform);
         mock_channel = std::make_shared<NiceMock<MockRpcChannel>>();
 
-        connection = std::make_shared<MirConnection>(mock_channel, logger,
-                                                     platform_factory);
+        TestConnectionConfiguration conf{mock_platform, mock_channel};
+
+        connection = std::make_shared<MirConnection>(conf);
     }
 
-    std::shared_ptr<mcl::Logger> logger;
     std::shared_ptr<testing::NiceMock<MockClientPlatform>> mock_platform;
-    std::shared_ptr<StubClientPlatformFactory> platform_factory;
     std::shared_ptr<testing::NiceMock<MockRpcChannel>> mock_channel;
     std::shared_ptr<MirConnection> connection;
 };
@@ -147,6 +182,28 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
 MATCHER_P(has_drm_magic, magic, "")
 {
     return arg->magic() == magic;
+}
+
+TEST_F(MirConnectionTest, client_drm_auth_magic_calls_server_drm_auth_magic)
+{
+    using namespace testing;
+
+    unsigned int const drm_magic{0x10111213};
+
+    EXPECT_CALL(*mock_channel, drm_auth_magic(has_drm_magic(drm_magic)))
+        .Times(1);
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_result();
+
+    int const no_error{0};
+    int status{67};
+
+    wait_handle = connection->drm_auth_magic(drm_magic, drm_auth_magic_callback, &status);
+    wait_handle->wait_for_result();
+
+    EXPECT_EQ(no_error, status);
 }
 
 namespace

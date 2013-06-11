@@ -23,6 +23,7 @@
 #include <hardware/hardware.h>
 
 #include "mir/compositor/buffer_properties.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "graphic_buffer_allocator.h"
 
 namespace mir
@@ -37,7 +38,7 @@ namespace android
 
 class GraphicAllocAdaptor;
 
-class AndroidGraphicBufferAllocator: public GraphicBufferAllocator
+class AndroidGraphicBufferAllocator: public GraphicBufferAllocator, public compositor::GraphicBufferAllocator
 {
 public:
     AndroidGraphicBufferAllocator(
@@ -51,7 +52,7 @@ public:
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();
 
-    BufferUsage convert_from_compositor_usage(compositor::BufferUsage usage);
+    static BufferUsage convert_from_compositor_usage(compositor::BufferUsage usage);
 
 private:
     const hw_module_t    *hw_module;

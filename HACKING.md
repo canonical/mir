@@ -101,6 +101,10 @@ from dying at the same time.
  - \ref using_mir_on_pc
  - \ref using_mir_on_android
 
+You can configure Mir to provide runtime information helpful for debugging
+by enabling component reports:
+
+ - \ref component_reports
 
 Documentation
 -------------

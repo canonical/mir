@@ -32,7 +32,7 @@ namespace
 
 struct PrintingEventFilter : public mi::EventFilter
 {
-    bool handles(MirEvent const& ev) override
+    bool handle(MirEvent const& ev) override
     {
         // TODO: Enhance printing
         if (ev.type == mir_event_type_key)

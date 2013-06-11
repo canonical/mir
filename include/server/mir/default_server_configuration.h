@@ -51,7 +51,7 @@ namespace shell
 {
 class SurfaceFactory;
 class SurfaceBuilder;
-class InputTargetListener;
+class InputTargeter;
 class SessionContainer;
 class FocusSetter;
 class FocusSequence;
@@ -70,6 +70,7 @@ class BufferBundleFactory;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
+class InputRegistrar;
 }
 namespace graphics
 {
@@ -82,13 +83,11 @@ class DisplayReport;
 }
 namespace input
 {
+class InputReport;
 class InputManager;
 class EventFilter;
 class InputChannelFactory;
-namespace android
-{
 class InputConfiguration;
-}
 }
 
 namespace logging
@@ -183,9 +182,11 @@ public:
 
     /** @name input configuration
      *  @{ */
-    virtual std::shared_ptr<input::android::InputConfiguration> the_input_configuration();
+    virtual std::shared_ptr<input::InputReport> the_input_report();
+    virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
-    virtual std::shared_ptr<shell::InputTargetListener> the_input_target_listener();
+    virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
+    virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     /** @} */
 
     /** @name logging configuration - customization
@@ -210,9 +211,14 @@ protected:
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
-    std::shared_ptr<input::android::InputConfiguration> input_configuration;
+
+
+    std::shared_ptr<input::InputConfiguration> input_configuration;
+
+    CachedPtr<input::InputReport> input_report;
     CachedPtr<input::InputManager>    input_manager;
-    CachedPtr<shell::InputTargetListener> input_target_listener;
+    CachedPtr<surfaces::InputRegistrar> input_registrar;
+    CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;

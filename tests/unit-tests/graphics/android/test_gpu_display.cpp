@@ -19,7 +19,7 @@
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "src/server/graphics/android/android_display.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test/egl_mock.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <stdexcept>
 #include <gtest/gtest.h>
@@ -42,7 +42,7 @@ protected:
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
 
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
-    mir::EglMock mock_egl;
+    mtd::MockEGL mock_egl;
 };
 
 TEST_F(GPUFramebuffer, display_post_calls_swapbuffers_once)

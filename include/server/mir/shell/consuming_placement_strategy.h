@@ -38,7 +38,7 @@ public:
     explicit ConsumingPlacementStrategy(std::shared_ptr<graphics::ViewableArea> const& display_area);
     virtual ~ConsumingPlacementStrategy() {}
 
-    virtual frontend::SurfaceCreationParameters place(frontend::SurfaceCreationParameters const& request_parameters);
+    virtual shell::SurfaceCreationParameters place(shell::SurfaceCreationParameters const& request_parameters);
 
 protected:
     ConsumingPlacementStrategy(ConsumingPlacementStrategy const&) = delete;

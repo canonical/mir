@@ -45,6 +45,8 @@
 
 #include "InputDispatcher.h"
 
+#include "mir/input/input_report.h"
+
 #include <cutils/log.h>
 #include <android/keycodes.h>
 
@@ -58,6 +60,8 @@
 #define INDENT2 "    "
 #define INDENT3 "      "
 #define INDENT4 "        "
+
+namespace mi = mir::input;
 
 namespace android {
 
@@ -167,17 +171,25 @@ static bool validateMotionEvent(int32_t action, size_t pointerCount,
 
 // --- InputDispatcher ---
 
-InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy) :
-    mPolicy(policy),
-    mPendingEvent(NULL), mAppSwitchSawKeyDown(false), mAppSwitchDueTime(LONG_LONG_MAX),
-    mNextUnblockedEvent(NULL),
-    mDispatchEnabled(false), mDispatchFrozen(false), mInputFilterEnabled(false),
-    mInputTargetWaitCause(INPUT_TARGET_WAIT_CAUSE_NONE) {
+InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, 
+    std::shared_ptr<mi::InputReport> const& input_report) :
+        input_report(input_report),
+        mPolicy(policy),
+        mPendingEvent(NULL), mAppSwitchSawKeyDown(false), mAppSwitchDueTime(LONG_LONG_MAX),
+        mNextUnblockedEvent(NULL),
+        mDispatchEnabled(false), mDispatchFrozen(false), mInputFilterEnabled(false),
+        mInputTargetWaitCause(INPUT_TARGET_WAIT_CAUSE_NONE) {
     mLooper = new Looper(false);
 
     mKeyRepeatState.lastKeyEntry = NULL;
 
     policy->getDispatcherConfiguration(&mConfig);
+}
+
+void InputDispatcher::setInputEnumerator(sp<InputEnumerator> const& enumerator)
+{
+    AutoMutex _l(mLock);
+    mEnumerator = enumerator;
 }
 
 InputDispatcher::~InputDispatcher() {
@@ -418,10 +430,8 @@ bool InputDispatcher::enqueueInboundEventLocked(EventEntry* entry) {
 }
 
 sp<InputWindowHandle> InputDispatcher::findTouchedWindowAtLocked(int32_t x, int32_t y) {
-    // Traverse windows from front to back to find touched window.
-    size_t numWindows = mWindowHandles.size();
-    for (size_t i = 0; i < numWindows; i++) {
-        sp<InputWindowHandle> windowHandle = mWindowHandles.itemAt(i);
+    sp<InputWindowHandle> foundHandle = NULL;
+    mEnumerator->for_each([&](sp<InputWindowHandle> windowHandle) {
         const InputWindowInfo* windowInfo = windowHandle->getInfo();
         int32_t flags = windowInfo->layoutParamsFlags;
 
@@ -431,17 +441,17 @@ sp<InputWindowHandle> InputDispatcher::findTouchedWindowAtLocked(int32_t x, int3
                         | InputWindowInfo::FLAG_NOT_TOUCH_MODAL)) == 0;
                 if (isTouchModal || windowInfo->touchableRegionContainsPoint(x, y)) {
                     // Found window.
-                    return windowHandle;
+                    foundHandle = windowHandle;
                 }
             }
         }
 
         if (flags & InputWindowInfo::FLAG_SYSTEM_ERROR) {
-            // Error window is on top but not visible, so touch is dropped.
-            return NULL;
+            foundHandle = NULL;
         }
-    }
-    return NULL;
+    });
+
+    return foundHandle;
 }
 
 void InputDispatcher::dropInboundEventLocked(EventEntry* entry, DropReason dropReason) {
@@ -1135,14 +1145,14 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
                 getAxisValue(AMOTION_EVENT_AXIS_X));
         int32_t y = int32_t(entry->pointerCoords[pointerIndex].
                 getAxisValue(AMOTION_EVENT_AXIS_Y));
-        sp<InputWindowHandle> newTouchedWindowHandle;
+        sp<InputWindowHandle> newTouchedWindowHandle = NULL;
         sp<InputWindowHandle> topErrorWindowHandle;
         bool isTouchModal = false;
 
         // Traverse windows from front to back to find touched window and outside targets.
-        size_t numWindows = mWindowHandles.size();
-        for (size_t i = 0; i < numWindows; i++) {
-            sp<InputWindowHandle> windowHandle = mWindowHandles.itemAt(i);
+        mEnumerator->for_each([&](sp<InputWindowHandle> const& windowHandle){
+            if (newTouchedWindowHandle != NULL)
+                return;
             const InputWindowInfo* windowInfo = windowHandle->getInfo();
             int32_t flags = windowInfo->layoutParamsFlags;
 
@@ -1161,7 +1171,7 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
                                 || (flags & InputWindowInfo::FLAG_TOUCHABLE_WHEN_WAKING)) {
                             newTouchedWindowHandle = windowHandle;
                         }
-                        break; // found touched window, exit window loop
+                        return; // found touched window, exit window loop
                     }
                 }
 
@@ -1176,7 +1186,7 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
                             windowHandle, outsideTargetFlags, BitSet32(0));
                 }
             }
-        }
+        });
 
         // If there is an error window but it is not taking focus (typically because
         // it is invisible) then wait for it.  Any other focused window may in
@@ -1402,12 +1412,12 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
     // We do not collect wallpapers during HOVER_MOVE or SCROLL because the wallpaper
     // engine only supports touch events.  We would need to add a mechanism similar
     // to View.onGenericMotionEvent to enable wallpapers to handle these events.
+    // TODO: What does any of this mean? ~racarr
     if (maskedAction == AMOTION_EVENT_ACTION_DOWN) {
         sp<InputWindowHandle> foregroundWindowHandle =
                 mTempTouchState.getFirstForegroundWindowHandle();
         if (foregroundWindowHandle->getInfo()->hasWallpaper) {
-            for (size_t i = 0; i < mWindowHandles.size(); i++) {
-                sp<InputWindowHandle> windowHandle = mWindowHandles.itemAt(i);
+            mEnumerator->for_each([&](sp<InputWindowHandle> const& windowHandle){
                 if (windowHandle->getInfo()->layoutParamsType
                         == InputWindowInfo::TYPE_WALLPAPER) {
                     mTempTouchState.addOrUpdateWindow(windowHandle,
@@ -1415,7 +1425,7 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
                                     | InputTarget::FLAG_DISPATCH_AS_IS,
                             BitSet32(0));
                 }
-            }
+            });
         }
     }
 
@@ -1580,20 +1590,23 @@ bool InputDispatcher::checkInjectionPermission(const sp<InputWindowHandle>& wind
 
 bool InputDispatcher::isWindowObscuredAtPointLocked(
         const sp<InputWindowHandle>& windowHandle, int32_t x, int32_t y) const {
-    size_t numWindows = mWindowHandles.size();
-    for (size_t i = 0; i < numWindows; i++) {
-        sp<InputWindowHandle> otherHandle = mWindowHandles.itemAt(i);
+    bool obscured = false;
+    bool seen_handle = false;
+    
+    mEnumerator->for_each([&](sp<InputWindowHandle> const& otherHandle){
         if (otherHandle == windowHandle) {
-            break;
+            seen_handle = true;
+            return;
         }
-
-        const InputWindowInfo* otherInfo = otherHandle->getInfo();
-        if (otherInfo->visible && ! otherInfo->isTrustedOverlay()
+        if (seen_handle) {
+            const InputWindowInfo* otherInfo = otherHandle->getInfo();
+            if (otherInfo->visible && ! otherInfo->isTrustedOverlay()
                 && otherInfo->frameContainsPoint(x, y)) {
-            return true;
+                obscured = true;
+            }
         }
-    }
-    return false;
+    });
+    return obscured;
 }
 
 bool InputDispatcher::isWindowReadyForMoreInputLocked(nsecs_t currentTime,
@@ -1846,6 +1859,9 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
                     keyEntry->keyCode, keyEntry->scanCode,
                     keyEntry->metaState, keyEntry->repeatCount, keyEntry->downTime,
                     keyEntry->eventTime);
+            input_report->published_key_event(connection->inputChannel->getFd(),
+                                              dispatchEntry->seq,
+                                              keyEntry->eventTime);
             break;
         }
 
@@ -1893,6 +1909,9 @@ void InputDispatcher::startDispatchCycleLocked(nsecs_t currentTime,
                     motionEntry->downTime, motionEntry->eventTime,
                     motionEntry->pointerCount, motionEntry->pointerProperties,
                     usingCoords);
+            input_report->published_motion_event(connection->inputChannel->getFd(),
+                                                 dispatchEntry->seq,
+                                                 motionEntry->eventTime);
             break;
         }
 
@@ -2021,6 +2040,7 @@ int InputDispatcher::handleReceiveCallback(int fd, int events, void* data) {
                 if (status) {
                     break;
                 }
+                d->input_report->received_event_finished_signal(connection->inputChannel->getFd(), seq);
                 d->finishDispatchCycleLocked(currentTime, connection, seq, handled);
                 gotOne = true;
             }
@@ -2652,79 +2672,74 @@ void InputDispatcher::decrementPendingForegroundDispatchesLocked(EventEntry* ent
 
 sp<InputWindowHandle> InputDispatcher::getWindowHandleLocked(
         const sp<InputChannel>& inputChannel) const {
-    size_t numWindows = mWindowHandles.size();
-    for (size_t i = 0; i < numWindows; i++) {
-        const sp<InputWindowHandle>& windowHandle = mWindowHandles.itemAt(i);
+    sp<InputWindowHandle> foundHandle = NULL;
+    mEnumerator->for_each([&](sp<InputWindowHandle> const& windowHandle){
         if (windowHandle->getInputChannel() == inputChannel) {
-            return windowHandle;
+            foundHandle = windowHandle;
         }
-    }
-    return NULL;
+    });
+    return foundHandle;
 }
 
 bool InputDispatcher::hasWindowHandleLocked(
         const sp<InputWindowHandle>& windowHandle) const {
-    size_t numWindows = mWindowHandles.size();
-    for (size_t i = 0; i < numWindows; i++) {
-        if (mWindowHandles.itemAt(i) == windowHandle) {
-            return true;
+    bool found_handle = false;
+    mEnumerator->for_each([&](sp<InputWindowHandle> const& otherHandle){
+        if (otherHandle == windowHandle) {
+            found_handle = true;
         }
-    }
-    return false;
+    });
+    return found_handle;
 }
 
-void InputDispatcher::setInputWindows(const Vector<sp<InputWindowHandle> >& inputWindowHandles) {
+void InputDispatcher::setKeyboardFocus(const sp<InputWindowHandle>& newFocusedWindowHandle)
+{
 #if DEBUG_FOCUS
-    ALOGD("setInputWindows");
+    ALOGD("setKeyboardFocus");
+#endif
+    {
+        AutoMutex _l(mLock);
+        setKeyboardFocusLocked(newFocusedWindowHandle);
+    }
+    mLooper->wake();
+}
+
+void InputDispatcher::setKeyboardFocusLocked(const sp<InputWindowHandle>& newFocusedWindowHandle)
+{
+    if (mFocusedWindowHandle != newFocusedWindowHandle) {
+        if (mFocusedWindowHandle != NULL) {
+#if DEBUG_FOCUS
+            ALOGD("Focus left window: %s",
+                  c_str(mFocusedWindowHandle->getName()));
+#endif
+            sp<InputChannel> focusedInputChannel = mFocusedWindowHandle->getInputChannel();
+            if (focusedInputChannel != NULL) {
+                CancelationOptions options(CancelationOptions::CANCEL_NON_POINTER_EVENTS,
+                                           "focus left window");
+                synthesizeCancelationEventsForInputChannelLocked(
+                    focusedInputChannel, options);
+            }
+        }
+        if (newFocusedWindowHandle != NULL) {
+#if DEBUG_FOCUS
+            ALOGD("Focus entered window: %s",
+                  c_str(newFocusedWindowHandle->getName()));
+#endif
+        }
+        mFocusedWindowHandle = newFocusedWindowHandle;
+    }
+}
+
+void InputDispatcher::notifyWindowRemoved(const sp<InputWindowHandle>& windowHandle)
+{
+#if DEBUG_FOCUS
+    ALOGD("notifyWindowRemoved");
 #endif
     { // acquire lock
         AutoMutex _l(mLock);
 
-        Vector<sp<InputWindowHandle> > oldWindowHandles = mWindowHandles;
-        mWindowHandles = inputWindowHandles;
-
-        sp<InputWindowHandle> newFocusedWindowHandle;
-        bool foundHoveredWindow = false;
-        for (size_t i = 0; i < mWindowHandles.size(); i++) {
-            const sp<InputWindowHandle>& windowHandle = mWindowHandles.itemAt(i);
-            if (!windowHandle->updateInfo() || windowHandle->getInputChannel() == NULL) {
-                mWindowHandles.removeAt(i--);
-                continue;
-            }
-            if (windowHandle->getInfo()->hasFocus) {
-                newFocusedWindowHandle = windowHandle;
-            }
-            if (windowHandle == mLastHoverWindowHandle) {
-                foundHoveredWindow = true;
-            }
-        }
-
-        if (!foundHoveredWindow) {
+        if (windowHandle == mLastHoverWindowHandle)
             mLastHoverWindowHandle = NULL;
-        }
-
-        if (mFocusedWindowHandle != newFocusedWindowHandle) {
-            if (mFocusedWindowHandle != NULL) {
-#if DEBUG_FOCUS
-                ALOGD("Focus left window: %s",
-                    c_str(mFocusedWindowHandle->getName()));
-#endif
-                sp<InputChannel> focusedInputChannel = mFocusedWindowHandle->getInputChannel();
-                if (focusedInputChannel != NULL) {
-                    CancelationOptions options(CancelationOptions::CANCEL_NON_POINTER_EVENTS,
-                            "focus left window");
-                    synthesizeCancelationEventsForInputChannelLocked(
-                            focusedInputChannel, options);
-                }
-            }
-            if (newFocusedWindowHandle != NULL) {
-#if DEBUG_FOCUS
-                ALOGD("Focus entered window: %s",
-                    c_str(newFocusedWindowHandle->getName()));
-#endif
-            }
-            mFocusedWindowHandle = newFocusedWindowHandle;
-        }
 
         for (size_t i = 0; i < mTouchState.windows.size(); i++) {
             TouchedWindow& touchedWindow = mTouchState.windows.editItemAt(i);
@@ -2737,20 +2752,21 @@ void InputDispatcher::setInputWindows(const Vector<sp<InputWindowHandle> >& inpu
                         touchedWindow.windowHandle->getInputChannel();
                 if (touchedInputChannel != NULL) {
                     CancelationOptions options(CancelationOptions::CANCEL_POINTER_EVENTS,
-                            "touched window was removed");
+                        "touched window was removed");
                     synthesizeCancelationEventsForInputChannelLocked(
-                            touchedInputChannel, options);
+                        touchedInputChannel, options);
                 }
                 mTouchState.windows.removeAt(i--);
             }
         }
 
-    } // release lock
+        if (windowHandle == mFocusedWindowHandle)
+            setKeyboardFocusLocked(NULL);
 
-    // Wake up poll loop since it may need to make new input dispatching choices.
+    } // release lock
     mLooper->wake();
 }
-
+    
 void InputDispatcher::setFocusedApplication(
         const sp<InputApplicationHandle>& inputApplicationHandle) {
 #if DEBUG_FOCUS
@@ -2786,6 +2802,9 @@ void InputDispatcher::setInputDispatchMode(bool enabled, bool frozen) {
 #if DEBUG_FOCUS
     ALOGD("setInputDispatchMode: enabled=%d, frozen=%d", enabled, frozen);
 #endif
+
+    if (enabled)
+        assert(mEnumerator != NULL);
 
     bool changed;
     { // acquire lock
@@ -2975,37 +2994,33 @@ void InputDispatcher::dumpDispatchStateLocked(String8& dump) {
         dump.append(INDENT "TouchedWindows: <none>\n");
     }
 
-    if (!mWindowHandles.isEmpty()) {
-        dump.append(INDENT "Windows:\n");
-        for (size_t i = 0; i < mWindowHandles.size(); i++) {
-            const sp<InputWindowHandle>& windowHandle = mWindowHandles.itemAt(i);
-            const InputWindowInfo* windowInfo = windowHandle->getInfo();
+    dump.append(INDENT "Windows:\n");
 
-            appendFormat(dump, INDENT2 "%d: name='%s', paused=%s, hasFocus=%s, hasWallpaper=%s, "
-                    "visible=%s, canReceiveKeys=%s, flags=0x%08x, type=0x%08x, layer=%d, "
-                    "frame=[%d,%d][%d,%d], scale=%f, "
-                    "touchableRegion=[%d,%d][%d,%d]",
-                    i, c_str(windowInfo->name),
-                    toString(windowInfo->paused),
-                    toString(windowInfo->hasFocus),
-                    toString(windowInfo->hasWallpaper),
-                    toString(windowInfo->visible),
-                    toString(windowInfo->canReceiveKeys),
-                    windowInfo->layoutParamsFlags, windowInfo->layoutParamsType,
-                    windowInfo->layer,
-                    windowInfo->frameLeft, windowInfo->frameTop,
-                    windowInfo->frameRight, windowInfo->frameBottom,
-                    windowInfo->scaleFactor,
-                    windowInfo->touchableRegionLeft, windowInfo->touchableRegionTop,
-                    windowInfo->touchableRegionRight, windowInfo->touchableRegionBottom);
-            appendFormat(dump, ", inputFeatures=0x%08x", windowInfo->inputFeatures);
-            appendFormat(dump, ", ownerPid=%d, ownerUid=%d, dispatchingTimeout=%0.3fms\n",
-                    windowInfo->ownerPid, windowInfo->ownerUid,
-                    windowInfo->dispatchingTimeout / 1000000.0);
-        }
-    } else {
-        dump.append(INDENT "Windows: <none>\n");
-    }
+    mEnumerator->for_each([&](sp<InputWindowHandle> const& windowHandle){
+        const InputWindowInfo* windowInfo = windowHandle->getInfo();
+
+        appendFormat(dump, INDENT2 "name='%s', paused=%s, hasFocus=%s, hasWallpaper=%s, "
+                "visible=%s, canReceiveKeys=%s, flags=0x%08x, type=0x%08x, layer=%d, "
+                "frame=[%d,%d][%d,%d], scale=%f, "
+                "touchableRegion=[%d,%d][%d,%d]",
+                c_str(windowInfo->name),
+                toString(windowInfo->paused),
+                toString(windowInfo->hasFocus),
+                toString(windowInfo->hasWallpaper),
+                toString(windowInfo->visible),
+                toString(windowInfo->canReceiveKeys),
+                windowInfo->layoutParamsFlags, windowInfo->layoutParamsType,
+                windowInfo->layer,
+                windowInfo->frameLeft, windowInfo->frameTop,
+                windowInfo->frameRight, windowInfo->frameBottom,
+                windowInfo->scaleFactor,
+                windowInfo->touchableRegionLeft, windowInfo->touchableRegionTop,
+                windowInfo->touchableRegionRight, windowInfo->touchableRegionBottom);
+        appendFormat(dump, ", inputFeatures=0x%08x", windowInfo->inputFeatures);
+        appendFormat(dump, ", ownerPid=%d, ownerUid=%d, dispatchingTimeout=%0.3fms\n",
+            windowInfo->ownerPid, windowInfo->ownerUid,
+                windowInfo->dispatchingTimeout / 1000000.0);
+        });
 
     if (!mMonitoringChannels.isEmpty()) {
         dump.append(INDENT "MonitoringChannels:\n");

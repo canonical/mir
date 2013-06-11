@@ -21,14 +21,18 @@
 
 #include "framebuffer_factory.h"
 
+#include <vector>
+
 namespace mir
 {
+namespace compositor { class Buffer; }
 namespace graphics
 {
 namespace android
 {
 
 class GraphicBufferAllocator;
+class FBSwapper;
 
 class DefaultFramebufferFactory : public FramebufferFactory
 {
@@ -38,6 +42,12 @@ public:
     std::shared_ptr<DisplaySupportProvider> create_fb_device() const; 
 private:
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
+
+    virtual std::vector<std::shared_ptr<compositor::Buffer>> create_buffers(
+        std::shared_ptr<DisplaySupportProvider> const& info_provider) const;
+
+    virtual std::shared_ptr<FBSwapper> create_swapper(
+        std::vector<std::shared_ptr<compositor::Buffer>> const& buffers) const;
 };
 
 }

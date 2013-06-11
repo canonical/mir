@@ -19,8 +19,11 @@
 #ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 #define MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 
-#include "android_buffer_handle.h"
+#include "mir/geometry/size.h"
+#include "mir/geometry/pixel_format.h"
+#include "buffer_usage.h"
 
+#include <system/window.h>
 #include <memory>
 
 namespace mir
@@ -30,11 +33,10 @@ namespace graphics
 namespace android
 {
 
-/* note: we will need a new concrete class implementing this interface whenever gralloc interface changes (or for hw specific quirks) */
 class GraphicAllocAdaptor
 {
 public:
-    virtual std::shared_ptr<AndroidBufferHandle> alloc_buffer(geometry::Size size,
+    virtual std::shared_ptr<ANativeWindowBuffer> alloc_buffer(geometry::Size size,
         geometry::PixelFormat, BufferUsage usage) = 0;
 protected:
     GraphicAllocAdaptor() = default;

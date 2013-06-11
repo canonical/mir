@@ -60,7 +60,6 @@ public:
     MirSurface(
         MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,
-        std::shared_ptr<mir::client::Logger> const& logger,
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceParameters const& params,
@@ -115,7 +114,6 @@ private:
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
 
-    std::shared_ptr<mir::client::Logger> logger;
     std::shared_ptr<EGLNativeWindowType> accelerated_window;
 
     mir::protobuf::SurfaceSetting configure_result;

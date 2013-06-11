@@ -32,14 +32,14 @@ namespace
 
 struct BufferSwapperTriple : testing::Test
 {
-    BufferSwapperTriple()
+    void SetUp()
     {
         buffer_a = std::make_shared<mtd::StubBuffer>();
         buffer_b = std::make_shared<mtd::StubBuffer>();
         buffer_c = std::make_shared<mtd::StubBuffer>();
 
-        auto triple_list = std::initializer_list<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
-        swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list);
+        auto triple_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+        swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list, triple_list.size());
 
     }
 

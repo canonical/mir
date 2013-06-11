@@ -17,10 +17,9 @@
  */
 
 #include "mir/compositor/buffer_bundle_surfaces.h"
-#include "mir/compositor/buffer_swapper.h"
 
-#include "mir_test_doubles/mock_swapper.h"
-#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_swapper_master.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
@@ -36,21 +35,13 @@ class BufferBundleTest : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        using namespace testing;
-        size = geom::Size{geom::Width{1024}, geom::Height{768}};
-        stride = geom::Stride{1024};
-        pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
-
-        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(size, stride, pixel_format);
-        mock_swapper = std::unique_ptr<NiceMock<mtd::MockSwapper>>(
-            new NiceMock<mtd::MockSwapper>(mock_buffer));
+        mock_buffer = std::make_shared<mtd::StubBuffer>();
+        mock_swapper = std::unique_ptr<mtd::MockSwapperMaster>(
+            new testing::NiceMock<mtd::MockSwapperMaster>());
     }
 
-    std::shared_ptr<testing::NiceMock<mtd::MockBuffer>> mock_buffer;
-    std::unique_ptr<testing::NiceMock<mtd::MockSwapper>> mock_swapper;
-    geom::Size size;
-    geom::Stride stride;
-    geom::PixelFormat pixel_format;
+    std::shared_ptr<mtd::StubBuffer> mock_buffer;
+    std::unique_ptr<mtd::MockSwapperMaster> mock_swapper;
 };
 
 TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
@@ -58,13 +49,14 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_handles_resources)
     using namespace testing;
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
-    .Times(1);
+        .Times(1)
+        .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_swapper, compositor_release(_))
-    .Times(1);
+        .Times(1);
 
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    auto texture = buffer_bundle.lock_back_buffer();
+    buffer_bundle.lock_back_buffer();
 }
 
 TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
@@ -72,14 +64,14 @@ TEST_F(BufferBundleTest, get_buffer_for_compositor_can_lock)
     using namespace testing;
 
     EXPECT_CALL(*mock_swapper, compositor_acquire())
-    .Times(1);
+        .Times(1)
+        .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_swapper, compositor_release(_))
-    .Times(1);
+        .Times(1);
 
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    std::shared_ptr<ms::GraphicRegion> region = buffer_bundle.lock_back_buffer();
-    region->bind_to_texture();
+    buffer_bundle.lock_back_buffer();
 }
 
 TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
@@ -87,10 +79,11 @@ TEST_F(BufferBundleTest, get_buffer_for_client_releases_resources)
     using namespace testing;
 
     EXPECT_CALL(*mock_swapper, client_acquire())
-    .Times(1);
+        .Times(1)
+        .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_swapper, client_release(_))
-    .Times(1);
+        .Times(1);
     mc::BufferBundleSurfaces buffer_bundle(std::move(mock_swapper));
 
-    auto buffer_resource = buffer_bundle.secure_client_buffer();
+    buffer_bundle.secure_client_buffer();
 }

@@ -17,9 +17,12 @@
  */
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/viewable_area.h"
+#include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/placement_strategy.h"
 
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_dispatcher_controller.h"
+#include "src/server/input/android/android_input_targeter.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -38,11 +41,16 @@
 
 #include <thread>
 #include <functional>
+#include <map>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace ms = mir::surfaces;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
@@ -52,90 +60,80 @@ namespace
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
+#include "mir/input/surface_target.h"
+
 namespace
 {
-
-struct FocusNotifyingDispatcherController : public mia::DispatcherController
+struct FocusNotifyingInputTargeter : public msh::InputTargeter
 {
-    FocusNotifyingDispatcherController(std::shared_ptr<mia::InputConfiguration> const& configuration,
-                                       mt::WaitCondition &wait_condition)
-      : DispatcherController(configuration),
-        on_focus_set(wait_condition)
+    FocusNotifyingInputTargeter(std::shared_ptr<msh::InputTargeter> const& real_targeter,
+                                std::function<void(void)> const& focus_set)
+      : real_targeter(real_targeter),
+        focus_set(focus_set)
     {
 
     }
+    virtual ~FocusNotifyingInputTargeter() noexcept(true) {}
     
-    void focus_changed(std::shared_ptr<mi::SurfaceTarget> const& surface) override
+    void focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface) override
     {
-        DispatcherController::focus_changed(surface);
-        
+        real_targeter->focus_changed(surface);
+
         // We need a synchronization primitive inorder to halt test event injection
         // until after a surface has taken focus (lest the events be discarded).
-        if (surface)
-            on_focus_set.wake_up_everyone();
+        focus_set();
+    }
+    void focus_cleared()
+    {
+        real_targeter->focus_cleared();
     }
 
-    mt::WaitCondition &on_focus_set;
+    std::shared_ptr<msh::InputTargeter> const real_targeter;
+    std::function<void(void)> focus_set;
 };
 
 struct FakeInputServerConfiguration : public mir_test_framework::TestingServerConfiguration
 {
     FakeInputServerConfiguration()
-      : input_config(the_event_filters(), the_display(), std::shared_ptr<mi::CursorListener>())
+      : input_config(the_event_filters(), the_display(), std::shared_ptr<mi::CursorListener>(), the_input_report())
     {
     }
 
-    virtual void inject_input()
+    virtual void inject_input_after_focus()
     {
     }
     
-    void exec() override
-    {
-        input_injection_thread = std::thread([this]() -> void
-        {
-            on_focus_set.wait_for_at_most_seconds(10);
-            fake_event_hub->synthesize_builtin_keyboard_added();
-            fake_event_hub->synthesize_builtin_cursor_added();
-            fake_event_hub->synthesize_device_scan_complete();
-            inject_input();
-        });
-    }
-    
-    void on_exit() override
-    {
-        input_injection_thread.join();
-    }
-    
-    std::shared_ptr<mia::InputConfiguration> the_input_configuration() override
+    std::shared_ptr<mi::InputConfiguration> the_input_configuration() override
     {
         fake_event_hub = input_config.the_fake_event_hub();
+        fake_event_hub->synthesize_builtin_keyboard_added();
+        fake_event_hub->synthesize_builtin_cursor_added();
+        fake_event_hub->synthesize_device_scan_complete();
+
         return mt::fake_shared(input_config);
     }
     
     std::shared_ptr<mi::InputManager> the_input_manager() override
     {
-        return input_manager(
-            [&]()
-            {
-                // Force usage of real input even in case of tests-use-real-input = false.
-                return std::make_shared<mia::InputManager>(the_input_configuration());
-            });
+        return DefaultServerConfiguration::the_input_manager();
+    }
+    std::shared_ptr<ms::InputRegistrar> the_input_registrar() override
+    {        
+        return DefaultServerConfiguration::the_input_registrar();
     }
 
-    std::shared_ptr<msh::InputTargetListener>
-    the_input_target_listener() override
+    std::shared_ptr<msh::InputTargeter>
+    the_input_targeter() override
     {
-        return input_target_listener(
+        return input_targeter(
             [this]()
             {
-                return std::make_shared<FocusNotifyingDispatcherController>(mt::fake_shared(input_config), on_focus_set);
+                return std::make_shared<FocusNotifyingInputTargeter>(DefaultServerConfiguration::the_input_targeter(), std::bind(std::mem_fn(&FakeInputServerConfiguration::inject_input_after_focus), this));
             });
     }
 
     mtd::FakeEventHubInputConfiguration input_config;
     mia::FakeEventHub* fake_event_hub;
-    mt::WaitCondition on_focus_set;
-    std::thread input_injection_thread;
 };
 
 
@@ -201,6 +199,7 @@ struct InputReceivingClient : ClientConfigCommon
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputReceivingClient *>(context);
+
         if (client->handler->handle_input(ev))
         {
             client->event_received[client->events_received].wake_up_everyone();
@@ -209,6 +208,18 @@ struct InputReceivingClient : ClientConfigCommon
     }
     virtual void expect_input()
     {
+    }
+    
+    virtual MirSurfaceParameters parameters()
+    {
+        MirSurfaceParameters const request_params =
+         {
+             __PRETTY_FUNCTION__,
+             surface_width, surface_height,
+             mir_pixel_format_abgr_8888,
+             mir_buffer_usage_hardware
+         };
+        return request_params;
     }
 
     void exec()
@@ -223,18 +234,13 @@ struct InputReceivingClient : ClientConfigCommon
             connection_callback,
             this));
          ASSERT_TRUE(connection != NULL);
-         MirSurfaceParameters const request_params =
-         {
-             __PRETTY_FUNCTION__,
-             surface_width, surface_height,
-             mir_pixel_format_abgr_8888,
-             mir_buffer_usage_hardware
-         };
+    
          MirEventDelegate const event_delegate =
          {
              handle_input,
              this
          };
+         auto request_params = parameters();
          mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 
          mir_surface_set_event_handler(surface, &event_delegate);
@@ -253,7 +259,7 @@ struct InputReceivingClient : ClientConfigCommon
     }
     
     std::shared_ptr<MockInputHandler> handler;
-    static int const max_events_to_receive = 3;
+    static int const max_events_to_receive = 4;
     mt::WaitCondition event_received[max_events_to_receive];
     
     int events_to_receive;
@@ -288,6 +294,15 @@ MATCHER(HoverEnterEvent, "")
 
     return true;
 }
+MATCHER(HoverExitEvent, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_hover_exit)
+        return false;
+
+    return true;
+}
 
 MATCHER_P2(ButtonDownEvent, x, y, "")
 {
@@ -307,6 +322,9 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
 MATCHER_P2(MotionEventWithPosition, x, y, "")
 {
     if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_move &&
+        arg->motion.action != mir_motion_action_hover_move)
         return false;
     if (arg->motion.pointer_coordinates[0].x != x)
         return false;
@@ -328,7 +346,7 @@ TEST_F(TestClientInput, clients_receive_key_input)
 
     struct InputProducingServerConfiguration : FakeInputServerConfiguration
     {
-        void inject_input()
+        void inject_input_after_focus()
         {
             // We send multiple events in order to verify the client is handling them
             // and server dispatch does not become backed up.
@@ -358,7 +376,7 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
     
     struct InputProducingServerConfiguration : FakeInputServerConfiguration
     {
-        void inject_input()
+        void inject_input_after_focus()
         {
             fake_event_hub->synthesize_event(mis::a_key_down_event()
                                              .of_scancode(KEY_LEFTSHIFT));
@@ -394,7 +412,7 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
     
     struct InputProducingServerConfiguration : FakeInputServerConfiguration
     {
-        void inject_input()
+        void inject_input_after_focus()
         {
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width,
                                                                                  InputReceivingClient::surface_height));
@@ -430,7 +448,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     
     struct InputProducingServerConfiguration : FakeInputServerConfiguration
     {
-        void inject_input()
+        void inject_input_after_focus()
         {
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
         }
@@ -452,4 +470,166 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
         }
     } client_config;
     launch_client_process(client_config);
+}
+
+namespace
+{
+struct StubViewableArea : public mg::ViewableArea
+{
+    StubViewableArea(int width, int height) :
+        width(width),
+        height(height),
+        x(0),
+        y(0)
+    {
+    }
+    
+    geom::Rectangle view_area() const
+    {
+        return geom::Rectangle{geom::Point{x, y},
+            geom::Size{width, height}};
+    }
+    
+    geom::Width const width;
+    geom::Height const height;
+    geom::X const x;
+    geom::Y const y;
+};
+
+typedef std::map<std::string, geom::Point> PositionList;
+
+struct StaticPlacementStrategy : public msh::PlacementStrategy
+{
+    StaticPlacementStrategy(PositionList positions)
+        : surface_positions_by_name(positions)
+    {
+    }
+
+    msh::SurfaceCreationParameters place(msh::SurfaceCreationParameters const& request_parameters)
+    {
+        auto placed = request_parameters;
+        placed.top_left = surface_positions_by_name[request_parameters.name];
+        return placed;
+    }
+    PositionList surface_positions_by_name;
+};
+
+}
+
+TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
+{
+    using namespace ::testing;
+    
+    int const screen_width = 1000;
+    int const screen_height = 800;
+    int const client_width = screen_width/2;
+    int const client_height = screen_height;
+    std::string const surface1_name = "1";
+    std::string const surface2_name = "2";
+    
+    PositionList positions;
+    positions[surface1_name] = geom::Point{geom::X{0}, geom::Y{0}};
+    positions[surface2_name] = geom::Point{geom::X{screen_width/2}, geom::Y{0}};
+
+    struct TestServerConfiguration : FakeInputServerConfiguration
+    {
+        TestServerConfiguration(int screen_width, int screen_height, PositionList positions)
+            : screen_width(screen_width),
+              screen_height(screen_height),
+              positions(positions),
+              clients_ready(0)
+        {
+        }
+
+        std::shared_ptr<mg::ViewableArea> the_viewable_area() override
+        {
+            return std::make_shared<StubViewableArea>(screen_width, screen_height);
+        }
+        std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
+        {
+            return std::make_shared<StaticPlacementStrategy>(positions);
+        }
+
+        void inject_input_after_focus() override
+        {
+            clients_ready++;
+            if (clients_ready != 2) // We wait until both clients have connected and registered with the input stack.
+                return;
+            
+            // In the bounds of the first surface
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, 0));
+            // In the bounds of the second surface
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, 0));
+        }
+        int screen_width, screen_height;
+        PositionList positions;
+
+        int clients_ready;
+    } server_config(screen_width, screen_height, positions);
+    
+    launch_server_process(server_config);
+    
+    MirSurfaceParameters const surface1_params =
+        {
+            surface1_name.c_str(),
+            client_width, client_height,
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware
+        };    
+    MirSurfaceParameters const surface2_params =
+        {
+            surface2_name.c_str(),
+            client_width, client_height,
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware
+        };
+    struct ParameterizedClient : InputReceivingClient
+    {
+        ParameterizedClient(MirSurfaceParameters params, int events_to_expect) : 
+            InputReceivingClient(events_to_expect),
+            params(params)
+        {
+        }
+        
+        MirSurfaceParameters parameters() override
+        {
+            return params;
+        }
+
+        MirSurfaceParameters params;
+    };
+    struct InputClientOne : ParameterizedClient
+    {
+        InputClientOne(MirSurfaceParameters params) :
+            ParameterizedClient(params, 3)
+        {
+        }
+        
+        void expect_input() override
+        {
+            InSequence seq;
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1).WillOnce(Return(true));
+            EXPECT_CALL(*handler, handle_input(
+                MotionEventWithPosition(params.width - 1, 0))).Times(1).WillOnce(Return(true));
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1).WillOnce(Return(true));
+        }
+    } client_1(surface1_params);
+    struct InputClientTwo : ParameterizedClient
+    {
+        InputClientTwo(MirSurfaceParameters params) :
+            ParameterizedClient(params, 2)
+        {
+        }
+        
+        void expect_input() override
+        {
+            InSequence seq;
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1).WillOnce(Return(true));
+            EXPECT_CALL(*handler, handle_input(
+                MotionEventWithPosition(params.width - 1, 0))).Times(1).WillOnce(Return(true));
+        }
+    } client_2(surface2_params);
+
+    launch_client_process(client_1);
+    launch_client_process(client_2);
 }

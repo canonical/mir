@@ -21,13 +21,10 @@
 #include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 
 #include <cassert>
-#include <functional>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -65,17 +62,15 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 }
 
-void mc::DefaultCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
+void mc::DefaultCompositingStrategy::compose_renderables(
+    mir::geometry::Rectangle const& view_area,
+    std::function<void(std::shared_ptr<void> const&)> save_resource)
 {
-    RenderingOperator applicator(*renderer);
-    FilterForVisibleRenderablesInRegion selector(display_buffer.view_area());
+    renderer->clear();
 
-    display_buffer.make_current();
-    display_buffer.clear();
-
+    RenderingOperator applicator(*renderer, save_resource);
+    FilterForVisibleRenderablesInRegion selector(view_area);
     renderables->for_each_if(selector, applicator);
 
-    overlay_renderer->render(display_buffer);
-
-    display_buffer.post_update();
+    overlay_renderer->render(view_area, save_resource);
 }

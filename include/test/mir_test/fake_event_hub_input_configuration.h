@@ -42,6 +42,7 @@ namespace input
 {
 class CursorListener;
 class EventFilter;
+class InputReport;
 
 namespace android
 {
@@ -56,9 +57,10 @@ namespace doubles
 class FakeEventHubInputConfiguration : public input::android::DefaultInputConfiguration
 {
 public:
-    FakeEventHubInputConfiguration(std::initializer_list<std::shared_ptr<mir::input::EventFilter> const> const& filters,
-                                   std::shared_ptr<mir::graphics::ViewableArea> const& view_area,
-                                   std::shared_ptr<mir::input::CursorListener> const& cursor_listener);
+    FakeEventHubInputConfiguration(std::initializer_list<std::shared_ptr<input::EventFilter> const> const& filters,
+                                   std::shared_ptr<graphics::ViewableArea> const& view_area,
+                                   std::shared_ptr<input::CursorListener> const& cursor_listener,
+                                   std::shared_ptr<input::InputReport> const& input_report);
     virtual ~FakeEventHubInputConfiguration();
 
     droidinput::sp<droidinput::EventHubInterface> the_event_hub();

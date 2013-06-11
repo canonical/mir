@@ -18,7 +18,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
-#include "mir_logger.h"
 #include "client_buffer.h"
 #include "mir_surface.h"
 #include "mir_connection.h"
@@ -26,6 +25,7 @@
 #include "mir/input/input_platform.h"
 
 #include <cassert>
+#include <unistd.h>
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
@@ -36,7 +36,6 @@ namespace gp = google::protobuf;
 MirSurface::MirSurface(
     MirConnection *allocating_connection,
     mp::DisplayServer::Stub & server,
-    std::shared_ptr<mir::client::Logger> const& logger,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
@@ -44,8 +43,7 @@ MirSurface::MirSurface(
     : server(server),
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
-      input_platform(input_platform),
-      logger(logger)
+      input_platform(input_platform)
 {
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
@@ -69,6 +67,10 @@ MirSurface::~MirSurface()
         input_thread->stop();
         input_thread->join();
     }
+
+    for (auto i = 0, end = surface.fd_size(); i != end; ++i)
+        close(surface.fd(i));
+
     release_cpu_region();
 }
 
@@ -159,11 +161,12 @@ void MirSurface::process_incoming_buffer()
     try
     {
         buffer_depository->deposit_package(std::move(ipc_package),
-                                buffer.buffer_id(),
-                                surface_size, surface_pf);
-    } catch (const std::runtime_error& err)
+                                           buffer.buffer_id(),
+                                           surface_size, surface_pf);
+    }
+    catch (const std::runtime_error& err)
     {
-        logger->error() << err.what();
+        // TODO: Report the error
     }
 }
 

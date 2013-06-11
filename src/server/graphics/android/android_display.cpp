@@ -129,11 +129,6 @@ geom::Rectangle mga::AndroidDisplay::view_area() const
     return rect;
 }
 
-void mga::AndroidDisplay::clear()
-{
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
 void mga::AndroidDisplay::post_update()
 {
     if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)

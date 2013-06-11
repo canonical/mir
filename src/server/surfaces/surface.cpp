@@ -20,21 +20,31 @@
 
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/buffer_bundle.h"
+#include "mir/input/input_channel.h"
 
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 #include <cassert>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
-    const std::string& name,
+    std::string const& name,
+    geom::Point const& top_left,
     std::shared_ptr<BufferBundle> buffer_bundle,
+    std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
     surface_name(name),
+    top_left_point(top_left),
     buffer_bundle(buffer_bundle),
+    input_channel(input_channel),
     client_buffer_resource(buffer_bundle->secure_client_buffer()),
     alpha_value(1.0f),
     is_hidden(false),
@@ -103,8 +113,8 @@ glm::mat4 ms::Surface::transformation() const
 {
     const geom::Size sz = size();
 
-    const glm::vec3 top_left_vec{top_left_point.x.as_uint32_t(),
-                                 top_left_point.y.as_uint32_t(),
+    const glm::vec3 top_left_vec{top_left_point.x.as_int(),
+                                 top_left_point.y.as_int(),
                                  0.0f};
     const glm::vec3 size_vec{sz.width.as_uint32_t(),
                              sz.height.as_uint32_t(),
@@ -170,4 +180,25 @@ std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 void ms::Surface::flag_for_render()
 {
     buffer_is_valid = true;
+}
+
+bool ms::Surface::supports_input() const
+{
+    if (input_channel)
+        return true;
+    return false;
+}
+
+int ms::Surface::client_input_fd() const
+{
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
+    return input_channel->client_fd();
+}
+
+int ms::Surface::server_input_fd() const
+{
+    if (!supports_input())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
+    return input_channel->server_fd();
 }
