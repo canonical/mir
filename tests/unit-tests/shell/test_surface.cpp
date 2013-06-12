@@ -329,6 +329,23 @@ TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
     });
 }
 
+TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
+{
+    msh::Surface test(
+            mt::fake_shared(surface_builder),
+            msh::a_surface());
+
+    EXPECT_NO_THROW({
+        test.allow_framedropping(true);
+    });
+
+    surface_builder.reset_surface();
+
+    EXPECT_NO_THROW({
+        test.allow_framedropping(true);
+    });
+}
+
 TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 {
     msh::Surface test(
