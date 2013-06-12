@@ -37,14 +37,14 @@ class StubSurfaceBuilder : public shell::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_bundle(std::make_shared<NullBufferStream>()),
+        buffer_stream(std::make_shared<NullBufferStream>()),
         dummy_surface()
     {
     }
 
     std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const& param)
     {
-        dummy_surface = std::make_shared<surfaces::Surface>(param.name, param.top_left, buffer_bundle, 
+        dummy_surface = std::make_shared<surfaces::Surface>(param.name, param.top_left, buffer_stream, 
             std::shared_ptr<input::InputChannel>(), []{});
         return dummy_surface;
     }
@@ -53,7 +53,7 @@ public:
     {
     }
 private:
-    std::shared_ptr<surfaces::BufferStream> const buffer_bundle;
+    std::shared_ptr<surfaces::BufferStream> const buffer_stream;
     std::shared_ptr<surfaces::Surface>  dummy_surface;
 };
 }

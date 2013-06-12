@@ -89,8 +89,8 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
-    auto buffer_bundle_factory = std::make_shared<mc::BufferStreamFactory>(strategy);
-    auto ss = std::make_shared<ms::SurfaceStack>(buffer_bundle_factory, stub_input_factory, stub_input_registrar);
+    auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(strategy);
+    auto ss = std::make_shared<ms::SurfaceStack>(buffer_stream_factory, stub_input_factory, stub_input_registrar);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller);
     auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());
