@@ -49,6 +49,7 @@ mc::SwapperFactory::SwapperFactory(
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buffers(
     std::vector<std::shared_ptr<Buffer>>& list, size_t buffer_num, SwapperType type) const
 {
+    printf("realloc!\n");
     if (type == mc::SwapperType::synchronous)
     {
         return std::make_shared<mc::BufferSwapperMulti>(list, buffer_num); 
@@ -63,6 +64,7 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_new_buffer
     BufferProperties& actual_buffer_properties,
     BufferProperties const& requested_buffer_properties, SwapperType type) const
 {
+    printf("alloc new!\n");
     std::vector<std::shared_ptr<mc::Buffer>> list;
     std::shared_ptr<mc::BufferSwapper> new_swapper;
 

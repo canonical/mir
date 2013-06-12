@@ -163,6 +163,7 @@ geom::PixelFormat ms::Surface::pixel_format() const
 
 void ms::Surface::advance_client_buffer()
 {
+    printf("advance it\n");
     /* we must hold a reference (client_buffer_resource) to the resource on behalf
        of the client until it is returned to us */
     /* todo: the surface shouldn't be holding onto the resource... the frontend should! */
@@ -180,6 +181,7 @@ std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 void ms::Surface::allow_framedropping(bool allow)
 {
     buffer_stream->allow_framedropping(allow);
+        printf("ok done.\n");
 }
 
 void ms::Surface::flag_for_render()

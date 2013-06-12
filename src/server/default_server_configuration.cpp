@@ -319,7 +319,7 @@ mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
     return buffer_allocation_strategy(
         [this]()
         {
-            return std::make_shared<mc::SwapperFactory>(the_buffer_allocator());
+            return std::make_shared<mc::SwapperFactory>(the_buffer_allocator(), 3);
         });
 }
 

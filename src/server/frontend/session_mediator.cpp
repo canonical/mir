@@ -236,4 +236,5 @@ void mf::SessionMediator::configure_surface(
     response->set_ivalue(newvalue);
 
     done->Run();
+    printf("done\n");
 }
