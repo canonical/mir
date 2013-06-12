@@ -72,14 +72,14 @@ public:
 
     ~EGLContextStore() noexcept { eglDestroyContext(egl_display_, egl_context_); }
 
-    operator EGLContext() { return egl_context_; }
+    operator EGLContext() const { return egl_context_; }
 
 private:
     EGLContextStore(EGLContextStore const&) = delete;
     EGLContextStore& operator=(EGLContextStore const&) = delete;
 
-    EGLDisplay egl_display_;
-    EGLContext egl_context_;
+    EGLDisplay const egl_display_;
+    EGLContext const egl_context_;
 };
 
 class EGLSurfaceStore
@@ -94,14 +94,14 @@ public:
 
     ~EGLSurfaceStore() noexcept { eglDestroySurface(egl_display_, egl_surface_); }
 
-    operator EGLSurface() { return egl_surface_; }
+    operator EGLSurface() const { return egl_surface_; }
 
 private:
     EGLSurfaceStore(EGLSurfaceStore const&) = delete;
     EGLSurfaceStore& operator=(EGLSurfaceStore const&) = delete;
 
-    EGLDisplay egl_display_;
-    EGLSurface egl_surface_;
+    EGLDisplay const egl_display_;
+    EGLSurface const egl_surface_;
 };
 
 class AndroidGLContext : public mg::GLContext
@@ -138,9 +138,9 @@ public:
     }
 
 private:
-    EGLDisplay egl_display;
-    EGLContextStore egl_context;
-    EGLSurfaceStore egl_surface;
+    EGLDisplay const egl_display;
+    EGLContextStore const egl_context;
+    EGLSurfaceStore const egl_surface;
 };
 
 }
