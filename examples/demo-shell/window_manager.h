@@ -53,6 +53,8 @@ private:
     std::shared_ptr<shell::FocusController> focus_controller;
     std::shared_ptr<shell::SessionManager> session_manager;
     geometry::Displacement relative_click;  // Click location in window space
+    geometry::Point click;                  // Click location in screen space
+    int max_fingers;  // Maximum number of fingers touched during gesture
 };
 
 }
