@@ -381,7 +381,7 @@ TEST(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace ::testing;
 
-    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         std::make_shared<StubInputChannelFactory>(),
             std::make_shared<mtd::StubInputRegistrar>()};
     mtd::MockSurfaceRenderer renderer;
