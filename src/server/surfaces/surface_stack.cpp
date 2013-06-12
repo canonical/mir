@@ -52,10 +52,14 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferStreamFactory> const& bb_fa
 void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
 {
     std::lock_guard<std::mutex> lock(guard);
-    for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+    for (auto &layer : layers_by_depth)
     {
-        mg::Renderable& renderable = **it;
-        if (filter(renderable)) renderable_operator(renderable);
+        auto surfaces = layer.second;
+        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        {
+            mg::Renderable& renderable = **it;
+            if (filter(renderable)) renderable_operator(renderable);
+        }
     }
 }
 
@@ -66,9 +70,8 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::SurfaceCreationParameters& params)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::SurfaceCreationParameters& params, ms::DepthId depth)
 {
-
     mc::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
                                            params.buffer_usage};
@@ -82,7 +85,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
     
     {
         std::lock_guard<std::mutex> lg(guard);
-        surfaces.push_back(surface);
+        layers_by_depth[depth].push_back(surface);
     }
 
     // TODO: It might be a nice refactoring to combine this with input channel creation
@@ -97,23 +100,27 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
 void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface)
 {
     auto keep_alive = surface.lock();
+    bool found_surface = false;
     {
         std::lock_guard<std::mutex> lg(guard);
 
-        auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
-        
-        if (p != surfaces.end())
+        for (auto &layer : layers_by_depth)
         {
-            surfaces.erase(p);
-        }
-        else
-        {
-            // else; TODO error logging
-            return;
+            auto &surfaces = layer.second;
+            auto const p = std::find(surfaces.begin(), surfaces.end(), surface.lock());
+
+            if (p != surfaces.end())
+            {
+                surfaces.erase(p);
+                found_surface = true;
+                break;
+            }
         }
     }
-    input_registrar->input_surface_closed(keep_alive);
+    if (found_surface)
+        input_registrar->input_surface_closed(keep_alive);
     emit_change_notification();
+    // TODO: error logging when surface not found
 }
 
 void ms::SurfaceStack::emit_change_notification()
@@ -125,6 +132,9 @@ void ms::SurfaceStack::emit_change_notification()
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback)
 {
     std::lock_guard<std::mutex> lg(guard);
-    for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
-        callback(*it);
+    for (auto &layer : layers_by_depth)
+    {
+        for (auto it = layer.second.rbegin(); it != layer.second.rend(); ++it)
+            callback(*it);
+    }
 }

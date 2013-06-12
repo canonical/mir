@@ -146,6 +146,8 @@ struct MockInputChannelFactory : public mi::InputChannelFactory
     MOCK_METHOD0(make_input_channel, std::shared_ptr<mi::InputChannel>());
 };
 
+static ms::DepthId const default_depth{0};
+
 }
 
 TEST(
@@ -168,7 +170,7 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_stream_factory), 
         mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
 
     stack.destroy_surface(surface);
 }
@@ -222,11 +224,11 @@ TEST(
         mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
 
     auto surface1 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
     auto surface2 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
     auto surface3 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -264,11 +266,11 @@ TEST(
         mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
 
     auto surface1 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
     auto surface2 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
     auto surface3 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -311,7 +313,7 @@ TEST(SurfaceStack, created_buffer_stream_uses_requested_surface_parameters)
     ms::SurfaceStack stack(mt::fake_shared(buffer_stream_factory), 
         mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msh::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format));
+        msh::a_surface().of_size(size).of_buffer_usage(usage).of_pixel_format(format), default_depth);
 
     stack.destroy_surface(surface);
 }
@@ -350,7 +352,7 @@ TEST(SurfaceStack, create_surface_notifies_changes)
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
 }
 
 TEST(SurfaceStack, destroy_surface_notifies_changes)
@@ -367,7 +369,7 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
 
     Mock::VerifyAndClearExpectations(&mock_cb);
     EXPECT_CALL(mock_cb, call()).Times(1);
@@ -375,10 +377,38 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
     stack.destroy_surface(surface);
 }
 
+TEST(SurfaceStack, surfaces_are_emitted_by_layer)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferBundleFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
+    mtd::MockSurfaceRenderer renderer;
+    MockFilterForRenderables filter;
+    MockOperatorForRenderables renderable_operator(&renderer);
+
+    auto surface1 = stack.create_surface(msh::a_surface(), ms::DepthId{0});
+    auto surface2 = stack.create_surface(msh::a_surface(), ms::DepthId{1});
+    auto surface3 = stack.create_surface(msh::a_surface(), ms::DepthId{0});
+
+    {
+        InSequence seq;
+
+        EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1)
+            .WillOnce(Return(false));
+        EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1)
+            .WillOnce(Return(false));                                  
+        EXPECT_CALL(filter, filter(Ref(*surface2.lock()))).Times(1)
+            .WillOnce(Return(false));
+    }
+
+    stack.for_each_if(filter, renderable_operator);
+}
+
 TEST(SurfaceStack, surface_is_created_at_requested_position)
 {
     using namespace ::testing;
-    
     geom::Point const requested_top_left{geom::X{50},
                                          geom::Y{17}};
     geom::Size const requested_size{geom::Width{1024}, 
@@ -389,12 +419,13 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
             std::make_shared<mtd::StubInputRegistrar>()};
     
     auto s = stack.create_surface(
-        msh::a_surface().of_size(requested_size).of_position(requested_top_left));
+        msh::a_surface().of_size(requested_size).of_position(requested_top_left), default_depth);
     
     {
         auto surface = s.lock();
         EXPECT_EQ(requested_top_left, surface->top_left());
     }
+    
 }
 
 TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
@@ -409,7 +440,7 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
         std::make_shared<StubInputChannelFactory>(),
             mt::fake_shared(registrar)};
     
-    auto s = stack.create_surface(msh::a_surface());
+    auto s = stack.create_surface(msh::a_surface(), default_depth);
     stack.destroy_surface(s);
 }
 
@@ -429,7 +460,7 @@ TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
         mt::fake_shared(input_factory),
             std::make_shared<mtd::StubInputRegistrar>()};
 
-    auto surface = stack.create_surface(msh::a_surface()).lock();
+    auto surface = stack.create_surface(msh::a_surface(), default_depth).lock();
     EXPECT_EQ(server_input_fd, surface->server_input_fd());
     EXPECT_EQ(client_input_fd, surface->client_input_fd());
 }

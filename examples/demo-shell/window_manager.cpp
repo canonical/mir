@@ -25,12 +25,19 @@
 
 #include <linux/input.h>
 
-#include <assert.h>
+#include <cassert>
+#include <cstdlib>
 
 namespace me = mir::examples;
 namespace msh = mir::shell;
 
+namespace
+{
+const int min_swipe_distance = 100;  // How long must a swipe be to act on?
+}
+
 me::WindowManager::WindowManager()
+    : max_fingers(0)
 {
 }
 
@@ -43,6 +50,25 @@ void me::WindowManager::set_session_manager(
     std::shared_ptr<msh::SessionManager> const& sm)
 {
     session_manager = sm;
+}
+
+mir::geometry::Point average_pointer(MirMotionEvent const& motion)
+{
+    using namespace mir;
+    using namespace geometry;
+
+    int x = 0, y = 0, count = static_cast<int>(motion.pointer_count);
+
+    for (int i = 0; i < count; i++)
+    {
+        x += motion.pointer_coordinates[i].x;
+        y += motion.pointer_coordinates[i].y;
+    }
+
+    x /= count;
+    y /= count;
+
+    return Point{X{x}, Y{y}};
 }
 
 bool me::WindowManager::handle(MirEvent const& event)
@@ -60,8 +86,17 @@ bool me::WindowManager::handle(MirEvent const& event)
     else if (event.type == mir_event_type_motion &&
              session_manager)
     {
+        geometry::Point cursor = average_pointer(event.motion);
+
+        MirMotionAction action = event.motion.action;
+
         std::shared_ptr<msh::Session> app =
             session_manager->focussed_application().lock();
+
+        int fingers = static_cast<int>(event.motion.pointer_count);
+
+        if (action == mir_motion_action_down || fingers > max_fingers)
+            max_fingers = fingers;
 
         if (app)
         {
@@ -70,22 +105,35 @@ bool me::WindowManager::handle(MirEvent const& event)
             std::shared_ptr<msh::Surface> surf = app->default_surface();
 
             if (surf &&
-                event.motion.modifiers & mir_key_modifier_alt)
+                (event.motion.modifiers & mir_key_modifier_alt ||
+                 fingers >= 3))
             {
-                geometry::Point cursor{
-                    geometry::X{event.motion.pointer_coordinates[0].x},
-                    geometry::Y{event.motion.pointer_coordinates[0].y}};
-
-                if (event.motion.button_state == 0)
+                // Start of a gesture: When the latest finger/button goes down
+                if (action == mir_motion_action_down ||
+                    action == mir_motion_action_pointer_down)
                 {
                     relative_click = cursor - surf->top_left();
+                    click = cursor;
                 }
-                else if (event.motion.button_state & mir_motion_button_primary)
-                {
+                else if (event.motion.action == mir_motion_action_move)
+                { // Movement is happening with one or more fingers/button down
                     geometry::Point abs = cursor - relative_click;
-                    surf->move_to(abs);
-                    return true;
+                    if (max_fingers <= 3)  // Avoid accidental movement
+                    {
+                        surf->move_to(abs);
+                        return true;
+                    }
                 }
+            }
+        }
+
+        if (max_fingers == 4 && action == mir_motion_action_up)
+        { // Four fingers released
+            geometry::Displacement dir = cursor - click;
+            if (abs(dir.dx.as_int()) >= min_swipe_distance)
+            {
+                focus_controller->focus_next();
+                return true;
             }
         }
     }
