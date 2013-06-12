@@ -45,6 +45,7 @@ public:
     virtual geometry::PixelFormat get_stream_pixel_format() = 0;
     virtual geometry::Size stream_size() = 0;
     virtual void force_client_completion() = 0;
+    virtual void allow_framedropping(bool) = 0;
 };
 
 }
