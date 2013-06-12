@@ -173,8 +173,13 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
             MirConnection* connection = mir_connect_sync(mir_test_socket, "testapp");
             MirSurface* surface = mir_connection_create_surface_sync(connection, &request_params);
 
-//            mir_wait_for(mir_surface_swapinterval(surface, 0, surface_callback, nullptr));
-//            mir_surface_swapinterval_sync(surface, 1);
+            mir_wait_for(mir_surface_set_swapinterval(surface, 0, surface_callback, nullptr));
+            mir_surface_set_swapinterval_sync(surface, 1);
+
+            //swapinterval 2 not supported
+            mir_surface_set_swapinterval_sync(surface, 2);
+            auto error = mir_surface_get_error_message(surface);
+            EXPECT_STREQ("swapinterval value not supported", error);
 
             set_flag(swapinterval_set);
             wait_for(do_client_finish);

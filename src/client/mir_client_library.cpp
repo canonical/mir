@@ -316,3 +316,21 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
 
     return state;
 }
+
+MirWaitHandle* mir_surface_set_swapinterval(
+    MirSurface* surface, int interval,
+    mir_surface_lifecycle_callback callback,
+    void *context)
+{
+    (void) surface;
+    (void)interval;
+    (void) callback;
+    (void) context;
+    return NULL;
+}
+
+void mir_surface_set_swapinterval_sync(MirSurface* surface, int interval)
+{
+    (void) surface;
+    (void) interval;
+}
