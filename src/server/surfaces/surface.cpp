@@ -177,6 +177,11 @@ std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
     return client_buffer_resource;
 }
 
+void ms::Surface::allow_framedropping(bool allow)
+{
+    buffer_stream->allow_framedropping(allow);
+}
+
 void ms::Surface::flag_for_render()
 {
     buffer_is_valid = true;

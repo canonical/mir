@@ -329,7 +329,7 @@ TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
     });
 }
 
-TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
+TEST_F(ShellSurface, allow_framedropping_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),

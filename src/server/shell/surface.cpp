@@ -165,6 +165,14 @@ void msh::Surface::advance_client_buffer()
     }
 }
 
+void msh::Surface::allow_framedropping(bool allow)
+{
+    if (auto const& s = surface.lock())
+    {
+        s->allow_framedropping(allow);
+    }
+}
+ 
 std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
 {
     if (auto const& s = surface.lock())

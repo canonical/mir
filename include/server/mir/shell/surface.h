@@ -87,6 +87,7 @@ public:
 
     virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
 
+    virtual void allow_framedropping(bool); 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
