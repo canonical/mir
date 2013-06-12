@@ -36,22 +36,22 @@ protected:
     virtual void SetUp()
     {
         mock_buffer = std::make_shared<mtd::StubBuffer>();
-        mock_director = std::make_shared<mtd::MockBufferBundle>();
+        mock_bundle = std::make_shared<mtd::MockBufferBundle>();
     }
 
     std::shared_ptr<mtd::StubBuffer> mock_buffer;
-    std::shared_ptr<mtd::MockBufferBundle> mock_director;
+    std::shared_ptr<mtd::MockBufferBundle> mock_bundle;
 };
 
 TEST_F(BufferStreamTest, size_query)
 {
     geom::Size size{geom::Width{4},geom::Height{5}};
     mc::BufferProperties properties {size, geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
-    EXPECT_CALL(*mock_director, properties())
+    EXPECT_CALL(*mock_bundle, properties())
         .Times(1)
         .WillOnce(testing::Return(properties));
 
-    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     auto returned_size = buffer_stream.stream_size();
     EXPECT_EQ(size, returned_size);
 }
@@ -61,21 +61,21 @@ TEST_F(BufferStreamTest, pixel_format_query)
     geom::PixelFormat format{geom::PixelFormat::abgr_8888};
     mc::BufferProperties properties {geom::Size{geom::Width{4},geom::Height{5}},
                                      format, mc::BufferUsage::hardware};
-    EXPECT_CALL(*mock_director, properties())
+    EXPECT_CALL(*mock_bundle, properties())
         .Times(1)
         .WillOnce(testing::Return(properties));
 
-    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     auto returned_pf = buffer_stream.get_stream_pixel_format();
     EXPECT_EQ(format, returned_pf);
 }
 
 TEST_F(BufferStreamTest, force_client_completion_command)
 {
-    EXPECT_CALL(*mock_director, force_client_completion())
+    EXPECT_CALL(*mock_bundle, force_client_completion())
         .Times(1);
 
-    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     buffer_stream.force_client_completion();
 }
 
@@ -83,13 +83,13 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_director, compositor_acquire())
+    EXPECT_CALL(*mock_bundle, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_director, compositor_release(_))
+    EXPECT_CALL(*mock_bundle, compositor_release(_))
         .Times(1);
 
-    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 
     buffer_stream.lock_back_buffer();
 }
@@ -98,13 +98,13 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_director, compositor_acquire())
+    EXPECT_CALL(*mock_bundle, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_director, compositor_release(_))
+    EXPECT_CALL(*mock_bundle, compositor_release(_))
         .Times(1);
 
-    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 
     buffer_stream.lock_back_buffer();
 }
@@ -113,12 +113,21 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_director, client_acquire())
+    EXPECT_CALL(*mock_bundle, client_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_director, client_release(_))
+    EXPECT_CALL(*mock_bundle, client_release(_))
         .Times(1);
-    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 
     buffer_stream.secure_client_buffer();
+}
+
+TEST_F(BufferStreamTest, allow_framedropping_command)
+{
+    EXPECT_CALL(*mock_bundle, allow_framedropping(true))
+        .Times(1);
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    buffer_stream.allow_framedropping(true);
 }
