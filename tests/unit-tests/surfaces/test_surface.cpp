@@ -208,14 +208,14 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
 
 }
 
-TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
+TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 {
     using namespace testing;
 
     ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
 
-    EXPECT_CALL(*mock_buffer_stream, get_bundle_pixel_format())
+    EXPECT_CALL(*mock_buffer_stream, get_stream_pixel_format())
         .Times(1)
         .WillOnce(Return(pf));
 
@@ -224,14 +224,14 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
     EXPECT_EQ(ret_pf, pf);
 }
 
-TEST_F(SurfaceCreation, test_surface_queries_bundle_for_size)
+TEST_F(SurfaceCreation, test_surface_queries_stream_for_size)
 {
     using namespace testing;
 
     ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
 
-    EXPECT_CALL(*mock_buffer_stream, bundle_size())
+    EXPECT_CALL(*mock_buffer_stream, stream_size())
         .Times(1)
         .WillOnce(Return(size));
 
@@ -270,7 +270,7 @@ TEST_F(SurfaceCreation, test_surface_advance_buffer_notifies_changes)
     surf.advance_client_buffer();
 }
 
-TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
+TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 {
     using namespace testing;
 
@@ -336,7 +336,7 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 
     geom::Size s{geom::Width{55}, geom::Height{66}};
-    ON_CALL(*mock_buffer_stream, bundle_size()).WillByDefault(Return(s));
+    ON_CALL(*mock_buffer_stream, stream_size()).WillByDefault(Return(s));
 
     auto ret_transformation = surf.transformation();
 
@@ -354,7 +354,7 @@ TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
-TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
+TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
 {
     using namespace testing;
 

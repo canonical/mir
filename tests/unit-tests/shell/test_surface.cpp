@@ -50,14 +50,14 @@ class StubSurfaceBuilder : public msh::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_bundle(new mtd::NullBufferStream()),
+        buffer_stream(new mtd::NullBufferStream()),
         dummy_surface()
     {
     }
 
     std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& )
     {
-        dummy_surface = std::make_shared<ms::Surface>(msh::a_surface().name, msh::a_surface().top_left, buffer_bundle, 
+        dummy_surface = std::make_shared<ms::Surface>(msh::a_surface().name, msh::a_surface().top_left, buffer_stream, 
             std::shared_ptr<mi::InputChannel>(), []{});
         return dummy_surface;
     }
@@ -73,7 +73,7 @@ public:
     }
 
 private:
-    std::shared_ptr<ms::BufferStream> const buffer_bundle;
+    std::shared_ptr<ms::BufferStream> const buffer_stream;
     std::shared_ptr<ms::Surface> dummy_surface;
 };
 
@@ -103,17 +103,17 @@ typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
 
 struct ShellSurface : testing::Test
 {
-    std::shared_ptr<StubBufferStream> const buffer_bundle;
+    std::shared_ptr<StubBufferStream> const buffer_stream;
     StubSurfaceBuilder surface_builder;
 
     ShellSurface() :
-        buffer_bundle(std::make_shared<StubBufferStream>())
+        buffer_stream(std::make_shared<StubBufferStream>())
     {
         using namespace testing;
 
-        ON_CALL(*buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
-        ON_CALL(*buffer_bundle, get_bundle_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mtd::StubBuffer>()));
+        ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
+        ON_CALL(*buffer_stream, get_stream_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
+        ON_CALL(*buffer_stream, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mtd::StubBuffer>()));
     }
 };
 }

@@ -14,12 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by:
- *  Alan Griffiths <alan@octopull.co.uk>
- *  Thomas Voss <thomas.voss@canonical.com>
+ * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_BUFFER_STREAM_FACTORY_H_
-#define MIR_SURFACES_BUFFER_STREAM_FACTORY_H_
+#ifndef MIR_SURFACES_BUFFER_STREAM_H_
+#define MIR_SURFACES_BUFFER_STREAM_H_
+
+#include "mir/geometry/size.h"
+#include "mir/geometry/pixel_format.h"
+#include "mir/compositor/buffer_id.h"
 
 #include <memory>
 
@@ -27,28 +30,24 @@ namespace mir
 {
 namespace compositor
 {
-struct BufferProperties;
+class Buffer;
 }
 
 namespace surfaces
 {
-class BufferStream;
+class GraphicRegion;
 
-class BufferStreamFactory
+class BufferStream
 {
 public:
-    virtual ~BufferStreamFactory() {}
-
-    virtual std::shared_ptr<BufferStream> create_buffer_bundle(
-        compositor::BufferProperties const& buffer_properties) = 0;
-
-protected:
-    BufferStreamFactory() = default;
-    BufferStreamFactory(const BufferStreamFactory&) = delete;
-    BufferStreamFactory& operator=(const BufferStreamFactory&) = delete;
+    virtual std::shared_ptr<compositor::Buffer> secure_client_buffer() = 0;
+    virtual std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer() = 0;
+    virtual geometry::PixelFormat get_stream_pixel_format() = 0;
+    virtual geometry::Size stream_size() = 0;
+    virtual void shutdown() = 0;
 };
 
 }
 }
 
-#endif // MIR_SURFACES_BUFFER_STREAM_FACTORY_H_
+#endif /* MIR_SURFACES_BUFFER_STREAM_H_ */

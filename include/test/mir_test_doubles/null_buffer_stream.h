@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
 #define MIR_TEST_DOUBLES_NULL_BUFFER_STREAM_H_
 
-#include <mir/surfaces/buffer_bundle.h>
+#include <mir/surfaces/buffer_stream.h>
 #include <mir_test_doubles/stub_buffer.h>
 
 namespace mir
@@ -46,12 +46,12 @@ public:
         return std::shared_ptr<surfaces::GraphicRegion>();
     }
 
-    geometry::PixelFormat get_bundle_pixel_format()
+    geometry::PixelFormat get_stream_pixel_format()
     {
         return geometry::PixelFormat();
     }
 
-    geometry::Size bundle_size()
+    geometry::Size stream_size()
     {
         return geometry::Size();
     }

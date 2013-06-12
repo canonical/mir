@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_STREAM_H_
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_STREAM_H_
 
-#include "mir/surfaces/buffer_bundle.h"
+#include "mir/surfaces/buffer_stream.h"
 
 #include <gmock/gmock.h>
 
@@ -34,8 +34,8 @@ struct MockBufferStream : public surfaces::BufferStream
     MOCK_METHOD0(secure_client_buffer, std::shared_ptr<compositor::Buffer>());
     MOCK_METHOD0(lock_back_buffer, std::shared_ptr<surfaces::GraphicRegion>());
 
-    MOCK_METHOD0(get_bundle_pixel_format, geometry::PixelFormat());
-    MOCK_METHOD0(bundle_size, geometry::Size());
+    MOCK_METHOD0(get_stream_pixel_format, geometry::PixelFormat());
+    MOCK_METHOD0(stream_size, geometry::Size());
     MOCK_METHOD0(shutdown, void());
 };
 }

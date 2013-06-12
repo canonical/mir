@@ -51,8 +51,8 @@ TEST_F(BufferStreamTest, size_query)
         .Times(1)
         .WillOnce(testing::Return(properties));
 
-    mc::BufferStreamSurfaces buffer_bundle(mock_director);
-    auto returned_size = buffer_bundle.bundle_size();
+    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    auto returned_size = buffer_stream.stream_size();
     EXPECT_EQ(size, returned_size);
 }
 
@@ -65,8 +65,8 @@ TEST_F(BufferStreamTest, pixel_format_query)
         .Times(1)
         .WillOnce(testing::Return(properties));
 
-    mc::BufferStreamSurfaces buffer_bundle(mock_director);
-    auto returned_pf = buffer_bundle.get_bundle_pixel_format();
+    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    auto returned_pf = buffer_stream.get_stream_pixel_format();
     EXPECT_EQ(format, returned_pf);
 }
 
@@ -75,8 +75,8 @@ TEST_F(BufferStreamTest, shutdown_command)
     EXPECT_CALL(*mock_director, shutdown())
         .Times(1);
 
-    mc::BufferStreamSurfaces buffer_bundle(mock_director);
-    buffer_bundle.shutdown();
+    mc::BufferStreamSurfaces buffer_stream(mock_director);
+    buffer_stream.shutdown();
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)
@@ -89,9 +89,9 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)
     EXPECT_CALL(*mock_director, compositor_release(_))
         .Times(1);
 
-    mc::BufferStreamSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_director);
 
-    buffer_bundle.lock_back_buffer();
+    buffer_stream.lock_back_buffer();
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
@@ -104,9 +104,9 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
     EXPECT_CALL(*mock_director, compositor_release(_))
         .Times(1);
 
-    mc::BufferStreamSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_director);
 
-    buffer_bundle.lock_back_buffer();
+    buffer_stream.lock_back_buffer();
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
@@ -118,7 +118,7 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
         .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_director, client_release(_))
         .Times(1);
-    mc::BufferStreamSurfaces buffer_bundle(mock_director);
+    mc::BufferStreamSurfaces buffer_stream(mock_director);
 
-    buffer_bundle.secure_client_buffer();
+    buffer_stream.secure_client_buffer();
 }

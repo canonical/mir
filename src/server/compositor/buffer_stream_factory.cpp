@@ -43,7 +43,7 @@ mc::BufferStreamFactory::BufferStreamFactory(
 }
 
 
-std::shared_ptr<ms::BufferStream> mc::BufferStreamFactory::create_buffer_bundle(
+std::shared_ptr<ms::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     mc::BufferProperties const& buffer_properties)
 {
     auto switching_bundle = std::make_shared<mc::SwitchingBundle>(swapper_factory, buffer_properties);

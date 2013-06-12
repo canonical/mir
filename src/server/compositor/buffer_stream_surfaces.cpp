@@ -27,8 +27,8 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace ms = mir::surfaces;
 
-mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& director)
-     : director(director)
+mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle)
+     : buffer_bundle(buffer_bundle)
 {
 }
 
@@ -38,25 +38,25 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 
 std::shared_ptr<ms::GraphicRegion> mc::BufferStreamSurfaces::lock_back_buffer()
 {
-    return std::make_shared<mc::TemporaryCompositorBuffer>(director);
+    return std::make_shared<mc::TemporaryCompositorBuffer>(buffer_bundle);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferStreamSurfaces::secure_client_buffer()
 {
-    return std::make_shared<mc::TemporaryClientBuffer>(director);
+    return std::make_shared<mc::TemporaryClientBuffer>(buffer_bundle);
 }
 
-geom::PixelFormat mc::BufferStreamSurfaces::get_bundle_pixel_format()
+geom::PixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
 {
-    return director->properties().format; 
+    return buffer_bundle->properties().format; 
 }
 
-geom::Size mc::BufferStreamSurfaces::bundle_size()
+geom::Size mc::BufferStreamSurfaces::stream_size()
 {
-    return director->properties().size; 
+    return buffer_bundle->properties().size; 
 }
 
 void mc::BufferStreamSurfaces::shutdown()
 {
-    director->shutdown();
+    buffer_bundle->shutdown();
 }

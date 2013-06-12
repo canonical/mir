@@ -22,7 +22,7 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/surfaces/buffer_bundle_factory.h"
+#include "mir/surfaces/buffer_stream_factory.h"
 
 #include <memory>
 
@@ -45,7 +45,7 @@ public:
     virtual ~BufferStreamFactory() {}
 
     // From BufferStreamFactory
-    virtual std::shared_ptr<surfaces::BufferStream> create_buffer_bundle(
+    virtual std::shared_ptr<surfaces::BufferStream> create_buffer_stream(
         BufferProperties const& buffer_properties);
 
 private:

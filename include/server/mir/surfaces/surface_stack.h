@@ -82,7 +82,7 @@ private:
     void emit_change_notification();
 
     std::mutex guard;
-    std::shared_ptr<BufferStreamFactory> const buffer_bundle_factory;
+    std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::vector<std::shared_ptr<Surface>> surfaces;
