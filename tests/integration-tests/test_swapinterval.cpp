@@ -24,8 +24,11 @@
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
 #include "mir/compositor/renderables.h"
+#include "mir/surfaces/buffer_stream.h"
+#include "mir/surfaces/buffer_stream_factory.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_doubles/stub_buffer.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -39,6 +42,8 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
+namespace ms = mir::surfaces;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -48,12 +53,12 @@ class CountingBufferStream : public ms::BufferStream
 {
 public:
     CountingBufferStream(int render_operations_fd)
-     : render_operations_fd(render_operaitons_fd)
+     : render_operations_fd(render_operations_fd)
     {
     }
 
-    std::shared_ptr<compositor::Buffer> secure_client_buffer() { return std::shared_ptr<mc::Buffer>(); }
-    std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer() { return std::shared_ptr<mc::GraphicRegion>(); }
+    std::shared_ptr<mc::Buffer> secure_client_buffer() { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<ms::GraphicRegion> lock_back_buffer() { return std::make_shared<mtd::StubBuffer>(); }
     geom::PixelFormat get_stream_pixel_format() { return geom::PixelFormat::abgr_8888; }
     geom::Size stream_size() { return geom::Size{}; }
     void force_client_completion() {}
@@ -70,11 +75,11 @@ class StubStreamFactory : public ms::BufferStreamFactory
 {
 public:
     StubStreamFactory(int render_operations_fd)
-     : render_operations_fd(render_operaitons_fd)
+     : render_operations_fd(render_operations_fd)
     {
     }
 
-    std::shared_ptr<BufferStream> create_buffer_stream(mc::BufferProperties const&)
+    std::shared_ptr<ms::BufferStream> create_buffer_stream(mc::BufferProperties const&)
     {
         return std::make_shared<CountingBufferStream>(render_operations_fd);
     }
@@ -85,7 +90,7 @@ private:
 }
 
 using SwapIntervalSignalTest = BespokeDisplayServerTestFixture;
-TEST_F(SwapIntervalSignalTest, surface_not_rendered_until_buffer_is_pushed)
+TEST_F(SwapIntervalSignalTest, swapinterval_test)
 {
     static std::string const swapinterval_set{"swapinterval_set_952f3f10.tmp"};
     static std::string const do_client_finish{"do_client_finish_952f3f10.tmp"};
@@ -118,7 +123,6 @@ TEST_F(SwapIntervalSignalTest, surface_not_rendered_until_buffer_is_pushed)
                 close(rendering_ops_pipe[1]);
         }
 
-
         std::shared_ptr<ms::BufferStreamFactory> the_buffer_stream_factory() override
         {
             if (!stub_stream_factory)
@@ -145,9 +149,14 @@ TEST_F(SwapIntervalSignalTest, surface_not_rendered_until_buffer_is_pushed)
 
     struct ClientConfig : TestingClientConfiguration
     {
-        ClientConfig(std::string const& swapinterval_set) 
+        ClientConfig(std::string const& swapinterval_set,
+                     std::string const& do_client_finish)
             : swapinterval_set{swapinterval_set},
               do_client_finish{do_client_finish}
+        {
+        }
+
+        static void surface_callback(MirSurface*, void*)
         {
         }
 
@@ -164,8 +173,8 @@ TEST_F(SwapIntervalSignalTest, surface_not_rendered_until_buffer_is_pushed)
             MirConnection* connection = mir_connect_sync(mir_test_socket, "testapp");
             MirSurface* surface = mir_connection_create_surface_sync(connection, &request_params);
 
-            mir_wait_for(mir_surface_swapinterval(surface, 0, cb, nullptr));
-            mir_surface_swapinterval_sync(surface, 1);
+//            mir_wait_for(mir_surface_swapinterval(surface, 0, surface_callback, nullptr));
+//            mir_surface_swapinterval_sync(surface, 1);
 
             set_flag(swapinterval_set);
             wait_for(do_client_finish);
