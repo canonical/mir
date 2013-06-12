@@ -143,7 +143,7 @@ TEST_F(BufferSwapperDouble, force_client_completion_works_causes_rc_failure)
                 [this]
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds{10});
-                    swapper->force_client_completion();
+                    swapper->force_client_abort();
                 });
 
     EXPECT_THROW({
@@ -159,7 +159,7 @@ TEST_F(BufferSwapperDouble, force_client_completion_works)
                 [this]
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds{10});
-                    swapper->force_client_completion();
+                    swapper->force_client_abort();
                 });
 
     EXPECT_THROW({

@@ -121,7 +121,7 @@ TEST_F(SwapperSwitcherTest, switch_sequence)
     mc::SwapperSwitcher switcher(mock_default_swapper);
 
     InSequence seq;
-    EXPECT_CALL(*mock_default_swapper, force_client_completion())
+    EXPECT_CALL(*mock_default_swapper, force_client_abort())
         .Times(1);
     EXPECT_CALL(*mock_default_swapper, end_responsibility(_,_))
         .Times(1);

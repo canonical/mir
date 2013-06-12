@@ -41,7 +41,7 @@ public:
     MOCK_METHOD1(client_release,     void(std::shared_ptr<compositor::Buffer> const&));
     MOCK_METHOD0(compositor_acquire, std::shared_ptr<compositor::Buffer>());
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<compositor::Buffer> const&));
-    MOCK_METHOD0(force_client_completion, void());
+    MOCK_METHOD0(force_client_abort, void());
     MOCK_METHOD2(end_responsibility, void(std::vector<std::shared_ptr<compositor::Buffer>>&, size_t&));
     MOCK_METHOD1(adopt_buffer, void(std::shared_ptr<compositor::Buffer> const&));
     MOCK_METHOD1(change_swapper, void(std::function<std::shared_ptr<compositor::BufferSwapper>

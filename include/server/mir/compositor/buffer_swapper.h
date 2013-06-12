@@ -49,7 +49,7 @@ public:
     virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
 
     /**
-     * Forces client requests on the buffer swapper to complete.
+     * Forces client requests on the buffer swapper to abort.
      *
      * client_acquire is the only function that can block to provide sync.
      * This function unblocks client_acquire, generally resulting in an exception
@@ -59,7 +59,7 @@ public:
      * but the client cannot. This used in shutdown of the swapper, the client cannot
      * be reactivated after this call completes.
      */
-    virtual void force_client_completion() = 0;
+    virtual void force_client_abort() = 0;
 
     /**
      * Ends synchronization of buffers. All buffers owned by the swapper
