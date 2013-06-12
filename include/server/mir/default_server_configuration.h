@@ -176,7 +176,7 @@ public:
     /** @name surfaces configuration - dependencies
      * dependencies of surfaces on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<surfaces::BufferStreamFactory> the_buffer_bundle_factory();
+    virtual std::shared_ptr<surfaces::BufferStreamFactory> the_buffer_stream_factory();
     /** @} */
 
 

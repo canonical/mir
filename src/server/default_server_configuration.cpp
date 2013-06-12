@@ -520,7 +520,7 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_stream_factory(), the_input_channel_factory(), the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;
         });
@@ -532,7 +532,7 @@ mir::DefaultServerConfiguration::the_renderables()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_stream_factory(), the_input_channel_factory(), the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;
         });
@@ -590,7 +590,7 @@ mir::DefaultServerConfiguration::the_compositing_strategy()
 }
 
 std::shared_ptr<ms::BufferStreamFactory>
-mir::DefaultServerConfiguration::the_buffer_bundle_factory()
+mir::DefaultServerConfiguration::the_buffer_stream_factory()
 {
     return buffer_stream_factory(
         [this]()
