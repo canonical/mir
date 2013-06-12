@@ -17,10 +17,10 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
-#define MIR_COMPOSITOR_SWAPPER_SWITCHER_H_
+#ifndef MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
+#define MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
 
-#include "buffer_swapper_master.h"
+#include "buffer_bundle.h"
 #include "rw_lock.h"
 #include <condition_variable>
 #include <memory>
@@ -32,25 +32,25 @@ namespace compositor
 {
 class Buffer;
 class BufferSwapper;
+class BufferAllocationStrategy;
 
-class SwapperSwitcher : public BufferSwapperMaster
+class SwitchingBundle : public BufferBundle 
 {
 public:
-    SwapperSwitcher(std::shared_ptr<BufferSwapper> const& initial_swapper);
+    SwitchingBundle(std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const&);
+
+    BufferProperties properties() const;
 
     std::shared_ptr<Buffer> client_acquire();
-    void client_release(std::shared_ptr<Buffer> const& queued_buffer);
+    void client_release(std::shared_ptr<Buffer> const&);
     std::shared_ptr<Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
+    void compositor_release(std::shared_ptr<Buffer> const&);
+    void allow_framedropping(bool dropping_allowed);
     void force_client_completion();
-    void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
-
-    //TODO: this function 'bundles up' the factory in a klunky manner. Replace with a more direct mechanism
-    //      to change swappers
-    void change_swapper(
-        std::function<std::shared_ptr<BufferSwapper>(std::vector<std::shared_ptr<Buffer>>&, size_t&)>);
 
 private:
+    BufferProperties bundle_properties; //must be before swapper
+    std::shared_ptr<BufferAllocationStrategy> const swapper_factory;
     std::shared_ptr<BufferSwapper> swapper;
     RWLockWriterBias rw_lock;
     std::condition_variable_any cv;
@@ -60,4 +60,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_SWAPPER_SWITCHER_H_ */
+#endif /* MIR_COMPOSITOR_SWITCHING_BUNDLE_H_ */

@@ -19,7 +19,7 @@
 #include "src/server/compositor/temporary_buffers.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_swapper.h"
+#include "mir_test_doubles/mock_buffer_bundle.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -49,16 +49,16 @@ public:
         buffer_stride = geom::Stride{1024};
         buffer_pixel_format = geom::PixelFormat{geom::PixelFormat::abgr_8888};
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(buffer_size, buffer_stride, buffer_pixel_format);
-        mock_swapper = std::make_shared<NiceMock<mtd::MockSwapper>>(mock_buffer);
+        mock_director = std::make_shared<NiceMock<mtd::MockBufferBundle>>();
 
-        ON_CALL(*mock_swapper, client_acquire())
+        ON_CALL(*mock_director, client_acquire())
             .WillByDefault(Return(mock_buffer));
-        ON_CALL(*mock_swapper, compositor_acquire())
+        ON_CALL(*mock_director, compositor_acquire())
             .WillByDefault(Return(mock_buffer));
     }
 
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    std::shared_ptr<mtd::MockSwapper> mock_swapper;
+    std::shared_ptr<mtd::MockBufferBundle> mock_director;
     geom::Size buffer_size;
     geom::Stride buffer_stride;
     geom::PixelFormat buffer_pixel_format;
@@ -68,43 +68,43 @@ public:
 TEST_F(TemporaryBuffersTest, client_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_swapper, client_acquire())
+    EXPECT_CALL(*mock_director, client_acquire())
         .Times(1);
-    EXPECT_CALL(*mock_swapper, client_release(_))
+    EXPECT_CALL(*mock_director, client_release(_))
         .Times(1);
 
-    mc::TemporaryClientBuffer proxy_buffer(mock_swapper);
+    mc::TemporaryClientBuffer proxy_buffer(mock_director);
 }
 
-TEST_F(TemporaryBuffersTest, client_buffer_handles_swapper_destruction)
+TEST_F(TemporaryBuffersTest, client_buffer_handles_director_destruction)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_swapper, client_acquire())
+    EXPECT_CALL(*mock_director, client_acquire())
         .Times(1);
 
-    mc::TemporaryClientBuffer proxy_buffer(mock_swapper);
-    mock_swapper.reset();
+    mc::TemporaryClientBuffer proxy_buffer(mock_director);
+    mock_director.reset();
 }
 
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_swapper, compositor_acquire())
+    EXPECT_CALL(*mock_director, compositor_acquire())
         .Times(1);
-    EXPECT_CALL(*mock_swapper, compositor_release(_))
+    EXPECT_CALL(*mock_director, compositor_release(_))
         .Times(1);
 
-    mc::TemporaryCompositorBuffer proxy_buffer(mock_swapper);
+    mc::TemporaryCompositorBuffer proxy_buffer(mock_director);
 }
 
-TEST_F(TemporaryBuffersTest, compositor_buffer_handles_swapper_destruction)
+TEST_F(TemporaryBuffersTest, compositor_buffer_handles_director_destruction)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_swapper, compositor_acquire())
+    EXPECT_CALL(*mock_director, compositor_acquire())
         .Times(1);
 
-    mc::TemporaryCompositorBuffer proxy_buffer(mock_swapper);
-    mock_swapper.reset();
+    mc::TemporaryCompositorBuffer proxy_buffer(mock_director);
+    mock_director.reset();
 }
 
 TEST_F(TemporaryBuffersTest, base_test_size)
