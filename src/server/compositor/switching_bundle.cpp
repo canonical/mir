@@ -76,7 +76,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& 
     return swapper->compositor_release(released_buffer);
 }
 
-void mc::SwitchingBundle::shutdown()
+void mc::SwitchingBundle::force_client_completion()
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     should_retry = false;

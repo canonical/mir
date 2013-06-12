@@ -56,7 +56,7 @@ public:
         return geometry::Size();
     }
 
-    void shutdown()
+    void force_client_completion()
     {
     }
 

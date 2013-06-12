@@ -46,7 +46,7 @@ public:
 
     geometry::PixelFormat get_stream_pixel_format();
     geometry::Size stream_size();
-    void shutdown();
+    void force_client_completion();
 
 protected:
     BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;

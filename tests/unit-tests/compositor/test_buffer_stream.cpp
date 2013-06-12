@@ -70,13 +70,13 @@ TEST_F(BufferStreamTest, pixel_format_query)
     EXPECT_EQ(format, returned_pf);
 }
 
-TEST_F(BufferStreamTest, shutdown_command)
+TEST_F(BufferStreamTest, force_client_completion_command)
 {
-    EXPECT_CALL(*mock_director, shutdown())
+    EXPECT_CALL(*mock_director, force_client_completion())
         .Times(1);
 
     mc::BufferStreamSurfaces buffer_stream(mock_director);
-    buffer_stream.shutdown();
+    buffer_stream.force_client_completion();
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)

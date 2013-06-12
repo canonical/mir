@@ -40,7 +40,7 @@ public:
 
     virtual BufferProperties properties() const = 0;
     virtual void allow_framedropping(bool dropping_allowed) = 0;
-    virtual void shutdown() = 0;
+    virtual void force_client_completion() = 0;
 protected:
     BufferBundle() = default;
     BufferBundle(BufferBundle const&) = delete;

@@ -46,7 +46,7 @@ public:
     std::shared_ptr<Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<Buffer> const&);
     void allow_framedropping(bool dropping_allowed);
-    void shutdown();
+    void force_client_completion();
 
 private:
     BufferProperties bundle_properties; //must be before swapper
