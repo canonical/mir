@@ -59,7 +59,7 @@ public:
 
 protected:
     Display() = default;
-    ~Display() = default;
+    virtual ~Display() {}
 private:
     Display(Display const&) = delete;
     Display& operator=(Display const&) = delete;

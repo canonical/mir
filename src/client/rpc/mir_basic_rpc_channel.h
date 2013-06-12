@@ -95,7 +95,7 @@ class MirBasicRpcChannel : public google::protobuf::RpcChannel
 {
 public:
     MirBasicRpcChannel();
-    ~MirBasicRpcChannel();
+    virtual ~MirBasicRpcChannel();
 
     virtual void set_event_handler(events::EventSink *sink) = 0;
 
