@@ -320,7 +320,8 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_stride)
 
     auto native_handle = buffer->native_buffer_handle();
     ASSERT_NE(nullptr, native_handle);
-    EXPECT_EQ(static_cast<int32_t>(stride.as_uint32_t()), native_handle->stride);
+    EXPECT_EQ(static_cast<int32_t>(stride.as_uint32_t()) / 4,
+              native_handle->stride);
 }
 
 TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set)
