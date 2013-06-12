@@ -62,6 +62,26 @@ public:
     virtual void force_client_abort() = 0;
 
     /**
+     * Forces requests on the buffer swapper to complete.
+     *
+     * Requests, like client_acquire(), can block waiting for a buffer to
+     * become available. This method tries to force the request to
+     * complete while ensuring that swapper keeps functioning properly.
+     *
+     * Note that it's not always possible to force a request to complete
+     * without breaking the swapper. It's a logic error to attempt to call
+     * this method if the circumstances don't allow a forced completion.
+     *
+     * To successfully use this method you should ensure that (i.e. the
+     * preconditions for calling this method are):
+     *
+     * - The compositor is not holding any buffers (e.g., it has been stopped).
+     * - The client is trying to acquire at most one buffer at a time (which is
+     *   normal usage, and enforced by the high level API).
+     */
+    virtual void force_requests_to_complete() = 0;
+
+    /**
      * Ends synchronization of buffers. All buffers owned by the swapper
      * at the time of this call are transferred to the 'buffers' parameter.
      * The swapper specifies the number of buffers it was managing (buffers owned by

@@ -24,6 +24,7 @@ namespace mc = mir::compositor;
 mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>>& buffer_list, size_t swapper_size)
  : in_use_by_client(0),
    swapper_size(swapper_size),
+   clients_trying_to_acquire(0),
    force_clients_to_complete(false)
 {
     if ((swapper_size != 2) && (swapper_size != 3))
@@ -40,6 +41,8 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<composito
 std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
+
+    clients_trying_to_acquire++;
 
     /*
      * Don't allow the client to acquire all the buffers, because then the
@@ -60,6 +63,8 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
     auto dequeued_buffer = client_queue.front();
     client_queue.pop_front();
     in_use_by_client++;
+
+    clients_trying_to_acquire--;
 
     return dequeued_buffer;
 }
@@ -117,6 +122,33 @@ void mc::BufferSwapperMulti::force_client_abort()
     force_clients_to_complete = true;
     client_available_cv.notify_all();
 }
+
+void mc::BufferSwapperMulti::force_requests_to_complete()
+{
+    if (in_use_by_client == swapper_size - 1 && clients_trying_to_acquire > 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("BufferSwapperMulti is not able to force requests to complete:"
+                             " the client is trying to acquire all buffers"));
+    }
+
+    if (client_queue.empty())
+    {
+        if (compositor_queue.empty())
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("BufferSwapperMulti is not able to force requests to complete:"
+                                 " all buffers are acquired"));
+        }
+
+        auto dequeued_buffer = compositor_queue.front();
+        compositor_queue.pop_front();
+        client_queue.push_back(dequeued_buffer);
+    }
+
+    client_available_cv.notify_all();
+}
+
 
 void mc::BufferSwapperMulti::end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers,
                                                 size_t& size)

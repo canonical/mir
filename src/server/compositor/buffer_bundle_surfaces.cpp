@@ -69,5 +69,5 @@ geom::Size mc::BufferBundleSurfaces::bundle_size()
 
 void mc::BufferBundleSurfaces::force_requests_to_complete()
 {
-    swapper->force_client_abort(); // {arg}
+    swapper->force_requests_to_complete();
 }

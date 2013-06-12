@@ -79,6 +79,12 @@ void mc::SwapperSwitcher::force_client_abort()
     swapper->force_client_abort();
 }
 
+void mc::SwapperSwitcher::force_requests_to_complete()
+{
+    std::unique_lock<mc::ReadLock> lk(rw_lock);
+    swapper->force_requests_to_complete();
+}
+
 void mc::SwapperSwitcher::end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&)
 {
     //TODO

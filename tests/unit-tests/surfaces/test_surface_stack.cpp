@@ -62,6 +62,7 @@ public:
     virtual std::shared_ptr<mc::Buffer> compositor_acquire(){ return std::shared_ptr<mc::Buffer>(); };
     virtual void compositor_release(std::shared_ptr<mc::Buffer> const&){}
     virtual void force_client_abort() {}
+    void force_requests_to_complete() {}
     virtual void end_responsibility(std::vector<std::shared_ptr<mc::Buffer>>&, size_t&) {};
     virtual void change_swapper(std::function<std::shared_ptr<mc::BufferSwapper>
                                      (std::vector<std::shared_ptr<mc::Buffer>>&, size_t&)>) {}

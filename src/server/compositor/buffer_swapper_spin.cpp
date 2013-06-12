@@ -94,6 +94,11 @@ void mc::BufferSwapperSpin::force_client_abort()
 {
 }
 
+void mc::BufferSwapperSpin::force_requests_to_complete()
+{
+}
+
+
 void mc::BufferSwapperSpin::end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers,
                                                 size_t& size)
 {
