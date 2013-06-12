@@ -302,24 +302,11 @@ MirSurfaceState mir_surface_get_state(MirSurface *surface);
  *   \param [in] surface  The surface to operate on
  *   \param [in] interval The number of vblank signals that
  *                        mir_surface_swap_buffers will wait for 
- *   \param [in] callback     Callback function to be invoked when the request
- *                            completes
- *   \param [in,out] context  User data passed to the callback function
  *   \return              A wait handle that can be passed to mir_wait_for
  */
-MirWaitHandle* mir_surface_set_swapinterval(
-    MirSurface* surface, int interval,
-    mir_surface_lifecycle_callback callback,
-    void *context);
+MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
 
-/**
- * Set a surface's swapinterval as in mir_surface_set_swapinterval(), but also wait
- * for the operation to complete.
- *   \param [in] surface  The surface to operate on
- *   \param [in] interval The number of vblank signals that
- *                        mir_surface_swap_buffers will wait for 
- */
-void mir_surface_set_swapinterval_sync(MirSurface* surface, int interval);
+int mir_surface_get_swapinterval(MirSurface* surface);
 
 #ifdef __cplusplus
 }

@@ -58,6 +58,7 @@ MirSurface::MirSurface(
         attrib_cache[i] = -1;
     attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
     attrib_cache[mir_surface_attrib_state] = mir_surface_state_unknown;
+    attrib_cache[mir_surface_attrib_performance_hint] = mir_surface_hint_synchronous;
 }
 
 MirSurface::~MirSurface()
@@ -269,6 +270,7 @@ void MirSurface::on_configured()
         {
         case mir_surface_attrib_type:
         case mir_surface_attrib_state:
+        case mir_surface_attrib_performance_hint:
             if (configure_result.has_ivalue())
                 attrib_cache[a] = configure_result.ivalue();
             else

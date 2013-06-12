@@ -224,7 +224,7 @@ int msh::Surface::server_input_fd() const
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;
-
+    bool allow_dropping = false;
     /*
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
@@ -242,6 +242,11 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
             !set_state(static_cast<MirSurfaceState>(value)))
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
         result = state();
+        break;
+    case mir_surface_attrib_performance_hint:
+        allow_dropping = (value == mir_surface_hint_drop_frames);
+        allow_framedropping(allow_dropping);
+        result = value;
         break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "

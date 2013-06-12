@@ -237,4 +237,3 @@ void mf::SessionMediator::configure_surface(
 
     done->Run();
 }
-
