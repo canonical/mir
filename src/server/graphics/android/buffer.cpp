@@ -65,7 +65,7 @@ geom::Size mga::Buffer::size() const
 
 geom::Stride mga::Buffer::stride() const
 {
-    return geom::Stride{native_buffer->stride};
+    return geom::Stride{native_buffer->stride * 4};
 }
 
 geom::PixelFormat mga::Buffer::pixel_format() const

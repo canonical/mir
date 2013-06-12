@@ -48,7 +48,7 @@ void mcla::AndroidClientBuffer::pack_native_window_buffer()
 {
     native_window_buffer->height = static_cast<int32_t>(rect.size.height.as_uint32_t());
     native_window_buffer->width =  static_cast<int32_t>(rect.size.width.as_uint32_t());
-    native_window_buffer->stride = creation_package->stride;
+    native_window_buffer->stride = creation_package->stride / 4;
     native_window_buffer->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
 
     native_window_buffer->handle = native_handle.get();
