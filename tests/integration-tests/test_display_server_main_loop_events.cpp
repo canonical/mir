@@ -23,6 +23,7 @@
 
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
+#include "mir_test_doubles/null_gl_context.h"
 #include "mir/run_mir.h"
 
 #include <gtest/gtest.h>
@@ -97,6 +98,10 @@ public:
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
     std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
+    std::unique_ptr<mg::GLContext> create_gl_context()
+    {
+        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
+    }
 
 private:
     std::shared_ptr<mg::Display> const display;
