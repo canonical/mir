@@ -155,7 +155,25 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;
     (void)surface;
 
-    static const Color color = {0xff, 0x00, 0xff, 0xff};
+    static const Color color[MIR_INPUT_EVENT_MAX_POINTER_COUNT] =
+    {
+        {0x00, 0xff, 0xff, 0xff},
+        {0xff, 0x00, 0xff, 0xff},
+        {0x00, 0xff, 0x00, 0xff},
+        {0xff, 0xff, 0x00, 0xff},
+        {0x00, 0x00, 0xff, 0xff},
+        {0xff, 0x00, 0x00, 0xff},
+        {0xff, 0xff, 0xff, 0xff},
+        {0x00, 0x00, 0x00, 0xff},
+        {0x00, 0x80, 0x80, 0xff},
+        {0x80, 0x00, 0x80, 0xff},
+        {0x00, 0x80, 0x00, 0xff},
+        {0x80, 0x80, 0x00, 0xff},
+        {0x00, 0x00, 0x80, 0xff},
+        {0x80, 0x00, 0x00, 0xff},
+        {0x80, 0x80, 0x80, 0xff},
+        {0x00, 0x00, 0x00, 0xff},
+    };
 
     if (event->type == mir_event_type_motion &&
         event->motion.action == mir_motion_action_move)
@@ -165,8 +183,9 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {
             int x = event->motion.pointer_coordinates[p].x;
             int y = event->motion.pointer_coordinates[p].y;
+            int radius = 10;
 
-            draw_box(canvas, x, y, 10, &color);
+            draw_box(canvas, x - radius, y - radis, 2*radius, color + p);
         }
 
         redraw(surface, canvas);
