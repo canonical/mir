@@ -121,6 +121,7 @@ set (DEMO_CLIENTS
   mir_demo_client_eglflash
   mir_demo_client_egltriangle
   mir_demo_client_eglplasma
+  mir_demo_client_fingerpaint
 )
 
 add_subdirectory(demo-inprocess-surface-client)
