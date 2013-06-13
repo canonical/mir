@@ -1,6 +1,5 @@
 add_executable(
   death-tests
-  test_swapper_factory.cpp
   test_process_death.cpp
   test_application_manager_death.cpp
 )

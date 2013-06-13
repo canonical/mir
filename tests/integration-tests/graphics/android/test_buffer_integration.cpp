@@ -20,7 +20,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/compositor/swapper_factory.h"
-#include "src/server/compositor/buffer_swapper_master.h"
+#include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_properties.h"
 
 #include "mir_test/draw/android_graphics.h"
@@ -92,7 +92,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     mc::BufferProperties actual;
-    auto swapper = strategy->create_swapper_master(actual, buffer_properties);
+    auto swapper = strategy->create_swapper_new_buffers(actual, buffer_properties, mc::SwapperType::synchronous);
     auto returned_buffer = swapper->client_acquire();
 
     EXPECT_NE(nullptr, returned_buffer);

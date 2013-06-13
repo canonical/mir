@@ -99,7 +99,8 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
 {
     using namespace testing;
 
-    geom::Stride expected_stride{mock_buffer_handle->stride};
+    geom::Stride expected_stride{mock_buffer_handle->stride *
+                                 geom::bytes_per_pixel(pf)};
     mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
     EXPECT_EQ(expected_stride, buffer.stride());
 }

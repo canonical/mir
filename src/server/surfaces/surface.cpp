@@ -19,7 +19,7 @@
  */
 
 #include "mir/surfaces/surface.h"
-#include "mir/surfaces/buffer_bundle.h"
+#include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
 
 #include <boost/throw_exception.hpp>
@@ -38,27 +38,27 @@ namespace geom = mir::geometry;
 ms::Surface::Surface(
     std::string const& name,
     geom::Point const& top_left,
-    std::shared_ptr<BufferBundle> buffer_bundle,
+    std::shared_ptr<BufferStream> buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
     surface_name(name),
     top_left_point(top_left),
-    buffer_bundle(buffer_bundle),
+    buffer_stream(buffer_stream),
     input_channel(input_channel),
-    client_buffer_resource(buffer_bundle->secure_client_buffer()),
+    client_buffer_resource(buffer_stream->secure_client_buffer()),
     alpha_value(1.0f),
     is_hidden(false),
     buffer_is_valid(false),
     notify_change(change_callback)
 {
-    // TODO(tvoss,kdub): Does a surface without a buffer_bundle make sense?
-    assert(buffer_bundle);
+    // TODO(tvoss,kdub): Does a surface without a buffer_stream make sense?
+    assert(buffer_stream);
     assert(change_callback);
 }
 
 void ms::Surface::force_requests_to_complete()
 {
-    buffer_bundle->force_requests_to_complete();
+    buffer_stream->force_client_completion();
 }
 
 ms::Surface::~Surface()
@@ -101,12 +101,12 @@ geom::Point ms::Surface::top_left() const
 
 mir::geometry::Size ms::Surface::size() const
 {
-    return buffer_bundle->bundle_size();
+    return buffer_stream->stream_size();
 }
 
 std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
 {
-    return buffer_bundle->lock_back_buffer();
+    return buffer_stream->lock_back_buffer();
 }
 
 glm::mat4 ms::Surface::transformation() const
@@ -158,7 +158,7 @@ bool ms::Surface::should_be_rendered() const
 //todo: kdub remove
 geom::PixelFormat ms::Surface::pixel_format() const
 {
-    return buffer_bundle->get_bundle_pixel_format();
+    return buffer_stream->get_stream_pixel_format();
 }
 
 void ms::Surface::advance_client_buffer()
@@ -167,7 +167,7 @@ void ms::Surface::advance_client_buffer()
        of the client until it is returned to us */
     /* todo: the surface shouldn't be holding onto the resource... the frontend should! */
     client_buffer_resource.reset();  // Release old client buffer
-    client_buffer_resource = buffer_bundle->secure_client_buffer();
+    client_buffer_resource = buffer_stream->secure_client_buffer();
     flag_for_render();
     notify_change();
 }

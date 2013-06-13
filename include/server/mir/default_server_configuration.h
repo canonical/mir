@@ -31,7 +31,7 @@ namespace compositor
 {
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
-class BufferBundleManager;
+class BufferStreamFactory;
 class Renderables;
 class Drawer;
 class CompositingStrategy;
@@ -66,7 +66,7 @@ class TimeSource;
 }
 namespace surfaces
 {
-class BufferBundleFactory;
+class BufferStreamFactory;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
@@ -176,7 +176,7 @@ public:
     /** @name surfaces configuration - dependencies
      * dependencies of surfaces on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
+    virtual std::shared_ptr<surfaces::BufferStreamFactory> the_buffer_stream_factory();
     /** @} */
 
 
@@ -229,7 +229,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
-    CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
+    CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<shell::SessionContainer>  shell_session_container;

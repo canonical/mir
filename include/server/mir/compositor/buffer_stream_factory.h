@@ -18,11 +18,11 @@
  *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_
-#define MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_
+#ifndef MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
+#define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
 #include "mir/compositor/buffer.h"
-#include "mir/surfaces/buffer_bundle_factory.h"
+#include "mir/surfaces/buffer_stream_factory.h"
 
 #include <memory>
 
@@ -35,21 +35,21 @@ class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 struct BufferProperties;
 
-class BufferBundleManager : public surfaces::BufferBundleFactory
+class BufferStreamFactory : public surfaces::BufferStreamFactory
 {
 public:
 
-    explicit BufferBundleManager(
+    explicit BufferStreamFactory(
         const std::shared_ptr<BufferAllocationStrategy>& strategy);
 
-    virtual ~BufferBundleManager() {}
+    virtual ~BufferStreamFactory() {}
 
-    // From BufferBundleFactory
-    virtual std::shared_ptr<surfaces::BufferBundle> create_buffer_bundle(
+    // From BufferStreamFactory
+    virtual std::shared_ptr<surfaces::BufferStream> create_buffer_stream(
         BufferProperties const& buffer_properties);
 
 private:
-    std::shared_ptr<BufferAllocationStrategy> buffer_allocation_strategy;
+    std::shared_ptr<BufferAllocationStrategy> swapper_factory;
 
 };
 
@@ -57,4 +57,4 @@ private:
 }
 
 
-#endif /* MIR_COMPOSITOR_BUFFER_BUNDLE_MANAGER_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_ */
