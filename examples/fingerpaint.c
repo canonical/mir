@@ -43,17 +43,38 @@ static void shutdown(int signum)
     }
 }
 
+static void blend(uint32_t *dest, uint32_t src, uint8_t src_alpha)
+{
+    uint8_t *d = (uint8_t*)dest;
+    uint8_t *s = (uint8_t*)&src;
+    uint8_t dest_alpha = 255 - src_alpha;
+
+    int i;
+
+    for (i = 0; i < 4; i++)
+    {
+        d[i] = (uint8_t)
+               (
+                   (
+                       ((unsigned)d[i] * (unsigned)dest_alpha) +
+                       ((unsigned)s[i] * (unsigned)src_alpha)
+                   ) >> 8
+               );
+    }
+}
+
 static void put_pixels(void *where, int count, MirPixelFormat format,
                        const Color *color)
 {
-    uint32_t pixel = 0;
+    uint32_t pixel = 0, mask = 0xffffffff;
     int n;
 
     switch (format)
     {
     case mir_pixel_format_abgr_8888:
+        mask = 0x00ffffff;
         pixel = 
-            (uint32_t)color->a << 24 |
+            0xff000000 |
             (uint32_t)color->b << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->r;
@@ -65,8 +86,9 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
             (uint32_t)color->r;
         break;
     case mir_pixel_format_argb_8888:
+        mask = 0x00ffffff;
         pixel = 
-            (uint32_t)color->a << 24 |
+            0xff000000 |
             (uint32_t)color->r << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->b;
@@ -93,7 +115,13 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
     }
 
     for (n = 0; n < count; n++)
-        ((uint32_t*)where)[n] = pixel;
+    {
+        uint32_t *p = (uint32_t*)where + n;
+        uint32_t blended = *p;
+        blend(&blended, pixel, color->a);
+        blended |= ~mask;  /* Restore full alpha */
+        *p = blended;
+    }
 }
 
 static void clear_region(const MirGraphicsRegion *region, const Color *color)
@@ -178,6 +206,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     {
         static size_t base_color = 0;
         static size_t max_fingers = 0;
+        static float max_pressure = 1.0f;
 
         if (event->motion.action == mir_motion_action_up)
         {
@@ -197,12 +226,19 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             {
                 int x = event->motion.pointer_coordinates[p].x;
                 int y = event->motion.pointer_coordinates[p].y;
-                int radius = event->motion.pointer_coordinates[p].pressure *
-                             event->motion.pointer_coordinates[p].size * 50.0f
+                int radius = event->motion.pointer_coordinates[p].size * 50.0f
                              + 1.0f;
                 size_t c = (base_color + p) %
                            (sizeof(color)/sizeof(color[0]));
-                draw_box(canvas, x - radius, y - radius, 2*radius, color + c);
+                Color tone = color[c];
+                float pressure = event->motion.pointer_coordinates[p].pressure;
+
+                if (pressure > max_pressure)
+                    max_pressure = pressure;
+                pressure /= max_pressure;
+                tone.a *= pressure;
+
+                draw_box(canvas, x - radius, y - radius, 2*radius, &tone);
             }
     
             redraw(surface, canvas);
