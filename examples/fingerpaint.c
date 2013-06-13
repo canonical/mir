@@ -43,12 +43,12 @@ static void shutdown(int signum)
     }
 }
 
-static void blend(uint32_t *dest, uint32_t src, uint8_t src_alpha)
+static void blend(uint32_t *dest, uint32_t src, int alpha_shift)
 {
     uint8_t *d = (uint8_t*)dest;
     uint8_t *s = (uint8_t*)&src;
-    uint8_t dest_alpha = 255 - src_alpha;
-
+    uint32_t src_alpha = (uint32_t)(src >> alpha_shift) & 0xff;
+    uint32_t dest_alpha = 0xff - src_alpha;
     int i;
 
     for (i = 0; i < 4; i++)
@@ -56,25 +56,28 @@ static void blend(uint32_t *dest, uint32_t src, uint8_t src_alpha)
         d[i] = (uint8_t)
                (
                    (
-                       ((unsigned)d[i] * (unsigned)dest_alpha) +
-                       ((unsigned)s[i] * (unsigned)src_alpha)
-                   ) >> 8
+                       ((uint32_t)d[i] * dest_alpha) +
+                       ((uint32_t)s[i] * src_alpha)
+                   ) >> 8   /* Close enough, and faster than /255 */
                );
     }
+
+    *dest |= (0xff << alpha_shift); /* Restore alpha 1.0 in the destination */
 }
 
 static void put_pixels(void *where, int count, MirPixelFormat format,
                        const Color *color)
 {
-    uint32_t pixel = 0, mask = 0xffffffff;
+    uint32_t pixel = 0;
+    int alpha_shift = -1;
     int n;
 
     switch (format)
     {
     case mir_pixel_format_abgr_8888:
-        mask = 0x00ffffff;
+        alpha_shift = 24;
         pixel = 
-            0xff000000 |
+            (uint32_t)color->a << 24 |
             (uint32_t)color->b << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->r;
@@ -86,9 +89,9 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
             (uint32_t)color->r;
         break;
     case mir_pixel_format_argb_8888:
-        mask = 0x00ffffff;
+        alpha_shift = 24;
         pixel = 
-            0xff000000 |
+            (uint32_t)color->a << 24 |
             (uint32_t)color->r << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->b;
@@ -114,13 +117,15 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
         break;
     }
 
-    for (n = 0; n < count; n++)
+    if (alpha_shift >= 0)
     {
-        uint32_t *p = (uint32_t*)where + n;
-        uint32_t blended = *p;
-        blend(&blended, pixel, color->a);
-        blended |= ~mask;  /* Restore full alpha */
-        *p = blended;
+        for (n = 0; n < count; n++)
+            blend((uint32_t*)where + n, pixel, alpha_shift);
+    }
+    else
+    {
+        for (n = 0; n < count; n++)
+            ((uint32_t*)where)[n] = pixel;
     }
 }
 
