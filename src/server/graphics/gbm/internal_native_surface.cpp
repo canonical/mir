@@ -66,3 +66,12 @@ int mgg::InternalNativeSurface::get_parameters(MirSurfaceParameters* parameters)
 
     return MIR_MESA_TRUE;
 }
+
+int mgg::InternalNativeSurface::set_swapinterval(MirMesaEGLNativeSurface* surface, int interval)
+{
+    //TODO:
+    (void) surface;
+    (void) interval;
+    printf("SWapint\n");
+    return MIR_MESA_TRUE;
+}

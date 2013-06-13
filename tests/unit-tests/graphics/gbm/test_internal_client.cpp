@@ -51,4 +51,5 @@ TEST(InternalClient, native_surface_sanity)
 
     ASSERT_NE(nullptr, native_window->surface_advance_buffer);
     ASSERT_NE(nullptr, native_window->surface_get_parameters);
+    ASSERT_NE(nullptr, native_window->surface_set_swapinterval);
 }
