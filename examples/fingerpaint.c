@@ -111,15 +111,18 @@ static void clear_region(const MirGraphicsRegion *region, const Color *color)
 static void draw_box(const MirGraphicsRegion *region, int x, int y, int size,
                      const Color *color)
 {
-    int j;
-    char *row = region->vaddr +
-                (y * region->stride) +
-                (x * BYTES_PER_PIXEL(region->pixel_format));
-
-    for (j = 0; j < size; j++)
+    if (x >= 0 && y >= 0 && x+size < region->width && y+size < region->height)
     {
-        put_pixels(row, size, region->pixel_format, color);
-        row += region->stride;
+        int j;
+        char *row = region->vaddr +
+                    (y * region->stride) +
+                    (x * BYTES_PER_PIXEL(region->pixel_format));
+    
+        for (j = 0; j < size; j++)
+        {
+            put_pixels(row, size, region->pixel_format, color);
+            row += region->stride;
+        }
     }
 }
 
@@ -183,9 +186,10 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {
             int x = event->motion.pointer_coordinates[p].x;
             int y = event->motion.pointer_coordinates[p].y;
-            int radius = 10;
+            int radius = event->motion.pointer_coordinates[p].pressure *
+                         event->motion.pointer_coordinates[p].size * 50.0f;
 
-            draw_box(canvas, x - radius, y - radis, 2*radius, color + p);
+            draw_box(canvas, x - radius, y - radius, 2*radius, color + p);
         }
 
         redraw(surface, canvas);
