@@ -51,7 +51,6 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buff
     BufferProperties const& buffer_properties, std::vector<std::shared_ptr<Buffer>>& list,
     size_t buffer_num, SwapperType type) const
 {
-    printf("realloc!\n");
     if (type == mc::SwapperType::synchronous)
     {
         //TODO: we should downgrade the number of buffers for BufferSwapperMulti. This will require 
@@ -59,10 +58,11 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buff
         return std::make_shared<mc::BufferSwapperMulti>(list, buffer_num); 
     }
     else
-    {
-        while (buffer_num < spin_number_of_buffers)
+    { 
+        if (buffer_num < spin_number_of_buffers)
         {
             list.push_back(gr_allocator->alloc_buffer(buffer_properties));
+            buffer_num++;
         } 
         return std::make_shared<mc::BufferSwapperSpin>(list, buffer_num);
     }

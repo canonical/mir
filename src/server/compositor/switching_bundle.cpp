@@ -39,7 +39,6 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
     /* lock is for use of 'swapper' below' */
     std::unique_lock<mc::ReadLock> lk(rw_lock);
 
-    printf("cli ac\n");
     std::shared_ptr<mc::Buffer> buffer = nullptr;
     while (!buffer) 
     {
@@ -61,21 +60,18 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
 
 void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    printf("cli rel\n");
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->client_release(released_buffer);
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
-    printf("comp acq\n");
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->compositor_acquire();
 }
 
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    printf("comp rel\n");
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->compositor_release(released_buffer);
 }
@@ -102,13 +98,10 @@ void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
 
     if (allow_dropping)
     {
-
-        printf("async\n");
         swapper = swapper_factory->create_swapper_reuse_buffers(bundle_properties, list, size, mc::SwapperType::framedropping);
     }
     else
     {
-        printf("sync\n");
         swapper = swapper_factory->create_swapper_reuse_buffers(bundle_properties, list, size, mc::SwapperType::synchronous);
     }
 

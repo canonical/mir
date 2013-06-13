@@ -194,10 +194,7 @@ mir_eglapp_bool mir_eglapp_init(unsigned int *width, unsigned int *height)
     *width = surfaceparm.width;
     *height = surfaceparm.height;
 
-    printf("waity\n");
-    mir_wait_for(mir_surface_set_swapinterval(surface, 0));
-    printf("stop waity\n");
-    //eglSwapInterval(egldisplay, 1);
+    eglSwapInterval(egldisplay, 1);
 
     running = 1;
 
