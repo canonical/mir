@@ -38,6 +38,14 @@ static int get_parameters_static(MirMesaEGLNativeSurface* surface,
     return s->get_parameters(surface_parameters);
 }
 
+static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interval)
+{
+    //TODO
+    (void) surface;
+    (void) interval;
+    return MIR_MESA_TRUE;
+} 
+
 static void buffer_advanced_callback(MirSurface*  /* surface */,
                                      void*  /* context */)
 {
@@ -49,6 +57,7 @@ mclg::GBMNativeSurface::GBMNativeSurface(ClientSurface& surface)
 {
     surface_advance_buffer = advance_buffer_static; 
     surface_get_parameters = get_parameters_static; 
+    surface_set_swapinterval = set_swapinterval_static; 
 }
 
 int mclg::GBMNativeSurface::advance_buffer(MirBufferPackage* buffer_package)
