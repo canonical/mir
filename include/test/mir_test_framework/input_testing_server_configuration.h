@@ -22,6 +22,8 @@
 
 #include "mir_test_framework/testing_server_configuration.h"
 
+#include "mir/geometry/rectangle.h"
+
 #include <map>
 #include <string>
 #include <mutex>
@@ -37,6 +39,10 @@ namespace android
 {
 class FakeEventHub;
 }
+}
+namespace graphics
+{
+class ViewableArea;
 }
 namespace test
 {
@@ -62,8 +68,11 @@ public:
     
     std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<mir::surfaces::InputRegistrar> the_input_registrar() override;
+    std::shared_ptr<mir::graphics::ViewableArea> the_viewable_area() override;
 
 protected:
+    virtual mir::geometry::Rectangle the_screen_geometry();
+
     virtual void inject_input() = 0;
     mir::input::android::FakeEventHub* fake_event_hub;
 
@@ -80,6 +89,7 @@ private:
     
     std::shared_ptr<mir::test::doubles::FakeEventHubInputConfiguration> input_configuration;
     std::shared_ptr<mir::surfaces::InputRegistrar> input_registrar;
+    std::shared_ptr<mir::graphics::ViewableArea> view_area;
 };
 
 }
