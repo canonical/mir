@@ -130,9 +130,32 @@ std::shared_ptr<mcl::ClientBufferFactory> mclg::GBMClientPlatform::create_buffer
     return std::make_shared<mclg::GBMClientBufferFactory>(drm_fd_handler);
 }
 
+namespace
+{
+struct NativeWindowDeleter
+{
+    NativeWindowDeleter(mclg::GBMNativeSurface* window)
+     : window(window) {}
+
+    void operator()(EGLNativeWindowType* type)
+    {
+        delete type;
+        delete window;
+    }
+
+private:
+    mclg::GBMNativeSurface* window;
+};
+}
+
 std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_window(ClientSurface* client_surface)
 {
-    return std::make_shared<void*>(new GBMNativeSurface(*client_surface));
+    //TODO: this is awkward on both android and gbm...
+    auto gbm_window = new GBMNativeSurface(*client_surface);
+    auto egl_native_window = new EGLNativeWindowType;
+    *egl_native_window = gbm_window; 
+    NativeWindowDeleter deleter(gbm_window);
+    return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()
