@@ -158,7 +158,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;
     (void)surface;
 
-    static const Color color[MIR_INPUT_EVENT_MAX_POINTER_COUNT] =
+    static const Color color[] =
     {
         {0x00, 0xff, 0xff, 0xff},
         {0xff, 0x00, 0xff, 0xff},
@@ -178,21 +178,38 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {0x00, 0x00, 0x00, 0xff},
     };
 
-    if (event->type == mir_event_type_motion &&
-        event->motion.action == mir_motion_action_move)
+    if (event->type == mir_event_type_motion)
     {
-        size_t p;
-        for (p = 0; p < event->motion.pointer_count; p++)
-        {
-            int x = event->motion.pointer_coordinates[p].x;
-            int y = event->motion.pointer_coordinates[p].y;
-            int radius = event->motion.pointer_coordinates[p].pressure *
-                         event->motion.pointer_coordinates[p].size * 50.0f;
+        static size_t base_color = 0;
+        static size_t max_fingers = 0;
 
-            draw_box(canvas, x - radius, y - radius, 2*radius, color + p);
+        if (event->motion.action == mir_motion_action_up)
+        {
+            base_color = (base_color + max_fingers) %
+                         (sizeof(color)/sizeof(color[0]));
+            max_fingers = 0;
         }
 
-        redraw(surface, canvas);
+        if (event->motion.action == mir_motion_action_move)
+        {
+            size_t p;
+
+            if (event->motion.pointer_count > max_fingers)
+                max_fingers = event->motion.pointer_count;
+
+            for (p = 0; p < event->motion.pointer_count; p++)
+            {
+                int x = event->motion.pointer_coordinates[p].x;
+                int y = event->motion.pointer_coordinates[p].y;
+                int radius = event->motion.pointer_coordinates[p].pressure *
+                             event->motion.pointer_coordinates[p].size * 50.0f;
+                size_t c = (base_color + p) %
+                           (sizeof(color)/sizeof(color[0]));
+                draw_box(canvas, x - radius, y - radius, 2*radius, color + c);
+            }
+    
+            redraw(surface, canvas);
+        }
     }
 }
 
