@@ -37,15 +37,7 @@ public:
     InternalNativeDisplay(std::shared_ptr<PlatformIPCPackage> const& platform_package);
 
     static int native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package);
-//    static int native_display_swapinterval(MirMesaEGLNativeDisplay* display, int interval);
-#if 0
-    static void native_display_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display */, 
-                                                          MirEGLNativeWindowType surface,
-                                                          MirBufferPackage* package);
-    static void native_display_surface_get_parameters(MirMesaEGLNativeDisplay* /* display  */, 
-                                                      MirEGLNativeWindowType surface,
-                                                      MirSurfaceParameters* parameters);
-#endif
+
 private:
     std::shared_ptr<PlatformIPCPackage> platform_package;
 };

@@ -38,8 +38,6 @@ mgg::InternalNativeDisplay::InternalNativeDisplay(std::shared_ptr<mg::PlatformIP
 {
     context = this;
     this->display_get_platform = &InternalNativeDisplay::native_display_get_platform;
-    //this->surface_get_parameters = &InternalNativeDisplay::native_display_surface_get_parameters;
-    //this->surface_advance_buffer = &InternalNativeDisplay::native_display_surface_advance_buffer;
 }
 
 int mgg::InternalNativeDisplay::native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package)

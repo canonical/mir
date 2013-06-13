@@ -101,11 +101,14 @@ void me::InprocessEGLClient::thread_loop()
     gl_animation.init_gl();
     ///\internal [setup_tag]
 
+printf("ok!\n");
     ///\internal [loop_tag]
     while(!terminate)
     {
         gl_animation.render_gl();
+    printf("swap begin.\n");
         rc = eglSwapBuffers(helper.the_display(), helper.the_surface());
+    printf("swap end.\n");
         assert(rc = EGL_TRUE);
 
         gl_animation.step();
