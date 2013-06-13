@@ -21,6 +21,7 @@
 #include "gbm_client_buffer_factory.h"
 #include "mesa_native_display_container.h"
 #include "drm_fd_handler.h"
+#include "gbm_native_surface.h"
 #include "../mir_connection.h"
 #include "../client_buffer_factory.h"
 #include "../native_client_platform_factory.h"
@@ -131,9 +132,13 @@ std::shared_ptr<mcl::ClientBufferFactory> mclg::GBMClientPlatform::create_buffer
 
 std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_window(ClientSurface* client_surface)
 {
-    auto window_type = std::make_shared<EGLNativeWindowType>();
-    *window_type = reinterpret_cast<EGLNativeWindowType>(client_surface);
-    return window_type;
+    auto window_type = new GBMNativeSurface(*client_surface);
+    ////LEAK
+    auto b = std::make_shared<void*>(window_type);
+//    *b  = window_type;
+    return b;
+ //   std::shared_ptr<EGLNativeWindowType> window(window_type);
+ //   return window;
 }
 
 std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()

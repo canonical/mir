@@ -21,6 +21,9 @@
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_toolkit/client_types.h"
 
+#define MIR_MESA_TRUE 1
+#define MIR_MESA_FALSE 0
+
 #ifdef __cplusplus
 /**
  * \addtogroup mir_toolkit
@@ -31,21 +34,22 @@ extern "C"
 #endif
 
 typedef struct MirMesaEGLNativeDisplay MirMesaEGLNativeDisplay;
+typedef struct MirMesaEGLNativeSurface MirMesaEGLNativeSurface;
 
 struct MirMesaEGLNativeDisplay
 {
-    void (*display_get_platform)(MirMesaEGLNativeDisplay* display,
+    int (*display_get_platform)(MirMesaEGLNativeDisplay* display,
                                  MirPlatformPackage* package);
-    void (*surface_get_current_buffer)(MirMesaEGLNativeDisplay* display,
-                                       MirEGLNativeWindowType surface,
-                                       MirBufferPackage* buffer_package);
-    void (*surface_get_parameters)(MirMesaEGLNativeDisplay* display,
-                                   MirEGLNativeWindowType surface,
-                                   MirSurfaceParameters* surface_parameters);
-    void (*surface_advance_buffer)(MirMesaEGLNativeDisplay* display,
-                                   MirEGLNativeWindowType surface);
-
     void *context;
+};
+
+struct MirMesaEGLNativeSurface
+{
+    int (*surface_set_swapinterval)(MirMesaEGLNativeSurface* surface, int interval);
+    int (*surface_advance_buffer)(MirMesaEGLNativeSurface* surface,
+                                   MirBufferPackage* buffer_package);
+    int (*surface_get_parameters)(MirMesaEGLNativeSurface* surface,
+                                   MirSurfaceParameters* surface_parameters);
 };
 
 typedef enum mir_display_type

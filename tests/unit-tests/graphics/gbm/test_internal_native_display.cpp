@@ -43,10 +43,6 @@ namespace
 
 struct InternalNativeDisplay : public testing::Test
 {
-    InternalNativeDisplay()
-    {
-    }
-
     void SetUp()
     {
         using namespace ::testing;
@@ -75,24 +71,6 @@ MATCHER_P(PackageMatches, package, "")
     }
     return true;
 }
-
-MATCHER_P(StrideMatches, package, "")
-{
-    if (arg.stride != package->stride)
-    {
-        return false;
-    }
-    return true;
-}
-
-MATCHER_P(ParametersHaveSize, size, "")
-{
-    if (static_cast<uint32_t>(arg.width) != size.width.as_uint32_t())
-        return false;
-    if (static_cast<uint32_t>(arg.height) != size.height.as_uint32_t())
-        return false;
-    return true;
-}
 }
 
 TEST_F(InternalNativeDisplay, display_get_platform_matches_construction_platform)
@@ -105,84 +83,6 @@ TEST_F(InternalNativeDisplay, display_get_platform_matches_construction_platform
     memset(&test_package, 0, sizeof(MirPlatformPackage));
     native_display.display_get_platform(&native_display, &test_package);
     EXPECT_THAT(test_package, PackageMatches(platform_package));
-}
-
-TEST_F(InternalNativeDisplay, surface_get_current_buffer)
-{
-    using namespace ::testing;
-    
-    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    auto buffer = std::make_shared<mtd::MockBuffer>(geom::Size(), geom::Stride(), geom::PixelFormat());
-    
-    auto test_buffer_package = std::make_shared<MirBufferPackage>();
-    
-    test_buffer_package->data_items = 2;
-    test_buffer_package->data[0] = 1;
-    test_buffer_package->data[1] = 2;
-    test_buffer_package->fd_items = 2;
-    test_buffer_package->fd[0] = 3;
-    test_buffer_package->fd[1] = 4;
-    test_buffer_package->stride = 77;
-
-    mgg::InternalNativeDisplay native_display(platform_package); 
-    
-    EXPECT_CALL(*buffer, native_buffer_handle())
-        .WillOnce(Return(test_buffer_package)); 
-    EXPECT_CALL(surface, client_buffer()).Times(1)
-        .WillOnce(Return(buffer));
- 
-    MirBufferPackage buffer_package;
-    memset(&buffer_package, 0, sizeof(MirBufferPackage));
-    native_display.surface_get_current_buffer(
-        &native_display, static_cast<MirEGLNativeWindowType>(&surface), &buffer_package);
-
-    EXPECT_EQ(test_buffer_package->data_items, buffer_package.data_items);
-    EXPECT_EQ(test_buffer_package->data[0], buffer_package.data[0]);
-    EXPECT_EQ(test_buffer_package->data[1], buffer_package.data[1]);
-    EXPECT_EQ(test_buffer_package->fd_items, buffer_package.fd_items);
-    EXPECT_EQ(test_buffer_package->fd[0], buffer_package.fd[0]);
-    EXPECT_EQ(test_buffer_package->fd[1], buffer_package.fd[1]);
-    EXPECT_EQ(test_buffer_package->stride, buffer_package.stride);
-}
-
-TEST_F(InternalNativeDisplay, surface_advance_buffer)
-{
-    using namespace ::testing;
-    
-    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    
-    mgg::InternalNativeDisplay native_display(platform_package); 
-    
-    EXPECT_CALL(surface, advance_client_buffer()).Times(1);
-    
-    native_display.surface_advance_buffer(
-        &native_display, static_cast<MirEGLNativeWindowType>(&surface));
-}
-
-TEST_F(InternalNativeDisplay, surface_get_parameters)
-{
-    using namespace ::testing;
-    
-    geom::Size const test_surface_size = geom::Size{geom::Width{17},
-                                                    geom::Height{29}};
-    geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
-
-    mgg::InternalNativeDisplay native_display(platform_package); 
-
-    mtd::MockSurface surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    EXPECT_CALL(surface, size()).Times(AtLeast(1)).WillRepeatedly(Return(test_surface_size));
-    EXPECT_CALL(surface, pixel_format()).Times(AtLeast(1)).WillRepeatedly(Return(test_pixel_format));
-    
-    MirSurfaceParameters parameters;
-    memset(&parameters, 0, sizeof(MirSurfaceParameters));
-    native_display.surface_get_parameters(
-        &native_display, static_cast<MirEGLNativeWindowType>(&surface), &parameters);
-
-    EXPECT_THAT(parameters, ParametersHaveSize(test_surface_size));
-    EXPECT_EQ(parameters.pixel_format, static_cast<MirPixelFormat>(geom::PixelFormat::xrgb_8888));
-
-    // TODO: What to do about buffer usage besides hardware? ~racarr
-    EXPECT_EQ(parameters.buffer_usage, mir_buffer_usage_hardware);
 }
 
 TEST(MirServerMesaEGLNativeDisplayInvariants, pixel_format_formats_are_castable)

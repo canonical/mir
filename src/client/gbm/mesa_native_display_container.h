@@ -30,7 +30,6 @@ namespace mir
 {
 namespace client
 {
-
 namespace gbm
 {
 class MesaNativeDisplayContainer : public EGLNativeDisplayContainer
