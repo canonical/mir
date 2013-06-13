@@ -434,22 +434,26 @@ struct StubViewableArea : public mg::ViewableArea
     geom::Y const y;
 };
 
-typedef std::map<std::string, geom::Point> PositionList;
+typedef std::map<std::string, geom::Rectangle> GeometryList;
 
 struct StaticPlacementStrategy : public msh::PlacementStrategy
 {
-    StaticPlacementStrategy(PositionList positions)
-        : surface_positions_by_name(positions)
+    StaticPlacementStrategy(GeometryList &positions)
+        : surface_geometry_by_name(positions)
     {
     }
 
     msh::SurfaceCreationParameters place(msh::SurfaceCreationParameters const& request_parameters)
     {
         auto placed = request_parameters;
-        placed.top_left = surface_positions_by_name[request_parameters.name];
+        auto geometry = surface_geometry_by_name[request_parameters.name];
+
+        placed.top_left = geometry.top_left;
+        placed.size = geometry.size;
+        
         return placed;
     }
-    PositionList surface_positions_by_name;
+    GeometryList& surface_geometry_by_name;
 };
 
 }
@@ -460,13 +464,16 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     
     static int const screen_width = 1000;
     static int const screen_height = 800;
+    static int const client_height = screen_width/2;
     static int const client_width = screen_width/2;
     static std::string const test_client_1 = "1";
     static std::string const test_client_2 = "2";
     
-    static PositionList positions;
-    positions[test_client_2] = geom::Point{geom::X{0}, geom::Y{0}};
-    positions[test_client_1] = geom::Point{geom::X{screen_width/2}, geom::Y{0}};
+    static GeometryList positions;
+    positions[test_client_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
+                                               geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
+    positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{0}},
+                                               geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
 
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
@@ -483,7 +490,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         {
             wait_until_client_appears(test_client_1);
             wait_until_client_appears(test_client_2);
-            
+            printf("Oh yeah clients appeared \n");
             // In the bounds of the first surface
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, 0));
             // In the bounds of the second surface

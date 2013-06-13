@@ -30,6 +30,8 @@
 #include <functional>
 #include <stdexcept>
 
+#include <time.h>
+
 namespace mtf = mir_test_framework;
 
 namespace ms = mir::surfaces;
@@ -162,8 +164,8 @@ std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_in
 void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string const& surface_name)
 {
     std::unique_lock<std::mutex> lg(lifecycle_lock);
-    // Need to make retry to allow for out of order surface appeareance (hast o be synced on the client side)
-    std::chrono::seconds const timeout(60);
+    
+    time_t end_time = ::time(NULL) + 60;
     
     if (client_lifecycles[surface_name] == appeared)
     {
@@ -175,16 +177,23 @@ void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string
     }
     else
     {
-        lifecycle_condition.wait_for(lg, timeout);
-        if (client_lifecycles[surface_name] != appeared)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to appear"));
+        while (::time(NULL) < end_time)
+        {
+            lifecycle_condition.wait_for(lg, std::chrono::seconds(60));
+            if (client_lifecycles[surface_name] == appeared)
+            {
+                return;
+            }
+        }
+        BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to appear"));
      }
 }
 
 void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::string const& surface_name)
 {
     std::unique_lock<std::mutex> lg(lifecycle_lock);
-    std::chrono::seconds const timeout(60);
+
+    time_t end_time = ::time(NULL) + 60;
     
     if (client_lifecycles[surface_name] == vanished)
     {
@@ -196,8 +205,14 @@ void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::strin
     }
     else
     {
-        lifecycle_condition.wait_for(lg, timeout);
-        if (client_lifecycles[surface_name] != vanished)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to vanish"));
+        while (::time(NULL) < end_time)
+        {
+            lifecycle_condition.wait_for(lg, std::chrono::seconds(60));
+            if (client_lifecycles[surface_name] == vanished)
+            {
+                return;
+            }
+        }
+        BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to vanish"));
      }
 }
