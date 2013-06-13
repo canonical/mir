@@ -143,6 +143,8 @@ int main(int argc, char* argv[])
     mir_connection_release(connection);
     puts("Connection released");
 
+    (void)rc;
+
     return 0;
 }
 

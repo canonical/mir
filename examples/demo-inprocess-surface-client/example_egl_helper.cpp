@@ -46,6 +46,7 @@ me::EGLHelper::EGLHelper(EGLNativeDisplayType native_display, EGLNativeWindowTyp
     rc = eglChooseConfig(display, attribs, &egl_config, 1, &n);
     assert(rc == EGL_TRUE);
     assert(n == 1);
+    (void)rc;
 
     surface = eglCreateWindowSurface(display, egl_config, native_window, nullptr);
     assert(surface != EGL_NO_SURFACE);
