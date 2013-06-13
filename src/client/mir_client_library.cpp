@@ -238,14 +238,14 @@ void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * g
     surface->get_cpu_region( *graphics_region);
 }
 
-MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
 {
     return surface->next_buffer(callback, context);
 }
 
-void mir_surface_next_buffer_sync(MirSurface *surface)
+void mir_surface_swap_buffers_sync(MirSurface *surface)
 {
-    mir_wait_for(mir_surface_next_buffer(surface,
+    mir_wait_for(mir_surface_swap_buffers(surface,
         reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
         nullptr));
 }

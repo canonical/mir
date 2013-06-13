@@ -111,7 +111,7 @@ static unsigned int get_bpp(MirPixelFormat pf)
     }
 }
 
-mir_eglapp_bool mir_eglapp_init(int *width, int *height)
+mir_eglapp_bool mir_eglapp_init(unsigned int *width, unsigned int *height)
 {
     EGLint ctxattribs[] =
     {

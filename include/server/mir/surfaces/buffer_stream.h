@@ -17,8 +17,8 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_BUFFER_BUNDLE_H_
-#define MIR_SURFACES_BUFFER_BUNDLE_H_
+#ifndef MIR_SURFACES_BUFFER_STREAM_H_
+#define MIR_SURFACES_BUFFER_STREAM_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
@@ -37,17 +37,17 @@ namespace surfaces
 {
 class GraphicRegion;
 
-class BufferBundle
+class BufferStream
 {
 public:
     virtual std::shared_ptr<compositor::Buffer> secure_client_buffer() = 0;
     virtual std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer() = 0;
-    virtual geometry::PixelFormat get_bundle_pixel_format() = 0;
-    virtual geometry::Size bundle_size() = 0;
+    virtual geometry::PixelFormat get_stream_pixel_format() = 0;
+    virtual geometry::Size stream_size() = 0;
     virtual void force_requests_to_complete() = 0;
 };
 
 }
 }
 
-#endif /* MIR_SURFACES_BUFFER_BUNDLE_H_ */
+#endif /* MIR_SURFACES_BUFFER_STREAM_H_ */

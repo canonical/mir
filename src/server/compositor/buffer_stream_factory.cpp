@@ -19,10 +19,10 @@
  */
 
 #include "mir/compositor/buffer_allocation_strategy.h"
-#include "mir/compositor/buffer_bundle_manager.h"
-#include "mir/compositor/buffer_bundle_surfaces.h"
+#include "mir/compositor/buffer_stream_factory.h"
+#include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/buffer_swapper.h"
+#include "switching_bundle.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -35,23 +35,17 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
-mc::BufferBundleManager::BufferBundleManager(
+mc::BufferStreamFactory::BufferStreamFactory(
     const std::shared_ptr<BufferAllocationStrategy>& strategy)
-        : buffer_allocation_strategy(strategy)
+        : swapper_factory(strategy)
 {
     assert(strategy);
 }
 
 
-std::shared_ptr<ms::BufferBundle> mc::BufferBundleManager::create_buffer_bundle(
+std::shared_ptr<ms::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     mc::BufferProperties const& buffer_properties)
 {
-    BufferProperties actual_buffer_properties;
-
-    auto swapper(buffer_allocation_strategy->create_swapper(actual_buffer_properties,
-                                                            buffer_properties));
-
-    return std::make_shared<mc::BufferBundleSurfaces>(
-        std::move(swapper),
-        actual_buffer_properties);
+    auto switching_bundle = std::make_shared<mc::SwitchingBundle>(swapper_factory, buffer_properties);
+    return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
 }

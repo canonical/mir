@@ -38,13 +38,17 @@ template<DimensionTag Tag>
 class IntWrapper
 {
 public:
-    typedef uint32_t ValueType;
+    typedef int ValueType;
 
     IntWrapper() : value(0) {}
     template<typename AnyInteger>
     explicit IntWrapper(AnyInteger value) : value(static_cast<ValueType>(value)) {}
 
-    uint32_t as_uint32_t() const
+    uint32_t as_uint32_t() const  // TODO: Deprecate this later
+    {
+        return (uint32_t)value;
+    }
+    int as_int() const
     {
         return value;
     }
@@ -60,44 +64,44 @@ private:
 template<DimensionTag Tag>
 std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
 {
-    out << value.as_uint32_t();
+    out << value.as_int();
     return out;
 }
 
 template<DimensionTag Tag>
 inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
-    return lhs.as_uint32_t() == rhs.as_uint32_t();
+    return lhs.as_int() == rhs.as_int();
 }
 
 template<DimensionTag Tag>
 inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
-    return lhs.as_uint32_t() != rhs.as_uint32_t();
+    return lhs.as_int() != rhs.as_int();
 }
 
 template<DimensionTag Tag>
 inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
-    return lhs.as_uint32_t() <= rhs.as_uint32_t();
+    return lhs.as_int() <= rhs.as_int();
 }
 
 template<DimensionTag Tag>
 inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
-    return lhs.as_uint32_t() >= rhs.as_uint32_t();
+    return lhs.as_int() >= rhs.as_int();
 }
 
 template<DimensionTag Tag>
 inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
-    return lhs.as_uint32_t() < rhs.as_uint32_t();
+    return lhs.as_int() < rhs.as_int();
 }
 
 template<DimensionTag Tag>
 inline bool operator > (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
-    return lhs.as_uint32_t() > rhs.as_uint32_t();
+    return lhs.as_int() > rhs.as_int();
 }
 } // namespace detail
 
@@ -111,23 +115,23 @@ typedef detail::IntWrapper<detail::dx> DeltaX;
 typedef detail::IntWrapper<detail::dy> DeltaY;
 
 // Adding deltas is fine
-inline DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_uint32_t() + rhs.as_uint32_t()); }
-inline DeltaY operator+(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_uint32_t() + rhs.as_uint32_t()); }
-inline DeltaX operator-(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_uint32_t() - rhs.as_uint32_t()); }
-inline DeltaY operator-(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_uint32_t() - rhs.as_uint32_t()); }
+inline DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() + rhs.as_int()); }
+inline DeltaY operator+(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() + rhs.as_int()); }
+inline DeltaX operator-(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
+inline DeltaY operator-(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
 
 // Adding deltas to co-ordinates is fine
-inline X operator+(X lhs, DeltaX rhs) { return X(lhs.as_uint32_t() + rhs.as_uint32_t()); }
-inline Y operator+(Y lhs, DeltaY rhs) { return Y(lhs.as_uint32_t() + rhs.as_uint32_t()); }
-inline X operator-(X lhs, DeltaX rhs) { return X(lhs.as_uint32_t() - rhs.as_uint32_t()); }
-inline Y operator-(Y lhs, DeltaY rhs) { return Y(lhs.as_uint32_t() - rhs.as_uint32_t()); }
+inline X operator+(X lhs, DeltaX rhs) { return X(lhs.as_int() + rhs.as_int()); }
+inline Y operator+(Y lhs, DeltaY rhs) { return Y(lhs.as_int() + rhs.as_int()); }
+inline X operator-(X lhs, DeltaX rhs) { return X(lhs.as_int() - rhs.as_int()); }
+inline Y operator-(Y lhs, DeltaY rhs) { return Y(lhs.as_int() - rhs.as_int()); }
 
 // Subtracting coordinates is fine
-inline DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_uint32_t() - rhs.as_uint32_t()); }
-inline DeltaY operator-(Y lhs, Y rhs) { return DeltaY(lhs.as_uint32_t() - rhs.as_uint32_t()); }
+inline DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
+inline DeltaY operator-(Y lhs, Y rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
 
 template<typename Target, typename Source>
-inline Target dim_cast(Source s) { return Target(s.as_uint32_t()); }
+inline Target dim_cast(Source s) { return Target(s.as_int()); }
 }
 }
 

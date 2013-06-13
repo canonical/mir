@@ -20,7 +20,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/input_channel.h"
 
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
 
@@ -165,16 +165,16 @@ struct SurfaceCreation : public ::testing::Test
         pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{43}, geom::Height{420}};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
-        mock_buffer_bundle = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
+        mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
         null_change_cb = []{};
         mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
 
-        ON_CALL(*mock_buffer_bundle, secure_client_buffer())
+        ON_CALL(*mock_buffer_stream, secure_client_buffer())
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
     }
 
     std::string surface_name;
-    std::shared_ptr<testing::NiceMock<mtd::MockBufferBundle>> mock_buffer_bundle;
+    std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream;
     geom::PixelFormat pf;
     geom::Stride stride;
     geom::Size size;
@@ -189,10 +189,10 @@ TEST_F(SurfaceCreation, test_surface_secures_client_buffer_on_creation)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
+    EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
 
-    ms::Surface surf(surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
 
     EXPECT_NE(nullptr, surf.client_buffer());
@@ -200,7 +200,7 @@ TEST_F(SurfaceCreation, test_surface_secures_client_buffer_on_creation)
 
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
 {
-    ms::Surface surf(surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
 
     auto str = surf.name();
@@ -208,14 +208,14 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
 
 }
 
-TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
+TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 {
     using namespace testing;
 
-    ms::Surface surf(surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
 
-    EXPECT_CALL(*mock_buffer_bundle, get_bundle_pixel_format())
+    EXPECT_CALL(*mock_buffer_stream, get_stream_pixel_format())
         .Times(1)
         .WillOnce(Return(pf));
 
@@ -224,14 +224,14 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_pf)
     EXPECT_EQ(ret_pf, pf);
 }
 
-TEST_F(SurfaceCreation, test_surface_queries_bundle_for_size)
+TEST_F(SurfaceCreation, test_surface_queries_stream_for_size)
 {
     using namespace testing;
 
-    ms::Surface surf(surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
 
-    EXPECT_CALL(*mock_buffer_bundle, bundle_size())
+    EXPECT_CALL(*mock_buffer_stream, stream_size())
         .Times(1)
         .WillOnce(Return(size));
 
@@ -243,11 +243,11 @@ TEST_F(SurfaceCreation, test_surface_queries_bundle_for_size)
 TEST_F(SurfaceCreation, test_surface_advance_buffer)
 {
     using namespace testing;
-    ms::Surface surf(surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
     auto graphics_resource = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
+    EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
         .Times(1)
         .WillOnce(Return(graphics_resource));
 
@@ -257,11 +257,11 @@ TEST_F(SurfaceCreation, test_surface_advance_buffer)
 TEST_F(SurfaceCreation, test_surface_advance_buffer_notifies_changes)
 {
     using namespace testing;
-    ms::Surface surf(surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb);
     auto graphics_resource = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
+    EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
         .Times(1)
         .WillOnce(Return(graphics_resource));
 
@@ -270,15 +270,15 @@ TEST_F(SurfaceCreation, test_surface_advance_buffer_notifies_changes)
     surf.advance_client_buffer();
 }
 
-TEST_F(SurfaceCreation, test_surface_gets_ipc_from_bundle)
+TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 {
     using namespace testing;
 
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
 
-    ms::Surface surf(surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
-    EXPECT_CALL(*mock_buffer_bundle, secure_client_buffer())
+    EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
         .Times(1)
         .WillOnce(Return(stub_buffer));
     surf.advance_client_buffer();
@@ -291,7 +291,7 @@ TEST_F(SurfaceCreation, test_surface_gets_top_left)
 {
     using namespace testing;
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb};
 
     auto ret_top_left = surf.top_left();
@@ -303,7 +303,7 @@ TEST_F(SurfaceCreation, test_surface_move_to)
 {
     using namespace testing;
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb};
 
     geom::Point p{geom::X{55}, geom::Y{66}};
@@ -321,7 +321,7 @@ TEST_F(SurfaceCreation, test_surface_move_to_notifies_changes)
 
     EXPECT_CALL(mock_callback, call()).Times(1);
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
 
     surf.move_to(geom::Point{geom::X{55}, geom::Y{66}});
@@ -331,12 +331,12 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
 {
     using namespace testing;
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb};
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 
     geom::Size s{geom::Width{55}, geom::Height{66}};
-    ON_CALL(*mock_buffer_bundle, bundle_size()).WillByDefault(Return(s));
+    ON_CALL(*mock_buffer_stream, stream_size()).WillByDefault(Return(s));
 
     auto ret_transformation = surf.transformation();
 
@@ -349,20 +349,20 @@ TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
 
     EXPECT_CALL(mock_callback, call()).Times(1);
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
-TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_bundle)
+TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
 {
     using namespace testing;
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb};
     std::shared_ptr<ms::GraphicRegion> buffer_resource = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(*mock_buffer_bundle, lock_back_buffer())
+    EXPECT_CALL(*mock_buffer_stream, lock_back_buffer())
         .Times(AtLeast(1))
         .WillOnce(Return(buffer_resource));
 
@@ -376,7 +376,7 @@ TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
 {
     using namespace testing;
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb};
 
     auto ret_alpha = surf.alpha();
@@ -388,7 +388,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 {
     using namespace testing;
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb};
     float alpha = 0.67f;
 
@@ -404,7 +404,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
 
     EXPECT_CALL(mock_callback, call()).Times(1);
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
     surf.set_alpha(0.5f);
 }
@@ -413,9 +413,9 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_buffer_bundle, force_requests_to_complete()).Times(Exactly(1));
+    EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
 
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
     surf.force_requests_to_complete();
 }
@@ -424,7 +424,7 @@ TEST_F(SurfaceCreation, input_fds)
 {
     using namespace testing;
     
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
     EXPECT_THROW({
             surf.server_input_fd();
@@ -439,7 +439,7 @@ TEST_F(SurfaceCreation, input_fds)
     EXPECT_CALL(channel, client_fd()).Times(1).WillOnce(Return(client_fd));
     EXPECT_CALL(channel, server_fd()).Times(1).WillOnce(Return(server_fd));
 
-    ms::Surface input_surf{surface_name, geom::Point(), mock_buffer_bundle,
+    ms::Surface input_surf{surface_name, geom::Point(), mock_buffer_stream,
         mt::fake_shared(channel), mock_change_cb};
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
     EXPECT_EQ(server_fd, input_surf.server_input_fd());

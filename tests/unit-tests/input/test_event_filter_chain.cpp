@@ -35,9 +35,9 @@ TEST(EventFilterChain, offers_events_to_filters)
 
     mi::EventFilterChain filter_chain{filter, filter};
     // Filter will pass the event on twice
-    EXPECT_CALL(*filter, handles(_)).Times(2).WillRepeatedly(Return(false));
+    EXPECT_CALL(*filter, handle(_)).Times(2).WillRepeatedly(Return(false));
     // So the filter chain should also reject the event
-    EXPECT_FALSE(filter_chain.handles(ev));
+    EXPECT_FALSE(filter_chain.handle(ev));
 }
 
 TEST(EventFilterChain, accepting_event_halts_emission)
@@ -51,11 +51,11 @@ TEST(EventFilterChain, accepting_event_halts_emission)
     // First filter will reject, second will accept, third one should not be asked.
     {
         InSequence seq;
-        EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(false));
-        EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(false));
+        EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(true));
     }
     // So the chain should accept
-    EXPECT_TRUE(filter_chain.handles(ev));
+    EXPECT_TRUE(filter_chain.handle(ev));
 }
 
 TEST(EventFilterChain, does_not_own_event_filters)
@@ -66,8 +66,8 @@ TEST(EventFilterChain, does_not_own_event_filters)
     MirEvent ev;
     
     mi::EventFilterChain filter_chain{filter};
-    EXPECT_CALL(*filter, handles(_)).Times(1).WillOnce(Return(true));
-    EXPECT_TRUE(filter_chain.handles(ev));
+    EXPECT_CALL(*filter, handle(_)).Times(1).WillOnce(Return(true));
+    EXPECT_TRUE(filter_chain.handle(ev));
     filter.reset();
-    EXPECT_FALSE(filter_chain.handles(ev));    
+    EXPECT_FALSE(filter_chain.handle(ev));    
 }

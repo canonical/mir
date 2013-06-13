@@ -32,15 +32,16 @@ struct BufferProperties;
 class SwapperFactory : public BufferAllocationStrategy
 {
 public:
-
     explicit SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
-    explicit SwapperFactory(
-        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int number_of_buffers);
+    SwapperFactory(
+        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
+        int number_of_buffers);
 
-    std::unique_ptr<BufferSwapper> create_swapper(
-        BufferProperties& actual_buffer_properties,
-        BufferProperties const& requested_buffer_properties);
+    std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(
+        std::vector<std::shared_ptr<Buffer>>&, size_t, SwapperType) const;
+    std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
+        BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const;
 
 private:
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;

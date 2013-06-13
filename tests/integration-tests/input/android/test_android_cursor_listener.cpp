@@ -124,7 +124,7 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
     EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1);
 
     // The stack doesn't like shutting down while events are still moving through
-    EXPECT_CALL(*event_filter, handles(_))
+    EXPECT_CALL(*event_filter, handle(_))
             .WillOnce(mt::ReturnFalseAndWakeUp(wait_condition));
 
     fake_event_hub->synthesize_builtin_cursor_added();

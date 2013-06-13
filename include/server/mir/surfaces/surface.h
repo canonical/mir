@@ -43,7 +43,7 @@ class InputChannel;
 
 namespace surfaces
 {
-class BufferBundle;
+class BufferStream;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
@@ -51,7 +51,7 @@ class Surface : public graphics::Renderable, public input::SurfaceTarget
 {
 public:
     Surface(const std::string& name, geometry::Point const& top_left,
-            std::shared_ptr<BufferBundle> buffer_bundle,
+            std::shared_ptr<BufferStream> buffer_stream,
             std::shared_ptr<input::InputChannel> const& input_channel,
             std::function<void()> const& change_callback);
 
@@ -87,7 +87,7 @@ private:
     std::string surface_name;
     geometry::Point top_left_point;
 
-    std::shared_ptr<BufferBundle> buffer_bundle;
+    std::shared_ptr<BufferStream> buffer_stream;
 
     std::shared_ptr<input::InputChannel> const input_channel;
 

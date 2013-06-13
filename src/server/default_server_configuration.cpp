@@ -23,7 +23,7 @@
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/buffer_stream_factory.h"
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
@@ -319,7 +319,7 @@ mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
     return buffer_allocation_strategy(
         [this]()
         {
-             return std::make_shared<mc::SwapperFactory>(the_buffer_allocator());
+            return std::make_shared<mc::SwapperFactory>(the_buffer_allocator());
         });
 }
 
@@ -520,7 +520,7 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_stream_factory(), the_input_channel_factory(), the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;
         });
@@ -532,7 +532,7 @@ mir::DefaultServerConfiguration::the_renderables()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_stream_factory(), the_input_channel_factory(), the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;
         });
@@ -589,13 +589,13 @@ mir::DefaultServerConfiguration::the_compositing_strategy()
         });
 }
 
-std::shared_ptr<ms::BufferBundleFactory>
-mir::DefaultServerConfiguration::the_buffer_bundle_factory()
+std::shared_ptr<ms::BufferStreamFactory>
+mir::DefaultServerConfiguration::the_buffer_stream_factory()
 {
-    return buffer_bundle_manager(
+    return buffer_stream_factory(
         [this]()
         {
-            return std::make_shared<mc::BufferBundleManager>(the_buffer_allocation_strategy());
+            return std::make_shared<mc::BufferStreamFactory>(the_buffer_allocation_strategy());
         });
 }
 
