@@ -189,7 +189,6 @@ static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 {
     MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;
-    (void)surface;
 
     static const Color color[] =
     {
