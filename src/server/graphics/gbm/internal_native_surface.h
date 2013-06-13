@@ -42,7 +42,7 @@ class InternalNativeSurface : public MirMesaEGLNativeSurface
 public:
     InternalNativeSurface(std::shared_ptr<frontend::Surface> const& surface);
 
-    static int set_swapinterval(MirMesaEGLNativeSurface* surface, int interval);
+    static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interval);
     static int advance_buffer_static(MirMesaEGLNativeSurface* surface,
                                       MirBufferPackage* package);
 

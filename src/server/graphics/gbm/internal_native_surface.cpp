@@ -26,7 +26,8 @@ mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<frontend::Surf
     : surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;
-    surface_get_parameters = get_parameters_static; 
+    surface_get_parameters = get_parameters_static;
+    surface_set_swapinterval = set_swapinterval_static; 
 }
 
 int mgg::InternalNativeSurface::advance_buffer_static(MirMesaEGLNativeSurface* surface,
@@ -67,7 +68,7 @@ int mgg::InternalNativeSurface::get_parameters(MirSurfaceParameters* parameters)
     return MIR_MESA_TRUE;
 }
 
-int mgg::InternalNativeSurface::set_swapinterval(MirMesaEGLNativeSurface* surface, int interval)
+int mgg::InternalNativeSurface::set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interval)
 {
     //TODO:
     (void) surface;
