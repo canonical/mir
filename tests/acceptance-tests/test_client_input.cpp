@@ -438,16 +438,17 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     static std::string const test_client_1 = "1";
     static std::string const test_client_2 = "2";
     
-    static GeometryList positions;
-    positions[test_client_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
-                                               geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
-    positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{0}},
-                                               geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
-
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
+            GeometryList positions;
+            positions[test_client_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
+                geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
+            positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{0}},
+                geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
+
+
             return std::make_shared<StaticPlacementStrategy>(positions);
         }
         
