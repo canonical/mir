@@ -132,13 +132,7 @@ std::shared_ptr<mcl::ClientBufferFactory> mclg::GBMClientPlatform::create_buffer
 
 std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_window(ClientSurface* client_surface)
 {
-    auto window_type = new GBMNativeSurface(*client_surface);
-    ////LEAK
-    auto b = std::make_shared<void*>(window_type);
-//    *b  = window_type;
-    return b;
- //   std::shared_ptr<EGLNativeWindowType> window(window_type);
- //   return window;
+    return std::make_shared<void*>(new GBMNativeSurface(*client_surface));
 }
 
 std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()

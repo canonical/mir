@@ -82,9 +82,6 @@ mclg::MesaNativeDisplayContainer::create(MirConnection* connection)
     display->display_get_platform = gbm_egl_display_get_platform;
     display->context = connection;
 
-    //display->surface_advance_buffer = gbm_egl_surface_advance_buffer;
-    //display->surface_get_parameters = gbm_egl_surface_get_parameters;
-
     std::lock_guard<std::mutex> lg(guard);
     auto egl_display = static_cast<MirEGLNativeDisplayType>(display);
     valid_displays.insert(egl_display);
