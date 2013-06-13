@@ -37,8 +37,7 @@ class BufferStreamSurfaces : public surfaces::BufferStream
 {
 public:
     BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
-
-    ~BufferStreamSurfaces();
+    virtual ~BufferStreamSurfaces();
 
     std::shared_ptr<Buffer> secure_client_buffer();
 

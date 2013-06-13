@@ -50,9 +50,8 @@ public:
     virtual std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
         BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const = 0;
 
-protected:
     BufferAllocationStrategy() {}
-    ~BufferAllocationStrategy() = default;
+    virtual ~BufferAllocationStrategy() { /* TODO: make nothrow */ }
 
     BufferAllocationStrategy(const BufferAllocationStrategy&);
     BufferAllocationStrategy& operator=(const BufferAllocationStrategy& );
