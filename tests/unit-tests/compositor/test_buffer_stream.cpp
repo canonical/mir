@@ -76,7 +76,7 @@ TEST_F(BufferStreamTest, force_requests_to_complete)
         .Times(1);
 
     mc::BufferStreamSurfaces buffer_stream(mock_director);
-    buffer_stream.force_client_completion();
+    buffer_stream.force_requests_to_complete();
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)

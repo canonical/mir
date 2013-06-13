@@ -93,7 +93,7 @@ public:
 
     /**
      * If the swapper has been used, and you want to preserve the buffers that have been used, 
-     * it is advisable to shutdown the BufferSwapper  by using force_client_completion()
+     * it is advisable to shutdown the BufferSwapper  by using force_client_abort()
      * and then end_responsibility(). If these are not called, all buffers within the swapper
      * will be deallocated
      */

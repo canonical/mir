@@ -56,7 +56,7 @@ geom::Size mc::BufferStreamSurfaces::stream_size()
     return buffer_bundle->properties().size; 
 }
 
-void mc::BufferStreamSurfaces::force_client_completion()
+void mc::BufferStreamSurfaces::force_requests_to_complete()
 {
     buffer_bundle->force_requests_to_complete();
 }
