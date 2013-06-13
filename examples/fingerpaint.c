@@ -254,24 +254,41 @@ int main(int argc, char *argv[])
     parm.width = dinfo.width;
     parm.height = dinfo.height;
     surf = mir_connection_create_surface_sync(conn, &parm);
-
-    mir_surface_set_event_handler(surf, &delegate);
-
-    canvas.width = parm.width;
-    canvas.height = parm.height;
-    canvas.stride = canvas.width * BYTES_PER_PIXEL(parm.pixel_format);
-    canvas.pixel_format = parm.pixel_format;
-    canvas.vaddr = (char*)malloc(canvas.stride * canvas.height);
-
-    signal(SIGINT, shutdown);
-    signal(SIGTERM, shutdown);
-
-    clear_region(&canvas, &background);
-    redraw(surf, &canvas);
-
-    while (running)
+    if (surf != NULL)
     {
-        sleep(1);  /* Is there a better way yet? */
+        mir_surface_set_event_handler(surf, &delegate);
+    
+        canvas.width = parm.width;
+        canvas.height = parm.height;
+        canvas.stride = canvas.width * BYTES_PER_PIXEL(parm.pixel_format);
+        canvas.pixel_format = parm.pixel_format;
+        canvas.vaddr = (char*)malloc(canvas.stride * canvas.height);
+
+        if (canvas.vaddr != NULL)
+        {
+            signal(SIGINT, shutdown);
+            signal(SIGTERM, shutdown);
+        
+            clear_region(&canvas, &background);
+            redraw(surf, &canvas);
+        
+            while (running)
+            {
+                sleep(1);  /* Is there a better way yet? */
+            }
+
+            free(canvas.vaddr);
+        }
+        else
+        {
+            fprintf(stderr, "Failed to malloc canvas\n");
+        }
+
+        mir_surface_release_sync(surf);
+    }
+    else
+    {
+        fprintf(stderr, "mir_connection_create_surface_sync failed\n");
     }
 
     mir_connection_release(conn);
