@@ -490,7 +490,6 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         {
             wait_until_client_appears(test_client_1);
             wait_until_client_appears(test_client_2);
-            printf("Oh yeah clients appeared \n");
             // In the bounds of the first surface
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, 0));
             // In the bounds of the second surface
