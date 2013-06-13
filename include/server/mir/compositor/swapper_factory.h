@@ -45,7 +45,8 @@ public:
 
 private:
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
-    int const number_of_buffers;
+    int const synchronous_number_of_buffers;
+    int const spin_numebr_of_buffers;
 };
 }
 }

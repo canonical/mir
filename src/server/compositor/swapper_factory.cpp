@@ -36,7 +36,8 @@ mc::SwapperFactory::SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
         int number_of_buffers)
     : gr_allocator(gr_alloc),
-      number_of_buffers(number_of_buffers)
+      synchronous_number_of_buffers(number_of_buffers),
+      spin_number_of_buffers(3) //spin algorithm always takes 3 buffers
 {
 }
 
@@ -56,6 +57,10 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buff
     }
     else
     {
+        while (buffer_num < spin_numebr_of_buffers)
+        {
+
+        } 
         return std::make_shared<mc::BufferSwapperSpin>(list, buffer_num);
     }
 }
@@ -64,7 +69,6 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_new_buffer
     BufferProperties& actual_buffer_properties,
     BufferProperties const& requested_buffer_properties, SwapperType type) const
 {
-    printf("alloc new!\n");
     std::vector<std::shared_ptr<mc::Buffer>> list;
     std::shared_ptr<mc::BufferSwapper> new_swapper;
 

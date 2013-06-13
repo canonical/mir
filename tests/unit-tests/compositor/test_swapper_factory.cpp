@@ -147,6 +147,7 @@ TEST_F(SwapperFactoryTest, create_async_reuse)
 {
     using namespace testing;
 
+    mc::BufferProperties properties;
     std::vector<std::shared_ptr<mc::Buffer>> list {};
     size_t size = 3;
 
@@ -154,13 +155,14 @@ TEST_F(SwapperFactoryTest, create_async_reuse)
         .Times(0);
 
     mc::SwapperFactory strategy(mock_buffer_allocator);
-    auto swapper = strategy.create_swapper_reuse_buffers(list, size, mc::SwapperType::framedropping);
+    auto swapper = strategy.create_swapper_reuse_buffers(properties, list, size, mc::SwapperType::framedropping);
 }
 
 TEST_F(SwapperFactoryTest, create_sync_reuse)
 {
     using namespace testing;
 
+    mc::BufferProperties properties;
     std::vector<std::shared_ptr<mc::Buffer>> list;
     size_t size = 3;
 
@@ -168,7 +170,7 @@ TEST_F(SwapperFactoryTest, create_sync_reuse)
         .Times(0);
 
     mc::SwapperFactory strategy(mock_buffer_allocator);
-    auto swapper = strategy.create_swapper_reuse_buffers(list, size, mc::SwapperType::synchronous);
+    auto swapper = strategy.create_swapper_reuse_buffers(properties, list, size, mc::SwapperType::synchronous);
 }
 
 TEST_F(SwapperFactoryTest, reuse_with_different_buffer_count)
@@ -189,7 +191,8 @@ TEST_F(SwapperFactoryTest, reuse_with_different_buffer_count)
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(1);
 
-    auto second_swapper = strategy.create_swapper_new_buffers(
-        actual_properties, properties, mc::SwapperType::synchronous);
+    auto second_swapper = strategy.create_swapper_reuse_buffers(
+        actual_properties, list, size, mc::SwapperType::framedropping);
     Mock::VerifyAndClearExpectations(mock_buffer_allocator.get());
 }
+
