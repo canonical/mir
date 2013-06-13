@@ -72,32 +72,27 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
     int alpha_shift = -1;
     int n;
 
+    /*
+     * We are blending in software, so can pretend that
+     *   mir_pixel_format_abgr_8888 == mir_pixel_format_xbgr_8888
+     *   mir_pixel_format_argb_8888 == mir_pixel_format_xrgb_8888
+     */
     switch (format)
     {
     case mir_pixel_format_abgr_8888:
+    case mir_pixel_format_xbgr_8888:
         alpha_shift = 24;
         pixel = 
             (uint32_t)color->a << 24 |
-            (uint32_t)color->b << 16 |
-            (uint32_t)color->g << 8  |
-            (uint32_t)color->r;
-        break;
-    case mir_pixel_format_xbgr_8888:
-        pixel = 
             (uint32_t)color->b << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->r;
         break;
     case mir_pixel_format_argb_8888:
+    case mir_pixel_format_xrgb_8888:
         alpha_shift = 24;
         pixel = 
             (uint32_t)color->a << 24 |
-            (uint32_t)color->r << 16 |
-            (uint32_t)color->g << 8  |
-            (uint32_t)color->b;
-        break;
-    case mir_pixel_format_xrgb_8888:
-        pixel = 
             (uint32_t)color->r << 16 |
             (uint32_t)color->g << 8  |
             (uint32_t)color->b;
@@ -276,8 +271,7 @@ int main(int argc, char *argv[])
     parm.pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < dinfo.supported_pixel_format_items; f++)
     {
-        if (dinfo.supported_pixel_format[f] == mir_pixel_format_abgr_8888 ||
-            dinfo.supported_pixel_format[f] == mir_pixel_format_argb_8888)
+        if (BYTES_PER_PIXEL(dinfo.supported_pixel_format[f]) == 4)
         {
             parm.pixel_format = dinfo.supported_pixel_format[f];
             break;
@@ -285,9 +279,9 @@ int main(int argc, char *argv[])
     }
     if (parm.pixel_format == mir_pixel_format_invalid)
     {
-        fprintf(stderr, "Could not find a fast 32-bit pixel format with "
-                        "alpha support. Blending won't work!.\n");
-        parm.pixel_format = dinfo.supported_pixel_format[0];
+        fprintf(stderr, "Could not find a fast 32-bit pixel format\n");
+        mir_connection_release(conn);
+        return 1;
     }
 
     parm.name = "Paint Canvas";
