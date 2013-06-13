@@ -143,7 +143,7 @@ TEST_F(SwitchingBundleTest, switch_sequence)
     mc::SwitchingBundle switcher(mock_swapper_factory, properties);
 
     InSequence seq;
-    EXPECT_CALL(*mock_default_swapper, force_client_completion())
+    EXPECT_CALL(*mock_default_swapper, force_client_abort())
         .Times(1);
     EXPECT_CALL(*mock_default_swapper, end_responsibility(_,_))
         .Times(1);

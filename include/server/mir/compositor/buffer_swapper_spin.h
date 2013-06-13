@@ -54,7 +54,8 @@ public:
     std::shared_ptr<Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
 
-    void force_client_completion();
+    void force_client_abort();
+    void force_requests_to_complete();
     void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
 
 private:

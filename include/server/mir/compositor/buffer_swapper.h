@@ -49,7 +49,7 @@ public:
     virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
 
     /**
-     * Forces client requests on the buffer swapper to complete.
+     * Forces client requests on the buffer swapper to abort.
      *
      * client_acquire is the only function that can block to provide sync.
      * This function unblocks client_acquire, generally resulting in an exception
@@ -59,7 +59,27 @@ public:
      * but the client cannot. This used in shutdown of the swapper, the client cannot
      * be reactivated after this call completes.
      */
-    virtual void force_client_completion() = 0;
+    virtual void force_client_abort() = 0;
+
+    /**
+     * Forces requests on the buffer swapper to complete.
+     *
+     * Requests, like client_acquire(), can block waiting for a buffer to
+     * become available. This method tries to force the request to
+     * complete while ensuring that swapper keeps functioning properly.
+     *
+     * Note that it's not always possible to force a request to complete
+     * without breaking the swapper. It's a logic error to attempt to call
+     * this method if the circumstances don't allow a forced completion.
+     *
+     * To successfully use this method you should ensure that (i.e. the
+     * preconditions for calling this method are):
+     *
+     * - The compositor is not holding any buffers (e.g., it has been stopped).
+     * - The client is trying to acquire at most one buffer at a time (which is
+     *   normal usage, and enforced by the high level API).
+     */
+    virtual void force_requests_to_complete() = 0;
 
     /**
      * Ends synchronization of buffers. All buffers owned by the swapper
@@ -73,7 +93,7 @@ public:
 
     /**
      * If the swapper has been used, and you want to preserve the buffers that have been used, 
-     * it is advisable to shutdown the BufferSwapper  by using force_client_completion()
+     * it is advisable to shutdown the BufferSwapper  by using force_client_abort()
      * and then end_responsibility(). If these are not called, all buffers within the swapper
      * will be deallocated
      */

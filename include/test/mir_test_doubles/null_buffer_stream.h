@@ -56,7 +56,7 @@ public:
         return geometry::Size();
     }
 
-    void force_client_completion()
+    void force_requests_to_complete()
     {
     }
 

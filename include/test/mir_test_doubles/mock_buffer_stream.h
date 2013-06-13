@@ -36,7 +36,7 @@ struct MockBufferStream : public surfaces::BufferStream
 
     MOCK_METHOD0(get_stream_pixel_format, geometry::PixelFormat());
     MOCK_METHOD0(stream_size, geometry::Size());
-    MOCK_METHOD0(force_client_completion, void());
+    MOCK_METHOD0(force_requests_to_complete, void());
 };
 }
 }

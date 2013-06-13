@@ -123,7 +123,7 @@ TEST_F(BufferSwapperDouble, test_client_and_compositor_advance_buffers_in_serial
     EXPECT_NE(buffer_2, buffer_4);
 }
 
-TEST_F(BufferSwapperDouble, force_client_completion_works_causes_rc_failure)
+TEST_F(BufferSwapperDouble, force_requests_to_complete_works_causes_rc_failure)
 {
     auto client_buffer = swapper->client_acquire();
     swapper->client_release(client_buffer);
@@ -133,9 +133,9 @@ TEST_F(BufferSwapperDouble, force_client_completion_works_causes_rc_failure)
 
     /*
      * Unblock the the upcoming client_acquire() call. There is no guarantee
-     * that force_client_completion will run after client_acquire() is
+     * that force_requests_to_complete will run after client_acquire() is
      * blocked, but it doesn't matter. As long as the client uses only one
-     * buffer at a time, BufferSwapperMulti::force_client_completion() ensures
+     * buffer at a time, BufferSwapperMulti::force_requests_to_complete() ensures
      * that either a currently blocked request will unblock, or the next
      * request will not block.
      */
@@ -143,7 +143,7 @@ TEST_F(BufferSwapperDouble, force_client_completion_works_causes_rc_failure)
                 [this]
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds{10});
-                    swapper->force_client_completion();
+                    swapper->force_client_abort();
                 });
 
     EXPECT_THROW({
@@ -151,7 +151,7 @@ TEST_F(BufferSwapperDouble, force_client_completion_works_causes_rc_failure)
     }, std::logic_error);
 }
 
-TEST_F(BufferSwapperDouble, force_client_completion_works)
+TEST_F(BufferSwapperDouble, force_requests_to_complete_works)
 {
     swapper->client_acquire();
 
@@ -159,7 +159,7 @@ TEST_F(BufferSwapperDouble, force_client_completion_works)
                 [this]
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds{10});
-                    swapper->force_client_completion();
+                    swapper->force_client_abort();
                 });
 
     EXPECT_THROW({
