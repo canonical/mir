@@ -317,6 +317,8 @@ int main(int argc, char *argv[])
                 sleep(1);  /* Is there a better way yet? */
             }
 
+            /* Ensure canvas won't be used after it's freed */
+            mir_surface_set_event_handler(surf, NULL);
             free(canvas.vaddr);
         }
         else
