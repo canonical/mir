@@ -37,8 +37,6 @@ TEST(InternalClient, native_display_sanity)
 
     auto native_display = client.egl_native_display();
     EXPECT_EQ(reinterpret_cast<EGLNativeDisplayType>(stub_display.get()), native_display);
-//    ASSERT_EQ(nullptr, native_display->native_display_get_platform);
-//    ASSERT_EQ(nullptr, native_display->native_display_swapinterval);
 }
 
 TEST(InternalClient, native_surface_sanity)
