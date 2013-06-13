@@ -27,11 +27,11 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/input_testing_server_configuration.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -60,84 +60,10 @@ namespace
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
 }
 
-#include "mir/input/surface_target.h"
-
 namespace
 {
-struct FocusNotifyingInputTargeter : public msh::InputTargeter
-{
-    FocusNotifyingInputTargeter(std::shared_ptr<msh::InputTargeter> const& real_targeter,
-                                std::function<void(void)> const& focus_set)
-      : real_targeter(real_targeter),
-        focus_set(focus_set)
-    {
 
-    }
-    virtual ~FocusNotifyingInputTargeter() noexcept(true) {}
-    
-    void focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface) override
-    {
-        real_targeter->focus_changed(surface);
-
-        // We need a synchronization primitive inorder to halt test event injection
-        // until after a surface has taken focus (lest the events be discarded).
-        focus_set();
-    }
-    void focus_cleared()
-    {
-        real_targeter->focus_cleared();
-    }
-
-    std::shared_ptr<msh::InputTargeter> const real_targeter;
-    std::function<void(void)> focus_set;
-};
-
-struct FakeInputServerConfiguration : public mir_test_framework::TestingServerConfiguration
-{
-    FakeInputServerConfiguration()
-      : input_config(the_event_filters(), the_display(), std::shared_ptr<mi::CursorListener>(), the_input_report())
-    {
-    }
-
-    virtual void inject_input_after_focus()
-    {
-    }
-    
-    std::shared_ptr<mi::InputConfiguration> the_input_configuration() override
-    {
-        fake_event_hub = input_config.the_fake_event_hub();
-        fake_event_hub->synthesize_builtin_keyboard_added();
-        fake_event_hub->synthesize_builtin_cursor_added();
-        fake_event_hub->synthesize_device_scan_complete();
-
-        return mt::fake_shared(input_config);
-    }
-    
-    std::shared_ptr<mi::InputManager> the_input_manager() override
-    {
-        return DefaultServerConfiguration::the_input_manager();
-    }
-    std::shared_ptr<ms::InputRegistrar> the_input_registrar() override
-    {        
-        return DefaultServerConfiguration::the_input_registrar();
-    }
-
-    std::shared_ptr<msh::InputTargeter>
-    the_input_targeter() override
-    {
-        return input_targeter(
-            [this]()
-            {
-                return std::make_shared<FocusNotifyingInputTargeter>(DefaultServerConfiguration::the_input_targeter(), std::bind(std::mem_fn(&FakeInputServerConfiguration::inject_input_after_focus), this));
-            });
-    }
-
-    mtd::FakeEventHubInputConfiguration input_config;
-    mia::FakeEventHub* fake_event_hub;
-};
-
-
-struct ClientConfigCommon : TestingClientConfiguration
+struct ClientConfigCommon : mtf::TestingClientConfiguration
 {
     ClientConfigCommon() :
         connection(0),
@@ -189,8 +115,9 @@ struct MockInputHandler
 
 struct InputReceivingClient : ClientConfigCommon
 {
-    InputReceivingClient(int events_to_receive)
-      : events_to_receive(events_to_receive),
+    InputReceivingClient(std::string const& surface_name, int events_to_receive)
+      : surface_name(surface_name),
+        events_to_receive(events_to_receive),
         events_received(0)
     {
         assert(events_to_receive <= max_events_to_receive);
@@ -214,7 +141,7 @@ struct InputReceivingClient : ClientConfigCommon
     {
         MirSurfaceParameters const request_params =
          {
-             __PRETTY_FUNCTION__,
+             surface_name.c_str(),
              surface_width, surface_height,
              mir_pixel_format_abgr_8888,
              mir_buffer_usage_hardware
@@ -261,6 +188,8 @@ struct InputReceivingClient : ClientConfigCommon
     std::shared_ptr<MockInputHandler> handler;
     static int const max_events_to_receive = 4;
     mt::WaitCondition event_received[max_events_to_receive];
+    
+    std::string const surface_name;
     
     int events_to_receive;
     int events_received;
@@ -343,13 +272,13 @@ TEST_F(TestClientInput, clients_receive_key_input)
     using namespace ::testing;
     
     int const num_events_produced = 3;
+    static std::string const test_client_name = "1";
 
-    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
-        void inject_input_after_focus()
+        void inject_input()
         {
-            // We send multiple events in order to verify the client is handling them
-            // and server dispatch does not become backed up.
+            wait_until_client_appears(test_client_name);
             for (int i = 0; i < num_events_produced; i++)
                 fake_event_hub->synthesize_event(mis::a_key_down_event()
                                                  .of_scancode(KEY_ENTER));
@@ -359,7 +288,7 @@ TEST_F(TestClientInput, clients_receive_key_input)
     
     struct KeyReceivingClient : InputReceivingClient
     {
-        KeyReceivingClient() : InputReceivingClient(num_events_produced) {}
+        KeyReceivingClient() : InputReceivingClient(test_client_name, num_events_produced) {}
         void expect_input()
         {
             using namespace ::testing;
@@ -373,11 +302,14 @@ TEST_F(TestClientInput, clients_receive_key_input)
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 {
     using namespace ::testing;
+    static std::string const test_client_name = "1";
     
-    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
-        void inject_input_after_focus()
+        void inject_input()
         {
+            wait_until_client_appears(test_client_name);
+
             fake_event_hub->synthesize_event(mis::a_key_down_event()
                                              .of_scancode(KEY_LEFTSHIFT));
             fake_event_hub->synthesize_event(mis::a_key_down_event()
@@ -389,7 +321,7 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
     
     struct KeyReceivingClient : InputReceivingClient
     {
-        KeyReceivingClient() : InputReceivingClient(2) {}
+        KeyReceivingClient() : InputReceivingClient(test_client_name, 2) {}
 
         void expect_input()
         {
@@ -409,11 +341,14 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 TEST_F(TestClientInput, clients_receive_motion_inside_window)
 {
     using namespace ::testing;
+    static std::string const test_client_name = "1";
     
-    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    struct ServerConfiguration : public mtf::InputTestingServerConfiguration
     {
-        void inject_input_after_focus()
+        void inject_input()
         {
+            wait_until_client_appears(test_client_name);
+            
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width,
                                                                                  InputReceivingClient::surface_height));
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,2));
@@ -423,7 +358,7 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
     
     struct MotionReceivingClient : InputReceivingClient
     {
-        MotionReceivingClient() : InputReceivingClient(2) {}
+        MotionReceivingClient() : InputReceivingClient(test_client_name, 2) {}
 
         void expect_input()
         {
@@ -446,10 +381,13 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 {
     using namespace ::testing;
     
-    struct InputProducingServerConfiguration : FakeInputServerConfiguration
+    static std::string const test_client_name = "1";
+    
+    struct ServerConfiguration : public mtf::InputTestingServerConfiguration
     {
-        void inject_input_after_focus()
+        void inject_input()
         {
+            wait_until_client_appears(test_client_name);
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
         }
     } server_config;
@@ -457,7 +395,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     
     struct ButtonReceivingClient : InputReceivingClient
     {
-        ButtonReceivingClient() : InputReceivingClient(1) {}
+        ButtonReceivingClient() : InputReceivingClient(test_client_name, 1) {}
 
         void expect_input()
         {
@@ -520,27 +458,18 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
 {
     using namespace ::testing;
     
-    int const screen_width = 1000;
-    int const screen_height = 800;
-    int const client_width = screen_width/2;
-    int const client_height = screen_height;
-    std::string const surface1_name = "1";
-    std::string const surface2_name = "2";
+    static int const screen_width = 1000;
+    static int const screen_height = 800;
+    static int const client_width = screen_width/2;
+    static std::string const test_client_1 = "1";
+    static std::string const test_client_2 = "2";
     
-    PositionList positions;
-    positions[surface1_name] = geom::Point{geom::X{0}, geom::Y{0}};
-    positions[surface2_name] = geom::Point{geom::X{screen_width/2}, geom::Y{0}};
+    static PositionList positions;
+    positions[test_client_2] = geom::Point{geom::X{0}, geom::Y{0}};
+    positions[test_client_1] = geom::Point{geom::X{screen_width/2}, geom::Y{0}};
 
-    struct TestServerConfiguration : FakeInputServerConfiguration
+    struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
-        TestServerConfiguration(int screen_width, int screen_height, PositionList positions)
-            : screen_width(screen_width),
-              screen_height(screen_height),
-              positions(positions),
-              clients_ready(0)
-        {
-        }
-
         std::shared_ptr<mg::ViewableArea> the_viewable_area() override
         {
             return std::make_shared<StubViewableArea>(screen_width, screen_height);
@@ -550,58 +479,24 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             return std::make_shared<StaticPlacementStrategy>(positions);
         }
 
-        void inject_input_after_focus() override
+        void inject_input() override
         {
-            clients_ready++;
-            if (clients_ready != 2) // We wait until both clients have connected and registered with the input stack.
-                return;
+            wait_until_client_appears(test_client_1);
+            wait_until_client_appears(test_client_2);
             
             // In the bounds of the first surface
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, 0));
             // In the bounds of the second surface
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, 0));
         }
-        int screen_width, screen_height;
-        PositionList positions;
-
-        int clients_ready;
-    } server_config(screen_width, screen_height, positions);
+    } server_config;
     
     launch_server_process(server_config);
     
-    MirSurfaceParameters const surface1_params =
-        {
-            surface1_name.c_str(),
-            client_width, client_height,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware
-        };    
-    MirSurfaceParameters const surface2_params =
-        {
-            surface2_name.c_str(),
-            client_width, client_height,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware
-        };
-    struct ParameterizedClient : InputReceivingClient
+    struct InputClientOne : InputReceivingClient
     {
-        ParameterizedClient(MirSurfaceParameters params, int events_to_expect) : 
-            InputReceivingClient(events_to_expect),
-            params(params)
-        {
-        }
-        
-        MirSurfaceParameters parameters() override
-        {
-            return params;
-        }
-
-        MirSurfaceParameters params;
-    };
-    struct InputClientOne : ParameterizedClient
-    {
-        InputClientOne(MirSurfaceParameters params) :
-            ParameterizedClient(params, 3)
+        InputClientOne()
+           : InputReceivingClient(test_client_1, 3)
         {
         }
         
@@ -610,14 +505,15 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             InSequence seq;
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1).WillOnce(Return(true));
             EXPECT_CALL(*handler, handle_input(
-                MotionEventWithPosition(params.width - 1, 0))).Times(1).WillOnce(Return(true));
+                MotionEventWithPosition(client_width - 1, 0))).Times(1).WillOnce(Return(true));
             EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1).WillOnce(Return(true));
         }
-    } client_1(surface1_params);
-    struct InputClientTwo : ParameterizedClient
+    } client_1;
+
+    struct InputClientTwo : InputReceivingClient
     {
-        InputClientTwo(MirSurfaceParameters params) :
-            ParameterizedClient(params, 2)
+        InputClientTwo()
+            : InputReceivingClient(test_client_2, 2)
         {
         }
         
@@ -626,9 +522,9 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             InSequence seq;
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1).WillOnce(Return(true));
             EXPECT_CALL(*handler, handle_input(
-                MotionEventWithPosition(params.width - 1, 0))).Times(1).WillOnce(Return(true));
+                MotionEventWithPosition(client_width - 1, 0))).Times(1).WillOnce(Return(true));
         }
-    } client_2(surface2_params);
+    } client_2;
 
     launch_client_process(client_1);
     launch_client_process(client_2);

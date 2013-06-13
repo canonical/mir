@@ -1,0 +1,203 @@
+/*
+ * Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Robert Carr <robert.carr@canonical.com>
+ */
+
+#include "mir_test_framework/input_testing_server_configuration.h"
+
+#include "mir/input/surface_target.h"
+#include "mir/surfaces/input_registrar.h"
+#include "mir/graphics/display.h"
+
+#include "mir_test/fake_event_hub.h"
+#include "mir_test/fake_event_hub_input_configuration.h"
+
+#include <boost/throw_exception.hpp>
+
+#include <functional>
+#include <stdexcept>
+
+namespace mtf = mir_test_framework;
+
+namespace ms = mir::surfaces;
+namespace mi = mir::input;
+namespace mia = mi::android;
+namespace mtd = mir::test::doubles;
+
+namespace
+{
+class InputRegistrarListener
+{
+public:
+    virtual ~InputRegistrarListener() = default;
+    
+    virtual void after_surface_appeared(std::string const& surface_name) = 0;
+    virtual void after_surface_vanished(std::string const& surface_name) = 0;
+
+protected:
+    InputRegistrarListener() = default;
+    InputRegistrarListener(InputRegistrarListener const&) = delete;
+    InputRegistrarListener& operator=(InputRegistrarListener const&) = delete;
+};
+
+class ProxyInputRegistrar : public ms::InputRegistrar
+{
+public:
+    ProxyInputRegistrar(std::shared_ptr<ms::InputRegistrar> const underlying_registrar,
+                        std::shared_ptr<InputRegistrarListener> const listener)
+        : underlying_registrar(underlying_registrar),
+          listener(listener)
+    {   
+    }
+
+    ~ProxyInputRegistrar() noexcept(true) = default;
+    
+    void input_surface_opened(std::shared_ptr<mi::SurfaceTarget> const& opened_surface)
+    {
+        underlying_registrar->input_surface_opened(opened_surface);
+        listener->after_surface_appeared(opened_surface->name());
+    }
+    void input_surface_closed(std::shared_ptr<mi::SurfaceTarget> const& closed_surface)
+    {
+        underlying_registrar->input_surface_closed(closed_surface);
+        listener->after_surface_vanished(closed_surface->name());
+    }
+
+private:
+    std::shared_ptr<ms::InputRegistrar> const underlying_registrar;
+    std::shared_ptr<InputRegistrarListener> const listener;
+};
+}
+
+mtf::InputTestingServerConfiguration::InputTestingServerConfiguration()
+    : input_configuration(nullptr)
+{
+}
+
+void mtf::InputTestingServerConfiguration::exec()
+{
+    input_injection_thread = std::thread(std::mem_fn(&mtf::InputTestingServerConfiguration::inject_input), this);
+}
+
+void mtf::InputTestingServerConfiguration::on_exit()
+{
+    input_injection_thread.join();
+}
+
+std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::the_input_configuration()
+{
+    if (!input_configuration)
+    {
+        std::shared_ptr<mi::CursorListener> null_cursor_listener{nullptr};
+
+        input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(the_event_filters(),
+            the_display(),
+            null_cursor_listener,
+            the_input_report());
+        fake_event_hub = input_configuration->the_fake_event_hub();
+
+        fake_event_hub->synthesize_builtin_keyboard_added();
+        fake_event_hub->synthesize_builtin_cursor_added();
+        fake_event_hub->synthesize_device_scan_complete();
+    }
+    
+    return input_configuration;
+}
+
+std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_input_registrar()
+{
+    struct LifecycleNotifier : public InputRegistrarListener
+    {
+        LifecycleNotifier(std::mutex& lifecycle_lock,
+                          std::condition_variable &lifecycle_condition,
+                          std::map<std::string, mtf::ClientLifecycleState> &client_lifecycles)
+            : lifecycle_lock(lifecycle_lock),
+              lifecycle_condition(lifecycle_condition),
+              client_lifecycles(client_lifecycles)
+        {
+        }
+        void after_surface_appeared(std::string const& surface_name)
+        {
+            std::unique_lock<std::mutex> lg(lifecycle_lock);
+            client_lifecycles[surface_name] = mtf::ClientLifecycleState::appeared;
+            lifecycle_condition.notify_all();
+        }
+
+        void after_surface_vanished(std::string const& surface_name)
+        {
+            std::unique_lock<std::mutex> lg(lifecycle_lock);
+            client_lifecycles[surface_name] = mtf::ClientLifecycleState::vanished;
+            lifecycle_condition.notify_all();
+        }
+        std::mutex &lifecycle_lock;
+        std::condition_variable &lifecycle_condition;
+        std::map<std::string, mtf::ClientLifecycleState> &client_lifecycles;
+    };
+    
+    if (!input_registrar)
+    {
+        auto registrar_listener = std::make_shared<LifecycleNotifier>(lifecycle_lock,
+            lifecycle_condition,
+            client_lifecycles);
+        input_registrar = std::make_shared<ProxyInputRegistrar>(the_input_configuration()->the_input_registrar(),
+            registrar_listener);
+    }
+
+    return input_registrar;
+}
+
+void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string const& surface_name)
+{
+    std::unique_lock<std::mutex> lg(lifecycle_lock);
+    // Need to make retry to allow for out of order surface appeareance (hast o be synced on the client side)
+    std::chrono::seconds const timeout(60);
+    
+    if (client_lifecycles[surface_name] == appeared)
+    {
+        return;
+    }
+    else if (client_lifecycles[surface_name] == vanished)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to appear but it has already vanished"));
+    }
+    else
+    {
+        lifecycle_condition.wait_for(lg, timeout);
+        if (client_lifecycles[surface_name] != appeared)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to appear"));
+     }
+}
+
+void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::string const& surface_name)
+{
+    std::unique_lock<std::mutex> lg(lifecycle_lock);
+    std::chrono::seconds const timeout(60);
+    
+    if (client_lifecycles[surface_name] == vanished)
+    {
+        return;
+    }
+    else if (client_lifecycles[surface_name] == starting)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to vanish but it has not started"));
+    }
+    else
+    {
+        lifecycle_condition.wait_for(lg, timeout);
+        if (client_lifecycles[surface_name] != vanished)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to vanish"));
+     }
+}
