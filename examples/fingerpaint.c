@@ -198,7 +198,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                 int x = event->motion.pointer_coordinates[p].x;
                 int y = event->motion.pointer_coordinates[p].y;
                 int radius = event->motion.pointer_coordinates[p].pressure *
-                             event->motion.pointer_coordinates[p].size * 50.0f;
+                             event->motion.pointer_coordinates[p].size * 50.0f
+                             + 1.0f;
                 size_t c = (base_color + p) %
                            (sizeof(color)/sizeof(color[0]));
                 draw_box(canvas, x - radius, y - radius, 2*radius, color + c);
