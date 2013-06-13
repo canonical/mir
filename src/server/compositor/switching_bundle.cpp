@@ -104,12 +104,12 @@ void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
     {
 
         printf("async\n");
-        swapper = swapper_factory->create_swapper_reuse_buffers(list, size, mc::SwapperType::framedropping);
+        swapper = swapper_factory->create_swapper_reuse_buffers(bundle_properties, list, size, mc::SwapperType::framedropping);
     }
     else
     {
         printf("sync\n");
-        swapper = swapper_factory->create_swapper_reuse_buffers(list, size, mc::SwapperType::synchronous);
+        swapper = swapper_factory->create_swapper_reuse_buffers(bundle_properties, list, size, mc::SwapperType::synchronous);
     }
 
     cv.notify_all();

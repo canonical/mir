@@ -48,18 +48,21 @@ mc::SwapperFactory::SwapperFactory(
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buffers(
-    std::vector<std::shared_ptr<Buffer>>& list, size_t buffer_num, SwapperType type) const
+    BufferProperties const& buffer_properties, std::vector<std::shared_ptr<Buffer>>& list,
+    size_t buffer_num, SwapperType type) const
 {
     printf("realloc!\n");
     if (type == mc::SwapperType::synchronous)
     {
+        //TODO: we should downgrade the number of buffers for BufferSwapperMulti. This will require 
+        //      coordination though
         return std::make_shared<mc::BufferSwapperMulti>(list, buffer_num); 
     }
     else
     {
-        while (buffer_num < spin_numebr_of_buffers)
+        while (buffer_num < spin_number_of_buffers)
         {
-
+            list.push_back(gr_allocator->alloc_buffer(buffer_properties));
         } 
         return std::make_shared<mc::BufferSwapperSpin>(list, buffer_num);
     }
@@ -74,20 +77,19 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_new_buffer
 
     if (type == mc::SwapperType::synchronous)
     {
-        for(auto i=0; i< number_of_buffers; i++)
+        for(auto i=0u; i< synchronous_number_of_buffers; i++)
         {
             list.push_back(gr_allocator->alloc_buffer(requested_buffer_properties));
         }
-        new_swapper = std::make_shared<mc::BufferSwapperMulti>(list, number_of_buffers);
+        new_swapper = std::make_shared<mc::BufferSwapperMulti>(list, synchronous_number_of_buffers);
     }
     else
     {
-        int const async_buffer_count = 3; //async only can accept 3 buffers, so ignore constructor request
-        for(auto i=0; i < async_buffer_count; i++)
+        for(auto i=0u; i < spin_number_of_buffers; i++)
         {
             list.push_back(gr_allocator->alloc_buffer(requested_buffer_properties));
         }
-        new_swapper = std::make_shared<mc::BufferSwapperSpin>(list, async_buffer_count);
+        new_swapper = std::make_shared<mc::BufferSwapperSpin>(list, spin_number_of_buffers);
     }
 
     actual_buffer_properties = BufferProperties{
