@@ -25,8 +25,6 @@
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#include <stdexcept>
-#include <boost/throw_exception.hpp>
 
 namespace mir
 {
@@ -34,24 +32,7 @@ namespace graphics
 {
 struct EGLExtensions
 {
-    EGLExtensions()
-        : eglCreateImageKHR{
-              reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
-                  eglGetProcAddress("eglCreateImageKHR"))},
-          eglDestroyImageKHR{
-              reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
-                  eglGetProcAddress("eglDestroyImageKHR"))},
-          glEGLImageTargetTexture2DOES{
-              reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-                  eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
-    {
-        if (!eglCreateImageKHR || !eglDestroyImageKHR)
-            BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGLImage"));
-
-        if (!glEGLImageTargetTexture2DOES)
-            BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
-    }
-
+    EGLExtensions();
     PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
     PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;

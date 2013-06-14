@@ -19,6 +19,7 @@
 
 #include "mir/graphics/egl_extensions.h"
 #include "mir_test_doubles/mock_egl.h"
+#include <stdexcept>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
