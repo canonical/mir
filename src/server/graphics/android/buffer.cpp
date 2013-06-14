@@ -37,17 +37,6 @@ mga::Buffer::Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
     : native_buffer(buffer_handle),
       egl_extensions(extensions)
 {
-#if 0
-    if (!alloc_device)
-        BOOST_THROW_EXCEPTION(std::runtime_error("No allocation device for graphics buffer"));
-
-    native_buffer = alloc_device->alloc_buffer(size, pf, use);
-
-    //TODO: we could make the native buffer itself a constructor dependency and move creation
-    //      failures to the factory
-    if (!native_buffer.get())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Graphics buffer allocation failed"));
-#endif
 }
 
 mga::Buffer::~Buffer()
