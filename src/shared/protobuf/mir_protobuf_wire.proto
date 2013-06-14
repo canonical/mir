@@ -4,6 +4,9 @@ message Invocation {
   required uint32 id = 1;
   required string method_name = 2;
   required bytes  parameters = 3;
+
+  optional uint32 version_major = 256;
+  optional uint32 version_minor = 257;
 }
 
 message Result {
@@ -12,4 +15,7 @@ message Result {
   optional bytes response = 2;
   // Events are in events.
   repeated bytes events = 3;
+
+  optional uint32 version_major = 256;
+  optional uint32 version_minor = 257;
 }
