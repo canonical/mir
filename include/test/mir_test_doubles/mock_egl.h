@@ -85,8 +85,8 @@ public:
     MOCK_METHOD0(eglGetError, EGLint (void));
 
     /* extensions */
-    MOCK_METHOD5(eglCreateImageKHR, EGLImageKHR(EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint*));
-    MOCK_METHOD2(eglDestroyImageKHR,EGLBoolean(EGLDisplay, EGLImageKHR));
+    MOCK_METHOD5(extension_eglCreateImageKHR, EGLImageKHR(EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint*));
+    MOCK_METHOD2(extension_eglDestroyImageKHR,EGLBoolean(EGLDisplay, EGLImageKHR));
 
     EGLDisplay fake_egl_display;
     EGLConfig* fake_configs;

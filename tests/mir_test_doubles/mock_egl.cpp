@@ -98,7 +98,7 @@ mtd::MockEGL::MockEGL()
     ON_CALL(*this, eglGetCurrentDisplay())
     .WillByDefault(Return(fake_egl_display));
 
-    ON_CALL(*this, eglCreateImageKHR(_,_,_,_,_))
+    ON_CALL(*this, extension_eglCreateImageKHR(_,_,_,_,_))
     .WillByDefault(Return(fake_egl_image));
 }
 
@@ -140,9 +140,9 @@ void mtd::MockEGL::silence_uninteresting()
         .Times(AtLeast(0));
     EXPECT_CALL(*this, eglSwapBuffers(_,_))
         .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglCreateImageKHR(_,_,_,_,_))
+    EXPECT_CALL(*this, extension_eglCreateImageKHR(_,_,_,_,_))
         .Times(AtLeast(0));
-    EXPECT_CALL(*this, eglDestroyImageKHR(_,_))
+    EXPECT_CALL(*this, extension_eglDestroyImageKHR(_,_))
         .Times(AtLeast(0));
 }
 
@@ -338,15 +338,15 @@ EGLBoolean eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, NativePixmapType 
 }
 
 /* extensions */
-EGLImageKHR eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
+EGLImageKHR extension_eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLImageKHR)
-    return global_mock_egl->eglCreateImageKHR ( dpy, ctx, target, buffer, attrib_list);
+    return global_mock_egl->extension_eglCreateImageKHR(dpy, ctx, target, buffer, attrib_list);
 }
 
-EGLBoolean eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
+EGLBoolean extension_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglDestroyImageKHR ( dpy, image);
+    return global_mock_egl->extension_eglDestroyImageKHR(dpy, image);
 }
 

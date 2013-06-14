@@ -40,7 +40,6 @@ public:
     ~MockGL();
     void silence_uninteresting();
 
-    MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
     MOCK_METHOD1(glGetString, const GLubyte*(GLenum));
     MOCK_METHOD1(glUseProgram, void (GLuint));
     MOCK_METHOD1(glEnable, void (GLenum));
@@ -72,6 +71,8 @@ public:
     MOCK_METHOD3(glGetProgramiv, void (GLuint, GLenum, GLint *));
     MOCK_METHOD4(glGetProgramInfoLog, void (GLuint, GLsizei, GLsizei *, GLchar *));
     MOCK_METHOD9(glTexImage2D, void(GLenum,GLint,GLint,GLsizei,GLsizei,GLint,GLenum,GLenum,const GLvoid*));
+
+    MOCK_METHOD2(extension_glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
 };
 
 }
