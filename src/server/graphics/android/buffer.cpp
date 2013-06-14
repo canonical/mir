@@ -26,7 +26,7 @@
 #include <GLES2/gl2ext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-
+#include <iostream>
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -55,7 +55,7 @@ mga::Buffer::~Buffer()
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     for(it = egl_image_map.begin(); it != egl_image_map.end(); it++)
     {
-        egl_extensions->eglDestroyImageKHR(it->first, it->second);
+     //   egl_extensions->eglDestroyImageKHR(it->first, it->second);
     }
 }
 
@@ -92,8 +92,13 @@ void mga::Buffer::bind_to_texture()
     auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
+#if 1
+        image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
+                                  native_buffer.get(), image_attrs);
+#else
         image = egl_extensions->eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                                   native_buffer.get(), image_attrs);
+#endif
         if (image == EGL_NO_IMAGE_KHR)
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("error binding buffer to texture\n"));
@@ -105,9 +110,12 @@ void mga::Buffer::bind_to_texture()
         image = it->second;
     }
 
+#if 1
+    std::cout << "OK " << &glEGLImageTargetTexture2DOES
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+#else
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
-
-    return;
+#endif
 }
  
 std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const

@@ -218,34 +218,6 @@ TEST_F(GBMBufferAllocatorTest, throws_on_buffer_creation_failure)
     }, std::runtime_error);
 }
 
-TEST_F(GBMBufferAllocatorTest, constructor_throws_if_egl_image_not_supported)
-{
-    using namespace testing;
-    typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
-
-    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
-    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
-
-    EXPECT_THROW({
-        mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
-    }, std::runtime_error);
-}
-
-TEST_F(GBMBufferAllocatorTest, constructor_throws_if_gl_oes_egl_image_not_supported)
-{
-    using namespace testing;
-    typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
-
-    ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
-
-    EXPECT_THROW({
-        mgg::GBMBufferAllocator allocator(platform, mock_buffer_initializer);
-    }, std::runtime_error);
-}
-
 TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
 {
     auto supported_pixel_formats = allocator->supported_pixel_formats();
