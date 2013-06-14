@@ -55,6 +55,7 @@ private:
     std::map<EGLDisplay,EGLImageKHR> egl_image_map;
 
     std::shared_ptr<ANativeWindowBuffer> native_buffer;
+    std::shared_ptr<EGLExtensions> egl_extensions;
 };
 
 }

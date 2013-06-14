@@ -18,6 +18,7 @@
 
 #include "mir/graphics/egl_extensions.h"
 #include "src/server/graphics/android/buffer.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>
@@ -28,6 +29,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 class AndroidGraphicBufferBasic : public ::testing::Test
 {
@@ -47,6 +49,7 @@ protected:
         extensions = std::make_shared<mg::EGLExtensions>();
     }
 
+    mtd::MockEGL mock_egl;
     std::shared_ptr<ANativeWindowBuffer> mock_buffer_handle;
     geom::PixelFormat pf;
     geom::Size size;

@@ -17,9 +17,9 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "buffer.h"
-#include "graphic_alloc_adaptor.h"
+#include "mir/graphics/egl_extensions.h"
 #include "android_format_conversion-inl.h"
+#include "buffer.h"
 
 #include <system/window.h>
 #include <GLES2/gl2.h>
@@ -34,9 +34,9 @@ namespace geom=mir::geometry;
 
 mga::Buffer::Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
                     std::shared_ptr<mg::EGLExtensions> const& extensions)
-    : native_buffer(buffer_handle)
+    : native_buffer(buffer_handle),
+      egl_extensions(extensions)
 {
-    (void) extensions;
 #if 0
     if (!alloc_device)
         BOOST_THROW_EXCEPTION(std::runtime_error("No allocation device for graphics buffer"));
@@ -55,7 +55,7 @@ mga::Buffer::~Buffer()
     std::map<EGLDisplay,EGLImageKHR>::iterator it;
     for(it = egl_image_map.begin(); it != egl_image_map.end(); it++)
     {
-        eglDestroyImageKHR(it->first, it->second);
+        egl_extensions->eglDestroyImageKHR(it->first, it->second);
     }
 }
 
@@ -85,14 +85,14 @@ void mga::Buffer::bind_to_texture()
     }
     static const EGLint image_attrs[] =
     {
-        EGL_IMAGE_PRESERVED_KHR,    EGL_TRUE,
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
         EGL_NONE
     };
     EGLImageKHR image;
     auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
-        image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
+        image = egl_extensions->eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                                   native_buffer.get(), image_attrs);
         if (image == EGL_NO_IMAGE_KHR)
         {
@@ -105,7 +105,7 @@ void mga::Buffer::bind_to_texture()
         image = it->second;
     }
 
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+    egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 
     return;
 }
