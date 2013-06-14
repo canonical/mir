@@ -26,7 +26,6 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
-namespace mtd = mir::test::doubles;
 
 class AndroidBufferBinding : public ::testing::Test
 {
@@ -38,7 +37,7 @@ public:
         stub_buffer = std::make_shared<ANativeWindowBuffer>();
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::abgr_8888;
-        buffer = std::make_shared<mga::Buffer>(stub_buffer, size, pf, mga::BufferUsage::use_hardware);
+        buffer = std::make_shared<mga::Buffer>(stub_buffer, extensions);
 
         mock_egl.silence_uninteresting();
     };
@@ -50,6 +49,7 @@ public:
     geom::Size size;
     geom::PixelFormat pf;
 
+    mg::EGLExtensions extensions;
     std::shared_ptr<mga::Buffer> buffer;
     std::shared_ptr<ANativeWindowBuffer> stub_buffer;
 };

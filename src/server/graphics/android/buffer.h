@@ -37,12 +37,11 @@ namespace graphics
 namespace android
 {
 
-class GraphicAllocAdaptor;
 class Buffer: public compositor::BufferBasic 
 {
 public:
-    Buffer(const std::shared_ptr<GraphicAllocAdaptor>& device,
-                  geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
+    Buffer(std::shared_ptr<ANativeWindowBuffer> const& device,
+           geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
     ~Buffer();
 
     geometry::Size size() const;
