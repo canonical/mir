@@ -43,6 +43,9 @@ target_link_libraries(mir_demo_client
 add_executable(mir_demo_client_multiwin multiwin.c)
 target_link_libraries(mir_demo_client_multiwin mirclient)
 
+add_executable(mir_demo_client_fingerpaint fingerpaint.c)
+target_link_libraries(mir_demo_client_fingerpaint mirclient)
+
 add_executable(mir_demo_client_unaccelerated
   demo_client_unaccelerated.c
 )
@@ -118,6 +121,7 @@ set (DEMO_CLIENTS
   mir_demo_client_eglflash
   mir_demo_client_egltriangle
   mir_demo_client_eglplasma
+  mir_demo_client_fingerpaint
 )
 
 add_subdirectory(demo-inprocess-surface-client)

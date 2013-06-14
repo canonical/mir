@@ -18,8 +18,8 @@
  *  Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
-#define MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
+#ifndef MIR_SURFACES_BUFFER_STREAM_FACTORY_H_
+#define MIR_SURFACES_BUFFER_STREAM_FACTORY_H_
 
 #include <memory>
 
@@ -32,23 +32,23 @@ struct BufferProperties;
 
 namespace surfaces
 {
-class BufferBundle;
+class BufferStream;
 
-class BufferBundleFactory
+class BufferStreamFactory
 {
 public:
-    virtual ~BufferBundleFactory() {}
+    virtual ~BufferStreamFactory() {}
 
-    virtual std::shared_ptr<BufferBundle> create_buffer_bundle(
+    virtual std::shared_ptr<BufferStream> create_buffer_stream(
         compositor::BufferProperties const& buffer_properties) = 0;
 
 protected:
-    BufferBundleFactory() = default;
-    BufferBundleFactory(const BufferBundleFactory&) = delete;
-    BufferBundleFactory& operator=(const BufferBundleFactory&) = delete;
+    BufferStreamFactory() = default;
+    BufferStreamFactory(const BufferStreamFactory&) = delete;
+    BufferStreamFactory& operator=(const BufferStreamFactory&) = delete;
 };
 
 }
 }
 
-#endif // MIR_COMPOSITOR_BUFFER_BUNDLE_FACTORY_H_
+#endif // MIR_SURFACES_BUFFER_STREAM_FACTORY_H_

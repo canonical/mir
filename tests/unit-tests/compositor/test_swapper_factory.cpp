@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "src/server/compositor/buffer_swapper_master.h"
+#include "src/server/compositor/buffer_bundle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -55,7 +55,7 @@ public:
 struct SwapperFactoryTest : testing::Test
 {
     SwapperFactoryTest()
-        : stub_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
+        : mock_buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           size{geom::Width{10},geom::Height{20}},
           pf{geom::PixelFormat::abgr_8888},
           usage{mc::BufferUsage::hardware},
@@ -64,7 +64,7 @@ struct SwapperFactoryTest : testing::Test
     {
     }
 
-    std::shared_ptr<MockGraphicBufferAllocator> const stub_allocator;
+    std::shared_ptr<MockGraphicBufferAllocator> const mock_buffer_allocator;
     geom::Size const size;
     geom::PixelFormat const pf;
     mc::BufferUsage const usage;
@@ -73,53 +73,100 @@ struct SwapperFactoryTest : testing::Test
 }
 
 /* default number of buffers is 2 */
-TEST_F(SwapperFactoryTest, create_swapper_uses_default_number_of_buffers)
+TEST_F(SwapperFactoryTest, create_sync_uses_default_number_of_buffers)
 {
     using namespace testing;
 
-    mc::SwapperFactory strategy{stub_allocator};
     mc::BufferProperties actual_properties;
-
     int default_num_of_buffers = 2;
-    EXPECT_CALL(*stub_allocator, alloc_buffer(_))
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(default_num_of_buffers);
-    auto swapper = strategy.create_swapper_master(actual_properties, properties);
+
+    mc::SwapperFactory strategy(mock_buffer_allocator);
+    auto swapper = strategy.create_swapper_new_buffers(
+        actual_properties, properties, mc::SwapperType::synchronous);
 }
 
-TEST_F(SwapperFactoryTest, create_swapper_with_two_makes_double_buffer)
+TEST_F(SwapperFactoryTest, create_sync_with_two_makes_double_buffer)
 {
     using namespace testing;
-
-    mc::BufferProperties actual_properties;
 
     int num_of_buffers = 2;
-    mc::SwapperFactory strategy{stub_allocator, num_of_buffers};
-    EXPECT_CALL(*stub_allocator, alloc_buffer(_))
+    mc::BufferProperties actual_properties;
+
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(num_of_buffers);
-    auto swapper = strategy.create_swapper_master(actual_properties, properties);
+
+    mc::SwapperFactory strategy(mock_buffer_allocator, num_of_buffers);
+    auto swapper = strategy.create_swapper_new_buffers(
+        actual_properties, properties, mc::SwapperType::synchronous);
 }
 
-TEST_F(SwapperFactoryTest, create_swapper_with_three_makes_triple_buffer)
+TEST_F(SwapperFactoryTest, create_sync_with_three_makes_triple_buffer)
+{
+    using namespace testing;
+
+    int num_of_buffers = 3;
+    mc::BufferProperties actual_properties;
+
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
+        .Times(num_of_buffers);
+
+    mc::SwapperFactory strategy(mock_buffer_allocator, num_of_buffers);
+    auto swapper = strategy.create_swapper_new_buffers(
+        actual_properties, properties, mc::SwapperType::synchronous);
+}
+
+TEST_F(SwapperFactoryTest, create_async_ignores_preference)
 {
     using namespace testing;
 
     mc::BufferProperties actual_properties;
 
     int num_of_buffers = 3;
-    mc::SwapperFactory strategy{stub_allocator, num_of_buffers};
-    EXPECT_CALL(*stub_allocator, alloc_buffer(_))
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(num_of_buffers);
-    auto swapper = strategy.create_swapper_master(actual_properties, properties);
+
+    mc::SwapperFactory strategy(mock_buffer_allocator);
+    auto swapper = strategy.create_swapper_new_buffers(
+        actual_properties, properties, mc::SwapperType::framedropping);
 }
 
-TEST_F(SwapperFactoryTest, create_swapper_returns_actual_properties_from_buffer)
+TEST_F(SwapperFactoryTest, creation_returns_new_parameters)
 {
-    mc::SwapperFactory strategy{stub_allocator};
-    mc::BufferProperties actual_properties;
+    mc::BufferProperties actual1, actual2;
+    mc::SwapperFactory strategy(mock_buffer_allocator);
+    strategy.create_swapper_new_buffers(actual1, properties, mc::SwapperType::synchronous);
 
-    auto swapper = strategy.create_swapper_master(actual_properties, properties);
+    EXPECT_EQ(buf_size, actual1.size);
+    EXPECT_EQ(buf_pixel_format, actual1.format);
+    EXPECT_EQ(usage, actual1.usage);
+}
 
-    EXPECT_EQ(buf_size, actual_properties.size);
-    EXPECT_EQ(buf_pixel_format, actual_properties.format);
-    EXPECT_EQ(usage, actual_properties.usage);
+TEST_F(SwapperFactoryTest, create_async_reuse)
+{
+    using namespace testing;
+
+    std::vector<std::shared_ptr<mc::Buffer>> list {};
+    size_t size = 3;
+
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
+        .Times(0);
+
+    mc::SwapperFactory strategy(mock_buffer_allocator);
+    auto swapper = strategy.create_swapper_reuse_buffers(list, size, mc::SwapperType::framedropping);
+}
+
+TEST_F(SwapperFactoryTest, create_sync_reuse)
+{
+    using namespace testing;
+
+    std::vector<std::shared_ptr<mc::Buffer>> list;
+    size_t size = 3;
+
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
+        .Times(0);
+
+    mc::SwapperFactory strategy(mock_buffer_allocator);
+    auto swapper = strategy.create_swapper_reuse_buffers(list, size, mc::SwapperType::synchronous);
 }

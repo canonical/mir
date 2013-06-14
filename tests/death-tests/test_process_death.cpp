@@ -20,8 +20,14 @@
 
 #include <gtest/gtest.h>
 
+#ifdef NDEBUG
+// If NDEBUG is defined then assert() does nothing. So this test would fail.
+TEST(ProcessDeathTest,
+     DISABLED_construction_with_an_invalid_pid_triggers_assertion)
+#else
 TEST(ProcessDeathTest,
      construction_with_an_invalid_pid_triggers_assertion)
+#endif
 {
     EXPECT_EXIT(
         mir_test_framework::Process p(0),

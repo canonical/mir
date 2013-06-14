@@ -16,7 +16,6 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
@@ -26,7 +25,7 @@
 #include "mir/surfaces/surface.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_surface.h"

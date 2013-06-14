@@ -17,10 +17,10 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_SURFACES_H_
-#define MIR_COMPOSITOR_BUFFER_BUNDLE_SURFACES_H_
+#ifndef MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
+#define MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
 
-#include "mir/surfaces/buffer_bundle.h"
+#include "mir/surfaces/buffer_stream.h"
 
 #include <map>
 
@@ -31,38 +31,32 @@ namespace compositor
 
 class BufferIDUniqueGenerator;
 struct BufferProperties;
-class BufferSwapperMaster;
+class BufferBundle;
 
-class BufferBundleSurfaces : public surfaces::BufferBundle
+class BufferStreamSurfaces : public surfaces::BufferStream
 {
 public:
-    BufferBundleSurfaces(std::unique_ptr<BufferSwapperMaster>&& swapper);
+    BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
 
-    BufferBundleSurfaces(
-        std::unique_ptr<BufferSwapperMaster>&& swapper, BufferProperties const& buffer_properties);
-
-    ~BufferBundleSurfaces();
+    ~BufferStreamSurfaces();
 
     std::shared_ptr<Buffer> secure_client_buffer();
 
     std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer();
 
-    geometry::PixelFormat get_bundle_pixel_format();
-    geometry::Size bundle_size();
+    geometry::PixelFormat get_stream_pixel_format();
+    geometry::Size stream_size();
     void force_requests_to_complete();
 
 protected:
-    BufferBundleSurfaces(const BufferBundleSurfaces&) = delete;
-    BufferBundleSurfaces& operator=(const BufferBundleSurfaces&) = delete;
+    BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;
+    BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
 
 private:
-    std::shared_ptr<BufferSwapperMaster> swapper;
-    std::map<Buffer*, BufferID> buffer_to_id_map;
-    geometry::Size size;
-    geometry::PixelFormat pixel_format;
+    std::shared_ptr<BufferBundle> buffer_bundle;
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_BUNDLE_SURFACES_H_ */
+#endif /* MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_ */

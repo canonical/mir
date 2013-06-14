@@ -19,6 +19,8 @@
 #ifndef MIR_SURFACES_SURFACE_STACK_MODEL_H_
 #define MIR_SURFACES_SURFACE_STACK_MODEL_H_
 
+#include "mir/surfaces/depth_id.h"
+
 #include <memory>
 
 namespace mir
@@ -38,7 +40,7 @@ class SurfaceStackModel
 public:
     virtual ~SurfaceStackModel() {}
 
-    virtual std::weak_ptr<Surface> create_surface(shell::SurfaceCreationParameters const& params) = 0;
+    virtual std::weak_ptr<Surface> create_surface(shell::SurfaceCreationParameters const& params, DepthId depth) = 0;
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
 

@@ -46,7 +46,8 @@ public:
     std::shared_ptr<Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
 
-    void force_client_completion();
+    void force_client_abort();
+    void force_requests_to_complete();
     void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
 
 private:
@@ -57,7 +58,7 @@ private:
     std::deque<std::shared_ptr<Buffer>> compositor_queue;
     unsigned int in_use_by_client;
     unsigned int const swapper_size;
-
+    int clients_trying_to_acquire;
     bool force_clients_to_complete;
 };
 
