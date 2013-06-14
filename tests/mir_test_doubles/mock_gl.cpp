@@ -34,8 +34,6 @@ mtd::MockGL::MockGL()
 
     global_mock_gl = this;
 
-
-
 }
 
 mtd::MockGL::~MockGL()
