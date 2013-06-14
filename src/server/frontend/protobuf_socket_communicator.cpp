@@ -25,7 +25,7 @@
 #include "event_pipe.h"
 
 #include <boost/signals2.hpp>
-
+#include <boost/exception/errinfo_errno.hpp>
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
@@ -45,6 +45,8 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
     force_requests_to_complete(force_requests_to_complete)
 {
+    acceptor.set_option(ba::socket_base::keep_alive(true));
+
     start_accept();
 }
 
@@ -126,14 +128,33 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
     std::remove(socket_file.c_str());
 }
 
+#include <iostream>
+#include <typeinfo>
 void mf::ProtobufSocketCommunicator::on_new_connection(
     std::shared_ptr<mfd::SocketSession> const& session,
     const boost::system::error_code& ec)
 {
     if (!ec)
     {
-        connected_sessions->add(session);
+        int32_t accept_server_socket = session->get_socket().native_handle();
 
+        std::cout << "DEBUG: typeof(socket):" << typeid(session->get_socket()).name()
+            << ", accept_server_socket =" << accept_server_socket << std::endl;
+
+        int32_t timeout = 8;
+        int32_t cnt = 2;
+        int32_t intverval = 2;
+
+        if (0 != setsockopt(accept_server_socket, SOL_TCP, TCP_KEEPIDLE, &timeout, sizeof(timeout)))
+            std::cout << "DEBUG: setsockopt(TCP_KEEPIDLE) = " << strerror(errno) << std::endl;
+
+        if (0 != setsockopt(accept_server_socket, SOL_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt)))
+            std::cout << "DEBUG: setsockopt(TCP_KEEPCNT) = " << strerror(errno) << std::endl;
+
+        if (0 != setsockopt(accept_server_socket, SOL_TCP, TCP_KEEPINTVL, &intverval, sizeof(intverval)))
+            std::cout << "DEBUG: setsockopt(TCP_KEEPINTVL) = " << strerror(errno) << std::endl;
+
+        connected_sessions->add(session);
         session->read_next_message();
     }
     start_accept();

@@ -27,6 +27,16 @@ namespace bs = boost::system;
 
 namespace mfd = mir::frontend::detail;
 
+mfd::SocketSession::SocketSession(
+    boost::asio::io_service& io_service,
+    int id_,
+    std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions) :
+    socket(io_service),
+    id_(id_),
+    connected_sessions(connected_sessions),
+    processor(std::make_shared<NullMessageProcessor>())
+{
+}
 
 void mfd::SocketSession::send(std::string const& body)
 {
