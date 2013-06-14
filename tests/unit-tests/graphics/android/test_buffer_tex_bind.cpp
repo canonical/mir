@@ -17,9 +17,6 @@
  */
 
 #include "src/server/graphics/android/buffer.h"
-
-#include "mir_test_doubles/mock_alloc_adaptor.h"
-#include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_egl.h"
 
 #include <stdexcept>
@@ -39,16 +36,11 @@ public:
         using namespace testing;
 
         stub_buffer = std::make_shared<ANativeWindowBuffer>();
-        mock_alloc_dev = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
-        ON_CALL(*mock_alloc_dev, alloc_buffer(_,_,_))
-            .WillByDefault(Return(stub_buffer)); 
-
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::abgr_8888;
-        buffer = std::make_shared<mga::Buffer>(mock_alloc_dev, size, pf, mga::BufferUsage::use_hardware);
+        buffer = std::make_shared<mga::Buffer>(stub_buffer, size, pf, mga::BufferUsage::use_hardware);
 
         mock_egl.silence_uninteresting();
-        mock_gl.silence_uninteresting();
     };
     virtual void TearDown()
     {
@@ -59,9 +51,6 @@ public:
     geom::PixelFormat pf;
 
     std::shared_ptr<mga::Buffer> buffer;
-    mtd::MockGL mock_gl;
-    mtd::MockEGL mock_egl;
-    std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_dev;
     std::shared_ptr<ANativeWindowBuffer> stub_buffer;
 };
 
@@ -278,7 +267,7 @@ TEST_F(AndroidBufferBinding, buffer_image_creation_failure_throws)
 TEST_F(AndroidBufferBinding, buffer_calls_binding_extension)
 {
     using namespace testing;
-    EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_, _))
+    EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
     .Times(Exactly(1));
     buffer->bind_to_texture();
 }
@@ -286,7 +275,7 @@ TEST_F(AndroidBufferBinding, buffer_calls_binding_extension)
 TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_every_time)
 {
     using namespace testing;
-    EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_, _))
+    EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
     .Times(Exactly(3));
 
     buffer->bind_to_texture();
@@ -298,7 +287,7 @@ TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_every_time)
 TEST_F(AndroidBufferBinding, buffer_binding_specifies_gl_texture_2d)
 {
     using namespace testing;
-    EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _))
+    EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _))
     .Times(Exactly(1));
     buffer->bind_to_texture();
 }
@@ -306,7 +295,7 @@ TEST_F(AndroidBufferBinding, buffer_binding_specifies_gl_texture_2d)
 TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image)
 {
     using namespace testing;
-    EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_, mock_egl.fake_egl_image))
+    EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, mock_egl.fake_egl_image))
     .Times(Exactly(1));
     buffer->bind_to_texture();
 }
@@ -317,11 +306,11 @@ TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image_after_display_swap)
     EGLDisplay second_fake_display = (EGLDisplay) ((int)mock_egl.fake_egl_display +1);
     EGLImageKHR second_fake_egl_image = (EGLImageKHR) 0x84211;
 
-    EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_, _))
+    EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
     .Times(Exactly(1));
     buffer->bind_to_texture();
 
-    EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_, second_fake_egl_image))
+    EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, second_fake_egl_image))
     .Times(Exactly(1));
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
     .Times(Exactly(1))
