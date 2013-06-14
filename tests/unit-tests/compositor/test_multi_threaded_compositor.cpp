@@ -22,6 +22,7 @@
 #include "mir/graphics/display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
+#include "mir_test_doubles/null_gl_context.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -62,6 +63,10 @@ class StubDisplay : public mg::Display
     void pause() {}
     void resume() {}
     std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
+    std::unique_ptr<mg::GLContext> create_gl_context()
+    {
+        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
+    }
 
 private:
     std::vector<mtd::NullDisplayBuffer> buffers;
@@ -89,6 +94,11 @@ class StubDisplayWithMockBuffers : public mg::Display
     void pause() {}
     void resume() {}
     std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
+
+    std::unique_ptr<mg::GLContext> create_gl_context()
+    {
+        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
+    }
 
     void for_each_mock_buffer(std::function<void(mtd::MockDisplayBuffer&)> const& f)
     {

@@ -40,6 +40,7 @@ public:
                                                       graphics::DisplayResumeHandler const&));
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
+    MOCK_METHOD0(create_gl_context, std::unique_ptr<mg::GLContext>());
 };
 
 }

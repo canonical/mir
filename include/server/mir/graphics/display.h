@@ -35,6 +35,7 @@ namespace graphics
 class DisplayBuffer;
 class DisplayConfiguration;
 class Cursor;
+class GLContext;
 
 typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
@@ -56,6 +57,8 @@ public:
     virtual void resume() = 0;
 
     virtual std::weak_ptr<Cursor> the_cursor() = 0;
+
+    virtual std::unique_ptr<GLContext> create_gl_context() = 0;
 
 protected:
     Display() = default;
