@@ -34,7 +34,7 @@ public:
     void lock() { read_lock(); }
     void unlock() { read_unlock(); }
 
-    virtual ~ReadLock(){}
+    virtual ~ReadLock() = default;
 protected:
     ReadLock()
     {
@@ -53,7 +53,7 @@ public:
     void lock() { write_lock(); }
     void unlock() { write_unlock(); }
 
-    virtual ~WriteLock(){}
+    virtual ~WriteLock() = default;
 protected:
     WriteLock()
     {
