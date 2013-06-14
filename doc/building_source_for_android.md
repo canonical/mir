@@ -60,7 +60,6 @@ compile and run code, and is well suited for a development workflow.
 
         #example sources.list with armhf dependencies
         deb [arch=armhf] http://ports.ubuntu.com/ubuntu-ports/ saucy main restricted universe multiverse
-        deb [arch=armhf] http://ppa.launchpad.net/phablet-team/ppa/ubuntu saucy main #for hybris packages 
     
     Then you should run:
 
