@@ -76,11 +76,17 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& 
     return swapper->compositor_release(released_buffer);
 }
 
-void mc::SwitchingBundle::force_client_completion()
+void mc::SwitchingBundle::force_client_abort()
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     should_retry = false;
-    swapper->force_client_completion();
+    swapper->force_client_abort();
+}
+
+void mc::SwitchingBundle::force_requests_to_complete()
+{
+    std::unique_lock<mc::ReadLock> lk(rw_lock);
+    swapper->force_requests_to_complete();
 }
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
@@ -88,7 +94,7 @@ void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
     {
         std::unique_lock<mc::ReadLock> lk(rw_lock);
         should_retry = true;
-        swapper->force_client_completion();
+        swapper->force_client_abort();
     }
 
     std::unique_lock<mc::WriteLock> lk(rw_lock);

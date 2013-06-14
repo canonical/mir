@@ -413,7 +413,7 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_buffer_stream, force_client_completion()).Times(Exactly(1));
+    EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
 
     ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};

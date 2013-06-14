@@ -58,7 +58,7 @@ ms::Surface::Surface(
 
 void ms::Surface::force_requests_to_complete()
 {
-    buffer_stream->force_client_completion();
+    buffer_stream->force_requests_to_complete();
 }
 
 ms::Surface::~Surface()

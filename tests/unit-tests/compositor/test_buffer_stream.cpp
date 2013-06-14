@@ -70,13 +70,13 @@ TEST_F(BufferStreamTest, pixel_format_query)
     EXPECT_EQ(format, returned_pf);
 }
 
-TEST_F(BufferStreamTest, force_client_completion_command)
+TEST_F(BufferStreamTest, force_requests_to_complete)
 {
-    EXPECT_CALL(*mock_bundle, force_client_completion())
+    EXPECT_CALL(*mock_bundle, force_requests_to_complete())
         .Times(1);
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    buffer_stream.force_client_completion();
+    buffer_stream.force_requests_to_complete();
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)

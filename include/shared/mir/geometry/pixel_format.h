@@ -36,6 +36,12 @@ enum class PixelFormat : uint32_t
     xrgb_8888,
     bgr_888
 };
+
+static inline size_t bytes_per_pixel(PixelFormat fmt)
+{
+    return (fmt == PixelFormat::bgr_888) ? 3 : 4;
+}
+
 }
 }
 

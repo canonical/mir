@@ -38,6 +38,7 @@ struct MockBufferStream : public surfaces::BufferStream
     MOCK_METHOD0(stream_size, geometry::Size());
     MOCK_METHOD0(force_client_completion, void());
     MOCK_METHOD1(allow_framedropping, void(bool));
+    MOCK_METHOD0(force_requests_to_complete, void());
 };
 }
 }

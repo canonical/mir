@@ -111,6 +111,8 @@ void me::InprocessEGLClient::thread_loop()
         gl_animation.step();
     }
 
+    (void)rc;
+
     input_thread->stop();
     ///\internal [loop_tag]
 }

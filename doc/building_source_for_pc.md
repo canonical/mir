@@ -16,8 +16,8 @@ Getting dependencies
 To succesfully build Mir there are a few packages required. The easiest way
 to get them is to use the packaging build dependencies:
 
-    $ apt-get install devscripts equivs cmake
-    $ mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
+    $ sudo apt-get install devscripts equivs cmake
+    $ sudo mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
 
 
 Building mir
