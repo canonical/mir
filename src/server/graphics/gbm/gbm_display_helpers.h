@@ -89,12 +89,13 @@ public:
           egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
           should_terminate_egl{false} {}
 
-    ~EGLHelper();
+    ~EGLHelper() noexcept;
 
     EGLHelper(const EGLHelper&) = delete;
     EGLHelper& operator=(const EGLHelper&) = delete;
 
     void setup(GBMHelper const& gbm);
+    void setup(GBMHelper const& gbm, EGLContext shared_context);
     void setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
                EGLContext shared_context);
 

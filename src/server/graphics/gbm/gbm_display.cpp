@@ -26,6 +26,7 @@
 #include "virtual_terminal.h"
 
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/exception/get_error_info.hpp>
@@ -45,6 +46,28 @@ int errno_from_exception(std::exception const& e)
     auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
     return (errno_ptr != nullptr) ? *errno_ptr : -1;
 }
+
+class GBMGLContext : public mg::GLContext
+{
+public:
+    GBMGLContext(mgg::helpers::GBMHelper const& gbm, EGLContext shared_context)
+    {
+        egl.setup(gbm, shared_context);
+    }
+
+    void make_current()
+    {
+        egl.make_current();
+    }
+
+    void release_current()
+    {
+        egl.release_current();
+    }
+
+private:
+    mgg::helpers::EGLHelper egl;
+};
 
 }
 
@@ -166,4 +189,10 @@ auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
 {
     if (!cursor) cursor = std::make_shared<GBMCursor>(platform, output_container);
     return cursor;
+}
+
+std::unique_ptr<mg::GLContext> mgg::GBMDisplay::create_gl_context()
+{
+    return std::unique_ptr<GBMGLContext>{
+        new GBMGLContext{platform->gbm, shared_egl.context()}};
 }
