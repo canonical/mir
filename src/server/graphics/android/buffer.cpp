@@ -81,7 +81,7 @@ void mga::Buffer::bind_to_texture()
     auto it = egl_image_map.find(disp);
     if (it == egl_image_map.end())
     {
-#if 1
+#if 0
         image = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID,
                                   native_buffer.get(), image_attrs);
 #else
@@ -99,8 +99,8 @@ void mga::Buffer::bind_to_texture()
         image = it->second;
     }
 
-#if 1
-    std::cout << "OK " << &glEGLImageTargetTexture2DOES
+#if 0
+//    std::cout << "OK " << &glEGLImageTargetTexture2DOES;
     glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 #else
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
