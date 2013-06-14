@@ -44,25 +44,25 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-class InputRegistrarListener
+class SurfaceReadinessListener
 {
 public:
-    virtual ~InputRegistrarListener() = default;
+    virtual ~SurfaceReadinessListener() = default;
     
-    virtual void after_surface_appeared(std::string const& surface_name) = 0;
-    virtual void after_surface_vanished(std::string const& surface_name) = 0;
+    virtual void surface_ready_for_input(std::string const& surface_name) = 0;
+    virtual void surface_finished_for_input(std::string const& surface_name) = 0;
 
 protected:
-    InputRegistrarListener() = default;
-    InputRegistrarListener(InputRegistrarListener const&) = delete;
-    InputRegistrarListener& operator=(InputRegistrarListener const&) = delete;
+    SurfaceReadinessListener() = default;
+    SurfaceReadinessListener(SurfaceReadinessListener const&) = delete;
+    SurfaceReadinessListener& operator=(SurfaceReadinessListener const&) = delete;
 };
 
 class ProxyInputRegistrar : public ms::InputRegistrar
 {
 public:
     ProxyInputRegistrar(std::shared_ptr<ms::InputRegistrar> const underlying_registrar,
-                        std::shared_ptr<InputRegistrarListener> const listener)
+                        std::shared_ptr<SurfaceReadinessListener> const listener)
         : underlying_registrar(underlying_registrar),
           listener(listener)
     {   
@@ -73,17 +73,17 @@ public:
     void input_surface_opened(std::shared_ptr<mi::SurfaceTarget> const& opened_surface)
     {
         underlying_registrar->input_surface_opened(opened_surface);
-        listener->after_surface_appeared(opened_surface->name());
+        listener->surface_ready_for_input(opened_surface->name());
     }
     void input_surface_closed(std::shared_ptr<mi::SurfaceTarget> const& closed_surface)
     {
         underlying_registrar->input_surface_closed(closed_surface);
-        listener->after_surface_vanished(closed_surface->name());
+        listener->surface_finished_for_input(closed_surface->name());
     }
 
 private:
     std::shared_ptr<ms::InputRegistrar> const underlying_registrar;
-    std::shared_ptr<InputRegistrarListener> const listener;
+    std::shared_ptr<SurfaceReadinessListener> const listener;
 };
 
 struct SizedViewArea : public mg::ViewableArea
@@ -136,9 +136,9 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
 
 std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_input_registrar()
 {
-    struct LifecycleNotifier : public InputRegistrarListener
+    struct LifecycleTracker : public SurfaceReadinessListener
     {
-        LifecycleNotifier(std::mutex& lifecycle_lock,
+        LifecycleTracker(std::mutex& lifecycle_lock,
                           std::condition_variable &lifecycle_condition,
                           std::map<std::string, mtf::ClientLifecycleState> &client_lifecycles)
             : lifecycle_lock(lifecycle_lock),
@@ -146,14 +146,14 @@ std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_in
               client_lifecycles(client_lifecycles)
         {
         }
-        void after_surface_appeared(std::string const& surface_name)
+        void surface_ready_for_input(std::string const& surface_name)
         {
             std::unique_lock<std::mutex> lg(lifecycle_lock);
             client_lifecycles[surface_name] = mtf::ClientLifecycleState::appeared;
             lifecycle_condition.notify_all();
         }
 
-        void after_surface_vanished(std::string const& surface_name)
+        void surface_finished_for_input(std::string const& surface_name)
         {
             std::unique_lock<std::mutex> lg(lifecycle_lock);
             client_lifecycles[surface_name] = mtf::ClientLifecycleState::vanished;
@@ -166,7 +166,7 @@ std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_in
     
     if (!input_registrar)
     {
-        auto registrar_listener = std::make_shared<LifecycleNotifier>(lifecycle_lock,
+        auto registrar_listener = std::make_shared<LifecycleTracker>(lifecycle_lock,
             lifecycle_condition,
             client_lifecycles);
         input_registrar = std::make_shared<ProxyInputRegistrar>(the_input_configuration()->the_input_registrar(),

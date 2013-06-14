@@ -63,9 +63,9 @@ namespace
 namespace
 {
 
-struct ClientConfigCommon : mtf::TestingClientConfiguration
+struct ClientConfig : mtf::TestingClientConfiguration
 {
-    ClientConfigCommon() :
+    ClientConfig() :
         connection(0),
         surface(0)
     {
@@ -73,19 +73,19 @@ struct ClientConfigCommon : mtf::TestingClientConfiguration
 
     static void connection_callback(MirConnection* connection, void* context)
     {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
+        ClientConfig* config = reinterpret_cast<ClientConfig *>(context);
         config->connection = connection;
     }
 
     static void create_surface_callback(MirSurface* surface, void* context)
     {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
+        ClientConfig* config = reinterpret_cast<ClientConfig *>(context);
         config->surface_created(surface);
     }
 
     static void release_surface_callback(MirSurface* surface, void* context)
     {
-        ClientConfigCommon* config = reinterpret_cast<ClientConfigCommon *>(context);
+        ClientConfig* config = reinterpret_cast<ClientConfig *>(context);
         config->surface_released(surface);
     }
 
@@ -113,16 +113,16 @@ struct MockInputHandler
     MOCK_METHOD1(handle_input, void(MirEvent const*));
 };
 
-struct InputReceivingClient : ClientConfigCommon
+struct InputClient : ClientConfig
 {
-    InputReceivingClient(std::string const& surface_name)
+    InputClient(std::string const& surface_name)
       : surface_name(surface_name)
     {
     }
 
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
-        auto client = static_cast<InputReceivingClient *>(context);
+        auto client = static_cast<InputClient *>(context);
 
         client->handler->handle_input(ev);
     }
@@ -274,9 +274,9 @@ TEST_F(TestClientInput, clients_receive_key_input)
     } server_config;
     launch_server_process(server_config);
     
-    struct KeyReceivingClient : InputReceivingClient
+    struct KeyReceivingClient : InputClient
     {
-        KeyReceivingClient() : InputReceivingClient(test_client_name) {}
+        KeyReceivingClient() : InputClient(test_client_name) {}
         void expect_input(mt::WaitCondition& events_received) override
         {
             using namespace ::testing;
@@ -310,9 +310,9 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
     } server_config;
     launch_server_process(server_config);
     
-    struct KeyReceivingClient : InputReceivingClient
+    struct KeyReceivingClient : InputClient
     {
-        KeyReceivingClient() : InputReceivingClient(test_client_name) {}
+        KeyReceivingClient() : InputClient(test_client_name) {}
 
         void expect_input(mt::WaitCondition& events_received) override
         {
@@ -338,16 +338,16 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
         {
             wait_until_client_appears(test_client_name);
             
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputReceivingClient::surface_width,
-                                                                                 InputReceivingClient::surface_height));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputClient::surface_width,
+                                                                                 InputClient::surface_height));
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,2));
         }
     } server_config;
     launch_server_process(server_config);
     
-    struct MotionReceivingClient : InputReceivingClient
+    struct MotionReceivingClient : InputClient
     {
-        MotionReceivingClient() : InputReceivingClient(test_client_name) {}
+        MotionReceivingClient() : InputClient(test_client_name) {}
 
         void expect_input(mt::WaitCondition& events_received) override
         {
@@ -358,8 +358,8 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
             // We should see the cursor enter
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
             EXPECT_CALL(*handler, handle_input(
-                MotionEventWithPosition(InputReceivingClient::surface_width, 
-                                        InputReceivingClient::surface_height))).Times(1)
+                MotionEventWithPosition(InputClient::surface_width, 
+                                        InputClient::surface_height))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
             // But we should not receive an event for the second movement outside of our surface!
         }
@@ -383,9 +383,9 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     } server_config;
     launch_server_process(server_config);
     
-    struct ButtonReceivingClient : InputReceivingClient
+    struct ButtonReceivingClient : InputClient
     {
-        ButtonReceivingClient() : InputReceivingClient(test_client_name) {}
+        ButtonReceivingClient() : InputClient(test_client_name) {}
 
         void expect_input(mt::WaitCondition& events_received) override
         {
@@ -470,10 +470,10 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     
     launch_server_process(server_config);
     
-    struct InputClientOne : InputReceivingClient
+    struct InputClientOne : InputClient
     {
         InputClientOne()
-           : InputReceivingClient(test_client_1)
+           : InputClient(test_client_1)
         {
         }
         
@@ -487,10 +487,10 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         }
     } client_1;
 
-    struct InputClientTwo : InputReceivingClient
+    struct InputClientTwo : InputClient
     {
         InputClientTwo()
-            : InputReceivingClient(test_client_2)
+            : InputClient(test_client_2)
         {
         }
         
