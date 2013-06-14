@@ -103,13 +103,9 @@ void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
     swapper->end_responsibility(list, size);
 
     if (allow_dropping)
-    {
         swapper = swapper_factory->create_swapper_reuse_buffers(bundle_properties, list, size, mc::SwapperType::framedropping);
-    }
     else
-    {
         swapper = swapper_factory->create_swapper_reuse_buffers(bundle_properties, list, size, mc::SwapperType::synchronous);
-    }
 
     cv.notify_all();
 }
