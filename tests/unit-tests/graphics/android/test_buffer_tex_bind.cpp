@@ -40,7 +40,6 @@ public:
         stub_buffer = std::make_shared<ANativeWindowBuffer>();
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::abgr_8888;
-        buffer = std::make_shared<mga::Buffer>(stub_buffer, extensions);
         extensions = std::make_shared<mg::EGLExtensions>();
 
         mock_egl.silence_uninteresting();
@@ -63,29 +62,32 @@ TEST_F(AndroidBufferBinding, buffer_queries_for_display)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-    .Times(Exactly(1));
+        .Times(Exactly(1));
 
-    buffer->bind_to_texture();
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_creates_image_on_first_bind)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(1));
+        .Times(Exactly(1));
 
-    buffer->bind_to_texture();
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_only_makes_one_image_per_display)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(1));
+        .Times(Exactly(1));
 
-    buffer->bind_to_texture();
-    buffer->bind_to_texture();
-    buffer->bind_to_texture();
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
+    buffer.bind_to_texture();
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_makes_new_image_with_new_display)
@@ -95,16 +97,17 @@ TEST_F(AndroidBufferBinding, buffer_makes_new_image_with_new_display)
 
     /* return 1st fake display */
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(2));
+        .Times(Exactly(2));
 
-    buffer->bind_to_texture();
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 
     /* return 2nd fake display */
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-    .Times(Exactly(1))
-    .WillOnce(Return(second_fake_display));
+        .Times(Exactly(1))
+        .WillOnce(Return(second_fake_display));
 
-    buffer->bind_to_texture();
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes)
@@ -113,15 +116,16 @@ TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes)
     EGLDisplay second_fake_display = (EGLDisplay) ((int)mock_egl.fake_egl_display +1);
 
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(_,_))
-    .Times(Exactly(2));
+        .Times(Exactly(2));
 
-    buffer->bind_to_texture();
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-    .Times(Exactly(1))
-    .WillOnce(Return(second_fake_display));
+        .Times(Exactly(1))
+        .WillOnce(Return(second_fake_display));
 
-    buffer->bind_to_texture();
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes_with_proper_args)
@@ -135,29 +139,30 @@ TEST_F(AndroidBufferBinding, buffer_frees_images_it_makes_with_proper_args)
 
     /* actual expectations */
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(first_fake_display, first_fake_egl_image))
-    .Times(Exactly(1));
+        .Times(Exactly(1));
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(second_fake_display, second_fake_egl_image))
-    .Times(Exactly(1));
+        .Times(Exactly(1));
 
     /* manipulate mock to return 1st set */
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-    .Times(Exactly(1))
-    .WillOnce(Return(first_fake_display));
+        .Times(Exactly(1))
+        .WillOnce(Return(first_fake_display));
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(1))
-    .WillOnce(Return((first_fake_egl_image)));
+        .Times(Exactly(1))
+        .WillOnce(Return((first_fake_egl_image)));
 
-    buffer->bind_to_texture();
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 
     /* manipulate mock to return 2nd set */
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-    .Times(Exactly(1))
-    .WillOnce(Return(second_fake_display));
+        .Times(Exactly(1))
+        .WillOnce(Return(second_fake_display));
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(1))
-    .WillOnce(Return((second_fake_egl_image)));
+        .Times(Exactly(1))
+        .WillOnce(Return((second_fake_egl_image)));
 
-    buffer->bind_to_texture();
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_uses_current_display)
@@ -166,12 +171,13 @@ TEST_F(AndroidBufferBinding, buffer_uses_current_display)
     EGLDisplay fake_display = (EGLDisplay) 0x32298;
 
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-    .Times(Exactly(1))
-    .WillOnce(Return(fake_display));
+        .Times(Exactly(1))
+        .WillOnce(Return(fake_display));
 
     EXPECT_CALL(mock_egl, eglCreateImageKHR(fake_display,_,_,_,_))
-    .Times(Exactly(1));
-    buffer->bind_to_texture();
+        .Times(Exactly(1));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_specifies_no_context)
@@ -179,8 +185,9 @@ TEST_F(AndroidBufferBinding, buffer_specifies_no_context)
     using namespace testing;
 
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_, EGL_NO_CONTEXT,_,_,_))
-    .Times(Exactly(1));
-    buffer->bind_to_texture();
+        .Times(Exactly(1));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
@@ -188,8 +195,9 @@ TEST_F(AndroidBufferBinding, buffer_sets_egl_native_buffer_android)
     using namespace testing;
 
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,EGL_NATIVE_BUFFER_ANDROID,_,_))
-    .Times(Exactly(1));
-    buffer->bind_to_texture();
+        .Times(Exactly(1));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
@@ -197,8 +205,9 @@ TEST_F(AndroidBufferBinding, buffer_sets_anw_buffer_to_provided_anw)
     using namespace testing;
 
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,stub_buffer.get(),_))
-    .Times(Exactly(1));
-    buffer->bind_to_texture();
+        .Times(Exactly(1));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_sets_proper_attributes)
@@ -208,11 +217,11 @@ TEST_F(AndroidBufferBinding, buffer_sets_proper_attributes)
     const EGLint* attrs;
 
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(1))
-    .WillOnce(DoAll(
-                  SaveArg<4>(&attrs),
-                  Return(mock_egl.fake_egl_image)));
-    buffer->bind_to_texture();
+        .Times(Exactly(1))
+        .WillOnce(DoAll(SaveArg<4>(&attrs),
+                        Return(mock_egl.fake_egl_image)));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 
     /* note: this should not segfault. if it does, the attributes were set wrong */
     EXPECT_EQ(attrs[0],    EGL_IMAGE_PRESERVED_KHR);
@@ -226,31 +235,33 @@ TEST_F(AndroidBufferBinding, buffer_destroys_correct_buffer_with_single_image)
     using namespace testing;
     EGLImageKHR fake_egl_image = (EGLImageKHR) 0x84210;
     EXPECT_CALL(mock_egl, eglCreateImageKHR(mock_egl.fake_egl_display,_,_,_,_))
-    .Times(Exactly(1))
-    .WillOnce(Return((fake_egl_image)));
+        .Times(Exactly(1))
+        .WillOnce(Return((fake_egl_image)));
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(mock_egl.fake_egl_display, fake_egl_image))
-    .Times(Exactly(1));
+        .Times(Exactly(1));
 
-    buffer->bind_to_texture();
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_image_creation_failure_does_not_save)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(2))
-    .WillRepeatedly(Return((EGL_NO_IMAGE_KHR)));
+        .Times(Exactly(2))
+        .WillRepeatedly(Return((EGL_NO_IMAGE_KHR)));
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(_,_))
-    .Times(Exactly(0));
+        .Times(Exactly(0));
 
+    mga::Buffer buffer(stub_buffer, extensions);
     EXPECT_THROW(
     {
-        buffer->bind_to_texture();
+        buffer.bind_to_texture();
     }, std::runtime_error);
 
     EXPECT_THROW(
     {
-        buffer->bind_to_texture();
+        buffer.bind_to_texture();
     }, std::runtime_error);
 }
 
@@ -258,12 +269,13 @@ TEST_F(AndroidBufferBinding, buffer_image_creation_failure_throws)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(1))
-    .WillRepeatedly(Return((EGL_NO_IMAGE_KHR)));
+        .Times(Exactly(1))
+        .WillRepeatedly(Return((EGL_NO_IMAGE_KHR)));
 
+    mga::Buffer buffer(stub_buffer, extensions);
     EXPECT_THROW(
     {
-        buffer->bind_to_texture();
+        buffer.bind_to_texture();
     }, std::runtime_error);
 }
 
@@ -273,36 +285,39 @@ TEST_F(AndroidBufferBinding, buffer_calls_binding_extension)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
-    .Times(Exactly(1));
-    buffer->bind_to_texture();
+        .Times(Exactly(1));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_every_time)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
-    .Times(Exactly(3));
+        .Times(Exactly(3));
 
-    buffer->bind_to_texture();
-    buffer->bind_to_texture();
-    buffer->bind_to_texture();
-
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
+    buffer.bind_to_texture();
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_binding_specifies_gl_texture_2d)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _))
-    .Times(Exactly(1));
-    buffer->bind_to_texture();
+        .Times(Exactly(1));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, mock_egl.fake_egl_image))
-    .Times(Exactly(1));
-    buffer->bind_to_texture();
+        .Times(Exactly(1));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 }
 
 TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image_after_display_swap)
@@ -312,16 +327,17 @@ TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image_after_display_swap)
     EGLImageKHR second_fake_egl_image = (EGLImageKHR) 0x84211;
 
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
-    .Times(Exactly(1));
-    buffer->bind_to_texture();
+        .Times(Exactly(1));
+    mga::Buffer buffer(stub_buffer, extensions);
+    buffer.bind_to_texture();
 
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, second_fake_egl_image))
-    .Times(Exactly(1));
+        .Times(Exactly(1));
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-    .Times(Exactly(1))
-    .WillOnce(Return(second_fake_display));
+        .Times(Exactly(1))
+        .WillOnce(Return(second_fake_display));
     EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
-    .Times(Exactly(1))
-    .WillOnce(Return((second_fake_egl_image)));
-    buffer->bind_to_texture();
+        .Times(Exactly(1))
+        .WillOnce(Return((second_fake_egl_image)));
+    buffer.bind_to_texture();
 }
