@@ -63,6 +63,7 @@ public:
     void release_current();
 
     std::weak_ptr<Cursor> the_cursor();
+    std::unique_ptr<graphics::GLContext> create_gl_context();
 
 protected:
     EGLDisplay egl_display;

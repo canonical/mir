@@ -219,6 +219,20 @@ void mggh::EGLHelper::setup(GBMHelper const& gbm)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
 }
 
+void mggh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
+{
+    static const EGLint context_attr[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    setup_internal(gbm, false);
+
+    egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
+    if (egl_context == EGL_NO_CONTEXT)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
+}
+
 void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
                             EGLContext shared_context)
 {
@@ -238,7 +252,7 @@ void mggh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create EGL context"));
 }
 
-mggh::EGLHelper::~EGLHelper()
+mggh::EGLHelper::~EGLHelper() noexcept
 {
     if (egl_display != EGL_NO_DISPLAY) {
         if (egl_context != EGL_NO_CONTEXT)

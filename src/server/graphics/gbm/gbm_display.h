@@ -66,6 +66,7 @@ public:
     void resume();
 
     std::weak_ptr<Cursor> the_cursor();
+    std::unique_ptr<GLContext> create_gl_context();
 
 private:
     void configure(std::shared_ptr<DisplayConfiguration> const& conf);
