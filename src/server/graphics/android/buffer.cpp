@@ -26,7 +26,7 @@
 #include <GLES2/gl2ext.h>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <iostream>
+
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
