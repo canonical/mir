@@ -26,6 +26,7 @@
 #include "mir/compositor/renderables.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_doubles/null_gl_context.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -39,6 +40,7 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -142,6 +144,10 @@ public:
     void pause() {}
     void resume() {}
     std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
+    std::unique_ptr<mg::GLContext> create_gl_context()
+    {
+        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
+    }
 
 private:
     StubDisplayBuffer display_buffer;

@@ -33,6 +33,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_gl_context.h"
 
 #include <gtest/gtest.h>
 #include <thread>
@@ -96,6 +97,10 @@ public:
     void pause() {}
     void resume() {}
     std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
+    std::unique_ptr<mg::GLContext> create_gl_context()
+    {
+        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
+    }
 };
 
 class StubGraphicPlatform : public mg::Platform
