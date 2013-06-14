@@ -20,11 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_GL_H_
 
 #include <gmock/gmock.h>
-
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
 #include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 
 namespace mir
 {
@@ -71,8 +67,6 @@ public:
     MOCK_METHOD3(glGetProgramiv, void (GLuint, GLenum, GLint *));
     MOCK_METHOD4(glGetProgramInfoLog, void (GLuint, GLsizei, GLsizei *, GLchar *));
     MOCK_METHOD9(glTexImage2D, void(GLenum,GLint,GLint,GLsizei,GLsizei,GLint,GLenum,GLenum,const GLvoid*));
-
-    MOCK_METHOD2(extension_glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
 };
 
 }

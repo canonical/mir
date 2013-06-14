@@ -34,6 +34,8 @@ mtd::MockGL::MockGL()
 
     global_mock_gl = this;
 
+
+
 }
 
 mtd::MockGL::~MockGL()
@@ -57,12 +59,6 @@ mtd::MockGL::~MockGL()
         rettype type = (rettype) 0;         \
         return type;                        \
     }
-
-void extension_glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
-{
-    CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->extension_glEGLImageTargetTexture2DOES(target, image);
-}
 
 const GLubyte* glGetString(GLenum name)
 {
@@ -270,7 +266,4 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
 
 void mtd::MockGL::silence_uninteresting()
 {
-    using namespace testing;
-    EXPECT_CALL(*this, extension_glEGLImageTargetTexture2DOES(_,_))
-        .Times(AtLeast(0));
 }
