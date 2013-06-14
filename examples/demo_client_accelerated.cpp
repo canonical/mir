@@ -127,9 +127,6 @@ int main(int argc, char* argv[])
         gl_animation.render_gl();
         rc = eglSwapBuffers(disp, egl_surface);
         assert(rc == EGL_TRUE);
-
-        usleep(167);//60fps
-
         gl_animation.step();
     }
 

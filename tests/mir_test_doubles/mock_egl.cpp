@@ -38,6 +38,13 @@ EGLConfig configs[] =
 };
 EGLint config_size = 4;
 
+/* We prefix GL/EGL extensions with "extension_" so code under test has to get their function
+   ptrs with eglGetProcAddress */
+EGLImageKHR extension_eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target,
+                                        EGLClientBuffer buffer, const EGLint *attrib_list);
+EGLBoolean extension_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image);
+void extension_glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image);
+
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
 mtd::MockEGL::MockEGL()
@@ -100,6 +107,14 @@ mtd::MockEGL::MockEGL()
 
     ON_CALL(*this, eglCreateImageKHR(_,_,_,_,_))
     .WillByDefault(Return(fake_egl_image));
+
+    typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglCreateImageKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglCreateImageKHR)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglDestroyImageKHR)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_glEGLImageTargetTexture2DOES)));
 }
 
 mtd::MockEGL::~MockEGL()
@@ -146,13 +161,21 @@ void mtd::MockEGL::silence_uninteresting()
         .Times(AtLeast(0));
 }
 
-#define CHECK_GLOBAL_MOCK(rettype)  \
-    if (!global_mock_egl)               \
-    {                               \
-        using namespace ::testing;  \
+#define CHECK_GLOBAL_MOCK(rettype)         \
+    if (!global_mock_egl)                  \
+    {                                      \
+        using namespace ::testing;         \
         ADD_FAILURE_AT(__FILE__,__LINE__); \
-        rettype type = (rettype) 0;       \
-        return type;        \
+        rettype type = (rettype) 0;        \
+        return type;                       \
+    }
+
+#define CHECK_GLOBAL_VOID_MOCK()            \
+    if (!global_mock_egl)                   \
+    {                                       \
+        using namespace ::testing;          \
+        ADD_FAILURE_AT(__FILE__,__LINE__);  \
+        return;                             \
     }
 
 EGLint eglGetError (void)
@@ -338,15 +361,20 @@ EGLBoolean eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, NativePixmapType 
 }
 
 /* extensions */
-EGLImageKHR eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
+EGLImageKHR extension_eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
 {
     CHECK_GLOBAL_MOCK(EGLImageKHR)
-    return global_mock_egl->eglCreateImageKHR ( dpy, ctx, target, buffer, attrib_list);
+    return global_mock_egl->eglCreateImageKHR(dpy, ctx, target, buffer, attrib_list);
 }
 
-EGLBoolean eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
+EGLBoolean extension_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 {
     CHECK_GLOBAL_MOCK(EGLBoolean)
-    return global_mock_egl->eglDestroyImageKHR ( dpy, image);
+    return global_mock_egl->eglDestroyImageKHR(dpy, image);
 }
 
+void extension_glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_egl->glEGLImageTargetTexture2DOES(target, image);
+}

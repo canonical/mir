@@ -22,6 +22,7 @@
 #include "gbm_platform.h"
 #include "buffer_texture_binder.h"
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/egl_extensions.h"
 #include "mir/compositor/buffer_properties.h"
 #include <boost/throw_exception.hpp>
 
@@ -39,42 +40,6 @@ namespace mgg = mir::graphics::gbm;
 namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
-namespace mir
-{
-namespace graphics
-{
-namespace gbm
-{
-
-struct EGLExtensions
-{
-    EGLExtensions()
-        : eglCreateImageKHR{
-              reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
-                  eglGetProcAddress("eglCreateImageKHR"))},
-          eglDestroyImageKHR{
-              reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
-                  eglGetProcAddress("eglDestroyImageKHR"))},
-          glEGLImageTargetTexture2DOES{
-              reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-                  eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
-    {
-        if (!eglCreateImageKHR || !eglDestroyImageKHR)
-            BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGLImage"));
-
-        if (!glEGLImageTargetTexture2DOES)
-            BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
-    }
-
-    PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
-    PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
-    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
-};
-
-}
-}
-}
-
 namespace
 {
 
@@ -82,7 +47,7 @@ class EGLImageBufferTextureBinder : public mgg::BufferTextureBinder
 {
 public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
-                                std::shared_ptr<mgg::EGLExtensions> const& egl_extensions)
+                                std::shared_ptr<mg::EGLExtensions> const& egl_extensions)
         : bo{gbm_bo}, egl_extensions{egl_extensions}, egl_image{EGL_NO_IMAGE_KHR}
     {
     }
@@ -125,7 +90,7 @@ private:
     }
 
     std::shared_ptr<gbm_bo> const bo;
-    std::shared_ptr<mgg::EGLExtensions> const egl_extensions;
+    std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     EGLDisplay egl_display;
     EGLImageKHR egl_image;
 };
@@ -146,7 +111,7 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
         const std::shared_ptr<BufferInitializer>& buffer_initializer)
         : platform(platform),
           buffer_initializer(buffer_initializer),
-          egl_extensions(std::make_shared<EGLExtensions>())
+          egl_extensions(std::make_shared<mg::EGLExtensions>())
 {
     assert(buffer_initializer.get() != 0);
 }

@@ -16,8 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/egl_extensions.h"
 #include "src/server/graphics/android/buffer.h"
-#include "mir_test_doubles/mock_alloc_adaptor.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>
@@ -42,37 +43,25 @@ protected:
         mock_buffer_handle->stride = 46;
         mock_buffer_handle->format = HAL_PIXEL_FORMAT_RGBA_8888;
 
-        mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocAdaptor>>();
-        ON_CALL(*mock_alloc_device, alloc_buffer(_,_,_))
-            .WillByDefault(Return(mock_buffer_handle));
- 
         default_use = mga::BufferUsage::use_hardware;
         pf = geom::PixelFormat::abgr_8888;
         size = geom::Size{geom::Width{300}, geom::Height{200}};
+        extensions = std::make_shared<mg::EGLExtensions>();
     }
 
-    std::shared_ptr<mtd::MockAllocAdaptor> mock_alloc_device;
+    mtd::MockEGL mock_egl;
     std::shared_ptr<ANativeWindowBuffer> mock_buffer_handle;
     geom::PixelFormat pf;
     geom::Size size;
     mga::BufferUsage default_use;
+    std::shared_ptr<mg::EGLExtensions> extensions;
 };
-
-
-TEST_F(AndroidGraphicBufferBasic, basic_allocation_uses_alloc_device)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer(size, pf, default_use));
-    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
-}
 
 TEST_F(AndroidGraphicBufferBasic, size_query_test)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_alloc_device, alloc_buffer(_,_,_));
-    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_buffer_handle, extensions);
 
     geom::Size expected_size{geom::Width{mock_buffer_handle->width},
                              geom::Height{mock_buffer_handle->height}};
@@ -83,15 +72,15 @@ TEST_F(AndroidGraphicBufferBasic, format_query_test)
 {
     using namespace testing;
 
-    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_buffer_handle, extensions);
     EXPECT_EQ(geom::PixelFormat::abgr_8888, buffer.pixel_format());
 }
 
-TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_native_handle)
+TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_when_asked)
 {
     using namespace testing;
 
-    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_buffer_handle, extensions);
     EXPECT_EQ(mock_buffer_handle, buffer.native_buffer_handle());
 }
 
@@ -101,6 +90,6 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
 
     geom::Stride expected_stride{mock_buffer_handle->stride *
                                  geom::bytes_per_pixel(pf)};
-    mga::Buffer buffer(mock_alloc_device, size, pf, default_use);
+    mga::Buffer buffer(mock_buffer_handle, extensions);
     EXPECT_EQ(expected_stride, buffer.stride());
 }

@@ -22,6 +22,7 @@
 #include "mir/compositor/buffer_properties.h"
 
 #include "mir_test_doubles/mock_buffer_initializer.h"
+#include "mir_test_doubles/mock_egl.h"
 
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>
@@ -42,6 +43,7 @@ struct AndroidGraphicBufferAllocatorTest : public ::testing::Test
 
     std::shared_ptr<mg::BufferInitializer> const null_buffer_initializer;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    mtd::MockEGL mock_egl;
 };
 
 TEST_F(AndroidGraphicBufferAllocatorTest, allocator_accesses_gralloc_module)
