@@ -32,10 +32,11 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::Buffer::Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle)
-                    geom::Size size, geom::PixelFormat pf, mga::BufferUsage use)
+mga::Buffer::Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
+                    std::shared_ptr<mg::EGLExtensions> const& extensions)
     : native_buffer(buffer_handle)
 {
+    (void) extensions;
 #if 0
     if (!alloc_device)
         BOOST_THROW_EXCEPTION(std::runtime_error("No allocation device for graphics buffer"));

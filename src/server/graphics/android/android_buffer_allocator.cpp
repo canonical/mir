@@ -79,7 +79,9 @@ std::shared_ptr<mga::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_pl
     geom::Size sz, geom::PixelFormat pf, mga::BufferUsage use)
 {
     auto native_handle = alloc_device->alloc_buffer(sz, pf, use);
-    auto buffer = std::make_shared<Buffer>(native_handle, sz, pf, use);
+    std::shared_ptr<mg::EGLExtensions> extensions;
+//    auto extensions = std::make_shared<mg::EGLExtensions>();
+    auto buffer = std::make_shared<Buffer>(native_handle, extensions);
     (*buffer_initializer)(*buffer);
     return buffer;
 }

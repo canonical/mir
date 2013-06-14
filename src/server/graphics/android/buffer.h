@@ -34,14 +34,15 @@ namespace mir
 {
 namespace graphics
 {
+struct EGLExtensions;
 namespace android
 {
 
 class Buffer: public compositor::BufferBasic 
 {
 public:
-    Buffer(std::shared_ptr<ANativeWindowBuffer> const& device,
-           geometry::Size size, geometry::PixelFormat pf, BufferUsage use);
+    Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,
+           std::shared_ptr<EGLExtensions> const& extensions);
     ~Buffer();
 
     geometry::Size size() const;

@@ -38,6 +38,7 @@ public:
         size = geom::Size{geom::Width{300}, geom::Height{220}};
         pf = geom::PixelFormat::abgr_8888;
         buffer = std::make_shared<mga::Buffer>(stub_buffer, extensions);
+        extensions = std::make_shared<mg::EGLExtensions>();
 
         mock_egl.silence_uninteresting();
     };
@@ -49,7 +50,7 @@ public:
     geom::Size size;
     geom::PixelFormat pf;
 
-    mg::EGLExtensions extensions;
+    std::shared_ptr<mg::EGLExtensions> extensions;
     std::shared_ptr<mga::Buffer> buffer;
     std::shared_ptr<ANativeWindowBuffer> stub_buffer;
 };
