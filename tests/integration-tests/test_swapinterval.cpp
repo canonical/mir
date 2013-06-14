@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir/geometry/rectangle.h"
@@ -182,10 +182,9 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
             mir_wait_for(mir_surface_set_swapinterval(surface, 1));
             EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
 
-            //swapinterval 2 not supported, default to max
-            mir_wait_for(mir_surface_set_swapinterval(surface, 2));
-            EXPECT_EQ(1, mir_surface_get_swapinterval(surface));
-            
+            //swapinterval 2 not supported
+            EXPECT_EQ(NULL, mir_surface_set_swapinterval(surface, 2));
+            EXPECT_EQ(1, mir_surface_get_swapinterval(surface)); 
 
             set_flag(swapinterval_set);
             wait_for(do_client_finish);
@@ -220,7 +219,7 @@ TEST_F(SwapIntervalSignalTest, swapinterval_test)
     {
         client_config.wait_for(swapinterval_set);
 
-        EXPECT_EQ(3, server_config.num_of_swapinterval_commands());
+        EXPECT_EQ(2, server_config.num_of_swapinterval_commands());
 
         client_config.set_flag(do_client_finish);
     });

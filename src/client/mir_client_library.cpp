@@ -329,7 +329,7 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
             hint = mir_surface_hint_synchronous;
         break;
         default:
-        break;
+        return NULL;
     }
 
     return surf ? surf->configure(mir_surface_attrib_performance_hint, hint) : NULL;
