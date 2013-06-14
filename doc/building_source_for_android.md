@@ -35,8 +35,8 @@ From within the armhf system:
 
 -  Set up Dependencies
 
-       $ apt-get install devscripts equivs cmake
-       $ mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
+       $ sudo apt-get install devscripts equivs cmake
+       $ sudo mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
 
 -  Build
 
@@ -51,19 +51,16 @@ This method uses a cross compiler (e.g., the `g++-arm-linux-gnueabihf`
 ubuntu package) to produce armhf code. This is typically the quickest way to
 compile and run code, and is well suited for a development workflow.
 
--  Be sure that the cross compiler that you are using matches the target
-   environment. (eg, make sure you're using the raring toolchain if you're
-   targeting a raring phablet image) You can specify the toolchain version
-   thusly:
+-  Install the compiler:
 
-        $ apt-get install g++-arm-linux-gnueabihf/raring
+        $ sudo apt-get install g++-arm-linux-gnueabihf
 
 -  Get access to armhf packages via apt-get. On an amd64/ia32 system, you can
    do this by adding a file like the one below to /etc/apt/sources.list.d/
 
         #example sources.list with armhf dependencies
-        deb [arch=armhf] http://ports.ubuntu.com/ubuntu-ports/ raring main restricted universe multiverse
-        deb [arch=armhf] http://ppa.launchpad.net/phablet-team/ppa/ubuntu raring main #for hybris packages 
+        deb [arch=armhf] http://ports.ubuntu.com/ubuntu-ports/ saucy main restricted universe multiverse
+        deb [arch=armhf] http://ppa.launchpad.net/phablet-team/ppa/ubuntu saucy main #for hybris packages 
     
     Then you should run:
 
