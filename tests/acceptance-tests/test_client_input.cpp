@@ -407,7 +407,7 @@ typedef std::map<std::string, geom::Rectangle> GeometryList;
 
 struct StaticPlacementStrategy : public msh::PlacementStrategy
 {
-    StaticPlacementStrategy(GeometryList &positions)
+    StaticPlacementStrategy(GeometryList const& positions)
         : surface_geometry_by_name(positions)
     {
     }
@@ -422,7 +422,7 @@ struct StaticPlacementStrategy : public msh::PlacementStrategy
         
         return placed;
     }
-    GeometryList& surface_geometry_by_name;
+    GeometryList surface_geometry_by_name;
 };
 
 }
@@ -442,12 +442,11 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     {
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
-            GeometryList positions;
+            static GeometryList positions;
             positions[test_client_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
             positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{0}},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
-
 
             return std::make_shared<StaticPlacementStrategy>(positions);
         }
