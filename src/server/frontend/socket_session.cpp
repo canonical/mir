@@ -116,3 +116,26 @@ void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 }
+
+bool mfd::SocketSession::is_connected()
+{
+    auto const socket_fd = socket.native_handle();
+    // use the poll system call to be notified about socket status changes
+    struct pollfd pfd;
+    pfd.fd = socket_fd;
+    pfd.events = POLLIN | POLLHUP | POLLRDNORM;
+    pfd.revents = 0;
+    if (pfd.revents == 0)
+    {
+        // call poll with a timeout of 100 ms
+        if (poll(&pfd, 1, 100) > 0)
+        {
+            // if result > 0, this means that there is either data available on the
+            // socket, or the socket has been closed
+            char buffer[32];
+            return recv(socket_fd, buffer, sizeof(buffer), MSG_PEEK | MSG_DONTWAIT);
+        }
+    }
+
+    return true;
+}

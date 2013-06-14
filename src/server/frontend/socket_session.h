@@ -53,6 +53,8 @@ struct SocketSession : public MessageSender
         return socket;
     }
 
+    bool is_connected();
+
 private:
     void send(std::string const& body);
     void send_fds(std::vector<int32_t> const& fd);

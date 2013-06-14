@@ -130,6 +130,8 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 
 #include <iostream>
 #include <typeinfo>
+
+
 void mf::ProtobufSocketCommunicator::on_new_connection(
     std::shared_ptr<mfd::SocketSession> const& session,
     const boost::system::error_code& ec)
@@ -153,6 +155,8 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 
         if (0 != setsockopt(accept_server_socket, SOL_TCP, TCP_KEEPINTVL, &intverval, sizeof(intverval)))
             std::cout << "DEBUG: setsockopt(TCP_KEEPINTVL) = " << strerror(errno) << std::endl;
+
+        std::cout << "DEBUG: is_connected() = " << session->is_connected() << std::endl;
 
         connected_sessions->add(session);
         session->read_next_message();
