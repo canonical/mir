@@ -87,8 +87,6 @@ public:
 
     MOCK_METHOD0(eglGetError, EGLint (void));
 
-    /* We prefix GL/EGL extensions with "extension_" so code under test has to get their function
-       ptrs with eglGetProcAddress */
     MOCK_METHOD5(eglCreateImageKHR, EGLImageKHR(EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint*));
     MOCK_METHOD2(eglDestroyImageKHR,EGLBoolean(EGLDisplay, EGLImageKHR));
     MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));

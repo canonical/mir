@@ -38,6 +38,8 @@ EGLConfig configs[] =
 };
 EGLint config_size = 4;
 
+/* We prefix GL/EGL extensions with "extension_" so code under test has to get their function
+   ptrs with eglGetProcAddress */
 EGLImageKHR extension_eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target,
                                         EGLClientBuffer buffer, const EGLint *attrib_list);
 EGLBoolean extension_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image);
