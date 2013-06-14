@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/egl_extensions.h"
 #include "src/server/graphics/android/buffer.h"
 
 #include <hardware/gralloc.h>
