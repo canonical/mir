@@ -7,7 +7,7 @@ if [ -z $1 ]; then
     exit
 fi
 
-echo "creating phablet-compatible raring armhf partial chroot for mir compiles in directory ${1}"
+echo "creating phablet-compatible armhf partial chroot for mir compiles in directory ${1}"
 
 if [ ! -d ${1} ]; then
     mkdir -p ${1} 
