@@ -17,6 +17,7 @@
  */
 
 #include "mir/compositor/buffer_swapper_multi.h"
+#include "mir/compositor/buffer_swapper_exceptions.h"
 #include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
@@ -25,7 +26,7 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<composito
  : in_use_by_client(0),
    swapper_size(swapper_size),
    clients_trying_to_acquire(0),
-   force_clients_to_complete(false)
+   force_clients_to_abort(false)
 {
     if ((swapper_size != 2) && (swapper_size != 3))
     {
@@ -48,16 +49,17 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
      * Don't allow the client to acquire all the buffers, because then the
      * compositor won't have a buffer to display.
      */
-    while ((!force_clients_to_complete) &&
+    while ((!force_clients_to_abort) &&
            (client_queue.empty() || (in_use_by_client == (swapper_size - 1))))
     {
         client_available_cv.wait(lk);
     }
 
     //we have been forced to shutdown
-    if (force_clients_to_complete)
+    if (force_clients_to_abort)
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("forced_completion"));
+        clients_trying_to_acquire--;
+        BOOST_THROW_EXCEPTION(BufferSwapperRequestAbortedException());
     }
 
     auto dequeued_buffer = client_queue.front();
@@ -89,21 +91,21 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    if (compositor_queue.empty() && client_queue.empty())
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("forced_completion"));
-    }
-
     std::shared_ptr<mc::Buffer> dequeued_buffer;
-    if (compositor_queue.empty())
+
+    if (!compositor_queue.empty())
+    {
+        dequeued_buffer = compositor_queue.front();
+        compositor_queue.pop_front();
+    }
+    else if (!client_queue.empty())
     {
         dequeued_buffer = client_queue.back();
         client_queue.pop_back();
     }
     else
     {
-        dequeued_buffer = compositor_queue.front();
-        compositor_queue.pop_front();
+        BOOST_THROW_EXCEPTION(BufferSwapperOutOfBuffersException());
     }
 
     return dequeued_buffer;
@@ -119,7 +121,7 @@ void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& r
 void mc::BufferSwapperMulti::force_client_abort()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
-    force_clients_to_complete = true;
+    force_clients_to_abort = true;
     client_available_cv.notify_all();
 }
 
