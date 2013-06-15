@@ -15,6 +15,7 @@ set(
   GRAPHICS_SOURCES
 
   gl_renderer.cpp
+  egl_extensions.cpp
   display_configuration.cpp
   null_display_report.cpp
 )

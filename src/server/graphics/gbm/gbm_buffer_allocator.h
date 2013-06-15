@@ -29,12 +29,11 @@ namespace mir
 namespace graphics
 {
 class BufferInitializer;
+struct EGLExtensions;
 
 namespace gbm
 {
-
 class GBMPlatform;
-struct EGLExtensions;
 
 class GBMBufferAllocator: public compositor::GraphicBufferAllocator
 {
