@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_CONNECTED_SESSIONS_H_
 #define MIR_FRONTEND_CONNECTED_SESSIONS_H_
 
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <map>
@@ -60,13 +61,26 @@ public:
         shell_list.clear();
     }
 
+    void discard_disconnected()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+
+        for (auto next = shell_list.begin(), current = next; next != shell_list.end(); current = next)
+        {
+            ++next;
+            if (!current->second->is_connected())
+                shell_list.erase(current);
+        }
+    }
+
 
 private:
     ConnectedSessions(ConnectedSessions const&) = delete;
     ConnectedSessions& operator =(ConnectedSessions const&) = delete;
 
     std::mutex mutex;
-    std::map<int, std::shared_ptr<Session>> shell_list;
+    typedef std::map<int, std::shared_ptr<Session>> SessionMap;
+    SessionMap shell_list;
 };
 }
 }
