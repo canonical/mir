@@ -33,7 +33,7 @@ TEST(GMock, return_by_move)
     struct MockImplementation : Interface
     {
         MOCK_CONST_METHOD0(function, std::unique_ptr<int>());
-        virtual ~MockImplementation() {}
+        ~MockImplementation() {}
     };
 
     MockImplementation mi;

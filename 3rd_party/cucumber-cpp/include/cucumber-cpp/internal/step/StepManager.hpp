@@ -26,7 +26,7 @@ public:
 
     SingleStepMatch();
     SingleStepMatch(const SingleStepMatch &match);
-    virtual ~SingleStepMatch() {}
+    ~SingleStepMatch() {}
 
     SingleStepMatch & operator =(const SingleStepMatch &match);
     operator void *();

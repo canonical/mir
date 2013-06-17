@@ -52,7 +52,7 @@ public:
                            Return(0)));
     }
 
-    virtual ~MockANativeWindow() {}
+    ~MockANativeWindow() {}
 
     static int hook_query(const ANativeWindow* anw, int code, int *ret)
     {

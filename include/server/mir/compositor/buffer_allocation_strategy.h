@@ -50,6 +50,7 @@ public:
     virtual std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
         BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const = 0;
 
+protected:
     BufferAllocationStrategy() {}
     virtual ~BufferAllocationStrategy() { /* TODO: make nothrow */ }
 
