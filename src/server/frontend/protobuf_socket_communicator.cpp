@@ -94,10 +94,15 @@ void mf::ProtobufSocketCommunicator::start()
         thread = std::move(std::thread(run_io_service));
     }
 
-    // TODO this ought to happen as a background scan
-    // TODO the code here is to prove it can compile
-    auto discard_disconnected = [&] { connected_sessions->discard_disconnected(); };
-    io_service.post(discard_disconnected);
+    io_service.post([&]
+    {
+        do
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            connected_sessions->discard_disconnected();
+        }
+        while (!io_service.stopped());
+    });
 }
 
 void mf::ProtobufSocketCommunicator::stop()
