@@ -47,33 +47,42 @@ mc::SwapperFactory::SwapperFactory(
 {
 }
 
+void mc::SwapperFactory::change_swapper_size(
+    std::vector<std::shared_ptr<mc::Buffer>>& list,
+    size_t const desired_size, size_t current_size, BufferProperties const& buffer_properties) const
+{
+    while (current_size < desired_size)
+    {
+        list.push_back(gr_allocator->alloc_buffer(buffer_properties));
+        current_size++;
+    }
+ 
+    while (current_size > desired_size)
+    {
+        if (list.empty())
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("SwapperFactory could not change algorithm"));
+        } else
+        {
+            list.pop_back();
+            current_size--;
+        }
+    }
+}
+
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buffers(
     BufferProperties const& buffer_properties, std::vector<std::shared_ptr<Buffer>>& list,
     size_t buffer_num, SwapperType type) const
 {
     if (type == mc::SwapperType::synchronous)
     {
-        if (buffer_num > synchronous_number_of_buffers)
-        {
-            if (list.empty())
-            {
-                BOOST_THROW_EXCEPTION(std::logic_error("SwapperFactory could not change algorithm"));
-            } else
-            {
-                list.pop_back();
-            }
-        }
-
-        return std::make_shared<mc::BufferSwapperMulti>(list, buffer_num); 
+        change_swapper_size(list, synchronous_number_of_buffers, buffer_num, buffer_properties);
+        return std::make_shared<mc::BufferSwapperMulti>(list, synchronous_number_of_buffers); 
     }
     else
-    { 
-        if (buffer_num < spin_number_of_buffers)
-        {
-            list.push_back(gr_allocator->alloc_buffer(buffer_properties));
-            buffer_num++;
-        } 
-        return std::make_shared<mc::BufferSwapperSpin>(list, buffer_num);
+    {
+        change_swapper_size(list, spin_number_of_buffers, buffer_num, buffer_properties);
+        return std::make_shared<mc::BufferSwapperSpin>(list, spin_number_of_buffers);
     }
 }
 

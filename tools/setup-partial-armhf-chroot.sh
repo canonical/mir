@@ -20,7 +20,7 @@ download_and_extract_packages()
 
     for i in ${!PACKAGES}; do
 
-        PACKAGE_VERSION=`apt-cache show ${i}:${ARCHITECTURE} | grep Version | awk -F: '{print $NF}' | sed "s/ //g"`
+        PACKAGE_VERSION=`apt-cache show --no-all-versions ${i}:${ARCHITECTURE} | grep Version | awk -F: '{print $NF}' | sed "s/ //g"`
         PACKAGE_FILENAME="${i}_${PACKAGE_VERSION}_${ARCHITECTURE}.deb"
 
         if [ ! -f ${PACKAGE_FILENAME} ]; then

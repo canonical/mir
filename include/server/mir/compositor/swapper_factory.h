@@ -44,6 +44,9 @@ public:
         BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const;
 
 private:
+    void change_swapper_size(
+        std::vector<std::shared_ptr<Buffer>>&, size_t const, size_t, BufferProperties const&) const;
+
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
     unsigned int const synchronous_number_of_buffers;
     unsigned int const spin_number_of_buffers;

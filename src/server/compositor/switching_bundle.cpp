@@ -18,6 +18,7 @@
  */
 
 #include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/buffer_swapper_exceptions.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "switching_bundle.h"
 
@@ -29,8 +30,7 @@ mc::SwitchingBundle::SwitchingBundle(
     std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const& property_request)
     : swapper_factory(swapper_factory),
       swapper(swapper_factory->create_swapper_new_buffers(
-                  bundle_properties, property_request, mc::SwapperType::synchronous)),
-      should_retry(false)
+                  bundle_properties, property_request, mc::SwapperType::synchronous))
 {
 }
 
@@ -45,12 +45,9 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
         try
         {
             buffer = swapper->client_acquire();
-        } catch (std::logic_error& e)
+        }
+        catch (BufferSwapperRequestAbortedException const& e)
         {
-            /* if failure is non recoverable, rethrow. */
-            if (!should_retry || (e.what() != std::string("forced_completion")))
-                throw e;
-
             /* wait for the swapper to change before retrying */
             cv.wait(lk);
         }
@@ -76,13 +73,6 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& 
     return swapper->compositor_release(released_buffer);
 }
 
-void mc::SwitchingBundle::force_client_abort()
-{
-    std::unique_lock<mc::ReadLock> lk(rw_lock);
-    should_retry = false;
-    swapper->force_client_abort();
-}
-
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
@@ -93,7 +83,6 @@ void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
 {
     {
         std::unique_lock<mc::ReadLock> lk(rw_lock);
-        should_retry = true;
         swapper->force_client_abort();
     }
 
