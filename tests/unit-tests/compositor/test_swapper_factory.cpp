@@ -169,7 +169,7 @@ TEST_F(SwapperFactoryTest, create_sync_reuse)
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(0);
 
-    mc::SwapperFactory strategy(mock_buffer_allocator);
+    mc::SwapperFactory strategy(mock_buffer_allocator, 3);
     auto swapper = strategy.create_swapper_reuse_buffers(properties, list, size, mc::SwapperType::synchronous);
 }
 
@@ -179,16 +179,15 @@ TEST_F(SwapperFactoryTest, reuse_drop_unneeded_buffer)
 
     mc::SwapperFactory strategy(mock_buffer_allocator, 2);
 
-    std::shared_ptr<mc::Buffer> buffer;
+    auto buffer = std::make_shared<mtd::StubBuffer>();
     {
-        buffer = mock_buffer_allocator->alloc_buffer(properties);
         size_t size = 3;
         std::vector<std::shared_ptr<mc::Buffer>> list{buffer};
 
         auto swapper = strategy.create_swapper_reuse_buffers(
             properties, list, size, mc::SwapperType::synchronous);
     }
-    EXPECT_EQ(0, buffer.use_count());
+    EXPECT_EQ(1, buffer.use_count());
 }
 
 TEST_F(SwapperFactoryTest, reuse_drop_unneeded_buffer_error)

@@ -53,8 +53,17 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buff
 {
     if (type == mc::SwapperType::synchronous)
     {
-        //TODO: we should downgrade the number of buffers for BufferSwapperMulti. This will require 
-        //      coordination though
+        if (buffer_num > synchronous_number_of_buffers)
+        {
+            if (list.empty())
+            {
+                BOOST_THROW_EXCEPTION(std::logic_error("SwapperFactory could not change algorithm"));
+            } else
+            {
+                list.pop_back();
+            }
+        }
+
         return std::make_shared<mc::BufferSwapperMulti>(list, buffer_num); 
     }
     else
