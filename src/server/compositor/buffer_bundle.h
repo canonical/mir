@@ -40,7 +40,6 @@ public:
 
     virtual BufferProperties properties() const = 0;
     virtual void allow_framedropping(bool dropping_allowed) = 0;
-    virtual void force_client_abort() = 0;
     virtual void force_requests_to_complete() = 0;
 protected:
     BufferBundle() = default;
