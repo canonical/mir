@@ -133,9 +133,12 @@ bool mfd::SocketSession::is_connected()
     // call poll with a timeout of 100 ms
     if (poll(&pfd, 1, 100) > 0)
     {
-        // this means that there is either data available
-        // on the socket, or the socket has been closed
+        // There is either data available on the socket,
+        // otherwise the socket has been closed
         char buffer[32];
+
+        // If we can peek characters we're connected
+        // otherwise the socket has been closed and we're not
         return recv(socket_fd, buffer, sizeof(buffer), MSG_PEEK | MSG_DONTWAIT);
     }
 
