@@ -32,6 +32,8 @@ class SessionListener
 public:
     virtual void starting(std::shared_ptr<Session> const& session) = 0;
     virtual void stopping(std::shared_ptr<Session> const& session) = 0;
+    virtual void received_focus(std::shared_ptr<Session> const& session) = 0;
+    virtual void focus_cleared() = 0;
 
 protected:
     SessionListener() = default;
