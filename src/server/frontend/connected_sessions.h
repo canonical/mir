@@ -19,7 +19,6 @@
 #ifndef MIR_FRONTEND_CONNECTED_SESSIONS_H_
 #define MIR_FRONTEND_CONNECTED_SESSIONS_H_
 
-#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <map>
