@@ -173,20 +173,49 @@ TEST_F(SwapperFactoryTest, create_sync_reuse)
     auto swapper = strategy.create_swapper_reuse_buffers(properties, list, size, mc::SwapperType::synchronous);
 }
 
-TEST_F(SwapperFactoryTest, reuse_with_different_buffer_count)
+TEST_F(SwapperFactoryTest, reuse_drop_unneeded_buffer)
 {
     using namespace testing;
 
-    mc::BufferProperties actual_properties;
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_))
-        .Times(3);
-    mc::SwapperFactory strategy(mock_buffer_allocator);
-    auto swapper = strategy.create_swapper_new_buffers(
-        actual_properties, properties, mc::SwapperType::synchronous);
+    mc::SwapperFactory strategy(mock_buffer_allocator, 2);
 
-    size_t size = 0;
-    std::vector<std::shared_ptr<mc::Buffer>> list; 
-    swapper->end_responsibility(list, size);
-    auto second_swapper = strategy.create_swapper_reuse_buffers(
-        actual_properties, list, size, mc::SwapperType::framedropping);
+    std::shared_ptr<mc::Buffer> buffer;
+    {
+        buffer = mock_buffer_allocator->alloc_buffer(properties);
+        size_t size = 3;
+        std::vector<std::shared_ptr<mc::Buffer>> list{buffer};
+
+        auto swapper = strategy.create_swapper_reuse_buffers(
+            properties, list, size, mc::SwapperType::synchronous);
+    }
+    EXPECT_EQ(0, buffer.use_count());
+}
+
+TEST_F(SwapperFactoryTest, reuse_drop_unneeded_buffer_error)
+{
+    using namespace testing;
+
+    mc::SwapperFactory strategy(mock_buffer_allocator, 2);
+
+    size_t size = 3;
+    std::vector<std::shared_ptr<mc::Buffer>> list{};
+
+    EXPECT_THROW({
+        strategy.create_swapper_reuse_buffers(
+            properties, list, size, mc::SwapperType::synchronous);
+    }, std::logic_error);
+}
+
+TEST_F(SwapperFactoryTest, reuse_alloc_additional_buffer_for_framedropping)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_))
+        .Times(1);
+    mc::SwapperFactory strategy(mock_buffer_allocator);
+
+    size_t size = 2;
+    std::vector<std::shared_ptr<mc::Buffer>> list{};
+    auto swapper = strategy.create_swapper_reuse_buffers(
+        properties, list, size, mc::SwapperType::framedropping);
 }
