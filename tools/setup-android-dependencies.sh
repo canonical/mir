@@ -21,11 +21,11 @@ pushd /tmp > /dev/null
     echo "ubuntu_chroot shell;
         cd /root;
         dpkg -i libgflags2_2.0-1_armhf.deb libgoogle-glog0_0.3.2-4ubuntu1_armhf.deb
-        apt-get install libprotobuf7 \
-                        libboost-system1.49.0 \
-                        libboost-program-options1.49.0 \
-                        libboost-thread1.49.0 \
-                        libxkbcommon0
+        apt-get -y install libprotobuf7 \
+                           libboost-system1.49.0 \
+                           libboost-program-options1.49.0 \
+                           libboost-thread1.49.0 \
+                           libxkbcommon0
 
             exit;
             exit" | adb shell
