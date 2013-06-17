@@ -21,8 +21,9 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
 
 #include "mir/surfaces/buffer_stream.h"
+#include "mir/compositor/multi_acquisition_back_buffer_strategy.h"
 
-#include <map>
+#include <mutex>
 
 namespace mir
 {
@@ -53,7 +54,8 @@ protected:
     BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
 
 private:
-    std::shared_ptr<BufferBundle> buffer_bundle;
+    std::shared_ptr<BufferBundle> const buffer_bundle;
+    MultiAcquisitionBackBufferStrategy back_buffer_strategy;
 };
 
 }

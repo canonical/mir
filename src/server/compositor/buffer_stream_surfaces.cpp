@@ -28,7 +28,8 @@ namespace geom = mir::geometry;
 namespace ms = mir::surfaces;
 
 mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle)
-     : buffer_bundle(buffer_bundle)
+     : buffer_bundle(buffer_bundle),
+       back_buffer_strategy(buffer_bundle)
 {
 }
 
@@ -38,12 +39,12 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 
 std::shared_ptr<ms::GraphicRegion> mc::BufferStreamSurfaces::lock_back_buffer()
 {
-    return std::make_shared<mc::TemporaryCompositorBuffer>(buffer_bundle);
+    return std::make_shared<mc::TemporaryCompositorBuffer>(back_buffer_strategy);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferStreamSurfaces::secure_client_buffer()
 {
-    return std::make_shared<mc::TemporaryClientBuffer>(buffer_bundle);
+    return std::make_shared<mc::TemporaryClientBuffer>(*buffer_bundle);
 }
 
 geom::PixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
