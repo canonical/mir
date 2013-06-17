@@ -31,8 +31,6 @@
 #include <functional>
 #include <stdexcept>
 
-#include <time.h>
-
 namespace mtf = mir_test_framework;
 
 namespace ms = mir::surfaces;
@@ -194,7 +192,8 @@ void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string
 {
     std::unique_lock<std::mutex> lg(lifecycle_lock);
     
-    time_t end_time = ::time(NULL) + 60;
+    std::chrono::seconds timeout(60);
+    auto end_time = std::chrono::system_clock::now() + timeout;
     
     if (client_lifecycles[surface_name] == appeared)
     {
@@ -206,9 +205,13 @@ void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string
     }
     else
     {
-        while (::time(NULL) < end_time)
+        std::chrono::time_point<std::chrono::system_clock> current_time;
+        while ((current_time = std::chrono::system_clock::now()) < end_time)
         {
-            lifecycle_condition.wait_for(lg, std::chrono::seconds(60));
+            lifecycle_condition.wait_for(lg, end_time - current_time);
+            
+            // If the surface we are waiting for has appeared, we can return
+            // otherwise an unrelated lifecycle event has occured and we go back to waiting.
             if (client_lifecycles[surface_name] == appeared)
             {
                 return;
@@ -222,7 +225,8 @@ void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::strin
 {
     std::unique_lock<std::mutex> lg(lifecycle_lock);
 
-    time_t end_time = ::time(NULL) + 60;
+    std::chrono::seconds timeout(60);
+    auto end_time = std::chrono::system_clock::now() + timeout;
     
     if (client_lifecycles[surface_name] == vanished)
     {
@@ -234,9 +238,13 @@ void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::strin
     }
     else
     {
-        while (::time(NULL) < end_time)
+        std::chrono::time_point<std::chrono::system_clock> current_time;
+        while ((current_time = std::chrono::system_clock::now()) < end_time)
         {
-            lifecycle_condition.wait_for(lg, std::chrono::seconds(60));
+            lifecycle_condition.wait_for(lg, end_time - current_time);
+
+            // If the surface we are waiting or has vanished we can return
+            // otherwise an unrelated lifecycle event has occured and we go back to waiting.
             if (client_lifecycles[surface_name] == vanished)
             {
                 return;
