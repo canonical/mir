@@ -25,7 +25,7 @@
 #include "event_pipe.h"
 
 #include <boost/signals2.hpp>
-#include <boost/exception/errinfo_errno.hpp>
+
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
@@ -45,8 +45,6 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
     force_requests_to_complete(force_requests_to_complete)
 {
-    acceptor.set_option(ba::socket_base::keep_alive(true));
-
     start_accept();
 }
 
@@ -145,6 +143,7 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
     if (!ec)
     {
         connected_sessions->add(session);
+
         session->read_next_message();
     }
     start_accept();

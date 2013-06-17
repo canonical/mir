@@ -79,8 +79,7 @@ private:
     ConnectedSessions& operator =(ConnectedSessions const&) = delete;
 
     std::mutex mutex;
-    typedef std::map<int, std::shared_ptr<Session>> SessionMap;
-    SessionMap shell_list;
+    std::map<int, std::shared_ptr<Session>> shell_list;
 };
 }
 }
