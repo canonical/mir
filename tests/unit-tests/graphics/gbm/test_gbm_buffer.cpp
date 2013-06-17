@@ -69,15 +69,6 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
-        typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
-
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglDestroyImageKHR)));
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
-
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
                                                       std::make_shared<mtd::NullVirtualTerminal>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
@@ -218,7 +209,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_uses_egl_image)
         EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
             .Times(Exactly(1));
 
-        EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_,mock_egl.fake_egl_image))
+        EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_,mock_egl.fake_egl_image))
             .Times(Exactly(1));
 
         EXPECT_CALL(mock_egl, eglDestroyImageKHR(_,mock_egl.fake_egl_image))

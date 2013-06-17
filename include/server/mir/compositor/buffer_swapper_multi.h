@@ -59,7 +59,7 @@ private:
     unsigned int in_use_by_client;
     unsigned int const swapper_size;
     int clients_trying_to_acquire;
-    bool force_clients_to_complete;
+    bool force_clients_to_abort;
 };
 
 }
