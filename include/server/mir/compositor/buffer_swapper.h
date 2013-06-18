@@ -97,7 +97,7 @@ public:
      * and then end_responsibility(). If these are not called, all buffers within the swapper
      * will be deallocated
      */
-    virtual ~BufferSwapper() {/* TODO: make nothrow */}
+    virtual ~BufferSwapper() = default;
 protected:
     BufferSwapper() = default;
     BufferSwapper(BufferSwapper const&) = delete;
