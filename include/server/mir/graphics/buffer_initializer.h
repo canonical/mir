@@ -28,11 +28,15 @@ class Buffer;
 namespace graphics
 {
 
+/**
+ * Interface to buffer initialization.
+ */
 class BufferInitializer
 {
 public:
     virtual ~BufferInitializer() {}
 
+    /** Operator to call to initialize a buffer. */
     virtual void operator()(compositor::Buffer& buffer) = 0;
 
 protected:

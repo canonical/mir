@@ -26,14 +26,21 @@ namespace mir
 namespace graphics
 {
 
+/**
+ * Interface to an output framebuffer.
+ */
 class DisplayBuffer
 {
 public:
     virtual ~DisplayBuffer() {}
 
+    /** The area the DisplayBuffer occupies in the virtual screen space. */
     virtual geometry::Rectangle view_area() const = 0;
+    /** Makes the DisplayBuffer the current GL rendering target. */
     virtual void make_current() = 0;
+    /** Releases the current GL rendering target. */
     virtual void release_current() = 0;
+    /** Posts the DisplayBuffer to the screen. */
     virtual void post_update() = 0;
 
 protected:

@@ -8,6 +8,7 @@ set(
   TEST_FRAMEWORK_SRCS
 
   testing_server_options.cpp
+  input_testing_server_options.cpp
   testing_process_manager.cpp
   display_server_test_fixture.cpp
   process.cpp
@@ -20,6 +21,7 @@ list(APPEND TEST_FRAMEWORK_SRCS
 add_library(
   mir-test-framework STATIC
   ${TEST_FRAMEWORK_SRCS})
+uses_android_input(mir-test-framework)
 
 target_link_libraries(
   mir-test-framework

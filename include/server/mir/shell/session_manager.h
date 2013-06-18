@@ -60,6 +60,7 @@ public:
 
     void focus_next();
     std::weak_ptr<Session> focussed_application() const;
+    void set_focus_to(std::shared_ptr<Session> const& focus);
 
 protected:
     SessionManager(const SessionManager&) = delete;

@@ -31,6 +31,10 @@ class ClientBufferFactory;
 class ClientSurface;
 class ClientContext;
 
+/**
+ * Interface to client-side platform specific support for graphics operations.
+ * \ingroup platform_enablement
+ */
 class ClientPlatform
 {
 public:
