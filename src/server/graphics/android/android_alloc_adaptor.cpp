@@ -17,9 +17,11 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/mir_native_buffer.h"
 #include "android_alloc_adaptor.h"
 #include "android_format_conversion-inl.h"
 
+#include <iostream>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -44,9 +46,11 @@ private:
     std::shared_ptr<alloc_device_t> const alloc_device;
 };
 
+#if 0
 static void incRef(android_native_base_t*)
 {
 }
+#endif
 }
 
 mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device)
@@ -72,7 +76,14 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     }
 
     /* pack ANativeWindow buffer for the handle */
-    auto buffer =  new ANativeWindowBuffer;
+    auto tmp = new mga::MirNativeBuffer(
+        [this](mga::MirNativeBuffer* buffer)
+        {
+            alloc_dev->free(alloc_dev.get(), buffer->handle);
+        });
+    mga::ExternalRefDeleter del;
+    std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
+
     buffer->width = width;
     buffer->height = height;
     buffer->stride = stride;
@@ -80,17 +91,21 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     buffer->format = format;
     buffer->usage = usage_flag;
 
+    std::cout << "INCREF " << buffer->common.incRef << std::endl;
+
+    return buffer;
+#if 0
     /* we don't use these for refcounting buffers. however, drivers still expect to be
        able to call them */
     buffer->common.incRef = &incRef;
     buffer->common.decRef = &incRef;
     buffer->common.magic = ANDROID_NATIVE_BUFFER_MAGIC;
     buffer->common.version = sizeof(ANativeWindowBuffer);
-
     AndroidBufferHandleDeleter del(alloc_dev);
     auto handle = std::shared_ptr<ANativeWindowBuffer>(buffer, del);
 
     return handle;
+#endif
 }
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
