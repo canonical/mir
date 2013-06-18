@@ -35,8 +35,8 @@ public:
 
     void starting(std::shared_ptr<Session> const&) override {}
     void stopping(std::shared_ptr<Session> const&) override {}
-    void received_focus(std::shared_ptr<Session> const&) override {}
-    void focus_cleared() override {}
+    void focused(std::shared_ptr<Session> const&) override {}
+    void unfocused() override {}
 
 protected:
     NullSessionListener(const NullSessionListener&) = delete;

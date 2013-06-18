@@ -169,8 +169,8 @@ struct MockSessionListener : public msh::SessionListener
     virtual ~MockSessionListener() noexcept(true) {}
     MOCK_METHOD1(starting, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD1(stopping, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD1(received_focus, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD0(focus_cleared, void());
+    MOCK_METHOD1(focused, void(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD0(unfocused, void());
 };
 
 struct SessionManagerSessionListenerSetup : public testing::Test
@@ -200,9 +200,9 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifec
     using namespace ::testing;
 
     EXPECT_CALL(session_listener, starting(_)).Times(1);
-    EXPECT_CALL(session_listener, received_focus(_)).Times(1);
+    EXPECT_CALL(session_listener, focused(_)).Times(1);
     EXPECT_CALL(session_listener, stopping(_)).Times(1);
-    EXPECT_CALL(session_listener, focus_cleared()).Times(1);
+    EXPECT_CALL(session_listener, unfocused()).Times(1);
 
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
     

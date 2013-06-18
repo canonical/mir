@@ -95,11 +95,11 @@ inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex
     focus_setter->set_focus_to(shell_session);
     if (shell_session)
     {
-        session_listener->received_focus(shell_session);
+        session_listener->focused(shell_session);
     }
     else
     {
-        session_listener->focus_cleared();
+        session_listener->unfocused();
     }
 }
 
