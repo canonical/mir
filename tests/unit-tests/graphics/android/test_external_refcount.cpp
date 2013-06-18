@@ -57,6 +57,7 @@ struct MirNativeBuffer : public ANativeWindowBuffer
         if ((external_references == 0) && (!mir_reference))
         {
             free_fn(this);
+            delete this;
         }
     }
 
@@ -66,12 +67,13 @@ struct MirNativeBuffer : public ANativeWindowBuffer
         if (external_references == 0)
         {
             free_fn(this);
+            delete this;
         }
     }
 
-    ~MirNativeBuffer() = default;
 
 private:
+    ~MirNativeBuffer() = default;
     std::function<void(MirNativeBuffer*)> free_fn;
     std::atomic<bool> mir_reference;
     std::atomic<int> external_references;
@@ -111,7 +113,7 @@ TEST(AndroidRefcount, ref_allocation_after_shared_ptr_del)
 
     mga::MirNativeBuffer* c_ownership = nullptr;
     {
-        auto tmp = new mga::MirNativeBuffer([](mga::MirNativeBuffer* b){delete b;});
+        auto tmp = new mga::MirNativeBuffer([](mga::MirNativeBuffer*){});
         mga::ExternalRefDeleter del;
         std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
         c_ownership = buffer.get();
@@ -128,10 +130,9 @@ TEST(AndroidRefcount, driver_hooks)
     mga::MirNativeBuffer* c_ownership = nullptr;
     {
         auto tmp = new mga::MirNativeBuffer(
-            [&](mga::MirNativeBuffer* b)
+            [&](mga::MirNativeBuffer*)
             {
                 call_count++;
-                delete b;
             });
         mga::ExternalRefDeleter del;
         std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
@@ -155,10 +156,9 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
         mga::MirNativeBuffer* c_ownership = nullptr;
         {
             auto tmp = new mga::MirNativeBuffer(
-                [&](mga::MirNativeBuffer* b)
+                [&](mga::MirNativeBuffer*)
                 {
                     call_count++;
-                    delete b;
                 });
             mga::ExternalRefDeleter del;
             std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
