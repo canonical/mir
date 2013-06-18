@@ -195,30 +195,15 @@ void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string
     std::chrono::seconds timeout(60);
     auto end_time = std::chrono::system_clock::now() + timeout;
     
-    if (client_lifecycles[surface_name] == appeared)
-    {
-        return;
-    }
-    else if (client_lifecycles[surface_name] == vanished)
+    if (client_lifecycles[surface_name] == vanished)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to appear but it has already vanished"));
     }
-    else
+    while (client_lifecycles[surface_name] != appeared)
     {
-        std::chrono::time_point<std::chrono::system_clock> current_time;
-        while ((current_time = std::chrono::system_clock::now()) < end_time)
-        {
-            lifecycle_condition.wait_for(lg, end_time - current_time);
-            
-            // If the surface we are waiting for has appeared, we can return
-            // otherwise an unrelated lifecycle event has occured and we go back to waiting.
-            if (client_lifecycles[surface_name] == appeared)
-            {
-                return;
-            }
-        }
-        BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to appear"));
-     }
+        if (lifecycle_condition.wait_until(lg, end_time) == std::cv_status::timeout)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to appear"));
+    }
 }
 
 void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::string const& surface_name)
@@ -228,28 +213,14 @@ void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::strin
     std::chrono::seconds timeout(60);
     auto end_time = std::chrono::system_clock::now() + timeout;
     
-    if (client_lifecycles[surface_name] == vanished)
-    {
-        return;
-    }
-    else if (client_lifecycles[surface_name] == starting)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to vanish but it has not started"));
-    }
-    else
-    {
-        std::chrono::time_point<std::chrono::system_clock> current_time;
-        while ((current_time = std::chrono::system_clock::now()) < end_time)
-        {
-            lifecycle_condition.wait_for(lg, end_time - current_time);
 
-            // If the surface we are waiting or has vanished we can return
-            // otherwise an unrelated lifecycle event has occured and we go back to waiting.
-            if (client_lifecycles[surface_name] == vanished)
-            {
-                return;
-            }
-        }
-        BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to vanish"));
-     }
+    if (client_lifecycles[surface_name] == appeared)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to vanish but it has already appeared"));
+    }
+    while (client_lifecycles[surface_name] != vanished)
+    {
+        if (lifecycle_condition.wait_until(lg, end_time) == std::cv_status::timeout)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to vanish"));
+    }
 }
