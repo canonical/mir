@@ -163,7 +163,7 @@ class NiceMock : public MockClass {
         internal::ImplicitCast_<MockClass*>(this));
   }
 
-  virtual ~NiceMock() {
+  virtual ~NiceMock() noexcept(noexcept(((MockClass*)0)->~MockClass())) {
     ::testing::Mock::UnregisterCallReaction(
         internal::ImplicitCast_<MockClass*>(this));
   }
@@ -259,7 +259,7 @@ class NaggyMock : public MockClass {
         internal::ImplicitCast_<MockClass*>(this));
   }
 
-  virtual ~NaggyMock() {
+  virtual ~NaggyMock() noexcept(noexcept(((MockClass*)0)->~MockClass())) {
     ::testing::Mock::UnregisterCallReaction(
         internal::ImplicitCast_<MockClass*>(this));
   }
@@ -355,7 +355,7 @@ class StrictMock : public MockClass {
         internal::ImplicitCast_<MockClass*>(this));
   }
 
-  virtual ~StrictMock() {
+  virtual ~StrictMock() noexcept(noexcept(((MockClass*)0)->~MockClass())) {
     ::testing::Mock::UnregisterCallReaction(
         internal::ImplicitCast_<MockClass*>(this));
   }
