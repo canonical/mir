@@ -55,45 +55,71 @@ public:
           buffer_stride{1024},
           buffer_pixel_format{geom::PixelFormat::abgr_8888},
           mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>(
-                          buffer_size, buffer_stride, buffer_pixel_format)}
+                          buffer_size, buffer_stride, buffer_pixel_format)},
+          mock_bundle{std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>()},
+          mock_back_buffer_strategy{std::make_shared<MockBackBufferStrategy>()}
     {
         using namespace testing;
 
-        ON_CALL(mock_bundle, client_acquire())
+        ON_CALL(*mock_bundle, client_acquire())
             .WillByDefault(Return(mock_buffer));
-        ON_CALL(mock_bundle, compositor_acquire())
+        ON_CALL(*mock_bundle, compositor_acquire())
             .WillByDefault(Return(mock_buffer));
     }
 
-    geom::Size buffer_size;
-    geom::Stride buffer_stride;
-    geom::PixelFormat buffer_pixel_format;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    testing::NiceMock<mtd::MockBufferBundle> mock_bundle;
-    MockBackBufferStrategy mock_back_buffer_strategy;
+    geom::Size const buffer_size;
+    geom::Stride const buffer_stride;
+    geom::PixelFormat const buffer_pixel_format;
+    std::shared_ptr<mtd::MockBuffer> const mock_buffer;
+    std::shared_ptr<mtd::MockBufferBundle> mock_bundle;
+    std::shared_ptr<MockBackBufferStrategy> mock_back_buffer_strategy;
 };
 }
 
 TEST_F(TemporaryBuffersTest, client_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(mock_bundle, client_acquire())
+    EXPECT_CALL(*mock_bundle, client_acquire())
         .Times(1);
-    EXPECT_CALL(mock_bundle, client_release(_))
+    EXPECT_CALL(*mock_bundle, client_release(_))
         .Times(1);
 
     mc::TemporaryClientBuffer proxy_buffer(mock_bundle);
 }
 
+TEST_F(TemporaryBuffersTest, client_buffer_handles_bundle_destruction)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_bundle, client_acquire())
+        .Times(1);
+    EXPECT_CALL(*mock_bundle, client_release(_))
+        .Times(0);
+
+    mc::TemporaryClientBuffer proxy_buffer(mock_bundle);
+    mock_bundle.reset();
+}
+
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(mock_back_buffer_strategy, acquire())
+    EXPECT_CALL(*mock_back_buffer_strategy, acquire())
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(mock_back_buffer_strategy, release(_))
+    EXPECT_CALL(*mock_back_buffer_strategy, release(_))
         .Times(1);
 
     mc::TemporaryCompositorBuffer proxy_buffer(mock_back_buffer_strategy);
+}
+
+TEST_F(TemporaryBuffersTest, compositor_buffer_handles_back_buffer_strategy_destruction)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_back_buffer_strategy, acquire())
+        .WillOnce(Return(mock_buffer));
+    EXPECT_CALL(*mock_back_buffer_strategy, release(_))
+        .Times(0);
+
+    mc::TemporaryCompositorBuffer proxy_buffer(mock_back_buffer_strategy);
+    mock_back_buffer_strategy.reset();
 }
 
 TEST_F(TemporaryBuffersTest, base_test_size)

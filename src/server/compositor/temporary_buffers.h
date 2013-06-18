@@ -49,21 +49,22 @@ protected:
 class TemporaryClientBuffer : public TemporaryBuffer
 {
 public:
-    explicit TemporaryClientBuffer(BufferBundle& buffer_bundle);
+    explicit TemporaryClientBuffer(std::shared_ptr<BufferBundle> const& buffer_swapper);
     ~TemporaryClientBuffer();
 
 private:
-    BufferBundle& allocating_bundle;
+    std::weak_ptr<BufferBundle> const allocating_swapper;
 };
 
 class TemporaryCompositorBuffer : public TemporaryBuffer
 {
 public:
-    explicit TemporaryCompositorBuffer(BackBufferStrategy& strategy);
+    explicit TemporaryCompositorBuffer(
+        std::shared_ptr<BackBufferStrategy> const& back_buffer_strategy);
     ~TemporaryCompositorBuffer();
 
 private:
-    BackBufferStrategy& back_buffer_strategy;
+    std::weak_ptr<BackBufferStrategy> const back_buffer_strategy;
 };
 
 }

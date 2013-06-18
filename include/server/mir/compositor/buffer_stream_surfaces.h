@@ -21,7 +21,6 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_SURFACES_H_
 
 #include "mir/surfaces/buffer_stream.h"
-#include "mir/compositor/multi_acquisition_back_buffer_strategy.h"
 
 #include <mutex>
 
@@ -33,6 +32,7 @@ namespace compositor
 class BufferIDUniqueGenerator;
 struct BufferProperties;
 class BufferBundle;
+class BackBufferStrategy;
 
 class BufferStreamSurfaces : public surfaces::BufferStream
 {
@@ -55,7 +55,7 @@ protected:
 
 private:
     std::shared_ptr<BufferBundle> const buffer_bundle;
-    MultiAcquisitionBackBufferStrategy back_buffer_strategy;
+    std::shared_ptr<BackBufferStrategy> const back_buffer_strategy;
 };
 
 }
