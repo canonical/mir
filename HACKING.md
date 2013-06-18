@@ -89,6 +89,23 @@ If a function cannot meet its post-conditions it throws an exception and meets
 AT LEAST the basic exception safety guarantee. It is a good idea to document the
 strong and no-throw guarantees. http://www.boost.org/community/exception_safety.html
 
+A function is not required to check its preconditions (there should be no
+tests that preconditions failures are reported). This means that 
+preconditions may be verified using the "assert" macro - which may or may
+not report problems (depending upon the NDEBUG define).
+
+
+Implicit rules
+--------------
+
+There are a lot of pointers (mostly smart, but a few raw ones) passed
+around in the code. We have adopted the general rule that pointers are
+expected to refer to valid objects. This avoids repetitive tests for
+validity. Unless otherwise documented functions and constructors that
+take pointer parameters have validity of the referenced objects as a
+precondition. Exceptions to the rule must be of limited scope and 
+documented.
+
 
 Running Mir
 -----------
