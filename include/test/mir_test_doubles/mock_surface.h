@@ -43,6 +43,8 @@ struct MockSurface : public shell::Surface
 
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+    MOCK_METHOD0(visible, bool());
+
     MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD0(advance_client_buffer, void());
