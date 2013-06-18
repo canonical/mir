@@ -34,5 +34,10 @@ EGLNativeDisplayType mgg::InternalClient::egl_native_display()
 
 EGLNativeWindowType mgg::InternalClient::egl_native_window(std::shared_ptr<mf::Surface> const& surface)
 {
-    return reinterpret_cast<EGLNativeWindowType>(surface.get());
+    if (!client_window)
+    {
+        client_window = std::make_shared<mgg::InternalNativeSurface>(surface);
+    }
+
+    return client_window.get();
 }

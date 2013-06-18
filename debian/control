@@ -89,7 +89,7 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to build Mir servers.
 
-Package: libmirclient0
+Package: libmirclient1
 Section: libs
 Architecture: any
 Depends: ${misc:Depends},
@@ -103,7 +103,7 @@ Description: Display server for Ubuntu - client library
 Package: libmirclient-dev
 Section: libdevel
 Architecture: any
-Depends: libmirclient0 (= ${binary:Version}),
+Depends: libmirclient1 (= ${binary:Version}),
          libmirprotobuf-dev (= ${source:Version}),
          mircommon-dev (= ${source:Version}),
          ${misc:Depends},

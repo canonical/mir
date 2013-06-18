@@ -1,3 +1,9 @@
+mir (0.0.4-0ubuntu1) raring; urgency=low
+
+  * change mesa header to clean up the file and add swapinterval 0 hook
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 17 Jun 2013 18:02:32 -0700
+
 mir (0.0.3-0ubuntu1) raring; urgency=low
 
   [ Bryce Harrington ]
