@@ -91,7 +91,16 @@ inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex
     auto old_focus = focus_application.lock();
 
     focus_application = shell_session;
+
     focus_setter->set_focus_to(shell_session);
+    if (shell_session)
+    {
+        session_listener->focused(shell_session);
+    }
+    else
+    {
+        session_listener->unfocused();
+    }
 }
 
 void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
