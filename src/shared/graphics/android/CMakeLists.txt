@@ -2,6 +2,7 @@ add_library(
   mirsharedandroid STATIC
 
   mir_native_window.cpp
+  mir_native_buffer.cpp
   syncfence.cpp
 )
 

@@ -17,30 +17,9 @@
  */
 
 #include "mir/graphics/android/mir_native_buffer.h"
-
 #include <gtest/gtest.h>
 
-#include <iostream>
-
 namespace mga=mir::graphics::android;
-
-
-TEST(AndroidRefcount, ref_allocation_after_shared_ptr_del)
-{
-    std::function<void(mga::MirNativeBuffer*)> free;
-
-    mga::MirNativeBuffer* c_ownership = nullptr;
-    {
-        auto tmp = new mga::MirNativeBuffer([](mga::MirNativeBuffer*){});
-        mga::ExternalRefDeleter del;
-        std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
-        c_ownership = buffer.get();
-        c_ownership->external_reference();
-        //Mir system loses its reference
-    }
-    c_ownership->external_dereference();
-    //should delete MirNativeBuffer here
-}
 
 TEST(AndroidRefcount, driver_hooks)
 {
@@ -52,18 +31,16 @@ TEST(AndroidRefcount, driver_hooks)
             {
                 call_count++;
             });
-        mga::ExternalRefDeleter del;
+        mga::MirNativeBufferDeleter del;
         std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
         c_ownership = buffer.get();
         c_ownership->common.incRef(&c_ownership->common);
-        //Mir system loses its reference
+        //Mir loses its reference
     }
 
-    //should delete MirNativeBuffer here
     EXPECT_EQ(0, call_count);
     c_ownership->common.decRef(&c_ownership->common);
     EXPECT_EQ(1, call_count);
-
 }
 
 TEST(AndroidRefcount, driver_hooks_mir_ref)
@@ -78,7 +55,7 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
                 {
                     call_count++;
                 });
-            mga::ExternalRefDeleter del;
+            mga::MirNativeBufferDeleter del;
             std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
             c_ownership = buffer.get();
             c_ownership->common.incRef(&c_ownership->common);
@@ -86,9 +63,9 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
             mir_ownership = buffer;
         }
 
+        //driver loses its reference
         c_ownership->common.decRef(&c_ownership->common);
         EXPECT_EQ(0, call_count);
     }
     EXPECT_EQ(1, call_count);
-
 }

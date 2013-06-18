@@ -68,11 +68,9 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
         BOOST_THROW_EXCEPTION(std::runtime_error("buffer allocation failed\n"));
     }
 
-    /* pack ANativeWindow buffer for the handle */
-    //this is goofy. write an allocator
     AndroidBufferHandleDeleter del1(alloc_dev);
     auto tmp = new mga::MirNativeBuffer(del1);
-    mga::ExternalRefDeleter del;
+    mga::MirNativeBufferDeleter del;
     std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
 
     buffer->width = width;

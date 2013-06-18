@@ -32,73 +32,29 @@ namespace graphics
 {
 namespace android
 {
-
-struct MirNativeBuffer;
-static void incref_hook(struct android_native_base_t* base);
-static void decref_hook(struct android_native_base_t* base);
-
 struct MirNativeBuffer : public ANativeWindowBuffer
 {
-    MirNativeBuffer(std::function<void(MirNativeBuffer*)> free)
-        : free_fn(free),
-          mir_reference(true),
-          external_references(0)
-    {
-        common.incRef = incref_hook;
-        common.decRef = decref_hook;
-    }
-    void external_reference()
-    {
-        external_references++;
-    }
-
-    void external_dereference()
-    {
-        external_references--;
-        if ((external_references == 0) && (!mir_reference))
-        {
-            free_fn(this);
-            delete this;
-        }
-    }
-
-    void internal_dereference()
-    {
-        mir_reference = false;
-        if (external_references == 0)
-        {
-            free_fn(this);
-            delete this;
-        }
-    }
+    MirNativeBuffer(std::function<void(MirNativeBuffer*)> free);
+    void driver_reference();
+    void driver_dereference();
+    void mir_dereference();
 
 private:
-    ~MirNativeBuffer() = default;
+    ~MirNativeBuffer();
+
     std::function<void(MirNativeBuffer*)> free_fn;
     std::atomic<bool> mir_reference;
-    std::atomic<int> external_references;
+    std::atomic<int> driver_references;
 
 };
 
-static void incref_hook(struct android_native_base_t* base)
-{
-    auto buffer = reinterpret_cast<MirNativeBuffer*>(base);
-    buffer->external_reference();
-}
-static void decref_hook(struct android_native_base_t* base)
-{
-    auto buffer = reinterpret_cast<MirNativeBuffer*>(base);
-    buffer->external_dereference();
-}
-
-struct ExternalRefDeleter
+struct MirNativeBufferDeleter
 { 
     void operator()(MirNativeBuffer* a)
     {
-        a->internal_dereference();
+        a->mir_dereference();
     }
 };
-
 }
 }
 }
