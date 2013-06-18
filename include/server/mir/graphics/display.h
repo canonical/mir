@@ -59,7 +59,7 @@ public:
 
 protected:
     Display() = default;
-    virtual ~Display() {}
+    virtual ~Display() {/* TODO: make nothrow */}
 private:
     Display(Display const&) = delete;
     Display& operator=(Display const&) = delete;

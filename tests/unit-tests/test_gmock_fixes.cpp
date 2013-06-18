@@ -26,14 +26,14 @@ TEST(GMock, return_by_move)
 {
     struct Interface
     {
-        virtual ~Interface() {}
+        virtual ~Interface() {/* TODO: make nothrow */}
         virtual std::unique_ptr<int> function() const = 0;
     };
 
     struct MockImplementation : Interface
     {
         MOCK_CONST_METHOD0(function, std::unique_ptr<int>());
-        ~MockImplementation() {}
+        ~MockImplementation() noexcept {}
     };
 
     MockImplementation mi;
