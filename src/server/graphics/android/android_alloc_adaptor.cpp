@@ -37,20 +37,13 @@ struct AndroidBufferHandleDeleter
         : alloc_device(alloc_dev)
     {}
 
-    void operator()(ANativeWindowBuffer* t)
+    void operator()(mga::MirNativeBuffer* t)
     {
         alloc_device->free(alloc_device.get(), t->handle);
-        delete t;
     }
 private:
     std::shared_ptr<alloc_device_t> const alloc_device;
 };
-
-#if 0
-static void incRef(android_native_base_t*)
-{
-}
-#endif
 }
 
 mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device)
@@ -76,11 +69,9 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     }
 
     /* pack ANativeWindow buffer for the handle */
-    auto tmp = new mga::MirNativeBuffer(
-        [this](mga::MirNativeBuffer* buffer)
-        {
-            alloc_dev->free(alloc_dev.get(), buffer->handle);
-        });
+    //this is goofy. write an allocator
+    AndroidBufferHandleDeleter del1(alloc_dev);
+    auto tmp = new mga::MirNativeBuffer(del1);
     mga::ExternalRefDeleter del;
     std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
 
@@ -91,21 +82,7 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     buffer->format = format;
     buffer->usage = usage_flag;
 
-    std::cout << "INCREF " << buffer->common.incRef << std::endl;
-
     return buffer;
-#if 0
-    /* we don't use these for refcounting buffers. however, drivers still expect to be
-       able to call them */
-    buffer->common.incRef = &incRef;
-    buffer->common.decRef = &incRef;
-    buffer->common.magic = ANDROID_NATIVE_BUFFER_MAGIC;
-    buffer->common.version = sizeof(ANativeWindowBuffer);
-    AndroidBufferHandleDeleter del(alloc_dev);
-    auto handle = std::shared_ptr<ANativeWindowBuffer>(buffer, del);
-
-    return handle;
-#endif
 }
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)

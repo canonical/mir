@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/mir_native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "android_client_buffer.h"
 
@@ -30,9 +31,10 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
  : creation_package(package),
    buffer_registrar(registrar),
    rect({{geom::X(0),geom::Y(0)}, size}),
-   buffer_pf(pf),
-   native_window_buffer(std::make_shared<ANativeWindowBuffer>())
+   buffer_pf(pf)
 {
+    native_window_buffer = std::make_shared<MirNativeBuffer>();
+
     creation_package = std::move(package);
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(creation_package));
 
