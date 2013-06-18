@@ -63,11 +63,46 @@ Matcher<internal::string>::Matcher(const char* s) {
   *this = Eq(internal::string(s));
 }
 
+#if GTEST_HAS_STRING_PIECE_
+// Constructs a matcher that matches a const StringPiece& whose value is
+// equal to s.
+Matcher<const StringPiece&>::Matcher(const internal::string& s) {
+  *this = Eq(s);
+}
+
+// Constructs a matcher that matches a const StringPiece& whose value is
+// equal to s.
+Matcher<const StringPiece&>::Matcher(const char* s) {
+  *this = Eq(internal::string(s));
+}
+
+// Constructs a matcher that matches a const StringPiece& whose value is
+// equal to s.
+Matcher<const StringPiece&>::Matcher(StringPiece s) {
+  *this = Eq(s.ToString());
+}
+
+// Constructs a matcher that matches a StringPiece whose value is equal to s.
+Matcher<StringPiece>::Matcher(const internal::string& s) {
+  *this = Eq(s);
+}
+
+// Constructs a matcher that matches a StringPiece whose value is equal to s.
+Matcher<StringPiece>::Matcher(const char* s) {
+  *this = Eq(internal::string(s));
+}
+
+// Constructs a matcher that matches a StringPiece whose value is equal to s.
+Matcher<StringPiece>::Matcher(StringPiece s) {
+  *this = Eq(s.ToString());
+}
+#endif  // GTEST_HAS_STRING_PIECE_
+
 namespace internal {
 
 // Joins a vector of strings as if they are fields of a tuple; returns
 // the joined string.
-string JoinAsTuple(const Strings& fields) {
+GTEST_API_ string JoinAsTuple(const Strings& fields) {
   switch (fields.size()) {
     case 0:
       return "";
@@ -89,8 +124,9 @@ string JoinAsTuple(const Strings& fields) {
 // 'negation' is false; otherwise returns the description of the
 // negation of the matcher.  'param_values' contains a list of strings
 // that are the print-out of the matcher's parameters.
-string FormatMatcherDescription(bool negation, const char* matcher_name,
-                                const Strings& param_values) {
+GTEST_API_ string FormatMatcherDescription(bool negation,
+                                           const char* matcher_name,
+                                           const Strings& param_values) {
   string result = ConvertIdentifierNameToWords(matcher_name);
   if (param_values.size() >= 1)
     result += " " + JoinAsTuple(param_values);

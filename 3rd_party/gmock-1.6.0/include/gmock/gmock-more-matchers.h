@@ -1,4 +1,4 @@
-// Copyright 2009, Google Inc.
+// Copyright 2013, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,30 +27,32 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Author: wan@google.com (Zhanyong Wan)
+// Author: marcus.boerger@google.com (Marcus Boerger)
 
-// Tests Google Test's throw-on-failure mode with exceptions disabled.
+// Google Mock - a framework for writing C++ mock classes.
 //
-// This program must be compiled with exceptions disabled.  It will be
-// invoked by gtest_throw_on_failure_test.py, and is expected to exit
-// with non-zero in the throw-on-failure mode or 0 otherwise.
+// This file implements some matchers that depend on gmock-generated-matchers.h.
+//
+// Note that tests are implemented in gmock-matchers_test.cc rather than
+// gmock-more-matchers-test.cc.
 
-#include "gtest/gtest.h"
+#ifndef GMOCK_GMOCK_MORE_MATCHERS_H_
+#define GMOCK_GMOCK_MORE_MATCHERS_H_
 
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
+#include "gmock/gmock-generated-matchers.h"
 
-  // We want to ensure that people can use Google Test assertions in
-  // other testing frameworks, as long as they initialize Google Test
-  // properly and set the thrown-on-failure mode.  Therefore, we don't
-  // use Google Test's constructs for defining and running tests
-  // (e.g. TEST and RUN_ALL_TESTS) here.
+namespace testing {
 
-  // In the throw-on-failure mode with exceptions disabled, this
-  // assertion will cause the program to exit with a non-zero code.
-  EXPECT_EQ(2, 3);
-
-  // When not in the throw-on-failure mode, the control will reach
-  // here.
-  return 0;
+// Defines a matcher that matches an empty container. The container must
+// support both size() and empty(), which all STL-like containers provide.
+MATCHER(IsEmpty, negation ? "isn't empty" : "is empty") {
+  if (arg.empty()) {
+    return true;
+  }
+  *result_listener << "whose size is " << arg.size();
+  return false;
 }
+
+}  // namespace testing
+
+#endif  // GMOCK_GMOCK_MORE_MATCHERS_H_

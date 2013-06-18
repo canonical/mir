@@ -170,23 +170,31 @@ called by Visual Studio and Xcode) to compile
 
 with
 
-  ${GTEST_DIR}/include, ${GTEST_DIR}, ${GMOCK_DIR}/include, and ${GMOCK_DIR}
+  ${GTEST_DIR}/include and ${GMOCK_DIR}/include
 
-in the header search path.  Assuming a Linux-like system and gcc,
+in the system header search path, and
+
+  ${GTEST_DIR} and ${GMOCK_DIR}
+
+in the normal header search path.  Assuming a Linux-like system and gcc,
 something like the following will do:
 
-  g++ -I${GTEST_DIR}/include -I${GTEST_DIR} -I${GMOCK_DIR}/include \
-      -I${GMOCK_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
-  g++ -I${GTEST_DIR}/include -I${GTEST_DIR} -I${GMOCK_DIR}/include \
-      -I${GMOCK_DIR} -c ${GMOCK_DIR}/src/gmock-all.cc
+  g++ -isystem ${GTEST_DIR}/include -I${GTEST_DIR} \
+      -isystem ${GMOCK_DIR}/include -I${GMOCK_DIR} \
+      -pthread -c ${GTEST_DIR}/src/gtest-all.cc
+  g++ -isystem ${GTEST_DIR}/include -I${GTEST_DIR} \
+      -isystem ${GMOCK_DIR}/include -I${GMOCK_DIR} \
+      -pthread -c ${GMOCK_DIR}/src/gmock-all.cc
   ar -rv libgmock.a gtest-all.o gmock-all.o
+
+(We need -pthread as Google Test and Google Mock use threads.)
 
 Next, you should compile your test source file with
 ${GTEST_DIR}/include and ${GMOCK_DIR}/include in the header search
 path, and link it with gmock and any other necessary libraries:
 
-  g++ -I${GTEST_DIR}/include -I${GMOCK_DIR}/include \
-      path/to/your_test.cc libgmock.a -o your_test
+  g++ -isystem ${GTEST_DIR}/include -isystem ${GMOCK_DIR}/include \
+      -pthread path/to/your_test.cc libgmock.a -o your_test
 
 As an example, the make/ directory contains a Makefile that you can
 use to build Google Mock on systems where GNU make is available
@@ -265,7 +273,14 @@ If you want to use Boost's TR1 tuple library with Google Mock, please
 refer to the Boost website (http://www.boost.org/) for how to obtain
 it and set it up.
 
-### Tweaking Google Test ###
+### As a Shared Library (DLL) ###
+
+Google Mock is compact, so most users can build and link it as a static
+library for the simplicity.  Google Mock can be used as a DLL, but the
+same DLL must contain Google Test as well.  See Google Test's README
+file for instructions on how to set up necessary compiler settings.
+
+### Tweaking Google Mock ###
 
 Most of Google Test's control macros apply to Google Mock as well.
 Please see file ${GTEST_DIR}/README for how to tweak them.

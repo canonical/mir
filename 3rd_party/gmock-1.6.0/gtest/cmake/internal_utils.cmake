@@ -56,6 +56,16 @@ macro(config_compiler_and_linker)
     # Newlines inside flags variables break CMake's NMake generator.
     # TODO(vladl@google.com): Add -RTCs and -RTCu to debug builds.
     set(cxx_base_flags "-GS -W4 -WX -wd4127 -wd4251 -wd4275 -nologo -J -Zi")
+    if (MSVC_VERSION LESS 1400)
+      # Suppress spurious warnings MSVC 7.1 sometimes issues.
+      # Forcing value to bool.
+      set(cxx_base_flags "${cxx_base_flags} -wd4800")
+      # Copy constructor and assignment operator could not be generated.
+      set(cxx_base_flags "${cxx_base_flags} -wd4511 -wd4512")
+      # Compatibility warnings not applicable to Google Test.
+      # Resolved overload was found by argument-dependent lookup.
+      set(cxx_base_flags "${cxx_base_flags} -wd4675")
+    endif()
     set(cxx_base_flags "${cxx_base_flags} -D_UNICODE -DUNICODE -DWIN32 -D_WIN32")
     set(cxx_base_flags "${cxx_base_flags} -DSTRICT -DWIN32_LEAN_AND_MEAN")
     set(cxx_exception_flags "-EHsc -D_HAS_EXCEPTIONS=1")
@@ -69,7 +79,8 @@ macro(config_compiler_and_linker)
     # whether RTTI is enabled.  Therefore we define GTEST_HAS_RTTI
     # explicitly.
     set(cxx_no_rtti_flags "-fno-rtti -DGTEST_HAS_RTTI=0")
-    set(cxx_strict_flags "-Wextra")
+    set(cxx_strict_flags
+      "-Wextra -Wno-unused-parameter -Wno-missing-field-initializers")
   elseif (CMAKE_CXX_COMPILER_ID STREQUAL "SunPro")
     set(cxx_exception_flags "-features=except")
     # Sun Pro doesn't provide macros to indicate whether exceptions and
@@ -93,7 +104,7 @@ macro(config_compiler_and_linker)
     set(cxx_no_rtti_flags "")
   endif()
 
-  if (CMAKE_USE_PTHREADS_INIT AND NOT gtest_disable_pthreads)  # The pthreads library is available and allowed.
+  if (CMAKE_USE_PTHREADS_INIT)  # The pthreads library is available and allowed.
     set(cxx_base_flags "${cxx_base_flags} -DGTEST_HAS_PTHREAD=1")
   else()
     set(cxx_base_flags "${cxx_base_flags} -DGTEST_HAS_PTHREAD=0")
@@ -125,7 +136,7 @@ function(cxx_library_with_type name type cxx_flags)
       PROPERTIES
       COMPILE_DEFINITIONS "GTEST_CREATE_SHARED_LIBRARY=1")
   endif()
-  if (CMAKE_USE_PTHREADS_INIT AND NOT gtest_disable_pthreads)
+  if (CMAKE_USE_PTHREADS_INIT)
     target_link_libraries(${name} ${CMAKE_THREAD_LIBS_INIT})
   endif()
 endfunction()
