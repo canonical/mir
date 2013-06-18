@@ -20,6 +20,7 @@
 
 #include <system/window.h>
 
+#include <functional>
 #include <atomic>
 #include <memory>
 namespace mir
@@ -36,8 +37,9 @@ static void decref_hook(struct android_native_base_t* base);
 
 struct MirNativeBuffer : public ANativeWindowBuffer
 {
-    MirNativeBuffer()
-        : mir_reference(true),
+    MirNativeBuffer(std::function<void(MirNativeBuffer*)> free)
+        : free_fn(free),
+          mir_reference(true),
           external_references(0)
     {
         common.incRef = incref_hook;
@@ -53,6 +55,7 @@ struct MirNativeBuffer : public ANativeWindowBuffer
         external_references--;
         if ((external_references == 0) && (!mir_reference))
         {
+            free_fn(this);
             delete this;
         }
     }
@@ -62,11 +65,13 @@ struct MirNativeBuffer : public ANativeWindowBuffer
         mir_reference = false;
         if (external_references == 0)
         {
+            free_fn(this);
             delete this;
         }
     }
 
     private:
+    std::function<void(MirNativeBuffer*)> free_fn;
     std::atomic<bool> mir_reference;
     std::atomic<int> external_references;
 
@@ -102,9 +107,11 @@ namespace mga=mir::graphics::android;
 
 TEST(AndroidRefcount, ref_allocation_after_shared_ptr_del)
 {
+    std::function<void(mga::MirNativeBuffer*)> free;
+
     mga::MirNativeBuffer* c_ownership = nullptr;
     {
-        auto tmp = new mga::MirNativeBuffer;
+        auto tmp = new mga::MirNativeBuffer(free);
         mga::ExternalRefDeleter del;
         std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
         c_ownership = buffer.get();
@@ -115,18 +122,22 @@ TEST(AndroidRefcount, ref_allocation_after_shared_ptr_del)
     //should delete MirNativeBuffer here
 }
 
-
 TEST(AndroidRefcount, driver_hooks)
 {
-    mga::MirNativeBuffer* c_ownership = nullptr;
+    int call_count = 0;
     {
-        auto tmp = new mga::MirNativeBuffer;
-        mga::ExternalRefDeleter del;
-        std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
-        c_ownership = buffer.get();
-        c_ownership->common.incRef(&c_ownership->common);
-        //Mir system loses its reference
+        mga::MirNativeBuffer* c_ownership = nullptr;
+        {
+            auto tmp = new mga::MirNativeBuffer([&](mga::MirNativeBuffer*){call_count++;});
+            mga::ExternalRefDeleter del;
+            std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
+            c_ownership = buffer.get();
+            c_ownership->common.incRef(&c_ownership->common);
+            //Mir system loses its reference
+        }
+        c_ownership->common.decRef(&c_ownership->common);
+        //should delete MirNativeBuffer here
+        EXPECT_EQ(0, call_count);
     }
-    c_ownership->common.decRef(&c_ownership->common);
-    //should delete MirNativeBuffer here
+    EXPECT_EQ(1, call_count);
 }
