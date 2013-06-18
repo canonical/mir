@@ -21,7 +21,6 @@
 #include "android_alloc_adaptor.h"
 #include "android_format_conversion-inl.h"
 
-#include <iostream>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 

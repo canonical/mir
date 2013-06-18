@@ -132,5 +132,4 @@ geom::PixelFormat mcla::AndroidClientBuffer::pixel_format() const
 std::shared_ptr<ANativeWindowBuffer> mcla::AndroidClientBuffer::native_buffer_handle() const
 {
     return native_window_buffer;
-    
 }

@@ -20,11 +20,8 @@
 #define MIR_GRAPHICS_ANDROID_MIR_NATIVE_BUFFER_H_
 
 #include <system/window.h>
-
 #include <functional>
 #include <atomic>
-#include <memory>
-#include <iostream>
 
 namespace mir
 {

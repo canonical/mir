@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/mir_native_buffer.h"
+#include <memory>
 #include <gtest/gtest.h>
 
 namespace mga=mir::graphics::android;
