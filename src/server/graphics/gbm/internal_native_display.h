@@ -36,9 +36,9 @@ class InternalNativeDisplay : public MirMesaEGLNativeDisplay
 public:
     InternalNativeDisplay(std::shared_ptr<PlatformIPCPackage> const& platform_package);
 
+private:
     static int native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package);
 
-private:
     std::shared_ptr<PlatformIPCPackage> platform_package;
 };
 

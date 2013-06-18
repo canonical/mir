@@ -42,17 +42,16 @@ class InternalNativeSurface : public MirMesaEGLNativeSurface
 public:
     InternalNativeSurface(std::shared_ptr<frontend::Surface> const& surface);
 
-    static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interval);
-    static int advance_buffer_static(MirMesaEGLNativeSurface* surface,
-                                      MirBufferPackage* package);
-
-    static int get_parameters_static(MirMesaEGLNativeSurface* surface,
-                                      MirSurfaceParameters* parameters);
-
     int advance_buffer(MirBufferPackage* package);
     int get_parameters(MirSurfaceParameters* parameters);
 
 private:
+    static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interval);
+    static int advance_buffer_static(MirMesaEGLNativeSurface* surface,
+                                      MirBufferPackage* package);
+    static int get_parameters_static(MirMesaEGLNativeSurface* surface,
+                                      MirSurfaceParameters* parameters);
+
     std::shared_ptr<frontend::Surface> surface;
     std::shared_ptr<compositor::Buffer> current_buffer;
 };
