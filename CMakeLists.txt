@@ -154,10 +154,10 @@ string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 set(
   GTEST_INCLUDE_DIR
 
-  3rd_party/gmock-1.6.0/include
-  3rd_party/gmock-1.6.0/gtest/include)
+  3rd_party/gmock/include
+  3rd_party/gmock/gtest/include)
 
-add_subdirectory(3rd_party/gmock-1.6.0/)
+add_subdirectory(3rd_party/gmock/)
 set(GMOCK_LIBRARY gmock)
 set(GMOCK_MAIN_LIBRARY gmock_main)
 set(
