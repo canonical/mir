@@ -54,11 +54,14 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
     auto tmp = new mga::MirNativeBuffer(del1);
     mga::MirNativeBufferDeleter del;
     native_window_buffer = std::shared_ptr<mga::MirNativeBuffer>(tmp, del);
-
-    creation_package = std::move(package);
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(creation_package));
 
-    buffer_registrar->register_buffer(native_handle.get());
+    try{ 
+        buffer_registrar->register_buffer(native_handle.get());
+    } catch (...)
+    {
+        //TODO: log failure
+    }
 
     pack_native_window_buffer();
 }
