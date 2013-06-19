@@ -25,7 +25,7 @@ namespace mga=mir::graphics::android;
 TEST(AndroidRefcount, driver_hooks)
 {
     int call_count = 0;
-    mga::MirNativeBuffer* c_ownership = nullptr;
+    mga::MirNativeBuffer* driver_reference = nullptr;
     {
         auto tmp = new mga::MirNativeBuffer(
             [&](mga::MirNativeBuffer*)
@@ -34,13 +34,13 @@ TEST(AndroidRefcount, driver_hooks)
             });
         mga::MirNativeBufferDeleter del;
         std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
-        c_ownership = buffer.get();
-        c_ownership->common.incRef(&c_ownership->common);
+        driver_reference = buffer.get();
+        driver_reference->common.incRef(&driver_reference->common);
         //Mir loses its reference
     }
 
     EXPECT_EQ(0, call_count);
-    c_ownership->common.decRef(&c_ownership->common);
+    driver_reference->common.decRef(&driver_reference->common);
     EXPECT_EQ(1, call_count);
 }
 
@@ -48,8 +48,8 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
 {
     int call_count = 0;
     {
-        std::shared_ptr<mga::MirNativeBuffer> mir_ownership;
-        mga::MirNativeBuffer* c_ownership = nullptr;
+        std::shared_ptr<mga::MirNativeBuffer> mir_reference;
+        mga::MirNativeBuffer* driver_reference = nullptr;
         {
             auto tmp = new mga::MirNativeBuffer(
                 [&](mga::MirNativeBuffer*)
@@ -57,15 +57,13 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
                     call_count++;
                 });
             mga::MirNativeBufferDeleter del;
-            std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
-            c_ownership = buffer.get();
-            c_ownership->common.incRef(&c_ownership->common);
-
-            mir_ownership = buffer;
+            mir_reference = std::shared_ptr<mga::MirNativeBuffer>(tmp, del);
+            driver_reference = mir_reference.get();
+            driver_reference->common.incRef(&driver_reference->common);
         }
 
         //driver loses its reference
-        c_ownership->common.decRef(&c_ownership->common);
+        driver_reference->common.decRef(&driver_reference->common);
         EXPECT_EQ(0, call_count);
     }
     EXPECT_EQ(1, call_count);
