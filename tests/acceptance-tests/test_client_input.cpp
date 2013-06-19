@@ -522,7 +522,7 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
     }
     
     std::shared_ptr<msh::Surface> create_surface(msh::SurfaceCreationParameters const& params,
-                                                 frontend::SurfaceId id,
+                                                 mf::SurfaceId id,
                                                  std::shared_ptr<me::EventSink> const& sink)
     {
         auto surface = underlying_factory->create_surface(params, id, sink);
@@ -534,7 +534,7 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
     std::shared_ptr<msh::SurfaceFactory> const underlying_factory;
     std::shared_ptr<mi::InputRegion> const input_region;
 };
-};
+}
 
 TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 {
