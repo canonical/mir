@@ -85,22 +85,25 @@ int mf::ProtobufSocketCommunicator::next_id()
 
 void mf::ProtobufSocketCommunicator::start()
 {
-    auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
+    auto run_io_service = [&]
+    {
+        while (true)
+        try
+        {
+            io_service.run();
+            return;
+        }
+        catch (std::exception const& e)
+        {
+            // TODO need a way to report errors
+            std::cerr << "Input error=" << e.what() << std::endl;
+        }
+    };
 
     for (auto& thread : io_service_threads)
     {
         thread = std::move(std::thread(run_io_service));
     }
-
-    io_service.post([&]
-    {
-        do
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            connected_sessions->discard_disconnected();
-        }
-        while (!io_service.stopped());
-    });
 }
 
 void mf::ProtobufSocketCommunicator::stop()

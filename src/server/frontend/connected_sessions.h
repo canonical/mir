@@ -60,19 +60,6 @@ public:
         shell_list.clear();
     }
 
-    void discard_disconnected()
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-
-        for (auto next = shell_list.begin(), current = next; next != shell_list.end(); current = next)
-        {
-            ++next;
-            if (!current->second->is_connected())
-                shell_list.erase(current);
-        }
-    }
-
-
 private:
     ConnectedSessions(ConnectedSessions const&) = delete;
     ConnectedSessions& operator =(ConnectedSessions const&) = delete;

@@ -73,19 +73,22 @@ void mfd::SocketSession::read_next_message()
                     this, ba::placeholders::error));
 }
 
-void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
+void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
 {
-    if (!ec)
+    if (error)
     {
-        size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
-        // Read newline delimited messages for now
-        ba::async_read(
-             socket,
-             message,
-             ba::transfer_exactly(body_size),
-             boost::bind(&mfd::SocketSession::on_new_message,
-                         this, ba::placeholders::error));
+        connected_sessions->remove(id());
+        BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
+
+    size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
+    // Read newline delimited messages for now
+    ba::async_read(
+         socket,
+         message,
+         ba::transfer_exactly(body_size),
+         boost::bind(&mfd::SocketSession::on_new_message,
+                     this, ba::placeholders::error));
 }
 
 void mfd::SocketSession::on_new_message(const boost::system::error_code& error)
@@ -115,32 +118,4 @@ void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size
         connected_sessions->remove(id());
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
-}
-
-bool mfd::SocketSession::is_connected()
-{
-    auto const socket_fd = socket.native_handle();
-
-    // use the poll system call to be notified about socket status changes
-    struct pollfd pfd;
-    pfd.fd = socket_fd;
-    pfd.events = POLLIN | POLLHUP | POLLRDNORM;
-    pfd.revents = 0;
-
-    // Something happened recently- we're connected
-    if (pfd.revents) return true;
-
-    // call poll with a timeout of 100 ms
-    if (poll(&pfd, 1, 100) > 0)
-    {
-        // There is either data available on the socket,
-        // otherwise the socket has been closed
-        char buffer[32];
-
-        // If we can peek characters we're connected
-        // otherwise the socket has been closed and we're not
-        return recv(socket_fd, buffer, sizeof(buffer), MSG_PEEK | MSG_DONTWAIT);
-    }
-
-    return true;
 }
