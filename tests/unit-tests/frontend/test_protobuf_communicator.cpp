@@ -66,6 +66,8 @@ struct ProtobufCommunicator : public ::testing::Test
 
     void SetUp()
     {
+        using namespace testing;
+        EXPECT_CALL(*communicator_report, error(_)).Times(AnyNumber());
         stub_server->comm->start();
         client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
