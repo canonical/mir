@@ -54,6 +54,7 @@ set(
   gbm/gbm_client_buffer_factory.cpp
   gbm/gbm_client_buffer.cpp
   gbm/mesa_native_display_container.cpp
+  gbm/gbm_native_surface.cpp
   ${CLIENT_SOURCES}
 )
 endif()
@@ -69,7 +70,7 @@ set_target_properties(
 
   PROPERTIES
   VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
-  SOVERSION ${MIR_VERSION_MAJOR}
+  SOVERSION 1
 )
 
 set(

@@ -57,8 +57,8 @@ public:
     ~Surface();
 
     virtual void hide();
-
     virtual void show();
+    virtual bool visible();
 
     virtual void destroy();
 

@@ -96,8 +96,6 @@ public:
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
 
-    void ensure_no_live_buffers_bound() {}
-
 private:
     int render_operations_fd;
 };

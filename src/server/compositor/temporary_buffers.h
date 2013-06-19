@@ -29,6 +29,7 @@ namespace compositor
 
 class BufferID;
 class BufferBundle;
+class BackBufferStrategy;
 
 class TemporaryBuffer : public Buffer
 {
@@ -58,11 +59,12 @@ private:
 class TemporaryCompositorBuffer : public TemporaryBuffer
 {
 public:
-    explicit TemporaryCompositorBuffer(std::shared_ptr<BufferBundle> const& buffer_swapper);
+    explicit TemporaryCompositorBuffer(
+        std::shared_ptr<BackBufferStrategy> const& back_buffer_strategy);
     ~TemporaryCompositorBuffer();
 
 private:
-    std::weak_ptr<BufferBundle> const allocating_swapper;
+    std::weak_ptr<BackBufferStrategy> const back_buffer_strategy;
 };
 
 }

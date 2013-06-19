@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/mir_native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "android_client_buffer.h"
 
@@ -23,6 +24,23 @@
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
+namespace mga=mir::graphics::android;
+namespace
+{
+struct AndroidBufferHandleDeleter
+{
+    AndroidBufferHandleDeleter(std::shared_ptr<mcla::AndroidRegistrar> const& alloc_dev)
+        : buffer_registrar(alloc_dev)
+    {}
+
+    void operator()(mga::MirNativeBuffer* t)
+    {
+        buffer_registrar->unregister_buffer(t->handle);
+    }
+private:
+    std::shared_ptr<mcla::AndroidRegistrar> const buffer_registrar;
+};
+}
 
 mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const& registrar,
                                                std::shared_ptr<MirBufferPackage> const& package,
@@ -30,20 +48,24 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
  : creation_package(package),
    buffer_registrar(registrar),
    rect({{geom::X(0),geom::Y(0)}, size}),
-   buffer_pf(pf),
-   native_window_buffer(std::make_shared<ANativeWindowBuffer>())
+   buffer_pf(pf)
 {
-    creation_package = std::move(package);
+    AndroidBufferHandleDeleter del1(registrar);
+    auto tmp = new mga::MirNativeBuffer(del1);
+    mga::MirNativeBufferDeleter del;
+    native_window_buffer = std::shared_ptr<mga::MirNativeBuffer>(tmp, del);
     native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(creation_package));
 
-    buffer_registrar->register_buffer(native_handle.get());
+    try{ 
+        buffer_registrar->register_buffer(native_handle.get());
+    } catch (...)
+    {
+        //TODO: log failure
+    }
 
     pack_native_window_buffer();
 }
 
-static void incRef(android_native_base_t*)
-{
-}
 void mcla::AndroidClientBuffer::pack_native_window_buffer()
 {
     native_window_buffer->height = static_cast<int32_t>(rect.size.height.as_uint32_t());
@@ -51,15 +73,11 @@ void mcla::AndroidClientBuffer::pack_native_window_buffer()
     native_window_buffer->stride = creation_package->stride /
                                    geom::bytes_per_pixel(buffer_pf);
     native_window_buffer->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-
     native_window_buffer->handle = native_handle.get();
-    native_window_buffer->common.incRef = &incRef;
-    native_window_buffer->common.decRef = &incRef;
 }
 
 mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept
 {
-    buffer_registrar->unregister_buffer(native_handle.get());
 }
 
 const native_handle_t* mcla::AndroidClientBuffer::convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package)

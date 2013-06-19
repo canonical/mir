@@ -27,6 +27,9 @@ namespace mir
 namespace graphics
 {
 
+/**
+ * Platform data to be sent to the clients over IPC.
+ */
 struct PlatformIPCPackage
 {
     virtual ~PlatformIPCPackage() {}

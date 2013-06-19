@@ -32,17 +32,30 @@ class Surface;
 }
 namespace graphics
 {
+
+/**
+ * Interface to in-process client support.
+ */
 class InternalClient
 {
 public:
+    /**
+     * The EGL native display to be used by in-process clients.
+     */
     virtual EGLNativeDisplayType egl_native_display() = 0;
+
+    /**
+     * The EGL native window to be used by in-process clients for a surface.
+     */
     virtual EGLNativeWindowType egl_native_window(std::shared_ptr<frontend::Surface> const&) = 0;
+
 protected:
     InternalClient() = default;
     virtual ~InternalClient() = default;
     InternalClient(InternalClient const&) = delete;
     InternalClient& operator=(InternalClient const&) = delete;
 };
+
 }
 }
 

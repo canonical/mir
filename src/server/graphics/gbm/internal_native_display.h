@@ -1,4 +1,3 @@
-
 /*
  * Copyright © 2013 Canonical Ltd.
  *
@@ -37,16 +36,9 @@ class InternalNativeDisplay : public MirMesaEGLNativeDisplay
 public:
     InternalNativeDisplay(std::shared_ptr<PlatformIPCPackage> const& platform_package);
 
-    static void native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package);
-    static void native_display_surface_get_current_buffer(MirMesaEGLNativeDisplay* /* display */, 
-                                                          MirEGLNativeWindowType surface,
-                                                          MirBufferPackage* package);
-    static void native_display_surface_get_parameters(MirMesaEGLNativeDisplay* /* display  */, 
-                                                      MirEGLNativeWindowType surface,
-                                                      MirSurfaceParameters* parameters);
-    static void native_display_surface_advance_buffer(MirMesaEGLNativeDisplay* /* display */, 
-                                                      MirEGLNativeWindowType surface);
 private:
+    static int native_display_get_platform(MirMesaEGLNativeDisplay* display, MirPlatformPackage* package);
+
     std::shared_ptr<PlatformIPCPackage> platform_package;
 };
 

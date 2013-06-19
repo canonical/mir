@@ -21,6 +21,7 @@
 
 #include "mir/graphics/internal_client.h"
 #include "internal_native_display.h"
+#include "internal_native_surface.h"
 #include <memory>
 
 namespace mir
@@ -44,6 +45,7 @@ public:
 
 private:
     std::shared_ptr<MirMesaEGLNativeDisplay> const native_display;
+    std::shared_ptr<MirMesaEGLNativeSurface> client_window;
 };
 
 }

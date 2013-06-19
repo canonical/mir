@@ -335,6 +335,6 @@ TEST_F(ClientAndroidBufferTest, buffer_packs_anativewindowbuffer_refcounters_set
     ASSERT_NE(nullptr, native_handle->common.incRef);
     ASSERT_NE(nullptr, native_handle->common.decRef);
 
-    native_handle->common.incRef(NULL);
-    native_handle->common.decRef(NULL);
+    native_handle->common.incRef(&native_handle->common);
+    native_handle->common.decRef(&native_handle->common);
 }

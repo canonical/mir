@@ -22,7 +22,7 @@
 
 #include "mir/surfaces/buffer_stream.h"
 
-#include <map>
+#include <mutex>
 
 namespace mir
 {
@@ -32,6 +32,7 @@ namespace compositor
 class BufferIDUniqueGenerator;
 struct BufferProperties;
 class BufferBundle;
+class BackBufferStrategy;
 
 class BufferStreamSurfaces : public surfaces::BufferStream
 {
@@ -54,7 +55,8 @@ protected:
     BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
 
 private:
-    std::shared_ptr<BufferBundle> buffer_bundle;
+    std::shared_ptr<BufferBundle> const buffer_bundle;
+    std::shared_ptr<BackBufferStrategy> const back_buffer_strategy;
 };
 
 }

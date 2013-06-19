@@ -81,7 +81,7 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(
     
     session_listener->starting(new_session);
 
-    set_focus_to_locked(std::unique_lock<std::mutex>(mutex), new_session);
+    set_focus_to(new_session);
 
     return new_session;
 }
@@ -91,7 +91,22 @@ inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex
     auto old_focus = focus_application.lock();
 
     focus_application = shell_session;
+
     focus_setter->set_focus_to(shell_session);
+    if (shell_session)
+    {
+        session_listener->focused(shell_session);
+    }
+    else
+    {
+        session_listener->unfocused();
+    }
+}
+
+void msh::SessionManager::set_focus_to(std::shared_ptr<Session> const& shell_session)
+{
+    std::unique_lock<std::mutex> lg(mutex);
+    set_focus_to_locked(lg, shell_session);
 }
 
 void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& session)
@@ -139,7 +154,7 @@ mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Sessio
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
     auto id = shell_session->create_surface(params);
 
-    set_focus_to_locked(std::unique_lock<std::mutex>(mutex), shell_session);
+    set_focus_to(shell_session);
 
     return id;
 }

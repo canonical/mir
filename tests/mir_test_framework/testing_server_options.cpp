@@ -141,10 +141,6 @@ public:
         r.graphic_region();
     }
 
-    void ensure_no_live_buffers_bound()
-    {
-    }
-
     void clear() {}
 };
 

@@ -31,14 +31,25 @@ namespace compositor
 
 struct BufferProperties;
 
+/**
+ * Interface to graphic buffer allocation.
+ */
 class GraphicBufferAllocator
 {
 public:
     virtual ~GraphicBufferAllocator() = default;
 
+    /**
+     * Allocates a buffer.
+     *
+     * \param [in] buffer_properties the properties the allocated buffer should have
+     */
     virtual std::shared_ptr<Buffer> alloc_buffer(
         BufferProperties const& buffer_properties) = 0;
 
+    /**
+     * The supported buffer pixel formats.
+     */
     virtual std::vector<geometry::PixelFormat> supported_pixel_formats() = 0;
 
 protected:
