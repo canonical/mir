@@ -18,8 +18,10 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
+#include "mir/input/rectangles_input_region.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
+#include "mir/shell/surface_factory.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
@@ -48,6 +50,7 @@ namespace mia = mi::android;
 namespace mis = mi::synthesis;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace me = mir::events;
 namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -505,4 +508,107 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
 
     launch_client_process(client_1);
     launch_client_process(client_2);
+}
+
+namespace
+{
+struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
+{
+    RegionApplyingSurfaceFactory(std::shared_ptr<msh::SurfaceFactory> real_factory,
+        std::initializer_list<geom::Rectangle> const& input_rectangles)
+        : underlying_factory(real_factory),
+          input_region(std::make_shared<mi::RectanglesInputRegion>(input_rectangles))
+    {
+    }
+    
+    std::shared_ptr<msh::Surface> create_surface(msh::SurfaceCreationParameters const& params,
+                                                 frontend::SurfaceId id,
+                                                 std::shared_ptr<me::EventSink> const& sink)
+    {
+        auto surface = underlying_factory->create_surface(params, id, sink);
+        surface->set_input_region(input_region);
+
+        return surface;
+    }
+    
+    std::shared_ptr<msh::SurfaceFactory> const underlying_factory;
+    std::shared_ptr<mi::InputRegion> const input_region;
+};
+};
+
+TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
+{
+    using namespace ::testing;
+    static std::string const test_client_name = "1";
+    
+    static int const screen_width = 100;
+    static int const screen_height = 100;
+    
+    static geom::Rectangle const screen_geometry{geom::Point{geom::X{0}, geom::Y{0}},
+        geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
+    
+    static std::initializer_list<geom::Rectangle> client_input_regions = {
+        geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, geom::Size{geom::Width{screen_width-80}, geom::Height{screen_height}}},
+        geom::Rectangle{geom::Point{geom::X{screen_width-20}, geom::Y{0}}, geom::Size{geom::Width{screen_width-80}, geom::Height{screen_height}}}
+    };
+
+    struct ServerConfiguration : mtf::InputTestingServerConfiguration
+    {
+        std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
+        {
+            static GeometryList positions;
+            positions[test_client_name] = screen_geometry;
+            
+            return std::make_shared<StaticPlacementStrategy>(positions);
+        }
+        std::shared_ptr<msh::SurfaceFactory> the_shell_surface_factory() override
+        {
+            return std::make_shared<RegionApplyingSurfaceFactory>(InputTestingServerConfiguration::the_shell_surface_factory(),
+                client_input_regions);                                                                  
+        }
+        geom::Rectangle the_screen_geometry() override
+        {
+            return screen_geometry;
+        }
+        
+        // TODO: Set the input region somewhere
+        void inject_input() override
+        {
+            (void)client_input_regions;
+            wait_until_client_appears(test_client_name);
+            
+            // First we will move the cursor in to the input region on the left side of the window
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+            // Now in to the dead zone in the center of the window
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+            // Now in to the right edge of the window, in the right input region.
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+        }
+    } server_config;
+    
+    launch_server_process(server_config);
+
+    struct ClientConfig : InputClient
+    {
+        ClientConfig()
+            : InputClient(test_client_name)
+        {
+        }
+
+        void expect_input(mt::WaitCondition& events_received) override
+        {
+            InSequence seq;
+
+            // We should see the cursor enter the left region
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
+            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(1, 1))).Times(1);
+            // And exit to the dead zone in the center
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1);
+            // And re-enter in the right region
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
+            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(99, 99))).Times(1)
+                .WillOnce(mt::WakeUp(&events_received));
+        }
+    } client_config;
+    launch_client_process(client_config);
 }
