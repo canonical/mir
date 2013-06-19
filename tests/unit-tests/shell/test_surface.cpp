@@ -22,7 +22,7 @@
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_builder.h"
 
-#include "mir_test_doubles/null_buffer_stream.h"
+#include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -50,14 +50,14 @@ class StubSurfaceBuilder : public msh::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_stream(new mtd::NullBufferStream()),
+        stub_buffer_stream_(std::make_shared<mtd::StubBufferStream>()),
         dummy_surface()
     {
     }
 
     std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& )
     {
-        dummy_surface = std::make_shared<ms::Surface>(msh::a_surface().name, msh::a_surface().top_left, buffer_stream, 
+        dummy_surface = std::make_shared<ms::Surface>(msh::a_surface().name, msh::a_surface().top_left, stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(), []{});
         return dummy_surface;
     }
@@ -72,8 +72,13 @@ public:
         dummy_surface.reset();
     }
 
+    std::shared_ptr<mtd::StubBufferStream> stub_buffer_stream()
+    {
+        return stub_buffer_stream_;
+    }
+
 private:
-    std::shared_ptr<ms::BufferStream> const buffer_stream;
+    std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
     std::shared_ptr<ms::Surface> dummy_surface;
 };
 
@@ -488,4 +493,22 @@ TEST_F(ShellSurface, take_input_focus_throw_behavior)
     EXPECT_THROW({
             test.take_input_focus(mt::fake_shared(targeter));
     }, std::runtime_error);
+}
+
+TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
+{
+    msh::Surface test(
+        mt::fake_shared(surface_builder),
+        msh::a_surface());
+
+    mc::Buffer* buf_ptr{nullptr};
+
+    test.with_most_recent_buffer_do(
+        [&](mc::Buffer& buffer)
+        {
+            buf_ptr = &buffer;
+        });
+
+    EXPECT_EQ(surface_builder.stub_buffer_stream()->stub_compositor_buffer.get(),
+              buf_ptr);
 }
