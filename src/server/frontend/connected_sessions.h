@@ -60,6 +60,7 @@ public:
         shell_list.clear();
     }
 
+
 private:
     ConnectedSessions(ConnectedSessions const&) = delete;
     ConnectedSessions& operator =(ConnectedSessions const&) = delete;
