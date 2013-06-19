@@ -63,7 +63,7 @@ std::shared_ptr<mc::Buffer> mc::MultiAcquisitionBackBufferStrategy::acquire()
             if (!acquired_buffers.empty())
                 buffer = acquired_buffers.back().buffer.lock();
             else
-                throw e;
+                throw;
         }
 
         iter = find_info(buffer);
