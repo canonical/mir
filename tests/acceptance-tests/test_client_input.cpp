@@ -22,6 +22,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"
+#include "mir/shell/surface.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"

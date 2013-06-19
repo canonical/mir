@@ -331,3 +331,9 @@ void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& t
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }
+
+void msh::Surface::set_input_region(std::shared_ptr<mi::InputRegion> const& region)
+{
+    // TODO: Implement
+    (void) region;
+}

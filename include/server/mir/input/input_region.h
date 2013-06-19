@@ -30,7 +30,7 @@ class InputRegion
 public:
     virtual ~InputRegion() = default;
 
-    virtual bool contains_point(float x, float y) const = 0;
+    virtual bool contains_point(uint32_t x, uint32_t y) const = 0;
 
 protected:
     InputRegion() = default;

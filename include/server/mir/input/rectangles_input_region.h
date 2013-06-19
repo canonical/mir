@@ -36,7 +36,7 @@ public:
     RectanglesInputRegion(std::initializer_list<geometry::Rectangle> const& input_rectangles);
     virtual ~RectanglesInputRegion() noexcept(true) = default;
 
-    bool contains_point(float x, float y) const;
+    bool contains_point(uint32_t x, uint32_t y) const;
 
 protected:
     RectanglesInputRegion(RectanglesInputRegion const&) = delete;
