@@ -74,6 +74,10 @@ void msh::Surface::hide()
     {
         s->set_hidden(true);
     }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
 }
 
 void msh::Surface::show()
@@ -81,6 +85,22 @@ void msh::Surface::show()
     if (auto const& s = surface.lock())
     {
         s->set_hidden(false);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
+bool msh::Surface::visible()
+{
+    if (auto const& s = surface.lock())
+    {
+        return s->should_be_rendered();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
 }
 

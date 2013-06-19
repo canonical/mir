@@ -29,17 +29,6 @@ namespace mcl = mir::client;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-TEST(GBMClientPlatformTest, egl_native_window_is_client_surface)
-{
-    mtd::MockClientContext context;
-    mcl::NativeClientPlatformFactory factory;
-    mtd::MockClientSurface surface;
-    auto platform = factory.create_client_platform(&context);
-    auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
-    auto native_window = platform->create_egl_native_window(&surface);
-    EXPECT_EQ(reinterpret_cast<EGLNativeWindowType>(&surface), *native_window);
-}
-
 /* TODO: mir_egl_mesa_display_is_valid is a bit fragile because libmirserver and libmirclient both have very
  *       different implementations and both have symbols for it. If the linking order of the test changes,
  *       specifically, if mir_egl_mesa_display_is_valid resolves into libmirserver, then this test will break. 

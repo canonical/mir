@@ -14,9 +14,6 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # Avoid clang complaints about poor quality gmock/gtest/cucumber headers
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
-else ()
-  # GCC 4.8 dislikes the gmock headers…
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-local-typedefs")
 endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include/server)
@@ -35,7 +32,6 @@ add_subdirectory(mir_test_doubles/)
 add_subdirectory(draw/)
 add_subdirectory(client-language/)
 add_subdirectory(behavior-tests/)
-add_subdirectory(death-tests/)
 add_subdirectory(mir-stress/)
 
 mir_add_memcheck_test()

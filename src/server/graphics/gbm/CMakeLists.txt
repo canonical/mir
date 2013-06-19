@@ -27,6 +27,7 @@ add_library(
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
   internal_native_display.cpp
+  internal_native_surface.cpp
   internal_client.cpp
   drm_close_threadsafe.cpp
 )
