@@ -75,7 +75,8 @@ public:
     std::shared_ptr<mg::Platform> create_platform()
     {
 #ifdef ANDROID
-        return mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+//        return mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+        return std::shared_ptr<mg::Platform>(); // TODO {arg} Fix before landing
 #else
         return std::make_shared<mg::gbm::GBMPlatform>(
             std::make_shared<mg::NullDisplayReport>(),

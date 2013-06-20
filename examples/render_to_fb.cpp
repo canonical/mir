@@ -54,7 +54,8 @@ int main(int, char**)
     sigaction(SIGTERM, &sa, NULL);
 
     auto logger = std::make_shared<ml::DumbConsoleLogger>();
-    auto platform = mg::create_platform(std::make_shared<ml::DisplayReport>(logger));
+//    auto platform = mg::create_platform(std::make_shared<ml::DisplayReport>(logger));
+    auto platform = std::shared_ptr<mg::Platform>(); // TODO {arg} fix before landing
     auto display = platform->create_display();
 
     mir::draw::glAnimationBasic gl_animation;

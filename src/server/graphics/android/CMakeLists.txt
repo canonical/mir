@@ -5,7 +5,7 @@ include_directories(
 )
 
 add_library(
-  mirplatformgraphics STATIC
+  mirplatformgraphics SHARED
 
   android_platform.cpp
   android_buffer_allocator.cpp
@@ -33,7 +33,8 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphics
-  mircompositor
+  mirserver
+  mirsharedandroid
 
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

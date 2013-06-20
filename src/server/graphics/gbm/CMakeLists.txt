@@ -11,7 +11,7 @@ string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 
 add_library(
-  mirplatformgraphics STATIC
+  mirplatformgraphics SHARED
 
   gbm_platform.cpp
   gbm_buffer_allocator.cpp
@@ -34,8 +34,7 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphics
-  mircompositor
-  mirlogging
+  mirserver
 
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}

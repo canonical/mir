@@ -50,9 +50,10 @@ list(APPEND MIRSERVER_ARCHIVES
 )
 
 list(APPEND MIRSERVER_LINKS
-  mirplatformgraphics
   mirprotobuf
   3rd_party
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
