@@ -48,6 +48,8 @@ class MockCommunicatorReport : public mf::CommunicatorReport
 {
 public:
 
+    ~MockCommunicatorReport() noexcept {}
+
     MOCK_METHOD1(error, void (std::exception const& error));
 };
 }
