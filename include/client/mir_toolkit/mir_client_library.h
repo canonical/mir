@@ -120,7 +120,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 MirWaitHandle *mir_connection_create_surface(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void *context);
 
 /**
@@ -216,7 +216,7 @@ void mir_surface_get_graphics_region(
  */
 MirWaitHandle *mir_surface_swap_buffers(
     MirSurface *surface,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void *context);
 
 /**
@@ -237,7 +237,7 @@ void mir_surface_swap_buffers_sync(MirSurface *surface);
  */
 MirWaitHandle *mir_surface_release(
     MirSurface *surface,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void *context);
 
 /**
