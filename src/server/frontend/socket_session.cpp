@@ -38,6 +38,10 @@ mfd::SocketSession::SocketSession(
 {
 }
 
+mfd::SocketSession::~SocketSession() noexcept
+{
+}
+
 void mfd::SocketSession::send(std::string const& body)
 {
     const size_t size = body.size();

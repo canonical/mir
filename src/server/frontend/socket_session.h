@@ -39,6 +39,8 @@ struct SocketSession : public MessageSender
         int id_,
         std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions);
 
+    ~SocketSession() noexcept;
+
     int id() const { return id_; }
 
     void read_next_message();
