@@ -34,6 +34,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/input/input_channel_factory.h"
+#include "mir/options/program_option.h"
 
 #include "mir_test_doubles/stub_input_registrar.h"
 
@@ -52,6 +53,7 @@ namespace msh=mir::shell;
 namespace mf=mir::frontend;
 namespace mi=mir::input;
 namespace mtd=mir::test::doubles;
+namespace mo=mir::options;
 
 namespace
 {
@@ -95,8 +97,9 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller);
     auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());
 
+    auto options = std::shared_ptr<mg::ProgramOption>(); 
     auto report = std::shared_ptr<mg::NullDisplayReport>(); 
-    auto platform = mg::create_platform(report);
+    auto platform = mg::create_platform(options, report);
     auto internal_client = platform->create_internal_client();
 
     int major, minor, n;
