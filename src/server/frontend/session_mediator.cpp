@@ -61,7 +61,7 @@ mf::SessionMediator::SessionMediator(
 {
 }
 
-mf::SessionMediator::~SessionMediator()
+mf::SessionMediator::~SessionMediator() noexcept
 {
     if (session)
     {
