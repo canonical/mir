@@ -340,7 +340,24 @@ TEST_F(ProtobufCommunicator,
 
     client->wait_for_create_surface();
 
+    std::mutex m;
+    std::condition_variable cv;
+    bool done = false;
+
+    ON_CALL(*communicator_report, error(_)).WillByDefault(Invoke([&] (std::exception const&)
+        {
+            std::unique_lock<std::mutex> lock(m);
+
+            done = true;
+            cv.notify_all();
+        }));
+
     EXPECT_CALL(*communicator_report, error(_)).Times(1);
 
     client.reset();
+
+    std::unique_lock<std::mutex> lock(m);
+
+    while (!done)
+        cv.wait(lock);
 }
