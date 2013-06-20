@@ -19,7 +19,6 @@
 #include "mir_test_framework/testing_server_configuration.h"
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/renderable.h"
@@ -32,8 +31,7 @@
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_gl_context.h"
+#include "mir_test_doubles/null_platform.h"
 
 #include <gtest/gtest.h>
 #include <thread>
@@ -103,32 +101,17 @@ public:
     }
 };
 
-class StubGraphicPlatform : public mg::Platform
+class StubGraphicPlatform : public mtd::NullPlatform
 {
-    virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    virtual std::shared_ptr<mg::Display> create_display()
+    std::shared_ptr<mg::Display> create_display() override
     {
         return std::make_shared<StubDisplay>();
-    }
-
-    virtual std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
-    }
-
-    std::shared_ptr<mg::InternalClient> create_internal_client()
-    {
-        return std::shared_ptr<mg::InternalClient>();   
-    }
-
-    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
-                          std::shared_ptr<mc::Buffer> const&) const
-    {
     }
 };
 

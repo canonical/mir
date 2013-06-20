@@ -24,8 +24,6 @@
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/platform_ipc_package.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -33,6 +31,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_swapper_factory.h"
 #include "mir_test_doubles/null_gl_context.h"
+#include "mir_test_doubles/null_platform.h"
 
 #include <thread>
 #include <atomic>
@@ -327,11 +326,11 @@ namespace
  */
 struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 {
-    class StubPlatform : public mg::Platform
+    class StubPlatform : public mtd::NullPlatform
     {
      public:
         std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-                const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
         {
             using testing::AtLeast;
 
@@ -340,24 +339,9 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return buffer_allocator;
         }
 
-        std::shared_ptr<mg::Display> create_display()
+        std::shared_ptr<mg::Display> create_display() override
         {
             return std::make_shared<StubDisplay>();
-        }
-
-        std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-        {
-            return std::make_shared<mg::PlatformIPCPackage>();
-        }
-
-        std::shared_ptr<mg::InternalClient> create_internal_client()
-        {
-            return std::shared_ptr<mg::InternalClient>();   
-        }
- 
-        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
-                              std::shared_ptr<mc::Buffer> const&) const
-        {
         }
     };
 
@@ -467,33 +451,18 @@ struct BufferCounterConfig : TestingServerConfiguration
         }
     };
 
-    class StubPlatform : public mg::Platform
+    class StubPlatform : public mtd::NullPlatform
     {
     public:
         std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-                const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
         {
             return std::make_shared<StubGraphicBufferAllocator>();
         }
 
-        std::shared_ptr<mg::Display> create_display()
+        std::shared_ptr<mg::Display> create_display() override
         {
             return std::make_shared<StubDisplay>();
-        }
-
-        std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-        {
-            return std::make_shared<mg::PlatformIPCPackage>();
-        }
-
-        std::shared_ptr<mg::InternalClient> create_internal_client()
-        {
-            return std::shared_ptr<mg::InternalClient>();   
-        }
-
-        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
-                              std::shared_ptr<mc::Buffer> const&) const
-        {
         }
     };
 
