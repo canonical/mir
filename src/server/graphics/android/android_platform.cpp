@@ -84,11 +84,11 @@ void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIP
     for(auto i=0; i<buffer_handle->numFds; i++)
     {
         packer->pack_fd(buffer_handle->data[offset++]);
-    }    
+    }
     for(auto i=0; i<buffer_handle->numInts; i++)
     {
         packer->pack_data(buffer_handle->data[offset++]);
-    }    
+    }
 
     packer->pack_stride(buffer->stride());
 }
@@ -98,7 +98,7 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
     return std::make_shared<mga::InternalClient>();
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)
+extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
 {
     return std::make_shared<mga::AndroidPlatform>(display_report);
 }

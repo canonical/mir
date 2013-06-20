@@ -95,6 +95,7 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     mirlogging
     mirdraw
     ${Boost_LIBRARIES}
+    dl
 )
 
 set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)

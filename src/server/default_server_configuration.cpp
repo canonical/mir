@@ -288,19 +288,36 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
         });
 }
 
+#include <dlfcn.h>
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
         [this]()
         {
-            // TODO I doubt we need the extra level of indirection provided by
-            // mg::create_platform() - we just need to move the implementation
-            // of DefaultServerConfiguration::the_graphics_platform() to the
-            // graphics libraries.
-            // Alternatively, if we want to dynamically load the graphics library
-            // then this would be the place to do that.
-            // TODO fix before checkin {arg} return mg::create_platform(the_display_report());
-            return std::shared_ptr<mg::Platform>(); // TODO fix before checkin {arg}
+            // Alternatively, we want to dynamically load the graphics library
+            // this would be the place to do that.
+            // TODO {arg} fix leaky POC code before checkin
+            if (auto const so = dlopen("libmirplatformgraphics.so", RTLD_NOW))
+            {
+                mg::CreatePlatform create_platform{};
+                (void*&)create_platform = dlsym(so, "create_platform");
+                if (create_platform)
+                {
+                    return create_platform(the_display_report());
+                }
+                else
+                {
+                    // TODO proper error reporting
+                    std::cerr << "Cannot load symbol: " << dlerror() << std::endl;
+                    throw std::runtime_error("Cannot load symbol");
+                }
+            }
+            else
+            {
+                // TODO proper error reporting
+                std::cerr << "Cannot open library: " << dlerror() << std::endl;
+                throw std::runtime_error("Cannot open library");
+            }
         });
 }
 

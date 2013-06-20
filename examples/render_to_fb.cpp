@@ -26,6 +26,8 @@
 #include "graphics.h"
 
 #include <csignal>
+#include <dlfcn.h>
+#include <iostream>
 
 namespace mg=mir::graphics;
 namespace ml=mir::logging;
@@ -40,6 +42,31 @@ void signal_handler(int /*signum*/)
     running = false;
 }
 
+std::shared_ptr<mg::Platform> my_create_platform(std::shared_ptr<mg::DisplayReport> const& report)
+{
+    // TODO {arg} fix leaky POC code before checkin
+    if (auto const so = dlopen("libmirplatformgraphics.so", RTLD_NOW))
+    {
+        mg::CreatePlatform create_platform{};
+        (void*&)create_platform = dlsym(so, "create_platform");
+        if (create_platform)
+        {
+            return create_platform(report);
+        }
+        else
+        {
+            // TODO proper error reporting
+            std::cerr << "Cannot load symbol: " << dlerror() << std::endl;
+            throw std::runtime_error("Cannot load symbol");
+        }
+    }
+    else
+    {
+        // TODO proper error reporting
+        std::cerr << "Cannot open library: " << dlerror() << std::endl;
+        throw std::runtime_error("Cannot open library");
+    }
+}
 }
 
 int main(int, char**)
@@ -54,8 +81,7 @@ int main(int, char**)
     sigaction(SIGTERM, &sa, NULL);
 
     auto logger = std::make_shared<ml::DumbConsoleLogger>();
-//    auto platform = mg::create_platform(std::make_shared<ml::DisplayReport>(logger));
-    auto platform = std::shared_ptr<mg::Platform>(); // TODO {arg} fix before landing
+    auto platform = my_create_platform(std::make_shared<ml::DisplayReport>(logger));
     auto display = platform->create_display();
 
     mir::draw::glAnimationBasic gl_animation;
