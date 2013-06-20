@@ -358,6 +358,6 @@ TEST_F(ProtobufCommunicator,
 
     std::unique_lock<std::mutex> lock(m);
 
-    while (!done)
-        cv.wait(lock);
+    auto const deadline = std::chrono::system_clock::now() + std::chrono::seconds(1);
+    while (!done && cv.wait_until(lock, deadline) != std::cv_status::timeout);
 }
