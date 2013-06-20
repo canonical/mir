@@ -174,7 +174,7 @@ int mgg::LinuxVirtualTerminal::find_active_vt_number()
 
 int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
 {
-    if (vt_number < 0)
+    if (vt_number <= 0)
         vt_number = find_active_vt_number();
 
     std::stringstream vt_path_stream;

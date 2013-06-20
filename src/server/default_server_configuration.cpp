@@ -244,7 +244,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
         ("ipc-thread-pool", po::value<int>(),
             "threads in frontend thread pool. [int:default=10]")
         ("vt", po::value<int>(),
-            "VT to run on or -1 to use current. [int:default=-1]");
+            "VT to run on or 0 to use current. [int:default=0]");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
