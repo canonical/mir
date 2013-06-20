@@ -63,11 +63,14 @@ public:
     Platform(const Platform& p) = delete;
     Platform& operator=(const Platform& p) = delete;
 
+    virtual ~Platform() { /* TODO: make nothrow */ }
+
     /**
      * Creates the buffer allocator subsystem.
      *
      * \param [in] buffer_initializer the object responsible for initializing the buffers
      */
+
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
 

@@ -135,9 +135,8 @@ struct mir::DisplayServer::Private
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
-    p()
+    p(new DisplayServer::Private{config})
 {
-    p.reset(new DisplayServer::Private(config));
 }
 
 /*

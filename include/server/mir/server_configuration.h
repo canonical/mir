@@ -60,7 +60,7 @@ public:
 
 protected:
     ServerConfiguration() = default;
-    virtual ~ServerConfiguration() {}
+    virtual ~ServerConfiguration() { /* TODO: make nothrow */ }
 
     ServerConfiguration(ServerConfiguration const&) = delete;
     ServerConfiguration& operator=(ServerConfiguration const&) = delete;
