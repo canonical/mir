@@ -40,6 +40,8 @@ class GraphicRegion;
 class BufferStream
 {
 public:
+    virtual ~BufferStream() {/* TODO: make nothrow */}
+
     virtual std::shared_ptr<compositor::Buffer> secure_client_buffer() = 0;
     virtual std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer() = 0;
     virtual geometry::PixelFormat get_stream_pixel_format() = 0;

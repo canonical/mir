@@ -30,7 +30,7 @@ class AgingBuffer : public ClientBuffer
 {
 public:
     AgingBuffer();
-    ~AgingBuffer() noexcept {};
+    ~AgingBuffer() noexcept {}
 
     virtual uint32_t age() const;
     virtual void increment_age();

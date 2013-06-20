@@ -100,7 +100,7 @@ public:
 
 protected:
     Display() = default;
-    ~Display() = default;
+    virtual ~Display() {/* TODO: make nothrow */}
 private:
     Display(Display const&) = delete;
     Display& operator=(Display const&) = delete;
