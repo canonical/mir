@@ -27,7 +27,6 @@ namespace bs = boost::system;
 
 namespace mfd = mir::frontend::detail;
 
-
 void mfd::SocketSession::send(std::string const& body)
 {
     const size_t size = body.size();

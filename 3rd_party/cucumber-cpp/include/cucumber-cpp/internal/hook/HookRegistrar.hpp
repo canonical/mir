@@ -15,11 +15,14 @@ namespace internal {
 
 class CallableStep {
 public:
+    virtual ~CallableStep() {}
     virtual void call() = 0;
 };
 
 class Hook {
 public:
+    virtual ~Hook() {}
+
     void setTags(const std::string &csvTagNotation);
     virtual void invokeHook(Scenario *scenario);
     virtual void skipHook();
