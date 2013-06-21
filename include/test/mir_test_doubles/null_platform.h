@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_PLATFORM_H_
-#define MIR_TEST_DOUBLES_STUB_PLATFORM_H_
+#ifndef MIR_TEST_DOUBLES_NULL_PLATFORM_H_
+#define MIR_TEST_DOUBLES_NULL_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -29,7 +29,7 @@ namespace test
 {
 namespace doubles
 {
-class StubPlatform : public graphics::Platform
+class NullPlatform : public graphics::Platform
 {
  public:
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
@@ -47,12 +47,12 @@ class StubPlatform : public graphics::Platform
     {
         return std::make_shared<graphics::PlatformIPCPackage>();
     }
- 
+
     std::shared_ptr<graphics::InternalClient> create_internal_client()
     {
-        return std::shared_ptr<graphics::InternalClient>();   
+        return std::shared_ptr<graphics::InternalClient>();
     }
- 
+
     void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const&,
                           std::shared_ptr<compositor::Buffer> const&) const
     {
@@ -62,4 +62,4 @@ class StubPlatform : public graphics::Platform
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_LISTENER_H_
+#endif // MIR_TEST_DOUBLES_NULL_PLATFORM_
