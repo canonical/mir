@@ -31,10 +31,7 @@ mir::SharedLibrary::SharedLibrary(char const* library_name) :
     if (!so)
     {
         BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Cannot open library")) <<
-                (boost::error_info<SharedLibrary, std::string>(library_name)) <<
-                (boost::error_info<SharedLibrary, decltype(dlerror())>(dlerror())));
+            boost::enable_error_info(std::runtime_error(dlerror())));
     }
 }
 
@@ -57,7 +54,6 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Cannot load symbol")) <<
-                (boost::error_info<SharedLibrary, std::string>(function_name)) <<
                 (boost::error_info<SharedLibrary, decltype(dlerror())>(dlerror())));
     }
 }
