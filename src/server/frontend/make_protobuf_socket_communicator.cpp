@@ -22,6 +22,7 @@
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
 #include "protobuf_socket_communicator.h"
+#include "mir/frontend/communicator_report.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -46,7 +47,8 @@ mir::DefaultServerConfiguration::the_communicator()
                     {
                         session->force_requests_to_complete();
                     });
-                });
+                },
+                std::make_shared<mf::NullCommunicatorReport>());
         });
 }
 

@@ -61,6 +61,15 @@ mf::SessionMediator::SessionMediator(
 {
 }
 
+mf::SessionMediator::~SessionMediator() noexcept
+{
+    if (session)
+    {
+        report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
+        shell->close_session(session);
+    }
+}
+
 void mf::SessionMediator::connect(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::ConnectParameters* request,

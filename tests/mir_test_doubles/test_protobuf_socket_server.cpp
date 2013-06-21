@@ -17,22 +17,41 @@
  */
 
 #include "mir_test/test_protobuf_server.h"
+#include "mir_test_doubles/stub_ipc_factory.h"
+#include "mir/frontend/communicator_report.h"
 #include "src/server/frontend/protobuf_socket_communicator.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 
+namespace
+{
+std::shared_ptr<mf::Communicator> make_communicator(
+    std::string const& socket_name,
+    std::shared_ptr<mf::ProtobufIpcFactory> const& factory,
+    std::shared_ptr<mf::CommunicatorReport> const& report)
+{
+    return std::make_shared<mf::ProtobufSocketCommunicator>(
+        socket_name,
+        factory,
+        10,
+        []{},
+        report);
+}
+}
 
 mt::TestProtobufServer::TestProtobufServer(
-    std::string socket_name,
+    std::string const& socket_name,
     const std::shared_ptr<protobuf::DisplayServer>& tool) :
-    factory(std::make_shared<mtd::StubIpcFactory>(*tool)),
-    comm(make_communicator(socket_name, factory))
+    TestProtobufServer(socket_name, tool, std::make_shared<mf::NullCommunicatorReport>())
 {
 }
 
-std::shared_ptr<mf::Communicator> mt::TestProtobufServer::make_communicator(const std::string& socket_name, std::shared_ptr<frontend::ProtobufIpcFactory> const& factory)
+mt::TestProtobufServer::TestProtobufServer(
+    std::string const& socket_name,
+    const std::shared_ptr<protobuf::DisplayServer>& tool,
+    std::shared_ptr<frontend::CommunicatorReport> const& report) :
+    comm(make_communicator(socket_name, std::make_shared<mtd::StubIpcFactory>(*tool), report))
 {
-    return std::make_shared<mf::ProtobufSocketCommunicator>(socket_name, factory, 10, []{});
 }
