@@ -38,8 +38,8 @@ class AndroidClientBuffer : public AgingBuffer
 {
 public:
     AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const&,
-                        std::shared_ptr<MirBufferPackage> const&,
-                        geometry::Size size, geometry::PixelFormat pf);
+                        std::shared_ptr<const native_handle_t> const&,
+                        geometry::Size size, geometry::PixelFormat pf, geometry::Stride stride);
     ~AndroidClientBuffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
@@ -52,16 +52,13 @@ public:
     AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
 private:
     void pack_native_window_buffer();
-    const native_handle_t* convert_to_native_handle(const std::shared_ptr<MirBufferPackage>& package);
 
-    std::shared_ptr<MirBufferPackage> creation_package;
-    std::shared_ptr<const native_handle_t> native_handle;
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
-
+    std::shared_ptr<ANativeWindowBuffer> native_window_buffer;
+    std::shared_ptr<const native_handle_t> native_handle;
     const geometry::Rectangle rect;
     const geometry::PixelFormat buffer_pf;
-
-    std::shared_ptr<ANativeWindowBuffer> native_window_buffer;
+    geometry::Stride const buffer_stride;
 };
 
 }
