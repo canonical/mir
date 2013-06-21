@@ -33,6 +33,8 @@ class ReadLock
 public:
     void lock() { read_lock(); }
     void unlock() { read_unlock(); }
+
+    virtual ~ReadLock() = default;
 protected:
     ReadLock()
     {
@@ -50,6 +52,8 @@ class WriteLock
 public:
     void lock() { write_lock(); }
     void unlock() { write_unlock(); }
+
+    virtual ~WriteLock() = default;
 protected:
     WriteLock()
     {

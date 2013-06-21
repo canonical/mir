@@ -63,7 +63,7 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
+typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context);
 
 /**
  * Callback member of MirEventDelegate for handling of events.

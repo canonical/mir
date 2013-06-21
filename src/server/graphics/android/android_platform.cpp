@@ -28,11 +28,13 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/options/option.h"
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 namespace mf=mir::frontend;
+namespace mo = mir::options;
 
 mga::AndroidPlatform::AndroidPlatform(std::shared_ptr<mg::DisplayReport> const& display_report)
     : display_report(display_report)
@@ -98,7 +100,7 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
     return std::make_shared<mga::InternalClient>();
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& display_report)
+std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<DisplayReport> const& display_report)
 {
     return std::make_shared<mga::AndroidPlatform>(display_report);
 }

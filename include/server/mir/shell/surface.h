@@ -76,6 +76,8 @@ public:
     virtual void advance_client_buffer();
 
     virtual std::shared_ptr<compositor::Buffer> client_buffer() const;
+    virtual void with_most_recent_buffer_do(
+        std::function<void(compositor::Buffer&)> const& exec);
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;

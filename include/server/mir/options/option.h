@@ -39,7 +39,7 @@ public:
 
 protected:
     Option() = default;
-    ~Option() = default;
+    virtual ~Option() { /* TODO: make nothrow */ }
     Option(Option const&) = delete;
     Option& operator=(Option const&) = delete;
 };

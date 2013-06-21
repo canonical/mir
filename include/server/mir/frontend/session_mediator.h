@@ -67,6 +67,8 @@ public:
         std::shared_ptr<events::EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
+    ~SessionMediator() noexcept;
+
     /* Platform independent requests */
     void connect(::google::protobuf::RpcController* controller,
                  const ::mir::protobuf::ConnectParameters* request,

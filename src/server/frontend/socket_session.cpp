@@ -27,6 +27,20 @@ namespace bs = boost::system;
 
 namespace mfd = mir::frontend::detail;
 
+mfd::SocketSession::SocketSession(
+    boost::asio::io_service& io_service,
+    int id_,
+    std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions) :
+    socket(io_service),
+    id_(id_),
+    connected_sessions(connected_sessions),
+    processor(std::make_shared<NullMessageProcessor>())
+{
+}
+
+mfd::SocketSession::~SocketSession() noexcept
+{
+}
 
 void mfd::SocketSession::send(std::string const& body)
 {
@@ -63,19 +77,22 @@ void mfd::SocketSession::read_next_message()
                     this, ba::placeholders::error));
 }
 
-void mfd::SocketSession::on_read_size(const boost::system::error_code& ec)
+void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
 {
-    if (!ec)
+    if (error)
     {
-        size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
-        // Read newline delimited messages for now
-        ba::async_read(
-             socket,
-             message,
-             ba::transfer_exactly(body_size),
-             boost::bind(&mfd::SocketSession::on_new_message,
-                         this, ba::placeholders::error));
+        connected_sessions->remove(id());
+        BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
+
+    size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
+    // Read newline delimited messages for now
+    ba::async_read(
+         socket,
+         message,
+         ba::transfer_exactly(body_size),
+         boost::bind(&mfd::SocketSession::on_new_message,
+                     this, ba::placeholders::error));
 }
 
 void mfd::SocketSession::on_new_message(const boost::system::error_code& error)

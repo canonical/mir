@@ -17,7 +17,6 @@
  */
 
 #include "gbm_platform.h"
-
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
 #include "internal_client.h"
@@ -25,6 +24,7 @@
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/options/option.h"
 
 #include "drm_close_threadsafe.h"
 
@@ -34,6 +34,7 @@
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mc = mir::compositor;
+namespace mo = mir::options;
 namespace
 {
 
@@ -143,10 +144,10 @@ std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
     return std::make_shared<mgg::InternalClient>(internal_native_display);
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
+std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
-    auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, report);
+    auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, options->get("vt", 0), report);
     return std::make_shared<mgg::GBMPlatform>(report, vt);
 }
 

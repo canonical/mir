@@ -23,12 +23,15 @@
 #include "mir/logging/display_report.h"
 #include "mir/logging/dumb_console_logger.h"
 
+#include "mir/options/program_option.h"
+
 #include "graphics.h"
 
 #include <csignal>
 
 namespace mg=mir::graphics;
 namespace ml=mir::logging;
+namespace mo=mir::options;
 
 namespace
 {
@@ -54,7 +57,7 @@ int main(int, char**)
     sigaction(SIGTERM, &sa, NULL);
 
     auto logger = std::make_shared<ml::DumbConsoleLogger>();
-    auto platform = mg::create_platform(std::make_shared<ml::DisplayReport>(logger));
+    auto platform = mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<ml::DisplayReport>(logger));
     auto display = platform->create_display();
 
     mir::draw::glAnimationBasic gl_animation;

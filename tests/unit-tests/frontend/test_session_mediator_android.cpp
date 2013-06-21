@@ -30,7 +30,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
-#include "mir_test_doubles/stub_platform.h"
+#include "mir_test_doubles/null_platform.h"
 
 #include "mir/events/event_sink.h"
 
@@ -73,7 +73,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
 {
     SessionMediatorAndroidTest()
         : shell{std::make_shared<mtd::StubShell>()},
-          graphics_platform{std::make_shared<mtd::StubPlatform>()},
+          graphics_platform{std::make_shared<mtd::NullPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
@@ -87,7 +87,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
     }
 
     std::shared_ptr<mtd::StubShell> const shell;
-    std::shared_ptr<mtd::StubPlatform> const graphics_platform;
+    std::shared_ptr<mtd::NullPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
