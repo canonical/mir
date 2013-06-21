@@ -38,7 +38,7 @@ struct NativeHandleDeleter
     void operator()(const native_handle_t* t)
     {
         module->unregisterBuffer(module.get(), t);
-        ::operator delete((void*)t);
+        ::operator delete(const_cast<native_handle_t*>(t));
     }
 private:
     const std::shared_ptr<const gralloc_module_t> module;
@@ -71,27 +71,13 @@ mcla::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<con
 std::shared_ptr<const native_handle_t> mcla::AndroidRegistrarGralloc::register_buffer(
     std::shared_ptr<MirBufferPackage> const& package) const
 {
-    auto handle = convert_to_native_handle(package);
-    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
-    {
-        ::operator delete((void*)handle);
-        BOOST_THROW_EXCEPTION(std::runtime_error("error registering graphics buffer for client use\n"));
-    }
-
-    NativeHandleDeleter del(gralloc_module);
-    return std::shared_ptr<const native_handle_t>(handle, del);
-}
-
-const native_handle_t* mcla::AndroidRegistrarGralloc::convert_to_native_handle(std::shared_ptr<MirBufferPackage> const& package) const
-{
     int native_handle_header_size = sizeof(native_handle_t);
-    int total = package->fd_items + package->data_items + native_handle_header_size;
-    native_handle_t* handle = (native_handle_t*) malloc(sizeof(int) * total);
-
+    int total_size = sizeof(int) * 
+                     (package->fd_items + package->data_items + native_handle_header_size);
+    native_handle_t* handle = static_cast<native_handle_t*>(::operator new(total_size));
     handle->version = native_handle_header_size;
     handle->numFds  = package->fd_items;
     handle->numInts = package->data_items;
-
     for (auto i=0; i< handle->numFds; i++)
     {
         handle->data[i] = package->fd[i];
@@ -103,7 +89,14 @@ const native_handle_t* mcla::AndroidRegistrarGralloc::convert_to_native_handle(s
         handle->data[offset_i+i] = package->data[i];
     }
 
-    return handle;
+    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
+    {
+        ::operator delete(const_cast<native_handle_t*>(handle));
+        BOOST_THROW_EXCEPTION(std::runtime_error("error registering graphics buffer for client use\n"));
+    }
+
+    NativeHandleDeleter del(gralloc_module);
+    return std::shared_ptr<const native_handle_t>(handle, del);
 }
 
 std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)

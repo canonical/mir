@@ -41,7 +41,6 @@ public:
     std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle);
 
 private:
-    const native_handle_t* convert_to_native_handle(std::shared_ptr<MirBufferPackage> const& package) const;
     std::shared_ptr<const gralloc_module_t> gralloc_module;
 };
 
