@@ -70,7 +70,13 @@ int mggh::DRMHelper::get_authenticated_fd()
             std::runtime_error(
                 "Tried to get authenticated DRM fd before setting up the DRM master"));
 
-    int auth_fd = open_drm_device();
+    char *busid = drmGetBusid(fd);
+    if (!busid)
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
+    int auth_fd = drmOpen(NULL, busid);
+    free(busid);
 
     if (auth_fd < 0)
         BOOST_THROW_EXCEPTION(
