@@ -48,17 +48,21 @@ private:
     HasSubstring& operator=(HasSubstring const&) = delete;
 };
 
+#define EXPECT_THAT(target, condition) EXPECT_TRUE((target, condition))
+
+char const* const nonexistent_library  = "nonexistent_library";
+char const* const existing_library     = "libmirplatformgraphics.so";
+char const* const nonexistent_function = "nonexistent_library";
+char const* const existing_function    = "create_platform";
 }
 
 TEST(SharedLibrary, load_nonexistent_library_fails)
 {
-    EXPECT_THROW({ mir::SharedLibrary nonexistent(__PRETTY_FUNCTION__); }, std::runtime_error);
+    EXPECT_THROW({ mir::SharedLibrary nonexistent(nonexistent_library); }, std::runtime_error);
 }
 
 TEST(SharedLibrary, load_nonexistent_library_fails_with_useful_info)
 {
-    char const* const nonexistent_library = "nonexistent_library";
-
     try
     {
         mir::SharedLibrary nonexistent(nonexistent_library);
@@ -67,14 +71,37 @@ TEST(SharedLibrary, load_nonexistent_library_fails_with_useful_info)
     {
         auto info = boost::diagnostic_information(error);
 
-        EXPECT_TRUE((info, HasSubstring("cannot open shared object"))) << "What went wrong";
-        EXPECT_TRUE((info, HasSubstring(nonexistent_library))) << "Name of library";
+        EXPECT_THAT(info, HasSubstring("cannot open shared object")) << "What went wrong";
+        EXPECT_THAT(info, HasSubstring(nonexistent_library)) << "Name of library";
     }
 }
 
 TEST(SharedLibrary, load_valid_library_works)
 {
-    mir::SharedLibrary existing("libmirplatformgraphics.so");
+    mir::SharedLibrary existing(existing_library);
 }
 
+TEST(SharedLibrary, load_nonexistent_function_fails)
+{
+    mir::SharedLibrary existing(existing_library);
 
+    EXPECT_THROW({ existing.load_function<void(*)()>(nonexistent_function); }, std::runtime_error);
+}
+
+TEST(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
+{
+    mir::SharedLibrary existing(existing_library);
+
+    try
+    {
+        existing.load_function<void(*)()>(nonexistent_function);
+    }
+    catch (std::exception const& error)
+    {
+        auto info = boost::diagnostic_information(error);
+
+        EXPECT_THAT(info, HasSubstring("undefined symbol")) << "What went wrong";
+        EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
+        EXPECT_THAT(info, HasSubstring(nonexistent_function)) << "Name of function";
+    }
+}
