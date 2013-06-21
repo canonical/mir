@@ -40,3 +40,5 @@ target_link_libraries(
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
+
+install(TARGETS mirplatformgraphics LIBRARY DESTINATION lib)
