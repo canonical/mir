@@ -18,7 +18,6 @@
 
 #include "android_registrar_gralloc.h"
 #include "../client_buffer.h"
-#include <hardware/gralloc.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
