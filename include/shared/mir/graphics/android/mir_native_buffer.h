@@ -42,7 +42,6 @@ private:
     std::function<void(MirNativeBuffer*)> free_fn;
     std::atomic<bool> mir_reference;
     std::atomic<int> driver_references;
-
 };
 
 struct MirNativeBufferDeleter

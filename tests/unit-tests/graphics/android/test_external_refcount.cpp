@@ -24,38 +24,33 @@ namespace mga=mir::graphics::android;
 
 TEST(AndroidRefcount, driver_hooks)
 {
-    int call_count = 0;
+    auto native_handle_resource = std::make_shared<native_handle_t>();
+    auto use_count_before = native_handle_resource.use_count();
     mga::MirNativeBuffer* driver_reference = nullptr;
     {
-        auto tmp = new mga::MirNativeBuffer(
-            [&](mga::MirNativeBuffer*)
-            {
-                call_count++;
-            });
         mga::MirNativeBufferDeleter del;
+        auto tmp = new mga::MirNativeBuffer(native_handle_resource);
         std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
+
         driver_reference = buffer.get();
         driver_reference->common.incRef(&driver_reference->common);
-        //Mir loses its reference
+        //Mir loses its reference, driver still has a ref
     }
 
-    EXPECT_EQ(0, call_count);
+    EXPECT_EQ(use_count_before+1, native_handle.use_count());
     driver_reference->common.decRef(&driver_reference->common);
-    EXPECT_EQ(1, call_count);
+    EXPECT_EQ(use_count_before, native_handle.use_count());
 }
 
 TEST(AndroidRefcount, driver_hooks_mir_ref)
 {
-    int call_count = 0;
+    auto native_handle_resource = std::make_shared<native_handle_t>();
+    auto use_count_before = native_handle_resource.use_count();
     {
         std::shared_ptr<mga::MirNativeBuffer> mir_reference;
         mga::MirNativeBuffer* driver_reference = nullptr;
         {
-            auto tmp = new mga::MirNativeBuffer(
-                [&](mga::MirNativeBuffer*)
-                {
-                    call_count++;
-                });
+            auto tmp = new mga::MirNativeBuffer(native_handle_resource);
             mga::MirNativeBufferDeleter del;
             mir_reference = std::shared_ptr<mga::MirNativeBuffer>(tmp, del);
             driver_reference = mir_reference.get();
@@ -64,7 +59,7 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
 
         //driver loses its reference
         driver_reference->common.decRef(&driver_reference->common);
-        EXPECT_EQ(0, call_count);
+        EXPECT_EQ(use_count_before+1, native_handle.use_count());
     }
-    EXPECT_EQ(1, call_count);
+    EXPECT_EQ(use_count_before, native_handle.use_count());
 }

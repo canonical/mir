@@ -52,7 +52,7 @@ void mga::MirNativeBuffer::driver_reference()
 void mga::MirNativeBuffer::driver_dereference()
 {
     driver_references--;
-    if ((!mir_reference) && (driver_references ==0))
+    if ((!mir_reference) && (driver_references == 0))
     {
         delete this;
     }
@@ -61,7 +61,7 @@ void mga::MirNativeBuffer::driver_dereference()
 void mga::MirNativeBuffer::mir_dereference()
 {
     mir_reference = false;
-    if ((!mir_reference) && (driver_references ==0))
+    if (driver_references == 0)
     {
         delete this;
     }
