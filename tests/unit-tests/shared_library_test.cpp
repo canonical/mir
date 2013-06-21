@@ -105,3 +105,10 @@ TEST(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
         EXPECT_THAT(info, HasSubstring(nonexistent_function)) << "Name of function";
     }
 }
+
+TEST(SharedLibrary, load_valid_function_works)
+{
+    mir::SharedLibrary existing(existing_library);
+    existing.load_function<void(*)()>(existing_function);
+}
+
