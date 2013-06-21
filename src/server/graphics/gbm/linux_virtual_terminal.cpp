@@ -174,8 +174,12 @@ int mgg::LinuxVirtualTerminal::find_active_vt_number()
 
 int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
 {
+    auto activate = true;
     if (vt_number <= 0)
+    {
         vt_number = find_active_vt_number();
+        activate = false;
+    }
 
     std::stringstream vt_path_stream;
     vt_path_stream << "/dev/tty" << vt_number;
@@ -191,6 +195,19 @@ int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
                 std::runtime_error("Failed to open current VT"))
                     << boost::errinfo_file_name(active_vt_path)
                     << boost::errinfo_errno(errno));
+    }
+
+    if (activate)
+    {
+        auto status = fops->ioctl(vt_fd, VT_ACTIVATE, vt_number);
+        if (status < 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to activate VT"))
+                        << boost::errinfo_file_name(active_vt_path)
+                        << boost::errinfo_errno(errno));
+        }      
     }
 
     return vt_fd;

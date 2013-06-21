@@ -115,7 +115,7 @@ public:
             .WillOnce(Return(0));
     }
 
-    void set_up_expectations_for_vt_setup(int vt_num)
+    void set_up_expectations_for_vt_setup(int vt_num, bool activate)
     {
         using namespace testing;
 
@@ -124,6 +124,10 @@ public:
 
         EXPECT_CALL(mock_fops, open(StrEq(ss.str()), _))
             .WillOnce(Return(fake_vt_fd));
+
+        if (activate)
+            EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_ACTIVATE, vt_num))
+                .WillOnce(Return(0));     
 
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDGETMODE, An<void*>()))
             .WillOnce(DoAll(SetIoctlPointee<int>(fake_kd_mode), Return(0)));
@@ -170,7 +174,7 @@ TEST_F(LinuxVirtualTerminalTest, use_provided_vt)
 
     InSequence s;
 
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, true);
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
@@ -188,7 +192,7 @@ TEST_F(LinuxVirtualTerminalTest, sets_up_current_vt)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
@@ -233,7 +237,7 @@ TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
 
     EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
         .WillOnce(Return(0));
@@ -256,7 +260,7 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
 
     EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
         .WillOnce(Return(-1));
@@ -282,7 +286,7 @@ TEST_F(LinuxVirtualTerminalTest, uses_sigusr1_for_switch_handling)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_switch_handler(SIGUSR1);
     set_up_expectations_for_vt_teardown();
 
@@ -305,7 +309,7 @@ TEST_F(LinuxVirtualTerminalTest, allows_vt_switch_on_switch_away_handler_success
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_switch_handler(SIGUSR1);
 
     EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
@@ -335,7 +339,7 @@ TEST_F(LinuxVirtualTerminalTest, disallows_vt_switch_on_switch_away_handler_fail
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_switch_handler(SIGUSR1);
 
     /* First switch away attempt */
@@ -374,7 +378,7 @@ TEST_F(LinuxVirtualTerminalTest, reports_failed_vt_switch_back_attempt)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_switch_handler(SIGUSR1);
 
     /* Switch away */
