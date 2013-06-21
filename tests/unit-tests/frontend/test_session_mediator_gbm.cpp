@@ -24,14 +24,13 @@
 #include "mir/frontend/shell.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/platform_ipc_package.h"
 #include "mir/events/event_sink.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
 
@@ -63,33 +62,13 @@ public:
     }
 };
 
-class MockAuthenticatingPlatform : public mg::Platform, public mg::DRMAuthenticator
+class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
 {
  public:
     std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::shared_ptr<StubGraphicBufferAllocator>();
-    }
-
-    std::shared_ptr<mg::Display> create_display()
-    {
-        return std::make_shared<mtd::NullDisplay>();
-    }
-
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
-    }
-
-    std::shared_ptr<mg::InternalClient> create_internal_client()
-    {
-        return std::shared_ptr<mg::InternalClient>();
-    }
-
-    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
-                          std::shared_ptr<mc::Buffer> const&) const
-    {
     }
 
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));

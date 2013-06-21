@@ -34,8 +34,8 @@ static void decref_hook(struct android_native_base_t* base)
 }
 }
 
-mga::MirNativeBuffer::MirNativeBuffer(std::function<void(MirNativeBuffer*)> free)
-    : free_fn(free),
+mga::MirNativeBuffer::MirNativeBuffer(std::shared_ptr<const native_handle_t> const& handle)
+    : handle_resource(handle),
       mir_reference(true),
       driver_references(0)
 {
@@ -46,13 +46,15 @@ mga::MirNativeBuffer::MirNativeBuffer(std::function<void(MirNativeBuffer*)> free
 
 void mga::MirNativeBuffer::driver_reference()
 {
+    std::unique_lock<std::mutex> lk(mutex);
     driver_references++;
 }
 
 void mga::MirNativeBuffer::driver_dereference()
 {
+    std::unique_lock<std::mutex> lk(mutex);
     driver_references--;
-    if ((!mir_reference) && (driver_references ==0))
+    if ((!mir_reference) && (driver_references == 0))
     {
         delete this;
     }
@@ -60,8 +62,9 @@ void mga::MirNativeBuffer::driver_dereference()
 
 void mga::MirNativeBuffer::mir_dereference()
 {
+    std::unique_lock<std::mutex> lk(mutex);
     mir_reference = false;
-    if ((!mir_reference) && (driver_references ==0))
+    if (driver_references == 0)
     {
         delete this;
     }
@@ -69,5 +72,4 @@ void mga::MirNativeBuffer::mir_dereference()
 
 mga::MirNativeBuffer::~MirNativeBuffer()
 {
-    free_fn(this);
 }

@@ -36,9 +36,9 @@ struct AndroidBufferHandleDeleter
         : alloc_device(alloc_dev)
     {}
 
-    void operator()(mga::MirNativeBuffer* t)
+    void operator()(native_handle_t const* t)
     {
-        alloc_device->free(alloc_device.get(), t->handle);
+        alloc_device->free(alloc_device.get(), t);
     }
 private:
     std::shared_ptr<alloc_device_t> const alloc_device;
@@ -68,7 +68,9 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     }
 
     AndroidBufferHandleDeleter del1(alloc_dev);
-    auto tmp = new mga::MirNativeBuffer(del1);
+    std::shared_ptr<native_handle_t> handle(buf_handle, del1);
+
+    auto tmp = new mga::MirNativeBuffer(handle);
     mga::MirNativeBufferDeleter del;
     std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
 

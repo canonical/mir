@@ -242,7 +242,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "directory instead of the default logging directory."
             " [string:default=\"\"]")
         ("ipc-thread-pool", po::value<int>(),
-            "threads in frontend thread pool. [int:default=10]");
+            "threads in frontend thread pool. [int:default=10]")
+        ("vt", po::value<int>(),
+            "VT to run on or 0 to use current. [int:default=0]");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
@@ -299,7 +301,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             // graphics libraries.
             // Alternatively, if we want to dynamically load the graphics library
             // then this would be the place to do that.
-            return mg::create_platform(the_display_report());
+            return mg::create_platform(the_options(), the_display_report());
         });
 }
 

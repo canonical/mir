@@ -20,8 +20,8 @@
 #define MIR_GRAPHICS_ANDROID_MIR_NATIVE_BUFFER_H_
 
 #include <system/window.h>
-#include <functional>
-#include <atomic>
+#include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -31,7 +31,7 @@ namespace android
 {
 struct MirNativeBuffer : public ANativeWindowBuffer
 {
-    MirNativeBuffer(std::function<void(MirNativeBuffer*)> free);
+    MirNativeBuffer(std::shared_ptr<const native_handle_t> const&);
     void driver_reference();
     void driver_dereference();
     void mir_dereference();
@@ -39,10 +39,10 @@ struct MirNativeBuffer : public ANativeWindowBuffer
 private:
     ~MirNativeBuffer();
 
-    std::function<void(MirNativeBuffer*)> free_fn;
-    std::atomic<bool> mir_reference;
-    std::atomic<int> driver_references;
-
+    std::shared_ptr<const native_handle_t> const handle_resource;
+    std::mutex mutex;
+    bool mir_reference;
+    int driver_references;
 };
 
 struct MirNativeBufferDeleter

@@ -26,7 +26,6 @@
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-namespace ms = mir::surfaces;
 
 mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle)
     : buffer_bundle(buffer_bundle),
@@ -39,7 +38,7 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
 }
 
-std::shared_ptr<ms::GraphicRegion> mc::BufferStreamSurfaces::lock_back_buffer()
+std::shared_ptr<mc::Buffer> mc::BufferStreamSurfaces::lock_back_buffer()
 {
     return std::make_shared<mc::TemporaryCompositorBuffer>(back_buffer_strategy);
 }

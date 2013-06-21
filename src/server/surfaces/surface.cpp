@@ -21,6 +21,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
+#include "mir/compositor/buffer.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -106,7 +107,7 @@ mir::geometry::Size ms::Surface::size() const
 
 std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
 {
-    return buffer_stream->lock_back_buffer();
+    return compositor_buffer();
 }
 
 glm::mat4 ms::Surface::transformation() const
@@ -180,6 +181,11 @@ std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 void ms::Surface::allow_framedropping(bool allow)
 {
     buffer_stream->allow_framedropping(allow);
+}
+
+std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
+{
+    return buffer_stream->lock_back_buffer();
 }
 
 void ms::Surface::flag_for_render()

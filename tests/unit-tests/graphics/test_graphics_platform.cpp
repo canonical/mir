@@ -32,6 +32,7 @@
 #endif
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
+#include "mir/options/program_option.h"
 
 #include "mir/graphics/null_display_report.h"
 
@@ -42,6 +43,7 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace mo = mir::options;
 
 class GraphicsPlatform : public ::testing::Test
 {
@@ -75,7 +77,7 @@ public:
     std::shared_ptr<mg::Platform> create_platform()
     {
 #ifdef ANDROID
-        return mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+        return mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<mg::NullDisplayReport>());
 #else
         return std::make_shared<mg::gbm::GBMPlatform>(
             std::make_shared<mg::NullDisplayReport>(),

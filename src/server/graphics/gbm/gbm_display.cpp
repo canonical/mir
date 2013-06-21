@@ -87,6 +87,9 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
     shared_egl.make_current();
 }
 
+// please don't remove this empty destructor, it's here for the
+// unique ptr!! if you accidentally remove it you will get a not
+// so relevant linker error about some missing headers
 mgg::GBMDisplay::~GBMDisplay()
 {
 }

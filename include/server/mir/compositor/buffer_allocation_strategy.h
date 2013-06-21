@@ -52,7 +52,7 @@ public:
 
 protected:
     BufferAllocationStrategy() {}
-    ~BufferAllocationStrategy() = default;
+    virtual ~BufferAllocationStrategy() { /* TODO: make nothrow */ }
 
     BufferAllocationStrategy(const BufferAllocationStrategy&);
     BufferAllocationStrategy& operator=(const BufferAllocationStrategy& );

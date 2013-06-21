@@ -100,6 +100,8 @@ public:
 class StepInfo {
 public:
     StepInfo(const std::string &stepMatcher, const std::string source);
+    virtual ~StepInfo() {}
+
     SingleStepMatch matches(const std::string &stepDescription);
     virtual InvokeResult invokeStep(const InvokeArgs * pArgs) = 0;
 
@@ -111,6 +113,7 @@ public:
 
 class BasicStep {
 public:
+    virtual ~BasicStep() {}
     InvokeResult invoke(const InvokeArgs *pArgs);
 
 protected:

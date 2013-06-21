@@ -56,6 +56,7 @@ class LinuxVirtualTerminal : public VirtualTerminal
 {
 public:
     LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
+                         int vt_number,
                          std::shared_ptr<DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
 

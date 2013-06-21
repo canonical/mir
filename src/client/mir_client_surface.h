@@ -33,7 +33,7 @@ class ClientSurface
   public:
     virtual MirSurfaceParameters get_parameters() const = 0;
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
-    virtual MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context) = 0;
+    virtual MirWaitHandle* next_buffer(mir_surface_callback callback, void * context) = 0;
   protected:
     ClientSurface() {}
     virtual ~ClientSurface() {}

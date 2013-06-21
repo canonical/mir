@@ -39,7 +39,7 @@ MirSurface::MirSurface(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
-    mir_surface_lifecycle_callback callback, void * context)
+    mir_surface_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
@@ -122,7 +122,7 @@ void MirSurface::release_cpu_region()
     secured_region.reset();
 }
 
-MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * context)
 {
     release_cpu_region();
 
@@ -171,7 +171,7 @@ void MirSurface::process_incoming_buffer()
     }
 }
 
-void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::created(mir_surface_callback callback, void * context)
 {
     process_incoming_buffer();
 
@@ -184,7 +184,7 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
     create_wait_handle.result_received();
 }
 
-void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::new_buffer(mir_surface_callback callback, void * context)
 {
     process_incoming_buffer();
 
@@ -193,7 +193,7 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
 }
 
 MirWaitHandle* MirSurface::release_surface(
-        mir_surface_lifecycle_callback callback,
+        mir_surface_callback callback,
         void * context)
 {
     return connection->release_surface(this, callback, context);
