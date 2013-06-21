@@ -31,20 +31,15 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
                                                geom::Size size, geom::PixelFormat pf, geometry::Stride stride)
  : buffer_registrar(registrar),
    native_handle(handle),
-   rect({{geom::X(0),geom::Y(0)}, size}),
-   buffer_pf(pf), buffer_stride(stride)
+   buffer_pf(pf), buffer_stride{stride}
 {
     auto tmp = new mga::MirNativeBuffer([](MirNativeBuffer*){});
     mga::MirNativeBufferDeleter del;
     native_window_buffer = std::shared_ptr<mga::MirNativeBuffer>(tmp, del);
-    pack_native_window_buffer();
-}
 
-void mcla::AndroidClientBuffer::pack_native_window_buffer()
-{
-    native_window_buffer->height = static_cast<int32_t>(rect.size.height.as_uint32_t());
-    native_window_buffer->width =  static_cast<int32_t>(rect.size.width.as_uint32_t());
-    native_window_buffer->stride = buffer_stride.as_uint32_t() /
+    native_window_buffer->height = static_cast<int32_t>(size.height.as_uint32_t());
+    native_window_buffer->width =  static_cast<int32_t>(size.width.as_uint32_t());
+    native_window_buffer->stride = stride.as_uint32_t() /
                                    geom::bytes_per_pixel(buffer_pf);
     native_window_buffer->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     native_window_buffer->handle = native_handle.get();
@@ -56,21 +51,21 @@ mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept
 
 std::shared_ptr<mcl::MemoryRegion> mcla::AndroidClientBuffer::secure_for_cpu_write()
 {
+    auto rect = geom::Rectangle{{geom::X(0),geom::Y(0)}, size()};
     auto vaddr = buffer_registrar->secure_for_cpu(native_handle, rect);
     auto region =  std::make_shared<mcl::MemoryRegion>();
     region->vaddr = vaddr;
     region->width = rect.size.width;
     region->height = rect.size.height;
-    //region->stride = geom::Stride{creation_package->stride};
-    region->stride = buffer_stride;
+    region->stride = stride();
     region->format = buffer_pf;
-
     return region;
 }
 
 geom::Size mcla::AndroidClientBuffer::size() const
 {
-    return rect.size;
+    return geom::Size{geom::Width{native_window_buffer->width},
+                      geom::Height{native_window_buffer->height}};
 }
 
 geom::Stride mcla::AndroidClientBuffer::stride() const
