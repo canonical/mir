@@ -26,9 +26,29 @@
 #include <sstream>
 #include <stdexcept>
 #include <xf86drm.h>
+#include <libudev.h>
+#include <fcntl.h>
 
 namespace mgg = mir::graphics::gbm;
 namespace mggh = mir::graphics::gbm::helpers;
+
+/**************
+ * UdevHelper *
+ **************/
+
+mggh::UdevHelper::UdevHelper()
+{
+    ctx = udev_new();
+
+    if (!ctx)
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to create udev context"));
+}
+
+mggh::UdevHelper::~UdevHelper() noexcept
+{
+    udev_unref(ctx);
+}
 
 /*************
  * DRMHelper *
@@ -199,24 +219,6 @@ mggh::GBMHelper::~GBMHelper()
 {
     if (device)
         gbm_device_destroy(device);
-}
-
-/**************
- * UdevHelper *
- **************/
-
-mggh::UdevHelper::UdevHelper()
-{
-    ctx = udev_new();
-
-    if (!ctx)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to create udev context"));
-}
-
-mggh::UdevHelper::~UdevHelper() noexcept
-{
-    udev_unref(ctx);
 }
 
 /*************

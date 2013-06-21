@@ -45,6 +45,22 @@ typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfac
 namespace helpers
 {
 
+// TODO (RAOF): This is going to morph into an approximately fully-featured
+// C++ udev library, and probably a top-level Mir interface.
+//
+// For now, do the simple thing.
+class UdevHelper
+{
+public:
+    UdevHelper();
+    ~UdevHelper() noexcept;
+
+    UdevHelper(const UdevHelper&) = delete;
+    UdevHelper &operator=(const UdevHelper &) = delete;
+
+    udev *ctx;
+};
+
 class DRMHelper
 {
 public:
@@ -80,22 +96,6 @@ public:
     GBMSurfaceUPtr create_scanout_surface(uint32_t width, uint32_t height);
 
     gbm_device* device;
-};
-
-// TODO (RAOF): This is going to morph into an approximately fully-featured
-// C++ udev library, and probably a top-level Mir interface.
-//
-// For now, do the simple thing.
-class UdevHelper
-{
-public:
-    UdevHelper();
-    ~UdevHelper() noexcept;
-
-    UdevHelper(const UdevHelper&) = delete;
-    UdevHelper &operator=(const UdevHelper &) = delete;
-
-    udev *ctx;
 };
 
 class EGLHelper
