@@ -28,25 +28,15 @@ namespace mga=mir::graphics::android;
 
 mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const& registrar,
                                                std::shared_ptr<const native_handle_t> const& handle,
-                                               geom::Size size, geom::PixelFormat pf, geometry::Stride)
+                                               geom::Size size, geom::PixelFormat pf, geometry::Stride stride)
  : buffer_registrar(registrar),
    native_handle(handle),
    rect({{geom::X(0),geom::Y(0)}, size}),
-   buffer_pf(pf)
+   buffer_pf(pf), buffer_stride(stride)
 {
-//    AndroidBufferHandleDeleter del1(registrar);
     auto tmp = new mga::MirNativeBuffer([](MirNativeBuffer*){});
     mga::MirNativeBufferDeleter del;
     native_window_buffer = std::shared_ptr<mga::MirNativeBuffer>(tmp, del);
-//    native_handle = std::shared_ptr<const native_handle_t> (convert_to_native_handle(creation_package));
-#if 0
-    try{ 
-        buffer_registrar->register_buffer(native_handle.get());
-    } catch (...)
-    {
-        //TODO: log failure
-    }
-#endif
     pack_native_window_buffer();
 }
 
