@@ -18,9 +18,11 @@
 
 #include "mir/shared_library.h"
 
+#include <boost/throw_exception.hpp>
+#include <boost/exception/info.hpp>
+
 #include <dlfcn.h>
 
-#include <iostream>
 #include <stdexcept>
 
 mir::SharedLibrary::SharedLibrary(char const* library_name) :
@@ -28,9 +30,11 @@ mir::SharedLibrary::SharedLibrary(char const* library_name) :
 {
     if (!so)
     {
-        // TODO proper error reporting
-        std::cerr << "Cannot open library: " << dlerror() << std::endl;
-        throw std::runtime_error("Cannot open library");
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Cannot open library")) <<
+                (boost::error_info<SharedLibrary, std::string>(library_name)) <<
+                (boost::error_info<SharedLibrary, decltype(dlerror())>(dlerror())));
     }
 }
 
@@ -50,8 +54,10 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
     }
     else
     {
-        // TODO proper error reporting
-        std::cerr << "Cannot load symbol: " << dlerror() << std::endl;
-        throw std::runtime_error("Cannot load symbol");
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Cannot load symbol")) <<
+                (boost::error_info<SharedLibrary, std::string>(function_name)) <<
+                (boost::error_info<SharedLibrary, decltype(dlerror())>(dlerror())));
     }
 }
