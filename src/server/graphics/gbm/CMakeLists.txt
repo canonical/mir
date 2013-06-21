@@ -3,6 +3,7 @@ include_directories(
     ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
+    ${UDEV_INCLUDE_DIRS}
 )
 
 # gbm.h and drm.h have trailing commas at the end of enum definitions
@@ -41,4 +42,5 @@ target_link_libraries(
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
