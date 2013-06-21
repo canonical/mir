@@ -48,7 +48,6 @@ protected:
         mock_android_registrar = std::make_shared<NiceMock<mtd::MockAndroidRegistrar>>();
 
         package = std::make_shared<native_handle_t>();
-//        package->stride = stride.as_uint32_t();
     }
 
     std::shared_ptr<native_handle_t> package;
@@ -61,22 +60,6 @@ protected:
     std::shared_ptr<mtd::MockAndroidRegistrar> mock_android_registrar;
 };
 
-/*
-TEST_F(ClientAndroidBufferTest, client_registers_right_handle_resource_cleanup)
-{
-    using namespace testing;
-
-    const native_handle_t* buffer_handle;
-    EXPECT_CALL(*mock_android_registrar, register_buffer(_))
-        .Times(1)
-        .WillOnce(SaveArg<0>(&buffer_handle));
-
-    buffer = std::make_shared<mcla::AndroidClientBuffer>(mock_android_registrar, package, size, pf);
-
-    EXPECT_CALL(*mock_android_registrar, unregister_buffer(buffer_handle))
-        .Times(1);
-}
-*/
 TEST_F(ClientAndroidBufferTest, buffer_returns_width_without_modifying)
 {
     mcla::AndroidClientBuffer buffer(mock_android_registrar, package, size, pf, stride);
