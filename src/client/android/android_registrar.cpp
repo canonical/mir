@@ -79,8 +79,7 @@ std::shared_ptr<const native_handle_t> mcla::AndroidRegistrarGralloc::register_b
     }
 
     NativeHandleDeleter del(gralloc_module);
-    auto ret = std::shared_ptr<const native_handle_t>(handle, del);
-    return ret;
+    return std::shared_ptr<const native_handle_t>(handle, del);
 }
 
 const native_handle_t* mcla::AndroidRegistrarGralloc::convert_to_native_handle(std::shared_ptr<MirBufferPackage> const& package) const
@@ -107,12 +106,6 @@ const native_handle_t* mcla::AndroidRegistrarGralloc::convert_to_native_handle(s
     return handle;
 }
 
-#if 0
-void mcla::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t* handle)
-{
-    gralloc_module->unregisterBuffer(gralloc_module.get(), handle);
-}
-#endif
 std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)
 {
     char* vaddr;
@@ -128,5 +121,3 @@ std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_
     MemoryRegionDeleter del(gralloc_module, handle);
     return std::shared_ptr<char>(vaddr, del);
 }
-
-

@@ -140,8 +140,8 @@ TEST_F(ClientAndroidRegistrarTest, client_sets_correct_version)
 TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
 {
     using namespace testing;
-    native_handle_t const* handle1;
-    native_handle_t const* handle2; 
+    native_handle_t const* handle1 = nullptr;
+    native_handle_t const* handle2 = nullptr; 
 
     EXPECT_CALL(*mock_module, registerBuffer_interface(mock_module.get(),_))
         .Times(1)
@@ -151,9 +151,11 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
         .WillOnce(DoAll(SaveArg<1>(&handle2), Return(0)));
 
     mcla::AndroidRegistrarGralloc registrar(mock_module);
-    auto handle = registrar.register_buffer(package);
+    {
+        auto handle = registrar.register_buffer(package);
+        EXPECT_EQ(handle1, handle.get());
+    }
     EXPECT_EQ(handle1, handle2);
-    EXPECT_EQ(handle1, handle.get());
 }
 
 
@@ -172,8 +174,6 @@ TEST_F(ClientAndroidRegistrarTest, register_failure)
     }, std::runtime_error);
 
 }
-
-
 
 class AndroidSoftwareRegionTest : public ::testing::Test
 {

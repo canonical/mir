@@ -33,7 +33,7 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
    native_handle(handle),
    buffer_pf(pf), buffer_stride{stride}
 {
-    auto tmp = new mga::MirNativeBuffer([](MirNativeBuffer*){});
+    auto tmp = new mga::MirNativeBuffer(handle);
     mga::MirNativeBufferDeleter del;
     native_window_buffer = std::shared_ptr<mga::MirNativeBuffer>(tmp, del);
 

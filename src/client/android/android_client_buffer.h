@@ -55,6 +55,7 @@ private:
 
     std::shared_ptr<AndroidRegistrar> buffer_registrar;
     std::shared_ptr<ANativeWindowBuffer> native_window_buffer;
+    //todo: the reference here is needed for software mapping operations
     std::shared_ptr<const native_handle_t> native_handle;
     const geometry::PixelFormat buffer_pf;
     geometry::Stride const buffer_stride;

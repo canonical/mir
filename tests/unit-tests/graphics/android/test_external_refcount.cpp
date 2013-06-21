@@ -37,9 +37,9 @@ TEST(AndroidRefcount, driver_hooks)
         //Mir loses its reference, driver still has a ref
     }
 
-    EXPECT_EQ(use_count_before+1, native_handle.use_count());
+    EXPECT_EQ(use_count_before+1, native_handle_resource.use_count());
     driver_reference->common.decRef(&driver_reference->common);
-    EXPECT_EQ(use_count_before, native_handle.use_count());
+    EXPECT_EQ(use_count_before, native_handle_resource.use_count());
 }
 
 TEST(AndroidRefcount, driver_hooks_mir_ref)
@@ -59,7 +59,7 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
 
         //driver loses its reference
         driver_reference->common.decRef(&driver_reference->common);
-        EXPECT_EQ(use_count_before+1, native_handle.use_count());
+        EXPECT_EQ(use_count_before+1, native_handle_resource.use_count());
     }
-    EXPECT_EQ(use_count_before, native_handle.use_count());
+    EXPECT_EQ(use_count_before, native_handle_resource.use_count());
 }
