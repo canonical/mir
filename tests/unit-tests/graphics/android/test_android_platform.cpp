@@ -19,6 +19,7 @@
 #include "mir/graphics/null_display_report.h"
 #include "src/server/graphics/android/android_platform.h"
 #include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/options/program_option.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include <system/window.h>
@@ -28,6 +29,7 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
+namespace mo=mir::options;
 
 class PlatformBufferIPCPackaging : public ::testing::Test
 {
@@ -81,7 +83,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(testing::Return(dummy_stride));
 
-    auto platform = mg::create_platform(stub_display_report);
+    auto platform = mg::create_platform(std::make_shared<mo::ProgramOption>(), stub_display_report);
 
     auto mock_packer = std::make_shared<mtd::MockPacker>();
     int offset = 0;

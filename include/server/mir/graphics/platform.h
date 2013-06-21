@@ -34,6 +34,10 @@ class GraphicBufferAllocator;
 class Buffer;
 class BufferIPCPacker;
 }
+namespace options
+{
+class Option;
+}
 
 /// Graphics subsystem. Mediates interaction between core system and
 /// the graphics environment.
@@ -107,13 +111,14 @@ public:
 /**
  * Creates and returns a new graphics platform.
  *
+ * \param [in] options options to use for this platform
  * \param [in] report the object to use to report interesting events from the display subsystem
  *
  * This factory function needs to be implemented by each platform.
  *
  * \ingroup platform_enablement
  */
-std::shared_ptr<Platform> create_platform(std::shared_ptr<DisplayReport> const& report);
+std::shared_ptr<Platform> create_platform(std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
 
 }
 }
