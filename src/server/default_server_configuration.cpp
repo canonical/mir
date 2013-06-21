@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
+#include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
@@ -288,36 +289,15 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
         });
 }
 
-#include <dlfcn.h>
+
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
         [this]()
         {
-            // Alternatively, we want to dynamically load the graphics library
-            // this would be the place to do that.
-            // TODO {arg} fix leaky POC code before checkin
-            if (auto const so = dlopen("libmirplatformgraphics.so", RTLD_NOW))
-            {
-                mg::CreatePlatform create_platform{};
-                (void*&)create_platform = dlsym(so, "create_platform");
-                if (create_platform)
-                {
-                    return create_platform(the_display_report());
-                }
-                else
-                {
-                    // TODO proper error reporting
-                    std::cerr << "Cannot load symbol: " << dlerror() << std::endl;
-                    throw std::runtime_error("Cannot load symbol");
-                }
-            }
-            else
-            {
-                // TODO proper error reporting
-                std::cerr << "Cannot open library: " << dlerror() << std::endl;
-                throw std::runtime_error("Cannot open library");
-            }
+            static SharedLibrary libmirplatformgraphics("libmirplatformgraphics.so");
+            static auto create_platform = libmirplatformgraphics.load_function<mg::CreatePlatform>("create_platform");
+            return create_platform(the_display_report());
         });
 }
 
