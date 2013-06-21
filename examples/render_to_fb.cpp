@@ -42,12 +42,6 @@ void signal_handler(int /*signum*/)
     running = false;
 }
 
-std::shared_ptr<mg::Platform> my_create_platform(std::shared_ptr<mg::DisplayReport> const& report)
-{
-    static mir::SharedLibrary libmirplatformgraphics("libmirplatformgraphics.so");
-    static auto create_platform = libmirplatformgraphics.load_function<mg::CreatePlatform>("create_platform");
-    return create_platform(report);
-}
 }
 
 int main(int, char**)
@@ -61,8 +55,10 @@ int main(int, char**)
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
+    mir::SharedLibrary libmirplatformgraphics("libmirplatformgraphics.so");
     auto logger = std::make_shared<ml::DumbConsoleLogger>();
-    auto platform = my_create_platform(std::make_shared<ml::DisplayReport>(logger));
+    auto report = std::make_shared<ml::DisplayReport>(logger);
+    auto platform = libmirplatformgraphics.load_function<mg::CreatePlatform>("create_platform")(report);
     auto display = platform->create_display();
 
     mir::draw::glAnimationBasic gl_animation;
