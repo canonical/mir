@@ -55,8 +55,8 @@ public:
     UdevHelper();
     ~UdevHelper() noexcept;
 
-    UdevHelper(const UdevHelper&) = delete;
-    UdevHelper &operator=(const UdevHelper &) = delete;
+    UdevHelper(UdevHelper const&) = delete;
+    UdevHelper &operator=(UdevHelper const&) = delete;
 
     udev *ctx;
 };
@@ -70,7 +70,7 @@ public:
     DRMHelper(const DRMHelper &) = delete;
     DRMHelper& operator=(const DRMHelper&) = delete;
 
-    void setup();
+    void setup(UdevHelper const& udev);
     int get_authenticated_fd();
     void auth_magic(drm_magic_t magic) const;
 
@@ -80,7 +80,7 @@ public:
     int fd;
 
 private:
-    int open_drm_device();
+    int open_drm_device(UdevHelper const& udev);
 };
 
 class GBMHelper
