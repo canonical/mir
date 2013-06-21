@@ -20,7 +20,6 @@
 #include "mir_toolkit/mesa/native_display.h"
 #include "src/server/graphics/gbm/internal_client.h"
 #include "src/server/graphics/gbm/internal_native_surface.h"
-#include "mir_test_doubles/stub_platform.h"
 #include "mir_test_doubles/stub_surface.h"
 
 #include <gtest/gtest.h>

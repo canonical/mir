@@ -17,14 +17,13 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_platform.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -85,33 +84,18 @@ std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
     geom::PixelFormat::xbgr_8888
 };
 
-class StubPlatform : public mg::Platform
+class StubPlatform : public mtd::NullPlatform
 {
 public:
     std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-            std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/)
+            std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::Display> create_display()
+    std::shared_ptr<mg::Display> create_display() override
     {
         return std::make_shared<StubDisplay>();
-    }
-
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
-    }
-
-    std::shared_ptr<mg::InternalClient> create_internal_client()
-    {
-        return std::shared_ptr<mg::InternalClient>();   
-    }
-
-    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
-                          std::shared_ptr<mc::Buffer> const&) const
-    {
     }
 };
 

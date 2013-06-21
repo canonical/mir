@@ -24,6 +24,7 @@
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/null_platform.h"
 #include "mir/graphics/null_display_report.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
@@ -81,32 +82,13 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
-class StubGraphicPlatform : public mg::Platform
+class StubGraphicPlatform : public mtd::NullPlatform
 {
 public:
-    virtual std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
-    }
-
-    virtual std::shared_ptr<mg::Display> create_display()
-    {
-        return std::shared_ptr<mg::Display>();
-    }
-
-    virtual std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-    {
-        return std::shared_ptr<mg::PlatformIPCPackage>();
-    }
-
-    std::shared_ptr<mg::InternalClient> create_internal_client()
-    {
-        return std::shared_ptr<mg::InternalClient>();
-    }
-    
-    void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&, std::shared_ptr<mc::Buffer> const&) const
-    {
     }
 };
 
@@ -118,7 +100,7 @@ protected:
         auto options = mtf::TestingServerConfiguration().the_options();
 
         if (options->get("tests-use-real-graphics", false))
-            platform = mg::create_platform(std::make_shared<mg::NullDisplayReport>());
+            platform = mg::create_platform(options, std::make_shared<mg::NullDisplayReport>());
         else
             platform = std::make_shared<StubGraphicPlatform>();
 
