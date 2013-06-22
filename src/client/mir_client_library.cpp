@@ -319,32 +319,12 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
 
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 {
-    int hint = mir_surface_hint_synchronous;
-    switch (interval)
-    {
-        case 0:
-            hint = mir_surface_hint_drop_frames;
-            break;
-        case 1:
-            hint = mir_surface_hint_synchronous;
-            break;
-        default:
-            return NULL;
-    }
-
-    return surf ? surf->configure(mir_surface_attrib_performance_hint, hint) : NULL;
+    if ((interval < 0) || (interval > 1))
+        return NULL;
+    return surf ? surf->configure(mir_surface_attrib_swap_interval, interval) : NULL;
 }
 
 int mir_surface_get_swapinterval(MirSurface* surf)
 {
-    if (!surf)
-        return -1;
-
-    int s = surf->attrib(mir_surface_attrib_performance_hint);
-    if (s == mir_surface_hint_synchronous)
-        return 1;
-    if (s == mir_surface_hint_drop_frames)
-        return 0;
-
-    return -1;
+    return surf ? surf->attrib(mir_surface_attrib_swap_interval) : NULL;
 }

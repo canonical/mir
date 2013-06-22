@@ -58,7 +58,7 @@ public:
     }
 
     std::shared_ptr<mc::Buffer> secure_client_buffer() { return std::make_shared<mtd::StubBuffer>(); }
-    std::shared_ptr<ms::GraphicRegion> lock_back_buffer() { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mc::Buffer> lock_back_buffer() { return std::make_shared<mtd::StubBuffer>(); }
     geom::PixelFormat get_stream_pixel_format() { return geom::PixelFormat::abgr_8888; }
     geom::Size stream_size() { return geom::Size{}; }
     void force_requests_to_complete() {}

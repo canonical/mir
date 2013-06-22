@@ -35,7 +35,7 @@ typedef enum MirSurfaceAttrib
 {
     mir_surface_attrib_type,
     mir_surface_attrib_state,
-    mir_surface_attrib_performance_hint,
+    mir_surface_attrib_swap_interval,
     mir_surface_attrib_arraysize_
 } MirSurfaceAttrib;
 
@@ -63,13 +63,6 @@ typedef enum MirSurfaceState
     mir_surface_state_fullscreen,
     mir_surface_state_arraysize_
 } MirSurfaceState;
-
-typedef enum MirSurfacePerformanceHint
-{
-    mir_surface_hint_synchronous,
-    mir_surface_hint_drop_frames,
-    mir_surface_hint_arraysize_
-} MirSurfacePerformanceHint;
 /**@}*/
 
 #endif
