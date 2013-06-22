@@ -62,7 +62,8 @@ void mc::SwapperFactory::change_swapper_size(
         if (list.empty())
         {
             BOOST_THROW_EXCEPTION(std::logic_error("SwapperFactory could not change algorithm"));
-        } else
+        }
+        else
         {
             list.pop_back();
             current_size--;
