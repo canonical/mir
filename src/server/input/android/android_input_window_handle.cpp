@@ -30,7 +30,6 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-#include <stdio.h> // TODO: Remove
 namespace
 {
 struct WindowInfo : public droidinput::InputWindowInfo
