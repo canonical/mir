@@ -10,11 +10,7 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 #overrding dh_auto_test to get rid of --parallel during testing
 override_dh_auto_test:
-ifeq ($(DEB_HOST_ARCH),armhf)
-	@echo "not testing"
-else
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1
-endif
 
 COMMON_CONFIGURE_OPTIONS = \
   -DMIR_DISABLE_EPOLL_REACTOR=YES \
