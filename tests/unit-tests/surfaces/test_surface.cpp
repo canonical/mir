@@ -171,8 +171,6 @@ struct SurfaceCreation : public ::testing::Test
 
         ON_CALL(*mock_buffer_stream, secure_client_buffer())
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
-        ON_CALL(*mock_buffer_stream, stream_size())
-            .WillByDefault(Return(size));
     }
 
     std::string surface_name;
@@ -354,35 +352,6 @@ TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
     ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
-}
-
-TEST_F(SurfaceCreation, test_surface_transformation_cache_updates)
-{
-    using namespace testing;
-
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(), null_change_cb};
-
-    geom::Point p{geom::X{55}, geom::Y{66}};
-
-    EXPECT_CALL(*mock_buffer_stream, stream_size())
-        .Times(1);
-    surf.move_to(p);
-
-    EXPECT_CALL(*mock_buffer_stream, stream_size())
-        .Times(1);
-    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
-
-    // Clean cache: transformation already known from above set_rotation
-    EXPECT_CALL(*mock_buffer_stream, stream_size())
-        .Times(1);
-    (void)surf.transformation();
-
-    // Dirty cache: transformation changed via stream_size() change
-    EXPECT_CALL(*mock_buffer_stream, stream_size())
-        .Times(2)
-        .WillRepeatedly(Return(geom::Size{geom::Width{12}, geom::Height{34}}));
-    (void)surf.transformation();
 }
 
 TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
