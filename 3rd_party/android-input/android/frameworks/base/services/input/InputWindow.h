@@ -137,7 +137,7 @@ struct InputWindowInfo {
     int32_t ownerUid;
     int32_t inputFeatures;
 
-    bool touchableRegionContainsPoint(int32_t x, int32_t y) const;
+    virtual bool touchableRegionContainsPoint(int32_t x, int32_t y) const;
     bool frameContainsPoint(int32_t x, int32_t y) const;
 
     /* Returns true if the window is of a trusted type that is allowed to silently

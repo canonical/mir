@@ -50,7 +50,7 @@ bool rectangle_contains_point(geom::Rectangle const& rectangle, uint32_t px, uin
 
 }
 
-bool mi::RectanglesInputRegion::contains_point(uint32_t x, uint32_t y)
+bool mi::RectanglesInputRegion::contains_point(uint32_t x, uint32_t y) const
 {
     for(auto const& rectangle : input_rectangles)
     {

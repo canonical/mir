@@ -23,11 +23,13 @@
 #include "mir/geometry/point.h"
 
 #include <string>
+#include <memory>
 
 namespace mir
 {
 namespace input
 {
+class InputRegion;
 
 class SurfaceTarget
 {
@@ -39,6 +41,8 @@ public:
     virtual std::string const& name() const = 0;
 
     virtual int server_input_fd() const = 0;
+    
+    virtual std::shared_ptr<InputRegion> input_region() const = 0;
 
 protected:
     SurfaceTarget() = default;

@@ -19,6 +19,7 @@
 #ifndef MIR_INPUT_INPUT_REGION_H_
 #define MIR_INPUT_INPUT_REGION_H_
 
+#include <stdint.h>
 
 namespace mir
 {

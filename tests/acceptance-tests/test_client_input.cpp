@@ -128,6 +128,28 @@ struct InputClient : ClientConfig
     {
         auto client = static_cast<InputClient *>(context);
 
+        printf("===\n");
+        printf("Handling event \n");
+        if (ev->type == mir_event_type_motion)
+            {
+                printf("Handling motion event \n");
+                if (ev->motion.action == mir_motion_action_move || 
+                    ev->motion.action == mir_motion_action_hover_move)
+                    {
+                        printf("Handling move event: %f %f\n", ev->motion.pointer_coordinates[0].x,
+                               ev->motion.pointer_coordinates[0].y);
+                    }
+                else if (ev->motion.action == mir_motion_action_hover_enter)
+                    {
+                        printf("Handling hover enter\n");
+                    }
+                else if (ev->motion.action == mir_motion_action_hover_exit)
+                    {
+                        printf("Handling hover exit\n");
+
+                        }
+            }
+        printf("===\n");
         client->handler->handle_input(ev);
     }
 
