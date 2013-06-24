@@ -595,7 +595,6 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
             return screen_geometry;
         }
         
-        // TODO: Set the input region somewhere
         void inject_input() override
         {
             wait_until_client_appears(test_client_name);
