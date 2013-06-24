@@ -54,8 +54,8 @@ bool mi::RectanglesInputRegion::contains_point(uint32_t x, uint32_t y) const
 {
     for(auto const& rectangle : input_rectangles)
     {
-        if(!rectangle_contains_point(rectangle, x, y))
-            return false;
+        if(rectangle_contains_point(rectangle, x, y))
+            return true;
     }
-    return true;
+    return false;
 }

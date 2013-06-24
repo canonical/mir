@@ -53,7 +53,7 @@ ms::Surface::Surface(
     buffer_is_valid(false),
     notify_change(change_callback)
 {
-    std::initializer_list<geom::Rectangle> input_rectangle = {geom::Rectangle{top_left_point, size()}};
+    std::initializer_list<geom::Rectangle> input_rectangle = {geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size()}};
     input_region_ = std::make_shared<mi::RectanglesInputRegion>(input_rectangle);
     // TODO(tvoss,kdub): Does a surface without a buffer_stream make sense?
     assert(buffer_stream);

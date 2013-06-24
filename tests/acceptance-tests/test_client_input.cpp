@@ -128,32 +128,6 @@ struct InputClient : ClientConfig
     {
         auto client = static_cast<InputClient *>(context);
 
-        printf("===\n");
-        printf("Handling event \n");
-        if (ev->type == mir_event_type_motion)
-            {
-                printf("Handling motion event \n");
-                if (ev->motion.action == mir_motion_action_move || 
-                    ev->motion.action == mir_motion_action_hover_move)
-                    {
-                        printf("Handling move event: %f %f\n", ev->motion.pointer_coordinates[0].x,
-                               ev->motion.pointer_coordinates[0].y);
-                    }
-                else if (ev->motion.action == mir_motion_action_hover_enter)
-                    {
-                        printf("Handling hover enter\n");
-                    }
-                else if (ev->motion.action == mir_motion_action_hover_exit)
-                    {
-                        printf("Handling hover exit\n");
-
-                        }
-                else
-                    {
-                        printf("Must be a bdown\n");
-                    }
-            }
-        printf("===\n");
         client->handler->handle_input(ev);
     }
 
@@ -266,11 +240,15 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     return true;
 }
 
-MATCHER(ButtonUpEvent, "")
+MATCHER_P2(ButtonUpEvent, x, y, "")
 {
     if (arg->type != mir_event_type_motion)
         return false;
     if (arg->motion.action != mir_motion_action_up)
+        return false;
+    if (arg->motion.pointer_coordinates[0].x != x)
+        return false;
+    if (arg->motion.pointer_coordinates[0].y != y)
         return false;
     return true;
 }
@@ -620,7 +598,6 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         // TODO: Set the input region somewhere
         void inject_input() override
         {
-            (void)client_input_regions;
             wait_until_client_appears(test_client_name);
             
             // First we will move the cursor in to the input region on the left side of the window. We should see a click here
@@ -658,9 +635,9 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
                 // We should see two of the three button pairs.
                 InSequence seq;
                 EXPECT_CALL(*handler, handle_input(ButtonDownEvent(1, 1))).Times(1);
-                EXPECT_CALL(*handler, handle_input(ButtonUpEvent())).Times(1);
+                EXPECT_CALL(*handler, handle_input(ButtonUpEvent(1, 1))).Times(1);
                 EXPECT_CALL(*handler, handle_input(ButtonDownEvent(99, 99))).Times(1);
-                EXPECT_CALL(*handler, handle_input(ButtonUpEvent())).Times(1)
+                EXPECT_CALL(*handler, handle_input(ButtonUpEvent(99, 99))).Times(1)
                     .WillOnce(mt::WakeUp(&events_received));
             }
         }
