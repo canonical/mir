@@ -171,6 +171,8 @@ struct SurfaceCreation : public ::testing::Test
 
         ON_CALL(*mock_buffer_stream, secure_client_buffer())
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
+        ON_CALL(*mock_buffer_stream, stream_size())
+            .WillByDefault(Return(size));
     }
 
     std::string surface_name;
@@ -352,6 +354,27 @@ TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
     ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+}
+
+TEST_F(SurfaceCreation, test_surface_transformation_cache_refreshes)
+{
+    using namespace testing;
+
+    const geom::Point origin{geom::X{77}, geom::Y{88}};
+
+    ms::Surface surf{surface_name, origin, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), null_change_cb};
+
+    glm::mat4 t0 = surf.transformation();
+    surf.move_to(geom::Point{geom::X{55}, geom::Y{66}});
+    EXPECT_NE(t0, surf.transformation());
+
+    surf.move_to(origin);
+    EXPECT_EQ(t0, surf.transformation());
+
+    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+    glm::mat4 t1 = surf.transformation();
+    EXPECT_NE(t0, t1);
 }
 
 TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
