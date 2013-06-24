@@ -26,9 +26,6 @@ else
 	  $(COMMON_CONFIGURE_OPTIONS)
 endif
 
-override_dh_installexamples:
-	dh_installexamples -p libmirclient-demos
-
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
 	dh_makeshlibs -p libmirserver0 -V 'libmirserver0 (= ${EXACT_PACKAGE_VERSION})'
