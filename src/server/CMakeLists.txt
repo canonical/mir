@@ -13,7 +13,7 @@ add_subdirectory(time/)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirserver")
 
 configure_file(
@@ -65,7 +65,7 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
       ${MIRSERVER_LINKS}
   )
   install(TARGETS mirserver
-    LIBRARY DESTINATION lib
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
   install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
@@ -84,5 +84,5 @@ set_target_properties(mirserver PROPERTIES
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
-  DESTINATION lib/pkgconfig
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )

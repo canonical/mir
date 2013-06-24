@@ -40,6 +40,7 @@ include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
+include (GNUInstallDirs)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
