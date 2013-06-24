@@ -1,6 +1,6 @@
 Source: mir
 Section: x11
-Priority: extra
+Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
@@ -9,7 +9,7 @@ Build-Depends: cmake,
                doxygen,
                xsltproc,
                graphviz,
-               libboost1.48-all-dev | libboost-all-dev,
+               libboost-all-dev,
                protobuf-compiler,
                libdrm-dev [!armhf],
                libegl1-mesa-dev,
@@ -21,8 +21,8 @@ Build-Depends: cmake,
                libhybris-dev [armhf],
                libgoogle-glog-dev,
                liblttng-ust-dev,
-               libxkbcommon-dev
-Standards-Version: 3.9.3
+               libxkbcommon-dev,
+Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
 # just go ahead. ~mir-team will notice and sync up the code again.
@@ -56,8 +56,7 @@ Package: libmirserver0
 Section: libs
 Architecture: any
 Depends: ${misc:Depends},
-         ${shlibs:Depends}
-Conflicts: mir
+         ${shlibs:Depends},
 Description: Display server for Ubuntu - server library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -116,11 +115,7 @@ Description: Display server for Ubuntu - development headers
 Package: mir-demos
 Architecture: any
 Depends: ${misc:Depends},
-         ${shlibs:Depends}
-Breaks: mir (<< 0.0.2-0ubuntu1),
-        libmirclient-demos
-Replaces: libmirclient-demos
-Provides: libmirclient-demos
+         ${shlibs:Depends},
 Description: Display server for Ubuntu - demonstration programs
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -129,7 +124,7 @@ Description: Display server for Ubuntu - demonstration programs
 
 Package: mir-doc
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends},
 Description: API documentation for mir
  This package installs the mir API documentation.
 
@@ -137,7 +132,7 @@ Package: mir-test-tools
 Architecture: any
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Recommends: mir-demos
+Recommends: mir-demos,
 Description: Display Server for Ubuntu - stress tests and other test tools
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
