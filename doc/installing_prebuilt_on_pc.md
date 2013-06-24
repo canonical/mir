@@ -20,7 +20,7 @@ Installing pre-built packages on a PC {#installing_prebuilt_on_pc}
        Pin-Priority: 1001
 
        Package: *
-       Pin: release o=LP-PPA-mir-team-staging
+       Pin: release o=LP-PPA-mir-team-system-compositor-testing
        Pin-Priority: 1002
 
 5. Install mir and dist-upgrade:
