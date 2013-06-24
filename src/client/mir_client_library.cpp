@@ -326,5 +326,5 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 
 int mir_surface_get_swapinterval(MirSurface* surf)
 {
-    return surf ? surf->attrib(mir_surface_attrib_swap_interval) : NULL;
+    return surf ? surf->attrib(mir_surface_attrib_swap_interval) : -1;
 }

@@ -309,7 +309,8 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
  * Query the swapinterval that the surface is operating with.
  * The default interval is 1.
  *   \param [in] surface  The surface to operate on
- *   \return              The swapinterval value that the client is operating with
+ *   \return              The swapinterval value that the client is operating with.
+ *                        Returns -1 if surface is invalid.
  */
 int mir_surface_get_swapinterval(MirSurface* surface);
 
