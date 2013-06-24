@@ -19,14 +19,10 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_DISABLE_EPOLL_REACTOR=YES \
   -DBUILD_DOXYGEN=YES
 
-# We need to rely on the select-based reactor to fix the ppa builds.
-# TODO: Get rid of this workaround by either switching to boost 1.51 or
-# updating the ppa builders kernel version.
 override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DBoost_COMPILER=-gcc \
 	  -DMIR_PLATFORM=android
 else
 	dh_auto_configure -- \
