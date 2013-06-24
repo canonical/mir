@@ -148,6 +148,10 @@ struct InputClient : ClientConfig
                         printf("Handling hover exit\n");
 
                         }
+                else
+                    {
+                        printf("Must be a bdown\n");
+                    }
             }
         printf("===\n");
         client->handler->handle_input(ev);
@@ -258,6 +262,15 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     if (arg->motion.pointer_coordinates[0].x != x)
         return false;
     if (arg->motion.pointer_coordinates[0].y != y)
+        return false;
+    return true;
+}
+
+MATCHER(ButtonUpEvent, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_up)
         return false;
     return true;
 }
@@ -613,12 +626,15 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
             // First we will move the cursor in to the input region on the left side of the window. We should see a click here
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
             // Now in to the dead zone in the center of the window. We should not see a click here.
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
             // Now in to the right edge of the window, in the right input region. Again we should see a click
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
         }
     } server_config;
     
@@ -639,10 +655,12 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
             EXPECT_CALL(*handler, handle_input(MovementEvent())).Times(AnyNumber());
 
             {
-                // We should see two of the three button events.
+                // We should see two of the three button pairs.
                 InSequence seq;
                 EXPECT_CALL(*handler, handle_input(ButtonDownEvent(1, 1))).Times(1);
-                EXPECT_CALL(*handler, handle_input(ButtonDownEvent(99, 99))).Times(1)
+                EXPECT_CALL(*handler, handle_input(ButtonUpEvent())).Times(1);
+                EXPECT_CALL(*handler, handle_input(ButtonDownEvent(99, 99))).Times(1);
+                EXPECT_CALL(*handler, handle_input(ButtonUpEvent())).Times(1)
                     .WillOnce(mt::WakeUp(&events_received));
             }
         }
