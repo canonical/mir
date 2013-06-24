@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -f 2)
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
@@ -15,7 +16,7 @@ override_dh_auto_test:
 COMMON_CONFIGURE_OPTIONS = \
   -DMIR_DISABLE_EPOLL_REACTOR=YES \
   -DBUILD_DOXYGEN=YES \
-  -DCMAKE_INSTALL_LIBEXECDIR="lib/mir"
+  -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"
 
 override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
