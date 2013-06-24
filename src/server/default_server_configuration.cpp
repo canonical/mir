@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
+#include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
@@ -242,7 +243,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "directory instead of the default logging directory."
             " [string:default=\"\"]")
         ("ipc-thread-pool", po::value<int>(),
-            "threads in frontend thread pool. [int:default=10]");
+            "threads in frontend thread pool. [int:default=10]")
+        ("vt", po::value<int>(),
+            "VT to run on or 0 to use current. [int:default=0]");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
@@ -288,18 +291,15 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
         });
 }
 
+
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
         [this]()
         {
-            // TODO I doubt we need the extra level of indirection provided by
-            // mg::create_platform() - we just need to move the implementation
-            // of DefaultServerConfiguration::the_graphics_platform() to the
-            // graphics libraries.
-            // Alternatively, if we want to dynamically load the graphics library
-            // then this would be the place to do that.
-            return mg::create_platform(the_display_report());
+            static SharedLibrary libmirplatformgraphics("libmirplatformgraphics.so");
+            static auto create_platform = libmirplatformgraphics.load_function<mg::CreatePlatform>("create_platform");
+            return create_platform(the_options(), the_display_report());
         });
 }
 

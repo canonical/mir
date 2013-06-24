@@ -78,6 +78,7 @@ public:
     // TODO and then client_buffer(). That's a bad interface.
     void advance_client_buffer();
     std::shared_ptr<compositor::Buffer> client_buffer() const;
+    std::shared_ptr<compositor::Buffer> compositor_buffer() const;
     void force_requests_to_complete();
     void flag_for_render();
 

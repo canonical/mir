@@ -362,14 +362,30 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
 
     ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb};
-    std::shared_ptr<ms::GraphicRegion> buffer_resource = std::make_shared<mtd::StubBuffer>();
+    auto buffer_resource = std::make_shared<mtd::StubBuffer>();
 
     EXPECT_CALL(*mock_buffer_stream, lock_back_buffer())
         .Times(AtLeast(1))
         .WillOnce(Return(buffer_resource));
 
-    std::shared_ptr<ms::GraphicRegion> comp_resource;
-    comp_resource = surf.graphic_region();
+    auto comp_resource = surf.graphic_region();
+
+    EXPECT_EQ(buffer_resource, comp_resource);
+}
+
+TEST_F(SurfaceCreation, test_surface_compositor_buffer_locks_back_buffer_from_stream)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), null_change_cb};
+    auto buffer_resource = std::make_shared<mtd::StubBuffer>();
+
+    EXPECT_CALL(*mock_buffer_stream, lock_back_buffer())
+        .Times(AtLeast(1))
+        .WillOnce(Return(buffer_resource));
+
+    auto comp_resource = surf.compositor_buffer();
 
     EXPECT_EQ(buffer_resource, comp_resource);
 }

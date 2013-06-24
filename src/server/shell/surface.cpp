@@ -197,6 +197,20 @@ std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
     }
 }
 
+void msh::Surface::with_most_recent_buffer_do(
+    std::function<void(mc::Buffer&)> const& exec)
+{
+    if (auto const& s = surface.lock())
+    {
+        auto buf = s->compositor_buffer();
+        exec(*buf);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
 bool msh::Surface::supports_input() const
 {
     if (auto const& s = surface.lock())

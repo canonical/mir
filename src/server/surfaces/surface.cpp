@@ -22,6 +22,7 @@
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/rectangles_input_region.h"
+#include "mir/compositor/buffer.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -109,7 +110,7 @@ mir::geometry::Size ms::Surface::size() const
 
 std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
 {
-    return buffer_stream->lock_back_buffer();
+    return compositor_buffer();
 }
 
 glm::mat4 ms::Surface::transformation() const
@@ -178,6 +179,11 @@ void ms::Surface::advance_client_buffer()
 std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
 {
     return client_buffer_resource;
+}
+
+std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
+{
+    return buffer_stream->lock_back_buffer();
 }
 
 void ms::Surface::flag_for_render()

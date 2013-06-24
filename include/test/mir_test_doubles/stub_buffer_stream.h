@@ -29,21 +29,22 @@ namespace test
 namespace doubles
 {
 
-class NullBufferStream : public surfaces::BufferStream
+class StubBufferStream : public surfaces::BufferStream
 {
 public:
-    NullBufferStream()
+    StubBufferStream()
     {
-        stub_buffer = std::make_shared<StubBuffer>();
+        stub_client_buffer = std::make_shared<StubBuffer>();
+        stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
     std::shared_ptr<compositor::Buffer> secure_client_buffer()
     {
-        return stub_buffer;
+        return stub_client_buffer;
     }
 
-    std::shared_ptr<surfaces::GraphicRegion> lock_back_buffer()
+    std::shared_ptr<compositor::Buffer> lock_back_buffer()
     {
-        return std::shared_ptr<surfaces::GraphicRegion>();
+        return stub_compositor_buffer;
     }
 
     geometry::PixelFormat get_stream_pixel_format()
@@ -60,7 +61,8 @@ public:
     {
     }
 
-    std::shared_ptr<compositor::Buffer> stub_buffer;
+    std::shared_ptr<compositor::Buffer> stub_client_buffer;
+    std::shared_ptr<compositor::Buffer> stub_compositor_buffer;
 };
 
 }

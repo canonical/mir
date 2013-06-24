@@ -20,6 +20,7 @@
 #include "protobuf_message_processor.h"
 #include "socket_session.h"
 
+#include "mir/frontend/communicator_report.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/protobuf/google_protobuf_guard.h"
 #include "event_pipe.h"
@@ -36,14 +37,16 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
     int threads,
-    std::function<void()> const& force_requests_to_complete)
+    std::function<void()> const& force_requests_to_complete,
+    std::shared_ptr<CommunicatorReport> const& report)
 :   socket_file((std::remove(socket_file.c_str()), socket_file)),
     acceptor(io_service, socket_file),
     io_service_threads(threads),
     ipc_factory(ipc_factory),
     next_session_id(0),
     connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
-    force_requests_to_complete(force_requests_to_complete)
+    force_requests_to_complete(force_requests_to_complete),
+    report(report)
 {
     start_accept();
 }
@@ -85,7 +88,19 @@ int mf::ProtobufSocketCommunicator::next_id()
 
 void mf::ProtobufSocketCommunicator::start()
 {
-    auto run_io_service = boost::bind(&ba::io_service::run, &io_service);
+    auto run_io_service = [&]
+    {
+        while (true)
+        try
+        {
+            io_service.run();
+            return;
+        }
+        catch (std::exception const& e)
+        {
+            report->error(e);
+        }
+    };
 
     for (auto& thread : io_service_threads)
     {
@@ -137,4 +152,8 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
         session->read_next_message();
     }
     start_accept();
+}
+
+void mf::NullCommunicatorReport::error(std::exception const& /*error*/)
+{
 }

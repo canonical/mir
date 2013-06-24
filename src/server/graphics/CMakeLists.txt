@@ -32,5 +32,6 @@ target_link_libraries(
   mirlogging
 
   ${MIR_COMMON_PLATFORM_LIBRARIES}
-  ${GLESv2_LIBRARIES}
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )

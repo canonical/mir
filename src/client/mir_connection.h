@@ -77,11 +77,11 @@ public:
 
     MirWaitHandle* create_surface(
         MirSurfaceParameters const & params,
-        mir_surface_lifecycle_callback callback,
+        mir_surface_callback callback,
         void * context);
     MirWaitHandle* release_surface(
             MirSurface *surface,
-            mir_surface_lifecycle_callback callback,
+            mir_surface_callback callback,
             void *context);
 
     char const * get_error_message();

@@ -76,7 +76,7 @@ struct MockMirSurface : public mcl::ClientSurface
 
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
-    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_lifecycle_callback callback, void * context));
+    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_callback callback, void * context));
 
     MirSurfaceParameters params;
 };

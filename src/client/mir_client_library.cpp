@@ -142,7 +142,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 MirWaitHandle* mir_connection_create_surface(
     MirConnection* connection,
     MirSurfaceParameters const* params,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void* context)
 {
     if (error_connections.contains(connection)) return 0;
@@ -166,7 +166,7 @@ MirSurface* mir_connection_create_surface_sync(
     MirSurface *surface = nullptr;
 
     mir_wait_for(mir_connection_create_surface(connection, params,
-        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        reinterpret_cast<mir_surface_callback>(assign_result),
         &surface));
 
     return surface;
@@ -180,7 +180,7 @@ void mir_surface_set_event_handler(MirSurface *surface,
 
 MirWaitHandle* mir_surface_release(
     MirSurface * surface,
-    mir_surface_lifecycle_callback callback, void * context)
+    mir_surface_callback callback, void * context)
 {
     return surface->release_surface(callback, context);
 }
@@ -188,7 +188,7 @@ MirWaitHandle* mir_surface_release(
 void mir_surface_release_sync(MirSurface *surface)
 {
     mir_wait_for(mir_surface_release(surface,
-        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        reinterpret_cast<mir_surface_callback>(assign_result),
         nullptr));
 }
 
@@ -238,7 +238,7 @@ void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * g
     surface->get_cpu_region( *graphics_region);
 }
 
-MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_callback callback, void * context)
 {
     return surface->next_buffer(callback, context);
 }
@@ -246,7 +246,7 @@ MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_lifecyc
 void mir_surface_swap_buffers_sync(MirSurface *surface)
 {
     mir_wait_for(mir_surface_swap_buffers(surface,
-        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        reinterpret_cast<mir_surface_callback>(assign_result),
         nullptr));
 }
 
