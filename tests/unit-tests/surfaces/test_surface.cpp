@@ -171,6 +171,8 @@ struct SurfaceCreation : public ::testing::Test
 
         ON_CALL(*mock_buffer_stream, secure_client_buffer())
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
+        ON_CALL(*mock_buffer_stream, stream_size())
+            .WillByDefault(Return(size));
     }
 
     std::string surface_name;
