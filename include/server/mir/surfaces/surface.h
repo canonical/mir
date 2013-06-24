@@ -85,6 +85,8 @@ public:
     int client_input_fd() const;
     int server_input_fd() const;
 private:
+    void update_transformation() const;
+
     std::string surface_name;
     geometry::Point top_left_point;
 
@@ -94,6 +96,8 @@ private:
 
     std::shared_ptr<compositor::Buffer> client_buffer_resource;
     glm::mat4 rotation_matrix;
+    mutable glm::mat4 transformation_matrix;
+    mutable geometry::Size transformation_size;
     float alpha_value;
 
     bool is_hidden;

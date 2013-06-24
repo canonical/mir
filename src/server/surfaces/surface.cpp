@@ -74,12 +74,14 @@ std::string const& ms::Surface::name() const
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
     top_left_point = top_left;
+    update_transformation();
     notify_change();
 }
 
 void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
 {
     rotation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
+    update_transformation();
     notify_change();
 }
 
@@ -112,6 +114,14 @@ std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
 
 glm::mat4 ms::Surface::transformation() const
 {
+    if (transformation_size != size())
+        update_transformation();
+
+    return transformation_matrix;
+}
+
+void ms::Surface::update_transformation() const
+{
     const geom::Size sz = size();
 
     const glm::vec3 top_left_vec{top_left_point.x.as_int(),
@@ -139,9 +149,8 @@ glm::mat4 ms::Surface::transformation() const
     pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
 
     // Rotate, then scale, then translate
-    const glm::mat4 transformation = pos_size_matrix * rotation_matrix;
-
-    return transformation;
+    transformation_matrix = pos_size_matrix * rotation_matrix;
+    transformation_size = sz;
 }
 
 float ms::Surface::alpha() const
