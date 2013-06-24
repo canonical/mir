@@ -5,7 +5,7 @@ EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -
 
 
 %:
-	dh $@ --parallel
+	dh $@ --parallel --fail-missing
 
 #overrding dh_auto_test to get rid of --parallel during testing
 override_dh_auto_test:
@@ -32,6 +32,7 @@ endif
 override_dh_installexamples:
 	dh_installexamples -p libmirclient-demos
 
+# TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
 	dh_makeshlibs -p libmirserver0 -V 'libmirserver0 (= ${EXACT_PACKAGE_VERSION})'
 	dh_makeshlibs --remaining-packages -V
