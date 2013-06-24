@@ -50,8 +50,7 @@ public:
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
-    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer>());
-    MOCK_METHOD0(advance_client_buffer, void());
+    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mc::Buffer>());
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
@@ -97,7 +96,7 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_packaging)
     
     EXPECT_CALL(*buffer, native_buffer_handle())
         .WillOnce(Return(test_buffer_package)); 
-    EXPECT_CALL(*mock_surface, client_buffer())
+    EXPECT_CALL(*mock_surface, advance_client_buffer())
         .Times(1)
         .WillOnce(Return(buffer));
  
@@ -126,7 +125,7 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
         .WillOnce(Return(test_buffer_package)); 
     EXPECT_CALL(*stub_buffer2, native_buffer_handle())
         .WillOnce(Return(test_buffer_package)); 
-    EXPECT_CALL(*mock_surface, client_buffer())
+    EXPECT_CALL(*mock_surface, advance_client_buffer())
         .Times(2)
         .WillOnce(Return(stub_buffer1))
         .WillOnce(Return(stub_buffer2));
