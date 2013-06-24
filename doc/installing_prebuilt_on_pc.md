@@ -7,7 +7,7 @@ Installing pre-built packages on a PC {#installing_prebuilt_on_pc}
 2. Add the ppa:mir-team/staging. Note that besides mir itself, the PPA includes
    custom builds of Mesa and Xorg drivers with support for mir:
 
-       sudo add-apt-repository ppa:mir-team/staging
+       sudo add-apt-repository ppa:mir-team/system-compositor-testing
 
 3. Update your package list:
 
