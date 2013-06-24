@@ -52,6 +52,10 @@ struct StubSurfaceTarget : public input::SurfaceTarget
         static std::string empty_name;
         return empty_name;
     }
+    std::shared_ptr<input::InputRegion> input_region() const override
+    {
+        return std::shared_ptr<input::InputRegion>();
+    }
 
     int input_fd;
 };

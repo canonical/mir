@@ -39,7 +39,7 @@ bool rectangle_contains_point(geom::Rectangle const& rectangle, uint32_t px, uin
     
     if (px < x)
         return false;
-    else if (px <  y)
+    else if (py <  y)
         return false;
     else if (px > x + width)
         return false;
