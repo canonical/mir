@@ -31,6 +31,7 @@ namespace android {
  * Describes the properties of a window that can receive input.
  */
 struct InputWindowInfo {
+    virtual ~InputWindowInfo() {}
     // Window flags from WindowManager.LayoutParams
     enum {
         FLAG_ALLOW_LOCK_WHILE_SCREEN_ON     = 0x00000001,

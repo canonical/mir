@@ -276,6 +276,16 @@ MATCHER_P2(MotionEventWithPosition, x, y, "")
     return true;
 }
 
+MATCHER(MovementEvent, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_move &&
+        arg->motion.action != mir_motion_action_hover_move)
+        return false;
+    return true;
+}
+
 }
 
 
@@ -600,12 +610,15 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
             (void)client_input_regions;
             wait_until_client_appears(test_client_name);
             
-            // First we will move the cursor in to the input region on the left side of the window
+            // First we will move the cursor in to the input region on the left side of the window. We should see a click here
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
-            // Now in to the dead zone in the center of the window
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            // Now in to the dead zone in the center of the window. We should not see a click here.
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
-            // Now in to the right edge of the window, in the right input region.
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            // Now in to the right edge of the window, in the right input region. Again we should see a click
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
         }
     } server_config;
     
@@ -620,17 +633,18 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 
         void expect_input(mt::WaitCondition& events_received) override
         {
-            InSequence seq;
 
-            // We should see the cursor enter the left region
-            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
-            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(1, 1))).Times(1);
-            // And exit to the dead zone in the center
-            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1);
-            // And re-enter in the right region
-            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
-            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(99, 99))).Times(1)
-                .WillOnce(mt::WakeUp(&events_received));
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(MovementEvent())).Times(AnyNumber());
+
+            {
+                // We should see two of the three button events.
+                InSequence seq;
+                EXPECT_CALL(*handler, handle_input(ButtonDownEvent(1, 1))).Times(1);
+                EXPECT_CALL(*handler, handle_input(ButtonDownEvent(99, 99))).Times(1)
+                    .WillOnce(mt::WakeUp(&events_received));
+            }
         }
     } client_config;
     launch_client_process(client_config);
