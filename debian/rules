@@ -3,6 +3,7 @@
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -f 2)
 
+export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 %:
 	dh $@ --parallel --fail-missing
