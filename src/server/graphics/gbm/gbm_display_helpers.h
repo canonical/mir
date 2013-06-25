@@ -58,7 +58,7 @@ public:
     UdevHelper(UdevHelper const&) = delete;
     UdevHelper &operator=(UdevHelper const&) = delete;
 
-    udev* ctx;
+    udev* ctx;
 };
 
 class DRMHelper
