@@ -28,9 +28,11 @@ TEST(AndroidRefcount, driver_hooks)
     auto use_count_before = native_handle_resource.use_count();
     mga::MirNativeBuffer* driver_reference = nullptr;
     {
-        mga::MirNativeBufferDeleter del;
         auto tmp = new mga::MirNativeBuffer(native_handle_resource);
-        std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
+        std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, [](mga::MirNativeBuffer* buffer)
+            {
+                buffer->mir_dereference();
+            });
 
         driver_reference = buffer.get();
         driver_reference->common.incRef(&driver_reference->common);
@@ -51,8 +53,10 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
         mga::MirNativeBuffer* driver_reference = nullptr;
         {
             auto tmp = new mga::MirNativeBuffer(native_handle_resource);
-            mga::MirNativeBufferDeleter del;
-            mir_reference = std::shared_ptr<mga::MirNativeBuffer>(tmp, del);
+            std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, [](mga::MirNativeBuffer* buffer)
+                {
+                    buffer->mir_dereference();
+                });
             driver_reference = mir_reference.get();
             driver_reference->common.incRef(&driver_reference->common);
         }

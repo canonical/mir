@@ -71,8 +71,10 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     std::shared_ptr<native_handle_t> handle(buf_handle, del1);
 
     auto tmp = new mga::MirNativeBuffer(handle);
-    mga::MirNativeBufferDeleter del;
-    std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, del);
+    std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, [](MirNativeBuffer* buffer)
+        {
+            buffer->mir_dereference();
+        });
 
     buffer->width = width;
     buffer->height = height;

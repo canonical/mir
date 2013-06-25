@@ -29,6 +29,7 @@ namespace graphics
 {
 namespace android
 {
+
 struct MirNativeBuffer : public ANativeWindowBuffer
 {
     MirNativeBuffer(std::shared_ptr<const native_handle_t> const&);
@@ -45,13 +46,6 @@ private:
     int driver_references;
 };
 
-struct MirNativeBufferDeleter
-{ 
-    void operator()(MirNativeBuffer* a)
-    {
-        a->mir_dereference();
-    }
-};
 }
 }
 }
