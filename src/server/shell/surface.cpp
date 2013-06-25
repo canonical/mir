@@ -269,7 +269,7 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
         result = state();
         break;
-    case mir_surface_attrib_swap_interval:
+    case mir_surface_attrib_swapinterval:
         allow_dropping = (value == 0);
         allow_framedropping(allow_dropping);
         result = value;
