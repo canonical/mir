@@ -144,7 +144,7 @@ std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
     return std::make_shared<mgg::InternalClient>(internal_native_display);
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
+extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, options->get("vt", 0), report);
