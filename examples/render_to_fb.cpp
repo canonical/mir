@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/shared_library.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
@@ -56,8 +57,10 @@ int main(int, char**)
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
+    mir::SharedLibrary libmirplatformgraphics("libmirplatformgraphics.so");
     auto logger = std::make_shared<ml::DumbConsoleLogger>();
-    auto platform = mg::create_platform(std::make_shared<mo::ProgramOption>(), std::make_shared<ml::DisplayReport>(logger));
+    auto report = std::make_shared<ml::DisplayReport>(logger);
+    auto platform = libmirplatformgraphics.load_function<mg::CreatePlatform>("create_platform")(std::make_shared<mo::ProgramOption>(), report);
     auto display = platform->create_display();
 
     mir::draw::glAnimationBasic gl_animation;

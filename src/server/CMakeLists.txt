@@ -28,6 +28,7 @@ set(
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  shared_library.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -50,9 +51,10 @@ list(APPEND MIRSERVER_ARCHIVES
 )
 
 list(APPEND MIRSERVER_LINKS
-  mirplatformgraphics
   mirprotobuf
   3rd_party
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
