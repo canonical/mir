@@ -41,13 +41,22 @@ namespace
 {
 struct RegistrationOrderFocusSequenceSetup : public testing::Test
 {
-    void SetUp()
+    RegistrationOrderFocusSequenceSetup()
+        : factory{std::make_shared<mtd::MockSurfaceFactory>()},
+          container{std::make_shared<msh::DefaultSessionContainer>()}
     {
-        factory = std::make_shared<mtd::MockSurfaceFactory>();
-        container = std::make_shared<msh::DefaultSessionContainer>();
     }
-    std::shared_ptr<mtd::MockSurfaceFactory> factory;
-    std::shared_ptr<msh::DefaultSessionContainer> container;
+
+    std::shared_ptr<msh::ApplicationSession> make_session(std::string const& name)
+    {
+        return std::make_shared<msh::ApplicationSession>(
+            factory, name,
+            std::shared_ptr<msh::SnapshotStrategy>(),
+            std::shared_ptr<me::EventSink>());
+    }
+
+    std::shared_ptr<mtd::MockSurfaceFactory> const factory;
+    std::shared_ptr<msh::DefaultSessionContainer> const container;
 
     static std::string const testing_app_name1;
     static std::string const testing_app_name2;
@@ -63,9 +72,9 @@ TEST_F(RegistrationOrderFocusSequenceSetup, focus_order)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1, std::shared_ptr<me::EventSink>());
-    auto app2 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name2, std::shared_ptr<me::EventSink>());
-    auto app3 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name3, std::shared_ptr<me::EventSink>());
+    auto app1 = make_session(testing_app_name1);
+    auto app2 = make_session(testing_app_name2);
+    auto app3 = make_session(testing_app_name3);
 
     container->insert_session(app1);
     container->insert_session(app2);
@@ -81,9 +90,10 @@ TEST_F(RegistrationOrderFocusSequenceSetup, reverse_focus_order)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1, std::shared_ptr<me::EventSink>());
-    auto app2 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name2, std::shared_ptr<me::EventSink>());
-    auto app3 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name3, std::shared_ptr<me::EventSink>());
+    auto app1 = make_session(testing_app_name1);
+    auto app2 = make_session(testing_app_name2);
+    auto app3 = make_session(testing_app_name3);
+
     container->insert_session(app1);
     container->insert_session(app2);
     container->insert_session(app3);
@@ -98,7 +108,7 @@ TEST_F(RegistrationOrderFocusSequenceSetup, identity)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1, std::shared_ptr<me::EventSink>());
+    auto app1 = make_session(testing_app_name1);
     container->insert_session(app1);
 
     msh::RegistrationOrderFocusSequence focus_sequence(container);
@@ -110,8 +120,8 @@ TEST_F(RegistrationOrderFocusSequenceSetup, default_focus)
 {
     using namespace ::testing;
 
-    auto app1 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1, std::shared_ptr<me::EventSink>());
-    auto app2 = std::make_shared<msh::ApplicationSession>(factory, testing_app_name2, std::shared_ptr<me::EventSink>());
+    auto app1 = make_session(testing_app_name1);
+    auto app2 = make_session(testing_app_name2);
     auto null_session = std::shared_ptr<msh::ApplicationSession>();
 
     msh::RegistrationOrderFocusSequence focus_sequence(container);
@@ -127,7 +137,7 @@ TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
 {
     using namespace ::testing;
 
-    auto invalid_session = std::make_shared<msh::ApplicationSession>(factory, testing_app_name1, std::shared_ptr<me::EventSink>());
+    auto invalid_session = make_session(testing_app_name1);
     auto null_session = std::shared_ptr<msh::ApplicationSession>();
 
     msh::RegistrationOrderFocusSequence focus_sequence(container);

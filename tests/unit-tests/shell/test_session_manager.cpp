@@ -32,6 +32,7 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/null_snapshot_strategy.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -70,6 +71,7 @@ struct SessionManagerSetup : public testing::Test
                         mt::fake_shared(container),
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
+                        std::make_shared<mtd::NullSnapshotStrategy>(),
                         mt::fake_shared(session_listener))
     {
     }
@@ -179,6 +181,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
                         mt::fake_shared(container),
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
+                        std::make_shared<mtd::NullSnapshotStrategy>(),
                         mt::fake_shared(session_listener))
     {
     }
