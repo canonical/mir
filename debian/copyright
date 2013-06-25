@@ -54,7 +54,9 @@ License:
  `/usr/share/common-licenses/Apache-2.0'.
 
 Files: 3rd_party/cucumber-cpp/*
-Copyright: 2010, Paolo Ambrosio
+Copyright:
+ 2007-2009, John W. Wilkinson
+ 2010, Paolo Ambrosio
 License:
  The MIT License
  .
