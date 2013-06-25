@@ -37,5 +37,5 @@ target_link_libraries(
 )
 
 install(TARGETS mirclientlttng
-  LIBRARY DESTINATION lib
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

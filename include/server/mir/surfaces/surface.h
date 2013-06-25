@@ -67,7 +67,7 @@ public:
     geometry::Point top_left() const;
     geometry::Size size() const;
     std::shared_ptr<GraphicRegion> graphic_region() const;
-    glm::mat4 transformation() const;
+    const glm::mat4& transformation() const override;
     float alpha() const;
     bool should_be_rendered() const;
 
@@ -90,6 +90,9 @@ private:
     std::shared_ptr<input::InputChannel> const input_channel;
 
     glm::mat4 rotation_matrix;
+    mutable glm::mat4 transformation_matrix;
+    mutable geometry::Size transformation_size;
+    mutable bool transformation_dirty;
     float alpha_value;
 
     bool is_hidden;

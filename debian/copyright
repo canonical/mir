@@ -19,7 +19,7 @@ License: GPL-3
  License version 3 can be found in the file
  `/usr/share/common-licenses/GPL-3'.
 
-Files: include/client/*, include/shared/*, src/client/*, src/shared/* 3rd_party/android-deps/std/*
+Files: include/client/* include/shared/* src/client/* src/shared/* 3rd_party/android-deps/std/*
 Copyright: 2012-2013, Canonical Ltd.
 License: LGPL-3
  This program is free software: you can redistribute it and/or modify
