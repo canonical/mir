@@ -49,7 +49,7 @@ namespace helpers
 // C++ udev library, and probably a top-level Mir interface.
 //
 // For now, do the simple thing.
-class UdevHelper
+struct UdevHelper
 {
 public:
     UdevHelper();
