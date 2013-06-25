@@ -4,6 +4,7 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_display_configuration.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_egl_extensions.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_pixel_buffer.cpp
 )
 
 add_subdirectory(egl_mock/)
