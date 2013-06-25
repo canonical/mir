@@ -242,7 +242,7 @@ mgg::MockDRM::MockDRM()
     .WillByDefault(Return(0));
 
     ON_CALL(*this, drmGetBusid(_))
-    .WillByDefault(DoAll(InvokeWithoutArgs([this]() {this->busid = (char *)malloc(10);}),
+    .WillByDefault(DoAll(InvokeWithoutArgs([this]() {this->busid = std::static_cast<char*>(malloc(10));}),
                          ReturnPointee(&this->busid)));
 }
 
@@ -381,12 +381,12 @@ int drmModeMoveCursor(int fd, uint32_t crtcId, int x, int y)
     return global_mock->drmModeMoveCursor(fd, crtcId, x, y);
 }
 
-int drmSetInterfaceVersion(int fd, drmSetVersion *sv)
+int drmSetInterfaceVersion(int fd, drmSetVersion* sv)
 {
     return global_mock->drmSetInterfaceVersion(fd, sv);
 }
 
-char *drmGetBusid(int fd)
+char* drmGetBusid(int fd)
 {
     return global_mock->drmGetBusid(fd);
 }
@@ -394,7 +394,7 @@ char *drmGetBusid(int fd)
 // We need to wrap open as we sometimes open() the DRM device 
 int open(char const* path, int flags, ...)
 {
-    char const *drm_prefix = "/dev/dri/";
+    char const* drm_prefix = "/dev/dri/";
     if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
         return global_mock->drmOpen("i915", NULL);
 

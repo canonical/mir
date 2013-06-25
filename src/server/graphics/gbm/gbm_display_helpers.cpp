@@ -70,7 +70,7 @@ int mggh::DRMHelper::get_authenticated_fd()
             std::runtime_error(
                 "Tried to get authenticated DRM fd before setting up the DRM master"));
 
-    char *busid = drmGetBusid(fd);
+    char* busid = drmGetBusid(fd);
     if (!busid)
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
@@ -163,24 +163,27 @@ void mggh::DRMHelper::set_master() const
     }
 }
 
-int mggh::DRMHelper::is_appropriate_device(UdevHelper const &udev, udev_device *drm_device)
+int mggh::DRMHelper::is_appropriate_device(UdevHelper const& udev, udev_device* drm_device)
 {
-    udev_enumerate *children = udev_enumerate_new(udev.ctx);
+    udev_enumerate* children = udev_enumerate_new(udev.ctx);
     udev_enumerate_add_match_parent(children, drm_device);
 
     char const* devtype = udev_device_get_devtype(drm_device);
     if (!devtype || strcmp(devtype, "drm_minor"))
         return EINVAL;
 
-    if (!udev_enumerate_scan_devices(children)) {
+    if (!udev_enumerate_scan_devices(children))
+    {
         udev_list_entry *devices, *device;
         devices = udev_enumerate_get_list_entry(children);
-        udev_list_entry_foreach(device, devices) {
-            const char *sys_path = udev_list_entry_get_name(device);
+        udev_list_entry_foreach(device, devices) 
+        {
+            char const* sys_path = udev_list_entry_get_name(device);
 
             // For some reason udev regards the device as a parent of itself
             // If there are any other children, they should be outputs.
-            if (strcmp(sys_path, udev_device_get_syspath(drm_device))) {
+            if (strcmp(sys_path, udev_device_get_syspath(drm_device)))
+            {
                 udev_enumerate_unref(children);
                 return 0;
             }
@@ -197,7 +200,7 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
     int error;
 
     // TODO: Wrap this up in a nice class
-    udev_enumerate *enumerator = udev_enumerate_new(udev.ctx);
+    udev_enumerate* enumerator = udev_enumerate_new(udev.ctx);
     udev_enumerate_add_match_subsystem(enumerator, "drm");
     udev_enumerate_add_match_sysname(enumerator, "card[0-9]");
 
@@ -209,24 +212,27 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
                 std::runtime_error("Failed to enumerate udev devices")) << boost::errinfo_errno(error));
 
     devices = udev_enumerate_get_list_entry(enumerator);
-    udev_list_entry_foreach(device, devices) {
-        const char *sys_path = udev_list_entry_get_name(device);
-        udev_device *dev = udev_device_new_from_syspath(udev.ctx, sys_path);
+    udev_list_entry_foreach(device, devices)
+    {
+        char const* sys_path = udev_list_entry_get_name(device);
+        udev_device* dev = udev_device_new_from_syspath(udev.ctx, sys_path);
 
         // Devices can disappear on us.
         if (!dev)
             continue;
 
-        if ((error = is_appropriate_device(udev, dev))) {
+        if ((error = is_appropriate_device(udev, dev)))
+        {
             udev_device_unref(dev);
             continue;
         }
 
-        const char *dev_path = udev_device_get_devnode(dev);
+        char const* dev_path = udev_device_get_devnode(dev);
 
         // If directly opening the DRM device is good enough for X it's good enough for us!
         tmp_fd = open(dev_path, O_RDWR, O_CLOEXEC);
-        if (tmp_fd < 0) {
+        if (tmp_fd < 0)
+        {
             error = errno;
             udev_device_unref(dev);
             continue;
@@ -235,14 +241,17 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
         udev_device_unref(dev);
 
         // Check that the drm device is usable by setting the interface version we use (1.4)
-        drmSetVersion sv {
+        drmSetVersion sv
+        {
             .drm_di_major = 1,
             .drm_di_minor = 4,
             .drm_dd_major = -1,     /* Don't care */
             .drm_dd_minor = -1      /* Don't care */
         };
-        if ((error = drmSetInterfaceVersion(tmp_fd, &sv))) {
+        if ((error = drmSetInterfaceVersion(tmp_fd, &sv)))
+        {
             close(tmp_fd);
+            tmp_fd = -1;
             continue;
         }
 
