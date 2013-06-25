@@ -33,14 +33,17 @@ list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
 endif()
 
 add_library(
-  mir-test-doubles STATIC
+  mir-test-doubles SHARED
   ${TEST_UTILS_SRCS})
 uses_android_input(mir-test-doubles)
 
 target_link_libraries(
   mir-test-doubles
 
+  -Wl,-zinterpose
+
   mirserver
+  mirclient
 
   3rd_party
 
@@ -53,12 +56,15 @@ target_link_libraries(
 )
 
 add_library(
-  mir-test-doubles-platform STATIC
+  mir-test-doubles-platform SHARED
   ${MIR_TEST_DOUBLES_PLATFORM_SRCS})
 
 target_link_libraries(
   mir-test-doubles-platform
 
+  -Wl,-zinterpose
+
+  -ldl
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
