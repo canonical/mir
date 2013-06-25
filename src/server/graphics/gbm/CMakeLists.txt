@@ -42,4 +42,4 @@ target_link_libraries(
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
-install(TARGETS mirplatformgraphics LIBRARY DESTINATION lib)
+install(TARGETS mirplatformgraphics LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
