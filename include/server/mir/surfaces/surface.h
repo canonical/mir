@@ -73,11 +73,8 @@ public:
 
     geometry::PixelFormat pixel_format() const;
 
-    // TODO client code always (and necessarily) calls advance_client_buffer()
-    // TODO and then client_buffer(). That's a bad interface.
-    void advance_client_buffer();
-    std::shared_ptr<compositor::Buffer> client_buffer() const;
     std::shared_ptr<compositor::Buffer> compositor_buffer() const;
+    std::shared_ptr<compositor::Buffer> advance_client_buffer();
     void force_requests_to_complete();
     void flag_for_render();
 
@@ -92,7 +89,6 @@ private:
 
     std::shared_ptr<input::InputChannel> const input_channel;
 
-    std::shared_ptr<compositor::Buffer> client_buffer_resource;
     glm::mat4 rotation_matrix;
     mutable glm::mat4 transformation_matrix;
     mutable geometry::Size transformation_size;
@@ -100,7 +96,7 @@ private:
     float alpha_value;
 
     bool is_hidden;
-    bool buffer_is_valid;
+    unsigned int buffer_count;
     std::function<void()> notify_change;
 };
 

@@ -187,19 +187,6 @@ struct SurfaceCreation : public ::testing::Test
 
 }
 
-TEST_F(SurfaceCreation, test_surface_secures_client_buffer_on_creation)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
-        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
-
-    ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(), null_change_cb);
-
-    EXPECT_NE(nullptr, surf.client_buffer());
-}
-
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
 {
     ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
@@ -242,7 +229,7 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_size)
     EXPECT_EQ(ret_size, size);
 }
 
-TEST_F(SurfaceCreation, test_surface_advance_buffer)
+TEST_F(SurfaceCreation, test_surface_next_buffer)
 {
     using namespace testing;
     ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
@@ -253,10 +240,10 @@ TEST_F(SurfaceCreation, test_surface_advance_buffer)
         .Times(1)
         .WillOnce(Return(graphics_resource));
 
-    surf.advance_client_buffer();
+    EXPECT_EQ(graphics_resource, surf.advance_client_buffer());
 }
 
-TEST_F(SurfaceCreation, test_surface_advance_buffer_notifies_changes)
+TEST_F(SurfaceCreation, test_surface_next_buffer_notifies_changes)
 {
     using namespace testing;
     ms::Surface surf(surface_name, geom::Point(), mock_buffer_stream,
@@ -283,9 +270,8 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
     EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
         .Times(1)
         .WillOnce(Return(stub_buffer));
-    surf.advance_client_buffer();
 
-    auto ret_ipc = surf.client_buffer();
+    auto ret_ipc = surf.advance_client_buffer();
     EXPECT_EQ(stub_buffer, ret_ipc);
 }
 
@@ -457,6 +443,18 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
     ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb};
     surf.force_requests_to_complete();
+}
+
+TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second_frame)
+{
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb};
+
+    EXPECT_FALSE(surf.should_be_rendered());
+    surf.advance_client_buffer();
+    EXPECT_FALSE(surf.should_be_rendered());
+    surf.advance_client_buffer();
+    EXPECT_TRUE(surf.should_be_rendered());
 }
 
 TEST_F(SurfaceCreation, input_fds)
