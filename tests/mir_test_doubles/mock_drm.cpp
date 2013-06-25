@@ -23,6 +23,8 @@
 
 #include <stdexcept>
 #include <unistd.h>
+#include <dlfcn.h>
+#include <fcntl.h>
 
 namespace mgg=mir::test::doubles;
 namespace geom = mir::geometry;
@@ -235,6 +237,13 @@ mgg::MockDRM::MockDRM()
 
     ON_CALL(*this, drmModeGetConnector(_, _))
     .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_connector)));
+
+    ON_CALL(*this, drmSetInterfaceVersion(_, _))
+    .WillByDefault(Return(0));
+
+    ON_CALL(*this, drmGetBusid(_))
+    .WillByDefault(DoAll(InvokeWithoutArgs([this]() {this->busid = (char *)malloc(10);}),
+                         ReturnPointee(&this->busid)));
 }
 
 mgg::MockDRM::~MockDRM() noexcept
@@ -370,4 +379,33 @@ int drmModeSetCursor(int fd, uint32_t crtcId, uint32_t bo_handle, uint32_t width
 int drmModeMoveCursor(int fd, uint32_t crtcId, int x, int y)
 {
     return global_mock->drmModeMoveCursor(fd, crtcId, x, y);
+}
+
+int drmSetInterfaceVersion(int fd, drmSetVersion *sv)
+{
+    return global_mock->drmSetInterfaceVersion(fd, sv);
+}
+
+char *drmGetBusid(int fd)
+{
+    return global_mock->drmGetBusid(fd);
+}
+
+// We need to wrap open as we sometimes open() the DRM device 
+int open(char const* path, int flags, ...)
+{
+    char const *drm_prefix = "/dev/dri/";
+    if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
+        return global_mock->drmOpen("i915", NULL);
+
+    int (*real_open)(char const *path, int flags, mode_t mode);
+    *(void **)(&real_open) = dlsym(RTLD_NEXT, "open");
+
+    va_list ap;
+    mode_t mode;
+    va_start(ap, flags);
+    mode = va_arg(ap, mode_t);
+    va_end(ap);
+
+    return (*real_open)(path, flags, mode);
 }
