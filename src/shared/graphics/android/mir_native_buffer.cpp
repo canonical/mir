@@ -22,12 +22,12 @@ namespace mga=mir::graphics::android;
 
 namespace
 {
-static void incref_hook(struct android_native_base_t* base)
+void incref_hook(struct android_native_base_t* base)
 {
     auto buffer = reinterpret_cast<mga::MirNativeBuffer*>(base);
     buffer->driver_reference();
 }
-static void decref_hook(struct android_native_base_t* base)
+void decref_hook(struct android_native_base_t* base)
 {
     auto buffer = reinterpret_cast<mga::MirNativeBuffer*>(base);
     buffer->driver_dereference();
