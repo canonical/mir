@@ -163,6 +163,34 @@ void mggh::DRMHelper::set_master() const
     }
 }
 
+int mggh::DRMHelper::is_appropriate_device(UdevHelper const &udev, udev_device *drm_device)
+{
+    udev_enumerate *children = udev_enumerate_new(udev.ctx);
+    udev_enumerate_add_match_parent(children, drm_device);
+
+    char const* devtype = udev_device_get_devtype(drm_device);
+    if (!devtype || strcmp(devtype, "drm_minor"))
+        return EINVAL;
+
+    if (!udev_enumerate_scan_devices(children)) {
+        udev_list_entry *devices, *device;
+        devices = udev_enumerate_get_list_entry(children);
+        udev_list_entry_foreach(device, devices) {
+            const char *sys_path = udev_list_entry_get_name(device);
+
+            // For some reason udev regards the device as a parent of itself
+            // If there are any other children, they should be outputs.
+            if (strcmp(sys_path, udev_device_get_syspath(drm_device))) {
+                udev_enumerate_unref(children);
+                return 0;
+            }
+        }
+    }
+    udev_enumerate_unref(children);
+
+    return ENOMEDIUM;
+}
+
 int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
 {    
     int tmp_fd = -1;
@@ -171,7 +199,7 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
     // TODO: Wrap this up in a nice class
     udev_enumerate *enumerator = udev_enumerate_new(udev.ctx);
     udev_enumerate_add_match_subsystem(enumerator, "drm");
-    udev_enumerate_add_match_sysname(enumerator, "card[0-9]*");
+    udev_enumerate_add_match_sysname(enumerator, "card[0-9]");
 
     udev_list_entry *devices, *device;
 
@@ -188,6 +216,11 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
         // Devices can disappear on us.
         if (!dev)
             continue;
+
+        if ((error = is_appropriate_device(udev, dev))) {
+            udev_device_unref(dev);
+            continue;
+        }
 
         // TODO: Check that the device we're opening actually has outputs
         // so that my poor hybrid laptop isn't left to the vagaries of which drm

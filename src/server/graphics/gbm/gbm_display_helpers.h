@@ -80,6 +80,10 @@ public:
     int fd;
 
 private:
+    // TODO: This herustic is temporary; should be replaced with
+    // handling >1 DRM device.
+    int is_appropriate_device(UdevHelper const& udev, udev_device *dev);
+
     int open_drm_device(UdevHelper const& udev);
 };
 
