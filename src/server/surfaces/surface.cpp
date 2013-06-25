@@ -113,7 +113,7 @@ std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
     return compositor_buffer();
 }
 
-glm::mat4 ms::Surface::transformation() const
+const glm::mat4& ms::Surface::transformation() const
 {
     const geom::Size sz = size();
 

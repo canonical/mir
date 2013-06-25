@@ -67,7 +67,7 @@ public:
     geometry::Point top_left() const;
     geometry::Size size() const;
     std::shared_ptr<GraphicRegion> graphic_region() const;
-    glm::mat4 transformation() const;
+    const glm::mat4& transformation() const override;
     float alpha() const;
     bool should_be_rendered() const;
 
