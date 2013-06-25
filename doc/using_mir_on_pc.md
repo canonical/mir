@@ -79,7 +79,7 @@ for this is to log in to a VT and:
 Getting some example client applications
 ----------------------------------------
 
-If you installed Mir using the packages from the mir-team system-compositor-testingf PPA, you can
+If you installed Mir using the packages from the mir-team system-compositor-testing PPA, you can
 get some example programs by installing the `mir-demos` package:
 
     $ sudo apt-get install mir-demos
