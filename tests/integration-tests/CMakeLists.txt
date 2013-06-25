@@ -48,6 +48,7 @@ target_link_libraries(
   mir-test-cucumber
 
   mirserver
+  mirplatformgraphics
   mirclient
   mirdraw
   mirtestdraw

@@ -177,11 +177,15 @@ mir::geometry::PixelFormat msh::Surface::pixel_format() const
     }
 }
 
-void msh::Surface::advance_client_buffer()
+std::shared_ptr<mc::Buffer> msh::Surface::advance_client_buffer()
 {
     if (auto const& s = surface.lock())
     {
-        s->advance_client_buffer();
+        return s->advance_client_buffer();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
 }
 
@@ -193,18 +197,6 @@ void msh::Surface::allow_framedropping(bool allow)
     }
 }
  
-std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
-{
-    if (auto const& s = surface.lock())
-    {
-        return s->client_buffer();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
-}
-
 void msh::Surface::with_most_recent_buffer_do(
     std::function<void(mc::Buffer&)> const& exec)
 {

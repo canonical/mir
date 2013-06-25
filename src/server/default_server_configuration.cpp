@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
+#include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
@@ -68,6 +69,8 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/default_configuration.h"
 
+#include <map>
+
 namespace mc = mir::compositor;
 namespace me = mir::events;
 namespace geom = mir::geometry;
@@ -82,6 +85,7 @@ namespace mia = mi::android;
 namespace
 {
 std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
+mir::SharedLibrary const* load_library(std::string const& libname);
 }
 
 namespace
@@ -156,6 +160,9 @@ char const* const off_opt_value = "off";
 char const* const log_opt_value = "log";
 char const* const lttng_opt_value = "lttng";
 
+char const* const platform_graphics_lib = "platform-graphics-lib";
+char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+
 void parse_arguments(
     boost::program_options::options_description desc,
     std::shared_ptr<mir::options::ProgramOption> const& options,
@@ -212,6 +219,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     add_options()
         ("file,f", po::value<std::string>(),
             "Socket filename")
+        (platform_graphics_lib, po::value<std::string>(),
+            "Library to use for platform graphics support [default=libmirplatformgraphics.so")
         ("enable-input,i", po::value<bool>(),
             "Enable input. [bool:default=true]")
         (display_report_opt, po::value<std::string>(),
@@ -290,18 +299,15 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
         });
 }
 
+
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
         [this]()
         {
-            // TODO I doubt we need the extra level of indirection provided by
-            // mg::create_platform() - we just need to move the implementation
-            // of DefaultServerConfiguration::the_graphics_platform() to the
-            // graphics libraries.
-            // Alternatively, if we want to dynamically load the graphics library
-            // then this would be the place to do that.
-            return mg::create_platform(the_options(), the_display_report());
+            auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
+            auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
+            return create_platform(the_options(), the_display_report());
         });
 }
 
@@ -730,4 +736,23 @@ std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
         {
             return std::make_shared<mir::AsioMainLoop>();
         });
+}
+
+namespace
+{
+mir::SharedLibrary const* load_library(std::string const& libname)
+{
+    // There's no point in loading twice, and it isn't safe to unload...
+    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
+
+    if (auto& ptr = libraries_cache[libname])
+    {
+        return ptr.get();
+    }
+    else
+    {
+        ptr = std::make_shared<mir::SharedLibrary>(libname);
+        return ptr.get();
+    }
+}
 }
