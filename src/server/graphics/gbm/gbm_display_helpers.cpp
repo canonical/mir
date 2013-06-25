@@ -222,9 +222,6 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
             continue;
         }
 
-        // TODO: Check that the device we're opening actually has outputs
-        // so that my poor hybrid laptop isn't left to the vagaries of which drm
-        // device comes up first.
         const char *dev_path = udev_device_get_devnode(dev);
 
         // If directly opening the DRM device is good enough for X it's good enough for us!
