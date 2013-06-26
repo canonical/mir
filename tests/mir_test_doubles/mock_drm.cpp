@@ -24,7 +24,6 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <dlfcn.h>
-#include <fcntl.h>
 
 namespace mgg=mir::test::doubles;
 namespace geom = mir::geometry;
@@ -392,7 +391,11 @@ char* drmGetBusid(int fd)
 }
 
 // We need to wrap open as we sometimes open() the DRM device 
-int open(char const* path, int flags, ...)
+// We need to explicitly mark this as C because we don't match the
+// libc header; we only care about the three-parameter version
+extern "C" 
+{
+int open(char const* path, int flags, mode_t mode)
 {
     char const* drm_prefix = "/dev/dri/";
     if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
@@ -401,11 +404,6 @@ int open(char const* path, int flags, ...)
     int (*real_open)(char const *path, int flags, mode_t mode);
     *(void **)(&real_open) = dlsym(RTLD_NEXT, "open");
 
-    va_list ap;
-    mode_t mode;
-    va_start(ap, flags);
-    mode = va_arg(ap, mode_t);
-    va_end(ap);
-
     return (*real_open)(path, flags, mode);
+}
 }
