@@ -4,7 +4,9 @@ Using Mir on a PC {#using_mir_on_pc}
 Before you begin
 ----------------
 
-Make sure your hardware is supported. That means you're using a Mesa driver, of which intel, radeon, and nouveau families are supported. If you're logged in to X then run this command to verify an appropriate DRI driver is active:
+Make sure your hardware is supported. That means you're using a Mesa driver,
+of which intel, radeon, and nouveau families are supported. If you're logged
+in to X then run this command to verify an appropriate DRI driver is active:
 
     sudo pmap `pidof X` | grep dri.so
 
@@ -12,9 +14,16 @@ or
 
     lsmod | grep drm
 
-Before you can use Mir you need to ensure you have the proper custom Mesa build installed. If you installed Mir using the packages from mir-team system-compositor-testing PPA (see \ref installing_prebuilt_on_pc), you should be good to go.
+Before you can use Mir you need to ensure you have the proper custom Mesa
+build installed. If you installed Mir using the packages from mir-team
+system-compositor-testing PPA (see \ref installing_prebuilt_on_pc), you
+should be good to go.
 
-If you built Mir from source code (see \ref building_source_for_pc), you nee to ensure you are using the proper Mesa at runtime. You can do that by installing the Mesa packages manually from the system-compositor-testing PPA, or by building the custom Mesa yourself and ensuring it can be found by Mir, e.g., by using LD_LIBRARY_PATH.
+If you built Mir from source code (see \ref building_source_for_pc), you
+nee to ensure you are using the proper Mesa at runtime. You can do that by
+installing the Mesa packages manually from the system-compositor-testing PPA,
+or by building the custom Mesa yourself and ensuring it can be found by Mir,
+e.g., by using LD_LIBRARY_PATH.
 
 Using Mir as system compositor with X
 -------------------------------------
@@ -23,7 +32,11 @@ Note: for this to work you need to have Mir and all its dependencies (which
 include lightdm, Mesa and the Xorg drivers). The easiest way is to install
 pre-built packages from the system-compositor-testing PPA.
 
-If you have installed the unity-system-compositor from the system-compositor-testing PPA, it will have modified your /etc/lightdm/lightdm.conf to run XMir. If you have build from source, to run X sessions under Mir, with Mir acting as the system compositor, edit your /etc/lightdm/lightdm.conf to look to look like this:
+If you have installed the unity-system-compositor from
+the system-compositor-testing PPA, it will have modified your
+/etc/lightdm/lightdm.conf to run XMir. If you have build from source, to
+run X sessions under Mir, with Mir acting as the system compositor, edit
+your /etc/lightdm/lightdm.conf to look to look like this:
 
     [SeatDefaults]
     user-session=ubuntu
@@ -44,7 +57,8 @@ anything different. You can verify you're in Mir several ways:
     $ ls -l /var/log/lightdm/unity-system-compositor.log
 
 
-In any case, if you wish to deactivate XMir upon boot, simply comment out the type=unity line from /etc/lightdm/lightdm.conf, like this:
+In any case, if you wish to deactivate XMir upon boot, simply comment out
+the type=unity line from /etc/lightdm/lightdm.conf, like this:
 
     [SeatDefaults]
     user-session=ubuntu
