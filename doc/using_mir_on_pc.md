@@ -33,14 +33,14 @@ include lightdm, Mesa and the Xorg drivers). The easiest way is to install
 pre-built packages from the system-compositor-testing PPA.
 
 If you have installed the unity-system-compositor from
-the system-compositor-testing PPA, it will have modified your
-/etc/lightdm/lightdm.conf to run XMir. If you have build from source, to
-run X sessions under Mir, with Mir acting as the system compositor, edit
-your /etc/lightdm/lightdm.conf to look to look like this:
+the system-compositor-testing PPA, it will have created a file in
+/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf to run XMir. If you
+have build from source, to run X sessions under Mir, with Mir acting as the
+system compositor, create the file
+/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf to look to look like
+this:
 
     [SeatDefaults]
-    user-session=ubuntu
-    greeter-session=unity-greeter
     type=unity
 
 Now restart lightdm:
@@ -58,11 +58,10 @@ anything different. You can verify you're in Mir several ways:
 
 
 In any case, if you wish to deactivate XMir upon boot, simply comment out
-the type=unity line from /etc/lightdm/lightdm.conf, like this:
+the type=unity line from
+/etc/lightdm/lightdm.conf.d10-unity-system-compositor.conf, like this:
 
     [SeatDefaults]
-    user-session=ubuntu
-    greeter-session=unity-greeter
     #type=unity
 
 
