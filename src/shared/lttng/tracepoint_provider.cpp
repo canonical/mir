@@ -23,15 +23,36 @@
 
 #include <dlfcn.h>
 
-mir::lttng::TracepointProvider::TracepointProvider(std::string const& lib_name)
-    : lib{dlopen(lib_name.c_str(), RTLD_NOW)}
+namespace
 {
+
+std::string const tracepoint_lib_install_path{MIR_TRACEPOINT_LIB_INSTALL_PATH};
+
+void* open_tracepoint_lib(std::string const& lib_name)
+{
+    auto lib = dlopen(lib_name.c_str(), RTLD_NOW);
+
+    if (lib == nullptr)
+    {
+        std::string path{tracepoint_lib_install_path + "/" + lib_name};
+        lib = dlopen(path.c_str(), RTLD_NOW);
+    }
+
     if (lib == nullptr)
     {
         std::string msg{"Failed to load tracepoint provider: "};
         msg += dlerror();
         BOOST_THROW_EXCEPTION(std::runtime_error(msg));
     }
+
+    return lib;
+}
+
+}
+
+mir::lttng::TracepointProvider::TracepointProvider(std::string const& lib_name)
+    : lib{open_tracepoint_lib(lib_name)}
+{
 }
 
 mir::lttng::TracepointProvider::~TracepointProvider() noexcept

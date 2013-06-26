@@ -51,5 +51,5 @@ target_link_libraries(
 )
 
 install(TARGETS mirserverlttng
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/tools
+  LIBRARY DESTINATION ${MIR_TRACEPOINT_LIB_INSTALL_DIR}
 )
