@@ -176,6 +176,11 @@ std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
     return buffer_stream->secure_client_buffer();
 }
 
+void ms::Surface::allow_framedropping(bool allow)
+{
+    buffer_stream->allow_framedropping(allow);
+}
+
 std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
 {
     return buffer_stream->lock_back_buffer();

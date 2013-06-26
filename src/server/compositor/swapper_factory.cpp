@@ -36,7 +36,8 @@ mc::SwapperFactory::SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
         int number_of_buffers)
     : gr_allocator(gr_alloc),
-      number_of_buffers(number_of_buffers)
+      synchronous_number_of_buffers(number_of_buffers),
+      spin_number_of_buffers(3) //spin algorithm always takes 3 buffers
 {
 }
 
@@ -46,16 +47,43 @@ mc::SwapperFactory::SwapperFactory(
 {
 }
 
+void mc::SwapperFactory::change_swapper_size(
+    std::vector<std::shared_ptr<mc::Buffer>>& list,
+    size_t const desired_size, size_t current_size, BufferProperties const& buffer_properties) const
+{
+    while (current_size < desired_size)
+    {
+        list.push_back(gr_allocator->alloc_buffer(buffer_properties));
+        current_size++;
+    }
+ 
+    while (current_size > desired_size)
+    {
+        if (list.empty())
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("SwapperFactory could not change algorithm"));
+        }
+        else
+        {
+            list.pop_back();
+            current_size--;
+        }
+    }
+}
+
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buffers(
-    std::vector<std::shared_ptr<Buffer>>& list, size_t buffer_num, SwapperType type) const
+    BufferProperties const& buffer_properties, std::vector<std::shared_ptr<Buffer>>& list,
+    size_t buffer_num, SwapperType type) const
 {
     if (type == mc::SwapperType::synchronous)
     {
-        return std::make_shared<mc::BufferSwapperMulti>(list, buffer_num); 
+        change_swapper_size(list, synchronous_number_of_buffers, buffer_num, buffer_properties);
+        return std::make_shared<mc::BufferSwapperMulti>(list, synchronous_number_of_buffers); 
     }
     else
     {
-        return std::make_shared<mc::BufferSwapperSpin>(list, buffer_num);
+        change_swapper_size(list, spin_number_of_buffers, buffer_num, buffer_properties);
+        return std::make_shared<mc::BufferSwapperSpin>(list, spin_number_of_buffers);
     }
 }
 
@@ -68,20 +96,19 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_new_buffer
 
     if (type == mc::SwapperType::synchronous)
     {
-        for(auto i=0; i< number_of_buffers; i++)
+        for(auto i=0u; i< synchronous_number_of_buffers; i++)
         {
             list.push_back(gr_allocator->alloc_buffer(requested_buffer_properties));
         }
-        new_swapper = std::make_shared<mc::BufferSwapperMulti>(list, number_of_buffers);
+        new_swapper = std::make_shared<mc::BufferSwapperMulti>(list, synchronous_number_of_buffers);
     }
     else
     {
-        int const async_buffer_count = 3; //async only can accept 3 buffers, so ignore constructor request
-        for(auto i=0; i < async_buffer_count; i++)
+        for(auto i=0u; i < spin_number_of_buffers; i++)
         {
             list.push_back(gr_allocator->alloc_buffer(requested_buffer_properties));
         }
-        new_swapper = std::make_shared<mc::BufferSwapperSpin>(list, async_buffer_count);
+        new_swapper = std::make_shared<mc::BufferSwapperSpin>(list, spin_number_of_buffers);
     }
 
     actual_buffer_properties = BufferProperties{

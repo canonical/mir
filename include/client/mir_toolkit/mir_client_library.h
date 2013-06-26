@@ -293,6 +293,27 @@ MirWaitHandle* mir_surface_set_state(MirSurface *surface,
  */
 MirSurfaceState mir_surface_get_state(MirSurface *surface);
 
+/**
+ * Set the swapinterval for mir_surface_swap_buffers. EGL users should use
+ * eglSwapInterval directly.
+ * At the time being, only swapinterval of 0 or 1 is supported. 
+ *   \param [in] surface  The surface to operate on
+ *   \param [in] interval The number of vblank signals that
+ *                        mir_surface_swap_buffers will wait for 
+ *   \return              A wait handle that can be passed to mir_wait_for,
+ *                        or NULL if the interval could not be supported 
+ */
+MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
+
+/**
+ * Query the swapinterval that the surface is operating with.
+ * The default interval is 1.
+ *   \param [in] surface  The surface to operate on
+ *   \return              The swapinterval value that the client is operating with.
+ *                        Returns -1 if surface is invalid.
+ */
+int mir_surface_get_swapinterval(MirSurface* surface);
+
 #ifdef __cplusplus
 }
 /**@}*/

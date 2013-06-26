@@ -46,6 +46,7 @@ public:
 
     geometry::PixelFormat get_stream_pixel_format();
     geometry::Size stream_size();
+    void allow_framedropping(bool);
     void force_requests_to_complete();
 
 protected:
