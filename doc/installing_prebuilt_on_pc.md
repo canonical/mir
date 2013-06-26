@@ -4,8 +4,8 @@ Installing pre-built packages on a PC {#installing_prebuilt_on_pc}
 Install raring if you haven' t done so already.  Uninstall any proprietary
 drivers (-nvidia, -fglrx) and reboot on the FOSS drivers.
 
-Add the ppa:mir-team/system-compositor-testing. Note that besides mir itself,
-the PPA includes custom builds of Mesa and Xorg drivers with support for mir:
+Add the ppa:mir-team/system-compositor-testing. Note that besides Mir itself,
+the PPA includes custom builds of Mesa and Xorg drivers with support for Mir:
 
        sudo add-apt-repository ppa:mir-team/system-compositor-testing
 
@@ -24,7 +24,7 @@ contents:
        Pin: release o=LP-PPA-mir-team-system-compositor-testing
        Pin-Priority: 1002
 
-Install mir and dist-upgrade:
+Install Mir and dist-upgrade:
 
        sudo apt-get install mir-demos
        sudo apt-get dist-upgrade
