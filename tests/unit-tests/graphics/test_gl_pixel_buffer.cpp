@@ -33,6 +33,7 @@ namespace mtd = mir::test::doubles;
 
 struct MockGLContext : public mg::GLContext
 {
+    ~MockGLContext() noexcept {}
     MOCK_METHOD0(make_current, void());
     MOCK_METHOD0(release_current, void());
 };
@@ -43,6 +44,7 @@ struct WrappingGLContext : public mg::GLContext
         : wrapped(wrapped)
     {
     }
+    ~WrappingGLContext() noexcept {}
     void make_current() { wrapped.make_current(); }
     void release_current() { wrapped.release_current(); }
 
