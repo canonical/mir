@@ -16,5 +16,5 @@ target_link_libraries(
 )
 install(
 	TARGETS mir_stress
-	RUNTIME DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/tools
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
