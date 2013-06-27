@@ -89,6 +89,14 @@ private:
             ResultMessage* response,
             ::google::protobuf::Closure* done),
         mir::protobuf::wire::Invocation const& invocation);
+    template<class ResultMessage>
+    void invoke(
+       void (protobuf::DisplayServer::*function)(
+           ::google::protobuf::RpcController* controller,
+           const ::mir::protobuf::ConnectParameters* request,
+           ResultMessage* response,
+           ::google::protobuf::Closure* done),
+        mir::protobuf::wire::Invocation const& invocation);
 
     MessageSender* const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;

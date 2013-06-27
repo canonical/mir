@@ -25,6 +25,8 @@
 #include <iosfwd>
 #include <cstdint>
 
+#include <sys/types.h>
+
 namespace mir
 {
 namespace frontend
@@ -35,6 +37,8 @@ struct MessageSender
 {
     virtual void send(std::string const& body) = 0;
     virtual void send_fds(std::vector<int32_t> const& fd) = 0;
+
+    virtual pid_t client_pid() = 0;
 protected:
     MessageSender() = default;
     virtual ~MessageSender() { /* TODO: make nothrow */ }

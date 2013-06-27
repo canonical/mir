@@ -45,6 +45,7 @@ class Communicator;
 class ProtobufIpcFactory;
 class SessionMediatorReport;
 class MessageProcessorReport;
+class SessionAuthorizer;
 }
 
 namespace shell
@@ -144,6 +145,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
+    virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     /** @} */
 
@@ -227,6 +229,7 @@ protected:
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
+    CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;

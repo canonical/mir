@@ -18,6 +18,7 @@
 
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/session_mediator_report.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
@@ -49,7 +50,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<events::EventSink> const& event_sink,
-    std::shared_ptr<ResourceCache> const& resource_cache) :
+    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer) :
     shell(shell),
     graphics_platform(graphics_platform),
     viewable_area(viewable_area),
@@ -57,7 +59,8 @@ mf::SessionMediator::SessionMediator(
     report(report),
     event_sink(event_sink),
     resource_cache(resource_cache),
-    client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size))
+    client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size)),
+    session_authorizer(session_authorizer)
 {
 }
 
@@ -77,6 +80,15 @@ void mf::SessionMediator::connect(
     ::google::protobuf::Closure* done)
 {
     report->session_connect_called(request->application_name());
+    
+    if (!session_authorizer->connection_is_allowed(request->client_pid(), request->application_name()))
+    {
+        std::string error_message = "Client with pid " + request->client_pid();
+        error_message += " is not authorized to connect as ";
+        error_message += request->application_name();
+            
+        BOOST_THROW_EXCEPTION(std::runtime_error(error_message));
+    }
 
     session = shell->open_session(request->application_name(), event_sink);
 

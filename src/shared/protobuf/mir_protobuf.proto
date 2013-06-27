@@ -4,6 +4,7 @@ package mir.protobuf;
 
 message ConnectParameters {
   required string application_name = 1;
+  optional int32 client_pid = 2;
 }
 
 message SurfaceParameters {

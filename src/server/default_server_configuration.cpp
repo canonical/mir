@@ -33,6 +33,7 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_mediator.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
@@ -99,14 +100,16 @@ public:
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::ViewableArea> const& graphics_display,
-        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
+        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer) :
         shell(shell),
         sm_report(sm_report),
         mp_report(mr_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         graphics_display(graphics_display),
-        buffer_allocator(buffer_allocator)
+        buffer_allocator(buffer_allocator),
+        session_authorizer(session_authorizer)
     {
     }
 
@@ -118,6 +121,7 @@ private:
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         std::shared_ptr<me::EventSink> const& sink)
@@ -129,7 +133,8 @@ private:
             buffer_allocator,
             sm_report,
             sink,
-            resource_cache());
+            resource_cache(),
+            session_authorizer);
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()
@@ -633,7 +638,25 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                display, allocator);
+                display, allocator,
+                the_session_authorizer());
+        });
+}
+
+std::shared_ptr<mf::SessionAuthorizer>
+mir::DefaultServerConfiguration::the_session_authorizer()
+{
+    struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
+    {
+        bool connection_is_allowed(pid_t /* pid */, std::string const& /* name */)
+        {
+            return true;
+        }
+    };
+    return session_authorizer(
+        [&]()
+        {
+            return std::make_shared<DefaultSessionAuthorizer>();
         });
 }
 
