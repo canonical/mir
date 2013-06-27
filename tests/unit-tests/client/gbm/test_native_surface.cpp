@@ -95,20 +95,34 @@ TEST_F(GBMInterpreterTest, basic_parameters)
 
     MirSurfaceParameters params;
     interpreter.surface_get_parameters(&interpreter, &params);
+    EXPECT_EQ(surf_params.width, params.width);
+    EXPECT_EQ(surf_params.height, params.height);
+    EXPECT_EQ(surf_params.pixel_format, params.pixel_format);
 }
 
 TEST_F(GBMInterpreterTest, basic_advance)
 {
     using namespace testing;
+    MirBufferPackage buffer_package;
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
-
-    mclg::GBMNativeSurface interpreter(mock_surface);
-
     EXPECT_CALL(mock_surface, next_buffer(_,_))
         .Times(1);
     EXPECT_CALL(mock_surface, get_current_buffer())
         .Times(1);
 
-    MirBufferPackage buffer_package;
+    mclg::GBMNativeSurface interpreter(mock_surface);
     interpreter.surface_advance_buffer(&interpreter, &buffer_package);
 }
+
+#if 0
+TEST_F(GBMInterpreterTest, swapinterval_request)
+{
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+    EXPECT_CALL(mock_surface, get_current_buffer())
+        .Times(1);
+
+    mclg::GBMNativeSurface interpreter(mock_surface);
+
+    interpreter.
+}
+#endif

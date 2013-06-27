@@ -90,7 +90,13 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
 
     // TODO: It might be a nice refactoring to combine this with input channel creation
     // i.e. client_fd = registrar->register_for_input(surface). ~racarr
+try
+{
     input_registrar->input_surface_opened(surface);
+} catch (...)
+{
+printf("FAIL");
+}
 
     emit_change_notification();
 
