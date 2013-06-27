@@ -36,6 +36,9 @@ extern "C" {
  * Request a connection to the Mir server. The supplied callback is called when
  * the connection is established, or fails. The returned wait handle remains
  * valid until the connection has been released.
+ *   \warning callback is called from the socket thread, which is never the
+ *            the same thread you called mir_connect from. It is your
+ *            responsibility to do any necessary locking.
  *   \param [in] server       File path of the server socket to connect to, or
  *                            NULL to choose the default server
  *   \param [in] app_name     A name referring to the application
@@ -109,6 +112,9 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
  * Request a new Mir surface on the supplied connection with the supplied
  * parameters. The returned handle remains valid until the surface has been
  * released.
+ *   \warning callback is called from the socket thread, which is probably
+ *            not the same thread you called mir_connection_create_surface in.
+ *            It is your responsibility to do all necessary locking.
  *   \param [in] connection          The connection
  *   \param [in] surface_parameters  Request surface parameters
  *   \param [in] callback            Callback function to be invoked when
@@ -136,6 +142,13 @@ MirSurface *mir_connection_create_surface_sync(
 
 /**
  * Set the event handler to be called when events arrive for a surface.
+ *   \warning Event handler callbacks are called from different threads
+ *            depending on the type of event. A MirSurfaceEvent will be called
+ *            back on the socket thread, whereas input events (MirMotionEvent
+ *            and MirKeyEvent) will arrive on a dedicated input thread. These
+ *            are almost certainly not the same threads that you called
+ *            mir_surface_set_event_handler from. It is your responsibility to
+ *            do all necessary locking.
  *   \param [in] surface        The surface
  *   \param [in] event_handler  The event handler to call
  */
@@ -208,6 +221,9 @@ void mir_surface_get_graphics_region(
  * Advance a surface's buffer. The returned handle remains valid until the next
  * call to mir_surface_swap_buffers, until the surface has been released or the
  * connection to the server has been released.
+ *   \warning callback is called from the socket thread, which is probably
+ *            not the same thread you called mir_surface_swap_buffers from.
+ *            It is your responsibility to do any necessary locking.
  *   \param [in] surface      The surface
  *   \param [in] callback     Callback function to be invoked when the request
  *                            completes
@@ -229,6 +245,9 @@ void mir_surface_swap_buffers_sync(MirSurface *surface);
 /**
  * Release the supplied surface and any associated buffer. The returned wait
  * handle remains valid until the connection to the server is released.
+ *   \warning callback is called from the socket thread, which is probably
+ *            not the same thread you called mir_surface_release from.
+ *            It is your responsibility to do any necessary locking.
  *   \param [in] surface      The surface
  *   \param [in] callback     Callback function to be invoked when the request
  *                            completes
