@@ -18,9 +18,12 @@
 
 #include "src/client/gbm/gbm_native_surface.h"
 #include "src/client/client_buffer.h"
+#include "mir_test_doubles/mock_client_surface.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mtd=mir::test::doubles;
 namespace mcl=mir::client;
 namespace mcl=mir::client;
 namespace mclg=mir::client::gbm;
@@ -50,25 +53,6 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
 };
 
-struct MockMirSurface : public mcl::ClientSurface
-{
-    MockMirSurface(MirSurfaceParameters params)
-     : params(params)
-    {
-        using namespace testing;
-        ON_CALL(*this, get_parameters())
-            .WillByDefault(Return(params));
-        ON_CALL(*this, get_current_buffer())
-            .WillByDefault(Return(
-                std::make_shared<NiceMock<MockClientBuffer>>()));
-    }
-
-    MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
-    MOCK_METHOD0(get_current_buffer, std::shared_ptr<mcl::ClientBuffer>());
-    MOCK_METHOD2(next_buffer, MirWaitHandle*(mir_surface_callback callback, void * context));
-
-    MirSurfaceParameters params;
-};
 }
 
 class GBMInterpreterTest : public ::testing::Test
@@ -81,16 +65,19 @@ public:
         surf_params.height = 715;
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
-        buffer = std::make_shared<MirBufferPackage>();
+        ON_CALL(mock_surface, get_parameters())
+            .WillByDefault(Return(surf_params));
+        ON_CALL(mock_surface, get_current_buffer())
+            .WillByDefault(Return(
+                std::make_shared<NiceMock<MockClientBuffer>>()));
     }
 
-    std::shared_ptr<MirBufferPackage> buffer;
     MirSurfaceParameters surf_params;
+    testing::NiceMock<mtd::MockClientSurface> mock_surface;
 };
 
 TEST_F(GBMInterpreterTest, basic_parameters)
 {
-    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mclg::GBMNativeSurface interpreter(mock_surface);
 
     MirSurfaceParameters params;
@@ -104,7 +91,6 @@ TEST_F(GBMInterpreterTest, basic_advance)
 {
     using namespace testing;
     MirBufferPackage buffer_package;
-    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     EXPECT_CALL(mock_surface, next_buffer(_,_))
         .Times(1);
     EXPECT_CALL(mock_surface, get_current_buffer())
@@ -114,15 +100,22 @@ TEST_F(GBMInterpreterTest, basic_advance)
     interpreter.surface_advance_buffer(&interpreter, &buffer_package);
 }
 
-#if 0
 TEST_F(GBMInterpreterTest, swapinterval_request)
 {
+    using namespace testing;
+
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
-    EXPECT_CALL(mock_surface, get_current_buffer())
-        .Times(1);
+
+    InSequence seq;
+    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,0))
+        .Times(1)
+        .WillOnce(Return(wait_handle));
+    EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,1))
+        .Times(1)
+        .WillOnce(Return(wait_handle));
 
     mclg::GBMNativeSurface interpreter(mock_surface);
 
-    interpreter.
+    interpreter.set_swapinterval(0);
+    interpreter.set_swapinterval(0);
 }
-#endif
