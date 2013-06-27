@@ -58,7 +58,9 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
         rpc_report->complete_response(result);
 
         completion.response->ParseFromString(result.response());
+        lock.unlock();  // Avoid deadlocking with MirSurface mutex
         completion.complete->Run();
+        lock.lock();
         pending_calls.erase(call);
     }
 }
