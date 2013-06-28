@@ -45,9 +45,6 @@ public:
 
     void clear() {}
 
-    void ensure_no_live_buffers_bound()
-    {
-    }
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource, mg::Renderable&)
     {
         std::shared_ptr<void> tmp;
@@ -81,7 +78,6 @@ class MockRenderer : public mg::Renderer
 {
 public:
     MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&));
-    MOCK_METHOD0(ensure_no_live_buffers_bound, void());
     MOCK_METHOD0(clear, void ());
 
     ~MockRenderer() noexcept {}
@@ -121,12 +117,4 @@ TEST(RenderingOperator, render_operator_saves_resources)
     EXPECT_EQ(use_count_before0, stub_renderer.resource0.use_count());
     EXPECT_EQ(use_count_before1, stub_renderer.resource1.use_count());
     EXPECT_EQ(use_count_before2, stub_renderer.resource2.use_count());
-}
-
-TEST(RenderingOperator, render_operator_ensures_no_live_texture_bound)
-{
-    MockRenderer mock_renderer;
-    EXPECT_CALL(mock_renderer, ensure_no_live_buffers_bound())
-        .Times(1);
-    mc::RenderingOperator rendering_operator(mock_renderer, [](std::shared_ptr<void> const&) {});
 }

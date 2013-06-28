@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,31 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
 
-#include "mir/graphics/renderable.h"
-#include "mir/graphics/renderer.h"
-#include <gmock/gmock.h>
+#ifndef MIR_SHELL_SNAPSHOT_H_
+#define MIR_SHELL_SNAPSHOT_H_
+
+#include "mir/geometry/size.h"
+#include "mir/geometry/dimensions.h"
+
+#include <functional>
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace shell
 {
 
-struct MockSurfaceRenderer : public graphics::Renderer
+struct Snapshot
 {
-    MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, graphics::Renderable&));
-    MOCK_METHOD0(clear, void());
-
-    ~MockSurfaceRenderer() noexcept {}
+    geometry::Size size;
+    geometry::Stride stride;
+    void const* pixels;
 };
 
+typedef std::function<void(Snapshot const&)> SnapshotCallback;
+
 }
 }
-}
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_ */
+
+#endif /* MIR_SHELL_SNAPSHOT_H_ */

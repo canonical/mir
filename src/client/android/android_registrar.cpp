@@ -28,6 +28,21 @@ namespace geom=mir::geometry;
 
 namespace
 {
+struct NativeHandleDeleter
+{
+    NativeHandleDeleter(const std::shared_ptr<const gralloc_module_t>& mod)
+        : module(mod)
+    {}
+
+    void operator()(const native_handle_t* t)
+    {
+        module->unregisterBuffer(module.get(), t);
+        ::operator delete(const_cast<native_handle_t*>(t));
+    }
+private:
+    const std::shared_ptr<const gralloc_module_t> module;
+};
+
 struct MemoryRegionDeleter
 {
     MemoryRegionDeleter(const std::shared_ptr<const gralloc_module_t>& mod,
@@ -52,15 +67,35 @@ mcla::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<con
 {
 }
 
-void mcla::AndroidRegistrarGralloc::register_buffer(const native_handle_t* handle)
+std::shared_ptr<const native_handle_t> mcla::AndroidRegistrarGralloc::register_buffer(
+    std::shared_ptr<MirBufferPackage> const& package) const
 {
-    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
-        BOOST_THROW_EXCEPTION(std::runtime_error("error registering graphics buffer for client use\n"));
-}
+    int native_handle_header_size = sizeof(native_handle_t);
+    int total_size = sizeof(int) * 
+                     (package->fd_items + package->data_items + native_handle_header_size);
+    native_handle_t* handle = static_cast<native_handle_t*>(::operator new(total_size));
+    handle->version = native_handle_header_size;
+    handle->numFds  = package->fd_items;
+    handle->numInts = package->data_items;
+    for (auto i=0; i< handle->numFds; i++)
+    {
+        handle->data[i] = package->fd[i];
+    }
 
-void mcla::AndroidRegistrarGralloc::unregister_buffer(const native_handle_t* handle)
-{
-    gralloc_module->unregisterBuffer(gralloc_module.get(), handle);
+    int offset_i = handle->numFds;
+    for (auto i=0; i< handle->numInts; i++)
+    {
+        handle->data[offset_i+i] = package->data[i];
+    }
+
+    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
+    {
+        ::operator delete(const_cast<native_handle_t*>(handle));
+        BOOST_THROW_EXCEPTION(std::runtime_error("error registering graphics buffer for client use\n"));
+    }
+
+    NativeHandleDeleter del(gralloc_module);
+    return std::shared_ptr<const native_handle_t>(handle, del);
 }
 
 std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)
@@ -78,5 +113,3 @@ std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_
     MemoryRegionDeleter del(gralloc_module, handle);
     return std::shared_ptr<char>(vaddr, del);
 }
-
-

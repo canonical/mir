@@ -445,6 +445,18 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
     surf.force_requests_to_complete();
 }
 
+TEST_F(SurfaceCreation, test_surface_allow_framedropping)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_buffer_stream, allow_framedropping(true))
+        .Times(1);
+
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb};
+    surf.allow_framedropping(true);
+}
+
 TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second_frame)
 {
     ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
@@ -480,4 +492,18 @@ TEST_F(SurfaceCreation, input_fds)
         mt::fake_shared(channel), mock_change_cb};
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
     EXPECT_EQ(server_fd, input_surf.server_input_fd());
+}
+
+TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb};
+
+    EXPECT_FALSE(surf.should_be_rendered());
+
+    surf.flag_for_render();
+
+    EXPECT_TRUE(surf.should_be_rendered());
 }

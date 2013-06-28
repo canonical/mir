@@ -81,6 +81,8 @@ public:
     bool supports_input() const;
     int client_input_fd() const;
     int server_input_fd() const;
+
+    void allow_framedropping(bool); 
 private:
     std::string surface_name;
     geometry::Point top_left_point;

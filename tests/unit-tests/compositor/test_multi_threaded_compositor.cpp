@@ -355,7 +355,7 @@ TEST(MultiThreadedCompositor, surface_update_from_render_doesnt_deadlock)
     compositor.stop();
 }
 
-TEST(MultiThreadedCompositor, releases_display_buffer_context_when_stopping)
+TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 {
     using namespace testing;
 
@@ -368,6 +368,7 @@ TEST(MultiThreadedCompositor, releases_display_buffer_context_when_stopping)
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {
+        EXPECT_CALL(mock_buf, make_current()).Times(1);
         EXPECT_CALL(mock_buf, release_current()).Times(1);
     });
 
