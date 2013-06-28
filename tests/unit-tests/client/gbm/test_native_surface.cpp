@@ -111,7 +111,15 @@ TEST_F(GBMInterpreterTest, swapinterval_request)
         .InSequence(seq);
 
     mclg::GBMNativeSurface interpreter(mock_surface);
-
     interpreter.set_swapinterval(0);
     interpreter.set_swapinterval(1);
+}
+
+TEST_F(GBMInterpreterTest, swapinterval_unsupported_request)
+{
+    mclg::GBMNativeSurface interpreter(mock_surface);
+    EXPECT_EQ(MIR_MESA_FALSE, interpreter.set_swapinterval(-1));
+    EXPECT_EQ(MIR_MESA_TRUE, interpreter.set_swapinterval(0));
+    EXPECT_EQ(MIR_MESA_TRUE, interpreter.set_swapinterval(1));
+    EXPECT_EQ(MIR_MESA_FALSE, interpreter.set_swapinterval(2));
 }
