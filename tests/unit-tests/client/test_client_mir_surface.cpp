@@ -312,7 +312,7 @@ struct MirClientSurfaceTest : public testing::Test
         connection = std::make_shared<MirConnection>(conf);
         MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                          connected_callback, 0);
-        wait_handle->wait_for_result();
+        wait_handle->wait_for_all();
         client_comm_channel = std::make_shared<mir::protobuf::DisplayServer::Stub>(
                                   conf.the_rpc_channel().get());
     }
@@ -351,7 +351,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation)
     auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 }
 
 namespace
@@ -369,12 +369,12 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_next_buffer)
     auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, nullptr);
-    buffer_wait_handle->wait_for_result();
+    buffer_wait_handle->wait_for_all();
 }
 
 MATCHER_P(BufferPackageMatches, package, "")
@@ -405,7 +405,7 @@ TEST_F(MirClientSurfaceTest, client_buffer_uses_ipc_message_from_server_on_creat
     auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     /* check for same contents */
     EXPECT_THAT(*submitted_package, BufferPackageMatches(mock_server_tool->server_package));
@@ -426,7 +426,7 @@ TEST_F(MirClientSurfaceTest, message_width_used_in_buffer_creation )
     auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     EXPECT_EQ(sz.width.as_uint32_t(), (unsigned int) mock_server_tool->width_sent);
 }
@@ -446,7 +446,7 @@ TEST_F(MirClientSurfaceTest, message_height_used_in_buffer_creation )
     auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     EXPECT_EQ(sz.height.as_uint32_t(), (unsigned int) mock_server_tool->height_sent);
 }
@@ -466,7 +466,7 @@ TEST_F(MirClientSurfaceTest, message_pf_used_in_buffer_creation )
     auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     EXPECT_EQ(pf, geom::PixelFormat::abgr_8888);
 }
@@ -499,7 +499,7 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_
         auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel,
             mock_buffer_factory, mock_input_platform, params, &empty_callback, nullptr);
         auto wait_handle = surface->get_create_wait_handle();
-        wait_handle->wait_for_result();
+        wait_handle->wait_for_all();
         surface->set_event_handler(&delegate);
     }
 
@@ -508,7 +508,7 @@ TEST_F(MirClientSurfaceTest, input_fd_used_to_create_input_thread_when_delegate_
         auto surface = std::make_shared<MirSurface> (connection.get(), *client_comm_channel,
             mock_buffer_factory, mock_input_platform, params, &empty_callback, nullptr);
         auto wait_handle = surface->get_create_wait_handle();
-        wait_handle->wait_for_result();
+        wait_handle->wait_for_all();
     }
 }
 
@@ -527,13 +527,13 @@ TEST_F(MirClientSurfaceTest, get_buffer_returns_last_received_buffer_package)
                                                  &empty_callback,
                                                  nullptr);
     auto wait_handle = surface->get_create_wait_handle();
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
     Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
 
     EXPECT_CALL(*mock_buffer_factory, create_buffer(_,_,_))
         .Times(1);
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, nullptr);
-    buffer_wait_handle->wait_for_result();
+    buffer_wait_handle->wait_for_all();
     Mock::VerifyAndClearExpectations(mock_buffer_factory.get());
 }
 
@@ -552,7 +552,7 @@ TEST_F(MirClientSurfaceTest, default_surface_type)
                                                  params,
                                                  &empty_callback,
                                                  nullptr);
-    surface->get_create_wait_handle()->wait_for_result();
+    surface->get_create_wait_handle()->wait_for_all();
 
     EXPECT_EQ(mir_surface_type_normal,
               surface->attrib(mir_surface_attrib_type));
@@ -567,7 +567,7 @@ TEST_F(MirClientSurfaceTest, default_surface_state)
                                                  params,
                                                  &empty_callback,
                                                  nullptr);
-    surface->get_create_wait_handle()->wait_for_result();
+    surface->get_create_wait_handle()->wait_for_all();
 
     // Test the default cached state value. It is always unknown until we
     // get a real answer from the server.
@@ -662,7 +662,7 @@ TEST_F(MirClientSurfaceTest, get_cpu_region_returns_correct_data)
                                                     nullptr);
 
         auto wait_handle = surface->get_create_wait_handle();
-        wait_handle->wait_for_result();
+        wait_handle->wait_for_all();
 
         MirGraphicsRegion region;
         surface->get_cpu_region(region);

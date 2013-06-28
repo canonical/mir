@@ -27,7 +27,7 @@ TEST(WaitHandle, symmetric_synchronous)
     for (int i = 0; i < 100; i++)
     {
         w.result_received();
-        w.wait_for_result();
+        w.wait_for_all();
     }
 
     EXPECT_TRUE(true);   // Failure would be hanging in the above loop
@@ -42,7 +42,7 @@ TEST(WaitHandle, asymmetric_synchronous)
         for (int j = 1; j <= i; j++)
             w.result_received();
 
-        w.wait_for_result();
+        w.wait_for_all();
     }
 
     EXPECT_TRUE(true);   // Failure would be hanging in the above loop
@@ -56,7 +56,7 @@ namespace
     {
         for (int i = 1; i <= max; i++)
         {
-            in->wait_for_result();
+            in->wait_for_all();
             symmetric_result = i;
             out->result_received();
         }
@@ -72,7 +72,7 @@ TEST(WaitHandle, symmetric_asynchronous)
     for (int i = 1; i <= max; i++)
     {
         in.result_received();
-        out.wait_for_result();
+        out.wait_for_all();
         ASSERT_EQ(symmetric_result, i);
     }
     t.join();
@@ -86,7 +86,7 @@ namespace
     {
         for (int i = 1; i <= max; i++)
         {
-            in->wait_for_result();
+            in->wait_for_all();
             asymmetric_result = i;
             for (int j = 1; j <= i; j++)
                 out->result_received();
@@ -105,7 +105,7 @@ TEST(WaitHandle, asymmetric_asynchronous)
         in.result_received();
         for (int j = 1; j <= i; j++)
             out.expect_result();
-        out.wait_for_result();
+        out.wait_for_all();
         ASSERT_EQ(asymmetric_result, i);
     }
     t.join();
