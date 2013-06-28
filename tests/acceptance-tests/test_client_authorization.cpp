@@ -239,7 +239,7 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
                 __PRETTY_FUNCTION__,
                 connection_callback,
                 this));
-            EXPECT_GT(strlen(mir_connection_get_error_message(connection)), 0);
+            EXPECT_GT(strlen(mir_connection_get_error_message(connection)), static_cast<unsigned int>(0));
             mir_connection_release(connection);
         }
 
