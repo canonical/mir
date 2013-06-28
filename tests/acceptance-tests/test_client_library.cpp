@@ -27,6 +27,7 @@
 
 #include <gtest/gtest.h>
 #include <chrono>
+#include <thread>
 #include <cstring>
 
 namespace mf = mir::frontend;
@@ -340,6 +341,110 @@ TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
             mir_surface_release_sync(surface);
             mir_connection_release(connection);
         }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, client_event_handler_is_thread_safe)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        static void event_callback(MirSurface* surface, MirEvent const* event,
+                                   void* ctx)
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            ClientConfig* self = static_cast<ClientConfig*>(ctx);
+            self->last_event = *event;
+            self->last_event_surface = surface;
+            self->prev_owner = self->owner;
+            self->owner = "event_callback";
+        }
+
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(connection != NULL);
+            ASSERT_TRUE(mir_connection_is_valid(connection));
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
+
+            memset(&last_event, 0, sizeof last_event);
+            last_event_surface = nullptr;
+            owner = "no one";
+            prev_owner = "nobody";
+
+            MirEventDelegate delegate{&event_callback, this};
+
+            surface =
+                mir_connection_create_surface_sync(connection, &request_params);
+            ASSERT_TRUE(surface != NULL);
+            ASSERT_TRUE(mir_surface_is_valid(surface));
+
+            mir_surface_set_event_handler(surface, &delegate);
+
+            int surface_id = mir_surface_get_id(surface);
+
+            mir_surface_lock(surface);
+            MirWaitHandle *w = mir_surface_set_state(surface,
+                                               mir_surface_state_fullscreen);
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+            // by now, event_callback is trying to start, but is blocked.
+            EXPECT_STREQ("no one", owner);
+            EXPECT_STREQ("nobody", prev_owner);
+            mir_surface_unlock(surface);
+
+            mir_wait_for(w);
+            mir_surface_lock(surface);
+            EXPECT_STREQ("event_callback", owner);
+            EXPECT_STREQ("no one", prev_owner);
+            prev_owner = owner;
+            owner = "exec";
+            mir_surface_unlock(surface);
+
+            EXPECT_EQ(surface, last_event_surface);
+            EXPECT_EQ(mir_event_type_surface, last_event.type);
+            EXPECT_EQ(surface_id, last_event.surface.id);
+            EXPECT_EQ(mir_surface_attrib_state, last_event.surface.attrib);
+            EXPECT_EQ(mir_surface_state_fullscreen, last_event.surface.value);
+
+            memset(&last_event, 0, sizeof last_event);
+            last_event_surface = nullptr;
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                           static_cast<MirSurfaceState>(777)));
+            EXPECT_EQ(0, last_event_surface);
+            EXPECT_EQ(0, last_event.type);
+            EXPECT_EQ(0, last_event.surface.id);
+            EXPECT_EQ(0, last_event.surface.attrib);
+            EXPECT_EQ(0, last_event.surface.value);
+
+            mir_surface_lock(surface);
+            EXPECT_STREQ("exec", owner);
+            EXPECT_STREQ("event_callback", prev_owner);
+            mir_surface_unlock(surface);
+
+            mir_wait_for(mir_surface_set_state(surface,
+                                               mir_surface_state_minimized));
+            mir_surface_set_event_handler(surface, nullptr);
+            // Event handler is dead. Locking no longer required.
+            EXPECT_STREQ("event_callback", owner);
+            EXPECT_STREQ("exec", prev_owner);
+            
+            mir_surface_release_sync(surface);
+            mir_connection_release(connection);
+        }
+
+        MirEvent last_event;
+        MirSurface* last_event_surface;
+        const char* prev_owner;
+        const char* owner;
     } client_config;
 
     launch_client_process(client_config);

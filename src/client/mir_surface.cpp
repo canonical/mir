@@ -374,3 +374,13 @@ MirPlatformType MirSurface::platform_type()
     auto platform = connection->get_client_platform();
     return platform->platform_type();
 }
+
+void MirSurface::lock()
+{
+    mutex.lock();
+}
+
+void MirSurface::unlock()
+{
+    mutex.unlock();
+}
