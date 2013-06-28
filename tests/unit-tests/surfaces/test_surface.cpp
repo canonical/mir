@@ -493,3 +493,17 @@ TEST_F(SurfaceCreation, input_fds)
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
     EXPECT_EQ(server_fd, input_surf.server_input_fd());
 }
+
+TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
+{
+    using namespace testing;
+
+    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb};
+
+    EXPECT_FALSE(surf.should_be_rendered());
+
+    surf.flag_for_render();
+
+    EXPECT_TRUE(surf.should_be_rendered());
+}
