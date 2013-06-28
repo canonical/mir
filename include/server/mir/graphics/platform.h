@@ -101,7 +101,7 @@ public:
      */
     virtual void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
                                   std::shared_ptr<compositor::Buffer> const& buffer) const = 0;
-    
+
     /**
      * Creates the in-process client support object.
      */
@@ -109,7 +109,7 @@ public:
 };
 
 /**
- * Creates and returns a new graphics platform.
+ * Function prototype used to return a new graphics platform.
  *
  * \param [in] options options to use for this platform
  * \param [in] report the object to use to report interesting events from the display subsystem
@@ -118,8 +118,8 @@ public:
  *
  * \ingroup platform_enablement
  */
-std::shared_ptr<Platform> create_platform(std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
-
+extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
+extern "C" std::shared_ptr<Platform> create_platform (std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
 }
 }
 

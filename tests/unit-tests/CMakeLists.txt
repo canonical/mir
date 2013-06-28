@@ -6,6 +6,7 @@ set(
 
   test_gmock_fixes.cpp
   test_asio_main_loop.cpp
+  shared_library_test.cpp
 )
 
 add_subdirectory(options/)
@@ -29,6 +30,7 @@ target_link_libraries(
 
   mirclient
   mirserver
+  mirplatformgraphics
   mirdraw
   mirtestdraw
   mirlogging

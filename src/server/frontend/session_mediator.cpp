@@ -133,9 +133,8 @@ void mf::SessionMediator::create_surface(
         if (surface->supports_input())
             response->add_fd(surface->client_input_fd());
 
-        auto const& buffer_resource = surface->client_buffer();
-
-        auto const& id = buffer_resource->id();
+        client_buffer_resource = surface->advance_client_buffer();
+        auto const& id = client_buffer_resource->id();
 
         auto buffer = response->mutable_buffer();
         buffer->set_buffer_id(id.as_uint32_t());
@@ -143,11 +142,7 @@ void mf::SessionMediator::create_surface(
         if (!client_tracker->client_has(id))
         {
             auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
-            graphics_platform->fill_ipc_package(packer, buffer_resource);
-
-            //TODO: (kdub) here, we should hold onto buffer_resource. so ms::Surface doesn't have
-            // to worry about it. ms::Surface guarentees the resource will be there until the end
-            // of the ipc request
+            graphics_platform->fill_ipc_package(packer, client_buffer_resource);
         }
         client_tracker->add(id);
     }
@@ -168,19 +163,16 @@ void mf::SessionMediator::next_buffer(
 
     auto surface = session->get_surface(SurfaceId(request->value()));
 
-    surface->advance_client_buffer();
-    auto const& buffer_resource = surface->client_buffer();
-    auto const& id = buffer_resource->id();
+    client_buffer_resource.reset();
+    client_buffer_resource = surface->advance_client_buffer();
+
+    auto const& id = client_buffer_resource->id();
     response->set_buffer_id(id.as_uint32_t());
 
     if (!client_tracker->client_has(id))
     {
         auto packer = std::make_shared<mfd::ProtobufBufferPacker>(response);
-        graphics_platform->fill_ipc_package(packer, buffer_resource);
-
-        //TODO: (kdub) here, we should hold onto buffer_resource. so ms::Surface doesn't have
-        // to worry about it. ms::Surface guarentees the resource will be there until the end
-        // of the ipc request
+        graphics_platform->fill_ipc_package(packer, client_buffer_resource);
     }
     client_tracker->add(id);
     done->Run();
@@ -246,4 +238,3 @@ void mf::SessionMediator::configure_surface(
 
     done->Run();
 }
-

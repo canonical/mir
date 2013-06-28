@@ -122,3 +122,12 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 
     buffer_stream.secure_client_buffer();
 }
+
+TEST_F(BufferStreamTest, allow_framedropping_command)
+{
+    EXPECT_CALL(*mock_bundle, allow_framedropping(true))
+        .Times(1);
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    buffer_stream.allow_framedropping(true);
+}

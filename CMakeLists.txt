@@ -28,7 +28,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 0)
-set(MIR_VERSION_PATCH 4)
+set(MIR_VERSION_PATCH 5)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -40,10 +40,15 @@ include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
+include (GNUInstallDirs)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+
+if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage")
+endif()
 
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov
@@ -134,6 +139,8 @@ add_subdirectory(3rd_party/)
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
+
+set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 macro(uses_android_input _target_name)

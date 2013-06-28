@@ -40,8 +40,7 @@ struct MockSurface : public mf::Surface
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
 
-    MOCK_METHOD0(advance_client_buffer, void());
-    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<mc::Buffer>());
+    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mc::Buffer>());
 
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
@@ -60,7 +59,7 @@ struct InternalClientWindow : public ::testing::Test
         mock_buffer = std::make_shared<mtd::MockBuffer>();
         stub_anw = std::make_shared<ANativeWindowBuffer>();
 
-        ON_CALL(*mock_surface, client_buffer())
+        ON_CALL(*mock_surface, advance_client_buffer())
             .WillByDefault(Return(mock_buffer));
         ON_CALL(*mock_surface, pixel_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
@@ -80,7 +79,7 @@ struct InternalClientWindow : public ::testing::Test
 TEST_F(InternalClientWindow, driver_requests_buffer)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_surface, client_buffer())
+    EXPECT_CALL(*mock_surface, advance_client_buffer())
         .Times(1);
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1);

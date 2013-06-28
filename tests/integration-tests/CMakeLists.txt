@@ -7,6 +7,7 @@ set(
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
   test_surface_first_frame_sync.cpp
+  test_swapinterval.cpp
 )
 
 add_subdirectory(client/)
@@ -47,6 +48,7 @@ target_link_libraries(
   mir-test-cucumber
 
   mirserver
+  mirplatformgraphics
   mirclient
   mirdraw
   mirtestdraw

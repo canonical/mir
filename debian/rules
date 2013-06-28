@@ -1,41 +1,34 @@
 #!/usr/bin/make -f
 
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -f 2)
 
+export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 %:
-	dh $@ --parallel
+	dh $@ --parallel --fail-missing
 
 #overrding dh_auto_test to get rid of --parallel during testing
 override_dh_auto_test:
-ifeq ($(DEB_HOST_ARCH),armhf)
-	@echo "not testing"
-else
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1
-endif
 
 COMMON_CONFIGURE_OPTIONS = \
   -DMIR_DISABLE_EPOLL_REACTOR=YES \
-  -DBUILD_DOXYGEN=YES
+  -DBUILD_DOXYGEN=YES \
+  -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"
 
-# We need to rely on the select-based reactor to fix the ppa builds.
-# TODO: Get rid of this workaround by either switching to boost 1.51 or
-# updating the ppa builders kernel version.
 override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DBoost_COMPILER=-gcc \
 	  -DMIR_PLATFORM=android
 else
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS)
 endif
 
-override_dh_installexamples:
-	dh_installexamples -p libmirclient-demos
-
+# TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
 	dh_makeshlibs -p libmirserver0 -V 'libmirserver0 (= ${EXACT_PACKAGE_VERSION})'
 	dh_makeshlibs --remaining-packages -V
