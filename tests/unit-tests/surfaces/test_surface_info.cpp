@@ -36,8 +36,20 @@ struct SurfaceInfoTest : public testing::Test
     geom::Size size;
 };
 
-TEST_F(SurfaceInfoTest, size)
-{
-    
-//    ms::SurfaceDataStorage{a};
+TEST_F(SurfaceInfoTest, basics)
+{ 
+    ms::SurfaceDataStorage storage{name, top_left, size};
+    EXPECT_EQ(name, storage.name());
+    EXPECT_EQ(top_left, storage.top_left());
+    EXPECT_EQ(size, storage.size());
+}
+
+TEST_F(SurfaceInfoTest, update_position)
+{ 
+    ms::SurfaceDataStorage storage{name, top_left, size};
+    EXPECT_EQ(top_left, storage.top_left());
+
+    atuo new_top_left = geom::Point{geom::X{5}, geom::Y{10}};
+    storage.set_top_left(new_to_left);
+    EXPECT_EQ(new_top_left, storage.top_left());
 }
