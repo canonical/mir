@@ -18,6 +18,7 @@
 
 #include "src/client/gbm/gbm_native_surface.h"
 #include "src/client/client_buffer.h"
+#include "src/client/mir_wait_handle.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
 #include <gmock/gmock.h>
@@ -104,15 +105,14 @@ TEST_F(GBMInterpreterTest, swapinterval_request)
 {
     using namespace testing;
 
-    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
-
+    MirWaitHandle dummy_wait_handle; 
     InSequence seq;
     EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,0))
         .Times(1)
-        .WillOnce(Return(wait_handle));
+        .WillOnce(Return(&dummy_wait_handle));
     EXPECT_CALL(mock_surface, configure(mir_surface_attrib_swapinterval,1))
         .Times(1)
-        .WillOnce(Return(wait_handle));
+        .WillOnce(Return(&dummy_wait_handle));
 
     mclg::GBMNativeSurface interpreter(mock_surface);
 
