@@ -27,10 +27,13 @@
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
 
+#include <boost/throw_exception.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
@@ -143,17 +146,25 @@ void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
 {
     auto surface = s.lock();
 
-    for (auto &layer : layers_by_depth)
     {
-        auto &surfaces = layer.second;
-        auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
-    
-        if (p != surfaces.end())
+        std::unique_lock<std::mutex> ul(guard);
+        for (auto &layer : layers_by_depth)
         {
-            surfaces.erase(p);
-            surfaces.push_back(surface);
+            auto &surfaces = layer.second;
+            auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
+    
+            if (p != surfaces.end())
+            {
+                surfaces.erase(p);
+                surfaces.push_back(surface);
             
-            return;
+                ul.unlock();
+                emit_change_notification();
+
+                return;
+            }
         }
     }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }

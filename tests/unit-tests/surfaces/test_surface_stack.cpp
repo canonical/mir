@@ -40,6 +40,7 @@
 #include "mir_test/gmock_fixes.h"
 
 #include <memory>
+#include <stdexcept>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -540,4 +541,19 @@ TEST(SurfaceStack, depth_id_trumps_raise)
     stack.for_each_if(filter, stub_operator);
     stack.raise(surface1);
     stack.for_each_if(filter, stub_operator);
+}
+
+TEST(SurfaceStack, raise_throw_behavior)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
+    
+    std::shared_ptr<ms::Surface> null_surface{nullptr};
+
+    EXPECT_THROW({
+            stack.raise(null_surface);
+    }, std::runtime_error);
 }
