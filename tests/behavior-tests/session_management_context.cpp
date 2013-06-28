@@ -26,13 +26,12 @@
 #include "mir/shell/session_container.h"
 #include "mir/frontend/shell.h"
 #include "mir/shell/surface_factory.h"
-#include "mir/graphics/display.h"
 #include "mir/default_server_configuration.h"
 
 #include "mir/shell/surface.h"
 
 #include "mir_test_doubles/stub_surface_builder.h"
-#include "mir_test_doubles/null_gl_context.h"
+#include "mir_test_doubles/null_display.h"
 #include "mir_test/fake_shared.h"
 
 namespace mf = mir::frontend;
@@ -79,7 +78,7 @@ struct DummySurfaceFactory : public msh::SurfaceFactory
     mtd::StubSurfaceBuilder surface_builder;
 };
 
-class SizedDisplay : public mg::Display
+class SizedDisplay : public mtd::NullDisplay
 {
 public:
     explicit SizedDisplay(geom::Rectangle const& view_area = default_view_area)
@@ -87,7 +86,7 @@ public:
     {
     }
 
-    geom::Rectangle view_area() const
+    geom::Rectangle view_area() const override
     {
         return area;
     }
@@ -97,31 +96,7 @@ public:
         area = new_view_area;
     }
 
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
-    {
-        (void)f;
-    }
-
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
-    {
-        return std::shared_ptr<mg::DisplayConfiguration>();
-    }
-
-    void register_pause_resume_handlers(MainLoop&,
-                                        mg::DisplayPauseHandler const&,
-                                        mg::DisplayResumeHandler const&)
-    {
-    }
-
-    void pause() {}
-    void resume() {}
-    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
-
-    std::unique_ptr<mg::GLContext> create_gl_context()
-    {
-        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
-    }
-
+private:
     geom::Rectangle area;
 };
 
