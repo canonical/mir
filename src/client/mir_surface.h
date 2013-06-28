@@ -92,9 +92,6 @@ public:
     void set_event_handler(MirEventDelegate const* delegate);
     void handle_event(MirEvent const& e);
 
-    void lock();
-    void unlock();
-
 private:
     mutable std::recursive_mutex mutex; // Protects all members and callbacks
 

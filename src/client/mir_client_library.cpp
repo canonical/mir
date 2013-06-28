@@ -328,13 +328,3 @@ int mir_surface_get_swapinterval(MirSurface* surf)
 {
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
 }
-
-void mir_surface_lock(MirSurface *surf)
-{
-    return surf->lock();
-}
-
-void mir_surface_unlock(MirSurface *surf)
-{
-    return surf->unlock();
-}

@@ -314,29 +314,6 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
  */
 int mir_surface_get_swapinterval(MirSurface* surface);
 
-/**
- * Locks the surface, temporarily pausing any other thread that might try to
- * operate on it, including callbacks for that surface. This is useful in
- * not only protecting a surface shared between threads, but also for
- * protecting shared data used in the surface's callbacks (e.g. event
- * handling) as callbacks might be running in other threads.
- *   \param [in] surface  The surface to lock
- *   \post  All pending operations on the surface from other threads will be
- *          completed, and further operations from other threads blocked,
- *          until you unlock the surface from the same thread that locked it.
- *   \warning  Do not call mir_wait_for, or any blocking system calls while
- *             you have a surface locked, as it could deadlock your client.
- */
-void mir_surface_lock(MirSurface *surface);
-
-/**
- * Unlocks a surface that was previously locked by mir_surface_lock.
- *   \pre  The surface was locked from the current thread using
- *         mir_surface_lock.
- *   \param [in] surface  The surface to unlock
- */
-void mir_surface_unlock(MirSurface *surface);
-
 #ifdef __cplusplus
 }
 /**@}*/
