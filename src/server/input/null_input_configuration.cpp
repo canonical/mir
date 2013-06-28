@@ -65,7 +65,7 @@ struct NullInputManager : public mi::InputManager
     void stop()
     {
     }
-    std::shared_ptr<mi::InputChannel> make_input_channel()
+    std::shared_ptr<mi::InputChannel> make_input_channel(std::shared_ptr<ms::SurfaceInfo> const&)
     {
         return std::shared_ptr<mi::InputChannel>();
     }

@@ -36,7 +36,8 @@ struct MockInputManager : public input::InputManager
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
 
-    MOCK_METHOD0(make_input_channel, std::shared_ptr<input::InputChannel>());
+    MOCK_METHOD1(make_input_channel,
+        std::shared_ptr<input::InputChannel>(std::shared_ptr<surfaces::SurfaceInfo> const&));
 };
 
 }

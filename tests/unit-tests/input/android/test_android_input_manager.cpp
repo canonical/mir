@@ -169,7 +169,7 @@ TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
     mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
 
     auto info = std::make_shared<mtd::MockSurfaceInfo>();
-    auto package = manager.make_input_channel(package);
+    auto package = manager.make_input_channel(info);
     EXPECT_GT(package->client_fd(), 0);
     EXPECT_GT(package->server_fd(), 0);
 }

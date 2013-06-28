@@ -116,7 +116,7 @@ struct MockOperatorForRenderables : public mc::OperatorForRenderables
 
 struct StubInputChannelFactory : public mi::InputChannelFactory
 {
-    std::shared_ptr<mi::InputChannel> make_input_channel()
+    std::shared_ptr<mi::InputChannel> make_input_channel(std::shared_ptr<ms::SurfaceInfo> const&)
     {
         return std::shared_ptr<mi::InputChannel>();
     }
@@ -159,7 +159,7 @@ struct StubInputChannel : public mi::InputChannel
 
 struct MockInputChannelFactory : public mi::InputChannelFactory
 {
-    MOCK_METHOD0(make_input_channel, std::shared_ptr<mi::InputChannel>());
+    MOCK_METHOD1(make_input_channel, std::shared_ptr<mi::InputChannel>(std::shared_ptr<ms::SurfaceInfo> const&));
 };
 
 static ms::DepthId const default_depth{0};
@@ -502,7 +502,8 @@ TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
     StubInputChannel input_channel(server_input_fd, client_input_fd);
     MockInputChannelFactory input_factory;
     
-    EXPECT_CALL(input_factory, make_input_channel()).Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
+    EXPECT_CALL(input_factory, make_input_channel(_))
+        .Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         mt::fake_shared(input_factory),
             std::make_shared<mtd::StubInputRegistrar>()};
