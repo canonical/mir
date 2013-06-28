@@ -83,7 +83,7 @@ void mf::SessionMediator::connect(
     
     if (!session_authorizer->connection_is_allowed(request->client_pid(), request->application_name()))
     {
-        std::string error_message = "Client with pid " + request->client_pid();
+        std::string error_message = "Client with pid " + std::to_string(request->client_pid());
         error_message += " is not authorized to connect as ";
         error_message += request->application_name();
             
