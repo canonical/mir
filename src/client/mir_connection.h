@@ -113,7 +113,7 @@ public:
     void handle_event(MirEvent const&);
 
 private:
-    std::recursive_mutex mutex; // Protects all members and callbacks of *this
+    std::recursive_mutex mutex; // Protects all members of *this
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::protobuf::DisplayServer::Stub server;
