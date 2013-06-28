@@ -43,6 +43,7 @@ class InputChannel;
 
 namespace surfaces
 {
+class SurfaceInfo;
 class BufferStream;
 
 // TODO this is ideally an implementation class. It is only in a public header
@@ -50,7 +51,7 @@ class BufferStream;
 class Surface : public graphics::Renderable, public input::SurfaceTarget
 {
 public:
-    Surface(const std::string& name, geometry::Point const& top_left,
+    Surface(std::shared_ptr<SurfaceInfo> const& info,
             std::shared_ptr<BufferStream> buffer_stream,
             std::shared_ptr<input::InputChannel> const& input_channel,
             std::function<void()> const& change_callback);
@@ -80,12 +81,11 @@ public:
 
     bool supports_input() const;
     int client_input_fd() const;
-    int server_input_fd() const;
+    int server_fd() const;
 
     void allow_framedropping(bool); 
 private:
-    std::string surface_name;
-    geometry::Point top_left_point;
+    std::shared_ptr<SurfaceInfo> info;
 
     std::shared_ptr<BufferStream> buffer_stream;
 

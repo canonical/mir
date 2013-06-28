@@ -19,6 +19,7 @@
  */
 
 #include "mir/surfaces/surface.h"
+#include "mir/surfaces/surface_info.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/compositor/buffer.h"
@@ -37,13 +38,11 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
-    std::string const& name,
-    geom::Point const& top_left,
+    std::shared_ptr<SurfaceInfo> const& info,
     std::shared_ptr<BufferStream> buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
-    surface_name(name),
-    top_left_point(top_left),
+    info(info),
     buffer_stream(buffer_stream),
     input_channel(input_channel),
     transformation_dirty(true),
@@ -68,12 +67,12 @@ ms::Surface::~Surface()
 
 std::string const& ms::Surface::name() const
 {
-    return surface_name;
+    return info->name();
 }
 
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
-    top_left_point = top_left;
+    info->set_top_left(top_left);
     transformation_dirty = true;
     notify_change();
 }
@@ -99,12 +98,12 @@ void ms::Surface::set_hidden(bool hide)
 
 geom::Point ms::Surface::top_left() const
 {
-    return top_left_point;
+    return info->top_left();
 }
 
 mir::geometry::Size ms::Surface::size() const
 {
-    return buffer_stream->stream_size();
+    return info->size();
 }
 
 std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
@@ -118,8 +117,9 @@ const glm::mat4& ms::Surface::transformation() const
 
     if (transformation_dirty || transformation_size != sz)
     {
-        const glm::vec3 top_left_vec{top_left_point.x.as_int(),
-                                     top_left_point.y.as_int(),
+        auto pt = info->top_left();
+        const glm::vec3 top_left_vec{pt.x.as_int(),
+                                     pt.y.as_int(),
                                      0.0f};
         const glm::vec3 size_vec{sz.width.as_uint32_t(),
                                  sz.height.as_uint32_t(),
@@ -207,7 +207,7 @@ int ms::Surface::client_input_fd() const
     return input_channel->client_fd();
 }
 
-int ms::Surface::server_input_fd() const
+int ms::Surface::server_fd() const
 {
     if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));

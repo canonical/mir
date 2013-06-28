@@ -62,6 +62,7 @@ TEST_F(AndroidInputChannel, packages_own_valid_fds)
 
 TEST_F(AndroidInputChannel, uses_topleft_info)
 {
+    using namespace testing;
     geom::Point pt{geom::X{4}, geom::Y{44}};
     EXPECT_CALL(*surface_info, top_left())
         .Times(1)
@@ -73,6 +74,7 @@ TEST_F(AndroidInputChannel, uses_topleft_info)
 
 TEST_F(AndroidInputChannel, uses_size_info)
 {
+    using namespace testing;
     geom::Size size{geom::Width{4}, geom::Height{44}};
     EXPECT_CALL(*surface_info, size())
         .Times(1)
@@ -84,11 +86,12 @@ TEST_F(AndroidInputChannel, uses_size_info)
 
 TEST_F(AndroidInputChannel, uses_name)
 {
+    using namespace testing;
     std::string str("coffee");
     EXPECT_CALL(*surface_info, name())
         .Times(1)
         .WillOnce(ReturnRef(str));
 
     mia::AndroidInputChannel package(surface_info);
-    EXPECT_EQ(size, package.name());
+    EXPECT_EQ(str, package.name());
 }

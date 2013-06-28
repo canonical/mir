@@ -74,5 +74,7 @@ void mia::InputManager::start()
 
 std::shared_ptr<mi::InputChannel> mia::InputManager::make_input_channel()
 {
-    return std::make_shared<mia::AndroidInputChannel>();
+    //todo:
+    std::shared_ptr<surfaces::SurfaceInfo> info;
+    return std::make_shared<mia::AndroidInputChannel>(info);
 }

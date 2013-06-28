@@ -22,6 +22,7 @@
 #include "mir/input/input_channel.h"
 
 #include <utils/StrongPointer.h>
+#include <memory>
 
 namespace android
 {
@@ -32,6 +33,10 @@ namespace droidinput = android;
 
 namespace mir
 {
+namespace surfaces
+{
+class SurfaceInfo;
+}
 namespace input
 {
 namespace android
@@ -40,9 +45,12 @@ namespace android
 class AndroidInputChannel : public InputChannel
 {
 public:
-    explicit AndroidInputChannel();
+    explicit AndroidInputChannel(std::shared_ptr<surfaces::SurfaceInfo> const&);
     virtual ~AndroidInputChannel();
 
+    geometry::Point top_left() const;
+    geometry::Size size() const;
+    std::string const& name() const;
     int client_fd() const;
     int server_fd() const;
 
@@ -51,6 +59,7 @@ protected:
     AndroidInputChannel& operator=(AndroidInputChannel const&) = delete;
 
 private:
+    std::shared_ptr<surfaces::SurfaceInfo> info;
     int s_fd, c_fd;
 };
 

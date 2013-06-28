@@ -129,6 +129,20 @@ struct StubInputChannel : public mi::InputChannel
     {
     }
     
+    geom::Point top_left() const
+    {
+        return geom::Point{geom::X{}, geom::Y{}};
+    }
+    geom::Size size() const
+    {
+        return geom::Size{geom::Width{}, geom::Height{}};
+    }
+    std::string const& name() const
+    {
+        static std::string n;
+        return n;
+    }
+
     int client_fd() const
     {
         return c_fd;
@@ -462,6 +476,6 @@ TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
             std::make_shared<mtd::StubInputRegistrar>()};
 
     auto surface = stack.create_surface(msh::a_surface(), default_depth).lock();
-    EXPECT_EQ(server_input_fd, surface->server_input_fd());
+    EXPECT_EQ(server_input_fd, surface->server_fd());
     EXPECT_EQ(client_input_fd, surface->client_input_fd());
 }

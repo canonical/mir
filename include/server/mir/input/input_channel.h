@@ -19,13 +19,15 @@
 #ifndef MIR_INPUT_INPUT_CHANNEL_H_
 #define MIR_INPUT_INPUT_CHANNEL_H_
 
+#include "mir/input/surface_target.h"
+
 namespace mir
 {
 namespace input
 {
 
 /// Encapsulates a paired set of fd's suitable for input communication.
-class InputChannel
+class InputChannel : public SurfaceTarget
 {
 public:
     virtual ~InputChannel() {}

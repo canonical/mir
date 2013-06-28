@@ -239,7 +239,7 @@ int msh::Surface::server_input_fd() const
 {
     if (auto const& s = surface.lock())
     {
-        return s->server_input_fd();
+        return s->server_fd();
     }
     else
     {

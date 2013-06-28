@@ -45,7 +45,7 @@ bool mia::InputWindowHandle::updateInfo()
 
         // TODO: How can we avoid recreating the InputChannel which the InputChannelFactory has already created?
         mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"),
-                                                           surface->server_input_fd());
+                                                           surface->server_fd());
     }
 
     auto surface_position = surface->top_left();

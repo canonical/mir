@@ -51,7 +51,7 @@ struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
 
 struct MockSurfaceTarget : public mi::SurfaceTarget
 {
-    MOCK_CONST_METHOD0(server_input_fd, int());
+    MOCK_CONST_METHOD0(server_fd, int());
     MOCK_CONST_METHOD0(top_left, geom::Point());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(name, std::string const&());
@@ -77,7 +77,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     MockSurfaceTarget surface;
 
-    EXPECT_CALL(surface, server_input_fd()).Times(1)
+    EXPECT_CALL(surface, server_fd()).Times(1)
         .WillOnce(Return(testing_server_fd));
     // For now since we are just doing keyboard input we only need surface size,
     // for touch/pointer events we will need a position

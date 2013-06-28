@@ -89,7 +89,7 @@ struct StubSurfaceTarget : public mi::SurfaceTarget
         return target_name;
     }
 
-    int server_input_fd() const override
+    int server_fd() const override
     {
         return 0;
     }

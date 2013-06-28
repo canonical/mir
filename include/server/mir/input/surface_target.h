@@ -38,7 +38,7 @@ public:
     virtual geometry::Size size() const = 0;
     virtual std::string const& name() const = 0;
 
-    virtual int server_input_fd() const = 0;
+    virtual int server_fd() const = 0;
 
 protected:
     SurfaceTarget() = default;
