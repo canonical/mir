@@ -76,11 +76,12 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
                                            params.pixel_format,
                                            params.buffer_usage};
 
+    auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
+
     //  TODO
     std::shared_ptr<ms::SurfaceInfo> info;
     std::shared_ptr<ms::Surface> surface(
-        new ms::Surface(info,
-            buffer_stream_factory->create_buffer_stream(buffer_properties),
+        new ms::Surface(info, buffer_stream,
             input_factory->make_input_channel(),
             [this]() { emit_change_notification(); }));
     

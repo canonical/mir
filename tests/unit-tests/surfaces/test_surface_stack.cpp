@@ -435,12 +435,39 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
     
     auto s = stack.create_surface(
         msh::a_surface().of_size(requested_size).of_position(requested_top_left), default_depth);
-    
+
     {
         auto surface = s.lock();
         EXPECT_EQ(requested_top_left, surface->top_left());
-    }
+    } 
+}
+
+TEST(SurfaceStack, surface_gets_buffer_bundles_reported_size)
+{
+    using namespace ::testing;
+    geom::Point const requested_top_left{geom::X{50},
+                                         geom::Y{17}};
+    geom::Size const requested_size{geom::Width{1024}, geom::Height{768}}; 
+    geom::Size const stream_size{geom::Width{1025}, geom::Height{769}};
+
+    MockBufferStreamFactory buffer_stream_factory;
+    EXPECT_CALL(buffer_stream_factory, stream_size())
+        .Times(1)
+        .WillOnce(Return(stream_size)); 
+
+    ms::SurfaceStack stack{mt::fake_shared(buffer_stream_factory),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
     
+    auto s = stack.create_surface(
+        msh::a_surface()
+            .of_size(requested_size)
+            .of_position(requested_top_left), default_depth);
+    
+    {
+        auto surface = s.lock();
+        EXPECT_EQ(stream_size, surface->size());
+    }    
 }
 
 TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
