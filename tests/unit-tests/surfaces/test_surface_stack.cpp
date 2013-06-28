@@ -480,8 +480,11 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     using namespace ::testing;
 
     mtd::MockInputRegistrar registrar;
-    EXPECT_CALL(registrar, input_surface_opened(_)).Times(1);
-    EXPECT_CALL(registrar, input_surface_closed(_)).Times(1);
+    Sequence seq
+    EXPECT_CALL(registrar, input_surface_opened(_))
+        .InSequence(seq);
+    EXPECT_CALL(registrar, input_surface_closed(_))
+        .InSequence(seq);
 
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         std::make_shared<StubInputChannelFactory>(),

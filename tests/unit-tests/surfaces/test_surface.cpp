@@ -332,6 +332,14 @@ TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
+TEST_F(SurfaceCreation, test_get_input_channel)
+{
+    auto mock_channel = std::make_shared<mtd::MockInputChannel>();
+    ms::Surface surf(mock_info, mock_buffer_stream, mock_channel, mock_change_cb);
+
+    EXPECT_EQ(mock_channel, surf->input_channel());
+}
+
 #if 0
 TEST_F(SurfaceCreation, test_surface_transformation_cache_refreshes)
 {
