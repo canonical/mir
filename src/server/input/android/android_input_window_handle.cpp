@@ -43,8 +43,7 @@ struct WindowInfo : public droidinput::InputWindowInfo
     {
         uint32_t rel_x = x-surface->top_left().x.as_uint32_t();
         uint32_t rel_y = y+surface->top_left().y.as_uint32_t();
-        int contains = surface->input_region()->contains_point(rel_x, rel_y);
-        return contains;
+        return surface->input_region()->contains_point(rel_x, rel_y);
     }
     
     std::shared_ptr<mi::SurfaceTarget> const surface;
