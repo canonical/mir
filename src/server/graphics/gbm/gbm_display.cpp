@@ -82,7 +82,7 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
 
     shared_egl.setup(platform->gbm);
 
-    configure(configuration());
+    configure(*configuration());
 
     shared_egl.make_current();
 }
@@ -110,16 +110,16 @@ std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
     return std::make_shared<mgg::KMSDisplayConfiguration>(platform->drm.fd);
 }
 
-void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const& conf)
+void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
     display_buffers.clear();
     std::vector<std::shared_ptr<KMSOutput>> enabled_outputs;
 
     /* Create or reset the KMS outputs */
-    conf->for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
-        auto const& kms_conf = std::static_pointer_cast<KMSDisplayConfiguration>(conf);
-        uint32_t const connector_id = kms_conf->get_kms_connector_id(conf_output.id);
+        auto const& kms_conf = static_cast<KMSDisplayConfiguration const&>(conf);
+        uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
 
         auto output = output_container.get_kms_output_for(connector_id);
 
