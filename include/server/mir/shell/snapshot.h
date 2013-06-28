@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,33 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Robert Carr <racarr@canonical.com>
+ * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_H_
-#define MIR_SHELL_SESSION_H_
+#ifndef MIR_SHELL_SNAPSHOT_H_
+#define MIR_SHELL_SNAPSHOT_H_
 
-#include "mir/frontend/session.h"
-#include "mir/shell/snapshot.h"
+#include "mir/geometry/size.h"
+#include "mir/geometry/dimensions.h"
+
+#include <functional>
 
 namespace mir
 {
-
 namespace shell
 {
-class Surface;
 
-class Session : public frontend::Session
+struct Snapshot
 {
-public:
-    virtual std::string name() const = 0;
-    virtual void force_requests_to_complete() = 0;
-
-    virtual void take_snapshot(SnapshotCallback const& snapshot_taken) = 0;
-    virtual std::shared_ptr<Surface> default_surface() const = 0;
+    geometry::Size size;
+    geometry::Stride stride;
+    void const* pixels;
 };
 
+typedef std::function<void(Snapshot const&)> SnapshotCallback;
+
 }
 }
 
-#endif // MIR_SHELL_SESSION_H_
+#endif /* MIR_SHELL_SNAPSHOT_H_ */
