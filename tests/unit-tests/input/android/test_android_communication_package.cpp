@@ -22,16 +22,14 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <string>
 #include <unistd.h>
 #include <fcntl.h>
 
 namespace droidinput = android;
 namespace mia = mir::input::android;
-
-struct MockSurfaceInfo : public ms::SurfaceInfo
-{
-    
-};
+namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
 
 struct AndroidInputChannel : public testing::Test
 {
