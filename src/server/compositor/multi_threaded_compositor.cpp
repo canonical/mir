@@ -33,6 +33,24 @@ namespace mir
 namespace compositor
 {
 
+class CurrentRenderingTarget
+{
+public:
+    CurrentRenderingTarget(mg::DisplayBuffer& buffer)
+        : buffer(buffer)
+    {
+        buffer.make_current();
+    }
+
+    ~CurrentRenderingTarget()
+    {
+        buffer.release_current();
+    }
+
+private:
+    mg::DisplayBuffer& buffer;
+};
+
 class CompositingFunctor
 {
 public:
@@ -48,6 +66,12 @@ public:
     void operator()()
     {
         std::unique_lock<std::mutex> lock{run_mutex};
+
+        /*
+         * Make the buffer the current rendering target, and release
+         * it when the thread is finished.
+         */
+        CurrentRenderingTarget target{buffer};
 
         while (running)
         {
@@ -68,12 +92,6 @@ public:
                 lock.lock();
             }
         }
-
-        /*
-         * Release the display buffer from this thread, so that it can be
-         * made current in another thread.
-         */
-        buffer.release_current();
     }
 
     void schedule_compositing()
