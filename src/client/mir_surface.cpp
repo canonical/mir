@@ -191,24 +191,27 @@ void MirSurface::process_incoming_buffer()
 
 void MirSurface::created(mir_surface_callback callback, void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    process_incoming_buffer();
+        process_incoming_buffer();
 
-    auto platform = connection->get_client_platform();
-    accelerated_window = platform->create_egl_native_window(this);
+        auto platform = connection->get_client_platform();
+        accelerated_window = platform->create_egl_native_window(this);
 
-    connection->on_surface_created(id(), this);
+        connection->on_surface_created(id(), this);
+    }
+
     callback(this, context);
-    
     create_wait_handle.result_received();
 }
 
 void MirSurface::new_buffer(mir_surface_callback callback, void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
-    process_incoming_buffer();
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+        process_incoming_buffer();
+    }
 
     callback(this, context);
     next_buffer_wait_handle.result_received();
@@ -354,7 +357,7 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
 
 void MirSurface::handle_event(MirEvent const& e)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    std::unique_lock<std::recursive_mutex> lock(mutex);
 
     if (e.type == mir_event_type_surface)
     {
@@ -364,7 +367,11 @@ void MirSurface::handle_event(MirEvent const& e)
     }
 
     if (handle_event_callback)
-        handle_event_callback(&e);
+    {
+        auto callback = handle_event_callback;
+        lock.unlock();
+        callback(&e);
+    }
 }
 
 MirPlatformType MirSurface::platform_type()

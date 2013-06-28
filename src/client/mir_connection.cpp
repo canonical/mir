@@ -107,7 +107,6 @@ struct MirConnection::SurfaceRelease
 
 void MirConnection::released(SurfaceRelease data)
 {
-    // TODO: surface.lock?
     data.callback(data.surface, data.context);
     data.handle->result_received();
     delete data.surface;
@@ -138,15 +137,17 @@ MirWaitHandle* MirConnection::release_surface(
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    /*
-     * We need to create the client platform after the connection has been
-     * established, to ensure that the client platform has access to all
-     * needed data (e.g. platform package).
-     */
-    platform = client_platform_factory->create_client_platform(this);
-    native_display = platform->create_egl_native_display();
+        /*
+         * We need to create the client platform after the connection has been
+         * established, to ensure that the client platform has access to all
+         * needed data (e.g. platform package).
+         */
+        platform = client_platform_factory->create_client_platform(this);
+        native_display = platform->create_egl_native_display();
+    }
 
     callback(this, context);
     connect_wait_handle.result_received();
