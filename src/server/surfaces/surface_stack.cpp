@@ -23,7 +23,9 @@
 #include "mir/graphics/renderer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
+#include "mir/surfaces/surface_data_storage.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
 
@@ -75,11 +77,10 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
     mc::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
                                            params.buffer_usage};
-
     auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
-
-    //  TODO
-    std::shared_ptr<ms::SurfaceInfo> info;
+    auto info = std::make_shared<ms::SurfaceDataStorage>(params.name,
+                                                         params.top_left,
+                                                         buffer_stream->stream_size());
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(info, buffer_stream,
             input_factory->make_input_channel(),

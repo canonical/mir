@@ -31,6 +31,7 @@
 #include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/stub_input_registrar.h"
 #include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
@@ -451,9 +452,13 @@ TEST(SurfaceStack, surface_gets_buffer_bundles_reported_size)
     geom::Size const stream_size{geom::Width{1025}, geom::Height{769}};
 
     MockBufferStreamFactory buffer_stream_factory;
-    EXPECT_CALL(buffer_stream_factory, stream_size())
+    auto stream = std::make_shared<mtd::MockBufferStream>();
+    EXPECT_CALL(*stream, stream_size())
         .Times(1)
-        .WillOnce(Return(stream_size)); 
+        .WillOnce(Return(stream_size));  
+    EXPECT_CALL(buffer_stream_factory,create_buffer_stream(_))
+        .Times(1)
+        .WillOnce(Return(stream));
 
     ms::SurfaceStack stack{mt::fake_shared(buffer_stream_factory),
         std::make_shared<StubInputChannelFactory>(),
