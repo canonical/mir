@@ -124,7 +124,7 @@ void mir_connection_release(MirConnection * connection)
     if (!error_connections.contains(connection))
     {
         auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_one();
+        wait_handle->wait_for_all();
     }
     else
     {
@@ -313,7 +313,7 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
         if (s == mir_surface_state_unknown)
         {
             surf->configure(mir_surface_attrib_state,
-                            mir_surface_state_unknown)->wait_for_one();
+                            mir_surface_state_unknown)->wait_for_all();
             s = surf->attrib(mir_surface_attrib_state);
         }
 
