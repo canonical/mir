@@ -19,9 +19,12 @@
 #include "mir/asio_main_loop.h"
 
 #include <gtest/gtest.h>
+#include <boost/throw_exception.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 
 #include <thread>
 #include <atomic>
+#include <stdexcept>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -141,4 +144,175 @@ TEST(AsioMainLoopTest, all_registered_handlers_are_called)
     ASSERT_EQ(signum, handled_signum[0]);
     ASSERT_EQ(signum, handled_signum[1]);
     ASSERT_EQ(signum, handled_signum[2]);
+}
+
+namespace
+{
+
+class Pipe
+{
+public:
+    Pipe()
+    {
+        if (pipe(pipefd))
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(std::runtime_error("Failed to create pipe"))
+                    << boost::errinfo_errno(errno));
+        }
+
+    }
+
+    ~Pipe()
+    {
+        close(pipefd[0]);
+        close(pipefd[1]);
+    }
+
+    int read_fd() const { return pipefd[0]; }
+    int write_fd() const { return pipefd[1]; }
+
+private:
+    int pipefd[2];
+};
+
+}
+
+TEST(AsioMainLoopTest, fd_data_handled)
+{
+    Pipe p;
+    char const data_to_write{'a'};
+    int handled_fd{0};
+    char data_read{0};
+
+    mir::AsioMainLoop ml;
+
+    ml.register_fd_handler(
+        {p.read_fd()},
+        [&handled_fd, &data_read, &ml](int fd)
+        {
+            handled_fd = fd;
+            read(fd, &data_read, 1);
+            ml.stop();
+        });
+
+    write(p.write_fd(), &data_to_write, 1);
+
+    ml.run();
+
+    ASSERT_EQ(data_to_write, data_read);
+}
+
+TEST(AsioMainLoopTest, multiple_fds_with_single_handler_handled)
+{
+    std::vector<Pipe> const pipes(2);
+    size_t const num_elems_to_send{10};
+    std::vector<int> handled_fds;
+    std::vector<size_t> elems_read;
+    std::atomic<unsigned int> num_handled_fds{0};
+
+    mir::AsioMainLoop ml;
+
+    ml.register_fd_handler(
+        {pipes[0].read_fd(), pipes[1].read_fd()},
+        [&handled_fds, &elems_read, &num_handled_fds](int fd)
+        {
+            handled_fds.push_back(fd);
+
+            size_t i;
+            read(fd, &i, sizeof(i));
+            elems_read.push_back(i);
+
+            ++num_handled_fds;
+        });
+
+    std::thread fd_writing_thread(
+        [&ml, num_elems_to_send, &pipes, &num_handled_fds]
+        {
+            for (size_t i = 0; i < num_elems_to_send; i++)
+            {
+                write(pipes[i % pipes.size()].write_fd(), &i, sizeof(i));
+                while (num_handled_fds <= i) std::this_thread::yield();
+            }
+            ml.stop();
+        });
+
+    ml.run();
+
+    fd_writing_thread.join();
+
+    ASSERT_EQ(num_elems_to_send, handled_fds.size());
+    ASSERT_EQ(num_elems_to_send, elems_read.size());
+
+    for (size_t i = 0; i < num_elems_to_send; i++)
+    {
+        ASSERT_EQ(pipes[i % pipes.size()].read_fd(), handled_fds[i]) << " index " << i;
+        ASSERT_EQ(i, elems_read[i]) << " index " << i;
+    }
+}
+
+TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
+{
+    std::vector<Pipe> const pipes(3);
+    std::vector<int> const elems_to_send{10,11,12};
+    std::vector<int> handled_fds{0,0,0};
+    std::vector<int> elems_read{0,0,0};
+
+    mir::AsioMainLoop ml;
+
+    ml.register_fd_handler(
+        {pipes[0].read_fd()},
+        [&handled_fds, &elems_read, &ml](int fd)
+        {
+            read(fd, &elems_read[0], sizeof(elems_read[0]));
+            handled_fds[0] = fd;
+            if (handled_fds[0] != 0 &&
+                handled_fds[1] != 0 &&
+                handled_fds[2] != 0)
+            {
+                ml.stop();
+            }
+        });
+
+    ml.register_fd_handler(
+        {pipes[1].read_fd()},
+        [&handled_fds, &elems_read, &ml](int fd)
+        {
+            read(fd, &elems_read[1], sizeof(elems_read[1]));
+            handled_fds[1] = fd;
+            if (handled_fds[0] != 0 &&
+                handled_fds[1] != 0 &&
+                handled_fds[2] != 0)
+            {
+                ml.stop();
+            }
+        });
+
+    ml.register_fd_handler(
+        {pipes[2].read_fd()},
+        [&handled_fds, &elems_read, &ml](int fd)
+        {
+            read(fd, &elems_read[2], sizeof(elems_read[1]));
+            handled_fds[2] = fd;
+            if (handled_fds[0] != 0 &&
+                handled_fds[1] != 0 &&
+                handled_fds[2] != 0)
+            {
+                ml.stop();
+            }
+        });
+
+    write(pipes[0].write_fd(), &elems_to_send[0], sizeof(elems_to_send[0]));
+    write(pipes[1].write_fd(), &elems_to_send[1], sizeof(elems_to_send[1]));
+    write(pipes[2].write_fd(), &elems_to_send[2], sizeof(elems_to_send[2]));
+
+    ml.run();
+
+    ASSERT_EQ(pipes[0].read_fd(), handled_fds[0]);
+    ASSERT_EQ(pipes[1].read_fd(), handled_fds[1]);
+    ASSERT_EQ(pipes[2].read_fd(), handled_fds[2]);
+
+    ASSERT_EQ(elems_to_send[0], elems_read[0]);
+    ASSERT_EQ(elems_to_send[1], elems_read[1]);
+    ASSERT_EQ(elems_to_send[2], elems_read[2]);
 }
