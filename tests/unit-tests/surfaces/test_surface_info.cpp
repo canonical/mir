@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/surfaces/surface_info.h"
+#include "mir/surfaces/surface_data_storage.h"
 
 #include <gtest/gtest.h>
 
@@ -49,7 +49,7 @@ TEST_F(SurfaceInfoTest, update_position)
     ms::SurfaceDataStorage storage{name, top_left, size};
     EXPECT_EQ(top_left, storage.top_left());
 
-    atuo new_top_left = geom::Point{geom::X{5}, geom::Y{10}};
-    storage.set_top_left(new_to_left);
+    auto new_top_left = geom::Point{geom::X{5}, geom::Y{10}};
+    storage.set_top_left(new_top_left);
     EXPECT_EQ(new_top_left, storage.top_left());
 }

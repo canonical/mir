@@ -305,19 +305,6 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     surf.move_to(p);
 }
 
-#if 0
-//test for surfaceinfo
-TEST_F(SurfaceCreation, test_surface_move_to_notifies_changes)
-{
-    using namespace testing;
-
-
-    ms::Surface surf(mock_info, mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
-
-    surf.move_to(geom::Point{geom::X{55}, geom::Y{66}});
-}
-#endif
 TEST_F(SurfaceCreation, test_surface_set_rotation)
 {
     using namespace testing;
