@@ -56,14 +56,30 @@ anything different. You can verify you're in Mir several ways:
     $ grep -i xmir /var/log/Xorg.0.log
     $ ls -l /var/log/lightdm/unity-system-compositor.log
 
+If problems occur, have a look at the following log files:
+
+    /var/log/lightdm/lightdm.log
+    /var/log/lightdm/unity-system-compositor.log
+    /var/log/lightdm/x-0.log
+
+You may not be able to get to a terminal if your video system has locked up. In
+that case secure shell into to your machine and read / copy these logs. They are
+overwritten on next boot.
 
 In any case, if you wish to deactivate XMir upon boot, simply comment out
 the type=unity line from
-/etc/lightdm/lightdm.conf.d10-unity-system-compositor.conf, like this:
+/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf, like this:
 
     [SeatDefaults]
     #type=unity
 
+If you cannot boot into a graphical display or terminal to disable XMir, then
+enter recovery mode as described in https://wiki.ubuntu.com/RecoveryMode. From
+there edit / move / remove
+/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf and then reboot.
+To modify the filesystem you will need to enter the following command:
+
+    # mount / -o remount,rw
 
 Running Mir natively
 --------------------
