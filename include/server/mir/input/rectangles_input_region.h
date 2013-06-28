@@ -38,10 +38,6 @@ public:
 
     bool contains_point(uint32_t x, uint32_t y) const;
 
-protected:
-    RectanglesInputRegion(RectanglesInputRegion const&) = delete;
-    RectanglesInputRegion& operator=(RectanglesInputRegion const&) = delete;
-
 private:
     std::vector<geometry::Rectangle> input_rectangles;
 };
