@@ -77,6 +77,9 @@ int mclg::GBMNativeSurface::get_parameters(MirSurfaceParameters* surface_paramet
 
 int mclg::GBMNativeSurface::set_swapinterval(int interval)
 {
+    if ((interval < 0) || (interval > 1))
+        return MIR_MESA_FALSE;
+
     mir_wait_for(surface.configure(mir_surface_attrib_swapinterval, interval)); 
     return MIR_MESA_TRUE;
 }
