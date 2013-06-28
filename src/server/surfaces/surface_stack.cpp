@@ -148,13 +148,12 @@ void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
         auto &surfaces = layer.second;
         auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
     
-        if (p == surfaces.end())
+        if (p != surfaces.end())
         {
-            continue;
+            surfaces.erase(p);
+            surfaces.push_back(surface);
+            
+            return;
         }
-        surfaces.erase(p);
-        surfaces.push_back(surface);
-        break;
     }
-    // TODO: Error logging
 }
