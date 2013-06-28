@@ -3,7 +3,7 @@ Upstream-Name: Mir
 Upstream-Contact: Thomas Voß <thomas.voss@canonical.com>
 Source: http://launchpad.net/mir
 
-Files: * 3rd_party/android-input/android/frameworks/base/services/input/MirLog.cpp
+Files: * 3rd_party/android-input/android/frameworks/base/services/input/MirLog.cpp 3rd_party/android-deps/std/MirLog.h
 Copyright: 2012-2013, Canonical Ltd.
 License: GPL-3
  This program is free software: you can redistribute it and/or modify
@@ -101,7 +101,7 @@ Files: 3rd_party/android-input/android/system/core/include/machine/cpu-features.
 Copyright:
  2008, The Android Open Source Project
  2002, Marc Espie
-License: BSD (3 clause)
+License: BSD (2 clause)
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
  are met:
