@@ -110,3 +110,39 @@ TEST(WaitHandle, asymmetric_asynchronous)
     }
     t.join();
 }
+
+namespace
+{
+    void crowded_thread(MirWaitHandle *w, int max)
+    {
+        for (int i = 0; i < max; i++)
+        {
+            /*
+             * This doesn't work with wait_for_all, because waiters will
+             * race and the winner would gobble up all the results, leaving
+             * the other waiters hanging forever. So we have wait_for_one()
+             * to allow many threads to safely wait on the same handle and
+             * guarantee that they will all get the number of results they
+             * expect.
+             */
+            w->wait_for_one();
+        }
+    }
+}
+
+TEST(WaitHandle, many_waiters)
+{
+    const int max = 100;
+    MirWaitHandle w;
+    std::thread a(crowded_thread, &w, max);
+    std::thread b(crowded_thread, &w, max);
+    std::thread c(crowded_thread, &w, max);
+
+    for (int n = 0; n < max * 3; n++)
+        w.result_received();
+
+    a.join();
+    b.join();
+    c.join();
+}
+
