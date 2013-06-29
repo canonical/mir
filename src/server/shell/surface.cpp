@@ -346,7 +346,7 @@ void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& t
 {
     auto s = surface.lock();
     if (s)
-        targeter->focus_changed(s);
+        targeter->focus_changed(s->input_channel());
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }

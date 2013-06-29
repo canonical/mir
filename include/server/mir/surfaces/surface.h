@@ -48,7 +48,7 @@ class BufferStream;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
-class Surface : public graphics::Renderable, public input::SurfaceTarget
+class Surface : public graphics::Renderable//, public input::SurfaceTarget
 {
 public:
     Surface(std::shared_ptr<SurfaceInfo> const& info,

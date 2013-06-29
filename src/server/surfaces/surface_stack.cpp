@@ -92,9 +92,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         layers_by_depth[depth].push_back(surface);
     }
 
-    // TODO: It might be a nice refactoring to combine this with input channel creation
-    // i.e. client_fd = registrar->register_for_input(surface). ~racarr
-    input_registrar->input_surface_opened(surface);
+    input_registrar->input_surface_opened(surface->input_channel());
 
     emit_change_notification();
 
@@ -122,7 +120,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         }
     }
     if (found_surface)
-        input_registrar->input_surface_closed(keep_alive);
+        input_registrar->input_surface_closed(keep_alive->input_channel());
     emit_change_notification();
     // TODO: error logging when surface not found
 }
@@ -139,6 +137,6 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTa
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.rbegin(); it != layer.second.rend(); ++it)
-            callback(*it);
+            callback((*it)->input_channel());
     }
 }
