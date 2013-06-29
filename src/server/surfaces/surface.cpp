@@ -44,7 +44,7 @@ ms::Surface::Surface(
     std::function<void()> const& change_callback) :
     info(info),
     buffer_stream(buffer_stream),
-    input_channel(input_channel),
+    server_input_channel(input_channel),
     transformation_dirty(true),
     alpha_value(1.0f),
     is_hidden(false),
@@ -195,7 +195,7 @@ void ms::Surface::flag_for_render()
 
 bool ms::Surface::supports_input() const
 {
-    if (input_channel)
+    if (server_input_channel)
         return true;
     return false;
 }
@@ -204,12 +204,17 @@ int ms::Surface::client_input_fd() const
 {
     if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return input_channel->client_fd();
+    return server_input_channel->client_fd();
 }
 
 int ms::Surface::server_fd() const
 {
     if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return input_channel->server_fd();
+    return server_input_channel->server_fd();
+}
+
+std::shared_ptr<mi::SurfaceTarget> ms::Surface::input_channel() const
+{
+    return server_input_channel;
 }

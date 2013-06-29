@@ -480,10 +480,18 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     using namespace ::testing;
 
     mtd::MockInputRegistrar registrar;
-    Sequence seq
-    EXPECT_CALL(registrar, input_surface_opened(_))
+    Sequence seq;
+
+    auto channel = std::make_shared<StubInputChannel>(4,3);
+    std::shared_ptr<mi::SurfaceTarget> target = channel;
+    MockInputChannelFactory input_factory;
+    
+    EXPECT_CALL(input_factory, make_input_channel(_))
+        .Times(1)
+        .WillOnce(Return(channel));
+    EXPECT_CALL(registrar, input_surface_opened(target))
         .InSequence(seq);
-    EXPECT_CALL(registrar, input_surface_closed(_))
+    EXPECT_CALL(registrar, input_surface_closed(target))
         .InSequence(seq);
 
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),

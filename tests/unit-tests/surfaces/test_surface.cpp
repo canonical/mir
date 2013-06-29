@@ -44,6 +44,9 @@ struct MockInputChannel : public mi::InputChannel
 {
     MOCK_CONST_METHOD0(server_fd, int());
     MOCK_CONST_METHOD0(client_fd, int());
+    MOCK_CONST_METHOD0(top_left, geom::Point());
+    MOCK_CONST_METHOD0(size, geom::Size());
+    MOCK_CONST_METHOD0(name, std::string const&());
 };
 }
 
@@ -334,10 +337,9 @@ TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
 
 TEST_F(SurfaceCreation, test_get_input_channel)
 {
-    auto mock_channel = std::make_shared<mtd::MockInputChannel>();
+    auto mock_channel = std::make_shared<MockInputChannel>();
     ms::Surface surf(mock_info, mock_buffer_stream, mock_channel, mock_change_cb);
-
-    EXPECT_EQ(mock_channel, surf->input_channel());
+    EXPECT_EQ(mock_channel, surf.input_channel());
 }
 
 #if 0

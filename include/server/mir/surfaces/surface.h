@@ -83,13 +83,15 @@ public:
     int client_input_fd() const;
     int server_fd() const;
 
-    void allow_framedropping(bool); 
+    void allow_framedropping(bool);
+
+    std::shared_ptr<input::SurfaceTarget> input_channel() const;
 private:
     std::shared_ptr<SurfaceInfo> info;
 
     std::shared_ptr<BufferStream> buffer_stream;
 
-    std::shared_ptr<input::InputChannel> const input_channel;
+    std::shared_ptr<input::InputChannel> const server_input_channel;
 
     glm::mat4 rotation_matrix;
     mutable glm::mat4 transformation_matrix;
