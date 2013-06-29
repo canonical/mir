@@ -484,18 +484,17 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
 
     auto channel = std::make_shared<StubInputChannel>(4,3);
     std::shared_ptr<mi::SurfaceTarget> target = channel;
-    MockInputChannelFactory input_factory;
-    
+    MockInputChannelFactory input_factory; 
     EXPECT_CALL(input_factory, make_input_channel(_))
         .Times(1)
         .WillOnce(Return(channel));
-    EXPECT_CALL(registrar, input_surface_opened(target))
+    EXPECT_CALL(registrar, input_surface_opened(_))
         .InSequence(seq);
-    EXPECT_CALL(registrar, input_surface_closed(target))
+    EXPECT_CALL(registrar, input_surface_closed(_))
         .InSequence(seq);
 
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
-        std::make_shared<StubInputChannelFactory>(),
+            mt::fake_shared(input_factory),
             mt::fake_shared(registrar)};
     
     auto s = stack.create_surface(msh::a_surface(), default_depth);

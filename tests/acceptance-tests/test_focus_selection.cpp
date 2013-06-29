@@ -188,7 +188,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
                 {
                     InSequence seq;
-                    EXPECT_CALL(*targeter, focus_changed(NonNullSurfaceTarget())).Times(1);
+                    EXPECT_CALL(*targeter, focus_changed(_)).Times(1);
                     expected = true;
                 }
             }
