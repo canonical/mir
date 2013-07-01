@@ -21,7 +21,8 @@ Build-Depends: cmake,
                libhybris-dev [armhf],
                libgoogle-glog-dev,
                liblttng-ust-dev,
-               libxkbcommon-dev
+               libxkbcommon-dev,
+               libumockdev-dev,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
