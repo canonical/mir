@@ -52,13 +52,11 @@ target_link_libraries(
 )
 
 add_library(
-  mir-test-doubles-platform SHARED
+  mir-test-doubles-platform STATIC
   ${MIR_TEST_DOUBLES_PLATFORM_SRCS})
 
 target_link_libraries(
   mir-test-doubles-platform
-
-  -Wl,-zinterpose
 
   -ldl
   ${GMOCK_LIBRARY}
