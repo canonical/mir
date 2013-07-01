@@ -21,6 +21,8 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 
+#include "mir_test_framework/udev_environment.h"
+
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/gbm_buffer.h"
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
@@ -43,6 +45,7 @@ namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
+namespace mtf=mir::mir_test_framework;
 
 class GBMGraphicBufferBasic : public ::testing::Test
 {
@@ -50,6 +53,8 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
+
+        fake_devices.add_standard_drm_devices();
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::argb_8888;
@@ -89,6 +94,8 @@ protected:
     geom::Stride stride;
     mc::BufferUsage usage;
     mc::BufferProperties buffer_properties;
+
+    mtf::UdevEnvironment fake_devices;
 };
 
 TEST_F(GBMGraphicBufferBasic, dimensions_test)
