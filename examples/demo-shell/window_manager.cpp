@@ -88,7 +88,8 @@ bool me::WindowManager::handle(MirEvent const& event)
     {
         geometry::Point cursor = average_pointer(event.motion);
 
-        MirMotionAction action = static_cast<MirMotionAction>(event.motion.action);
+        // FIXME: http://pastebin.ubuntu.com/5834366/
+        MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & 0xff00);
 
         std::shared_ptr<msh::Session> app =
             session_manager->focussed_application().lock();
