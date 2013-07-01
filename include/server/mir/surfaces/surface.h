@@ -80,7 +80,6 @@ public:
 
     bool supports_input() const;
     int client_input_fd() const;
-    int server_fd() const;
 
     void allow_framedropping(bool);
 

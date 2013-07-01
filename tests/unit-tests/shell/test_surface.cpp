@@ -206,9 +206,9 @@ TEST_F(ShellSurface, top_left_throw_behavior)
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
-    //EXPECT_NO_THROW({
+    EXPECT_NO_THROW({
         test.top_left();
-    //});
+    });
 
     surface_builder.reset_surface();
 
@@ -361,9 +361,6 @@ TEST_F(ShellSurface, input_fds_throw_behavior)
 
     surface_builder.reset_surface();
 
-    EXPECT_THROW({
-            test.server_input_fd();
-    }, std::runtime_error);
     EXPECT_THROW({
             test.client_input_fd();
     }, std::runtime_error);

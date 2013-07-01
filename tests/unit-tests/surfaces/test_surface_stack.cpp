@@ -518,6 +518,5 @@ TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
             std::make_shared<mtd::StubInputRegistrar>()};
 
     auto surface = stack.create_surface(msh::a_surface(), default_depth).lock();
-    EXPECT_EQ(server_input_fd, surface->server_fd());
     EXPECT_EQ(client_input_fd, surface->client_input_fd());
 }

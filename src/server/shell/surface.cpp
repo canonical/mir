@@ -235,18 +235,6 @@ int msh::Surface::client_input_fd() const
     }
 }
 
-int msh::Surface::server_input_fd() const
-{
-    if (auto const& s = surface.lock())
-    {
-        return s->server_fd();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
-}
-
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;

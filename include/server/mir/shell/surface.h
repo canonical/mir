@@ -80,7 +80,6 @@ public:
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;
-    virtual int server_input_fd() const;
 
     virtual int configure(MirSurfaceAttrib attrib, int value);
     virtual MirSurfaceType type() const;

@@ -342,14 +342,15 @@ TEST_F(SurfaceCreation, test_get_input_channel)
     EXPECT_EQ(mock_channel, surf.input_channel());
 }
 
-#if 0
 TEST_F(SurfaceCreation, test_surface_transformation_cache_refreshes)
 {
     using namespace testing;
 
     const geom::Point origin{geom::X{77}, geom::Y{88}};
+    ON_CALL(*mock_info, top_left())
+        .WillByDefault(Return(origin));
 
-    ms::Surface surf{surface_name, origin, mock_buffer_stream,
+    ms::Surface surf(mock_info, mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
 
     glm::mat4 t0 = surf.transformation();
@@ -363,7 +364,6 @@ TEST_F(SurfaceCreation, test_surface_transformation_cache_refreshes)
     glm::mat4 t1 = surf.transformation();
     EXPECT_NE(t0, t1);
 }
-#endif
 
 TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
 {
@@ -473,36 +473,23 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second
 
 TEST_F(SurfaceCreation, input_fds)
 {
-    ms::Surface surf(mock_info, mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
-}
-
-#if 0
-TEST_F(SurfaceCreation, input_fds)
-{
     using namespace testing;
     
-    ms::Surface surf{surface_name, geom::Point(), mock_buffer_stream,
+    ms::Surface surf(mock_info, mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), mock_change_cb);
-    EXPECT_THROW({
-            surf.server_input_fd();
-    }, std::logic_error);
     EXPECT_THROW({
             surf.client_input_fd();
     }, std::logic_error);
 
     MockInputChannel channel;
     int const client_fd = 13;
-    int const server_fd = 19;
     EXPECT_CALL(channel, client_fd()).Times(1).WillOnce(Return(client_fd));
-    EXPECT_CALL(channel, server_fd()).Times(1).WillOnce(Return(server_fd));
 
-    ms::Surface input_surf{surface_name, geom::Point(), mock_buffer_stream,
+    ms::Surface input_surf(mock_info, mock_buffer_stream,
         mt::fake_shared(channel), mock_change_cb);
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
-    EXPECT_EQ(server_fd, input_surf.server_input_fd());
 }
-#endif
+
 TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
 {
     using namespace testing;

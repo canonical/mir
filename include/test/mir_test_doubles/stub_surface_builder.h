@@ -43,9 +43,8 @@ public:
     {
     }
 
-    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const& param)
+    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const&)
     {
-        (void) param;
         auto info = std::make_shared<MockSurfaceInfo>();
         dummy_surface = std::make_shared<surfaces::Surface>(info, buffer_stream, 
             std::shared_ptr<input::InputChannel>(), []{});

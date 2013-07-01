@@ -33,6 +33,8 @@ public:
 
     int advance_buffer(MirBufferPackage* buffer_package);
     int get_parameters(MirSurfaceParameters* surface_parameters);
+    int set_swapinterval(int interval);
+
 private:
     ClientSurface& surface;
 };
