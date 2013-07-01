@@ -60,7 +60,7 @@ msh::Surface::Surface(
 {
 }
 
-msh::Surface::~Surface()
+msh::Surface::~Surface() noexcept
 {
     if (surface.lock())
     {

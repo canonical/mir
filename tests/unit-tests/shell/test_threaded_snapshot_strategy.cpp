@@ -37,8 +37,11 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
-struct StubSurfaceBufferAccess : public msh::SurfaceBufferAccess
+class StubSurfaceBufferAccess : public msh::SurfaceBufferAccess
 {
+public:
+    ~StubSurfaceBufferAccess() noexcept {}
+
     void with_most_recent_buffer_do(
         std::function<void(mc::Buffer&)> const& exec)
     {
@@ -48,8 +51,11 @@ struct StubSurfaceBufferAccess : public msh::SurfaceBufferAccess
     mtd::StubBuffer buffer;
 };
 
-struct MockPixelBuffer : public msh::PixelBuffer
+class MockPixelBuffer : public msh::PixelBuffer
 {
+public:
+    ~MockPixelBuffer() noexcept {}
+
     MOCK_METHOD1(fill_from, void(mc::Buffer& buffer));
     MOCK_METHOD0(as_argb_8888, void const*());
     MOCK_CONST_METHOD0(size, geom::Size());
