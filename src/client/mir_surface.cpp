@@ -39,7 +39,7 @@ MirSurface::MirSurface(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
-    mir_surface_lifecycle_callback callback, void * context)
+    mir_surface_callback callback, void * context)
     : server(server),
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
@@ -58,6 +58,7 @@ MirSurface::MirSurface(
         attrib_cache[i] = -1;
     attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
     attrib_cache[mir_surface_attrib_state] = mir_surface_state_unknown;
+    attrib_cache[mir_surface_attrib_swapinterval] = 1;
 }
 
 MirSurface::~MirSurface()
@@ -121,7 +122,7 @@ void MirSurface::release_cpu_region()
     secured_region.reset();
 }
 
-MirWaitHandle* MirSurface::next_buffer(mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * context)
 {
     release_cpu_region();
 
@@ -170,7 +171,7 @@ void MirSurface::process_incoming_buffer()
     }
 }
 
-void MirSurface::created(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::created(mir_surface_callback callback, void * context)
 {
     process_incoming_buffer();
 
@@ -183,7 +184,7 @@ void MirSurface::created(mir_surface_lifecycle_callback callback, void * context
     create_wait_handle.result_received();
 }
 
-void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * context)
+void MirSurface::new_buffer(mir_surface_callback callback, void * context)
 {
     process_incoming_buffer();
 
@@ -192,7 +193,7 @@ void MirSurface::new_buffer(mir_surface_lifecycle_callback callback, void * cont
 }
 
 MirWaitHandle* MirSurface::release_surface(
-        mir_surface_lifecycle_callback callback,
+        mir_surface_callback callback,
         void * context)
 {
     return connection->release_surface(this, callback, context);
@@ -269,6 +270,7 @@ void MirSurface::on_configured()
         {
         case mir_surface_attrib_type:
         case mir_surface_attrib_state:
+        case mir_surface_attrib_swapinterval:
             if (configure_result.has_ivalue())
                 attrib_cache[a] = configure_result.ivalue();
             else

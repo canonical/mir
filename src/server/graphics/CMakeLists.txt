@@ -18,6 +18,7 @@ set(
   egl_extensions.cpp
   display_configuration.cpp
   null_display_report.cpp
+  gl_pixel_buffer.cpp
 )
 
 add_library(
@@ -32,5 +33,6 @@ target_link_libraries(
   mirlogging
 
   ${MIR_COMMON_PLATFORM_LIBRARIES}
-  ${GLESv2_LIBRARIES}
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )

@@ -177,19 +177,11 @@ mir::geometry::PixelFormat msh::Surface::pixel_format() const
     }
 }
 
-void msh::Surface::advance_client_buffer()
+std::shared_ptr<mc::Buffer> msh::Surface::advance_client_buffer()
 {
     if (auto const& s = surface.lock())
     {
-        s->advance_client_buffer();
-    }
-}
-
-std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
-{
-    if (auto const& s = surface.lock())
-    {
-        return s->client_buffer();
+        return s->advance_client_buffer();
     }
     else
     {
@@ -197,6 +189,14 @@ std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
     }
 }
 
+void msh::Surface::allow_framedropping(bool allow)
+{
+    if (auto const& s = surface.lock())
+    {
+        s->allow_framedropping(allow);
+    }
+}
+ 
 void msh::Surface::with_most_recent_buffer_do(
     std::function<void(mc::Buffer&)> const& exec)
 {
@@ -250,7 +250,7 @@ int msh::Surface::server_input_fd() const
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;
-
+    bool allow_dropping = false;
     /*
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
@@ -268,6 +268,11 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
             !set_state(static_cast<MirSurfaceState>(value)))
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
         result = state();
+        break;
+    case mir_surface_attrib_swapinterval:
+        allow_dropping = (value == 0);
+        allow_framedropping(allow_dropping);
+        result = value;
         break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "

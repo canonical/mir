@@ -62,6 +62,11 @@ public:
     virtual std::shared_ptr<DisplayConfiguration> configuration() = 0;
 
     /**
+     * Sets a new output configuration.
+     */
+    virtual void configure(DisplayConfiguration const& conf) = 0;
+
+    /**
      * Registers handlers for pausing and resuming the display subsystem.
      *
      * The implementation should use the functionality provided by the MainLoop

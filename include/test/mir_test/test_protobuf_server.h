@@ -19,29 +19,37 @@
 #ifndef MIR_TEST_TEST_PROTOBUF_SERVER_H_
 #define MIR_TEST_TEST_PROTOBUF_SERVER_H_
 
-#include "mir_test/stub_server_tool.h"
-#include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir/frontend/communicator.h"
+#include <memory>
 
 namespace mir
 {
+namespace frontend
+{
+class Communicator;
+class CommunicatorReport;
+}
+
+namespace protobuf
+{
+class DisplayServer;
+}
+
 namespace test
 {
-
 struct TestProtobufServer
 {
-    TestProtobufServer(std::string socket_name,
-               const std::shared_ptr<protobuf::DisplayServer>& tool);
+    TestProtobufServer(
+        std::string const& socket_name,
+        std::shared_ptr<protobuf::DisplayServer> const& tool);
 
-    std::shared_ptr<frontend::Communicator> make_communicator(
-        const std::string& socket_name,
-        std::shared_ptr<frontend::ProtobufIpcFactory> const& factory);
+    TestProtobufServer(
+        std::string const& socket_name,
+        std::shared_ptr<protobuf::DisplayServer> const& tool,
+        std::shared_ptr<frontend::CommunicatorReport> const& report);
 
     // "Server" side
-    std::shared_ptr<doubles::StubIpcFactory> factory;
-    std::shared_ptr<frontend::Communicator> comm;
+    std::shared_ptr<frontend::Communicator> const comm;
 };
-
 }
 }
 #endif /* MIR_TEST_TEST_PROTOBUF_SERVER_H_ */

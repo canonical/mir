@@ -39,8 +39,8 @@ class KMSDisplayConfiguration : public DisplayConfiguration
 public:
     KMSDisplayConfiguration(int drm_fd);
 
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f);
-    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f);
+    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const;
+    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const;
 
     uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const;
 

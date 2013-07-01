@@ -44,7 +44,7 @@ public:
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(graphic_region, std::shared_ptr<surfaces::GraphicRegion>());
-    MOCK_CONST_METHOD0(transformation, glm::mat4());
+    MOCK_CONST_METHOD0(transformation, const glm::mat4&());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(should_be_rendered, bool());
 

@@ -1,6 +1,6 @@
 Source: mir
 Section: x11
-Priority: extra
+Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
@@ -9,7 +9,7 @@ Build-Depends: cmake,
                doxygen,
                xsltproc,
                graphviz,
-               libboost1.48-all-dev | libboost-all-dev,
+               libboost-all-dev,
                protobuf-compiler,
                libdrm-dev [!armhf],
                libegl1-mesa-dev,
@@ -23,7 +23,9 @@ Build-Depends: cmake,
                liblttng-ust-dev,
                libxkbcommon-dev,
                libumockdev-dev,
-Standards-Version: 3.9.3
+               libudev-dev,
+               valgrind,
+Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
 # just go ahead. ~mir-team will notice and sync up the code again.
@@ -32,6 +34,8 @@ Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
 Package: libmirprotobuf0
 Section: libs
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - protocol implementation
@@ -43,6 +47,8 @@ Description: Display server for Ubuntu - protocol implementation
 Package: libmirprotobuf-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirprotobuf0 (= ${binary:Version}),
          libprotobuf-dev,
          ${misc:Depends},
@@ -56,9 +62,10 @@ Description: Display server for Ubuntu - protocol definition
 Package: libmirserver0
 Section: libs
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         ${shlibs:Depends}
-Conflicts: mir
+         ${shlibs:Depends},
 Description: Display server for Ubuntu - server library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -68,6 +75,8 @@ Description: Display server for Ubuntu - server library
 Package: mircommon-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -78,9 +87,11 @@ Description: Display server for Ubuntu - development headers
 Package: libmirserver-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirserver0 (= ${binary:Version}),
-         libmirprotobuf-dev (= ${source:Version}),
-         mircommon-dev (= ${source:Version}),
+         libmirprotobuf-dev (= ${binary:Version}),
+         mircommon-dev (= ${binary:Version}),
          libglm-dev,
          libboost-program-options-dev,
          ${misc:Depends},
@@ -93,6 +104,8 @@ Description: Display server for Ubuntu - development headers
 Package: libmirclient1
 Section: libs
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - client library
@@ -104,9 +117,11 @@ Description: Display server for Ubuntu - client library
 Package: libmirclient-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirclient1 (= ${binary:Version}),
-         libmirprotobuf-dev (= ${source:Version}),
-         mircommon-dev (= ${source:Version}),
+         libmirprotobuf-dev (= ${binary:Version}),
+         mircommon-dev (= ${binary:Version}),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -117,11 +132,8 @@ Description: Display server for Ubuntu - development headers
 Package: mir-demos
 Architecture: any
 Depends: ${misc:Depends},
-         ${shlibs:Depends}
-Breaks: mir (<< 0.0.2-0ubuntu1),
-        libmirclient-demos
-Replaces: libmirclient-demos
-Provides: libmirclient-demos
+         ${shlibs:Depends},
+Recommends: mir-doc
 Description: Display server for Ubuntu - demonstration programs
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -129,16 +141,21 @@ Description: Display server for Ubuntu - demonstration programs
  Contains demo applications (with source) that use the Mir display server
 
 Package: mir-doc
+Section: doc
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends},
+         libmirclient-dev,
+         libmirserver-dev,
 Description: API documentation for mir
  This package installs the mir API documentation.
 
 Package: mir-test-tools
 Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Recommends: mir-demos
+Recommends: mir-demos,
 Description: Display Server for Ubuntu - stress tests and other test tools
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.

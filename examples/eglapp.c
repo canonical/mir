@@ -29,6 +29,7 @@
 static const char appname[] = "egldemo";
 
 static MirConnection *connection;
+static MirSurface *surface;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
@@ -42,7 +43,9 @@ static volatile sig_atomic_t running = 0;
 
 void mir_eglapp_shutdown(void)
 {
+    eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
+    mir_surface_release_sync(surface);
     mir_connection_release(connection);
     connection = NULL;
 }
@@ -131,7 +134,6 @@ mir_eglapp_bool mir_eglapp_init(unsigned int *width, unsigned int *height)
         NULL
     };
     MirDisplayInfo dinfo;
-    MirSurface *surface;
     EGLConfig eglconfig;
     EGLint neglconfigs;
     EGLContext eglctx;

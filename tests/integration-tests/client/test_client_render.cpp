@@ -27,6 +27,8 @@
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 
+#include "mir/frontend/communicator.h"
+
 #include <gmock/gmock.h>
 #include <thread>
 #include <hardware/gralloc.h>

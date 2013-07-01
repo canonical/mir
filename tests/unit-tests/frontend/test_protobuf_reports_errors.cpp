@@ -20,6 +20,7 @@
 #include "mir/frontend/communicator.h"
 #include "mir/frontend/resource_cache.h"
 
+#include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test/test_protobuf_client.h"

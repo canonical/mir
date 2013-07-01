@@ -1,2 +1,2 @@
 usr/include/mircommon
-usr/lib/pkgconfig/mircommon.pc
+usr/lib/*/pkgconfig/mircommon.pc

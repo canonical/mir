@@ -7,3 +7,4 @@ usr/bin/mir_demo_client_eglflash
 usr/bin/mir_demo_client_egltriangle
 usr/bin/mir_demo_client_eglplasma
 usr/bin/mir_demo_client_fingerpaint
+usr/bin/mir_demo_standalone_input_filter

@@ -127,7 +127,7 @@ set (DEMO_CLIENTS
 add_subdirectory(demo-inprocess-surface-client)
 add_subdirectory(demo-shell)
 
-install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION bin)
+install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server
   demo_server.cpp
@@ -139,6 +139,6 @@ target_link_libraries(mir_demo_server
 )
 
 install(TARGETS mir_demo_server
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 

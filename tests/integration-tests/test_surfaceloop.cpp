@@ -30,8 +30,8 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_swapper_factory.h"
-#include "mir_test_doubles/null_gl_context.h"
 #include "mir_test_doubles/null_platform.h"
+#include "mir_test_doubles/null_display.h"
 
 #include <thread>
 #include <atomic>
@@ -55,9 +55,6 @@ geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
 
-geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
-                                                          geom::Size{geom::Width(1600),
-                                                                     geom::Height(1600)}};
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -94,34 +91,14 @@ namespace mir
 namespace
 {
 
-class StubDisplay : public mg::Display
+class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const
+    geom::Rectangle view_area() const override
     {
-        return default_view_area;
-    }
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
-    {
-        (void)f;
-        std::this_thread::yield();
-    }
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
-    {
-        auto null_configuration = std::shared_ptr<mg::DisplayConfiguration>();
-        return null_configuration;
-    }
-    void register_pause_resume_handlers(mir::MainLoop&,
-                                        mg::DisplayPauseHandler const&,
-                                        mg::DisplayResumeHandler const&)
-    {
-    }
-    void pause() {}
-    void resume() {}
-    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
-    std::unique_ptr<mg::GLContext> create_gl_context()
-    {
-        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
+        return geom::Rectangle{geom::Point(),
+                               geom::Size{geom::Width(1600),
+                                          geom::Height(1600)}};
     }
 };
 

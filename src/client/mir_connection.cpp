@@ -63,7 +63,7 @@ MirConnection::~MirConnection() noexcept
 
 MirWaitHandle* MirConnection::create_surface(
     MirSurfaceParameters const & params,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void * context)
 {
     auto surface = new MirSurface(this, server, platform->create_buffer_factory(), input_platform, params, callback, context);
@@ -95,7 +95,7 @@ struct MirConnection::SurfaceRelease
 {
     MirSurface * surface;
     MirWaitHandle * handle;
-    mir_surface_lifecycle_callback callback;
+    mir_surface_callback callback;
     void * context;
 };
 
@@ -108,7 +108,7 @@ void MirConnection::released(SurfaceRelease data)
 
 MirWaitHandle* MirConnection::release_surface(
         MirSurface *surface,
-        mir_surface_lifecycle_callback callback,
+        mir_surface_callback callback,
         void * context)
 {
     auto new_wait_handle = new MirWaitHandle;

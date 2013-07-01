@@ -37,11 +37,9 @@ struct SocketSession : public MessageSender
     SocketSession(
         boost::asio::io_service& io_service,
         int id_,
-        std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions) :
-        socket(io_service),
-        id_(id_),
-        connected_sessions(connected_sessions),
-        processor(std::make_shared<NullMessageProcessor>()) {}
+        std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions);
+
+    ~SocketSession() noexcept;
 
     int id() const { return id_; }
 

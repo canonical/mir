@@ -90,7 +90,7 @@ TEST_F(SwitchingBundleTest, client_acquire_with_switch)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_secondary_swapper, client_release(stub_buffer))
         .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_))
+    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_,_))
         .Times(1)
         .WillOnce(Return(mock_secondary_swapper));
 
@@ -126,7 +126,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_with_switch)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(*mock_secondary_swapper, compositor_release(stub_buffer))
         .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_))
+    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_,_))
         .Times(1)
         .WillOnce(Return(mock_secondary_swapper));
 
@@ -147,7 +147,7 @@ TEST_F(SwitchingBundleTest, switch_sequence)
         .Times(1);
     EXPECT_CALL(*mock_default_swapper, end_responsibility(_,_))
         .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,mc::SwapperType::framedropping))
+    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_,mc::SwapperType::framedropping))
         .Times(1)
         .WillOnce(Return(mock_secondary_swapper));
 

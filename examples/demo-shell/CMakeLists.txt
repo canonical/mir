@@ -8,4 +8,4 @@ target_link_libraries(mir_demo_server_shell
   mirserver
 )
 
-install(TARGETS mir_demo_server_shell RUNTIME DESTINATION bin)
+install(TARGETS mir_demo_server_shell RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
