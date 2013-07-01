@@ -56,6 +56,51 @@ private:
     std::function<void(int)> handler;
 };
 
+class mir::AsioMainLoop::FDHandler
+{
+public:
+    FDHandler(boost::asio::io_service& io,
+              std::initializer_list<int> fds,
+              std::function<void(int)> const& handler)
+        : handler{handler}
+    {
+        for (auto fd : fds)
+        {
+            auto raw = new boost::asio::posix::stream_descriptor{io, fd};
+            auto s = std::unique_ptr<boost::asio::posix::stream_descriptor>(raw);
+            stream_descriptors.push_back(std::move(s));
+        }
+    }
+
+    void async_wait()
+    {
+        for (auto const& s : stream_descriptors)
+        {
+            s->async_read_some(
+                boost::asio::null_buffers(),
+                std::bind(&FDHandler::handle, this,
+                          std::placeholders::_1, std::placeholders::_2, s.get()));
+        }
+    }
+
+private:
+    void handle(boost::system::error_code err, size_t /*bytes*/,
+                boost::asio::posix::stream_descriptor* s)
+    {
+        if (!err)
+        {
+            handler(s->native_handle());
+            s->async_read_some(
+                boost::asio::null_buffers(),
+                std::bind(&FDHandler::handle, this,
+                          std::placeholders::_1, std::placeholders::_2, s));
+        }
+    }
+
+    std::vector<std::unique_ptr<boost::asio::posix::stream_descriptor>> stream_descriptors;
+    std::function<void(int)> handler;
+};
+
 /* 
  * We need to define an empty constructor and destructor in the .cpp file,
  * so that we can use unique_ptr to hold SignalHandler. Otherwise, users
@@ -93,4 +138,18 @@ void mir::AsioMainLoop::register_signal_handler(
     sig_handler->async_wait();
 
     signal_handlers.push_back(std::move(sig_handler));
+}
+
+void mir::AsioMainLoop::register_fd_handler(
+    std::initializer_list<int> fds,
+    std::function<void(int)> const& handler)
+{
+    assert(handler);
+
+    auto fd_handler = std::unique_ptr<FDHandler>{
+        new FDHandler{io, fds, handler}};
+
+    fd_handler->async_wait();
+
+    fd_handlers.push_back(std::move(fd_handler));
 }

@@ -47,10 +47,10 @@ ms::Surface::Surface(
     top_left_point(top_left),
     buffer_stream(buffer_stream),
     input_channel(input_channel),
-    client_buffer_resource(buffer_stream->secure_client_buffer()),
+    transformation_dirty(true),
     alpha_value(1.0f),
     is_hidden(false),
-    buffer_is_valid(false),
+    buffer_count(0),
     notify_change(change_callback)
 {
     std::initializer_list<geom::Rectangle> input_rectangle = {geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size()}};
@@ -77,12 +77,14 @@ std::string const& ms::Surface::name() const
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
     top_left_point = top_left;
+    transformation_dirty = true;
     notify_change();
 }
 
 void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
 {
     rotation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
+    transformation_dirty = true;
     notify_change();
 }
 
@@ -113,38 +115,43 @@ std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
     return compositor_buffer();
 }
 
-glm::mat4 ms::Surface::transformation() const
+const glm::mat4& ms::Surface::transformation() const
 {
     const geom::Size sz = size();
 
-    const glm::vec3 top_left_vec{top_left_point.x.as_int(),
-                                 top_left_point.y.as_int(),
+    if (transformation_dirty || transformation_size != sz)
+    {
+        const glm::vec3 top_left_vec{top_left_point.x.as_int(),
+                                     top_left_point.y.as_int(),
+                                     0.0f};
+        const glm::vec3 size_vec{sz.width.as_uint32_t(),
+                                 sz.height.as_uint32_t(),
                                  0.0f};
-    const glm::vec3 size_vec{sz.width.as_uint32_t(),
-                             sz.height.as_uint32_t(),
-                             0.0f};
 
-    /* Get the center of the renderable's area */
-    const glm::vec3 center_vec{top_left_vec + 0.5f * size_vec};
+        /* Get the center of the renderable's area */
+        const glm::vec3 center_vec{top_left_vec + 0.5f * size_vec};
 
-    /*
-     * Every renderable is drawn using a 1x1 quad centered at 0,0.
-     * We need to transform and scale that quad to get to its final position
-     * and size.
-     *
-     * 1. We scale the quad vertices (from 1x1 to wxh)
-     * 2. We move the quad to its final position. Note that because the quad
-     *    is centered at (0,0), we need to translate by center_vec, not
-     *    top_left_vec.
-     */
-    glm::mat4 pos_size_matrix;
-    pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
-    pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
+        /*
+         * Every renderable is drawn using a 1x1 quad centered at 0,0.
+         * We need to transform and scale that quad to get to its final position
+         * and size.
+         *
+         * 1. We scale the quad vertices (from 1x1 to wxh)
+         * 2. We move the quad to its final position. Note that because the quad
+         *    is centered at (0,0), we need to translate by center_vec, not
+         *    top_left_vec.
+         */
+        glm::mat4 pos_size_matrix;
+        pos_size_matrix = glm::translate(pos_size_matrix, center_vec);
+        pos_size_matrix = glm::scale(pos_size_matrix, size_vec);
 
-    // Rotate, then scale, then translate
-    const glm::mat4 transformation = pos_size_matrix * rotation_matrix;
+        // Rotate, then scale, then translate
+        transformation_matrix = pos_size_matrix * rotation_matrix;
+        transformation_size = sz;
+        transformation_dirty = false;
+    }
 
-    return transformation;
+    return transformation_matrix;
 }
 
 float ms::Surface::alpha() const
@@ -154,7 +161,7 @@ float ms::Surface::alpha() const
 
 bool ms::Surface::should_be_rendered() const
 {
-    return !is_hidden && buffer_is_valid;
+    return !is_hidden && (buffer_count > 1);
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the
@@ -165,20 +172,18 @@ geom::PixelFormat ms::Surface::pixel_format() const
     return buffer_stream->get_stream_pixel_format();
 }
 
-void ms::Surface::advance_client_buffer()
+std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
 {
-    /* we must hold a reference (client_buffer_resource) to the resource on behalf
-       of the client until it is returned to us */
-    /* todo: the surface shouldn't be holding onto the resource... the frontend should! */
-    client_buffer_resource.reset();  // Release old client buffer
-    client_buffer_resource = buffer_stream->secure_client_buffer();
-    flag_for_render();
+    if (buffer_count < 2)
+        buffer_count++;
+
     notify_change();
+    return buffer_stream->secure_client_buffer();
 }
 
-std::shared_ptr<mc::Buffer> ms::Surface::client_buffer() const
+void ms::Surface::allow_framedropping(bool allow)
 {
-    return client_buffer_resource;
+    buffer_stream->allow_framedropping(allow);
 }
 
 std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
@@ -188,7 +193,7 @@ std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
 
 void ms::Surface::flag_for_render()
 {
-    buffer_is_valid = true;
+    buffer_count = 2;
 }
 
 bool ms::Surface::supports_input() const

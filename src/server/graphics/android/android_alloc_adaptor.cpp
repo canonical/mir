@@ -17,6 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/mir_native_buffer.h"
 #include "android_alloc_adaptor.h"
 #include "android_format_conversion-inl.h"
 
@@ -35,18 +36,13 @@ struct AndroidBufferHandleDeleter
         : alloc_device(alloc_dev)
     {}
 
-    void operator()(ANativeWindowBuffer* t)
+    void operator()(native_handle_t const* t)
     {
-        alloc_device->free(alloc_device.get(), t->handle);
-        delete t;
+        alloc_device->free(alloc_device.get(), t);
     }
 private:
     std::shared_ptr<alloc_device_t> const alloc_device;
 };
-
-static void incRef(android_native_base_t*)
-{
-}
 }
 
 mga::AndroidAllocAdaptor::AndroidAllocAdaptor(const std::shared_ptr<struct alloc_device_t>& alloc_device)
@@ -71,8 +67,15 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
         BOOST_THROW_EXCEPTION(std::runtime_error("buffer allocation failed\n"));
     }
 
-    /* pack ANativeWindow buffer for the handle */
-    auto buffer =  new ANativeWindowBuffer;
+    AndroidBufferHandleDeleter del1(alloc_dev);
+    std::shared_ptr<native_handle_t> handle(buf_handle, del1);
+
+    auto tmp = new mga::MirNativeBuffer(handle);
+    std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, [](MirNativeBuffer* buffer)
+        {
+            buffer->mir_dereference();
+        });
+
     buffer->width = width;
     buffer->height = height;
     buffer->stride = stride;
@@ -80,17 +83,7 @@ std::shared_ptr<ANativeWindowBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     buffer->format = format;
     buffer->usage = usage_flag;
 
-    /* we don't use these for refcounting buffers. however, drivers still expect to be
-       able to call them */
-    buffer->common.incRef = &incRef;
-    buffer->common.decRef = &incRef;
-    buffer->common.magic = ANDROID_NATIVE_BUFFER_MAGIC;
-    buffer->common.version = sizeof(ANativeWindowBuffer);
-
-    AndroidBufferHandleDeleter del(alloc_dev);
-    auto handle = std::shared_ptr<ANativeWindowBuffer>(buffer, del);
-
-    return handle;
+    return buffer;
 }
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)

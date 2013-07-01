@@ -61,6 +61,10 @@ public:
     {
     }
 
+    void allow_framedropping(bool)
+    {
+    }
+
     std::shared_ptr<compositor::Buffer> stub_client_buffer;
     std::shared_ptr<compositor::Buffer> stub_compositor_buffer;
 };

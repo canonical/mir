@@ -181,23 +181,6 @@ TEST_F(ShellSurface, destroy)
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
 }
 
-TEST_F(ShellSurface, client_buffer_throw_behavior)
-{
-    msh::Surface test(
-            mt::fake_shared(surface_builder),
-            msh::a_surface());
-
-    EXPECT_NO_THROW({
-        test.client_buffer();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.client_buffer();
-    }, std::runtime_error);
-}
-
 TEST_F(ShellSurface, size_throw_behavior)
 {
     msh::Surface test(
@@ -363,9 +346,9 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 
     surface_builder.reset_surface();
 
-    EXPECT_NO_THROW({
+    EXPECT_THROW({
         test.advance_client_buffer();
-    });
+    }, std::runtime_error);
 }
 
 TEST_F(ShellSurface, input_fds_throw_behavior)

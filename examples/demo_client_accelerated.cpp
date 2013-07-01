@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     assert(egl_surface != EGL_NO_SURFACE);
 
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-    assert(egl_surface != EGL_NO_CONTEXT);
+    assert(context != EGL_NO_CONTEXT);
 
     rc = eglMakeCurrent(disp, egl_surface, egl_surface, context);
     assert(rc == EGL_TRUE);

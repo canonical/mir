@@ -34,6 +34,7 @@
 using testing::SetArgPointee;
 using testing::InSequence;
 using testing::Return;
+using testing::ReturnRef;
 using testing::_;
 
 namespace mtd=mir::test::doubles;
@@ -277,6 +278,7 @@ public:
     mtd::MockGL         mock_gl;
     mir::geometry::Size display_size;
     std::unique_ptr<mg::GLRenderer> renderer;
+    glm::mat4           trans;
 };
 
 void NullGraphicRegionDeleter(mtd::MockGraphicRegion * /* gr */)
@@ -303,7 +305,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     mir::geometry::Point tl;
     mir::geometry::Size  s;
-    glm::mat4            transformation;
 
     tl.x = mir::geometry::X(1);
     tl.y = mir::geometry::Y(2);
@@ -319,7 +320,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
 
     EXPECT_CALL(rd, transformation())
-        .WillOnce(Return(transformation));
+        .WillOnce(ReturnRef(trans));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
     EXPECT_CALL(rd, alpha())
         .WillOnce(Return(0));
@@ -348,14 +349,4 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_EQ(1, save_count);
     auto result = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
     EXPECT_NE(saved_resources.end(), result);
-}
-
-TEST_F(GLRenderer, TestRenderEnsureNoBind)
-{
-    using namespace std::placeholders;
-
-    mtd::MockRenderable rd;
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE,_));
-
-    renderer->ensure_no_live_buffers_bound();
 }

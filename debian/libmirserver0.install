@@ -1,3 +1,2 @@
-usr/lib/libmirserver.so.*
-usr/lib/libmirplatformgraphics.so*
-usr/lib/libmirserverlttng.so
+usr/lib/*/libmirserver.so.*
+usr/lib/*/libmirplatformgraphics.so*

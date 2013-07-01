@@ -20,6 +20,7 @@
 #ifndef MIR_SHELL_SURFACE_H_
 #define MIR_SHELL_SURFACE_H_
 
+#include "mir/shell/surface_buffer_access.h"
 #include "mir/frontend/surface.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/surfaces/surface.h"
@@ -45,7 +46,7 @@ class InputTargeter;
 class SurfaceBuilder;
 struct SurfaceCreationParameters;
 
-class Surface : public frontend::Surface
+class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
     Surface(
@@ -77,11 +78,9 @@ public:
 
     virtual geometry::PixelFormat pixel_format() const;
 
-    virtual void advance_client_buffer();
-
-    virtual std::shared_ptr<compositor::Buffer> client_buffer() const;
     virtual void with_most_recent_buffer_do(
         std::function<void(compositor::Buffer&)> const& exec);
+    virtual std::shared_ptr<compositor::Buffer> advance_client_buffer();
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;
@@ -94,6 +93,7 @@ public:
     virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
     virtual void set_input_region(std::shared_ptr<input::InputRegion> const& region);
 
+    virtual void allow_framedropping(bool); 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);

@@ -17,13 +17,12 @@
  */
 
 #include "mir/compositor/compositor.h"
-#include "mir/graphics/display.h"
 #include "mir/frontend/communicator.h"
 #include "mir/main_loop.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
-#include "mir_test_doubles/null_gl_context.h"
+#include "mir_test_doubles/null_display.h"
 #include "mir/run_mir.h"
 
 #include <gtest/gtest.h>
@@ -56,7 +55,7 @@ public:
     MOCK_METHOD0(stop, void());
 };
 
-class MockDisplay : public mg::Display
+class MockDisplay : public mtd::NullDisplay
 {
 public:
     MockDisplay(std::shared_ptr<mg::Display> const& display,
@@ -67,17 +66,17 @@ public:
     {
     }
 
-    mir::geometry::Rectangle view_area() const
+    mir::geometry::Rectangle view_area() const override
     {
         return display->view_area();
     }
 
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         display->for_each_display_buffer(f);
     }
 
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    std::shared_ptr<mg::DisplayConfiguration> configuration() override
     {
         return display->configuration();
     }
@@ -85,7 +84,7 @@ public:
     void register_pause_resume_handlers(
         mir::MainLoop& main_loop,
         mg::DisplayPauseHandler const& pause_handler,
-        mg::DisplayResumeHandler const& resume_handler)
+        mg::DisplayResumeHandler const& resume_handler) override
     {
         main_loop.register_signal_handler(
             {pause_signal},
@@ -97,11 +96,6 @@ public:
 
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
-    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
-    std::unique_ptr<mg::GLContext> create_gl_context()
-    {
-        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
-    }
 
 private:
     std::shared_ptr<mg::Display> const display;

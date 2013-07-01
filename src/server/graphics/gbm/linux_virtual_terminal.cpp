@@ -207,7 +207,8 @@ int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
                     std::runtime_error("Failed to activate VT"))
                         << boost::errinfo_file_name(active_vt_path)
                         << boost::errinfo_errno(errno));
-        }      
+        }
+        status = fops->ioctl(vt_fd, VT_WAITACTIVE, vt_number);
     }
 
     return vt_fd;

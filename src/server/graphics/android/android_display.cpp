@@ -51,11 +51,11 @@ static EGLint const dummy_pbuffer_attribs[] =
 class NullDisplayConfiguration : public mg::DisplayConfiguration
 {
 public:
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>)
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
     {
     }
 
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)>)
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)>) const
     {
     }
 };
@@ -236,6 +236,10 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
     return std::make_shared<NullDisplayConfiguration>();
+}
+
+void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
+{
 }
 
 void mga::AndroidDisplay::register_pause_resume_handlers(

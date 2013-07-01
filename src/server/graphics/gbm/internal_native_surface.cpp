@@ -39,10 +39,8 @@ int mgg::InternalNativeSurface::advance_buffer_static(
 
 int mgg::InternalNativeSurface::advance_buffer(MirBufferPackage* package)
 {
-    /* TODO: kdub has a cleanup branch for the surface interface that will make this less ugly */
     current_buffer.reset();
-    surface->advance_client_buffer();
-    current_buffer = surface->client_buffer();
+    current_buffer = surface->advance_client_buffer();
 
     auto buffer_package = current_buffer->native_buffer_handle();
     memcpy(package, buffer_package.get(), sizeof(MirBufferPackage));

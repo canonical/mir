@@ -60,6 +60,10 @@ public:
     MOCK_METHOD2(register_signal_handler,
                  void(std::initializer_list<int>,
                       std::function<void(int)> const&));
+
+    MOCK_METHOD2(register_fd_handler,
+                 void(std::initializer_list<int>,
+                      std::function<void(int)> const&));
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,
@@ -126,8 +130,13 @@ public:
             .WillOnce(Return(fake_vt_fd));
 
         if (activate)
+        {
             EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_ACTIVATE, vt_num))
-                .WillOnce(Return(0));     
+                    .WillOnce(Return(0));
+
+            EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_WAITACTIVE, vt_num))
+                    .WillOnce(Return(0));
+        }
 
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDGETMODE, An<void*>()))
             .WillOnce(DoAll(SetIoctlPointee<int>(fake_kd_mode), Return(0)));

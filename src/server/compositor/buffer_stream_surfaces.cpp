@@ -63,3 +63,7 @@ void mc::BufferStreamSurfaces::force_requests_to_complete()
     buffer_bundle->force_requests_to_complete();
 }
 
+void mc::BufferStreamSurfaces::allow_framedropping(bool allow)
+{
+    buffer_bundle->allow_framedropping(allow);
+}

@@ -67,8 +67,7 @@ public:
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(geom::PixelFormat()));
-        EXPECT_CALL(*mock_surface, client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
-        EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber());
+        EXPECT_CALL(*mock_surface, advance_client_buffer()).Times(AnyNumber()).WillRepeatedly(Return(mock_buffer));
 
         EXPECT_CALL(*mock_surface, supports_input()).Times(AnyNumber()).WillRepeatedly(Return(true));
         EXPECT_CALL(*mock_surface, client_input_fd()).Times(AnyNumber()).WillRepeatedly(Return(testing_client_input_fd));
@@ -395,6 +394,39 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[1], null_callback.get());
         mediator.next_buffer(nullptr, &buffer_request, &buffer_response[2], null_callback.get());
     }
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
+{
+    using namespace testing;
+
+    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
+    auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mp::Surface surface_response;
+    mp::SurfaceId buffer_request;
+    mp::Buffer buffer_response;
+    mp::SurfaceParameters surface_request;
+
+    EXPECT_CALL(*stubbed_session->mock_surface, advance_client_buffer())
+        .Times(2)
+        .WillOnce(Return(stub_buffer1))
+        .WillOnce(Return(stub_buffer2));
+ 
+    auto refcount = stub_buffer1.use_count();
+    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
+    EXPECT_EQ(refcount+1, stub_buffer1.use_count());
+
+    auto refcount2 = stub_buffer2.use_count();
+    mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
+    EXPECT_EQ(refcount, stub_buffer1.use_count());
+    EXPECT_EQ(refcount2+1, stub_buffer2.use_count());
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }

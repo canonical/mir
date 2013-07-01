@@ -50,6 +50,7 @@ struct MockShellSession : public msh::Session
     MOCK_METHOD1(destroy_surface, void(mf::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<mf::Surface>(mf::SurfaceId));
 
+    MOCK_METHOD1(take_snapshot, void(msh::SnapshotCallback const&));
     MOCK_CONST_METHOD0(default_surface, std::shared_ptr<msh::Surface>());
 
     MOCK_CONST_METHOD0(name, std::string());

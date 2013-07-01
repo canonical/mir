@@ -40,9 +40,12 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
+#include "mir/shell/threaded_snapshot_strategy.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/gl_pixel_buffer.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
@@ -69,6 +72,8 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/default_configuration.h"
 
+#include <map>
+
 namespace mc = mir::compositor;
 namespace me = mir::events;
 namespace geom = mir::geometry;
@@ -83,6 +88,7 @@ namespace mia = mi::android;
 namespace
 {
 std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
+mir::SharedLibrary const* load_library(std::string const& libname);
 }
 
 namespace
@@ -157,6 +163,9 @@ char const* const off_opt_value = "off";
 char const* const log_opt_value = "log";
 char const* const lttng_opt_value = "lttng";
 
+char const* const platform_graphics_lib = "platform-graphics-lib";
+char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+
 void parse_arguments(
     boost::program_options::options_description desc,
     std::shared_ptr<mir::options::ProgramOption> const& options,
@@ -213,6 +222,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     add_options()
         ("file,f", po::value<std::string>(),
             "Socket filename")
+        (platform_graphics_lib, po::value<std::string>(),
+            "Library to use for platform graphics support [default=libmirplatformgraphics.so")
         ("enable-input,i", po::value<bool>(),
             "Enable input. [bool:default=true]")
         (display_report_opt, po::value<std::string>(),
@@ -297,8 +308,8 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     return graphics_platform(
         [this]()
         {
-            static SharedLibrary libmirplatformgraphics("libmirplatformgraphics.so");
-            static auto create_platform = libmirplatformgraphics.load_function<mg::CreatePlatform>("create_platform");
+            auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
+            auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
             return create_platform(the_options(), the_display_report());
         });
 }
@@ -392,10 +403,32 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
+                the_shell_snapshot_strategy(),
                 the_shell_session_listener());
         });
 }
 
+std::shared_ptr<msh::PixelBuffer>
+mir::DefaultServerConfiguration::the_shell_pixel_buffer()
+{
+    return shell_pixel_buffer(
+        [this]()
+        {
+            return std::make_shared<mg::GLPixelBuffer>(
+                the_display()->create_gl_context());
+        });
+}
+
+std::shared_ptr<msh::SnapshotStrategy>
+mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
+{
+    return shell_snapshot_strategy(
+        [this]()
+        {
+            return std::make_shared<msh::ThreadedSnapshotStrategy>(
+                the_shell_pixel_buffer());
+        });
+}
 
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
@@ -728,4 +761,23 @@ std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
         {
             return std::make_shared<mir::AsioMainLoop>();
         });
+}
+
+namespace
+{
+mir::SharedLibrary const* load_library(std::string const& libname)
+{
+    // There's no point in loading twice, and it isn't safe to unload...
+    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
+
+    if (auto& ptr = libraries_cache[libname])
+    {
+        return ptr.get();
+    }
+    else
+    {
+        ptr = std::make_shared<mir::SharedLibrary>(libname);
+        return ptr.get();
+    }
+}
 }

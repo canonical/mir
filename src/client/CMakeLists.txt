@@ -1,6 +1,6 @@
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirclient")
 
 configure_file(
@@ -118,8 +118,8 @@ target_link_libraries(
 
 install(
   TARGETS mirclient
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib)
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit
@@ -128,5 +128,5 @@ install(
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
-  DESTINATION lib/pkgconfig
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )

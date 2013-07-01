@@ -22,6 +22,7 @@
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/null_snapshot_strategy.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -32,14 +33,28 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+
+std::shared_ptr<msh::ApplicationSession> make_session(
+    std::shared_ptr<msh::SurfaceFactory> const& factory,
+    std::string const& session_name)
+{
+    return std::make_shared<msh::ApplicationSession>(
+        factory, session_name,
+        std::make_shared<mtd::NullSnapshotStrategy>());
+}
+
+}
+
 TEST(DefaultSessionContainer, for_each)
 {
     using namespace ::testing;
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msh::DefaultSessionContainer container;
 
-    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 7"));
-    container.insert_session(std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 8"));
+    container.insert_session(make_session(factory, "Visual Studio 7"));
+    container.insert_session(make_session(factory, "Visual Studio 8"));
 
     struct local
     {
@@ -64,7 +79,7 @@ TEST(DefaultSessionContainer, invalid_session_throw_behavior)
     auto factory = std::make_shared<mtd::MockSurfaceFactory>();
     msh::DefaultSessionContainer container;
 
-    auto session = std::make_shared<msh::ApplicationSession>(factory, "Visual Studio 7");
+    auto session = make_session(factory, "Visual Studio 7");
     EXPECT_THROW({
         container.remove_session(session);
     }, std::logic_error);
