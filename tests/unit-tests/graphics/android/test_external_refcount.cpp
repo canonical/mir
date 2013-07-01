@@ -53,7 +53,7 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
         mga::MirNativeBuffer* driver_reference = nullptr;
         {
             auto tmp = new mga::MirNativeBuffer(native_handle_resource);
-            std::shared_ptr<mga::MirNativeBuffer> buffer(tmp, [](mga::MirNativeBuffer* buffer)
+            mir_reference = std::shared_ptr<mga::MirNativeBuffer>(tmp, [](mga::MirNativeBuffer* buffer)
                 {
                     buffer->mir_dereference();
                 });
