@@ -178,7 +178,7 @@ struct SurfaceCreation : public ::testing::Test
 
         ON_CALL(*mock_buffer_stream, secure_client_buffer())
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
-        ON_CALL(*mock_buffer_stream, stream_size())
+        ON_CALL(*mock_info, size())
             .WillByDefault(Return(size));
     }
 
@@ -347,16 +347,27 @@ TEST_F(SurfaceCreation, test_surface_transformation_cache_refreshes)
     using namespace testing;
 
     const geom::Point origin{geom::X{77}, geom::Y{88}};
-    ON_CALL(*mock_info, top_left())
-        .WillByDefault(Return(origin));
+    const geom::Point moved_pt{geom::X{55}, geom::Y{66}};
+
+    Sequence seq;
+    EXPECT_CALL(*mock_info, top_left())
+        .InSequence(seq)
+        .WillOnce(Return(origin));
+    EXPECT_CALL(*mock_info, top_left())
+        .InSequence(seq)
+        .WillOnce(Return(moved_pt));
+    EXPECT_CALL(*mock_info, top_left())
+        .InSequence(seq)
+        .WillOnce(Return(origin));
+    EXPECT_CALL(*mock_info, top_left())
+        .InSequence(seq)
+        .WillOnce(Return(origin));
 
     ms::Surface surf(mock_info, mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(), null_change_cb);
-
     glm::mat4 t0 = surf.transformation();
-    surf.move_to(geom::Point{geom::X{55}, geom::Y{66}});
+    surf.move_to(moved_pt);
     EXPECT_NE(t0, surf.transformation());
-
     surf.move_to(origin);
     EXPECT_EQ(t0, surf.transformation());
 
