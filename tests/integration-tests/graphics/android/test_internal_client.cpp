@@ -67,7 +67,7 @@ protected:
 
 struct StubInputFactory : public mi::InputChannelFactory 
 {
-    std::shared_ptr<mi::InputChannel> make_input_channel()
+    std::shared_ptr<mi::InputChannel> make_input_channel(std::shared_ptr<ms::SurfaceInfo> const&)
     {
         return std::shared_ptr<mi::InputChannel>();
     }
