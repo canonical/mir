@@ -123,10 +123,6 @@ MATCHER(NonNullSession, "")
 {
     return arg != std::shared_ptr<msh::Session>();
 }
-MATCHER(NonNullInputChannel, "")
-{
-    return arg != std::shared_ptr<mi::InputChannel>();
-}
 }
 
 TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
