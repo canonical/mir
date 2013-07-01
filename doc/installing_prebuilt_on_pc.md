@@ -1,7 +1,7 @@
 Installing pre-built packages on a PC {#installing_prebuilt_on_pc}
 =====================================
 
-Install raring if you haven' t done so already.  Uninstall any proprietary
+Install saucy if you haven' t done so already.  Uninstall any proprietary
 drivers (-nvidia, -fglrx) and reboot on the FOSS drivers.
 
 Add the ppa:mir-team/system-compositor-testing. Note that besides Mir itself,

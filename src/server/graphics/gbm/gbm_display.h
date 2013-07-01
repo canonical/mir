@@ -56,6 +56,7 @@ public:
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
+    void configure(DisplayConfiguration const& conf);
 
     void register_pause_resume_handlers(
         MainLoop& main_loop,
@@ -69,8 +70,6 @@ public:
     std::unique_ptr<GLContext> create_gl_context();
 
 private:
-    void configure(std::shared_ptr<DisplayConfiguration> const& conf);
-
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     helpers::EGLHelper shared_egl;

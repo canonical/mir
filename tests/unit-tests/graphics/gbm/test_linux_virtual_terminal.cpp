@@ -60,6 +60,10 @@ public:
     MOCK_METHOD2(register_signal_handler,
                  void(std::initializer_list<int>,
                       std::function<void(int)> const&));
+
+    MOCK_METHOD2(register_fd_handler,
+                 void(std::initializer_list<int>,
+                      std::function<void(int)> const&));
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,
