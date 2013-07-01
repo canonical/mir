@@ -138,7 +138,7 @@ typedef struct
      * encodes some non enumerable values in it. It's convenient to keep things
      * this way for now until we can drop SF/Hybris support in QtUbuntu.
      */
-    int action;
+    int32_t action;
     MirMotionFlag flags;
     unsigned int modifiers;
 
