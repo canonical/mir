@@ -37,6 +37,10 @@ public:
         std::initializer_list<int> signals,
         std::function<void(int)> const& handler) = 0;
 
+    virtual void register_fd_handler(
+        std::initializer_list<int> fds,
+        std::function<void(int)> const& handler) = 0;
+
 protected:
     MainLoop() = default;
     MainLoop(MainLoop const&) = delete;
