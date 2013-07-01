@@ -111,6 +111,7 @@ struct Configuration
     const char* executable;
     bool enable_memcheck;
     bool memcheck_test;
+    std::vector<std::pair<std::string, std::string>> extra_environment;
 };
 
 bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& config)
@@ -119,6 +120,7 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
         {"executable", required_argument, 0, 0},
         {"enable-memcheck", no_argument, 0, 0},
         {"memcheck-test", no_argument, 0, 0},
+        {"add-environment", required_argument, 0, 0},
         {0, 0, 0, 0}
     };
 
@@ -152,6 +154,13 @@ bool parse_configuration_from_cmd_line(int argc, char** argv, Configuration& con
             config.enable_memcheck = true;
         else if (!strcmp(optname, "memcheck-test"))
             config.memcheck_test = true;
+        else if (!strcmp(optname, "add-environment"))
+        {
+            char const* equal_pos = strchr(optarg, '=');
+            if (!equal_pos)
+                return false;
+            config.extra_environment.push_back(std::make_pair(std::string(optarg, equal_pos - optarg), std::string(equal_pos + 1)));
+        }
     }
 
     return true;
@@ -258,6 +267,10 @@ int main (int argc, char **argv)
     testfilecmake.open(string(test_suite  + "_test.cmake").c_str(), ios::out | ios::trunc);
     if (testfilecmake.is_open())
     {
+        for (auto& env_pair : config.extra_environment)
+        {
+            testfilecmake << "SET( ENV{"<<env_pair.first<<"} \""<<env_pair.second<<"\" )"<<std::endl;
+        }
         for (auto test = tests.begin(); test != tests.end(); ++ test)
         {
             static char cmd_line[1024] = "";
