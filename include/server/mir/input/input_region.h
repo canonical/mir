@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace geometry
+{
+class Point;
+}
 namespace input
 {
 
@@ -31,7 +35,7 @@ class InputRegion
 public:
     virtual ~InputRegion() = default;
 
-    virtual bool contains_point(uint32_t x, uint32_t y) const = 0;
+    virtual bool contains(geometry::Point const& point) const = 0;
 
 protected:
     InputRegion() = default;

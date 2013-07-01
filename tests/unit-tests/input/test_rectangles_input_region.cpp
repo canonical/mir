@@ -32,10 +32,10 @@ TEST(RectanglesInputRegion, hit_testing)
     };
     mi::RectanglesInputRegion region(rectangles);
     
-    EXPECT_TRUE(region.contains_point(5, 5));
-    EXPECT_FALSE(region.contains_point(4, 5));
-    EXPECT_FALSE(region.contains_point(5, 4));
-    EXPECT_TRUE(region.contains_point(10, 10));
-    EXPECT_FALSE(region.contains_point(11, 5));
-    EXPECT_FALSE(region.contains_point(5, 11));
+    EXPECT_TRUE(region.contains(geom::Point{geom::X{5}, geom::Y{5}}));
+    EXPECT_FALSE(region.contains(geom::Point{geom::X{4}, geom::Y{5}}));
+    EXPECT_FALSE(region.contains(geom::Point{geom::X{5}, geom::Y{4}}));
+    EXPECT_TRUE(region.contains(geom::Point{geom::X{10}, geom::Y{10}}));
+    EXPECT_FALSE(region.contains(geom::Point{geom::X{11}, geom::Y{5}}));
+    EXPECT_FALSE(region.contains(geom::Point{geom::X{5}, geom::Y{11}}));
 }
