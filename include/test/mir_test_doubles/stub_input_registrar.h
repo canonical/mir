@@ -30,10 +30,10 @@ namespace doubles
 
 struct StubInputRegistrar : public surfaces::InputRegistrar
 {
-    void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const&)
+    void input_surface_opened(std::shared_ptr<input::InputChannel> const&)
     {
     }
-    void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const&)
+    void input_surface_closed(std::shared_ptr<input::InputChannel> const&)
     {
     }
 };

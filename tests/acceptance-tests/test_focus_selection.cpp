@@ -123,9 +123,9 @@ MATCHER(NonNullSession, "")
 {
     return arg != std::shared_ptr<msh::Session>();
 }
-MATCHER(NonNullSurfaceTarget, "")
+MATCHER(NonNullInputChannel, "")
 {
-    return arg != std::shared_ptr<mi::SurfaceTarget>();
+    return arg != std::shared_ptr<mi::InputChannel>();
 }
 }
 

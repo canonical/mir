@@ -47,7 +47,7 @@ struct SurfaceCreationParameters;
 namespace input
 {
 class InputChannelFactory;
-class SurfaceTarget;
+class InputChannel;
 }
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
@@ -71,7 +71,7 @@ public:
     virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets
-    void for_each(std::function<void(std::shared_ptr<input::SurfaceTarget> const&)> const& callback);
+    void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel 
     virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params, DepthId depth);

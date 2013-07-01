@@ -483,7 +483,6 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     Sequence seq;
 
     auto channel = std::make_shared<StubInputChannel>(4,3);
-    std::shared_ptr<mi::SurfaceTarget> target = channel;
     MockInputChannelFactory input_factory; 
     EXPECT_CALL(input_factory, make_input_channel(_))
         .Times(1)

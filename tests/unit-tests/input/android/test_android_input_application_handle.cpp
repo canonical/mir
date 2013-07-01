@@ -18,7 +18,7 @@
 
 #include "src/server/input/android/android_input_application_handle.h"
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -31,8 +31,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct MockSurfaceHandle : public mi::SurfaceTarget
+struct MockSurfaceHandle : public mi::InputChannel
 {
+    MOCK_CONST_METHOD0(client_fd, int());
     MOCK_CONST_METHOD0(server_fd, int());
     MOCK_CONST_METHOD0(top_left, geom::Point());
     MOCK_CONST_METHOD0(size, geom::Size());

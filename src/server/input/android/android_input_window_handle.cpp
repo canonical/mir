@@ -20,7 +20,6 @@
 #include "android_input_application_handle.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/input/surface_target.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -30,7 +29,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
-                                          std::shared_ptr<mi::SurfaceTarget> const& surface)
+                                          std::shared_ptr<mi::InputChannel> const& surface)
   : droidinput::InputWindowHandle(input_app_handle),
     surface(surface)
 {

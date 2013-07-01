@@ -21,7 +21,6 @@
 #include "mir/frontend/surface.h"
 #include "mir/geometry/size.h"
 #include "mir/input/input_channel.h"
-#include "mir/input/surface_target.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface.h"
@@ -49,8 +48,9 @@ struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
     bool updateInfo() { return true; }
 };
 
-struct MockSurfaceTarget : public mi::SurfaceTarget
+struct MockInputChannel : public mi::InputChannel
 {
+    MOCK_CONST_METHOD0(client_fd, int());
     MOCK_CONST_METHOD0(server_fd, int());
     MOCK_CONST_METHOD0(top_left, geom::Point());
     MOCK_CONST_METHOD0(size, geom::Size());
@@ -75,7 +75,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     // We don't actually need the file to exist after this test.
     unlink(filename);
 
-    MockSurfaceTarget surface;
+    MockInputChannel surface;
 
     EXPECT_CALL(surface, server_fd()).Times(1)
         .WillOnce(Return(testing_server_fd));

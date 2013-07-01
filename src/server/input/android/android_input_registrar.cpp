@@ -41,7 +41,7 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 }
 
 // Be careful on the locking in these two functions.
-void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface)
+void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::InputChannel> const& opened_surface)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {
@@ -62,7 +62,7 @@ void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::SurfaceTar
     input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
 }
 
-void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface)
+void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::InputChannel> const& closed_surface)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {
@@ -76,7 +76,7 @@ void mia::InputRegistrar::input_surface_closed(std::shared_ptr<input::SurfaceTar
     input_dispatcher->unregisterInputChannel(window_handle->getInputChannel());
 }
 
-droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface)
+droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_surface(std::shared_ptr<input::InputChannel const> const& surface)
 {
     std::unique_lock<std::mutex> lock(handles_mutex);
     if (window_handles.find(surface) == window_handles.end())

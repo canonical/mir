@@ -19,7 +19,7 @@
 #include "src/server/input/android/android_input_target_enumerator.h"
 #include "src/server/input/android/android_window_handle_repository.h"
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
 #include "mir/input/input_targets.h"
 
 #include "mir_test/fake_shared.h"
@@ -68,19 +68,19 @@ struct StubInputWindowHandle : public droidinput::InputWindowHandle
 
 struct StubWindowHandleRepository : public mia::WindowHandleRepository
 {
-    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<mi::SurfaceTarget const> const& surface)
+    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<mi::InputChannel const> const& surface)
     {
         if (handles.find(surface) == handles.end())
             handles[surface] = new StubInputWindowHandle(surface->name());
         
         return handles[surface];
     }
-    std::map<std::shared_ptr<mi::SurfaceTarget const>, droidinput::sp<droidinput::InputWindowHandle>> handles;
+    std::map<std::shared_ptr<mi::InputChannel const>, droidinput::sp<droidinput::InputWindowHandle>> handles;
 };
 
-struct StubSurfaceTarget : public mi::SurfaceTarget
+struct StubInputChannel : public mi::InputChannel
 {
-    StubSurfaceTarget(std::string const& name)
+    StubInputChannel(std::string const& name)
         : target_name(name)
     {
     }
@@ -89,6 +89,10 @@ struct StubSurfaceTarget : public mi::SurfaceTarget
         return target_name;
     }
 
+    int client_fd() const override
+    {
+        return 0;
+    }
     int server_fd() const override
     {
         return 0;
@@ -107,18 +111,18 @@ struct StubSurfaceTarget : public mi::SurfaceTarget
 
 struct StubInputTargets : public mi::InputTargets
 {
-    StubInputTargets(std::initializer_list<std::shared_ptr<mi::SurfaceTarget>> const& target_list)
+    StubInputTargets(std::initializer_list<std::shared_ptr<mi::InputChannel>> const& target_list)
         : targets(target_list.begin(), target_list.end())
     {
     }
     
-    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback) override
+    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback) override
     {
         for (auto target : targets)
             callback(target);
     }
     
-    std::vector<std::shared_ptr<mi::SurfaceTarget>> targets;
+    std::vector<std::shared_ptr<mi::InputChannel>> targets;
 };
 
 MATCHER_P(HandleWithName, name, "")
@@ -145,7 +149,7 @@ TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
         EXPECT_CALL(observer, see(HandleWithName(surface2_name))).Times(1);
     }
 
-    StubSurfaceTarget t1(surface1_name), t2(surface2_name);
+    StubInputChannel t1(surface1_name), t2(surface2_name);
     StubInputTargets targets({mt::fake_shared(t1), mt::fake_shared(t2)});
     StubWindowHandleRepository handles;
     

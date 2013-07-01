@@ -20,7 +20,7 @@
 
 #include "mir_test_doubles/mock_input_configuration.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/stub_surface_target.h"
+#include "mir_test_doubles/stub_input_channel.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -73,7 +73,7 @@ TEST_F(AndroidInputRegistrarFdSetup, input_surface_opened_behavior)
 {    
     using namespace ::testing;
 
-    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+    auto surface = std::make_shared<mtd::StubInputChannel>(test_input_fd);
 
     EXPECT_CALL(config, the_dispatcher()).Times(1)
         .WillOnce(Return(dispatcher));
@@ -93,7 +93,7 @@ TEST_F(AndroidInputRegistrarFdSetup, input_surface_closed_behavior)
 {
     using namespace ::testing;
 
-    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+    auto surface = std::make_shared<mtd::StubInputChannel>(test_input_fd);
 
     EXPECT_CALL(config, the_dispatcher()).Times(1)
         .WillOnce(Return(dispatcher));

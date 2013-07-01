@@ -131,7 +131,7 @@ void ms::SurfaceStack::emit_change_notification()
     notify_change();
 }
 
-void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback)
+void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
 {
     std::lock_guard<std::mutex> lg(guard);
     for (auto &layer : layers_by_depth)

@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/input_testing_server_configuration.h"
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
@@ -68,12 +68,12 @@ public:
 
     ~ProxyInputRegistrar() noexcept(true) = default;
     
-    void input_surface_opened(std::shared_ptr<mi::SurfaceTarget> const& opened_surface)
+    void input_surface_opened(std::shared_ptr<mi::InputChannel> const& opened_surface)
     {
         underlying_registrar->input_surface_opened(opened_surface);
         listener->surface_ready_for_input(opened_surface->name());
     }
-    void input_surface_closed(std::shared_ptr<mi::SurfaceTarget> const& closed_surface)
+    void input_surface_closed(std::shared_ptr<mi::InputChannel> const& closed_surface)
     {
         underlying_registrar->input_surface_closed(closed_surface);
         listener->surface_finished_for_input(closed_surface->name());

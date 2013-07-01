@@ -214,7 +214,7 @@ int ms::Surface::server_fd() const
     return server_input_channel->server_fd();
 }
 
-std::shared_ptr<mi::SurfaceTarget> ms::Surface::input_channel() const
+std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
 {
     return server_input_channel;
 }

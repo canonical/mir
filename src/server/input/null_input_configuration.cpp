@@ -34,11 +34,11 @@ struct NullInputRegistrar : public ms::InputRegistrar
     NullInputRegistrar() = default;
     virtual ~NullInputRegistrar() noexcept(true) = default;
     
-    void input_surface_opened(std::shared_ptr<mi::SurfaceTarget> const&)
+    void input_surface_opened(std::shared_ptr<mi::InputChannel> const&)
     {
     }
 
-    void input_surface_closed(std::shared_ptr<mi::SurfaceTarget> const&)
+    void input_surface_closed(std::shared_ptr<mi::InputChannel> const&)
     {
     }
 };
@@ -48,7 +48,7 @@ struct NullInputTargeter : public msh::InputTargeter
     NullInputTargeter() = default;
     virtual ~NullInputTargeter() noexcept(true) = default;
 
-    void focus_changed(std::shared_ptr<mi::SurfaceTarget const> const&)
+    void focus_changed(std::shared_ptr<mi::InputChannel const> const&)
     {
     }
 

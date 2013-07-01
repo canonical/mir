@@ -20,10 +20,10 @@
 #include "src/server/input/android/android_input_registrar.h"
 #include "src/server/input/android/android_window_handle_repository.h"
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/stub_surface_target.h"
+#include "mir_test_doubles/stub_input_channel.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -72,7 +72,7 @@ struct StubInputWindowHandle : public droidinput::InputWindowHandle
 
 struct StubWindowHandleRepository : public mia::WindowHandleRepository
 {
-    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<mi::SurfaceTarget const> const& surface)
+    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<mi::InputChannel const> const& surface)
     {
         return new StubInputWindowHandle(surface->name());
     }
@@ -80,12 +80,12 @@ struct StubWindowHandleRepository : public mia::WindowHandleRepository
 struct MockWindowHandleRepository : public mia::WindowHandleRepository
 {
     ~MockWindowHandleRepository() noexcept(true) {};
-    MOCK_METHOD1(handle_for_surface, droidinput::sp<droidinput::InputWindowHandle>(std::shared_ptr<mi::SurfaceTarget const> const& surface));
+    MOCK_METHOD1(handle_for_surface, droidinput::sp<droidinput::InputWindowHandle>(std::shared_ptr<mi::InputChannel const> const& surface));
 };
 
-struct StubSurfaceTarget : public mi::SurfaceTarget
+struct StubInputChannel : public mi::InputChannel
 {
-    StubSurfaceTarget(std::string const& name)
+    StubInputChannel(std::string const& name)
         : target_name(name)
     {
     }
@@ -94,6 +94,10 @@ struct StubSurfaceTarget : public mi::SurfaceTarget
         return target_name;
     }
 
+    int client_fd() const override
+    {
+        return 0;
+    }
     int server_fd() const override
     {
         return 0;
@@ -138,7 +142,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed)
     using namespace ::testing;
 
     droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
-    auto surface = std::make_shared<StubSurfaceTarget>("test_focus_changed");
+    auto surface = std::make_shared<StubInputChannel>("test_focus_changed");
     {
         InSequence seq;
         EXPECT_CALL(*dispatcher, setKeyboardFocus(WindowHandleFor(surface))).Times(1);
@@ -158,7 +162,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
     MockWindowHandleRepository repository;
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
 
-    auto surface = std::make_shared<StubSurfaceTarget>("test_focus_changed_throw");
+    auto surface = std::make_shared<StubInputChannel>("test_focus_changed_throw");
 
     EXPECT_CALL(repository, handle_for_surface(_)).Times(1)
         .WillOnce(Return(droidinput::sp<droidinput::InputWindowHandle>()));

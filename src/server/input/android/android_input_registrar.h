@@ -51,16 +51,16 @@ public:
     explicit InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher);
     virtual ~InputRegistrar() noexcept(true);
 
-    void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface);
-    void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface);
+    void input_surface_opened(std::shared_ptr<input::InputChannel> const& opened_surface);
+    void input_surface_closed(std::shared_ptr<input::InputChannel> const& closed_surface);
 
 
-    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::SurfaceTarget const> const& surface);
+    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::InputChannel const> const& surface);
 
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> const input_dispatcher;
 
-    std::map<std::shared_ptr<input::SurfaceTarget const>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
+    std::map<std::shared_ptr<input::InputChannel const>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
 
     std::mutex handles_mutex;
 };

@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SURFACE_TARGET_H_
-#define MIR_TEST_DOUBLES_STUB_SURFACE_TARGET_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
 
 namespace mir
 {
@@ -28,13 +28,17 @@ namespace test
 namespace doubles
 {
 
-struct StubSurfaceTarget : public input::SurfaceTarget
+struct StubInputChannel : public input::InputChannel
 {
-    StubSurfaceTarget(int fd)
+    StubInputChannel(int fd)
       : input_fd(fd)
     {
     }
 
+    int client_fd() const override
+    {
+        return input_fd;
+    }
     int server_fd() const override
     {
         return input_fd;
@@ -60,5 +64,5 @@ struct StubSurfaceTarget : public input::SurfaceTarget
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_SURFACE_TARGET_H_
+#endif // MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
 

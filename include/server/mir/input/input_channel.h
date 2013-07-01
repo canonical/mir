@@ -19,19 +19,21 @@
 #ifndef MIR_INPUT_INPUT_CHANNEL_H_
 #define MIR_INPUT_INPUT_CHANNEL_H_
 
-#include "mir/input/surface_target.h"
+#include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 
 namespace mir
 {
 namespace input
 {
-
-/// Encapsulates a paired set of fd's suitable for input communication.
-class InputChannel : public SurfaceTarget
+class InputChannel
 {
 public:
     virtual ~InputChannel() {}
 
+    virtual geometry::Point top_left() const = 0;
+    virtual geometry::Size size() const = 0;
+    virtual std::string const& name() const = 0;
     virtual int client_fd() const = 0;
     virtual int server_fd() const = 0;
 

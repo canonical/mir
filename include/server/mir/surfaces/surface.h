@@ -22,7 +22,6 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/input/surface_target.h"
 
 #include <memory>
 #include <string>
@@ -48,7 +47,7 @@ class BufferStream;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
-class Surface : public graphics::Renderable//, public input::SurfaceTarget
+class Surface : public graphics::Renderable
 {
 public:
     Surface(std::shared_ptr<SurfaceInfo> const& info,
@@ -85,7 +84,7 @@ public:
 
     void allow_framedropping(bool);
 
-    std::shared_ptr<input::SurfaceTarget> input_channel() const;
+    std::shared_ptr<input::InputChannel> input_channel() const;
 private:
     std::shared_ptr<SurfaceInfo> info;
 

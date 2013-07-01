@@ -18,14 +18,14 @@
 
 #include "android_input_application_handle.h"
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
 
 #include <limits.h>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::SurfaceTarget> const& surface)
+mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::InputChannel> const& surface)
   : weak_surface(surface)
 {
     updateInfo();

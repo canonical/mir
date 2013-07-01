@@ -47,7 +47,7 @@ void mia::InputTargeter::focus_cleared()
     input_dispatcher->setKeyboardFocus(null_window);
 }
 
-void mia::InputTargeter::focus_changed(std::shared_ptr<mi::SurfaceTarget const> const& surface)
+void mia::InputTargeter::focus_changed(std::shared_ptr<mi::InputChannel const> const& surface)
 {
     auto window_handle = repository->handle_for_surface(surface);
     
