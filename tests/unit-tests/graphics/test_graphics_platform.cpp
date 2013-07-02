@@ -45,7 +45,9 @@ namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mo = mir::options;
+#ifndef ANDROID
 namespace mtf = mir::mir_test_framework;
+#endif
 
 class GraphicsPlatform : public ::testing::Test
 {
