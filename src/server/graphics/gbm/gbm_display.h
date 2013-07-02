@@ -58,6 +58,10 @@ public:
     std::shared_ptr<DisplayConfiguration> configuration();
     void configure(DisplayConfiguration const& conf);
 
+    void register_configuration_change_handler(
+        MainLoop& main_loop,
+        DisplayConfigurationChangeHandler const& conf_change_handler);
+
     void register_pause_resume_handlers(
         MainLoop& main_loop,
         DisplayPauseHandler const& pause_handler,

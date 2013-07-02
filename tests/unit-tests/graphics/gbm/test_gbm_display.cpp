@@ -22,7 +22,7 @@
 #include "mir/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/main_loop.h"
+#include "mir/asio_main_loop.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -38,6 +38,9 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
+#include <atomic>
+#include <chrono>
+#include <thread>
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
@@ -698,4 +701,43 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     EXPECT_THROW({
         display->resume();
     }, std::runtime_error);
+}
+
+TEST_F(GBMDisplayTest, configuration_change_calls_handler)
+{
+    using namespace testing;
+
+    char const* const devpath{"/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/drm/card0"};
+
+    mir::AsioMainLoop ml;
+    std::atomic<int> call_count{0};
+
+    auto platform = std::make_shared<mgg::GBMPlatform>(
+                        mock_report,
+                        std::make_shared<mtd::NullVirtualTerminal>());
+    auto display = std::make_shared<mgg::GBMDisplay>(platform, mock_report);
+
+    display->register_configuration_change_handler(
+        ml,
+        [&call_count,&ml]
+        { 
+            if (++call_count == 10)
+                ml.stop();
+        });
+
+    std::thread t{
+        [this, devpath]
+        {
+            for (int i = 0; i < 10; ++i)
+            {
+                umockdev_testbed_uevent(fake_devices.testbed, devpath, "change");
+                std::this_thread::sleep_for(std::chrono::microseconds{500});
+            }
+        }};
+
+    ml.run();
+
+    t.join();
+
+    EXPECT_EQ(10, call_count);
 }

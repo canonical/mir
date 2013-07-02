@@ -242,6 +242,12 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
 {
 }
 
+void mga::AndroidDisplay::register_configuration_change_handler(
+    MainLoop&,
+    DisplayConfigurationChangeHandler const&) 
+{
+}
+
 void mga::AndroidDisplay::register_pause_resume_handlers(
     MainLoop& /*main_loop*/,
     DisplayPauseHandler const& /*pause_handler*/,
