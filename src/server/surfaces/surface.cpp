@@ -213,3 +213,4 @@ int ms::Surface::server_input_fd() const
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return input_channel->server_fd();
 }
+
