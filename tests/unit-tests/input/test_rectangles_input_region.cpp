@@ -28,14 +28,14 @@ namespace geom = mir::geometry;
 TEST(RectanglesInputRegion, hit_testing)
 {
     static std::initializer_list<geom::Rectangle> const rectangles = {
-        geom::Rectangle{geom::Point{geom::X{5}, geom::Y{5}}, geom::Size{geom::Width{5}, geom::Height{5}}}
+        {{geom::X{5}, geom::Y{5}}, {geom::Width{5}, geom::Height{5}}}
     };
     mi::RectanglesInputRegion region(rectangles);
     
-    EXPECT_TRUE(region.contains(geom::Point{geom::X{5}, geom::Y{5}}));
-    EXPECT_FALSE(region.contains(geom::Point{geom::X{4}, geom::Y{5}}));
-    EXPECT_FALSE(region.contains(geom::Point{geom::X{5}, geom::Y{4}}));
-    EXPECT_TRUE(region.contains(geom::Point{geom::X{10}, geom::Y{10}}));
-    EXPECT_FALSE(region.contains(geom::Point{geom::X{11}, geom::Y{5}}));
-    EXPECT_FALSE(region.contains(geom::Point{geom::X{5}, geom::Y{11}}));
+    EXPECT_TRUE(region.contains({geom::X{5}, geom::Y{5}}));
+    EXPECT_FALSE(region.contains({geom::X{4}, geom::Y{5}}));
+    EXPECT_FALSE(region.contains({geom::X{5}, geom::Y{4}}));
+    EXPECT_TRUE(region.contains({geom::X{10}, geom::Y{10}}));
+    EXPECT_FALSE(region.contains({geom::X{11}, geom::Y{5}}));
+    EXPECT_FALSE(region.contains({geom::X{5}, geom::Y{11}}));
 }

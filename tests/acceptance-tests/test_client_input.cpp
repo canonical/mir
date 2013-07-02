@@ -572,8 +572,8 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
     
     static std::initializer_list<geom::Rectangle> client_input_regions = {
-        geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, geom::Size{geom::Width{screen_width-80}, geom::Height{screen_height}}},
-        geom::Rectangle{geom::Point{geom::X{screen_width-20}, geom::Y{0}}, geom::Size{geom::Width{screen_width-80}, geom::Height{screen_height}}}
+        {{geom::X{0}, geom::Y{0}}, {geom::Width{screen_width-80}, geom::Height{screen_height}}},
+        {{geom::X{screen_width-20}, geom::Y{0}}, {geom::Width{screen_width-80}, geom::Height{screen_height}}}
     };
 
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
