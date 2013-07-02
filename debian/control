@@ -23,6 +23,7 @@ Build-Depends: cmake,
                liblttng-ust-dev,
                libxkbcommon-dev,
                libumockdev-dev,
+               umockdev,
                libudev-dev,
                valgrind,
 Standards-Version: 3.9.4
