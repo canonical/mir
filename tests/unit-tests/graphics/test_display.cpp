@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
+#include "mir_test_framework/udev_environment.h"
 #else
 #include "src/server/graphics/android/android_framebuffer_window_query.h"
 #include "src/server/graphics/android/android_display.h"
@@ -38,6 +39,7 @@
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir::mir_test_framework;
 
 class DisplayTest : public ::testing::Test
 {
@@ -58,6 +60,10 @@ public:
             .WillByDefault(Return(egl_exts));
         ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
             .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+
+#ifndef ANDROID
+        fake_devices.add_standard_drm_devices();
+#endif
     }
 
     std::shared_ptr<mg::Display> create_display()
@@ -93,6 +99,7 @@ public:
 #else
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
+    mtf::UdevEnvironment fake_devices;
 #endif
 };
 
