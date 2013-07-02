@@ -84,7 +84,7 @@ mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
     : listener{listener},
       vt{vt}
 {
-    drm.setup();
+    drm.setup(udev);
     gbm.setup(drm);
     internal_display_clients_present = false;
 }

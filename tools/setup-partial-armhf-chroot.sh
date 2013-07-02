@@ -62,6 +62,7 @@ pushd ${1} > /dev/null
         libboost-program-options1.49.0
         libhybris
         libhybris-dev
+        libandroid-properties1
         libgflags2
         libgflags-dev
         libgoogle-glog-dev
