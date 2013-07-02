@@ -158,6 +158,23 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
     EXPECT_EQ(handle1, handle2);
 }
 
+TEST_F(ClientAndroidRegistrarTest, registrar_frees_fds)
+{
+    using namespace testing;
+    auto package = std::make_shared<MirBufferPackage>();
+    package->data_items = 0;
+    package->fd_items = 2;
+    pipe(&package->fd);
+
+    {
+        mcla::AndroidRegistrarGralloc registrar(mock_module);
+        auto handle = registrar.register_buffer(package);
+    }
+
+    EXPECT_EQ(-1, fcntl(package->fd[0], F_GETFD))
+    EXPECT_EQ(-1, fcntl(package->fd[1], F_GETFD))
+}
+
 
 TEST_F(ClientAndroidRegistrarTest, register_failure)
 {
