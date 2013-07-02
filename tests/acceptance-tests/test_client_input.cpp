@@ -159,7 +159,7 @@ struct InputClient : ClientConfig
             connection_callback,
             this));
          ASSERT_TRUE(connection != NULL);
-    
+
          MirEventDelegate const event_delegate =
          {
              handle_input,
@@ -178,7 +178,7 @@ struct InputClient : ClientConfig
 
          // ClientConfiguration d'tor is not called on client side so we need this
          // in order to not leak the Mock object.
-         handler.reset(); 
+         handler.reset();
     }
     
     std::shared_ptr<MockInputHandler> handler;
@@ -196,7 +196,7 @@ MATCHER(KeyDownEvent, "")
         return false;
     if (arg->key.action != mir_key_action_down) // Key down
         return false;
-    
+
     return true;
 }
 MATCHER_P(KeyOfSymbol, keysym, "")
@@ -385,7 +385,7 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
             // We should see the cursor enter
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
             EXPECT_CALL(*handler, handle_input(
-                MotionEventWithPosition(InputClient::surface_width, 
+                MotionEventWithPosition(InputClient::surface_width,
                                         InputClient::surface_height))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
             // But we should not receive an event for the second movement outside of our surface!
@@ -570,7 +570,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     
     static geom::Rectangle const screen_geometry{geom::Point{geom::X{0}, geom::Y{0}},
         geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
-    
+
     static std::initializer_list<geom::Rectangle> client_input_regions = {
         {{geom::X{0}, geom::Y{0}}, {geom::Width{screen_width-80}, geom::Height{screen_height}}},
         {{geom::X{screen_width-20}, geom::Y{0}}, {geom::Width{screen_width-80}, geom::Height{screen_height}}}
@@ -588,7 +588,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         std::shared_ptr<msh::SurfaceFactory> the_shell_surface_factory() override
         {
             return std::make_shared<RegionApplyingSurfaceFactory>(InputTestingServerConfiguration::the_shell_surface_factory(),
-                client_input_regions);                                                                  
+                client_input_regions);
         }
         geom::Rectangle the_screen_geometry() override
         {
