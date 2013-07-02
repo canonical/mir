@@ -207,8 +207,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         static size_t max_fingers = 0;
         static float max_pressure = 1.0f;
         
-        // FIXME: http://pastebin.ubuntu.com/5834366/
-        MirMotionAction masked_action = event->motion.action & 0xff00;
+        // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
+        MirMotionAction masked_action = event->motion.action & ~0xff00;
 
         if (masked_action == mir_motion_action_up)
         {
