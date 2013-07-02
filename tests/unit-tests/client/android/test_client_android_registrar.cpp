@@ -22,6 +22,8 @@
 
 #include <system/graphics.h>
 #include <stdexcept>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -164,15 +166,15 @@ TEST_F(ClientAndroidRegistrarTest, registrar_frees_fds)
     auto package = std::make_shared<MirBufferPackage>();
     package->data_items = 0;
     package->fd_items = 2;
-    pipe(&package->fd);
+    pipe(static_cast<int*>(&package->fd[0]));
 
     {
         mcla::AndroidRegistrarGralloc registrar(mock_module);
         auto handle = registrar.register_buffer(package);
     }
 
-    EXPECT_EQ(-1, fcntl(package->fd[0], F_GETFD))
-    EXPECT_EQ(-1, fcntl(package->fd[1], F_GETFD))
+    EXPECT_EQ(-1, fcntl(package->fd[0], F_GETFD));
+    EXPECT_EQ(-1, fcntl(package->fd[1], F_GETFD));
 }
 
 
