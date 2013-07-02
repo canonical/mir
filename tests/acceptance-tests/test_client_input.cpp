@@ -460,7 +460,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     
     static int const screen_width = 1000;
     static int const screen_height = 800;
-    static int const client_height = screen_width/2;
+    static int const client_height = screen_height/2;
     static int const client_width = screen_width/2;
     static std::string const test_client_1 = "1";
     static std::string const test_client_2 = "2";
@@ -472,7 +472,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             static GeometryList positions;
             positions[test_client_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
-            positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{0}},
+            positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{screen_height/2}},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
 
             return std::make_shared<StaticPlacementStrategy>(positions);
@@ -489,9 +489,9 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             wait_until_client_appears(test_client_1);
             wait_until_client_appears(test_client_2);
             // In the bounds of the first surface
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, 0));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, screen_height/2-1));
             // In the bounds of the second surface
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, 0));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, screen_height/2));
         }
     } server_config;
     
@@ -508,7 +508,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         {
             InSequence seq;
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
-            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, 0))).Times(1);
+            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1);
             EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
@@ -525,7 +525,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         {
             InSequence seq;
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
-            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, 0))).Times(1)
+            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
     } client_2;
