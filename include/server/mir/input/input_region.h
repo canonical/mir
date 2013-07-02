@@ -25,7 +25,7 @@ namespace mir
 {
 namespace geometry
 {
-class Point;
+struct Point;
 }
 namespace input
 {
