@@ -17,17 +17,17 @@
  */
 
 #include "mir/asio_main_loop.h"
+#include "mir_test/pipe.h"
 
 #include <gtest/gtest.h>
-#include <boost/throw_exception.hpp>
-#include <boost/exception/errinfo_errno.hpp>
 
 #include <thread>
 #include <atomic>
-#include <stdexcept>
 
 #include <sys/types.h>
 #include <unistd.h>
+
+namespace mt = mir::test;
 
 TEST(AsioMainLoopTest, signal_handled)
 {
@@ -146,41 +146,9 @@ TEST(AsioMainLoopTest, all_registered_handlers_are_called)
     ASSERT_EQ(signum, handled_signum[2]);
 }
 
-namespace
-{
-
-class Pipe
-{
-public:
-    Pipe()
-    {
-        if (pipe(pipefd))
-        {
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(std::runtime_error("Failed to create pipe"))
-                    << boost::errinfo_errno(errno));
-        }
-
-    }
-
-    ~Pipe()
-    {
-        close(pipefd[0]);
-        close(pipefd[1]);
-    }
-
-    int read_fd() const { return pipefd[0]; }
-    int write_fd() const { return pipefd[1]; }
-
-private:
-    int pipefd[2];
-};
-
-}
-
 TEST(AsioMainLoopTest, fd_data_handled)
 {
-    Pipe p;
+    mt::Pipe p;
     char const data_to_write{'a'};
     int handled_fd{0};
     char data_read{0};
@@ -205,7 +173,7 @@ TEST(AsioMainLoopTest, fd_data_handled)
 
 TEST(AsioMainLoopTest, multiple_fds_with_single_handler_handled)
 {
-    std::vector<Pipe> const pipes(2);
+    std::vector<mt::Pipe> const pipes(2);
     size_t const num_elems_to_send{10};
     std::vector<int> handled_fds;
     std::vector<size_t> elems_read;
@@ -255,7 +223,7 @@ TEST(AsioMainLoopTest, multiple_fds_with_single_handler_handled)
 
 TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
 {
-    std::vector<Pipe> const pipes(3);
+    std::vector<mt::Pipe> const pipes(3);
     std::vector<int> const elems_to_send{10,11,12};
     std::vector<int> handled_fds{0,0,0};
     std::vector<int> elems_read{0,0,0};

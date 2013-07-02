@@ -43,6 +43,7 @@ uses_android_input(integration-tests)
 target_link_libraries(
   integration-tests
 
+  mir-test
   mir-test-framework
   mir-test-doubles
   mir-test-cucumber

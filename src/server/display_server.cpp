@@ -58,6 +58,25 @@ private:
     std::function<void()> const revert;
 };
 
+class TryButRevertOnScopeExit
+{
+public:
+    TryButRevertOnScopeExit(std::function<void()> const& apply,
+                            std::function<void()> const& revert)
+        : revert{revert}
+    {
+        apply();
+    }
+
+    ~TryButRevertOnScopeExit()
+    {
+        revert();
+    }
+
+private:
+    std::function<void()> const revert;
+};
+
 }
 
 struct mir::DisplayServer::Private
@@ -69,6 +88,10 @@ struct mir::DisplayServer::Private
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()}
     {
+        display->register_configuration_change_handler(
+            *main_loop,
+            [this] { return configure_display(); });
+
         display->register_pause_resume_handlers(
             *main_loop,
             [this] { return pause(); },
@@ -125,6 +148,15 @@ struct mir::DisplayServer::Private
         }
 
         return true;
+    }
+
+    void configure_display()
+    {
+        TryButRevertOnScopeExit comp{
+            [this] { compositor->stop(); },
+            [this] { compositor->start(); }};
+
+        display->configure(*display->configuration());
     }
 
     std::shared_ptr<mg::Display> display;
