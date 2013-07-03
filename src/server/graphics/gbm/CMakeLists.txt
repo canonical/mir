@@ -31,6 +31,7 @@ add_library(
   internal_native_surface.cpp
   internal_client.cpp
   drm_close_threadsafe.cpp
+  udev_wrapper.cpp
 )
 
 target_link_libraries(
