@@ -23,6 +23,7 @@
 #include "mir/input/input_targets.h"
 
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/stub_input_channel.h"
 
 #include <InputApplication.h>
 #include <InputWindow.h>
@@ -39,74 +40,44 @@ namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mt = mir::test;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
 
 struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
 {
+    StubInputApplicationHandle()
+    {
+        if (mInfo == NULL)
+            mInfo = new droidinput::InputApplicationInfo;
+    }
     bool updateInfo()
     {
         return true;
     }
 };
 
-struct StubInputWindowHandle : public droidinput::InputWindowHandle
+struct StubWindowHandle : public droidinput::InputWindowHandle
 {
-    StubInputWindowHandle(std::string const& name)
-        : droidinput::InputWindowHandle(new StubInputApplicationHandle)
+    StubWindowHandle()
+      : droidinput::InputWindowHandle(make_app_handle())
     {
-        mInfo = new droidinput::InputWindowInfo();
-        mInfo->name = droidinput::String8(name);
+        if (!mInfo)
+        {
+            mInfo = new droidinput::InputWindowInfo();
+        }
     }
-          
+
+    droidinput::sp<droidinput::InputApplicationHandle> make_app_handle()
+    {
+        return new StubInputApplicationHandle;
+    }
+
     bool updateInfo()
     {
         return true;
     }
-};
-
-struct StubWindowHandleRepository : public mia::WindowHandleRepository
-{
-    droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<mi::InputChannel const> const& surface)
-    {
-        if (handles.find(surface) == handles.end())
-            handles[surface] = new StubInputWindowHandle(surface->name());
-        
-        return handles[surface];
-    }
-    std::map<std::shared_ptr<mi::InputChannel const>, droidinput::sp<droidinput::InputWindowHandle>> handles;
-};
-
-struct StubInputChannel : public mi::InputChannel
-{
-    StubInputChannel(std::string const& name)
-        : target_name(name)
-    {
-    }
-    std::string const& name() const override
-    {
-        return target_name;
-    }
-
-    int client_fd() const override
-    {
-        return 0;
-    }
-    int server_fd() const override
-    {
-        return 0;
-    }
-    geom::Size size() const override
-    {
-        return geom::Size();
-    }
-    geom::Point top_left() const override
-    {
-        return geom::Point();
-    }
-
-    std::string const target_name;
 };
 
 struct StubInputTargets : public mi::InputTargets
@@ -125,41 +96,52 @@ struct StubInputTargets : public mi::InputTargets
     std::vector<std::shared_ptr<mi::InputChannel>> targets;
 };
 
-MATCHER_P(HandleWithName, name, "")
+struct MockWindowHandleRepository : public mia::WindowHandleRepository
 {
-    return arg->getName() == name;
-}
-
+    MockWindowHandleRepository()
+    {
+        using namespace testing;
+        ON_CALL(*this, handle_for_surface(_))
+            .WillByDefault(Return(droidinput::sp<droidinput::InputWindowHandle>()));
+    }
+    ~MockWindowHandleRepository() noexcept(true) {};
+    MOCK_METHOD1(handle_for_surface, droidinput::sp<droidinput::InputWindowHandle>(std::shared_ptr<mi::InputChannel const> const& surface));
+};
 }
 
 TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
 {
     using namespace ::testing;
+    mtd::StubInputChannel t1, t2;
+    MockWindowHandleRepository repository;
+    droidinput::sp<droidinput::InputWindowHandle> stub_window_handle1 = new StubWindowHandle;
+    droidinput::sp<droidinput::InputWindowHandle> stub_window_handle2 = new StubWindowHandle;
+    StubInputTargets targets({mt::fake_shared(t1), mt::fake_shared(t2)});
 
-    std::string const surface1_name = "Pacific";
-    std::string const surface2_name = "Atlantic";
-    
+    Sequence seq2;
+    EXPECT_CALL(repository, handle_for_surface(_))//mt::fake_shared(t1)))
+        .InSequence(seq2)
+        .WillOnce(Return(stub_window_handle1)); 
+    EXPECT_CALL(repository, handle_for_surface(_))//mt::fake_shared(t2)))
+        .InSequence(seq2)
+        .WillOnce(Return(stub_window_handle2));
+
     struct MockTargetObserver
     {
         MOCK_METHOD1(see, void(droidinput::sp<droidinput::InputWindowHandle> const&));
     } observer;
-    {
-        InSequence seq;
-        EXPECT_CALL(observer, see(HandleWithName(surface1_name))).Times(1);
-        EXPECT_CALL(observer, see(HandleWithName(surface2_name))).Times(1);
-    }
+    Sequence seq;
+    EXPECT_CALL(observer, see(stub_window_handle1))
+        .InSequence(seq);
+    EXPECT_CALL(observer, see(stub_window_handle2))
+        .InSequence(seq);
 
-    StubInputChannel t1(surface1_name), t2(surface2_name);
-    StubInputTargets targets({mt::fake_shared(t1), mt::fake_shared(t2)});
-    StubWindowHandleRepository handles;
-    
     // The InputTargetEnumerator only holds a weak reference to the targets so we need to hold a shared pointer.
     auto shared_targets = mt::fake_shared(targets);
-    auto shared_handles = mt::fake_shared(handles);
-
+    auto shared_handles = mt::fake_shared(repository);
     mia::InputTargetEnumerator enumerator(shared_targets, shared_handles);
-    enumerator.for_each([&observer](droidinput::sp<droidinput::InputWindowHandle> const& handle)
+    enumerator.for_each([&](droidinput::sp<droidinput::InputWindowHandle> const& handle)
         {
             observer.see(handle);
-        });                        
+        });
 }

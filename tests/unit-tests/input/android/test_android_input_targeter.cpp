@@ -26,6 +26,7 @@
 #include "mir_test_doubles/stub_input_channel.h"
 
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/stub_input_channel.h"
 
 #include <InputWindow.h>
 #include <InputApplication.h>
@@ -94,23 +95,6 @@ struct MockWindowHandleRepository : public mia::WindowHandleRepository
     MOCK_METHOD1(handle_for_surface, droidinput::sp<droidinput::InputWindowHandle>(std::shared_ptr<mi::InputChannel const> const& surface));
 };
 
-struct StubInputChannel : public mi::InputChannel
-{
-    StubInputChannel()
-    {
-    }
-
-    int client_fd() const override
-    {
-        return 0;
-    }
-    int server_fd() const override
-    {
-        return 0;
-    }
-
-};
-
 }
 
 TEST(AndroidInputTargeterSetup, on_focus_cleared)
@@ -132,7 +116,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed)
 {
     using namespace ::testing;
 
-    std::shared_ptr<mi::InputChannel const> stub_surface = std::make_shared<StubInputChannel>();
+    std::shared_ptr<mi::InputChannel const> stub_surface = std::make_shared<mtd::StubInputChannel>();
     MockWindowHandleRepository repository;
 
     droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
@@ -156,7 +140,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
     MockWindowHandleRepository repository;
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
 
-    std::shared_ptr<mi::InputChannel const> stub_surface = std::make_shared<StubInputChannel>();
+    std::shared_ptr<mi::InputChannel const> stub_surface = std::make_shared<mtd::StubInputChannel>();
 
     EXPECT_CALL(repository, handle_for_surface(stub_surface))
         .Times(1)

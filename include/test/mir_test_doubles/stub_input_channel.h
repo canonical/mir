@@ -35,6 +35,11 @@ struct StubInputChannel : public input::InputChannel
     {
     }
 
+    StubInputChannel()
+     : StubInputChannel(0)
+    {
+    }
+
     int client_fd() const override
     {
         return input_fd;
