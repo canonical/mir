@@ -55,25 +55,31 @@ public:
     }
 
 private:
+    TryButRevertIfUnwinding(TryButRevertIfUnwinding const&) = delete;
+    TryButRevertIfUnwinding& operator=(TryButRevertIfUnwinding const&) = delete;
+
     std::function<void()> const revert;
 };
 
-class TryButRevertOnScopeExit
+class ApplyNowAndRevertOnScopeExit
 {
 public:
-    TryButRevertOnScopeExit(std::function<void()> const& apply,
-                            std::function<void()> const& revert)
+    ApplyNowAndRevertOnScopeExit(std::function<void()> const& apply,
+                                 std::function<void()> const& revert)
         : revert{revert}
     {
         apply();
     }
 
-    ~TryButRevertOnScopeExit()
+    ~ApplyNowAndRevertOnScopeExit()
     {
         revert();
     }
 
 private:
+    ApplyNowAndRevertOnScopeExit(ApplyNowAndRevertOnScopeExit const&) = delete;
+    ApplyNowAndRevertOnScopeExit& operator=(ApplyNowAndRevertOnScopeExit const&) = delete;
+
     std::function<void()> const revert;
 };
 
@@ -152,7 +158,7 @@ struct mir::DisplayServer::Private
 
     void configure_display()
     {
-        TryButRevertOnScopeExit comp{
+        ApplyNowAndRevertOnScopeExit comp{
             [this] { compositor->stop(); },
             [this] { compositor->start(); }};
 
