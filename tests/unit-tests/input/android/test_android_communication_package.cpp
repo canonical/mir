@@ -31,22 +31,12 @@ namespace mia = mir::input::android;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
-struct AndroidInputChannel : public testing::Test
-{
-    void SetUp()
-    {
-        surface_info = std::make_shared<mtd::MockSurfaceInfo>();
-    }
-
-    std::shared_ptr<mtd::MockSurfaceInfo> surface_info;
-};
-
-TEST_F(AndroidInputChannel, packages_own_valid_fds)
+TEST(AndroidInputChannel, packages_own_valid_fds)
 {
 
     int server_fd, client_fd;
     {
-        mia::AndroidInputChannel package(surface_info);
+        mia::AndroidInputChannel package;
 
         server_fd = package.server_fd();
         client_fd = package.client_fd();
@@ -58,40 +48,4 @@ TEST_F(AndroidInputChannel, packages_own_valid_fds)
     }
     EXPECT_LT(fcntl(server_fd, F_GETFD), 0);
     EXPECT_LT(fcntl(client_fd, F_GETFD), 0);
-}
-
-TEST_F(AndroidInputChannel, uses_topleft_info)
-{
-    using namespace testing;
-    geom::Point pt{geom::X{4}, geom::Y{44}};
-    EXPECT_CALL(*surface_info, top_left())
-        .Times(1)
-        .WillOnce(Return(pt));
-
-    mia::AndroidInputChannel package(surface_info);
-    EXPECT_EQ(pt, package.top_left());
-}
-
-TEST_F(AndroidInputChannel, uses_size_info)
-{
-    using namespace testing;
-    geom::Size size{geom::Width{4}, geom::Height{44}};
-    EXPECT_CALL(*surface_info, size())
-        .Times(1)
-        .WillOnce(Return(size));
-
-    mia::AndroidInputChannel package(surface_info);
-    EXPECT_EQ(size, package.size());
-}
-
-TEST_F(AndroidInputChannel, uses_name)
-{
-    using namespace testing;
-    std::string str("coffee");
-    EXPECT_CALL(*surface_info, name())
-        .Times(1)
-        .WillOnce(ReturnRef(str));
-
-    mia::AndroidInputChannel package(surface_info);
-    EXPECT_EQ(str, package.name());
 }
