@@ -703,12 +703,7 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     }, std::runtime_error);
 }
 
-/* 
- * TODO: Enable the test when the fix for a umockdev_testbed_uevent()
- * memory leak which breaks our CI lands in the libumockdev0 package
- * (see https://github.com/martinpitt/umockdev/commit/d5299732f).
- */
-TEST_F(GBMDisplayTest, DISABLED_configuration_change_calls_handler)
+TEST_F(GBMDisplayTest, configuration_change_calls_handler)
 {
     using namespace testing;
 
