@@ -34,7 +34,8 @@ struct NullInputRegistrar : public ms::InputRegistrar
     NullInputRegistrar() = default;
     virtual ~NullInputRegistrar() noexcept(true) = default;
     
-    void input_surface_opened(std::shared_ptr<mi::InputChannel> const&)
+    void input_surface_opened(std::shared_ptr<mi::InputChannel> const&,
+                              std::shared_ptr<ms::SurfaceInfo> const&)
     {
     }
 

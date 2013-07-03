@@ -32,6 +32,7 @@
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/mock_viewable_area.h"
+#include "mir_test_doubles/mock_surface_info.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
@@ -323,13 +324,14 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
 
     auto input_fd = test_fd();
     mtd::StubInputChannel surface(input_fd);
+    mtd::StubSurfaceInfo info;
 
     EXPECT_CALL(*event_filter, handle(_)).Times(1).WillOnce(Return(false));
     // We return -1 here to skip publishing of the event (to an unconnected test socket!).
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
-    input_registrar->input_surface_opened(mt::fake_shared(surface));
+    input_registrar->input_surface_opened(mt::fake_shared(surface), mt::fake_shared(info));
     input_targeter->focus_changed(mt::fake_shared(surface));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
@@ -346,13 +348,14 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
 
     mt::WaitCondition wait1, wait2, wait3;
 
+    mtd::StubSurfaceInfo info;
     auto input_fd_1 = test_fd();
     mtd::StubInputChannel surface1(input_fd_1);
     auto input_fd_2 = test_fd();
     mtd::StubInputChannel surface2(input_fd_2);
 
-    input_registrar->input_surface_opened(mt::fake_shared(surface1));
-    input_registrar->input_surface_opened(mt::fake_shared(surface2));
+    input_registrar->input_surface_opened(mt::fake_shared(surface1), mt::fake_shared(info));
+    input_registrar->input_surface_opened(mt::fake_shared(surface2), mt::fake_shared(info));
 
     EXPECT_CALL(*event_filter, handle(_)).Times(3).WillRepeatedly(Return(false));
 

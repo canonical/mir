@@ -31,6 +31,7 @@ class InputChannel;
 
 namespace surfaces
 {
+class SurfaceInfo;
 
 /// An interface used to register input targets and take care of input assosciation (i.e.
 /// create input channels).
@@ -39,7 +40,8 @@ class InputRegistrar
 public:
     virtual ~InputRegistrar() = default;
     
-    virtual void input_surface_opened(std::shared_ptr<input::InputChannel> const& opened_surface) = 0;
+    virtual void input_surface_opened(std::shared_ptr<input::InputChannel> const& opened_surface,
+                                      std::shared_ptr<surfaces::SurfaceInfo> const& info) = 0;
     virtual void input_surface_closed(std::shared_ptr<input::InputChannel> const& closed_surface) = 0;
 
 protected:

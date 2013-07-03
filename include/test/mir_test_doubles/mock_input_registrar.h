@@ -33,7 +33,8 @@ namespace doubles
 struct MockInputRegistrar : public surfaces::InputRegistrar
 {
     virtual ~MockInputRegistrar() noexcept(true) {}
-    MOCK_METHOD1(input_surface_opened, void(std::shared_ptr<input::InputChannel> const& opened_surface));
+    MOCK_METHOD2(input_surface_opened, void(std::shared_ptr<input::InputChannel> const&,
+                                            std::shared_ptr<surfaces::SurfaceInfo> const&));
     MOCK_METHOD1(input_surface_closed, void(std::shared_ptr<input::InputChannel> const& closed_surface));
 };
 

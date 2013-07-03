@@ -43,20 +43,6 @@ struct StubInputChannel : public input::InputChannel
     {
         return input_fd;
     }
-    geometry::Size size() const override
-    {
-        return geometry::Size();
-    }
-    geometry::Point top_left() const override
-    {
-        return geometry::Point();
-    }
-    std::string const& name() const override
-    {
-        static std::string empty_name;
-        return empty_name;
-    }
-
     int input_fd;
 };
 

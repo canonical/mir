@@ -30,6 +30,7 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace ms = mir::surfaces;
 
 mia::InputRegistrar::InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher)
     : input_dispatcher(input_dispatcher)
@@ -41,7 +42,8 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 }
 
 // Be careful on the locking in these two functions.
-void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::InputChannel> const& opened_surface)
+void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::InputChannel> const& channel,
+                                               std::shared_ptr<ms::SurfaceInfo> const& info)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {
@@ -51,13 +53,13 @@ void mia::InputRegistrar::input_surface_opened(std::shared_ptr<input::InputChann
         // it is only used in droidinput for logging and determining application not responding (ANR),
         // we determine ANR on a per surface basis. When we have time we should factor InputApplicationHandle out
         // of the input stack (merging it's state with WindowHandle). ~racarr
-        if (window_handles.find(opened_surface) != window_handles.end())
+        if (window_handles.find(channel) != window_handles.end())
             BOOST_THROW_EXCEPTION(std::logic_error("A surface was opened twice"));
 
-        auto application_handle = new mia::InputApplicationHandle(opened_surface);
-        window_handle = new mia::InputWindowHandle(application_handle, opened_surface);
+        auto application_handle = new mia::InputApplicationHandle(info);
+        window_handle = new mia::InputWindowHandle(application_handle, channel, info);
     
-        window_handles[opened_surface] = window_handle;
+        window_handles[channel] = window_handle;
     }
     input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
 }

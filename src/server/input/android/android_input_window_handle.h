@@ -28,6 +28,11 @@ namespace droidinput = android;
 namespace mir
 {
 
+namespace surfaces
+{
+class SurfaceInfo;
+}
+
 namespace input
 {
 class InputChannel;
@@ -39,7 +44,8 @@ class InputWindowHandle : public droidinput::InputWindowHandle
 {
 public:
     InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
-                      std::shared_ptr<input::InputChannel> const& surface);
+                      std::shared_ptr<input::InputChannel> const& channel,
+                      std::shared_ptr<surfaces::SurfaceInfo> const& info);
     ~InputWindowHandle() {}
 
     bool updateInfo();
@@ -49,7 +55,8 @@ protected:
     InputWindowHandle& operator=(InputWindowHandle const&) = delete;
 
 private:
-    std::shared_ptr<input::InputChannel> surface;
+    std::shared_ptr<input::InputChannel> input_channel;
+    std::shared_ptr<surfaces::SurfaceInfo> surface_info;
 };
 
 }

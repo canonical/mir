@@ -20,18 +20,22 @@
 #include "android_input_application_handle.h"
 
 #include "mir/input/input_channel.h"
+#include "mir/surfaces/surface_info.h"
 
 #include <androidfw/InputTransport.h>
 
 #include <limits.h>
 
+namespace ms = mir::surfaces;
 namespace mi = mir::input;
 namespace mia = mi::android;
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
-                                          std::shared_ptr<mi::InputChannel> const& surface)
+                                          std::shared_ptr<mi::InputChannel> const& channel,
+                                          std::shared_ptr<ms::SurfaceInfo> const& info)
   : droidinput::InputWindowHandle(input_app_handle),
-    surface(surface)
+    input_channel(channel),
+    surface_info(info)
 {
     updateInfo();
 }
@@ -44,13 +48,13 @@ bool mia::InputWindowHandle::updateInfo()
 
         // TODO: How can we avoid recreating the InputChannel which the InputChannelFactory has already created?
         mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"),
-                                                           surface->server_fd());
+                                                           input_channel->server_fd());
     }
 
-    auto surface_position = surface->top_left();
+    auto surface_position = surface_info->top_left();
     mInfo->frameLeft = surface_position.x.as_uint32_t();
     mInfo->frameTop = surface_position.y.as_uint32_t();
-    auto surface_size = surface->size();
+    auto surface_size = surface_info->size();
     mInfo->frameRight = mInfo->frameLeft + surface_size.width.as_uint32_t();
     mInfo->frameBottom = mInfo->frameTop + surface_size.height.as_uint32_t();
     
@@ -59,7 +63,7 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->touchableRegionRight = mInfo->frameRight;
     mInfo->touchableRegionBottom = mInfo->frameBottom;
 
-    mInfo->name = droidinput::String8(surface->name().c_str());
+    mInfo->name = droidinput::String8(surface_info->name().c_str());
     mInfo->layoutParamsFlags = droidinput::InputWindowInfo::FLAG_NOT_TOUCH_MODAL;
     mInfo->layoutParamsType = droidinput::InputWindowInfo::TYPE_APPLICATION;
     mInfo->scaleFactor = 1.f;

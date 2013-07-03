@@ -49,6 +49,7 @@ public:
     MOCK_CONST_METHOD0(name, std::string const&());
 };
 
+typedef ::testing::NiceMock<MockSurfaceInfo> StubSurfaceInfo;
 }
 }
 }

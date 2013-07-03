@@ -20,6 +20,8 @@
 
 #include "mir/input/input_channel.h"
 
+#include "mir_test_doubles/mock_surface_info.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -28,18 +30,19 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 TEST(AndroidInputApplicationHandle, takes_name_from_surface_and_specifies_max_timeout)
 {
     using namespace ::testing;
     std::string testing_surface_name = "Cats";
-    auto info = std::make_shared<mtd::MockSurfaceInfo>();
+    auto surface_info = std::make_shared<mtd::MockSurfaceInfo>();
 
-    EXPECT_CALL(*info, name())
+    EXPECT_CALL(*surface_info, name())
         .Times(2)
         .WillOnce(ReturnRef(testing_surface_name));
 
-    mia::InputApplicationHandle application_handle(info);
+    mia::InputApplicationHandle application_handle(surface_info);
     EXPECT_TRUE(application_handle.updateInfo());
     auto info = application_handle.getInfo();
     EXPECT_EQ(INT_MAX, info->dispatchingTimeout);

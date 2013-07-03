@@ -487,7 +487,7 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     EXPECT_CALL(input_factory, make_input_channel(_))
         .Times(1)
         .WillOnce(Return(channel));
-    EXPECT_CALL(registrar, input_surface_opened(_))
+    EXPECT_CALL(registrar, input_surface_opened(_,_))
         .InSequence(seq);
     EXPECT_CALL(registrar, input_surface_closed(_))
         .InSequence(seq);

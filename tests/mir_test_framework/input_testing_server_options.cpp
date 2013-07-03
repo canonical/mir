@@ -20,6 +20,7 @@
 
 #include "mir/input/input_channel.h"
 #include "mir/surfaces/input_registrar.h"
+#include "mir/surfaces/surface_info.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
 
@@ -68,18 +69,22 @@ public:
 
     ~ProxyInputRegistrar() noexcept(true) = default;
     
-    void input_surface_opened(std::shared_ptr<mi::InputChannel> const& opened_surface)
+    void input_surface_opened(std::shared_ptr<mi::InputChannel> const& opened_surface,
+                              std::shared_ptr<ms::SurfaceInfo> const& info)
     {
-        underlying_registrar->input_surface_opened(opened_surface);
-        listener->surface_ready_for_input(opened_surface->name());
+        outstanding_channels[opened_surface] = info->name();
+        underlying_registrar->input_surface_opened(opened_surface, info);
+        listener->surface_ready_for_input(info->name());
     }
-    void input_surface_closed(std::shared_ptr<mi::InputChannel> const& closed_surface)
+    void input_surface_closed(std::shared_ptr<mi::InputChannel> const& closed_channel)
     {
-        underlying_registrar->input_surface_closed(closed_surface);
-        listener->surface_finished_for_input(closed_surface->name());
+        auto closed_surface = outstanding_channels[closed_channel];
+        underlying_registrar->input_surface_closed(closed_channel);
+        listener->surface_finished_for_input(closed_surface);
     }
 
 private:
+    std::map<std::shared_ptr<mi::InputChannel>, std::string> outstanding_channels;
     std::shared_ptr<ms::InputRegistrar> const underlying_registrar;
     std::shared_ptr<SurfaceReadinessListener> const listener;
 };
