@@ -30,6 +30,7 @@ namespace graphics
 namespace gbm
 {
 
+class UdevEnumerator;
 
 class UdevDevice
 {
@@ -41,6 +42,10 @@ public:
     UdevDevice& operator=(UdevDevice const &rhs) noexcept;
 
     char const* subsystem() const;
+    char const* devtype() const;
+    char const* devpath() const;
+
+    friend class UdevEnumerator;
 private:
     udev_device* dev;   
 };
@@ -78,6 +83,7 @@ public:
     void scan_devices();
 
     void add_match_subsystem(std::string const& subsystem);
+    void match_parent(UdevDevice const& parent);
 
     UdevIterator begin();
     UdevIterator end();

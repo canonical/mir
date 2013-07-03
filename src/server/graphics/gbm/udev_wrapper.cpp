@@ -56,6 +56,16 @@ char const* mgg::UdevDevice::subsystem() const
     return udev_device_get_subsystem(dev);
 }
 
+char const* mgg::UdevDevice::devtype() const
+{
+    return udev_device_get_devtype(dev);
+}
+
+char const* mgg::UdevDevice::devpath() const
+{
+    return udev_device_get_devpath(dev);
+}
+
 /////////////////////
 //    UdevIterator
 /////////////////////
@@ -123,6 +133,11 @@ void mgg::UdevEnumerator::scan_devices()
 void mgg::UdevEnumerator::add_match_subsystem(std::string const& subsystem)
 {
     udev_enumerate_add_match_subsystem(enumerator, subsystem.c_str());
+}
+
+void mgg::UdevEnumerator::match_parent(mgg::UdevDevice const& parent)
+{
+    udev_enumerate_add_match_parent(enumerator, parent.dev);
 }
 
 mgg::UdevIterator mgg::UdevEnumerator::begin()
