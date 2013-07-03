@@ -19,9 +19,12 @@
 #include "src/client/android/android_client_buffer.h"
 #include "src/client/android/android_registrar_gralloc.h"
 #include "mir_test_doubles/mock_android_alloc_device.h"
+#include "mir_test/fake_shared.h"
 
 #include <system/graphics.h>
 #include <stdexcept>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -82,6 +85,7 @@ public:
         return registrar->unlock_interface(module, handle);
     }
 };
+typedef ::testing::NiceMock<MockRegistrarDevice> StubRegistrarDevice;
 
 class ClientAndroidRegistrarTest : public ::testing::Test
 {
@@ -90,7 +94,7 @@ protected:
     {
         using namespace testing;
 
-        mock_module = std::make_shared<MockRegistrarDevice>();
+        mock_module = std::make_shared<NiceMock<MockRegistrarDevice>>();
 
         width = 41;
         height = 43;
@@ -156,6 +160,24 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
         EXPECT_EQ(handle1, handle.get());
     }
     EXPECT_EQ(handle1, handle2);
+}
+
+TEST_F(ClientAndroidRegistrarTest, registrar_frees_fds)
+{
+    using namespace testing;
+    StubRegistrarDevice stub_module;
+    auto package = std::make_shared<MirBufferPackage>();
+    package->data_items = 0;
+    package->fd_items = 2;
+    pipe(static_cast<int*>(package->fd));
+
+    {
+        mcla::AndroidRegistrarGralloc registrar(mir::test::fake_shared(stub_module));
+        auto handle = registrar.register_buffer(package);
+    }
+
+    EXPECT_EQ(-1, fcntl(package->fd[0], F_GETFD));
+    EXPECT_EQ(-1, fcntl(package->fd[1], F_GETFD));
 }
 
 

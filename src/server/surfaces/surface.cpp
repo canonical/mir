@@ -211,3 +211,4 @@ std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
 {
     return server_input_channel;
 }
+

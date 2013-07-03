@@ -77,6 +77,8 @@ public:
     virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params, DepthId depth);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
+    
+    virtual void raise(std::weak_ptr<Surface> const& surface);
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;

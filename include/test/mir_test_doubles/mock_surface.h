@@ -41,6 +41,8 @@ struct MockSurface : public shell::Surface
     {
     }
 
+    ~MockSurface() noexcept {}
+
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
     MOCK_METHOD0(visible, bool());

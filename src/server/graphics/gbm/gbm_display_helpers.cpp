@@ -26,17 +26,37 @@
 #include <sstream>
 #include <stdexcept>
 #include <xf86drm.h>
+#include <libudev.h>
+#include <fcntl.h>
 
 namespace mgg = mir::graphics::gbm;
 namespace mggh = mir::graphics::gbm::helpers;
+
+/**************
+ * UdevHelper *
+ **************/
+
+mggh::UdevHelper::UdevHelper()
+{
+    ctx = udev_new();
+
+    if (!ctx)
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to create udev context"));
+}
+
+mggh::UdevHelper::~UdevHelper() noexcept
+{
+    udev_unref(ctx);
+}
 
 /*************
  * DRMHelper *
  *************/
 
-void mggh::DRMHelper::setup()
+void mggh::DRMHelper::setup(UdevHelper const& udev)
 {
-    fd = open_drm_device();
+    fd = open_drm_device(udev);
 
     if (fd < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open DRM device\n"));
@@ -50,7 +70,13 @@ int mggh::DRMHelper::get_authenticated_fd()
             std::runtime_error(
                 "Tried to get authenticated DRM fd before setting up the DRM master"));
 
-    int auth_fd = open_drm_device();
+    char* busid = drmGetBusid(fd);
+    if (!busid)
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
+    int auth_fd = drmOpen(NULL, busid);
+    free(busid);
 
     if (auth_fd < 0)
         BOOST_THROW_EXCEPTION(
@@ -137,26 +163,108 @@ void mggh::DRMHelper::set_master() const
     }
 }
 
-int mggh::DRMHelper::open_drm_device()
+int mggh::DRMHelper::is_appropriate_device(UdevHelper const& udev, udev_device* drm_device)
 {
-    static const char *drivers[] = {
-        "i915", "radeon", "nouveau", 0
-    };
-    int tmp_fd = -1;
+    udev_enumerate* children = udev_enumerate_new(udev.ctx);
+    udev_enumerate_add_match_parent(children, drm_device);
 
-    const char** driver{drivers};
+    char const* devtype = udev_device_get_devtype(drm_device);
+    if (!devtype || strcmp(devtype, "drm_minor"))
+        return EINVAL;
 
-    while (tmp_fd < 0 && *driver)
+    if (!udev_enumerate_scan_devices(children))
     {
-        tmp_fd = drmOpen(*driver, NULL);
-        ++driver;
+        udev_list_entry *devices, *device;
+        devices = udev_enumerate_get_list_entry(children);
+        udev_list_entry_foreach(device, devices) 
+        {
+            char const* sys_path = udev_list_entry_get_name(device);
+
+            // For some reason udev regards the device as a parent of itself
+            // If there are any other children, they should be outputs.
+            if (strcmp(sys_path, udev_device_get_syspath(drm_device)))
+            {
+                udev_enumerate_unref(children);
+                return 0;
+            }
+        }
     }
+    udev_enumerate_unref(children);
+
+    return ENOMEDIUM;
+}
+
+int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
+{    
+    int tmp_fd = -1;
+    int error;
+
+    // TODO: Wrap this up in a nice class
+    udev_enumerate* enumerator = udev_enumerate_new(udev.ctx);
+    udev_enumerate_add_match_subsystem(enumerator, "drm");
+    udev_enumerate_add_match_sysname(enumerator, "card[0-9]");
+
+    udev_list_entry *devices, *device;
+
+    if ((error = udev_enumerate_scan_devices(enumerator)))
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to enumerate udev devices")) << boost::errinfo_errno(error));
+
+    devices = udev_enumerate_get_list_entry(enumerator);
+    udev_list_entry_foreach(device, devices)
+    {
+        char const* sys_path = udev_list_entry_get_name(device);
+        udev_device* dev = udev_device_new_from_syspath(udev.ctx, sys_path);
+
+        // Devices can disappear on us.
+        if (!dev)
+            continue;
+
+        if ((error = is_appropriate_device(udev, dev)))
+        {
+            udev_device_unref(dev);
+            continue;
+        }
+
+        char const* dev_path = udev_device_get_devnode(dev);
+
+        // If directly opening the DRM device is good enough for X it's good enough for us!
+        tmp_fd = open(dev_path, O_RDWR, O_CLOEXEC);
+        if (tmp_fd < 0)
+        {
+            error = errno;
+            udev_device_unref(dev);
+            continue;
+        }
+
+        udev_device_unref(dev);
+
+        // Check that the drm device is usable by setting the interface version we use (1.4)
+        drmSetVersion sv
+        {
+            .drm_di_major = 1,
+            .drm_di_minor = 4,
+            .drm_dd_major = -1,     /* Don't care */
+            .drm_dd_minor = -1      /* Don't care */
+        };
+        if ((error = drmSetInterfaceVersion(tmp_fd, &sv)))
+        {
+            close(tmp_fd);
+            tmp_fd = -1;
+            continue;
+        }
+
+        // We currently only handle one DRM device
+        break;
+    }
+    udev_enumerate_unref(enumerator);
 
     if (tmp_fd < 0)
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Problem opening DRM device")) << boost::errinfo_errno(-tmp_fd));
+                std::runtime_error("Error opening DRM device")) << boost::errinfo_errno(error));
     }
 
     return tmp_fd;

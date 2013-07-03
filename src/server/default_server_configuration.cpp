@@ -174,8 +174,6 @@ void parse_arguments(
 {
     namespace po = boost::program_options;
 
-    bool exit_with_helptext = false;
-
     try
     {
         desc.add_options()
@@ -185,19 +183,15 @@ void parse_arguments(
 
         if (options->is_set("help"))
         {
-            exit_with_helptext = true;
+            std::ostringstream help_text;
+            help_text << desc;
+            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
         }
     }
     catch (po::error const& error)
     {
-        exit_with_helptext = true;
-    }
-
-    if (exit_with_helptext)
-    {
         std::ostringstream help_text;
-        help_text << desc;
-
+        help_text << "Failed to parse command line options: " << error.what() << "." << std::endl << desc;
         BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
     }
 }

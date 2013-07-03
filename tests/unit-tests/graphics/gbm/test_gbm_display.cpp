@@ -33,6 +33,8 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 
+#include "mir_test_framework/udev_environment.h"
+
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
@@ -41,6 +43,7 @@ namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace ml=mir::logging;
 namespace mtd=mir::test::doubles;
+namespace mtf=mir::mir_test_framework;
 
 namespace
 {
@@ -93,6 +96,8 @@ public:
         .Times(AtLeast(0));
         EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
         .Times(AtLeast(0));
+
+        fake_devices.add_standard_drm_devices();
     }
 
     std::shared_ptr<mgg::GBMPlatform> create_platform()
@@ -192,6 +197,7 @@ public:
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     std::shared_ptr<testing::NiceMock<mtd::MockDisplayReport>> const mock_report;
     std::shared_ptr<mg::DisplayReport> const null_report;
+    mtf::UdevEnvironment fake_devices;
 };
 
 }

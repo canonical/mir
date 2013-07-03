@@ -28,6 +28,8 @@
 
 #include <gtest/gtest.h>
 
+#include "mir_test_framework/udev_environment.h"
+
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 
@@ -42,6 +44,7 @@
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir::mir_test_framework;
 
 namespace
 {
@@ -53,6 +56,7 @@ public:
     {
         ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
         ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
+        fake_devices.add_standard_drm_devices();
     }
 
     std::shared_ptr<mg::Platform> create_platform()
@@ -64,6 +68,7 @@ public:
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
+    mtf::UdevEnvironment fake_devices;
 };
 }
 
