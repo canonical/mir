@@ -51,6 +51,11 @@ mgg::UdevDevice& mgg::UdevDevice::operator=(UdevDevice const &rhs) noexcept
     return *this;
 }
 
+char const* mgg::UdevDevice::subsystem() const
+{
+    return udev_device_get_subsystem(dev);
+}
+
 /////////////////////
 //    UdevIterator
 /////////////////////
@@ -113,6 +118,11 @@ mgg::UdevEnumerator::~UdevEnumerator() noexcept
 void mgg::UdevEnumerator::scan_devices()
 {
     udev_enumerate_scan_devices(enumerator);
+}
+
+void mgg::UdevEnumerator::add_match_subsystem(std::string const& subsystem)
+{
+    udev_enumerate_add_match_subsystem(enumerator, subsystem.c_str());
 }
 
 mgg::UdevIterator mgg::UdevEnumerator::begin()

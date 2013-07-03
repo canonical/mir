@@ -40,6 +40,7 @@ public:
     UdevDevice(UdevDevice const& copy);
     UdevDevice& operator=(UdevDevice const &rhs) noexcept;
 
+    char const* subsystem() const;
 private:
     udev_device* dev;   
 };
@@ -76,8 +77,11 @@ public:
 
     void scan_devices();
 
+    void add_match_subsystem(std::string const& subsystem);
+
     UdevIterator begin();
     UdevIterator end();
+
 private:
     udev_enumerate* enumerator;
 };
