@@ -24,6 +24,7 @@
 #include "kms_output.h"
 #include "kms_page_flipper.h"
 #include "virtual_terminal.h"
+#include "video_devices.h"
 
 #include "mir/main_loop.h"
 #include "mir/graphics/display_report.h"
@@ -74,8 +75,10 @@ private:
 }
 
 mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
+                            std::shared_ptr<VideoDevices> const& video_devices,
                             std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
+      video_devices(video_devices),
       listener(listener),
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)}
@@ -148,7 +151,7 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
                                                               std::move(surface), max_size,
                                                               shared_egl.context()}};
 
-    /* 
+    /*
      * TODO: Investigate why we have to destroy the previous display buffers and
      * their contexts after creating the new ones to avoid a crash in Mesa.
      */
@@ -160,26 +163,9 @@ void mgg::GBMDisplay::register_configuration_change_handler(
     MainLoop& main_loop,
     DisplayConfigurationChangeHandler const& conf_change_handler)
 {
-    auto monitor = std::shared_ptr<udev_monitor>(
-                       udev_monitor_new_from_netlink(platform->udev.ctx, "udev"),
-                       [](udev_monitor* m) { if (m) udev_monitor_unref(m); });
-    if (!monitor)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev_monitor"));
-
-    udev_monitor_filter_add_match_subsystem_devtype(monitor.get(), "drm", "drm_minor");
-
-    main_loop.register_fd_handler(
-        {udev_monitor_get_fd(monitor.get())},
-        [conf_change_handler, monitor](int)
-        {
-            auto dev = std::unique_ptr<udev_device,std::function<void(udev_device*)>>(
-                           udev_monitor_receive_device(monitor.get()),
-                           [](udev_device* d) { if (d) udev_device_unref(d); });
-            if (dev)
-                conf_change_handler();
-        });
-
-    udev_monitor_enable_receiving(monitor.get());
+    video_devices->register_change_handler(
+        main_loop,
+        conf_change_handler);
 }
 
 void mgg::GBMDisplay::register_pause_resume_handlers(

@@ -244,7 +244,7 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
 
 void mga::AndroidDisplay::register_configuration_change_handler(
     MainLoop&,
-    DisplayConfigurationChangeHandler const&) 
+    DisplayConfigurationChangeHandler const&)
 {
 }
 
