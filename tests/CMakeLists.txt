@@ -1,14 +1,6 @@
-if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_GRAPHICS})
-  message(STATUS "Tests are NOT run with real graphics support.")
-else()
-  message(STATUS "Tests are run with real graphics.")
-endif()
+find_package(GFlags REQUIRED)
+find_package(umockdev REQUIRED)
 
-if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_INPUT})
-  message(STATUS "Tests are NOT run with real input.")
-else()
-  message(STATUS "Tests are run with real input.")
-endif()
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # Avoid clang complaints about poor quality gmock/gtest/cucumber headers
@@ -19,6 +11,7 @@ endif()
 include_directories(${PROJECT_SOURCE_DIR}/include/server)
 include_directories(${PROJECT_SOURCE_DIR}/include/client)
 include_directories(${PROJECT_SOURCE_DIR}/include/test)
+include_directories(${umockdev_INCLUDE_DIR})
 
 if (MIR_PLATFORM STREQUAL "android")
   include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
