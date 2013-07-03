@@ -27,10 +27,13 @@
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
 
+#include <boost/throw_exception.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
@@ -55,7 +58,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
     for (auto &layer : layers_by_depth)
     {
         auto surfaces = layer.second;
-        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
             mg::Renderable& renderable = **it;
             if (filter(renderable)) renderable_operator(renderable);
@@ -134,7 +137,34 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTa
     std::lock_guard<std::mutex> lg(guard);
     for (auto &layer : layers_by_depth)
     {
-        for (auto it = layer.second.rbegin(); it != layer.second.rend(); ++it)
+        for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
             callback(*it);
     }
+}
+
+void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
+{
+    auto surface = s.lock();
+
+    {
+        std::unique_lock<std::mutex> ul(guard);
+        for (auto &layer : layers_by_depth)
+        {
+            auto &surfaces = layer.second;
+            auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
+    
+            if (p != surfaces.end())
+            {
+                surfaces.erase(p);
+                surfaces.push_back(surface);
+            
+                ul.unlock();
+                emit_change_notification();
+
+                return;
+            }
+        }
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }

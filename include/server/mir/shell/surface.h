@@ -59,7 +59,7 @@ public:
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink);
 
-    ~Surface();
+    ~Surface() noexcept;
 
     virtual void hide();
     virtual void show();

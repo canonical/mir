@@ -14,6 +14,8 @@ if(DOXYGEN_FOUND AND (DOXYGEN_VERSION VERSION_GREATER "1.8"))
                  ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
   configure_file(doc/footer.html.in
                  ${PROJECT_BINARY_DIR}/doc/footer.html @ONLY IMMEDIATE)
+  configure_file(doc/extra.css
+                 ${PROJECT_BINARY_DIR}/doc/extra.css @ONLY IMMEDIATE)
   if (BUILD_DOXYGEN)
     set(ALL "ALL")
   endif()

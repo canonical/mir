@@ -31,6 +31,7 @@
 
 #include <EGL/egl.h>
 #include <xf86drmMode.h>
+#include <libudev.h>
 
 namespace mir
 {
@@ -44,6 +45,22 @@ typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfac
 namespace helpers
 {
 
+// TODO (RAOF): This is going to morph into an approximately fully-featured
+// C++ udev library, and probably a top-level Mir interface.
+//
+// For now, do the simple thing.
+struct UdevHelper
+{
+public:
+    UdevHelper();
+    ~UdevHelper() noexcept;
+
+    UdevHelper(UdevHelper const&) = delete;
+    UdevHelper &operator=(UdevHelper const&) = delete;
+
+    udev* ctx;
+};
+
 class DRMHelper
 {
 public:
@@ -53,7 +70,7 @@ public:
     DRMHelper(const DRMHelper &) = delete;
     DRMHelper& operator=(const DRMHelper&) = delete;
 
-    void setup();
+    void setup(UdevHelper const& udev);
     int get_authenticated_fd();
     void auth_magic(drm_magic_t magic) const;
 
@@ -63,7 +80,11 @@ public:
     int fd;
 
 private:
-    int open_drm_device();
+    // TODO: This herustic is temporary; should be replaced with
+    // handling >1 DRM device.
+    int is_appropriate_device(UdevHelper const& udev, udev_device* dev);
+
+    int open_drm_device(UdevHelper const& udev);
 };
 
 class GBMHelper

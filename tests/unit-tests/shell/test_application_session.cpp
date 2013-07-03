@@ -163,8 +163,11 @@ TEST(Session, uses_snapshot_strategy)
 {
     using namespace ::testing;
 
-    struct MockSnapshotStrategy : public msh::SnapshotStrategy
+    class MockSnapshotStrategy : public msh::SnapshotStrategy
     {
+    public:
+        ~MockSnapshotStrategy() noexcept {}
+
         MOCK_METHOD2(take_snapshot_of,
                     void(std::shared_ptr<msh::SurfaceBufferAccess> const&,
                          msh::SnapshotCallback const&));
