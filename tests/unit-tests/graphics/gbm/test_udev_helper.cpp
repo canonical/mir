@@ -39,11 +39,11 @@ public:
 
 TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
 {
-    umockdev_testbed_add_device(udev_environment.testbed, "drm", "fakedev1", NULL, NULL, NULL);
-    umockdev_testbed_add_device(udev_environment.testbed, "drm", "fakedev2", NULL, NULL, NULL);
-    umockdev_testbed_add_device(udev_environment.testbed, "drm", "fakedev3", NULL, NULL, NULL);
-    umockdev_testbed_add_device(udev_environment.testbed, "drm", "fakedev4", NULL, NULL, NULL);
-    umockdev_testbed_add_device(udev_environment.testbed, "drm", "fakedev5", NULL, NULL, NULL);
+    udev_environment.add_device("drm", "fakedev1", NULL, {}, {});
+    udev_environment.add_device("drm", "fakedev2", NULL, {}, {});
+    udev_environment.add_device("drm", "fakedev3", NULL, {}, {});
+    udev_environment.add_device("drm", "fakedev4", NULL, {}, {});
+    udev_environment.add_device("drm", "fakedev5", NULL, {}, {});
 
     udev* ctx = udev_new();
     mgg::UdevEnumerator enumerator(ctx);
@@ -58,4 +58,27 @@ TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
     }
 
     ASSERT_EQ(device_count, 5);
+
+    udev_unref(ctx);
+}
+
+TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
+{
+    udev_environment.add_device("drm", "fakedrm1", NULL, {}, {});
+    udev_environment.add_device("scsi", "fakescsi1", NULL, {}, {});
+    udev_environment.add_device("drm", "fakedrm2", NULL, {}, {});
+    udev_environment.add_device("usb", "fakeusb1", NULL, {}, {});
+    udev_environment.add_device("usb", "fakeusb2", NULL, {}, {});
+
+    udev* ctx = udev_new();
+    mgg::UdevEnumerator devices(ctx);
+
+    devices.add_match_subsystem("drm");
+    devices.scan_devices();
+    for (auto& device : devices)
+    {
+        ASSERT_STREQ("drm", device.subsystem());
+    }
+
+    udev_unref(ctx);
 }

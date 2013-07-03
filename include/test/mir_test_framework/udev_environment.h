@@ -20,6 +20,8 @@
 #ifndef MIR_TESTING_UDEV_ENVIRONMENT
 #define MIR_TESTING_UDEV_ENVIRONMENT
 
+#include <string>
+#include <initializer_list>
 #include <umockdev.h>
 
 namespace mir
@@ -33,6 +35,12 @@ public:
     ~UdevEnvironment() noexcept;
 
     void add_standard_drm_devices();
+
+    std::string add_device(char const* subsystem,
+                           char const* name,
+                           char const* parent,
+                           std::initializer_list<char const*> attributes,
+                           std::initializer_list<char const*> properties);
 
     UMockdevTestbed *testbed;  
 };
