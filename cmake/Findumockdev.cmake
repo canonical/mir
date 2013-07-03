@@ -3,7 +3,7 @@ if (umockdev_INCLUDE_DIR)
   set(umockdev_FIND_QUIETLY TRUE)
 endif ()
 
-find_path(umockdev_INCLUDE_DIR umockdev-1.0/umockdev.h)
+find_path(umockdev_INCLUDE_DIR umockdev.h HINTS /usr/include/umockdev-1.0/)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(umockdev DEFAULT_MSG umockdev_INCLUDE_DIR)

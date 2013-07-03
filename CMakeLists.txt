@@ -100,6 +100,7 @@ find_package(GLESv2 REQUIRED)
 find_package(GLM REQUIRED)
 find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
+find_package(GFlags REQUIRED)
 find_package(XKBCOMMON REQUIRED)
 find_package(LTTngUST REQUIRED)
 

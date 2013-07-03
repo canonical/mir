@@ -1,4 +1,3 @@
-find_package(GFlags REQUIRED)
 find_package(umockdev REQUIRED)
 
 
