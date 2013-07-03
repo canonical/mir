@@ -1,5 +1,7 @@
-find_package(umockdev REQUIRED)
-
+pkg_check_modules(UMOCKDEV umockdev-1.0)
+if (NOT UMOCKDEV_FOUND)
+  message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
+endif()
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # Avoid clang complaints about poor quality gmock/gtest/cucumber headers
@@ -10,7 +12,6 @@ endif()
 include_directories(${PROJECT_SOURCE_DIR}/include/server)
 include_directories(${PROJECT_SOURCE_DIR}/include/client)
 include_directories(${PROJECT_SOURCE_DIR}/include/test)
-include_directories(${umockdev_INCLUDE_DIR})
 
 if (MIR_PLATFORM STREQUAL "android")
   include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
