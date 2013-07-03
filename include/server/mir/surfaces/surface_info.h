@@ -29,14 +29,16 @@ namespace mir
 namespace surfaces
 {
 
+//TODO: (kdub) as this interface grows, should we split into a read-only interface and a mutator? 
 class SurfaceInfo 
 {
 public:
     virtual geometry::Point top_left() const = 0;
-    virtual void set_top_left(geometry::Point) = 0;
-
     virtual geometry::Size size() const = 0;
     virtual std::string const& name() const = 0;
+
+    //mutators
+    virtual void set_top_left(geometry::Point) = 0;
 
 protected:
     SurfaceInfo() = default; 
