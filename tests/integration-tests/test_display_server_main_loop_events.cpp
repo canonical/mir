@@ -30,6 +30,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <atomic>
+#include <thread>
+#include <chrono>
+
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -385,6 +389,7 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
     using namespace testing;
 
     TestMainLoopServerConfig server_config;
+    std::atomic<bool> configuration_changed{false};
 
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
@@ -400,7 +405,9 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
         /* Configuration change event */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_display, configure(_)).Times(1);
-        EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start())
+            .Times(1)
+            .WillOnce(Assign(&configuration_changed, true));
 
         /* Stop */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
@@ -408,9 +415,16 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
     }
 
     mir::run_mir(server_config,
-                 [&server_config](mir::DisplayServer&)
+                 [&server_config,&configuration_changed](mir::DisplayServer&)
                  {
-                    server_config.emit_configuration_change_event();
-                    kill(getpid(), SIGTERM);
+                    std::thread t{
+                        [&server_config,&configuration_changed]
+                        {
+                           server_config.emit_configuration_change_event();
+                           while (!configuration_changed)
+                               std::this_thread::sleep_for(std::chrono::microseconds{500});
+                           kill(getpid(), SIGTERM);
+                        }};
+                    t.detach();
                  });
 }
