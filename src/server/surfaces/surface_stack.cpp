@@ -81,8 +81,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
     auto info = std::make_shared<ms::SurfaceDataStorage>(params.name,
                                                          params.top_left,
                                                          buffer_stream->stream_size());
-
-    auto input_channel = input_factory->make_input_channel(info);
+    auto input_channel = input_factory->make_input_channel();
     std::shared_ptr<ms::Surface> surface(
         new ms::Surface(info, buffer_stream, input_channel,
             [this]() { emit_change_notification(); }));

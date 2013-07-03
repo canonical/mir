@@ -23,10 +23,6 @@
 
 namespace mir
 {
-namespace surfaces
-{
-class SurfaceInfo;
-}
 namespace input
 {
 class InputChannel;
@@ -36,8 +32,7 @@ class InputChannelFactory
 public:
     virtual ~InputChannelFactory() {}
 
-    virtual std::shared_ptr<InputChannel> make_input_channel(
-        std::shared_ptr<surfaces::SurfaceInfo> const&) = 0;
+    virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
 
 protected:
     InputChannelFactory() = default;

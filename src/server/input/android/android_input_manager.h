@@ -61,7 +61,7 @@ public:
     void start();
     void stop();
 
-    std::shared_ptr<InputChannel> make_input_channel(std::shared_ptr<surfaces::SurfaceInfo> const&);
+    std::shared_ptr<InputChannel> make_input_channel();
 
 protected:
     InputManager(const InputManager&) = delete;

@@ -27,8 +27,7 @@ namespace mia = mir::input::android;
 namespace geom = mir::geometry;
 namespace droidinput = android;
 
-mia::AndroidInputChannel::AndroidInputChannel(std::shared_ptr<surfaces::SurfaceInfo> const& info)
-    : info(info)
+mia::AndroidInputChannel::AndroidInputChannel()
 {
     
     droidinput::InputChannel::openInputFdPair(s_fd, c_fd);
@@ -48,19 +47,4 @@ int mia::AndroidInputChannel::client_fd() const
 int mia::AndroidInputChannel::server_fd() const
 {
     return s_fd;
-}
-
-geom::Point mia::AndroidInputChannel::top_left() const
-{
-    return info->top_left();
-}
-
-geom::Size mia::AndroidInputChannel::size() const
-{
-    return info->size();
-}
-
-std::string const& mia::AndroidInputChannel::name() const
-{
-    return info->name();
 }

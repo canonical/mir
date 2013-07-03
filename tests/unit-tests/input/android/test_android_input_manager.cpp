@@ -25,7 +25,6 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/mock_surface_info.h"
 #include "mir_test_doubles/stub_input_channel.h"
 
 #include <EventHub.h>
@@ -167,8 +166,7 @@ TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
 {
     mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
 
-    auto info = std::make_shared<mtd::MockSurfaceInfo>();
-    auto package = manager.make_input_channel(info);
+    auto package = manager.make_input_channel();
     EXPECT_GT(package->client_fd(), 0);
     EXPECT_GT(package->server_fd(), 0);
 }

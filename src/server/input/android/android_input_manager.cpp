@@ -71,7 +71,7 @@ void mia::InputManager::start()
     dispatcher_thread->start();
 }
 
-std::shared_ptr<mi::InputChannel> mia::InputManager::make_input_channel(std::shared_ptr<surfaces::SurfaceInfo> const& info)
+std::shared_ptr<mi::InputChannel> mia::InputManager::make_input_channel()
 {
-    return std::make_shared<mia::AndroidInputChannel>(info);
+    return std::make_shared<mia::AndroidInputChannel>();
 }

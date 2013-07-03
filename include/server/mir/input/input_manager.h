@@ -41,7 +41,7 @@ public:
     virtual void start() = 0;
     virtual void stop() = 0;
 
-    virtual std::shared_ptr<InputChannel> make_input_channel(std::shared_ptr<surfaces::SurfaceInfo> const&) = 0;
+    virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
 
 protected:
     InputManager() {};

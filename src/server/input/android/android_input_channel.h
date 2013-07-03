@@ -45,12 +45,9 @@ namespace android
 class AndroidInputChannel : public InputChannel
 {
 public:
-    explicit AndroidInputChannel(std::shared_ptr<surfaces::SurfaceInfo> const&);
+    explicit AndroidInputChannel();
     virtual ~AndroidInputChannel();
 
-    geometry::Point top_left() const;
-    geometry::Size size() const;
-    std::string const& name() const;
     int client_fd() const;
     int server_fd() const;
 
@@ -59,7 +56,6 @@ protected:
     AndroidInputChannel& operator=(AndroidInputChannel const&) = delete;
 
 private:
-    std::shared_ptr<surfaces::SurfaceInfo> info;
     int s_fd, c_fd;
 };
 
