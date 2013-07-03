@@ -33,8 +33,6 @@ if(MIR_PLATFORM STREQUAL "gbm")
   list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
-add_subdirectory(cucumber)
-
 add_executable(
   integration-tests
   ${INTEGRATION_TESTS_SRCS})
@@ -45,7 +43,6 @@ target_link_libraries(
 
   mir-test-framework
   mir-test-doubles
-  mir-test-cucumber
 
   mirserver
   mirplatformgraphics
