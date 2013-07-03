@@ -19,13 +19,12 @@
 #ifndef MIR_INPUT_INPUT_CHANNEL_H_
 #define MIR_INPUT_INPUT_CHANNEL_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
-
 namespace mir
 {
 namespace input
 {
+
+/// Encapsulates a paired set of fd's suitable for input communication.
 class InputChannel
 {
 public:

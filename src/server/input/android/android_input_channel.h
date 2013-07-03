@@ -22,7 +22,6 @@
 #include "mir/input/input_channel.h"
 
 #include <utils/StrongPointer.h>
-#include <memory>
 
 namespace android
 {
@@ -33,10 +32,6 @@ namespace droidinput = android;
 
 namespace mir
 {
-namespace surfaces
-{
-class SurfaceInfo;
-}
 namespace input
 {
 namespace android

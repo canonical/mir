@@ -38,7 +38,6 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mt = mir::test;
-namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
 namespace

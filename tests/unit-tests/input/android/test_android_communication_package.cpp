@@ -17,23 +17,18 @@
  */
 
 #include "src/server/input/android/android_input_channel.h"
-#include "mir_test_doubles/mock_surface_info.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <string>
 #include <unistd.h>
 #include <fcntl.h>
 
 namespace droidinput = android;
 namespace mia = mir::input::android;
-namespace mtd = mir::test::doubles;
-namespace geom = mir::geometry;
 
 TEST(AndroidInputChannel, packages_own_valid_fds)
 {
-
     int server_fd, client_fd;
     {
         mia::AndroidInputChannel package;

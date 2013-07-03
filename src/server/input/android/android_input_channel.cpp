@@ -16,7 +16,6 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/surfaces/surface_info.h"
 #include "android_input_channel.h"
 
 #include <androidfw/InputTransport.h>
@@ -24,7 +23,6 @@
 #include <unistd.h>
 
 namespace mia = mir::input::android;
-namespace geom = mir::geometry;
 namespace droidinput = android;
 
 mia::AndroidInputChannel::AndroidInputChannel()

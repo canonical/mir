@@ -45,7 +45,6 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
-namespace geom = mir::geometry;
 
 TEST(AndroidInputTargeterSetup, on_focus_cleared)
 {

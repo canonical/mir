@@ -44,9 +44,6 @@ struct MockInputChannel : public mi::InputChannel
 {
     MOCK_CONST_METHOD0(server_fd, int());
     MOCK_CONST_METHOD0(client_fd, int());
-    MOCK_CONST_METHOD0(top_left, geom::Point());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(name, std::string const&());
 };
 }
 

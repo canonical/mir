@@ -138,20 +138,6 @@ struct StubInputChannel : public mi::InputChannel
     {
     }
     
-    geom::Point top_left() const
-    {
-        return geom::Point{geom::X{}, geom::Y{}};
-    }
-    geom::Size size() const
-    {
-        return geom::Size{geom::Width{}, geom::Height{}};
-    }
-    std::string const& name() const
-    {
-        static std::string n;
-        return n;
-    }
-
     int client_fd() const
     {
         return c_fd;
