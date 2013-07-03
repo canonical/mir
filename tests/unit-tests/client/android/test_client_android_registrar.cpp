@@ -19,6 +19,7 @@
 #include "src/client/android/android_client_buffer.h"
 #include "src/client/android/android_registrar_gralloc.h"
 #include "mir_test_doubles/mock_android_alloc_device.h"
+#include "mir_test/fake_shared.h"
 
 #include <system/graphics.h>
 #include <stdexcept>
@@ -84,6 +85,7 @@ public:
         return registrar->unlock_interface(module, handle);
     }
 };
+typedef ::testing::NiceMock<MockRegistrarDevice> StubRegistrarDevice;
 
 class ClientAndroidRegistrarTest : public ::testing::Test
 {
@@ -163,13 +165,14 @@ TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
 TEST_F(ClientAndroidRegistrarTest, registrar_frees_fds)
 {
     using namespace testing;
+    StubRegistrarDevice stub_module;
     auto package = std::make_shared<MirBufferPackage>();
     package->data_items = 0;
     package->fd_items = 2;
     pipe(static_cast<int*>(package->fd));
 
     {
-        mcla::AndroidRegistrarGralloc registrar(mock_module);
+        mcla::AndroidRegistrarGralloc registrar(mir::test::fake_shared(stub_module));
         auto handle = registrar.register_buffer(package);
     }
 
