@@ -713,6 +713,7 @@ TEST_F(GBMDisplayTest, DISABLED_configuration_change_calls_handler)
     using namespace testing;
 
     char const* const devpath{"/sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/drm/card0"};
+    int const expected_call_count{10};
 
     mir::AsioMainLoop ml;
     std::atomic<int> call_count{0};
@@ -726,14 +727,14 @@ TEST_F(GBMDisplayTest, DISABLED_configuration_change_calls_handler)
         ml,
         [&call_count,&ml]
         { 
-            if (++call_count == 10)
+            if (++call_count == expected_call_count)
                 ml.stop();
         });
 
     std::thread t{
         [this, devpath]
         {
-            for (int i = 0; i < 10; ++i)
+            for (int i = 0; i < expected_call_count; ++i)
             {
                 umockdev_testbed_uevent(fake_devices.testbed, devpath, "change");
                 std::this_thread::sleep_for(std::chrono::microseconds{500});
@@ -744,5 +745,5 @@ TEST_F(GBMDisplayTest, DISABLED_configuration_change_calls_handler)
 
     t.join();
 
-    EXPECT_EQ(10, call_count);
+    EXPECT_EQ(expected_call_count, call_count);
 }
