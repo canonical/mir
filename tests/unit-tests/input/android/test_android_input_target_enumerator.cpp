@@ -17,16 +17,15 @@
  */
 
 #include "src/server/input/android/android_input_target_enumerator.h"
-#include "src/server/input/android/android_window_handle_repository.h"
 
 #include "mir/input/input_channel.h"
 #include "mir/input/input_targets.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_input_channel.h"
+#include "mir_test_doubles/stub_input_handles.h"
+#include "mir_test_doubles/mock_window_handle_repository.h"
 
-#include <InputApplication.h>
-#include <InputWindow.h>
 #include <InputDispatcher.h>
 
 #include <gmock/gmock.h>
@@ -45,41 +44,6 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
-{
-    StubInputApplicationHandle()
-    {
-        if (mInfo == NULL)
-            mInfo = new droidinput::InputApplicationInfo;
-    }
-    bool updateInfo()
-    {
-        return true;
-    }
-};
-
-struct StubWindowHandle : public droidinput::InputWindowHandle
-{
-    StubWindowHandle()
-      : droidinput::InputWindowHandle(make_app_handle())
-    {
-        if (!mInfo)
-        {
-            mInfo = new droidinput::InputWindowInfo();
-        }
-    }
-
-    droidinput::sp<droidinput::InputApplicationHandle> make_app_handle()
-    {
-        return new StubInputApplicationHandle;
-    }
-
-    bool updateInfo()
-    {
-        return true;
-    }
-};
-
 struct StubInputTargets : public mi::InputTargets
 {
     StubInputTargets(std::initializer_list<std::shared_ptr<mi::InputChannel>> const& target_list)
@@ -96,26 +60,15 @@ struct StubInputTargets : public mi::InputTargets
     std::vector<std::shared_ptr<mi::InputChannel>> targets;
 };
 
-struct MockWindowHandleRepository : public mia::WindowHandleRepository
-{
-    MockWindowHandleRepository()
-    {
-        using namespace testing;
-        ON_CALL(*this, handle_for_surface(_))
-            .WillByDefault(Return(droidinput::sp<droidinput::InputWindowHandle>()));
-    }
-    ~MockWindowHandleRepository() noexcept(true) {};
-    MOCK_METHOD1(handle_for_surface, droidinput::sp<droidinput::InputWindowHandle>(std::shared_ptr<mi::InputChannel const> const& surface));
-};
 }
 
 TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
 {
     using namespace ::testing;
     mtd::StubInputChannel t1, t2;
-    MockWindowHandleRepository repository;
-    droidinput::sp<droidinput::InputWindowHandle> stub_window_handle1 = new StubWindowHandle;
-    droidinput::sp<droidinput::InputWindowHandle> stub_window_handle2 = new StubWindowHandle;
+    mtd::MockWindowHandleRepository repository;
+    droidinput::sp<droidinput::InputWindowHandle> stub_window_handle1 = new mtd::StubWindowHandle;
+    droidinput::sp<droidinput::InputWindowHandle> stub_window_handle2 = new mtd::StubWindowHandle;
     StubInputTargets targets({mt::fake_shared(t1), mt::fake_shared(t2)});
 
     Sequence seq2;
