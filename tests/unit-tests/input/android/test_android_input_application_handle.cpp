@@ -29,47 +29,19 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace geom = mir::geometry;
 
-namespace
-{
-struct MockSurfaceHandle : public mi::InputChannel
-{
-    MOCK_CONST_METHOD0(client_fd, int());
-    MOCK_CONST_METHOD0(server_fd, int());
-    MOCK_CONST_METHOD0(top_left, geom::Point());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(name, std::string const&());
-};
-}
-
-
 TEST(AndroidInputApplicationHandle, takes_name_from_surface_and_specifies_max_timeout)
 {
     using namespace ::testing;
     std::string testing_surface_name = "Cats";
-    auto surface = std::make_shared<MockSurfaceHandle>();
+    auto info = std::make_shared<mtd::MockSurfaceInfo>();
 
-    EXPECT_CALL(*surface, name()).Times(AtLeast(1))
-        .WillRepeatedly(ReturnRef(testing_surface_name));
-    mia::InputApplicationHandle application_handle(surface);
+    EXPECT_CALL(*info, name())
+        .Times(2)
+        .WillOnce(ReturnRef(testing_surface_name));
+
+    mia::InputApplicationHandle application_handle(info);
     EXPECT_TRUE(application_handle.updateInfo());
     auto info = application_handle.getInfo();
     EXPECT_EQ(INT_MAX, info->dispatchingTimeout);
     EXPECT_EQ(droidinput::String8(testing_surface_name.c_str()), info->name);
 }
-
-TEST(AndroidInputApplicationHandle, does_not_own_surface)
-{
-    using namespace ::testing;
-    std::string const testing_surface_name = "Let it Grow";
-    
-    auto surface = std::make_shared<MockSurfaceHandle>();
-    EXPECT_CALL(*surface, name()).Times(AtLeast(1))
-        .WillRepeatedly(ReturnRef(testing_surface_name));
-    
-    mia::InputApplicationHandle application_handle(surface);
-    EXPECT_TRUE(application_handle.updateInfo());
-    surface.reset();
-    EXPECT_FALSE(application_handle.updateInfo());
-
-}
-
