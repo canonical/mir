@@ -52,9 +52,6 @@ struct MockInputChannel : public mi::InputChannel
 {
     MOCK_CONST_METHOD0(client_fd, int());
     MOCK_CONST_METHOD0(server_fd, int());
-    MOCK_CONST_METHOD0(top_left, geom::Point());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(name, std::string const&());
 };
 
 }
@@ -75,21 +72,27 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     // We don't actually need the file to exist after this test.
     unlink(filename);
 
-    MockInputChannel surface;
+    MockInputChannel mock_channel;
+    mtd::MockSurfaceInfo mock_info;
 
-    EXPECT_CALL(surface, server_fd()).Times(1)
+    EXPECT_CALL(mock_channel, server_fd())
+        .Times(1)
         .WillOnce(Return(testing_server_fd));
+
     // For now since we are just doing keyboard input we only need surface size,
     // for touch/pointer events we will need a position
-    EXPECT_CALL(surface, size()).Times(1)
+    EXPECT_CALL(mock_info, size())
+        .Times(1)
         .WillOnce(Return(default_surface_size));
-    EXPECT_CALL(surface, top_left()).Times(1)
+    EXPECT_CALL(mock_info, top_left())
+        .Times(1)
         .WillOnce(Return(default_surface_top_left));
-    EXPECT_CALL(surface, name()).Times(1)
+    EXPECT_CALL(mock_info, name())
+        .Times(1)
         .WillOnce(ReturnRef(testing_surface_name));
 
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
-                                  mt::fake_shared(surface));
+                                  mt::fake_shared(mock_channel), mt::fake_shared(mock_info));
 
     auto info = handle.getInfo();
 
