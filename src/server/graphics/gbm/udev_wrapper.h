@@ -33,7 +33,6 @@ namespace gbm
 
 class UdevDevice;
 class UdevEnumerator;
-class UdevIterator;
 
 class UdevContext
 {
@@ -65,30 +64,6 @@ private:
     udev_device* dev;   
 };
 
-class UdevIterator : 
-    public boost::iterator_facade<
-                                  UdevIterator,
-                                  UdevDevice,
-                                  boost::forward_traversal_tag
-                                 >
-{
-public:
-    UdevIterator ();
-    UdevIterator (UdevContext const& ctx, udev_list_entry* entry);
-
-private:
-    friend class boost::iterator_core_access;
-
-    void increment();
-    bool equal(UdevIterator const& other) const;
-    UdevDevice& dereference() const;
-
-    UdevContext ctx;
-    udev_list_entry* entry;
-
-    std::shared_ptr<UdevDevice> current;
-};
-
 class UdevEnumerator
 {
 public:
@@ -100,8 +75,32 @@ public:
     void add_match_subsystem(std::string const& subsystem);
     void match_parent(UdevDevice const& parent);
 
-    UdevIterator begin();
-    UdevIterator end();
+    class iterator : 
+        public boost::iterator_facade<
+                                      iterator,
+                                      UdevDevice,
+                                      boost::forward_traversal_tag
+                                     >
+    {
+    private:
+        friend class UdevEnumerator;
+        friend class boost::iterator_core_access;
+
+        iterator ();
+        iterator (UdevContext const& ctx, udev_list_entry* entry);
+
+        void increment();
+        bool equal(iterator const& other) const;
+        UdevDevice& dereference() const;
+
+        UdevContext ctx;
+        udev_list_entry* entry;
+
+        std::shared_ptr<UdevDevice> current;
+    };
+
+    iterator begin();
+    iterator end();
 
 private:
     UdevContext ctx;

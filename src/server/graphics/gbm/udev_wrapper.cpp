@@ -65,15 +65,15 @@ char const* mgg::UdevDevice::devpath() const
     return udev_device_get_devpath(dev);
 }
 
-/////////////////////
-//    UdevIterator
-/////////////////////
+////////////////////////
+//    UdevEnumerator
+////////////////////////
 
-mgg::UdevIterator::UdevIterator () : entry(nullptr)
+mgg::UdevEnumerator::iterator::iterator () : entry(nullptr)
 {
 }
 
-mgg::UdevIterator::UdevIterator (UdevContext const& ctx, udev_list_entry* entry) :
+mgg::UdevEnumerator::iterator::iterator (UdevContext const& ctx, udev_list_entry* entry) :
     ctx(ctx),
     entry(entry)
 {
@@ -81,7 +81,7 @@ mgg::UdevIterator::UdevIterator (UdevContext const& ctx, udev_list_entry* entry)
         current = std::make_shared<UdevDevice>(ctx, udev_list_entry_get_name(entry));
 }
 
-void mgg::UdevIterator::increment()
+void mgg::UdevEnumerator::iterator::increment()
 {
     entry = udev_list_entry_get_next(entry);
     if (entry)
@@ -100,20 +100,15 @@ void mgg::UdevIterator::increment()
     }
 }
 
-bool mgg::UdevIterator::equal(mgg::UdevIterator const& other) const
+bool mgg::UdevEnumerator::iterator::equal(mgg::UdevEnumerator::iterator const& other) const
 {
     return this->entry == other.entry;
 }
 
-mgg::UdevDevice& mgg::UdevIterator::dereference() const
+mgg::UdevDevice& mgg::UdevEnumerator::iterator::dereference() const
 {
     return *current;
 }
-
-////////////////////////
-//    UdevEnumerator
-////////////////////////
-
 
 mgg::UdevEnumerator::UdevEnumerator(UdevContext const& ctx) :
     ctx(ctx),
@@ -143,18 +138,18 @@ void mgg::UdevEnumerator::match_parent(mgg::UdevDevice const& parent)
     udev_enumerate_add_match_parent(enumerator, parent.dev);
 }
 
-mgg::UdevIterator mgg::UdevEnumerator::begin()
+mgg::UdevEnumerator::iterator mgg::UdevEnumerator::begin()
 {
     if (!scanned)
         BOOST_THROW_EXCEPTION(std::logic_error("Attempted to iterate over udev devices without first scanning"));
 
-    return UdevIterator(ctx,
-                        udev_enumerate_get_list_entry(enumerator));
+    return iterator(ctx,
+                    udev_enumerate_get_list_entry(enumerator));
 }
 
-mgg::UdevIterator mgg::UdevEnumerator::end()
+mgg::UdevEnumerator::iterator mgg::UdevEnumerator::end()
 {
-    return UdevIterator();
+    return iterator();
 }
 
 ///////////////////
