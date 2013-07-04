@@ -42,6 +42,7 @@ inline int property_get(const char *key, char *value, const char *default_value)
         value[0] = '\0';
         len = 0;
     }
+    return len;
 }
 }
 

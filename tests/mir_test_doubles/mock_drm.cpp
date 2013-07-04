@@ -241,8 +241,7 @@ mgg::MockDRM::MockDRM()
     .WillByDefault(Return(0));
 
     ON_CALL(*this, drmGetBusid(_))
-    .WillByDefault(DoAll(InvokeWithoutArgs([this]() {this->busid = static_cast<char*>(malloc(10));}),
-                         ReturnPointee(&this->busid)));
+    .WillByDefault(WithoutArgs(Invoke([]{ return static_cast<char*>(malloc(10)); })));
 }
 
 mgg::MockDRM::~MockDRM() noexcept
