@@ -123,13 +123,6 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
 
     std::unique_lock<std::mutex> lock(mutex);
     set_focus_to_locked(lock, focus_sequence->default_focus());
-
-    typedef Tags::value_type Pair;
-
-    auto remove = std::remove_if(tags.begin(), tags.end(),
-        [&](Pair const& v) { return v.second == shell_session;});
-
-    tags.erase(remove, tags.end());
 }
 
 void msh::SessionManager::focus_next()
