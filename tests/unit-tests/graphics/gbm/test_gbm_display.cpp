@@ -331,18 +331,11 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
     using namespace testing;
 
     EXPECT_CALL(mock_drm, drmModeGetResources(_))
-        .Times(Exactly(1))
-        .WillOnce(Return(reinterpret_cast<drmModeRes*>(0)));
-
-    EXPECT_CALL(mock_drm, drmModeFreeResources(_))
-        .Times(Exactly(0));
-
-    EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(1));
-
-    auto platform = create_platform();
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(reinterpret_cast<drmModeRes*>(0)));
 
     EXPECT_THROW({
+        auto platform = create_platform();
         auto display = std::make_shared<mgg::GBMDisplay>(platform, null_report);
     }, std::runtime_error) << "Expected that c'tor of GBMDisplay throws";
 }

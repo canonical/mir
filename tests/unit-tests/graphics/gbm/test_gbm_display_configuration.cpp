@@ -209,19 +209,23 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
 
 TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
 {
-    uint32_t const invalid_id{0};
+    uint32_t const crtc0_id{10};
+    uint32_t const encoder0_id{20};
+    uint32_t const possible_crtcs_mask_empty{0};
     std::vector<uint32_t> const connector_ids{30, 31};
-    std::vector<uint32_t> possible_encoder_ids_empty;
+    std::vector<uint32_t> encoder_ids{20};
 
     /* Set up DRM resources */
     mtd::FakeDRMResources& resources(mock_drm.fake_drm);
 
     resources.reset();
 
+    resources.add_crtc(crtc0_id, modes0[1]);
+    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
     for (auto id : connector_ids)
     {
-        resources.add_connector(id, DRM_MODE_DISCONNECTED, invalid_id,
-                                modes_empty, possible_encoder_ids_empty,
+        resources.add_connector(id, DRM_MODE_CONNECTED, encoder0_id,
+                                modes0, encoder_ids,
                                 geom::Size());
     }
 
@@ -248,19 +252,23 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
 
 TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
 {
-    uint32_t const invalid_id{0};
+    uint32_t const crtc0_id{10};
+    uint32_t const encoder0_id{20};
+    uint32_t const possible_crtcs_mask_empty{0};
     std::vector<uint32_t> const connector_ids{30, 31};
-    std::vector<uint32_t> possible_encoder_ids_empty;
+    std::vector<uint32_t> encoder_ids{20};
 
     /* Set up DRM resources */
     mtd::FakeDRMResources& resources(mock_drm.fake_drm);
 
     resources.reset();
 
+    resources.add_crtc(crtc0_id, modes0[1]);
+    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
     for (auto id : connector_ids)
     {
-        resources.add_connector(id, DRM_MODE_DISCONNECTED, invalid_id,
-                                modes_empty, possible_encoder_ids_empty,
+        resources.add_connector(id, DRM_MODE_CONNECTED, encoder0_id,
+                                modes0, encoder_ids,
                                 geom::Size());
     }
 
