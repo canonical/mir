@@ -23,15 +23,12 @@
 #include <unistd.h>
 #include <GLES2/gl2.h>
 
-int main(void)
+int main(int argc, char *argv[])
 {
     unsigned int width = 0, height = 0;
 
-    if (!mir_eglapp_init(&width, &height))
-    {
-        printf("Can't initialize EGL\n");
+    if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
-    }
 
     /* This is probably the simplest GL you can do */
     while (mir_eglapp_running())
