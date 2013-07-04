@@ -44,6 +44,11 @@ class NullDisplay : public graphics::Display
         return std::shared_ptr<graphics::DisplayConfiguration>();
     }
     void configure(graphics::DisplayConfiguration const&) {}
+    void register_configuration_change_handler(
+        MainLoop&,
+        graphics::DisplayConfigurationChangeHandler const&)
+    {
+    }
     void register_pause_resume_handlers(MainLoop&,
                                         graphics::DisplayPauseHandler const&,
                                         graphics::DisplayResumeHandler const&)

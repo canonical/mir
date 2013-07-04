@@ -44,11 +44,13 @@ class GBMPlatform;
 class KMSOutput;
 class GBMDisplayBuffer;
 class GBMCursor;
+class VideoDevices;
 
 class GBMDisplay : public Display
 {
 public:
     GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
+               std::shared_ptr<VideoDevices> const& video_devices,
                std::shared_ptr<DisplayReport> const& listener);
     ~GBMDisplay();
 
@@ -57,6 +59,10 @@ public:
 
     std::shared_ptr<DisplayConfiguration> configuration();
     void configure(DisplayConfiguration const& conf);
+
+    void register_configuration_change_handler(
+        MainLoop& main_loop,
+        DisplayConfigurationChangeHandler const& conf_change_handler);
 
     void register_pause_resume_handlers(
         MainLoop& main_loop,
@@ -71,6 +77,7 @@ public:
 
 private:
     std::shared_ptr<GBMPlatform> const platform;
+    std::shared_ptr<VideoDevices> const video_devices;
     std::shared_ptr<DisplayReport> const listener;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;

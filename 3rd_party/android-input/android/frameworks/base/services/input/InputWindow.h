@@ -31,6 +31,7 @@ namespace android {
  * Describes the properties of a window that can receive input.
  */
 struct InputWindowInfo {
+    virtual ~InputWindowInfo() = default;
     // Window flags from WindowManager.LayoutParams
     enum {
         FLAG_ALLOW_LOCK_WHILE_SCREEN_ON     = 0x00000001,
@@ -137,7 +138,7 @@ struct InputWindowInfo {
     int32_t ownerUid;
     int32_t inputFeatures;
 
-    bool touchableRegionContainsPoint(int32_t x, int32_t y) const;
+    virtual bool touchableRegionContainsPoint(int32_t x, int32_t y) const;
     bool frameContainsPoint(int32_t x, int32_t y) const;
 
     /* Returns true if the window is of a trusted type that is allowed to silently

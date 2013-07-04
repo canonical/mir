@@ -478,6 +478,25 @@ TEST_F(ShellSurface, take_input_focus_throw_behavior)
     }, std::runtime_error);
 }
 
+TEST_F(ShellSurface, set_input_region_throw_behavior)
+{
+    using namespace ::testing;
+    
+    msh::Surface test(
+        mt::fake_shared(surface_builder),
+        msh::a_surface());
+    
+    EXPECT_NO_THROW({
+            test.set_input_region(std::shared_ptr<mi::InputRegion>());
+    });
+
+    surface_builder.reset_surface();
+
+    EXPECT_THROW({
+            test.set_input_region(std::shared_ptr<mi::InputRegion>());
+    }, std::runtime_error);
+}
+
 TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
 {
     msh::Surface test(

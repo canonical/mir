@@ -128,7 +128,6 @@ public:
     MOCK_METHOD1(drmGetBusid, char* (int fd));
 
     FakeDRMResources fake_drm;
-    char* busid;
 };
 
 }

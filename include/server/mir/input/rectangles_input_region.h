@@ -16,41 +16,33 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_SURFACE_TARGET_H_
-#define MIR_INPUT_SURFACE_TARGET_H_
+#ifndef MIR_INPUT_RECTANGLES_INPUT_REGION_H_
+#define MIR_INPUT_RECTANGLES_INPUT_REGION_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
+#include "mir/input/input_region.h"
+#include "mir/geometry/rectangle.h"
 
-#include <string>
-#include <memory>
+#include <initializer_list>
+#include <vector>
 
 namespace mir
 {
 namespace input
 {
-class InputRegion;
 
-class SurfaceTarget
+class RectanglesInputRegion : public InputRegion
 {
 public:
-    virtual ~SurfaceTarget() {}
+    RectanglesInputRegion(std::initializer_list<geometry::Rectangle> const& input_rectangles);
+    virtual ~RectanglesInputRegion() noexcept(true) = default;
 
-    virtual geometry::Point top_left() const = 0;
-    virtual geometry::Size size() const = 0;
-    virtual std::string const& name() const = 0;
+    bool contains(geometry::Point const& point) const;
 
-    virtual int server_input_fd() const = 0;
-    
-    virtual std::shared_ptr<InputRegion> input_region() const = 0;
-
-protected:
-    SurfaceTarget() = default;
-    SurfaceTarget(SurfaceTarget const&) = delete;
-    SurfaceTarget& operator=(SurfaceTarget const&) = delete;
+private:
+    std::vector<geometry::Rectangle> input_rectangles;
 };
 
 }
-} // namespace mir
+}
 
-#endif // MIR_INPUT_SURFACE_TARGET_H_
+#endif // MIR_INPUT_RECTANGLES_INPUT_REGION
