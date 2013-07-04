@@ -206,15 +206,18 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         static size_t base_color = 0;
         static size_t max_fingers = 0;
         static float max_pressure = 1.0f;
+        
+        // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
+        MirMotionAction masked_action = event->motion.action & ~0xff00;
 
-        if (event->motion.action == mir_motion_action_up)
+        if (masked_action == mir_motion_action_up)
         {
             base_color = (base_color + max_fingers) %
                          (sizeof(color)/sizeof(color[0]));
             max_fingers = 0;
         }
 
-        if (event->motion.action == mir_motion_action_move)
+        if (masked_action == mir_motion_action_move)
         {
             size_t p;
 
