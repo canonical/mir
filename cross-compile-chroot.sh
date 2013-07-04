@@ -23,7 +23,7 @@ rm -rf ${BUILD_DIR}
 mkdir ${BUILD_DIR}
 pushd ${BUILD_DIR} > /dev/null 
 
-    export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/lib/pkgconfig"
+    export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf/pkgconfig"
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
       -DBoost_COMPILER=-gcc \

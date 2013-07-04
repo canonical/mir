@@ -111,6 +111,7 @@ include_directories (${GLM_INCLUDE_DIRS})
 add_definitions(-DANDROID_USE_STD)
 
 if (MIR_PLATFORM STREQUAL "android")
+  find_package( PkgConfig )
   include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
   list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
