@@ -116,7 +116,8 @@ mgg::UdevDevice& mgg::UdevIterator::dereference() const
 
 
 mgg::UdevEnumerator::UdevEnumerator(udev* ctx) :
-    enumerator(udev_enumerate_new(ctx))
+    enumerator(udev_enumerate_new(ctx)),
+    scanned(false)
 {
 }
 
@@ -128,6 +129,7 @@ mgg::UdevEnumerator::~UdevEnumerator() noexcept
 void mgg::UdevEnumerator::scan_devices()
 {
     udev_enumerate_scan_devices(enumerator);
+    scanned = true;
 }
 
 void mgg::UdevEnumerator::add_match_subsystem(std::string const& subsystem)
@@ -142,6 +144,9 @@ void mgg::UdevEnumerator::match_parent(mgg::UdevDevice const& parent)
 
 mgg::UdevIterator mgg::UdevEnumerator::begin()
 {
+    if (!scanned)
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempted to iterate over udev devices without first scanning"));
+
     return UdevIterator(udev_enumerate_get_udev(enumerator),
                         udev_enumerate_get_list_entry(enumerator));
 }

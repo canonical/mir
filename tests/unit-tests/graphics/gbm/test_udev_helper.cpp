@@ -134,3 +134,33 @@ TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
 
     udev_unref(ctx);
 }
+
+TEST_F(UdevWrapperTest, EnumeratorThrowsLogicErrorIfIteratedBeforeScanned)
+{
+    udev* ctx = udev_new();
+
+    mgg::UdevEnumerator devices(ctx);
+
+    EXPECT_THROW({ devices.begin(); },
+                 std::logic_error);
+    udev_unref(ctx);
+}
+
+TEST_F(UdevWrapperTest, EnumeratorLogicErrorHasSensibleMessage)
+{
+    udev* ctx = udev_new();
+
+    mgg::UdevEnumerator devices(ctx);
+    std::string error_msg;
+
+    try {
+        devices.begin();
+    }
+    catch (std::logic_error& e)
+    {
+        error_msg = e.what();
+    }
+    EXPECT_STREQ("Attempted to iterate over udev devices without first scanning", error_msg.c_str());
+
+    udev_unref(ctx);
+}

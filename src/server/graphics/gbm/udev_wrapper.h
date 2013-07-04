@@ -90,6 +90,7 @@ public:
 
 private:
     udev_enumerate* enumerator;
+    bool scanned;
 };
 
 }
