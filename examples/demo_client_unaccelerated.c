@@ -25,7 +25,6 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdint.h>
-#include <time.h>
 
 static char const *socket_file = NULL;
 
@@ -90,26 +89,6 @@ static void fill_pattern(uint32_t pattern[2], MirPixelFormat pf)
     };
 }
 
-void count_fps(void)
-{
-    static time_t lasttime = 0;
-    static int lastcount = 0;
-    static int count = 0;
-    time_t now = time(NULL);
-    time_t dtime;
-    int dcount;
-
-    count++;
-    dcount = count - lastcount;
-    dtime = now - lasttime;
-    if (dtime)
-    {
-        printf("%d FPS\n", dcount);
-        lasttime = now;
-        lastcount = count;
-    }
-}
-
 int main(int argc, char* argv[])
 {
     MirConnection *connection = 0;
@@ -159,8 +138,6 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
     puts("Surface created");
 
-    mir_surface_set_swapinterval(surface, 1);
-
     uint32_t pattern[2] = {0};
     fill_pattern(pattern, pixel_format);
 
@@ -174,7 +151,6 @@ int main(int argc, char* argv[])
         else
             render_pattern(&graphics_region, pattern[1]);
         mir_surface_swap_buffers_sync(surface);
-        count_fps();
     }
 
     mir_surface_release_sync(surface);
