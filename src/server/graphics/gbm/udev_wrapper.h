@@ -30,12 +30,27 @@ namespace graphics
 namespace gbm
 {
 
+
+class UdevDevice;
 class UdevEnumerator;
+class UdevIterator;
+
+class UdevContext
+{
+public:
+    UdevContext();
+    ~UdevContext() noexcept;
+
+    UdevContext(UdevContext const& copy);
+    UdevContext& operator=(UdevContext const& rhs) noexcept;
+
+    udev* ctx;
+};
 
 class UdevDevice
 {
 public:
-    UdevDevice(udev* ctx, std::string const& syspath);
+    UdevDevice(UdevContext const& ctx, std::string const& syspath);
     ~UdevDevice() noexcept;
 
     UdevDevice(UdevDevice const& copy);
@@ -59,7 +74,7 @@ class UdevIterator :
 {
 public:
     UdevIterator ();
-    UdevIterator (udev* ctx, udev_list_entry* entry);
+    UdevIterator (UdevContext const& ctx, udev_list_entry* entry);
 
 private:
     friend class boost::iterator_core_access;
@@ -68,7 +83,7 @@ private:
     bool equal(UdevIterator const& other) const;
     UdevDevice& dereference() const;
 
-    udev *ctx;
+    UdevContext ctx;
     udev_list_entry* entry;
 
     std::shared_ptr<UdevDevice> current;
@@ -77,7 +92,7 @@ private:
 class UdevEnumerator
 {
 public:
-    UdevEnumerator(udev* ctx);
+    UdevEnumerator(UdevContext const& ctx);
     ~UdevEnumerator() noexcept;
 
     void scan_devices();
@@ -89,6 +104,7 @@ public:
     UdevIterator end();
 
 private:
+    UdevContext ctx;
     udev_enumerate* enumerator;
     bool scanned;
 };

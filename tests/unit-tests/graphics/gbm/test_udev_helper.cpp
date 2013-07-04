@@ -45,7 +45,7 @@ TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
     udev_environment.add_device("drm", "fakedev4", NULL, {}, {});
     udev_environment.add_device("drm", "fakedev5", NULL, {}, {});
 
-    udev* ctx = udev_new();
+    mgg::UdevContext ctx;
     mgg::UdevEnumerator enumerator(ctx);
 
     enumerator.scan_devices();
@@ -58,8 +58,6 @@ TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
     }
 
     ASSERT_EQ(device_count, 5);
-
-    udev_unref(ctx);
 }
 
 TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
@@ -70,7 +68,7 @@ TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
     udev_environment.add_device("usb", "fakeusb1", NULL, {}, {});
     udev_environment.add_device("usb", "fakeusb2", NULL, {}, {});
 
-    udev* ctx = udev_new();
+    mgg::UdevContext ctx;
     mgg::UdevEnumerator devices(ctx);
 
     devices.add_match_subsystem("drm");
@@ -79,32 +77,26 @@ TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
     {
         ASSERT_STREQ("drm", device.subsystem());
     }
-
-    udev_unref(ctx);
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevType)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVTYPE", "drm_minor"});
 
-    udev* ctx = udev_new();
+    mgg::UdevContext ctx;
 
     mgg::UdevDevice dev(ctx, sysfs_path);
     ASSERT_STREQ("drm_minor", dev.devtype());
-
-    udev_unref(ctx);
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevPath)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    udev* ctx = udev_new();
+    mgg::UdevContext ctx;
 
     mgg::UdevDevice dev(ctx, sysfs_path);
     ASSERT_STREQ("/devices/card0", dev.devpath());
-
-    udev_unref(ctx);
 }
 
 TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
@@ -116,7 +108,7 @@ TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
     udev_environment.add_device("drm", "card0-VGA1", "/sys/devices/card0", {}, {});
     udev_environment.add_device("drm", "card0-LVDS1", "/sys/devices/card0", {}, {});
 
-    udev* ctx = udev_new();
+    mgg::UdevContext ctx;
 
     mgg::UdevEnumerator devices(ctx);
     mgg::UdevDevice drm_device(ctx, card0_syspath);
@@ -131,24 +123,21 @@ TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
         ++child_count;
     }
     EXPECT_EQ(4, child_count);
-
-    udev_unref(ctx);
 }
 
 TEST_F(UdevWrapperTest, EnumeratorThrowsLogicErrorIfIteratedBeforeScanned)
 {
-    udev* ctx = udev_new();
+    mgg::UdevContext ctx;
 
     mgg::UdevEnumerator devices(ctx);
 
     EXPECT_THROW({ devices.begin(); },
                  std::logic_error);
-    udev_unref(ctx);
 }
 
 TEST_F(UdevWrapperTest, EnumeratorLogicErrorHasSensibleMessage)
 {
-    udev* ctx = udev_new();
+    mgg::UdevContext ctx;
 
     mgg::UdevEnumerator devices(ctx);
     std::string error_msg;
@@ -161,6 +150,16 @@ TEST_F(UdevWrapperTest, EnumeratorLogicErrorHasSensibleMessage)
         error_msg = e.what();
     }
     EXPECT_STREQ("Attempted to iterate over udev devices without first scanning", error_msg.c_str());
+}
 
-    udev_unref(ctx);
+TEST_F(UdevWrapperTest, EnumeratorEnumeratesEmptyList)
+{
+    mgg::UdevContext ctx;
+
+    mgg::UdevEnumerator devices(ctx);
+
+    devices.scan_devices();
+
+    for (auto& device : devices)
+        ADD_FAILURE() << "Unexpected udev device: " << device.devpath();
 }

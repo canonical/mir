@@ -26,9 +26,9 @@ namespace mgg = mir::graphics::gbm;
 //    UdevDevice
 /////////////////////
 
-mgg::UdevDevice::UdevDevice(udev* ctx, std::string const& syspath)
+mgg::UdevDevice::UdevDevice(UdevContext const& ctx, std::string const& syspath)
 {
-    dev = udev_device_new_from_syspath(ctx, syspath.c_str());
+    dev = udev_device_new_from_syspath(ctx.ctx, syspath.c_str());
     if (!dev)
         BOOST_THROW_EXCEPTION(std::runtime_error("Udev device does not exist"));
 }
@@ -40,7 +40,6 @@ mgg::UdevDevice::~UdevDevice() noexcept
 
 mgg::UdevDevice::UdevDevice(UdevDevice const& copy)
 {
-
     dev = udev_device_ref(copy.dev);
 }
 
@@ -74,11 +73,12 @@ mgg::UdevIterator::UdevIterator () : entry(nullptr)
 {
 }
 
-mgg::UdevIterator::UdevIterator (udev* ctx, udev_list_entry* entry) :
+mgg::UdevIterator::UdevIterator (UdevContext const& ctx, udev_list_entry* entry) :
     ctx(ctx),
-    entry(entry),
-    current(std::make_shared<UdevDevice>(ctx, udev_list_entry_get_name(entry)))
+    entry(entry)
 {
+    if (entry)
+        current = std::make_shared<UdevDevice>(ctx, udev_list_entry_get_name(entry));
 }
 
 void mgg::UdevIterator::increment()
@@ -115,8 +115,9 @@ mgg::UdevDevice& mgg::UdevIterator::dereference() const
 ////////////////////////
 
 
-mgg::UdevEnumerator::UdevEnumerator(udev* ctx) :
-    enumerator(udev_enumerate_new(ctx)),
+mgg::UdevEnumerator::UdevEnumerator(UdevContext const& ctx) :
+    ctx(ctx),
+    enumerator(udev_enumerate_new(ctx.ctx)),
     scanned(false)
 {
 }
@@ -147,11 +148,38 @@ mgg::UdevIterator mgg::UdevEnumerator::begin()
     if (!scanned)
         BOOST_THROW_EXCEPTION(std::logic_error("Attempted to iterate over udev devices without first scanning"));
 
-    return UdevIterator(udev_enumerate_get_udev(enumerator),
+    return UdevIterator(ctx,
                         udev_enumerate_get_list_entry(enumerator));
 }
 
 mgg::UdevIterator mgg::UdevEnumerator::end()
 {
     return UdevIterator();
+}
+
+///////////////////
+//   UdevContext
+///////////////////
+
+mgg::UdevContext::UdevContext()
+{
+    ctx = udev_new();
+    if (!ctx)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev context"));
+}
+mgg::UdevContext::~UdevContext() noexcept
+{
+    udev_unref(ctx);
+}
+
+mgg::UdevContext::UdevContext(UdevContext const& copy) :
+    ctx(udev_ref(copy.ctx))
+{
+}
+
+mgg::UdevContext& mgg::UdevContext::operator=(UdevContext const& rhs) noexcept
+{
+    udev_unref(ctx);
+    ctx = udev_ref(rhs.ctx);
+    return *this;
 }
