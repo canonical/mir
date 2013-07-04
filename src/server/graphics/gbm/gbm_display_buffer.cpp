@@ -206,11 +206,15 @@ void mgg::GBMDisplayBuffer::post_update()
     last_flipped_bufobj = bufobj;
 }
 
+struct gbm_bo *vv_bo = NULL;
+
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
 {
     auto bo = gbm_surface_lock_front_buffer(surface_gbm.get());
     if (!bo)
         return nullptr;
+
+    vv_bo = bo;
 
     /*
      * Check if we have already set up this gbm_bo (the gbm implementation is

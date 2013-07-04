@@ -196,7 +196,7 @@ mir_eglapp_bool mir_eglapp_init(unsigned int *width, unsigned int *height)
     *width = surfaceparm.width;
     *height = surfaceparm.height;
 
-    eglSwapInterval(egldisplay, 1);
+    eglSwapInterval(egldisplay, 0);
 
     running = 1;
 
