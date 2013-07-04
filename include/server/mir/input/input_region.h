@@ -16,41 +16,34 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_SURFACE_TARGET_H_
-#define MIR_INPUT_SURFACE_TARGET_H_
+#ifndef MIR_INPUT_INPUT_REGION_H_
+#define MIR_INPUT_INPUT_REGION_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
-
-#include <string>
-#include <memory>
+#include <stdint.h>
 
 namespace mir
 {
+namespace geometry
+{
+struct Point;
+}
 namespace input
 {
-class InputRegion;
 
-class SurfaceTarget
+class InputRegion
 {
 public:
-    virtual ~SurfaceTarget() {}
+    virtual ~InputRegion() = default;
 
-    virtual geometry::Point top_left() const = 0;
-    virtual geometry::Size size() const = 0;
-    virtual std::string const& name() const = 0;
-
-    virtual int server_input_fd() const = 0;
-    
-    virtual std::shared_ptr<InputRegion> input_region() const = 0;
+    virtual bool contains(geometry::Point const& point) const = 0;
 
 protected:
-    SurfaceTarget() = default;
-    SurfaceTarget(SurfaceTarget const&) = delete;
-    SurfaceTarget& operator=(SurfaceTarget const&) = delete;
+    InputRegion() = default;
+    InputRegion(InputRegion const&) = delete;
+    InputRegion& operator=(InputRegion const&) = delete;
 };
 
 }
-} // namespace mir
+}
 
-#endif // MIR_INPUT_SURFACE_TARGET_H_
+#endif // MIR_INPUT_INPUT_REGION
