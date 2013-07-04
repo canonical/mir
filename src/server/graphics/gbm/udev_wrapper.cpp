@@ -128,7 +128,7 @@ void mgg::UdevEnumerator::scan_devices()
     scanned = true;
 }
 
-void mgg::UdevEnumerator::add_match_subsystem(std::string const& subsystem)
+void mgg::UdevEnumerator::match_subsystem(std::string const& subsystem)
 {
     udev_enumerate_add_match_subsystem(enumerator, subsystem.c_str());
 }

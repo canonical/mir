@@ -71,7 +71,7 @@ TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
     mgg::UdevContext ctx;
     mgg::UdevEnumerator devices(ctx);
 
-    devices.add_match_subsystem("drm");
+    devices.match_subsystem("drm");
     devices.scan_devices();
     for (auto& device : devices)
     {

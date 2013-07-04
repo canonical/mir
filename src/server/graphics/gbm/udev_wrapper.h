@@ -72,7 +72,7 @@ public:
 
     void scan_devices();
 
-    void add_match_subsystem(std::string const& subsystem);
+    void match_subsystem(std::string const& subsystem);
     void match_parent(UdevDevice const& parent);
 
     class iterator : 
