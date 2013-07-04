@@ -196,22 +196,14 @@ int mggh::DRMHelper::is_appropriate_device(UdevHelper const& udev, udev_device* 
 
 int mggh::DRMHelper::count_connections(int fd)
 {
-    auto resources = drmModeGetResources(fd);
-    int n_connected = 0;
-    if (resources != NULL)
-    {
-        for (int i = 0; i < resources->count_connectors; i++)
-        {
-            auto connector = drmModeGetConnector(fd, resources->connectors[i]);
-            if (connector == NULL)
-                continue;
+    DRMModeResources resources{fd};
 
-            if (connector->connection == DRM_MODE_CONNECTED)
-                n_connected++;
-            drmModeFreeConnector(connector);
-        }
-        drmModeFreeResources(resources);
-    }
+    int n_connected = 0;
+    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+    {
+        if (connector->connection == DRM_MODE_CONNECTED)
+            n_connected++;
+    });
 
     return n_connected;
 }
