@@ -99,7 +99,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
                                         GBMSurfaceUPtr surface_gbm_param,
                                         geom::Size const& size,
                                         EGLContext shared_context)
-    : last_flipped_bufobj{nullptr},
+    : back_buffer{nullptr},
       platform(platform),
       listener(listener),
       drm(platform->drm),
@@ -125,13 +125,13 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    last_flipped_bufobj = get_front_buffer_object();
-    if (!last_flipped_bufobj)
+    back_buffer = get_front_buffer_object();
+    if (!back_buffer)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get frontbuffer"));
 
     for (auto& output : outputs)
     {
-        if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
+        if (!output->set_crtc(back_buffer->get_drm_fb_id()))
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
     }
 
@@ -149,11 +149,11 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
 mgg::GBMDisplayBuffer::~GBMDisplayBuffer()
 {
     /*
-     * There is no need to destroy last_flipped_bufobj manually.
+     * There is no need to destroy back_buffer manually.
      * It will be destroyed when its gbm_surface gets destroyed.
      */
-    if (last_flipped_bufobj)
-        last_flipped_bufobj->release();
+    if (back_buffer)
+        back_buffer->release();
 }
 
 geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
@@ -177,16 +177,16 @@ void mgg::GBMDisplayBuffer::post_update()
      * If the flip fails, release the buffer object to make it available
      * for future rendering.
      */
-    if (!needs_set_crtc && !schedule_and_wait_for_page_flip(last_flipped_bufobj))
+    if (!needs_set_crtc && !schedule_and_wait_for_page_flip(back_buffer))
     {
-        last_flipped_bufobj->release();
+        back_buffer->release();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
     }
     else if (needs_set_crtc)
     {
         for (auto& output : outputs)
         {
-            if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
+            if (!output->set_crtc(back_buffer->get_drm_fb_id()))
                 BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
         }
         needs_set_crtc = false;
@@ -196,12 +196,15 @@ void mgg::GBMDisplayBuffer::post_update()
      * Release the last flipped buffer object (which is not displayed anymore)
      * to make it available for future rendering.
      */
-    if (last_flipped_bufobj)
-        last_flipped_bufobj->release();
+    if (back_buffer)
+        back_buffer->release();
 
-    // TODO: rename to "next"
-    last_flipped_bufobj = get_front_buffer_object();
-    if (!last_flipped_bufobj)
+    /*
+     * Yes, really. get_front_buffer_object means get a front-buffer-capable
+     * BufferObject. But we will first use it as the compositor's backbuffer.
+     */
+    back_buffer = get_front_buffer_object();
+    if (!back_buffer)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
 }
 

@@ -62,7 +62,7 @@ private:
     BufferObject* get_front_buffer_object();
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
-    BufferObject* last_flipped_bufobj;
+    BufferObject* back_buffer;
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from GBMPlatform */
