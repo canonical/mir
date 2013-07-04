@@ -170,10 +170,6 @@ void mgg::GBMDisplayBuffer::post_update()
     if (!egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
-    auto bufobj = get_front_buffer_object();
-    if (!bufobj)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
-
     /*
      * Schedule the current front buffer object for display, and wait
      * for it to be actually displayed (flipped).
@@ -181,16 +177,16 @@ void mgg::GBMDisplayBuffer::post_update()
      * If the flip fails, release the buffer object to make it available
      * for future rendering.
      */
-    if (!needs_set_crtc && !schedule_and_wait_for_page_flip(bufobj))
+    if (!needs_set_crtc && !schedule_and_wait_for_page_flip(last_flipped_bufobj))
     {
-        bufobj->release();
+        last_flipped_bufobj->release();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
     }
     else if (needs_set_crtc)
     {
         for (auto& output : outputs)
         {
-            if (!output->set_crtc(bufobj->get_drm_fb_id()))
+            if (!output->set_crtc(last_flipped_bufobj->get_drm_fb_id()))
                 BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
         }
         needs_set_crtc = false;
@@ -203,7 +199,10 @@ void mgg::GBMDisplayBuffer::post_update()
     if (last_flipped_bufobj)
         last_flipped_bufobj->release();
 
-    last_flipped_bufobj = bufobj;
+    // TODO: rename to "next"
+    last_flipped_bufobj = get_front_buffer_object();
+    if (!last_flipped_bufobj)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
 }
 
 struct gbm_bo *vv_bo = NULL;
