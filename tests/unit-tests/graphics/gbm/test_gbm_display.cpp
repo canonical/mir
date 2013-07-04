@@ -351,6 +351,9 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
         .Times(AtLeast(1))
         .WillRepeatedly(Return(reinterpret_cast<drmModeRes*>(0)));
 
+    EXPECT_CALL(mock_drm, drmModeFreeResources(_))
+        .Times(Exactly(0));
+
     EXPECT_THROW({
         auto platform = create_platform();
         auto display = create_display(platform);
