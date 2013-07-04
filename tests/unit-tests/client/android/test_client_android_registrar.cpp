@@ -169,13 +169,14 @@ TEST_F(ClientAndroidRegistrarTest, registrar_frees_fds)
     auto package = std::make_shared<MirBufferPackage>();
     package->data_items = 0;
     package->fd_items = 2;
-    pipe(static_cast<int*>(package->fd));
-
+    
+    int ret = pipe(static_cast<int*>(package->fd));
     {
         mcla::AndroidRegistrarGralloc registrar(mir::test::fake_shared(stub_module));
         auto handle = registrar.register_buffer(package);
     }
 
+    EXPECT_EQ(0, ret);
     EXPECT_EQ(-1, fcntl(package->fd[0], F_GETFD));
     EXPECT_EQ(-1, fcntl(package->fd[1], F_GETFD));
 }
