@@ -160,7 +160,7 @@ int mggh::DRMHelper::is_appropriate_device(UdevContext const& udev, UdevDevice c
     {
         // For some reason udev regards the device as a parent of itself
         // If there are any other children, they should be outputs.
-        if (device.devpath() != drm_device.devpath())
+        if (device != drm_device)
             return 0;
     }
 
