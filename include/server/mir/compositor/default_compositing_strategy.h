@@ -44,6 +44,7 @@ public:
         std::shared_ptr<graphics::Renderer> const& renderer,
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
+    void render(graphics::DisplayBuffer& display_buffer);
     void compose_renderables(
         mir::geometry::Rectangle const& view_area,
         std::function<void(std::shared_ptr<void> const&)> save_resource);

@@ -23,6 +23,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/display_buffer.h"
 
 #include <cassert>
 
@@ -60,6 +61,43 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
     mir::geometry::Rectangle const& enclosing_region;
 };
 
+struct BypassFilter : public mc::FilterForRenderables
+{
+    BypassFilter() : bypassed(false)
+    {
+    }
+    bool operator()(mg::Renderable&)
+    {
+        // TODO
+        bypassed = true;
+        return true;;
+    }
+
+    bool bypassed;
+};
+
+}
+
+void mc::DefaultCompositingStrategy::render(
+    graphics::DisplayBuffer& display_buffer)
+{
+    graphics::Renderer *bypass_renderer = display_buffer.direct_renderer();
+    bool bypassed = false;
+
+    if (bypass_renderer)  // Some platforms can do bypass, not all
+    {
+        BypassFilter bypass_filter;
+        auto save_resource =
+            [&](std::shared_ptr<void> const&)
+            {
+            };
+        RenderingOperator bypass(*bypass_renderer, save_resource);
+        renderables->for_each_if(bypass_filter, bypass);
+        bypassed = bypass_filter.bypassed;
+    }
+
+    if (!bypassed)
+        BasicCompositingStrategy::render(display_buffer);
 }
 
 void mc::DefaultCompositingStrategy::compose_renderables(

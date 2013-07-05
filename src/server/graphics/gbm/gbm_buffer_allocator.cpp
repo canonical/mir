@@ -116,22 +116,16 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
     assert(buffer_initializer.get() != 0);
 }
 
-extern struct gbm_bo *vv_bo;
-
 std::shared_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
-    uint32_t bo_flags{GBM_BO_USE_RENDERING};
+    uint32_t bo_flags{GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT};
 
     /* Create the GBM buffer object */
     if (buffer_properties.usage == mc::BufferUsage::software)
         bo_flags |= GBM_BO_USE_WRITE;
 
-    gbm_bo *bo_raw;
-    if (vv_bo)
-        bo_raw = vv_bo;
-    else
-        bo_raw = gbm_bo_create(
+    gbm_bo *bo_raw = gbm_bo_create(
         platform->gbm.device,
         buffer_properties.size.width.as_uint32_t(),
         buffer_properties.size.height.as_uint32_t(),
