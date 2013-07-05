@@ -70,10 +70,14 @@ struct BypassFilter : public mc::FilterForRenderables
     bool operator()(mg::Renderable& renderable)
     {
         // TODO
-        bypassed = true;
         auto reg = renderable.graphic_region();
         native_bo = reg->native_buffer();
-        return true;
+        if (native_bo)
+        {
+            bypassed = true;
+            return true;
+        }
+        return false;
     }
 
     bool bypassed;
@@ -88,8 +92,7 @@ void mc::DefaultCompositingStrategy::render(
     graphics::Renderer *bypass_renderer = display_buffer.direct_renderer();
     bool bypassed = false;
 
-    //if (bypass_renderer)  // Some platforms can do bypass, not all
-    if (false) // TODO enable when it works
+    if (bypass_renderer)  // Some platforms can do bypass, not all
     {
         BypassFilter bypass_filter;
         auto save_resource =
@@ -101,6 +104,7 @@ void mc::DefaultCompositingStrategy::render(
         display_buffer.make_current();
         renderables->for_each_if(bypass_filter, bypass);
         bypassed = bypass_filter.bypassed;
+
         if (bypassed)
             display_buffer.post_update(bypass_filter.native_bo);
     }
