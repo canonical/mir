@@ -88,7 +88,8 @@ void mc::DefaultCompositingStrategy::render(
     graphics::Renderer *bypass_renderer = display_buffer.direct_renderer();
     bool bypassed = false;
 
-    if (bypass_renderer)  // Some platforms can do bypass, not all
+    //if (bypass_renderer)  // Some platforms can do bypass, not all
+    if (false) // TODO enable when it works
     {
         BypassFilter bypass_filter;
         auto save_resource =
