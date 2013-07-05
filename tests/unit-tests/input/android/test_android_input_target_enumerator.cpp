@@ -71,10 +71,10 @@ TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
     StubInputTargets targets({mt::fake_shared(t1), mt::fake_shared(t2)});
 
     Sequence seq2;
-    EXPECT_CALL(repository, handle_for_surface(_))//mt::fake_shared(t1)))
+    EXPECT_CALL(repository, handle_for_channel(mt::fake_shared(t1)))
         .InSequence(seq2)
         .WillOnce(Return(stub_window_handle1)); 
-    EXPECT_CALL(repository, handle_for_surface(_))//mt::fake_shared(t2)))
+    EXPECT_CALL(repository, handle_for_channel(mt::fake_shared(t2)))
         .InSequence(seq2)
         .WillOnce(Return(stub_window_handle2));
 

@@ -43,7 +43,7 @@ void mia::InputTargetEnumerator::for_each(std::function<void(droidinput::sp<droi
     auto t = targets.lock();
     auto r = repository.lock();
     t->for_each([&callback, &r, this](std::shared_ptr<mi::InputChannel> const& target){
-            auto handle = r->handle_for_surface(target);
+            auto handle = r->handle_for_channel(target);
             callback(handle);
     });
 }

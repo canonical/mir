@@ -316,14 +316,14 @@ MATCHER_P(WindowHandleWithInputFd, input_fd, "")
 
 }
 
-TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_surface_is_sent_unfiltered_key_events)
+TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_channel_is_sent_unfiltered_key_events)
 {
     using namespace ::testing;
 
     mt::WaitCondition wait_condition;
 
     auto input_fd = test_fd();
-    mtd::StubInputChannel surface(input_fd);
+    mtd::StubInputChannel channel(input_fd);
     mtd::StubSurfaceInfo info;
 
     EXPECT_CALL(*event_filter, handle(_)).Times(1).WillOnce(Return(false));
@@ -331,8 +331,8 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_s
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
-    input_registrar->input_surface_opened(mt::fake_shared(surface), mt::fake_shared(info));
-    input_targeter->focus_changed(mt::fake_shared(surface));
+    input_registrar->input_channel_opened(mt::fake_shared(channel), mt::fake_shared(info));
+    input_targeter->focus_changed(mt::fake_shared(channel));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
@@ -350,12 +350,12 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
 
     mtd::StubSurfaceInfo info;
     auto input_fd_1 = test_fd();
-    mtd::StubInputChannel surface1(input_fd_1);
+    mtd::StubInputChannel channel1(input_fd_1);
     auto input_fd_2 = test_fd();
-    mtd::StubInputChannel surface2(input_fd_2);
+    mtd::StubInputChannel channel2(input_fd_2);
 
-    input_registrar->input_surface_opened(mt::fake_shared(surface1), mt::fake_shared(info));
-    input_registrar->input_surface_opened(mt::fake_shared(surface2), mt::fake_shared(info));
+    input_registrar->input_channel_opened(mt::fake_shared(channel1), mt::fake_shared(info));
+    input_registrar->input_channel_opened(mt::fake_shared(channel2), mt::fake_shared(info));
 
     EXPECT_CALL(*event_filter, handle(_)).Times(3).WillRepeatedly(Return(false));
 
@@ -373,17 +373,17 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     fake_event_hub->synthesize_builtin_keyboard_added();
     fake_event_hub->synthesize_device_scan_complete();
 
-    input_targeter->focus_changed(mt::fake_shared(surface1));
+    input_targeter->focus_changed(mt::fake_shared(channel1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_1));
     wait1.wait_for_at_most_seconds(1);
 
-    input_targeter->focus_changed(mt::fake_shared(surface2));
+    input_targeter->focus_changed(mt::fake_shared(channel2));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_2));
     wait2.wait_for_at_most_seconds(1);
 
-    input_targeter->focus_changed(mt::fake_shared(surface1));
+    input_targeter->focus_changed(mt::fake_shared(channel1));
     fake_event_hub->synthesize_event(mis::a_key_down_event()
                                 .of_scancode(KEY_3));
     wait3.wait_for_at_most_seconds(5);

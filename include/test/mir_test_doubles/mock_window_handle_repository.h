@@ -34,11 +34,12 @@ struct MockWindowHandleRepository : public input::android::WindowHandleRepositor
     MockWindowHandleRepository()
     {
         using namespace testing;
-        ON_CALL(*this, handle_for_surface(_))
+        ON_CALL(*this, handle_for_channel(_))
             .WillByDefault(Return(droidinput::sp<droidinput::InputWindowHandle>()));
     }
     ~MockWindowHandleRepository() noexcept(true) {};
-    MOCK_METHOD1(handle_for_surface, droidinput::sp<droidinput::InputWindowHandle>(std::shared_ptr<input::InputChannel const> const& surface));
+    MOCK_METHOD1(handle_for_channel,
+        droidinput::sp<droidinput::InputWindowHandle>(std::shared_ptr<input::InputChannel const> const&));
 };
 
 }

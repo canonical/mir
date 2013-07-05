@@ -482,9 +482,9 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     EXPECT_CALL(input_factory, make_input_channel())
         .Times(1)
         .WillOnce(Return(channel));
-    EXPECT_CALL(registrar, input_surface_opened(_,_))
+    EXPECT_CALL(registrar, input_channel_opened(_,_))
         .InSequence(seq);
-    EXPECT_CALL(registrar, input_surface_closed(_))
+    EXPECT_CALL(registrar, input_channel_closed(_))
         .InSequence(seq);
 
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),

@@ -45,7 +45,7 @@ class WindowHandleRepository
 public:
     virtual ~WindowHandleRepository() = default;
     
-    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::InputChannel const> const& surface) = 0;
+    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_channel(std::shared_ptr<input::InputChannel const> const& channel) = 0;
 protected:
     WindowHandleRepository() = default;
     WindowHandleRepository(const WindowHandleRepository&) = delete;

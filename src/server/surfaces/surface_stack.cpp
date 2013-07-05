@@ -94,7 +94,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         layers_by_depth[depth].push_back(surface);
     }
 
-    input_registrar->input_surface_opened(surface->input_channel(), info);
+    input_registrar->input_channel_opened(surface->input_channel(), info);
 
     emit_change_notification();
 
@@ -122,7 +122,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         }
     }
     if (found_surface)
-        input_registrar->input_surface_closed(keep_alive->input_channel());
+        input_registrar->input_channel_closed(keep_alive->input_channel());
     emit_change_notification();
     // TODO: error logging when surface not found
 }

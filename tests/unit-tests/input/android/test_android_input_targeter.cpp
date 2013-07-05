@@ -65,7 +65,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed)
 {
     using namespace ::testing;
 
-    std::shared_ptr<mi::InputChannel const> stub_surface = std::make_shared<mtd::StubInputChannel>();
+    std::shared_ptr<mi::InputChannel const> stub_channel = std::make_shared<mtd::StubInputChannel>();
     mtd::MockWindowHandleRepository repository;
 
     droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
@@ -73,12 +73,12 @@ TEST(AndroidInputTargeterSetup, on_focus_changed)
 
     EXPECT_CALL(*dispatcher, setKeyboardFocus(stub_window_handle))
         .Times(1);
-    EXPECT_CALL(repository, handle_for_surface(stub_surface))
+    EXPECT_CALL(repository, handle_for_channel(stub_channel))
         .Times(1)
         .WillOnce(Return(stub_window_handle));
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
     
-    targeter.focus_changed(stub_surface);
+    targeter.focus_changed(stub_channel);
 }
 
 TEST(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
@@ -89,14 +89,14 @@ TEST(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
     mtd::MockWindowHandleRepository repository;
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
 
-    std::shared_ptr<mi::InputChannel const> stub_surface = std::make_shared<mtd::StubInputChannel>();
+    std::shared_ptr<mi::InputChannel const> stub_channel = std::make_shared<mtd::StubInputChannel>();
 
-    EXPECT_CALL(repository, handle_for_surface(stub_surface))
+    EXPECT_CALL(repository, handle_for_channel(stub_channel))
         .Times(1)
         .WillOnce(Return(droidinput::sp<droidinput::InputWindowHandle>()));
 
     EXPECT_THROW({
-            // We can't focus surfaces which never opened
-            targeter.focus_changed(stub_surface);
+            // We can't focus channels which never opened
+            targeter.focus_changed(stub_channel);
     }, std::logic_error);
 }

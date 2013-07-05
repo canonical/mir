@@ -51,12 +51,12 @@ public:
     explicit InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher);
     virtual ~InputRegistrar() noexcept(true);
 
-    void input_surface_opened(std::shared_ptr<input::InputChannel> const& opened_surface,
+    void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
                               std::shared_ptr<surfaces::SurfaceInfo> const& info);
-    void input_surface_closed(std::shared_ptr<input::InputChannel> const& closed_surface);
+    void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel);
 
 
-    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_surface(std::shared_ptr<input::InputChannel const> const& surface);
+    virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_channel(std::shared_ptr<input::InputChannel const> const& channel);
 
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> const input_dispatcher;
