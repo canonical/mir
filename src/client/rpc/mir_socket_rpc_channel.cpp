@@ -189,17 +189,12 @@ void mclr::MirSocketRpcChannel::send_message(
     std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
     std::copy(body.begin(), body.end(), send_buffer.begin() + sizeof header_bytes);
 
-    boost::asio::async_write(
+    boost::system::error_code error;
+    boost::asio::write(
         socket,
         boost::asio::buffer(send_buffer),
-        boost::bind(&MirSocketRpcChannel::on_message_sent, this,
-            invocation, boost::asio::placeholders::error));
-}
+        error);
 
-void mclr::MirSocketRpcChannel::on_message_sent(
-    mir::protobuf::wire::Invocation const& invocation,
-    boost::system::error_code const& error)
-{
     if (error)
         rpc_report->invocation_failed(invocation, error);
     else
