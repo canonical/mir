@@ -24,6 +24,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -123,6 +124,8 @@ private:
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 
     std::shared_ptr<compositor::Buffer> client_buffer_resource;
+
+    std::mutex session_mutex;
     std::shared_ptr<Session> session;
 };
 
