@@ -58,6 +58,8 @@ public:
 
     virtual void bind_to_texture();
 
+    virtual void* native_buffer() { return gbm_handle.get(); }
+
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     std::unique_ptr<BufferTextureBinder> const texture_binder;

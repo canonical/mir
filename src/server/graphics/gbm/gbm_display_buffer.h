@@ -56,6 +56,7 @@ public:
     void make_current();
     void release_current();
     void post_update();
+    void post_update(void *native_buffer);
 
     graphics::Renderer *direct_renderer() { return &bypass_renderer; }
 
@@ -63,6 +64,7 @@ public:
 
 private:
     BufferObject* get_front_buffer_object();
+    BufferObject* get_native_buffer_object(struct gbm_bo *bo);
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;

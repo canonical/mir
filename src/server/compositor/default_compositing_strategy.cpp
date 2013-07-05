@@ -24,6 +24,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/surfaces/graphic_region.h"
 
 #include <cassert>
 
@@ -63,17 +64,20 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 struct BypassFilter : public mc::FilterForRenderables
 {
-    BypassFilter() : bypassed(false)
+    BypassFilter() : bypassed(false), native_bo(nullptr)
     {
     }
-    bool operator()(mg::Renderable&)
+    bool operator()(mg::Renderable& renderable)
     {
         // TODO
         bypassed = true;
-        return true;;
+        auto reg = renderable.graphic_region();
+        native_bo = reg->native_buffer();
+        return true;
     }
 
     bool bypassed;
+    void *native_bo; // HACK
 };
 
 }
@@ -92,8 +96,12 @@ void mc::DefaultCompositingStrategy::render(
             {
             };
         RenderingOperator bypass(*bypass_renderer, save_resource);
+
+        display_buffer.make_current();
         renderables->for_each_if(bypass_filter, bypass);
         bypassed = bypass_filter.bypassed;
+        if (bypassed)
+            display_buffer.post_update(bypass_filter.native_bo);
     }
 
     if (!bypassed)
