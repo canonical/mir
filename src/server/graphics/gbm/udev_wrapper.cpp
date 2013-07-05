@@ -138,6 +138,11 @@ void mgg::UdevEnumerator::match_parent(mgg::UdevDevice const& parent)
     udev_enumerate_add_match_parent(enumerator, parent.dev);
 }
 
+void mgg::UdevEnumerator::match_sysname(std::string const& sysname)
+{
+    udev_enumerate_add_match_sysname(enumerator, sysname.c_str());
+}
+
 mgg::UdevEnumerator::iterator mgg::UdevEnumerator::begin()
 {
     if (!scanned)

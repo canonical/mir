@@ -74,6 +74,7 @@ public:
 
     void match_subsystem(std::string const& subsystem);
     void match_parent(UdevDevice const& parent);
+    void match_sysname(std::string const& sysname);
 
     class iterator : 
         public boost::iterator_facade<

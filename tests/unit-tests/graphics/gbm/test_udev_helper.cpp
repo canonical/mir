@@ -24,6 +24,10 @@
 #include <memory>
 #include <stdexcept>
 
+// At some point gnu libstdc++ will have a <regex> header that contains
+// actual functions. Until then, Boost to the rescue.
+#include <boost/regex.hpp>
+
 #include <umockdev.h>
 #include <libudev.h>
 
@@ -162,4 +166,24 @@ TEST_F(UdevWrapperTest, EnumeratorEnumeratesEmptyList)
 
     for (auto& device : devices)
         ADD_FAILURE() << "Unexpected udev device: " << device.devpath();
+}
+
+TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
+{
+    auto drm_sysfspath = udev_environment.add_device("drm", "card0", NULL, {}, {});
+    udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
+    udev_environment.add_device("drm", "card1", NULL, {}, {});
+
+    mgg::UdevContext ctx;
+
+    mgg::UdevEnumerator devices(ctx);
+
+    devices.match_sysname("card[0-9]");
+    devices.scan_devices();
+    for (auto& device : devices)
+    {
+        EXPECT_TRUE(boost::regex_match(device.devpath(), boost::regex(".*card[0-9].*")))
+            << "Unexpected device with devpath:" << device.devpath();
+    }
 }
