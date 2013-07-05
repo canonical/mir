@@ -18,7 +18,6 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
-#include "mir/input/rectangles_input_region.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"

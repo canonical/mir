@@ -21,7 +21,6 @@
 
 #include "mir/input/input_channel.h"
 #include "mir/input/surface_info.h"
-#include "mir/input/input_region.h"
 
 #include <androidfw/InputTransport.h>
 

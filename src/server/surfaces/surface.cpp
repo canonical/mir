@@ -23,7 +23,6 @@
 #include "mir/input/surface_info.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
-#include "mir/input/rectangles_input_region.h"
 #include "mir/compositor/buffer.h"
 
 #include <boost/throw_exception.hpp>
@@ -55,8 +54,6 @@ ms::Surface::Surface(
     buffer_count(0),
     notify_change(change_callback)
 {
-//    std::initializer_list<geom::Rectangle> input_rectangle = {geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size()}};
-//    input_region_ = std::make_shared<mi::RectanglesInputRegion>(input_rectangle);
     assert(buffer_stream);
     assert(change_callback);
 }
