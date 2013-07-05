@@ -241,13 +241,12 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
         udev_device_unref(dev);
 
         // Check that the drm device is usable by setting the interface version we use (1.4)
-        drmSetVersion sv
-        {
-            .drm_di_major = 1,
-            .drm_di_minor = 4,
-            .drm_dd_major = -1,     /* Don't care */
-            .drm_dd_minor = -1      /* Don't care */
-        };
+        drmSetVersion sv;
+        sv.drm_di_major = 1;
+        sv.drm_di_minor = 4;
+        sv.drm_dd_major = -1;     /* Don't care */
+        sv.drm_dd_minor = -1;     /* Don't care */
+
         if ((error = drmSetInterfaceVersion(tmp_fd, &sv)))
         {
             close(tmp_fd);
