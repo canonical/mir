@@ -50,11 +50,11 @@ bool rectangle_contains_point(geom::Rectangle const& rectangle, uint32_t px, uin
     
     if (px < x)
         return false;
-    else if (py <  y)
+    else if (py < y)
         return false;
-    else if (px >= x + width)
+    else if (px > x + width)
         return false;
-    else if (py >= y + height)
+    else if (py > y + height)
         return false;
     return true;
 }
@@ -72,5 +72,6 @@ bool mi::SurfaceDataStorage::input_region_contains(geom::Point const& point) con
 
 void mi::SurfaceDataStorage::set_input_region(std::vector<geom::Rectangle> const& rectangles)
 {
-    input_rectangles = rectangles;
+    std::copy(rectangles.begin(), rectangles.end(), input_rectangles.end());
+//    input_rectangles = rectangles;
 }
