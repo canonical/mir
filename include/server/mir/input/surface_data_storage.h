@@ -16,30 +16,33 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_DATA_STORAGE_H_
-#define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
+#ifndef MIR_INPUT_SURFACE_DATA_STORAGE_H_
+#define MIR_INPUT_SURFACE_DATA_STORAGE_H_
 
-#include "mir/surfaces/surface_info.h"
-#include <mutex>
+#include "mir/input/surface_info.h"
 
 namespace mir
 {
 namespace surfaces
 {
+class SurfaceInfo;
+}
+namespace input
+{
 
 class SurfaceDataStorage : public SurfaceInfoController 
 {
 public:
-    SurfaceDataStorage(std::string const& name, geometry::Point top_left, geometry::Size size);
+    SurfaceDataStorage(std::shared_ptr<surfaces::SurfaceInfo> const&);
 
     geometry::Rectangle size_and_position() const;
     std::string const& name() const;
-    void set_top_left(geometry::Point);
+
+    bool input_region_contains(geometry::Point const& point) const;
+    void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
+
 private:
-    std::mutex mutable guard;
-    std::string surface_name;
-    geometry::Point surface_top_left;
-    geometry::Size surface_size;
+    std::shared_ptr<surfaces::SurfaceInfo> surface_info;
 };
 
 }

@@ -19,6 +19,7 @@
 #ifndef MIR_INPUT_SURFACE_INFO_H_
 #define MIR_INPUT_SURFACE_INFO_H_
 
+#include "mir/geometry/rectangle.h"
 #include <vector>
 #include <memory>
 #include <string>
@@ -35,17 +36,28 @@ namespace input
 class SurfaceInfo 
 {
 public:
-    virtual geometry::Rectangle size_and_position() const = 0;
     virtual std::string const& name() const = 0;
-
+    virtual geometry::Rectangle size_and_position() const = 0;
     virtual bool input_region_contains(geometry::Point const& point) const = 0;
-    virtual void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) = 0;
 
 protected:
     SurfaceInfo() = default; 
     virtual ~SurfaceInfo() = default;
     SurfaceInfo(const SurfaceInfo&) = delete;
     SurfaceInfo& operator=(const SurfaceInfo& ) = delete;
+};
+
+class SurfaceInfoController : public SurfaceInfo 
+{
+public:
+    virtual void set_input_region(
+        std::vector<geometry::Rectangle> const& input_rectangles) = 0;
+
+protected:
+    SurfaceInfoController() = default; 
+    virtual ~SurfaceInfoController() = default;
+    SurfaceInfoController(const SurfaceInfoController&) = delete;
+    SurfaceInfoController& operator=(const SurfaceInfoController& ) = delete;
 };
 
 }

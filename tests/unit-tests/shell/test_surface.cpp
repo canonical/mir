@@ -29,6 +29,7 @@
 #include "mir_test_doubles/mock_input_targeter.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test_doubles/mock_input_info.h"
 #include "mir_test/fake_shared.h"
 
 #include <stdexcept>
@@ -59,7 +60,8 @@ public:
     std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& )
     {
         auto info = std::make_shared<mtd::MockSurfaceInfo>();
-        dummy_surface = std::make_shared<ms::Surface>(info, stub_buffer_stream_,
+        auto input_info = std::make_shared<mtd::MockInputInfo>();
+        dummy_surface = std::make_shared<ms::Surface>(info, input_info, stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(), []{});
         return dummy_surface;
     }

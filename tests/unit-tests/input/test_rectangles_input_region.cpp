@@ -18,13 +18,15 @@
  */
 
 #include "mir_test_doubles/mock_surface_info.h"
-#include "mir/input/rectangles_input_region.h"
+#include "mir_test/fake_shared.h"
+#include "mir/input/surface_data_storage.h"
 #include "mir/geometry/rectangle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
@@ -33,14 +35,13 @@ struct InputSurfaceInfo : public testing::Test
     void SetUp()
     {
         using namespace testing;
-        ON_CALL(primitive_info, size())
-            .WillByDefault(Return(primitive_sz));
-        ON_CALL(primitive_info, top_left())
-            .WillByDefault(Return(primitive_pt));
+        ON_CALL(primitive_info, size_and_position())
+            .WillByDefault(Return(primitive_rect));
     }
 
     geom::Point primitive_pt{geom::X{1}, geom::Y{1}};
     geom::Size primitive_sz{geom::Width{1}, geom::Height{1}};
+    geom::Rectangle primitive_rect{primitive_pt, primitive_sz};
     mtd::MockSurfaceInfo primitive_info;
 };
 
@@ -48,18 +49,17 @@ TEST_F(InputSurfaceInfo, rect_comes_from_shared_data)
 {
     using namespace testing;
 
-    geom::Rectangle rect{primitive_pt, primitive_sz};
     EXPECT_CALL(primitive_info, size_and_position())
         .Times(AtLeast(1))
-        .WillOnce(Return(rect));
-    mi::SurfaceDataController input_info(mt::fake_shared(primitive_info));
+        .WillRepeatedly(Return(primitive_rect));
+    mi::SurfaceDataStorage input_info(mt::fake_shared(primitive_info));
 
-    EXPECT_EQ(rect, input_info.size_and_position());
+    EXPECT_EQ(primitive_rect, input_info.size_and_position());
 }
 
 TEST_F(InputSurfaceInfo, default_region_is_surface_rectangle)
 {
-    mi::SurfaceDataController input_info(mt::fake_shared(primitive_info));
+    mi::SurfaceDataStorage input_info(mt::fake_shared(primitive_info));
 
     //...
     //.O.
@@ -68,7 +68,8 @@ TEST_F(InputSurfaceInfo, default_region_is_surface_rectangle)
     {
         for(auto y = 0; y <= 2; y++)
         {
-            auto contains = input_info.input_region_contains(geom::X{x}, geom::Y{y});
+            auto contains = input_info.input_region_contains(
+                                geom::Point{geom::X{x}, geom::Y{y}});
             if (( x == 1) && (y == 1))
             {
                 EXPECT_TRUE(contains);
@@ -88,8 +89,8 @@ TEST_F(InputSurfaceInfo, set_input_region)
         {{geom::X{2}, geom::Y{2}}, {geom::Width{1}, geom::Height{1}}}
     };
 
-    mi::SurfaceDataController input_info(mt::fake_shared(primitive_info));
-    input_info.set_additional_regions(rectangles);
+    mi::SurfaceDataStorage input_info(mt::fake_shared(primitive_info));
+    input_info.set_input_region(rectangles);
 
     //.....
     //.O...
@@ -100,16 +101,16 @@ TEST_F(InputSurfaceInfo, set_input_region)
     {
         for(auto y = -1; y <= 3; y++)
         {
-            auto contains = input_info.input_region_contains(geom::X{x}, geom::Y{y});
-            if ((x == 0) && (y == 0) ||
-                (x == 2) && (y == 2))
+            auto contains = input_info.input_region_contains(
+                                geom::Point{geom::X{x}, geom::Y{y}});
+            if (((x == 0) && (y == 0)) ||
+                ((x == 2) && (y == 2)))
             {
                 EXPECT_TRUE(contains);
             }
             else
             {
                 EXPECT_FALSE(contains);
-            }
             }
         }
     }

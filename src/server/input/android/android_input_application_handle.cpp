@@ -19,14 +19,14 @@
 #include "android_input_application_handle.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/surfaces/surface_info.h"
+#include "mir/input/surface_info.h"
 
 #include <limits.h>
 
-namespace ms = mir::surfaces;
+namespace mi = mir::input;
 namespace mia = mir::input::android;
 
-mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<ms::SurfaceInfo> const& info)
+mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::SurfaceInfo> const& info)
   : surface_info(info)
 {
     updateInfo();

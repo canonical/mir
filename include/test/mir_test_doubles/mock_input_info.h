@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_INFO_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_INFO_H_
 
-#include "mir/surfaces/surface_info.h"
+#include "mir/input/surface_info.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,10 +29,10 @@ namespace test
 namespace doubles
 {
 
-class MockSurfaceInfo : public surfaces::SurfaceInfoController 
+class MockInputInfo : public input::SurfaceInfoController 
 {
 public:
-    MockSurfaceInfo()
+    MockInputInfo()
     {
         using namespace testing;
         ON_CALL(*this, size_and_position())
@@ -44,15 +44,16 @@ public:
         ON_CALL(*this, name())
             .WillByDefault(testing::ReturnRef(n));
     }
-    ~MockSurfaceInfo() noexcept {}
+    ~MockInputInfo() noexcept {}
     MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(name, std::string const&());
 
-    MOCK_METHOD1(set_top_left, void(geometry::Point));
+    MOCK_CONST_METHOD1(input_region_contains, bool(geometry::Point const&));
+    MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
 };
 
-typedef ::testing::NiceMock<MockSurfaceInfo> StubSurfaceInfo;
+typedef ::testing::NiceMock<MockInputInfo> StubInputInfo;
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_INPUT_INFO_H_ */

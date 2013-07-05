@@ -32,6 +32,7 @@ namespace surfaces
 {
 class SurfaceInfo
 {
+public:
     virtual geometry::Rectangle size_and_position() const = 0;
     virtual std::string const& name() const = 0;
 
@@ -42,16 +43,16 @@ protected:
     SurfaceInfo& operator=(const SurfaceInfo& ) = delete;
 };
 
-class SurfaceInfoControl : public SurfaceInfo
+class SurfaceInfoController : public SurfaceInfo
 {
 public:
     virtual void set_top_left(geometry::Point) = 0;
 
 protected:
-    SurfaceInfoControl() = default; 
-    virtual ~SurfaceInfoControl() = default;
-    SurfaceInfoControl(const SurfaceInfoControl&) = delete;
-    SurfaceInfoControl& operator=(const SurfaceInfoControl& ) = delete;
+    SurfaceInfoController() = default; 
+    virtual ~SurfaceInfoController() = default;
+    SurfaceInfoController(const SurfaceInfoController&) = delete;
+    SurfaceInfoController& operator=(const SurfaceInfoController& ) = delete;
 };
 
 }

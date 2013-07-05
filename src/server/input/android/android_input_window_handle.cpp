@@ -20,14 +20,13 @@
 #include "android_input_application_handle.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/surfaces/surface_info.h"
+#include "mir/input/surface_info.h"
 #include "mir/input/input_region.h"
 
 #include <androidfw/InputTransport.h>
 
 #include <limits.h>
 
-namespace ms = mir::surfaces;
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace geom = mir::geometry;
@@ -36,26 +35,27 @@ namespace
 {
 struct WindowInfo : public droidinput::InputWindowInfo
 {
-    WindowInfo(std::shared_ptr<ms::SurfaceInfo> const& info)
+    WindowInfo(std::shared_ptr<mi::SurfaceInfo> const& info)
         : info(info)
     {
     }
 
     bool touchableRegionContainsPoint(int32_t x, int32_t y) const override
     {
-        uint32_t rel_x = x - info->top_left().x.as_uint32_t();
-        uint32_t rel_y = y - info->top_left().y.as_uint32_t();
-        
-        return info->contains({geom::X{rel_x}, geom::Y{rel_y}});
+        auto top_left = info->size_and_position().top_left;
+        uint32_t rel_x = x - top_left.x.as_uint32_t();
+        uint32_t rel_y = y - top_left.y.as_uint32_t();
+
+        return info->input_region_contains({geom::X{rel_x}, geom::Y{rel_y}});
     }
     
-    std::shared_ptr<ms::SurfaceInfo> const info;
+    std::shared_ptr<mi::SurfaceInfo> const info;
 };
 }
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
                                           std::shared_ptr<mi::InputChannel> const& channel,
-                                          std::shared_ptr<ms::SurfaceInfo> const& info)
+                                          std::shared_ptr<mi::SurfaceInfo> const& info)
   : droidinput::InputWindowHandle(input_app_handle),
     input_channel(channel),
     surface_info(info)
@@ -74,10 +74,12 @@ bool mia::InputWindowHandle::updateInfo()
                                                            input_channel->server_fd());
     }
 
-    auto surface_position = surface_info->top_left();
+    auto surface_rect = surface_info->size_and_position();
+    auto surface_position = surface_rect.top_left;
+    auto surface_size = surface_rect.size;
+
     mInfo->frameLeft = surface_position.x.as_uint32_t();
     mInfo->frameTop = surface_position.y.as_uint32_t();
-    auto surface_size = surface_info->size();
     mInfo->frameRight = mInfo->frameLeft + surface_size.width.as_uint32_t();
     mInfo->frameBottom = mInfo->frameTop + surface_size.height.as_uint32_t();
     

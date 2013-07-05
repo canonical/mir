@@ -23,6 +23,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/surface_data_storage.h"
 #include "mir/surfaces/surface_data_storage.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/buffer_stream.h"
@@ -81,12 +82,13 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
                                            params.pixel_format,
                                            params.buffer_usage};
     auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
-    auto info = std::make_shared<ms::SurfaceDataStorage>(params.name,
+    auto basic_info = std::make_shared<ms::SurfaceDataStorage>(params.name,
                                                          params.top_left,
                                                          buffer_stream->stream_size());
+    auto input_info = std::make_shared<mi::SurfaceDataStorage>(basic_info);
     auto input_channel = input_factory->make_input_channel();
     std::shared_ptr<ms::Surface> surface(
-        new ms::Surface(info, buffer_stream, input_channel,
+        new ms::Surface(basic_info, input_info, buffer_stream, input_channel,
             [this]() { emit_change_notification(); }));
     
     {
@@ -94,7 +96,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         layers_by_depth[depth].push_back(surface);
     }
 
-    input_registrar->input_channel_opened(surface->input_channel(), info);
+    input_registrar->input_channel_opened(surface->input_channel(), input_info);
 
     emit_change_notification();
 

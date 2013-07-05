@@ -20,6 +20,7 @@
 
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_info.h"
+#include "mir/input/surface_info.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/rectangles_input_region.h"
@@ -39,11 +40,13 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
-    std::shared_ptr<SurfaceInfo> const& info,
+    std::shared_ptr<ms::SurfaceInfoController> const& basic_info,
+    std::shared_ptr<mi::SurfaceInfoController> const& input_info,
     std::shared_ptr<BufferStream> buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
-    info(info),
+    basic_info(basic_info),
+    input_info(input_info),
     buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     transformation_dirty(true),
@@ -69,12 +72,12 @@ ms::Surface::~Surface()
 
 std::string const& ms::Surface::name() const
 {
-    return info->name();
+    return basic_info->name();
 }
 
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
-    info->set_top_left(top_left);
+    basic_info->set_top_left(top_left);
     transformation_dirty = true;
     notify_change();
 }
@@ -100,12 +103,12 @@ void ms::Surface::set_hidden(bool hide)
 
 geom::Point ms::Surface::top_left() const
 {
-    return info->top_left();
+    return basic_info->size_and_position().top_left;
 }
 
 mir::geometry::Size ms::Surface::size() const
 {
-    return info->size();
+    return basic_info->size_and_position().size;
 }
 
 std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
@@ -119,7 +122,7 @@ const glm::mat4& ms::Surface::transformation() const
 
     if (transformation_dirty || transformation_size != sz)
     {
-        auto pt = info->top_left();
+        auto pt = basic_info->size_and_position().top_left;
         const glm::vec3 top_left_vec{pt.x.as_int(),
                                      pt.y.as_int(),
                                      0.0f};
@@ -224,5 +227,5 @@ std::shared_ptr<mi::InputRegion> ms::Surface::input_region() const
 #endif
 void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
-    info->set_input_region(input_rectangles);
+    input_info->set_input_region(input_rectangles);
 }

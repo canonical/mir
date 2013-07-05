@@ -38,18 +38,20 @@ struct SurfaceInfoTest : public testing::Test
 
 TEST_F(SurfaceInfoTest, basics)
 { 
+    geom::Rectangle rect{top_left, size};
     ms::SurfaceDataStorage storage{name, top_left, size};
     EXPECT_EQ(name, storage.name());
-    EXPECT_EQ(top_left, storage.top_left());
-    EXPECT_EQ(size, storage.size());
+    EXPECT_EQ(rect, storage.size_and_position());
 }
 
 TEST_F(SurfaceInfoTest, update_position)
 { 
+    geom::Rectangle rect1{top_left, size};
     ms::SurfaceDataStorage storage{name, top_left, size};
-    EXPECT_EQ(top_left, storage.top_left());
+    EXPECT_EQ(rect1, storage.size_and_position());
 
     auto new_top_left = geom::Point{geom::X{5}, geom::Y{10}};
+    geom::Rectangle rect2{top_left, size};
     storage.set_top_left(new_top_left);
-    EXPECT_EQ(new_top_left, storage.top_left());
+    EXPECT_EQ(rect2, storage.size_and_position());
 }

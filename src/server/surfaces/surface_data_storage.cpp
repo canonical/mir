@@ -29,16 +29,10 @@ ms::SurfaceDataStorage::SurfaceDataStorage(
 {
 }
 
-geom::Point ms::SurfaceDataStorage::top_left() const
+geom::Rectangle ms::SurfaceDataStorage::size_and_position() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return surface_top_left;
-}
-
-geom::Size ms::SurfaceDataStorage::size() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return surface_size;
+    return geom::Rectangle{surface_top_left, surface_size};
 }
 
 std::string const& ms::SurfaceDataStorage::name() const
@@ -46,51 +40,8 @@ std::string const& ms::SurfaceDataStorage::name() const
     std::unique_lock<std::mutex> lk(guard);
     return surface_name;
 }
-
 void ms::SurfaceDataStorage::set_top_left(geom::Point new_pt)
 {
     std::unique_lock<std::mutex> lk(guard);
     surface_top_left = new_pt;
-}
-
-#if 0
-namespace
-{
-
-bool rectangle_contains_point(geom::Rectangle const& rectangle, uint32_t px, uint32_t py)
-{
-    auto width = rectangle.size.width.as_uint32_t();
-    auto height = rectangle.size.height.as_uint32_t();
-    auto x = rectangle.top_left.x.as_uint32_t();
-    auto y = rectangle.top_left.y.as_uint32_t();
-    
-    if (px < x)
-        return false;
-    else if (py <  y)
-        return false;
-    else if (px > x + width)
-        return false;
-    else if (py > y + height)
-        return false;
-    return true;
-}
-
-}
-#endif 
-bool ms::SurfaceDataStorage::contains(geom::Point const& point) const
-{
-    (void) point;
-#if 0
-    for (auto const& rectangle : input_rectangles)
-    {
-        if (rectangle_contains_point(rectangle, point.x.as_uint32_t(), point.y.as_uint32_t()))
-            return true;
-    }
-#endif
-    return false;
-}
-
-void ms::SurfaceDataStorage::set_input_region(
-    std::vector<geometry::Rectangle> const&)// input_rectangles);
-{
 }

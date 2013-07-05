@@ -40,6 +40,7 @@ namespace mir
 {
 namespace input
 {
+class SurfaceInfo;
 namespace android
 {
 class InputConfiguration;
@@ -52,7 +53,7 @@ public:
     virtual ~InputRegistrar() noexcept(true);
 
     void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
-                              std::shared_ptr<surfaces::SurfaceInfo> const& info);
+                              std::shared_ptr<input::SurfaceInfo> const& info);
     void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel);
 
 
