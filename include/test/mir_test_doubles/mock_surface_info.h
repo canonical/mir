@@ -34,10 +34,13 @@ class MockSurfaceInfo : public surfaces::SurfaceInfo
 public:
     MockSurfaceInfo()
     {
+        using namespace testing;
+        ON_CALL(*this, contains(_))
+            .WillByDefault(Return(true));
         ON_CALL(*this, top_left())
-            .WillByDefault(testing::Return(geometry::Point{geometry::X{}, geometry::Y{}}));
+            .WillByDefault(Return(geometry::Point{geometry::X{}, geometry::Y{}}));
         ON_CALL(*this, size())
-            .WillByDefault(testing::Return(geometry::Size{geometry::Width{}, geometry::Height{}}));
+            .WillByDefault(Return(geometry::Size{geometry::Width{}, geometry::Height{}}));
         static std::string n;
         ON_CALL(*this, name())
             .WillByDefault(testing::ReturnRef(n));
@@ -47,6 +50,8 @@ public:
     MOCK_METHOD1(set_top_left, void(geometry::Point));
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(name, std::string const&());
+    MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
+    MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
 };
 
 typedef ::testing::NiceMock<MockSurfaceInfo> StubSurfaceInfo;

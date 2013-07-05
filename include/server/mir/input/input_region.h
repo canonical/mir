@@ -16,48 +16,34 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
+#ifndef MIR_INPUT_INPUT_REGION_H_
+#define MIR_INPUT_INPUT_REGION_H_
 
-#include "mir/input/input_channel.h"
+#include <stdint.h>
 
 namespace mir
 {
-namespace test
+namespace geometry
 {
-namespace doubles
+struct Point;
+}
+namespace input
 {
 
-struct StubInputChannel : public input::InputChannel
+class InputRegion
 {
-    StubInputChannel(int fd)
-      : input_fd(fd)
-    {
-    }
+public:
+    virtual ~InputRegion() = default;
 
-    StubInputChannel()
-     : StubInputChannel(0)
-    {
-    }
-    std::shared_ptr<input::InputRegion> input_region() const override
-    {
-        return std::shared_ptr<input::InputRegion>();
-    }
+    virtual bool contains(geometry::Point const& point) const = 0;
 
-    int client_fd() const override
-    {
-        return input_fd;
-    }
-    int server_fd() const override
-    {
-        return input_fd;
-    }
-    int input_fd;
+protected:
+    InputRegion() = default;
+    InputRegion(InputRegion const&) = delete;
+    InputRegion& operator=(InputRegion const&) = delete;
 };
 
 }
 }
-} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
-
+#endif // MIR_INPUT_INPUT_REGION

@@ -78,9 +78,9 @@ public:
     }
     void input_channel_closed(std::shared_ptr<mi::InputChannel> const& closed_channel)
     {
-        auto closed_channel = outstanding_channels[closed_channel];
+        auto channel = outstanding_channels[closed_channel];
         underlying_registrar->input_channel_closed(closed_channel);
-        listener->channel_finished_for_input(closed_channel);
+        listener->channel_finished_for_input(channel);
     }
 
 private:

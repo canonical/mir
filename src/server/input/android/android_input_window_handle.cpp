@@ -21,6 +21,7 @@
 
 #include "mir/input/input_channel.h"
 #include "mir/surfaces/surface_info.h"
+#include "mir/input/input_region.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -29,6 +30,28 @@
 namespace ms = mir::surfaces;
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace geom = mir::geometry;
+
+namespace
+{
+struct WindowInfo : public droidinput::InputWindowInfo
+{
+    WindowInfo(std::shared_ptr<ms::SurfaceInfo> const& info)
+        : info(info)
+    {
+    }
+
+    bool touchableRegionContainsPoint(int32_t x, int32_t y) const override
+    {
+        uint32_t rel_x = x - info->top_left().x.as_uint32_t();
+        uint32_t rel_y = y - info->top_left().y.as_uint32_t();
+        
+        return info->contains({geom::X{rel_x}, geom::Y{rel_y}});
+    }
+    
+    std::shared_ptr<ms::SurfaceInfo> const info;
+};
+}
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
                                           std::shared_ptr<mi::InputChannel> const& channel,
@@ -44,7 +67,7 @@ bool mia::InputWindowHandle::updateInfo()
 {
     if (!mInfo)
     {
-        mInfo = new droidinput::InputWindowInfo();
+        mInfo = new WindowInfo(surface_info);
 
         // TODO: How can we avoid recreating the InputChannel which the InputChannelFactory has already created?
         mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"),

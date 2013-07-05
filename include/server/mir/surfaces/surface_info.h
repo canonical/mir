@@ -19,16 +19,21 @@
 #ifndef MIR_SURFACES_SURFACE_INFO_H_
 #define MIR_SURFACES_SURFACE_INFO_H_
 
-#include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/geometry/size.h"
 
+#include <vector>
+#include <memory>
 #include <string>
 
 namespace mir
 {
+namespace input
+{
+class InputRegion;
+}
 namespace surfaces
 {
-
 //TODO: (kdub) as this interface grows, should we split into a read-only interface and a mutator? 
 class SurfaceInfo 
 {
@@ -36,6 +41,10 @@ public:
     virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
     virtual std::string const& name() const = 0;
+
+    //input
+    virtual bool contains(geometry::Point const& point) const = 0;
+    virtual void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) = 0;
 
     //mutators
     virtual void set_top_left(geometry::Point) = 0;

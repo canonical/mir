@@ -16,48 +16,33 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
+#ifndef MIR_INPUT_RECTANGLES_INPUT_REGION_H_
+#define MIR_INPUT_RECTANGLES_INPUT_REGION_H_
 
-#include "mir/input/input_channel.h"
+#include "mir/input/input_region.h"
+#include "mir/geometry/rectangle.h"
+
+#include <initializer_list>
+#include <vector>
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct StubInputChannel : public input::InputChannel
+class RectanglesInputRegion : public InputRegion
 {
-    StubInputChannel(int fd)
-      : input_fd(fd)
-    {
-    }
+public:
+    RectanglesInputRegion(std::initializer_list<geometry::Rectangle> const& input_rectangles);
+    virtual ~RectanglesInputRegion() noexcept(true) = default;
 
-    StubInputChannel()
-     : StubInputChannel(0)
-    {
-    }
-    std::shared_ptr<input::InputRegion> input_region() const override
-    {
-        return std::shared_ptr<input::InputRegion>();
-    }
+    bool contains(geometry::Point const& point) const;
 
-    int client_fd() const override
-    {
-        return input_fd;
-    }
-    int server_fd() const override
-    {
-        return input_fd;
-    }
-    int input_fd;
+private:
+    std::vector<geometry::Rectangle> input_rectangles;
 };
 
 }
 }
-} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
-
+#endif // MIR_INPUT_RECTANGLES_INPUT_REGION

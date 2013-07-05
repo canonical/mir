@@ -36,6 +36,9 @@ public:
     geometry::Size size() const;
     std::string const& name() const;
 
+    bool contains(geometry::Point const& point) const;
+    void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
+
     void set_top_left(geometry::Point);
 private:
     std::mutex mutable guard;

@@ -20,9 +20,11 @@
 #define MIR_SURFACES_SURFACE_H_
 
 #include "mir/geometry/pixel_format.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_properties.h"
 
+#include <vector>
 #include <memory>
 #include <string>
 
@@ -38,6 +40,7 @@ class BufferID;
 namespace input
 {
 class InputChannel;
+class InputRegion;
 }
 
 namespace surfaces
@@ -80,10 +83,11 @@ public:
 
     bool supports_input() const;
     int client_input_fd() const;
-
     void allow_framedropping(bool);
-
     std::shared_ptr<input::InputChannel> input_channel() const;
+
+    void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
+
 private:
     std::shared_ptr<SurfaceInfo> info;
 
@@ -100,6 +104,8 @@ private:
     bool is_hidden;
     unsigned int buffer_count;
     std::function<void()> notify_change;
+
+    std::shared_ptr<input::InputRegion> input_region_;
 };
 
 }

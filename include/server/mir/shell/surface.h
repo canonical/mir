@@ -35,6 +35,10 @@ namespace events
 {
 class EventSink;
 }
+namespace input
+{
+class InputRegion;
+}
 
 namespace shell
 {
@@ -86,6 +90,7 @@ public:
     virtual MirSurfaceState state() const;
 
     virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
+    virtual void set_input_region(std::vector<geometry::Rectangle> const& region);
 
     virtual void allow_framedropping(bool); 
 private:

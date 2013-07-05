@@ -18,8 +18,11 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
+#include "mir/input/rectangles_input_region.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
+#include "mir/shell/surface_factory.h"
+#include "mir/shell/surface.h"
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
@@ -48,6 +51,7 @@ namespace mia = mi::android;
 namespace mis = mi::synthesis;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace me = mir::events;
 namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -155,7 +159,7 @@ struct InputClient : ClientConfig
             connection_callback,
             this));
          ASSERT_TRUE(connection != NULL);
-    
+
          MirEventDelegate const event_delegate =
          {
              handle_input,
@@ -174,7 +178,7 @@ struct InputClient : ClientConfig
 
          // ClientConfiguration d'tor is not called on client side so we need this
          // in order to not leak the Mock object.
-         handler.reset(); 
+         handler.reset();
     }
     
     std::shared_ptr<MockInputHandler> handler;
@@ -192,7 +196,7 @@ MATCHER(KeyDownEvent, "")
         return false;
     if (arg->key.action != mir_key_action_down) // Key down
         return false;
-    
+
     return true;
 }
 MATCHER_P(KeyOfSymbol, keysym, "")
@@ -236,6 +240,19 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     return true;
 }
 
+MATCHER_P2(ButtonUpEvent, x, y, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_up)
+        return false;
+    if (arg->motion.pointer_coordinates[0].x != x)
+        return false;
+    if (arg->motion.pointer_coordinates[0].y != y)
+        return false;
+    return true;
+}
+
 MATCHER_P2(MotionEventWithPosition, x, y, "")
 {
     if (arg->type != mir_event_type_motion)
@@ -246,6 +263,16 @@ MATCHER_P2(MotionEventWithPosition, x, y, "")
     if (arg->motion.pointer_coordinates[0].x != x)
         return false;
     if (arg->motion.pointer_coordinates[0].y != y)
+        return false;
+    return true;
+}
+
+MATCHER(MovementEvent, "")
+{
+    if (arg->type != mir_event_type_motion)
+        return false;
+    if (arg->motion.action != mir_motion_action_move &&
+        arg->motion.action != mir_motion_action_hover_move)
         return false;
     return true;
 }
@@ -358,7 +385,7 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
             // We should see the cursor enter
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
             EXPECT_CALL(*handler, handle_input(
-                MotionEventWithPosition(InputClient::surface_width, 
+                MotionEventWithPosition(InputClient::surface_width,
                                         InputClient::surface_height))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
             // But we should not receive an event for the second movement outside of our surface!
@@ -433,7 +460,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     
     static int const screen_width = 1000;
     static int const screen_height = 800;
-    static int const client_height = screen_width/2;
+    static int const client_height = screen_height/2;
     static int const client_width = screen_width/2;
     static std::string const test_client_1 = "1";
     static std::string const test_client_2 = "2";
@@ -445,7 +472,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             static GeometryList positions;
             positions[test_client_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
-            positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{0}},
+            positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{screen_height/2}},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
 
             return std::make_shared<StaticPlacementStrategy>(positions);
@@ -462,9 +489,9 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             wait_until_client_appears(test_client_1);
             wait_until_client_appears(test_client_2);
             // In the bounds of the first surface
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, 0));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, screen_height/2-1));
             // In the bounds of the second surface
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, 0));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, screen_height/2));
         }
     } server_config;
     
@@ -481,7 +508,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         {
             InSequence seq;
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
-            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, 0))).Times(1);
+            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1);
             EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
@@ -498,11 +525,122 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         {
             InSequence seq;
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
-            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, 0))).Times(1)
+            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
     } client_2;
 
     launch_client_process(client_1);
     launch_client_process(client_2);
+}
+
+namespace
+{
+struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
+{
+    RegionApplyingSurfaceFactory(std::shared_ptr<msh::SurfaceFactory> real_factory,
+        std::initializer_list<geom::Rectangle> const& input_rectangles)
+        : underlying_factory(real_factory),
+          input_rectangles(input_rectangles)
+    {
+    }
+    
+    std::shared_ptr<msh::Surface> create_surface(msh::SurfaceCreationParameters const& params,
+                                                 mf::SurfaceId id,
+                                                 std::shared_ptr<me::EventSink> const& sink)
+    {
+        auto surface = underlying_factory->create_surface(params, id, sink);
+
+        surface->set_input_region(input_rectangles);
+
+        return surface;
+    }
+    
+    std::shared_ptr<msh::SurfaceFactory> const underlying_factory;
+    std::vector<geom::Rectangle> const input_rectangles;
+};
+}
+
+TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
+{
+    using namespace ::testing;
+    static std::string const test_client_name = "1";
+    
+    static int const screen_width = 100;
+    static int const screen_height = 100;
+    
+    static geom::Rectangle const screen_geometry{geom::Point{geom::X{0}, geom::Y{0}},
+        geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
+
+    static std::initializer_list<geom::Rectangle> client_input_regions = {
+        {{geom::X{0}, geom::Y{0}}, {geom::Width{screen_width-80}, geom::Height{screen_height}}},
+        {{geom::X{screen_width-20}, geom::Y{0}}, {geom::Width{screen_width-80}, geom::Height{screen_height}}}
+    };
+
+    struct ServerConfiguration : mtf::InputTestingServerConfiguration
+    {
+        std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
+        {
+            static GeometryList positions;
+            positions[test_client_name] = screen_geometry;
+            
+            return std::make_shared<StaticPlacementStrategy>(positions);
+        }
+        std::shared_ptr<msh::SurfaceFactory> the_shell_surface_factory() override
+        {
+            return std::make_shared<RegionApplyingSurfaceFactory>(InputTestingServerConfiguration::the_shell_surface_factory(),
+                client_input_regions);
+        }
+        geom::Rectangle the_screen_geometry() override
+        {
+            return screen_geometry;
+        }
+        
+        void inject_input() override
+        {
+            wait_until_client_appears(test_client_name);
+            
+            // First we will move the cursor in to the input region on the left side of the window. We should see a click here
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+            // Now in to the dead zone in the center of the window. We should not see a click here.
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+            // Now in to the right edge of the window, in the right input region. Again we should see a click
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+        }
+    } server_config;
+    
+    launch_server_process(server_config);
+
+    struct ClientConfig : InputClient
+    {
+        ClientConfig()
+            : InputClient(test_client_name)
+        {
+        }
+
+        void expect_input(mt::WaitCondition& events_received) override
+        {
+
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(MovementEvent())).Times(AnyNumber());
+
+            {
+                // We should see two of the three button pairs.
+                InSequence seq;
+                EXPECT_CALL(*handler, handle_input(ButtonDownEvent(1, 1))).Times(1);
+                EXPECT_CALL(*handler, handle_input(ButtonUpEvent(1, 1))).Times(1);
+                EXPECT_CALL(*handler, handle_input(ButtonDownEvent(99, 99))).Times(1);
+                EXPECT_CALL(*handler, handle_input(ButtonUpEvent(99, 99))).Times(1)
+                    .WillOnce(mt::WakeUp(&events_received));
+            }
+        }
+    } client_config;
+    launch_client_process(client_config);
 }

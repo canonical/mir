@@ -22,6 +22,7 @@
 #include "mir/surfaces/surface_info.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
+#include "mir/input/rectangles_input_region.h"
 #include "mir/compositor/buffer.h"
 
 #include <boost/throw_exception.hpp>
@@ -51,7 +52,8 @@ ms::Surface::Surface(
     buffer_count(0),
     notify_change(change_callback)
 {
-    // TODO(tvoss,kdub): Does a surface without a buffer_stream make sense?
+//    std::initializer_list<geom::Rectangle> input_rectangle = {geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size()}};
+//    input_region_ = std::make_shared<mi::RectanglesInputRegion>(input_rectangle);
     assert(buffer_stream);
     assert(change_callback);
 }
@@ -214,3 +216,13 @@ std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
     return server_input_channel;
 }
 
+#if 0
+std::shared_ptr<mi::InputRegion> ms::Surface::input_region() const
+{
+    return input_region_;
+}
+#endif
+void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
+{
+    info->set_input_region(input_rectangles);
+}

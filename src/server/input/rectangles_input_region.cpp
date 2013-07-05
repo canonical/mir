@@ -13,26 +13,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef __EGLAPP_H__
-#define __EGLAPP_H__
+#include "mir/input/rectangles_input_region.h"
+#include "mir/geometry/rectangle.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace mi = mir::input;
+namespace geom = mir::geometry;
 
-typedef int mir_eglapp_bool;
-
-mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
-                                unsigned int *width, unsigned int *height);
-void            mir_eglapp_swap_buffers(void);
-mir_eglapp_bool mir_eglapp_running(void);
-void            mir_eglapp_shutdown(void);
-
-#ifdef __cplusplus
+mi::RectanglesInputRegion::RectanglesInputRegion(std::initializer_list<geom::Rectangle> const& input_rectangles)
+    : input_rectangles(input_rectangles.begin(), input_rectangles.end())
+{
 }
-#endif
 
-#endif
