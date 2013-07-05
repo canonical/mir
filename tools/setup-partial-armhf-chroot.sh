@@ -43,23 +43,23 @@ download_and_extract_packages()
 pushd ${1} > /dev/null
 
     declare -a PACKAGES_ARMHF=(
-        libboost1.49-dev
-        libboost-chrono1.49-dev
-        libboost-chrono1.49-dev
-        libboost-date-time1.49-dev
-        libboost-filesystem1.49-dev
-        libboost-program-options1.49-dev
+        libboost1.53-dev
+        libboost-chrono1.53-dev
+        libboost-chrono1.53-dev
+        libboost-date-time1.53-dev
+        libboost-filesystem1.53-dev
+        libboost-program-options1.53-dev
         libprotobuf-dev
-        libboost-chrono1.49.0
-        libboost-date-time1.49.0
-        libboost-filesystem1.49.0
-        libboost-system1.49.0
-        libboost-system1.49-dev
-        libboost-thread1.49-dev
-        libboost-thread1.49.0
-        libboost-regex1.49-dev
-        libboost-regex1.49.0
-        libboost-program-options1.49.0
+        libboost-chrono1.53.0
+        libboost-date-time1.53.0
+        libboost-filesystem1.53.0
+        libboost-system1.53.0
+        libboost-system1.53-dev
+        libboost-thread1.53-dev
+        libboost-thread1.53.0
+        libboost-regex1.53-dev
+        libboost-regex1.53.0
+        libboost-program-options1.53.0
         libhybris
         libhybris-dev
         libandroid-properties1
