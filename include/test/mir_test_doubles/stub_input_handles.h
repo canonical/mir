@@ -32,8 +32,10 @@ struct StubInputApplicationHandle : public droidinput::InputApplicationHandle
 {
     StubInputApplicationHandle()
     {
-        if (mInfo == NULL)
+        if (!mInfo)
+        {
             mInfo = new droidinput::InputApplicationInfo;
+        }
     }
     bool updateInfo()
     {

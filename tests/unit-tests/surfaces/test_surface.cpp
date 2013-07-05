@@ -339,6 +339,15 @@ TEST_F(SurfaceCreation, test_get_input_channel)
     EXPECT_EQ(mock_channel, surf.input_channel());
 }
 
+//TODO: we shouldn't be allowing a nullptr constructor argument
+TEST_F(SurfaceCreation, test_get_input_channel_when_no_input_in_constructor)
+{
+    ms::Surface surf(mock_info, mock_buffer_stream, nullptr, mock_change_cb);
+    EXPECT_THROW({
+        surf.input_channel();
+    }, std::logic_error);
+}
+
 TEST_F(SurfaceCreation, test_surface_transformation_cache_refreshes)
 {
     using namespace testing;
