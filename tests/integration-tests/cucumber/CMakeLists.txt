@@ -1,9 +1,0 @@
-list(
-  APPEND INTEGRATION_TESTS_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_session_management_context.cpp
-)
-
-set(
-  INTEGRATION_TESTS_SRCS
-  ${INTEGRATION_TESTS_SRCS}
-  PARENT_SCOPE)

@@ -89,11 +89,11 @@ struct StubSurfaceTarget : public mi::SurfaceTarget
         : target_name(name)
     {
     }
+
     std::string const& name() const override
     {
         return target_name;
     }
-
     int server_input_fd() const override
     {
         return 0;
@@ -105,6 +105,10 @@ struct StubSurfaceTarget : public mi::SurfaceTarget
     geom::Point top_left() const override
     {
         return geom::Point();
+    }
+    std::shared_ptr<mi::InputRegion> input_region() const
+    {
+        return std::shared_ptr<mi::InputRegion>();
     }
 
     std::string const target_name;

@@ -110,10 +110,8 @@ include_directories (${GLM_INCLUDE_DIRS})
 
 add_definitions(-DANDROID_USE_STD)
 
-# By default we can run our tests
-set( MIR_TESTS_AVAILABLE TRUE )
-
 if (MIR_PLATFORM STREQUAL "android")
+  find_package( PkgConfig )
   include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
   list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
@@ -131,11 +129,6 @@ elseif (MIR_PLATFORM STREQUAL "gbm")
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
   pkg_check_modules( UDEV REQUIRED libudev )
-  pkg_check_modules( UMOCKDEV umockdev-1.0 )
-  if ( NOT UMOCKDEV_FOUND )
-    message( WARNING "Umockdev not found, tests are disabled" )
-    set(MIR_TESTS_AVAILABLE FALSE)
-  endif ()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__GBM__")
 else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
@@ -159,7 +152,7 @@ add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 set (OLD_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-# Don't treat warnings as errors in 3rd_party/{gmock,cucumber-cpp}
+# Don't treat warnings as errors in 3rd_party/{gmock}
 string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 # Pulling in local gmock version
@@ -186,16 +179,16 @@ set(GTEST_FOUND TRUE)
 include_directories (
   ${GTEST_INCLUDE_DIR}
 )
-# We need to build cucumber after gtest
-add_subdirectory(3rd_party/cucumber-cpp)
 
 # Restore -Werror for non-3rd-party code
 set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 
-add_subdirectory(benchmarks/)
-if (MIR_TESTS_AVAILABLE)
+option(MIR_ENABLE_TESTS "Build tests" ON)
+
+if (MIR_ENABLE_TESTS)
   add_subdirectory(tests/)
 endif ()
+add_subdirectory(benchmarks/)
 add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(guides/)

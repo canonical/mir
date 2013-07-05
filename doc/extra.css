@@ -1,0 +1,40 @@
+body, table, div, p, dl {
+	font: 400 14px/19px Ubuntu,Arial,sans-serif;
+}
+
+#projectname
+{
+	font: 300% Ubuntu,Arial,sans-serif;
+	margin: 0px;
+	padding: 2px 0px;
+}
+    
+#projectbrief
+{
+	font: 120% Ubuntu,Arial,sans-serif;
+	margin: 0px;
+	padding: 0px;
+}
+
+#projectnumber
+{
+	font: 50% Ubuntu,Arial,sans-serif;
+	margin: 0px;
+	padding: 0px;
+}
+
+div.toc li {
+        background: url("bdwn.png") no-repeat scroll 0 5px transparent;
+        font: 10px/1.2 Ubuntu,Arial,sans-serif;
+        margin-top: 5px;
+        padding-left: 10px;
+        padding-top: 2px;
+}
+
+div.toc h3 {
+        font: bold 12px/1.2 Ubuntu,Arial,FreeSans,sans-serif;
+	color: #E24106;
+        border-bottom: 0 none;
+        margin: 0;
+}
+

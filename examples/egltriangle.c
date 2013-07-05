@@ -47,7 +47,7 @@ static GLuint load_shader(const char *src, GLenum type)
 #define MID_AUBERGINE 0.368627451f, 0.152941176f, 0.31372549f
 #define ORANGE        0.866666667f, 0.282352941f, 0.141414141f
 
-int main(void)
+int main(int argc, char *argv[])
 {
     const char vshadersrc[] =
         "attribute vec4 vPosition;            \n"
@@ -82,11 +82,8 @@ int main(void)
     unsigned int width = 512, height = 512;
     GLfloat angle = 0.0f;
 
-    if (!mir_eglapp_init(&width, &height))
-    {
-        printf("Can't initialize EGL\n");
+    if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
-    }
 
     vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
     assert(vshader);
