@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "gbm_display_helpers.h"
+#include "gbm_bypass_renderer.h"
 
 #include <vector>
 #include <memory>
@@ -56,6 +57,8 @@ public:
     void release_current();
     void post_update();
 
+    graphics::Renderer *direct_renderer() { return &bypass_renderer; }
+
     void schedule_set_crtc();
 
 private:
@@ -72,6 +75,7 @@ private:
     helpers::EGLHelper egl;
     geometry::Size size;
     std::atomic<bool> needs_set_crtc;
+    GBMBypassRenderer bypass_renderer;
 };
 
 }
