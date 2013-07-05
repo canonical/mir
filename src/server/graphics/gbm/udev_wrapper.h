@@ -55,6 +55,9 @@ public:
     UdevDevice(UdevDevice const& copy);
     UdevDevice& operator=(UdevDevice const &rhs) noexcept;
 
+    bool operator==(UdevDevice const& rhs);
+    bool operator!=(UdevDevice const& rhs);
+
     char const* subsystem() const;
     char const* devtype() const;
     char const* devpath() const;

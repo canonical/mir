@@ -18,6 +18,7 @@
 
 #include "udev_wrapper.h"
 #include <libudev.h>
+#include <string.h>
 #include <boost/throw_exception.hpp>
 
 namespace mgg = mir::graphics::gbm;
@@ -48,6 +49,17 @@ mgg::UdevDevice& mgg::UdevDevice::operator=(UdevDevice const &rhs) noexcept
     udev_device_unref(dev);
     dev = udev_device_ref(rhs.dev);
     return *this;
+}
+
+bool mgg::UdevDevice::operator==(UdevDevice const& rhs)
+{
+    // The device path is unique
+    return !strcmp(devpath(), rhs.devpath());
+}
+
+bool mgg::UdevDevice::operator!=(UdevDevice const& rhs)
+{
+    return !(*this == rhs);
 }
 
 char const* mgg::UdevDevice::subsystem() const

@@ -113,6 +113,66 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevNode)
     ASSERT_STREQ("/dev/dri/card0", card0.devnode());
 }
 
+TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
+{
+    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
+
+    mgg::UdevContext ctx;
+    mgg::UdevDevice dev(ctx, sysfs_path);
+
+    EXPECT_TRUE(dev == dev);
+}
+
+TEST_F(UdevWrapperTest, UdevDeviceComparisonIsSymmetric)
+{
+    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
+
+    mgg::UdevContext ctx;
+    mgg::UdevDevice same_one(ctx, sysfs_path);
+    mgg::UdevDevice same_two(ctx, sysfs_path);
+
+    EXPECT_TRUE(same_one == same_two);
+    EXPECT_TRUE(same_two == same_one);
+}
+
+TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesCompareFalse)
+{
+    auto path_one = udev_environment.add_device("drm", "card0", NULL, {}, {});
+    auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
+
+    mgg::UdevContext ctx;
+    mgg::UdevDevice dev_one(ctx, path_one);
+    mgg::UdevDevice dev_two(ctx, path_two);
+
+    EXPECT_FALSE(dev_one == dev_two);
+    EXPECT_FALSE(dev_two == dev_one);
+}
+
+TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesAreNotEqual)
+{
+    auto path_one = udev_environment.add_device("drm", "card0", NULL, {}, {});
+    auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
+
+    mgg::UdevContext ctx;
+    mgg::UdevDevice dev_one(ctx, path_one);
+    mgg::UdevDevice dev_two(ctx, path_two);
+
+    EXPECT_TRUE(dev_one != dev_two);
+    EXPECT_TRUE(dev_two != dev_one);    
+}
+
+TEST_F(UdevWrapperTest, UdevDeviceSameDeviceIsNotNotEqual)
+{
+    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
+
+    mgg::UdevContext ctx;
+    mgg::UdevDevice same_one(ctx, sysfs_path);
+    mgg::UdevDevice same_two(ctx, sysfs_path);
+
+    EXPECT_FALSE(same_one != same_two);
+    EXPECT_FALSE(same_two != same_one);
+}
+
 TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
 {
     auto card0_syspath = udev_environment.add_device("drm", "card0", NULL, {}, {});
