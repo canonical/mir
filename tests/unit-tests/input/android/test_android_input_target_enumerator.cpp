@@ -64,17 +64,21 @@ struct StubInputTargets : public mi::InputTargets
 TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
 {
     using namespace ::testing;
-    mtd::StubInputChannel t1, t2;
+    std::shared_ptr<mi::InputChannel> t1, t2;
+    t1 = std::make_shared<mtd::StubInputChannel>();
+    t2 = std::make_shared<mtd::StubInputChannel>();
     mtd::MockWindowHandleRepository repository;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle1 = new mtd::StubWindowHandle;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle2 = new mtd::StubWindowHandle;
-    StubInputTargets targets({mt::fake_shared(t1), mt::fake_shared(t2)});
+    StubInputTargets targets({t1, t2});
 
     Sequence seq2;
-    EXPECT_CALL(repository, handle_for_channel(mt::fake_shared(t1)))
+    EXPECT_CALL(repository, handle_for_channel(
+        std::const_pointer_cast<mi::InputChannel const>(t1)))
         .InSequence(seq2)
         .WillOnce(Return(stub_window_handle1)); 
-    EXPECT_CALL(repository, handle_for_channel(mt::fake_shared(t2)))
+    EXPECT_CALL(repository, handle_for_channel(
+        std::const_pointer_cast<mi::InputChannel const>(t2)))
         .InSequence(seq2)
         .WillOnce(Return(stub_window_handle2));
 

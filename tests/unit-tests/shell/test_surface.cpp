@@ -486,13 +486,13 @@ TEST_F(ShellSurface, set_input_region_throw_behavior)
         msh::a_surface());
     
     EXPECT_NO_THROW({
-            test.set_input_region(std::shared_ptr<mi::InputRegion>());
+            test.set_input_region(std::vector<geom::Rectangle>{});
     });
 
     surface_builder.reset_surface();
 
     EXPECT_THROW({
-            test.set_input_region(std::shared_ptr<mi::InputRegion>());
+            test.set_input_region(std::vector<geom::Rectangle>{});
     }, std::runtime_error);
 }
 

@@ -25,6 +25,7 @@
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
+#if 0
 TEST(RectanglesInputRegion, hit_testing)
 {
     static std::initializer_list<geom::Rectangle> const rectangles = {
@@ -39,3 +40,4 @@ TEST(RectanglesInputRegion, hit_testing)
     EXPECT_FALSE(region.contains({geom::X{11}, geom::Y{5}}));
     EXPECT_FALSE(region.contains({geom::X{5}, geom::Y{11}}));
 }
+#endif

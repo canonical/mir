@@ -39,10 +39,6 @@ struct StubInputChannel : public input::InputChannel
      : StubInputChannel(0)
     {
     }
-    std::shared_ptr<input::InputRegion> input_region() const override
-    {
-        return std::shared_ptr<input::InputRegion>();
-    }
 
     int client_fd() const override
     {
