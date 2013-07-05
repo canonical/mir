@@ -37,6 +37,7 @@ struct MockSurfaceHandle : public mi::SurfaceTarget
     MOCK_CONST_METHOD0(top_left, geom::Point());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(name, std::string const&());
+    MOCK_CONST_METHOD0(input_region, std::shared_ptr<mi::InputRegion>());
 };
 }
 

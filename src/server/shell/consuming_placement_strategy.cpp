@@ -33,27 +33,17 @@ msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::
 
 msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::SurfaceCreationParameters const& request_parameters)
 {
-    // We would like to try to fill placement requests
     auto placed_parameters = request_parameters;
 
     auto input_width = request_parameters.size.width.as_uint32_t();
     auto input_height = request_parameters.size.height.as_uint32_t();
     auto view_area = display_area->view_area();
 
-    // If we have a size request of course we will attempt to fill it
-    // (consuming-mode.feature: l12)
-    //
-    // TODO: It seems a little strange that we allow one dimension to be 0
-    // but this does not seem like the right place to correct for that.
     if (input_width != 0 || input_height != 0)
     {
-        // However, we should clip the request to the display size
-        // (consuming-mode.feature: l21)
         placed_parameters.size.width = geom::Width{std::min(input_width, view_area.size.width.as_uint32_t())};
         placed_parameters.size.height = geom::Height{std::min(input_height, view_area.size.height.as_uint32_t())};
     }
-    // Otherwise we consume the entire viewable area
-    // (consuming-mode.feature: l5)
     else
     {
         placed_parameters.size = view_area.size;
