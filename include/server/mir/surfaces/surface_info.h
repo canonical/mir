@@ -28,32 +28,30 @@
 
 namespace mir
 {
-namespace input
-{
-class InputRegion;
-}
 namespace surfaces
 {
-//TODO: (kdub) as this interface grows, should we split into a read-only interface and a mutator? 
-class SurfaceInfo 
+class SurfaceInfo
 {
-public:
-    virtual geometry::Point top_left() const = 0;
-    virtual geometry::Size size() const = 0;
+    virtual geometry::Rectangle size_and_position() const = 0;
     virtual std::string const& name() const = 0;
-
-    //input
-    virtual bool contains(geometry::Point const& point) const = 0;
-    virtual void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) = 0;
-
-    //mutators
-    virtual void set_top_left(geometry::Point) = 0;
 
 protected:
     SurfaceInfo() = default; 
     virtual ~SurfaceInfo() = default;
     SurfaceInfo(const SurfaceInfo&) = delete;
     SurfaceInfo& operator=(const SurfaceInfo& ) = delete;
+};
+
+class SurfaceInfoControl : public SurfaceInfo
+{
+public:
+    virtual void set_top_left(geometry::Point) = 0;
+
+protected:
+    SurfaceInfoControl() = default; 
+    virtual ~SurfaceInfoControl() = default;
+    SurfaceInfoControl(const SurfaceInfoControl&) = delete;
+    SurfaceInfoControl& operator=(const SurfaceInfoControl& ) = delete;
 };
 
 }

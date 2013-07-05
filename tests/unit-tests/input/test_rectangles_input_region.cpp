@@ -44,7 +44,20 @@ struct InputSurfaceInfo : public testing::Test
     mtd::MockSurfaceInfo primitive_info;
 };
 
-TEST(InputSurfaceInfo, default_region_is_surface_rectangle)
+TEST_F(InputSurfaceInfo, rect_comes_from_shared_data)
+{
+    using namespace testing;
+
+    geom::Rectangle rect{primitive_pt, primitive_sz};
+    EXPECT_CALL(primitive_info, size_and_position())
+        .Times(AtLeast(1))
+        .WillOnce(Return(rect));
+    mi::SurfaceDataController input_info(mt::fake_shared(primitive_info));
+
+    EXPECT_EQ(rect, input_info.size_and_position());
+}
+
+TEST_F(InputSurfaceInfo, default_region_is_surface_rectangle)
 {
     mi::SurfaceDataController input_info(mt::fake_shared(primitive_info));
 
@@ -68,7 +81,7 @@ TEST(InputSurfaceInfo, default_region_is_surface_rectangle)
     }
 }
 
-TEST(InputSurfaceInfo, set_input_region)
+TEST_F(InputSurfaceInfo, set_input_region)
 {
     std::vector<geom::Rectangle> const rectangles = {
         {{geom::X{0}, geom::Y{0}}, {geom::Width{1}, geom::Height{1}}},
