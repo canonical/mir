@@ -58,7 +58,7 @@ public:
 
     virtual void bind_to_texture();
 
-    virtual void* native_buffer() { return gbm_handle.get(); }
+    virtual void* native_buffer() override;
 
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;

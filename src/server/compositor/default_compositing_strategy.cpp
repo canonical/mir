@@ -70,12 +70,15 @@ struct BypassFilter : public mc::FilterForRenderables
     bool operator()(mg::Renderable& renderable)
     {
         // TODO
-        auto reg = renderable.graphic_region();
-        native_bo = reg->native_buffer();
-        if (native_bo)
+        if (!bypassed)
         {
-            bypassed = true;
-            return true;
+            auto reg = renderable.graphic_region();
+            native_bo = reg->native_buffer();  // FIXME: always NULL
+            if (native_bo)
+            {
+                bypassed = true;
+                return true;
+            }
         }
         return false;
     }

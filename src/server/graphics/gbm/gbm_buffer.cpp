@@ -29,6 +29,7 @@
 
 #include <limits>
 #include <stdexcept>
+#include <cassert>
 
 namespace mc=mir::compositor;
 namespace mgg=mir::graphics::gbm;
@@ -131,4 +132,11 @@ std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
     temp->fd[0] = prime_fd;
     temp->stride = stride().as_uint32_t();
     return temp;
+}
+
+void* mgg::GBMBuffer::native_buffer()
+{
+    struct gbm_bo *bo = gbm_handle.get();
+    assert(bo != NULL);
+    return bo;
 }
