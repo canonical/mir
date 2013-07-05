@@ -74,6 +74,7 @@ pushd ${1} > /dev/null
         libgles2-mesa-dev
         libxkbcommon0
         libxkbcommon-dev
+        libumockdev-dev
         liblttng-ust0
         liburcu1
         libuuid1
