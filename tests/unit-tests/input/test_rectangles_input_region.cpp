@@ -14,30 +14,90 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_test_doubles/mock_surface_info.h"
 #include "mir/input/rectangles_input_region.h"
 #include "mir/geometry/rectangle.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace mtd = mir::test::doubles;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-#if 0
-TEST(RectanglesInputRegion, hit_testing)
+struct InputSurfaceInfo : public testing::Test
 {
-    static std::initializer_list<geom::Rectangle> const rectangles = {
-        {{geom::X{5}, geom::Y{5}}, {geom::Width{5}, geom::Height{5}}}
-    };
-    mi::RectanglesInputRegion region(rectangles);
-    
-    EXPECT_TRUE(region.contains({geom::X{5}, geom::Y{5}}));
-    EXPECT_FALSE(region.contains({geom::X{4}, geom::Y{5}}));
-    EXPECT_FALSE(region.contains({geom::X{5}, geom::Y{4}}));
-    EXPECT_TRUE(region.contains({geom::X{10}, geom::Y{10}}));
-    EXPECT_FALSE(region.contains({geom::X{11}, geom::Y{5}}));
-    EXPECT_FALSE(region.contains({geom::X{5}, geom::Y{11}}));
+    void SetUp()
+    {
+        using namespace testing;
+        ON_CALL(primitive_info, size())
+            .WillByDefault(Return(primitive_sz));
+        ON_CALL(primitive_info, top_left())
+            .WillByDefault(Return(primitive_pt));
+    }
+
+    geom::Point primitive_pt{geom::X{1}, geom::Y{1}};
+    geom::Size primitive_sz{geom::Width{1}, geom::Height{1}};
+    mtd::MockSurfaceInfo primitive_info;
+};
+
+TEST(InputSurfaceInfo, default_region_is_surface_rectangle)
+{
+    mi::SurfaceDataController input_info(mt::fake_shared(primitive_info));
+
+    //...
+    //.O.
+    //...
+    for(auto x = 0; x <= 2; x++)
+    {
+        for(auto y = 0; y <= 2; y++)
+        {
+            auto contains = input_info.input_region_contains(geom::X{x}, geom::Y{y});
+            if (( x == 1) && (y == 1))
+            {
+                EXPECT_TRUE(contains);
+            }
+            else
+            {
+                EXPECT_FALSE(contains);
+            }
+        }
+    }
 }
-#endif
+
+TEST(InputSurfaceInfo, set_input_region)
+{
+    std::vector<geom::Rectangle> const rectangles = {
+        {{geom::X{0}, geom::Y{0}}, {geom::Width{1}, geom::Height{1}}},
+        {{geom::X{2}, geom::Y{2}}, {geom::Width{1}, geom::Height{1}}}
+    };
+
+    mi::SurfaceDataController input_info(mt::fake_shared(primitive_info));
+    input_info.set_additional_regions(rectangles);
+
+    //.....
+    //.O...
+    //.....
+    //...O.
+    //.....
+    for(auto x = -1; x <= 3; x++)
+    {
+        for(auto y = -1; y <= 3; y++)
+        {
+            auto contains = input_info.input_region_contains(geom::X{x}, geom::Y{y});
+            if ((x == 0) && (y == 0) ||
+                (x == 2) && (y == 2))
+            {
+                EXPECT_TRUE(contains);
+            }
+            else
+            {
+                EXPECT_FALSE(contains);
+            }
+            }
+        }
+    }
+}
