@@ -58,6 +58,7 @@ public:
     char const* subsystem() const;
     char const* devtype() const;
     char const* devpath() const;
+    char const* devnode() const;
 
     friend class UdevEnumerator;
 private:

@@ -65,6 +65,11 @@ char const* mgg::UdevDevice::devpath() const
     return udev_device_get_devpath(dev);
 }
 
+char const* mgg::UdevDevice::devnode() const
+{
+    return udev_device_get_devnode(dev);
+}
+
 ////////////////////////
 //    UdevEnumerator
 ////////////////////////

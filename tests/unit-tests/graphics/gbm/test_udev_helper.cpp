@@ -103,6 +103,16 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevPath)
     ASSERT_STREQ("/devices/card0", dev.devpath());
 }
 
+TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevNode)
+{
+    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVNAME", "/dev/dri/card0"});
+
+    mgg::UdevContext ctx;
+    mgg::UdevDevice card0(ctx, sysfs_path);
+
+    ASSERT_STREQ("/dev/dri/card0", card0.devnode());
+}
+
 TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
 {
     auto card0_syspath = udev_environment.add_device("drm", "card0", NULL, {}, {});
