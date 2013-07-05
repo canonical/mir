@@ -26,11 +26,6 @@ mi::SurfaceDataStorage::SurfaceDataStorage(std::shared_ptr<surfaces::SurfaceInfo
     : surface_info(surface_info),
       input_rectangles{surface_info->size_and_position()}
 {
-    printf("RECT... %i %i %i %i\n", input_rectangles[0].top_left.x.as_uint32_t(),
-                                    input_rectangles[0].top_left.y.as_uint32_t(),
-                                    input_rectangles[0].size.width.as_uint32_t(),
-                                    input_rectangles[0].size.height.as_uint32_t());
-    input_rectangles[0].top_left = geom::Point{geom::X{0}, geom::Y{0}};
 }
 
 geom::Rectangle mi::SurfaceDataStorage::size_and_position() const
@@ -52,6 +47,8 @@ bool rectangle_contains_point(geom::Rectangle const& rectangle, uint32_t px, uin
     auto height = rectangle.size.height.as_uint32_t();
     auto x = rectangle.top_left.x.as_uint32_t();
     auto y = rectangle.top_left.y.as_uint32_t();
+
+    //TODO: what if (width == 0) || (height == 0) ?
     
     if (px < x)
         return false;
@@ -71,11 +68,9 @@ bool mi::SurfaceDataStorage::input_region_contains(geom::Point const& point) con
     {
         if (rectangle_contains_point(rectangle, point.x.as_uint32_t(), point.y.as_uint32_t()))
         {
-            printf("TRUTH.\n");
             return true;
         } 
     }
-            printf("FALSE.\n");
     return false;
 }
 

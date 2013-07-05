@@ -22,6 +22,7 @@
 #include "mir/input/surface_data_storage.h"
 #include "mir/geometry/rectangle.h"
 
+#include <algorithm>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -57,20 +58,22 @@ TEST_F(InputSurfaceInfo, rect_comes_from_shared_data)
     EXPECT_EQ(primitive_rect, input_info.size_and_position());
 }
 
+// a 1x1 window at (1,1) will get events at (1,1), (1,2) (2,1), (2,2)
 TEST_F(InputSurfaceInfo, default_region_is_surface_rectangle)
 {
     mi::SurfaceDataStorage input_info(mt::fake_shared(primitive_info));
+    std::initializer_list <geom::Point> contained_pt{geom::Point{geom::X{1}, geom::Y{1}},
+                                       geom::Point{geom::X{1}, geom::Y{2}},
+                                       geom::Point{geom::X{2}, geom::Y{1}},
+                                       geom::Point{geom::X{2}, geom::Y{2}}};
 
-    //...
-    //.O.
-    //...
-    for(auto x = 0; x <= 2; x++)
+    for(auto x = 0; x <= 3; x++)
     {
-        for(auto y = 0; y <= 2; y++)
+        for(auto y = 0; y <= 3; y++)
         {
-            auto contains = input_info.input_region_contains(
-                                geom::Point{geom::X{x}, geom::Y{y}});
-            if (( x == 1) && (y == 1))
+            auto test_pt = geom::Point{geom::X{x}, geom::Y{y}};
+            auto contains = input_info.input_region_contains(test_pt);
+            if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);
             }
@@ -82,29 +85,36 @@ TEST_F(InputSurfaceInfo, default_region_is_surface_rectangle)
     }
 }
 
+
 TEST_F(InputSurfaceInfo, set_input_region)
 {
     std::vector<geom::Rectangle> const rectangles = {
-        {{geom::X{0}, geom::Y{0}}, {geom::Width{1}, geom::Height{1}}},
-        {{geom::X{2}, geom::Y{2}}, {geom::Width{1}, geom::Height{1}}}
+        {{geom::X{0}, geom::Y{0}}, {geom::Width{1}, geom::Height{1}}}, //region0
+        {{geom::X{1}, geom::Y{1}}, {geom::Width{1}, geom::Height{1}}}  //region1
     };
 
     mi::SurfaceDataStorage input_info(mt::fake_shared(primitive_info));
     input_info.set_input_region(rectangles);
 
-    //.....
-    //.O...
-    //.....
-    //...O.
-    //.....
-    for(auto x = -1; x <= 3; x++)
+    std::initializer_list <geom::Point> contained_pt{//region0 points
+                                                     geom::Point{geom::X{0}, geom::Y{0}},
+                                                     geom::Point{geom::X{0}, geom::Y{1}},
+                                                     geom::Point{geom::X{1}, geom::Y{0}},
+                                                     //overlapping point
+                                                     geom::Point{geom::X{1}, geom::Y{1}},
+                                                     //region1 points
+                                                     geom::Point{geom::X{1}, geom::Y{2}},
+                                                     geom::Point{geom::X{2}, geom::Y{1}},
+                                                     geom::Point{geom::X{2}, geom::Y{2}},
+                                                    };
+
+    for(auto x = 0; x <= 3; x++)
     {
-        for(auto y = -1; y <= 3; y++)
+        for(auto y = 0; y <= 3; y++)
         {
-            auto contains = input_info.input_region_contains(
-                                geom::Point{geom::X{x}, geom::Y{y}});
-            if (((x == 0) && (y == 0)) ||
-                ((x == 2) && (y == 2)))
+            auto test_pt = geom::Point{geom::X{x}, geom::Y{y}};
+            auto contains = input_info.input_region_contains(test_pt);
+            if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);
             }
