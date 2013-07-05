@@ -33,7 +33,7 @@ namespace input
 class SurfaceDataStorage : public SurfaceInfoController 
 {
 public:
-    SurfaceDataStorage(std::shared_ptr<surfaces::SurfaceInfo> const&);
+    SurfaceDataStorage(std::shared_ptr<surfaces::SurfaceInfo> const& surface_info);
 
     geometry::Rectangle size_and_position() const;
     std::string const& name() const;
@@ -43,6 +43,7 @@ public:
 
 private:
     std::shared_ptr<surfaces::SurfaceInfo> surface_info;
+    std::vector<geometry::Rectangle> input_rectangles;
 };
 
 }

@@ -109,8 +109,6 @@ private:
     bool is_hidden;
     unsigned int buffer_count;
     std::function<void()> notify_change;
-
-    std::shared_ptr<input::InputRegion> input_region_;
 };
 
 }

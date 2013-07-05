@@ -214,8 +214,8 @@ int ms::Surface::client_input_fd() const
 
 std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
 {
-    if (!supports_input())
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
+//    if (!supports_input())
+//        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return server_input_channel;
 }
 
