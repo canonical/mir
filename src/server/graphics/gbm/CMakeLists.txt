@@ -32,6 +32,7 @@ add_library(
   internal_client.cpp
   drm_close_threadsafe.cpp
   udev_wrapper.cpp
+  udev_video_devices.cpp
 )
 
 target_link_libraries(

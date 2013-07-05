@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdint.h>
+#include <time.h>
 
 static char const *socket_file = NULL;
 
@@ -93,24 +94,28 @@ int main(int argc, char* argv[])
 {
     MirConnection *connection = 0;
     MirSurface *surface = 0;
+    int swapinterval = 1;
 
     int arg;
     opterr = 0;
-    while ((arg = getopt (argc, argv, "hf:")) != -1)
+    while ((arg = getopt (argc, argv, "hnf:")) != -1)
     {
         switch (arg)
         {
         case 'f':
             socket_file = optarg;
             break;
-
+        case 'n':
+            swapinterval = 0;
+            break;
         case '?':
         case 'h':
         default:
-            puts(argv[0]);
-            puts("Usage:");
-            puts("    -f <socket filename>");
-            puts("    -h: this help text");
+            printf("Usage: %s [<options>]\n"
+                   "    -f <socket filename>  Connect to a specific Mir socket\n"
+                   "    -h  Show this help text\n"
+                   "    -n  Don't sync to vblank\n"
+                   , argv[0]);
             return -1;
         }
     }
@@ -138,19 +143,32 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);
     puts("Surface created");
 
+    mir_surface_set_swapinterval(surface, swapinterval);
+
     uint32_t pattern[2] = {0};
     fill_pattern(pattern, pixel_format);
+
+    time_t lasttime = 0;
+    int lastcount = 0;
+    int count = 0;
 
     MirGraphicsRegion graphics_region;
     int i=0;
     while (1)
     {
         mir_surface_get_graphics_region( surface, &graphics_region);
-        if ((i++ % 2) == 0)
-            render_pattern(&graphics_region, pattern[0]);
-        else
-            render_pattern(&graphics_region, pattern[1]);
+        i++;
+        render_pattern(&graphics_region, pattern[i & 1]);
         mir_surface_swap_buffers_sync(surface);
+
+        count++;
+        time_t now = time(NULL);
+        if (now != lasttime)
+        {
+            printf("%d FPS\n", count - lastcount);
+            lasttime = now;
+            lastcount = count;
+        }
     }
 
     mir_surface_release_sync(surface);

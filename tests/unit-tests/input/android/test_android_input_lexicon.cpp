@@ -229,7 +229,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
     // Common event properties
     EXPECT_EQ(device_id, mir_ev.motion.device_id);
     EXPECT_EQ(source_id, mir_ev.motion.source_id);
-    EXPECT_EQ(action & AMOTION_EVENT_ACTION_MASK, mir_ev.motion.action);
+    EXPECT_EQ(action, mir_ev.motion.action);
     EXPECT_EQ(flags, mir_ev.motion.flags);
     EXPECT_EQ((unsigned int)meta_state, mir_ev.motion.modifiers);
 

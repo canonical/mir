@@ -18,8 +18,10 @@
 
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/communicator.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/main_loop.h"
 
+#include "mir_test/pipe.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
 #include "mir_test_doubles/null_display.h"
@@ -28,6 +30,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <atomic>
+#include <thread>
+#include <chrono>
+
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -35,6 +41,7 @@ namespace mi = mir::input;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -59,10 +66,11 @@ class MockDisplay : public mtd::NullDisplay
 {
 public:
     MockDisplay(std::shared_ptr<mg::Display> const& display,
-                int pause_signal, int resume_signal)
+                int pause_signal, int resume_signal, int fd)
         : display{display},
           pause_signal{pause_signal},
-          resume_signal{resume_signal}
+          resume_signal{resume_signal},
+          fd{fd}
     {
     }
 
@@ -79,6 +87,22 @@ public:
     std::shared_ptr<mg::DisplayConfiguration> configuration() override
     {
         return display->configuration();
+    }
+
+    MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
+
+    void register_configuration_change_handler(
+        mir::MainLoop& main_loop,
+        mg::DisplayConfigurationChangeHandler const& conf_change_handler) override
+    {
+        main_loop.register_fd_handler(
+            {fd},
+            [conf_change_handler](int fd)
+            {
+                char c;
+                if (read(fd, &c, 1) == 1)
+                    conf_change_handler();
+            });
     }
 
     void register_pause_resume_handlers(
@@ -101,6 +125,7 @@ private:
     std::shared_ptr<mg::Display> const display;
     int const pause_signal;
     int const resume_signal;
+    int const fd;
 };
 
 class ServerConfig : public mtf::TestingServerConfiguration
@@ -138,10 +163,10 @@ private:
 };
 
 
-class PauseResumeServerConfig : public mtf::TestingServerConfiguration
+class TestMainLoopServerConfig : public mtf::TestingServerConfiguration
 {
 public:
-    PauseResumeServerConfig()
+    TestMainLoopServerConfig()
         : pause_signal{SIGUSR1}, resume_signal{SIGUSR2}
     {
     }
@@ -153,7 +178,8 @@ public:
             auto display = mtf::TestingServerConfiguration::the_display();
             mock_display = std::make_shared<MockDisplay>(display,
                                                          pause_signal,
-                                                         resume_signal);
+                                                         resume_signal,
+                                                         p.read_fd());
         }
 
         return mock_display;
@@ -203,11 +229,17 @@ public:
         kill(getpid(), resume_signal);
     }
 
+    void emit_configuration_change_event()
+    {
+        if (write(p.write_fd(), "a", 1)) {}
+    }
+
 private:
     std::shared_ptr<MockCompositor> mock_compositor;
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<MockCommunicator> mock_communicator;
 
+    mt::Pipe p;
     int const pause_signal;
     int const resume_signal;
 };
@@ -240,7 +272,7 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
 {
     using namespace testing;
 
-    PauseResumeServerConfig server_config;
+    TestMainLoopServerConfig server_config;
 
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
@@ -281,7 +313,7 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
 {
     using namespace testing;
 
-    PauseResumeServerConfig server_config;
+    TestMainLoopServerConfig server_config;
 
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
@@ -316,7 +348,7 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
 {
     using namespace testing;
 
-    PauseResumeServerConfig server_config;
+    TestMainLoopServerConfig server_config;
 
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
@@ -349,5 +381,50 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
                  {
                     server_config.emit_pause_event();
                     kill(getpid(), SIGTERM);
+                 });
+}
+
+TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
+{
+    using namespace testing;
+
+    TestMainLoopServerConfig server_config;
+    std::atomic<bool> configuration_changed{false};
+
+    auto mock_compositor = server_config.the_mock_compositor();
+    auto mock_display = server_config.the_mock_display();
+    auto mock_communicator = server_config.the_mock_communicator();
+
+    {
+        InSequence s;
+
+        /* Start */
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+
+        /* Configuration change event */
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_display, configure(_)).Times(1);
+        EXPECT_CALL(*mock_compositor, start())
+            .Times(1)
+            .WillOnce(Assign(&configuration_changed, true));
+
+        /* Stop */
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
+    }
+
+    mir::run_mir(server_config,
+                 [&server_config,&configuration_changed](mir::DisplayServer&)
+                 {
+                    std::thread t{
+                        [&server_config,&configuration_changed]
+                        {
+                           server_config.emit_configuration_change_event();
+                           while (!configuration_changed)
+                               std::this_thread::sleep_for(std::chrono::microseconds{500});
+                           kill(getpid(), SIGTERM);
+                        }};
+                    t.detach();
                  });
 }

@@ -39,6 +39,7 @@ class BufferID;
 namespace input
 {
 class InputChannel;
+class InputRegion;
 }
 
 namespace surfaces
@@ -81,8 +82,12 @@ public:
     bool supports_input() const;
     int client_input_fd() const;
     int server_input_fd() const;
+    
+    std::shared_ptr<input::InputRegion> input_region() const;
+    void set_input_region(std::shared_ptr<input::InputRegion> const& region);
 
     void allow_framedropping(bool); 
+
 private:
     std::string surface_name;
     geometry::Point top_left_point;
@@ -100,6 +105,8 @@ private:
     bool is_hidden;
     unsigned int buffer_count;
     std::function<void()> notify_change;
+
+    std::shared_ptr<input::InputRegion> input_region_;
 };
 
 }

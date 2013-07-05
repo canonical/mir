@@ -114,7 +114,8 @@ static unsigned int get_bpp(MirPixelFormat pf)
     }
 }
 
-mir_eglapp_bool mir_eglapp_init(unsigned int *width, unsigned int *height)
+mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
+                                unsigned int *width, unsigned int *height)
 {
     EGLint ctxattribs[] =
     {
@@ -138,6 +139,44 @@ mir_eglapp_bool mir_eglapp_init(unsigned int *width, unsigned int *height)
     EGLint neglconfigs;
     EGLContext eglctx;
     EGLBoolean ok;
+    EGLint swapinterval = 1;
+
+    if (argc > 1)
+    {
+        int i;
+        for (i = 1; i < argc; i++)
+        {
+            mir_eglapp_bool help = 0;
+            const char *arg = argv[i];
+
+            if (arg[0] == '-')
+            {
+                switch (arg[1])
+                {
+                case 'n':
+                    swapinterval = 0;
+                    break;
+                case 'h':
+                default:
+                    help = 1;
+                    break;
+                }
+            }
+            else
+            {
+                help = 1;
+            }
+
+            if (help)
+            {
+                printf("Usage: %s [<options>]\n"
+                       "  -h  Show this help text\n"
+                       "  -n  Don't sync to vblank\n"
+                       , argv[0]);
+                return 0;
+            }
+        }
+    }
 
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
@@ -196,7 +235,7 @@ mir_eglapp_bool mir_eglapp_init(unsigned int *width, unsigned int *height)
     *width = surfaceparm.width;
     *height = surfaceparm.height;
 
-    eglSwapInterval(egldisplay, 1);
+    eglSwapInterval(egldisplay, swapinterval);
 
     running = 1;
 
