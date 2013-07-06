@@ -115,11 +115,12 @@ std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
 
 const glm::mat4& ms::Surface::transformation() const
 {
-    const geom::Size sz = size();
+    auto rect = basic_info->size_and_position();
+    auto sz = rect.size;
 
     if (transformation_dirty || transformation_size != sz)
     {
-        auto pt = basic_info->size_and_position().top_left;
+        auto pt = rect.top_left;
         const glm::vec3 top_left_vec{pt.x.as_int(),
                                      pt.y.as_int(),
                                      0.0f};
@@ -211,17 +212,9 @@ int ms::Surface::client_input_fd() const
 
 std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
 {
-//    if (!supports_input())
-//        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
     return server_input_channel;
 }
 
-#if 0
-std::shared_ptr<mi::InputRegion> ms::Surface::input_region() const
-{
-    return input_region_;
-}
-#endif
 void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     input_info->set_input_region(input_rectangles);

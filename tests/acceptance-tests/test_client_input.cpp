@@ -533,7 +533,6 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     launch_client_process(client_2);
 }
 
-#if 0
 namespace
 {
 struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
@@ -643,4 +642,3 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     } client_config;
     launch_client_process(client_config);
 }
-#endif
