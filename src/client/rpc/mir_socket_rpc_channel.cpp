@@ -160,9 +160,6 @@ void mclr::MirSocketRpcChannel::CallMethod(
 
     rpc_report->invocation_requested(invocation);
 
-    std::ostringstream buffer;
-    invocation.SerializeToOstream(&buffer);
-
     std::shared_ptr<google::protobuf::Closure> callback(
         google::protobuf::NewPermanentCallback(this, &MirSocketRpcChannel::receive_file_descriptors, response, complete));
 
@@ -170,15 +167,15 @@ void mclr::MirSocketRpcChannel::CallMethod(
     auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
-    send_message(buffer.str(), send_buffer, invocation);
+    send_message(invocation, send_buffer, invocation);
 }
 
 void mclr::MirSocketRpcChannel::send_message(
-    std::string const& body,
+    mir::protobuf::wire::Invocation const& body,
     detail::SendBuffer& send_buffer,
     mir::protobuf::wire::Invocation const& invocation)
 {
-    const size_t size = body.size();
+    const size_t size = body.ByteSize();
     const unsigned char header_bytes[2] =
     {
         static_cast<unsigned char>((size >> 8) & 0xff),
@@ -187,19 +184,14 @@ void mclr::MirSocketRpcChannel::send_message(
 
     send_buffer.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
-    std::copy(body.begin(), body.end(), send_buffer.begin() + sizeof header_bytes);
+    body.SerializeToArray(send_buffer.data() + sizeof header_bytes, size);
 
-    boost::asio::async_write(
+    boost::system::error_code error;
+    boost::asio::write(
         socket,
         boost::asio::buffer(send_buffer),
-        boost::bind(&MirSocketRpcChannel::on_message_sent, this,
-            invocation, boost::asio::placeholders::error));
-}
+        error);
 
-void mclr::MirSocketRpcChannel::on_message_sent(
-    mir::protobuf::wire::Invocation const& invocation,
-    boost::system::error_code const& error)
-{
     if (error)
         rpc_report->invocation_failed(invocation, error);
     else
