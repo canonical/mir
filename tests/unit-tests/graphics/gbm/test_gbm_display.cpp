@@ -356,8 +356,7 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     EXPECT_THROW({
         auto platform = create_platform();
-        auto display = create_display(platform);
-    }, std::runtime_error) << "Expected that c'tor of GBMDisplay throws";
+    }, std::runtime_error) << "Expected that c'tor of GBMPlatform throws";
 }
 
 TEST_F(GBMDisplayTest, create_display_gbm_failure)
