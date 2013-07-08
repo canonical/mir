@@ -4,12 +4,12 @@ Debug for XMir {#debug_for_xmir}
 What is XMir ?
 ----------------
 
-In order to help with debug, its important to understand what XMir is and what
-bugs are likely to occur. XMir is not a replacement to X and does not alter
-X or compiz window management functionality in the current Ubuntu stack. XMir
-is an addition to the system. XMir enables enables Mir to be employed as a
-system compositor under the X stack, in this configuration Mir composites
-the greeter and the desktop sessions.
+In order to help with debugging, it's important to understand what XMir is
+and what bugs are likely to occur. XMir is not a replacement to X and does
+not alter X or compiz window management functionality in the current Ubuntu
+stack. XMir is an addition to the system. XMir enables enables Mir to be
+employed as a system compositor under the X stack, in this configuration
+Mir composites the greeter and the desktop sessions.
 
 XMir is currently targeted at the Ubuntu 13.10 release as being the default
 configuration. It currently supports open source graphics drivers based on
@@ -49,11 +49,11 @@ by booting into a standalone X configuration, when you expected XMir.
 2. If you desire to log a bug, please include the log files contained in the
    /var/log/lightdm/ directory. Note, it is good to inspect the last update to
    these files to see if they were written to in your boot attempt,
-   obviously if they were not updated their contents are irrelevant. 
-   The most important of these files is likely the lightdm.log and 
-   unity-system-compositor.log. You are more than welcome to inspect these 
-   files, frequently there will be an error statment in 
-   unity-system-compositor.log which can be traced back into the source code 
+   obviously if they were not updated their contents are irrelevant.
+   The most important of these files is likely the lightdm.log and
+   unity-system-compositor.log. You are more than welcome to inspect these
+   files, frequently there will be an error statment in
+   unity-system-compositor.log which can be traced back into the source code
    for further debug.
 
 3. If you have the experience of booting to a black screen which seems frozen,
