@@ -110,7 +110,6 @@ private:
     mutable glm::mat4 transformation_matrix;
     mutable geometry::Size transformation_size;
     mutable bool transformation_dirty;
-    float alpha_value;
 
     bool is_hidden;
     unsigned int buffer_count;

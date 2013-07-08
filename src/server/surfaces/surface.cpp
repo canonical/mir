@@ -52,7 +52,6 @@ ms::Surface::Surface(
     buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     transformation_dirty(true),
-    alpha_value(1.0f),
     is_hidden(false),
     buffer_count(0),
     notify_change(change_callback)
@@ -96,8 +95,7 @@ void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
 
 void ms::Surface::set_alpha(float alpha_v)
 {
-    alpha_value = alpha_v;
-    notify_change();
+    gfx_info->apply_alpha(alpha_v);
 }
 
 void ms::Surface::set_hidden(bool hide)
@@ -164,7 +162,9 @@ const glm::mat4& ms::Surface::transformation() const
 
 float ms::Surface::alpha() const
 {
-    return alpha_value;
+    //TODO REMOVE THIS FUNCTION. use graphics_info()
+//    return alpha_value;
+        return 1.0f;
 }
 
 bool ms::Surface::should_be_rendered() const

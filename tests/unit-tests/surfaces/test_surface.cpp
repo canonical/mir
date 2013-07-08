@@ -454,6 +454,23 @@ TEST_F(SurfaceCreation, test_surface_compositor_buffer_locks_back_buffer_from_st
     EXPECT_EQ(buffer_resource, comp_resource);
 }
 
+
+TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
+{
+    using namespace testing;
+
+    float alpha = 0.5f;
+    EXPECT_CALL(*mock_graphics_info, apply_alpha(FloatEq(alpha)))
+        .Times(1);
+
+    ms::Surface surf(mock_basic_info,
+                     mock_graphics_info, mock_buffer_stream,
+                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
+                     null_change_cb);
+
+    surf.set_alpha(alpha);
+}
+#if 0
 TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
 {
     using namespace testing;
@@ -483,23 +500,6 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     EXPECT_EQ(alpha, ret_alpha);
 }
-
-TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
-{
-    using namespace testing;
-
-    float alpha = 0.5f;
-    EXPECT_CALL(*mock_graphics_info, apply_alpha(FloatEq(alpha)))
-        .Times(1);
-
-    ms::Surface surf(mock_basic_info,
-                     mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
-
-    surf.set_alpha(alpha);
-}
-#if 0
 TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
 {
     using namespace testing;
