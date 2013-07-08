@@ -192,9 +192,13 @@ void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
     {
         if (!native_buffer)
             bufobj->release();
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
+
+        // FIXME: This is a hack to stop the server dying whenever a bypass
+        //        client exits. We also need to for reset of the CRTC... ?!
+        //BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
+        needs_set_crtc = true;
     }
-    else if (needs_set_crtc)
+    if (needs_set_crtc)
     {
         for (auto& output : outputs)
         {
