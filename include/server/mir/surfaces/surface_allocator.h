@@ -16,33 +16,35 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_FACTORY_H_
-#define MIR_SURFACES_SURFACE_FACTORY_H_
+#ifndef MIR_SURFACES_SURFACE_ALLOCATOR_H_
+#define MIR_SURFACES_SURFACE_ALLOCATOR_H_
 
-#include "mir/shell/surface_creation_parameters.h"
-#include <memory>
-#include <functional>
+#include "mir/surfaces/surface_factory.h"
 
 namespace mir
 {
+namespace input
+{
+class InputChannelFactory;
+}
 namespace surfaces
 {
+class BufferStreamFactory;
 
-class Surface;
-class SurfaceFactory
+class SurfaceAllocator : public SurfaceFactory
 {
 public:
-    SurfaceFactory() {};
-    virtual ~SurfaceFactory() = default;
+    SurfaceAllocator(std::shared_ptr<BufferStreamFactory> const& bb_factory,
+                     std::shared_ptr<input::InputChannelFactory> const& input_factory);
 
-    virtual std::shared_ptr<Surface> create_surface(
-        shell::SurfaceCreationParameters const&, std::function<void()> const&) = 0;
+    std::shared_ptr<Surface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()> const&);
+
 private:
-    SurfaceFactory(const SurfaceFactory&) = delete;
-    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
+    std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
+    std::shared_ptr<input::InputChannelFactory> const input_factory;
 };
 
 }
 }
 
-#endif /* MIR_SURFACES_SURFACE_FACTORY_H_ */
+#endif /* MIR_SURFACES_SURFACE_ALLOCATOR_H_ */

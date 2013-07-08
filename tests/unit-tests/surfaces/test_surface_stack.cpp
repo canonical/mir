@@ -142,7 +142,7 @@ struct StubInputChannel : public mi::InputChannel
 struct MockSurfaceAllocator : public ms::SurfaceFactory
 {
     MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(msh::SurfaceCreationParameters const&,
-                                                              std::function<void()>)); 
+                                                              std::function<void()> const&)); 
 };
 
 static ms::DepthId const default_depth{0};

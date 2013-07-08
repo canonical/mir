@@ -18,7 +18,6 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/buffer_stream_factory.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/surface_state.h"
