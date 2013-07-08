@@ -20,6 +20,7 @@
 #define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
 
 #include "mir/surfaces/surface_info.h"
+#include <memory>
 #include <mutex>
 
 namespace mir
@@ -34,7 +35,7 @@ public:
 
     geometry::Rectangle size_and_position() const;
     std::string const& name() const;
-    void set_top_left(geometry::Point);
+    void move_to(geometry::Point);
 private:
     std::mutex mutable guard;
     std::string surface_name;

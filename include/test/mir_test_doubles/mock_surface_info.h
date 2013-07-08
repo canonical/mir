@@ -48,7 +48,7 @@ public:
     MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(name, std::string const&());
 
-    MOCK_METHOD1(set_top_left, void(geometry::Point));
+    MOCK_METHOD1(move_to, void(geometry::Point));
 };
 
 typedef ::testing::NiceMock<MockSurfaceInfo> StubSurfaceInfo;

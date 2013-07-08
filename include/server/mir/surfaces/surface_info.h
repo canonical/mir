@@ -46,7 +46,7 @@ protected:
 class SurfaceInfoController : public SurfaceInfo
 {
 public:
-    virtual void set_top_left(geometry::Point) = 0;
+    virtual void move_to(geometry::Point) = 0;
 
 protected:
     SurfaceInfoController() = default; 

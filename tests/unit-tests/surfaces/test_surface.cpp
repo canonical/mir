@@ -300,7 +300,7 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     geom::Point p{geom::X{55}, geom::Y{66}};
 
     EXPECT_CALL(mock_callback, call()).Times(1);
-    EXPECT_CALL(*mock_basic_info, set_top_left(p))
+    EXPECT_CALL(*mock_basic_info, move_to(p))
         .Times(1);
 
     ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,

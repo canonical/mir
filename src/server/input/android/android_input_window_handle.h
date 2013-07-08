@@ -28,7 +28,6 @@ namespace droidinput = android;
 namespace mir
 {
 
-
 namespace input
 {
 class SurfaceInfo;

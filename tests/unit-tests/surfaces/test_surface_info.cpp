@@ -52,6 +52,6 @@ TEST_F(SurfaceInfoTest, update_position)
 
     auto new_top_left = geom::Point{geom::X{5}, geom::Y{10}};
     geom::Rectangle rect2{new_top_left, size};
-    storage.set_top_left(new_top_left);
+    storage.move_to(new_top_left);
     EXPECT_EQ(rect2, storage.size_and_position());
 }

@@ -21,16 +21,10 @@
 
 #include "mir/geometry/rectangle.h"
 #include <vector>
-#include <memory>
 #include <string>
 
 namespace mir
 {
-namespace surfaces
-{
-class SurfaceInfo;
-}
-
 namespace input
 {
 class SurfaceInfo 
