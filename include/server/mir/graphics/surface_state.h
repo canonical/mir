@@ -34,7 +34,7 @@ class SurfaceInfo;
 namespace graphics
 {
 
-class SurfaceState 
+class SurfaceState : public SurfaceInfoController 
 {
 public:
     SurfaceState(std::shared_ptr<surfaces::SurfaceInfo> const& basic_info,

@@ -24,6 +24,7 @@
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/compositor/buffer.h"
+#include "mir/graphics/surface_info.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -40,12 +41,14 @@ namespace geom = mir::geometry;
 
 ms::Surface::Surface(
     std::shared_ptr<ms::SurfaceInfoController> const& basic_info,
+    std::shared_ptr<mg::SurfaceInfoController> const& graphics_info,
+    std::shared_ptr<BufferStream> const& buffer_stream,
     std::shared_ptr<mi::SurfaceInfoController> const& input_info,
-    std::shared_ptr<BufferStream> buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
     basic_info(basic_info),
     input_info(input_info),
+    gfx_info(graphics_info),
     buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     transformation_dirty(true),
@@ -65,6 +68,11 @@ void ms::Surface::force_requests_to_complete()
 
 ms::Surface::~Surface()
 {
+}
+
+std::shared_ptr<mg::SurfaceInfo> ms::Surface::graphics_info()
+{
+    return gfx_info;
 }
 
 std::string const& ms::Surface::name() const

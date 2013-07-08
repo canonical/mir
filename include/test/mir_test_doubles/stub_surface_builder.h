@@ -27,6 +27,7 @@
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_info.h"
 #include "mir_test_doubles/mock_input_info.h"
+#include "mir_test_doubles/mock_graphics_info.h"
 
 namespace mir
 {
@@ -48,9 +49,10 @@ public:
     {
         auto info = std::make_shared<MockSurfaceInfo>();
         auto input_info = std::make_shared<MockInputInfo>();
+        auto gfx_info = std::make_shared<MockGraphicsInfo>();
         dummy_surface = std::make_shared<surfaces::Surface>(
-            info, input_info, buffer_stream, 
-            std::shared_ptr<input::InputChannel>(), []{});
+            info, gfx_info, buffer_stream,
+            input_info, std::shared_ptr<input::InputChannel>(), []{});
         return dummy_surface;
     }
 

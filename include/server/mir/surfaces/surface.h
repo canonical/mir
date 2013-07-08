@@ -43,7 +43,11 @@ class InputChannel;
 class InputRegion;
 class SurfaceInfoController;
 }
-
+namespace graphics
+{
+class SurfaceInfo;
+class SurfaceInfoController;
+}
 namespace surfaces
 {
 class SurfaceInfoController;
@@ -54,10 +58,10 @@ class BufferStream;
 class Surface : public graphics::Renderable
 {
 public:
-    //TODO: surfaces::SurfaceInfo shouldn't be here, rather, something like mg::SurfaceInfo
     Surface(std::shared_ptr<surfaces::SurfaceInfoController> const& basic_info,
+            std::shared_ptr<graphics::SurfaceInfoController> const& graphics_info,
+            std::shared_ptr<BufferStream> const& buffer_stream,
             std::shared_ptr<input::SurfaceInfoController> const& input_info,
-            std::shared_ptr<BufferStream> buffer_stream,
             std::shared_ptr<input::InputChannel> const& input_channel,
             std::function<void()> const& change_callback);
 
@@ -91,10 +95,12 @@ public:
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
 
+    std::shared_ptr<graphics::SurfaceInfo> graphics_info();
 private:
     //TODO: surfaces::SurfaceInfo shouldn't be here, rather, something like mg::SurfaceInfo
     std::shared_ptr<surfaces::SurfaceInfoController> basic_info;
     std::shared_ptr<input::SurfaceInfoController> input_info;
+    std::shared_ptr<graphics::SurfaceInfoController> gfx_info;
 
     std::shared_ptr<BufferStream> buffer_stream;
 
