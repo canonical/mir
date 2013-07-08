@@ -51,13 +51,13 @@ mgg::UdevDevice& mgg::UdevDevice::operator=(UdevDevice const &rhs) noexcept
     return *this;
 }
 
-bool mgg::UdevDevice::operator==(UdevDevice const& rhs)
+bool mgg::UdevDevice::operator==(UdevDevice const& rhs) const
 {
     // The device path is unique
     return !strcmp(devpath(), rhs.devpath());
 }
 
-bool mgg::UdevDevice::operator!=(UdevDevice const& rhs)
+bool mgg::UdevDevice::operator!=(UdevDevice const& rhs) const
 {
     return !(*this == rhs);
 }
@@ -117,12 +117,30 @@ void mgg::UdevEnumerator::iterator::increment()
     }
 }
 
-bool mgg::UdevEnumerator::iterator::equal(mgg::UdevEnumerator::iterator const& other) const
+mgg::UdevEnumerator::iterator& mgg::UdevEnumerator::iterator::operator++()
 {
-    return this->entry == other.entry;
+    increment();
+    return *this;
 }
 
-mgg::UdevDevice& mgg::UdevEnumerator::iterator::dereference() const
+mgg::UdevEnumerator::iterator mgg::UdevEnumerator::iterator::operator++(int)
+{
+    auto tmp = *this;
+    increment();
+    return tmp;
+}
+
+bool mgg::UdevEnumerator::iterator::operator==(mgg::UdevEnumerator::iterator const& rhs) const
+{
+    return this->entry == rhs.entry;
+}
+
+bool mgg::UdevEnumerator::iterator::operator!=(mgg::UdevEnumerator::iterator const& rhs) const
+{
+    return !(*this == rhs);
+}
+
+mgg::UdevDevice const& mgg::UdevEnumerator::iterator::operator*() const
 {
     return *current;
 }

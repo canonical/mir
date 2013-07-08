@@ -55,8 +55,8 @@ public:
     UdevDevice(UdevDevice const& copy);
     UdevDevice& operator=(UdevDevice const &rhs) noexcept;
 
-    bool operator==(UdevDevice const& rhs);
-    bool operator!=(UdevDevice const& rhs);
+    bool operator==(UdevDevice const& rhs) const;
+    bool operator!=(UdevDevice const& rhs) const;
 
     char const* subsystem() const;
     char const* devtype() const;
@@ -81,22 +81,24 @@ public:
     void match_sysname(std::string const& sysname);
 
     class iterator : 
-        public boost::iterator_facade<
-                                      iterator,
-                                      UdevDevice,
-                                      boost::forward_traversal_tag
-                                     >
+        public std::iterator<std::input_iterator_tag, UdevDevice>
     {
+    public:
+        iterator& operator++();
+        iterator operator++(int);
+
+        bool operator==(iterator const& rhs) const;
+        bool operator!=(iterator const& rhs) const;
+
+        UdevDevice const& operator*() const;
+
     private:
         friend class UdevEnumerator;
-        friend class boost::iterator_core_access;
 
         iterator ();
         iterator (UdevContext const& ctx, udev_list_entry* entry);
 
         void increment();
-        bool equal(iterator const& other) const;
-        UdevDevice& dereference() const;
 
         UdevContext ctx;
         udev_list_entry* entry;
