@@ -54,7 +54,7 @@ public:
     DRMHelper(const DRMHelper &) = delete;
     DRMHelper& operator=(const DRMHelper&) = delete;
 
-    void setup(UdevContext const& udev);
+    void setup(std::shared_ptr<UdevContext> const& udev);
     int get_authenticated_fd();
     void auth_magic(drm_magic_t magic) const;
 
@@ -66,9 +66,9 @@ public:
 private:
     // TODO: This herustic is temporary; should be replaced with
     // handling >1 DRM device.
-    int is_appropriate_device(UdevContext const& udev, UdevDevice const& dev);
+    int is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& dev);
 
-    int open_drm_device(UdevContext const& udev);
+    int open_drm_device(std::shared_ptr<UdevContext> const& udev);
 };
 
 class GBMHelper

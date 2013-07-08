@@ -49,7 +49,7 @@ TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
     udev_environment.add_device("drm", "fakedev4", NULL, {}, {});
     udev_environment.add_device("drm", "fakedev5", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
     mgg::UdevEnumerator enumerator(ctx);
 
     enumerator.scan_devices();
@@ -72,7 +72,7 @@ TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
     udev_environment.add_device("usb", "fakeusb1", NULL, {}, {});
     udev_environment.add_device("usb", "fakeusb2", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
     mgg::UdevEnumerator devices(ctx);
 
     devices.match_subsystem("drm");
@@ -87,7 +87,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevType)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVTYPE", "drm_minor"});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
 
     mgg::UdevDevice dev(ctx, sysfs_path);
     ASSERT_STREQ("drm_minor", dev.devtype());
@@ -97,7 +97,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevPath)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
 
     mgg::UdevDevice dev(ctx, sysfs_path);
     ASSERT_STREQ("/devices/card0", dev.devpath());
@@ -107,7 +107,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevNode)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVNAME", "/dev/dri/card0"});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
     mgg::UdevDevice card0(ctx, sysfs_path);
 
     ASSERT_STREQ("/dev/dri/card0", card0.devnode());
@@ -117,7 +117,7 @@ TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
     mgg::UdevDevice dev(ctx, sysfs_path);
 
     EXPECT_TRUE(dev == dev);
@@ -127,7 +127,7 @@ TEST_F(UdevWrapperTest, UdevDeviceComparisonIsSymmetric)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
     mgg::UdevDevice same_one(ctx, sysfs_path);
     mgg::UdevDevice same_two(ctx, sysfs_path);
 
@@ -140,7 +140,7 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesCompareFalse)
     auto path_one = udev_environment.add_device("drm", "card0", NULL, {}, {});
     auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
     mgg::UdevDevice dev_one(ctx, path_one);
     mgg::UdevDevice dev_two(ctx, path_two);
 
@@ -153,7 +153,7 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesAreNotEqual)
     auto path_one = udev_environment.add_device("drm", "card0", NULL, {}, {});
     auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
     mgg::UdevDevice dev_one(ctx, path_one);
     mgg::UdevDevice dev_two(ctx, path_two);
 
@@ -165,7 +165,7 @@ TEST_F(UdevWrapperTest, UdevDeviceSameDeviceIsNotNotEqual)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
     mgg::UdevDevice same_one(ctx, sysfs_path);
     mgg::UdevDevice same_two(ctx, sysfs_path);
 
@@ -182,7 +182,7 @@ TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
     udev_environment.add_device("drm", "card0-VGA1", "/sys/devices/card0", {}, {});
     udev_environment.add_device("drm", "card0-LVDS1", "/sys/devices/card0", {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
 
     mgg::UdevEnumerator devices(ctx);
     mgg::UdevDevice drm_device(ctx, card0_syspath);
@@ -201,7 +201,7 @@ TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
 
 TEST_F(UdevWrapperTest, EnumeratorThrowsLogicErrorIfIteratedBeforeScanned)
 {
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
 
     mgg::UdevEnumerator devices(ctx);
 
@@ -211,7 +211,7 @@ TEST_F(UdevWrapperTest, EnumeratorThrowsLogicErrorIfIteratedBeforeScanned)
 
 TEST_F(UdevWrapperTest, EnumeratorLogicErrorHasSensibleMessage)
 {
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
 
     mgg::UdevEnumerator devices(ctx);
     std::string error_msg;
@@ -228,7 +228,7 @@ TEST_F(UdevWrapperTest, EnumeratorLogicErrorHasSensibleMessage)
 
 TEST_F(UdevWrapperTest, EnumeratorEnumeratesEmptyList)
 {
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
 
     mgg::UdevEnumerator devices(ctx);
 
@@ -245,7 +245,7 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
     udev_environment.add_device("drm", "card1", NULL, {}, {});
 
-    mgg::UdevContext ctx;
+    auto ctx = std::make_shared<mgg::UdevContext>();
 
     mgg::UdevEnumerator devices(ctx);
 

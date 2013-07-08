@@ -82,7 +82,8 @@ std::shared_ptr<mgg::InternalNativeDisplay> mgg::GBMPlatform::internal_native_di
 bool mgg::GBMPlatform::internal_display_clients_present;
 mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
                               std::shared_ptr<VirtualTerminal> const& vt)
-    : listener{listener},
+    : udev{std::make_shared<UdevContext>()},
+      listener{listener},
       vt{vt}
 {
     drm.setup(udev);
@@ -108,7 +109,7 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 {
     return std::make_shared<mgg::GBMDisplay>(
         this->shared_from_this(),
-        std::make_shared<UdevVideoDevices>(udev.ctx),
+        std::make_shared<UdevVideoDevices>(udev->ctx),
         listener);
 }
 

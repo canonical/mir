@@ -37,7 +37,7 @@ namespace mggh = mir::graphics::gbm::helpers;
  * DRMHelper *
  *************/
 
-void mggh::DRMHelper::setup(UdevContext const& udev)
+void mggh::DRMHelper::setup(std::shared_ptr<UdevContext> const& udev)
 {
     fd = open_drm_device(udev);
 
@@ -146,7 +146,7 @@ void mggh::DRMHelper::set_master() const
     }
 }
 
-int mggh::DRMHelper::is_appropriate_device(UdevContext const& udev, UdevDevice const& drm_device)
+int mggh::DRMHelper::is_appropriate_device(std::shared_ptr<UdevContext> const& udev, UdevDevice const& drm_device)
 {
     mgg::UdevEnumerator children(udev);
     children.match_parent(drm_device);
@@ -167,7 +167,7 @@ int mggh::DRMHelper::is_appropriate_device(UdevContext const& udev, UdevDevice c
     return ENOMEDIUM;
 }
 
-int mggh::DRMHelper::open_drm_device(UdevContext const& udev)
+int mggh::DRMHelper::open_drm_device(std::shared_ptr<UdevContext> const& udev)
 {    
     int tmp_fd = -1;
     int error;

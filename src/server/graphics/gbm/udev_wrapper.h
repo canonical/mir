@@ -39,8 +39,8 @@ public:
     UdevContext();
     ~UdevContext() noexcept;
 
-    UdevContext(UdevContext const& copy);
-    UdevContext& operator=(UdevContext const& rhs) noexcept;
+    UdevContext(UdevContext const&) = delete;
+    UdevContext& operator=(UdevContext const&) = delete;
 
     udev* ctx;
 };
@@ -48,11 +48,11 @@ public:
 class UdevDevice
 {
 public:
-    UdevDevice(UdevContext const& ctx, std::string const& syspath);
+    UdevDevice(std::shared_ptr<UdevContext> const& ctx, std::string const& syspath);
     ~UdevDevice() noexcept;
 
-    UdevDevice(UdevDevice const& copy);
-    UdevDevice& operator=(UdevDevice const &rhs) noexcept;
+    UdevDevice(UdevDevice const&) = delete;
+    UdevDevice& operator=(UdevDevice const&) = delete;
 
     bool operator==(UdevDevice const& rhs) const;
     bool operator!=(UdevDevice const& rhs) const;
@@ -70,7 +70,7 @@ private:
 class UdevEnumerator
 {
 public:
-    UdevEnumerator(UdevContext const& ctx);
+    UdevEnumerator(std::shared_ptr<UdevContext> const& ctx);
     ~UdevEnumerator() noexcept;
 
     void scan_devices();
@@ -95,11 +95,11 @@ public:
         friend class UdevEnumerator;
 
         iterator ();
-        iterator (UdevContext const& ctx, udev_list_entry* entry);
+        iterator (std::shared_ptr<UdevContext> const& ctx, udev_list_entry* entry);
 
         void increment();
 
-        UdevContext ctx;
+        std::shared_ptr<UdevContext> ctx;
         udev_list_entry* entry;
 
         std::shared_ptr<UdevDevice> current;
@@ -109,7 +109,7 @@ public:
     iterator end();
 
 private:
-    UdevContext ctx;
+    std::shared_ptr<UdevContext> ctx;
     udev_enumerate* enumerator;
     bool scanned;
 };

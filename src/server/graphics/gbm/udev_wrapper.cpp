@@ -27,9 +27,9 @@ namespace mgg = mir::graphics::gbm;
 //    UdevDevice
 /////////////////////
 
-mgg::UdevDevice::UdevDevice(UdevContext const& ctx, std::string const& syspath)
+mgg::UdevDevice::UdevDevice(std::shared_ptr<UdevContext> const& ctx, std::string const& syspath)
 {
-    dev = udev_device_new_from_syspath(ctx.ctx, syspath.c_str());
+    dev = udev_device_new_from_syspath(ctx->ctx, syspath.c_str());
     if (!dev)
         BOOST_THROW_EXCEPTION(std::runtime_error("Udev device does not exist"));
 }
@@ -37,18 +37,6 @@ mgg::UdevDevice::UdevDevice(UdevContext const& ctx, std::string const& syspath)
 mgg::UdevDevice::~UdevDevice() noexcept
 {
     udev_device_unref(dev);
-}
-
-mgg::UdevDevice::UdevDevice(UdevDevice const& copy)
-{
-    dev = udev_device_ref(copy.dev);
-}
-
-mgg::UdevDevice& mgg::UdevDevice::operator=(UdevDevice const &rhs) noexcept
-{
-    udev_device_unref(dev);
-    dev = udev_device_ref(rhs.dev);
-    return *this;
 }
 
 bool mgg::UdevDevice::operator==(UdevDevice const& rhs) const
@@ -90,7 +78,7 @@ mgg::UdevEnumerator::iterator::iterator () : entry(nullptr)
 {
 }
 
-mgg::UdevEnumerator::iterator::iterator (UdevContext const& ctx, udev_list_entry* entry) :
+mgg::UdevEnumerator::iterator::iterator (std::shared_ptr<UdevContext> const& ctx, udev_list_entry* entry) :
     ctx(ctx),
     entry(entry)
 {
@@ -145,9 +133,9 @@ mgg::UdevDevice const& mgg::UdevEnumerator::iterator::operator*() const
     return *current;
 }
 
-mgg::UdevEnumerator::UdevEnumerator(UdevContext const& ctx) :
+mgg::UdevEnumerator::UdevEnumerator(std::shared_ptr<UdevContext> const& ctx) :
     ctx(ctx),
-    enumerator(udev_enumerate_new(ctx.ctx)),
+    enumerator(udev_enumerate_new(ctx->ctx)),
     scanned(false)
 {
 }
@@ -205,16 +193,4 @@ mgg::UdevContext::UdevContext()
 mgg::UdevContext::~UdevContext() noexcept
 {
     udev_unref(ctx);
-}
-
-mgg::UdevContext::UdevContext(UdevContext const& copy) :
-    ctx(udev_ref(copy.ctx))
-{
-}
-
-mgg::UdevContext& mgg::UdevContext::operator=(UdevContext const& rhs) noexcept
-{
-    udev_unref(ctx);
-    ctx = udev_ref(rhs.ctx);
-    return *this;
 }
