@@ -25,6 +25,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_test_doubles/stub_ipc_factory.h"
+#include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_doubles/mock_rpc_report.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
@@ -318,7 +319,8 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
         .Times(2);
 
     auto comms = std::make_shared<mf::ProtobufSocketCommunicator>(
-                    "./test_socket1", ipc_factory, 10,
+                    "./test_socket1", ipc_factory, 
+                    std::make_shared<mtd::StubSessionAuthorizer>(), 10,
                     std::bind(&MockForceRequests::force_requests_to_complete,
                               &mock_force_requests),
                     std::make_shared<mf::NullCommunicatorReport>());

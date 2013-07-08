@@ -42,7 +42,7 @@ struct SocketSession : public MessageSender
         std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions);
 
     ~SocketSession() noexcept;
-
+    
     int id() const { return id_; }
 
     void read_next_message();
@@ -58,7 +58,7 @@ struct SocketSession : public MessageSender
     }
     
     pid_t client_pid();
-
+    
 private:
     void send(std::string const& body);
     void send_fds(std::vector<int32_t> const& fd);

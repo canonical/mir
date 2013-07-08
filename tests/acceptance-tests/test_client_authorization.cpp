@@ -239,6 +239,14 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
                 __PRETTY_FUNCTION__,
                 connection_callback,
                 this));
+            MirSurfaceParameters const parameters =
+            {
+                __PRETTY_FUNCTION__,
+                1, 1,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware
+            };
+            mir_connection_create_surface_sync(connection, &parameters);
             EXPECT_GT(strlen(mir_connection_get_error_message(connection)), static_cast<unsigned int>(0));
             mir_connection_release(connection);
         }

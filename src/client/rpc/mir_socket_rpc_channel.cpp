@@ -29,8 +29,11 @@
 #include "ancillary.h"
 
 #include <boost/bind.hpp>
+#include <boost/throw_exception.hpp>
+
 #include <cstring>
 #include <sstream>
+#include <stdexcept>
 
 namespace mclr = mir::client::rpc;
 
@@ -201,7 +204,20 @@ void mclr::MirSocketRpcChannel::on_message_sent(
     boost::system::error_code const& error)
 {
     if (error)
+    {
         rpc_report->invocation_failed(invocation, error);
+        
+        mir::protobuf::Connection error_response;
+        error_response.set_error("Failed to connect to server");
+        std::string buffer;
+        error_response.SerializeToString(&buffer);
+
+        mir::protobuf::wire::Result error_result;
+        error_result.set_id(invocation.id());
+        error_result.set_response(buffer);
+        
+        pending_calls.complete_response(error_result);
+    }
     else
         rpc_report->invocation_succeeded(invocation);
 }

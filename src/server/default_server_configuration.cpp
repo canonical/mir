@@ -100,16 +100,14 @@ public:
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::ViewableArea> const& graphics_display,
-        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator,
-        std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer) :
+        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
         mp_report(mr_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
         graphics_display(graphics_display),
-        buffer_allocator(buffer_allocator),
-        session_authorizer(session_authorizer)
+        buffer_allocator(buffer_allocator)
     {
     }
 
@@ -121,7 +119,6 @@ private:
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::ViewableArea> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
-    std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         std::shared_ptr<me::EventSink> const& sink)
@@ -133,8 +130,7 @@ private:
             buffer_allocator,
             sm_report,
             sink,
-            resource_cache(),
-            session_authorizer);
+            resource_cache());
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()
@@ -638,8 +634,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                display, allocator,
-                the_session_authorizer());
+                display, allocator);
         });
 }
 

@@ -46,6 +46,7 @@ namespace frontend
 {
 class ResourceCache;
 class ProtobufIpcFactory;
+class SessionAuthorizer;
 
 namespace detail
 {
@@ -62,6 +63,7 @@ public:
     explicit ProtobufSocketCommunicator(
         const std::string& socket_file,
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         int threads,
         std::function<void()> const& force_requests_to_complete,
         std::shared_ptr<CommunicatorReport> const& report);
@@ -71,7 +73,7 @@ public:
 
 private:
     void start_accept();
-    void on_new_connection(const std::shared_ptr<detail::SocketSession>& session, const boost::system::error_code& ec);
+    void on_new_connection(std::shared_ptr<detail::SocketSession>& session, const boost::system::error_code& ec);
     int next_id();
 
     const std::string socket_file;
@@ -79,6 +81,7 @@ private:
     boost::asio::local::stream_protocol::acceptor acceptor;
     std::vector<std::thread> io_service_threads;
     std::shared_ptr<ProtobufIpcFactory> const ipc_factory;
+    std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::atomic<int> next_session_id;
     std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
     std::function<void()> const force_requests_to_complete;

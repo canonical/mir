@@ -33,7 +33,6 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
-#include "mir_test_doubles/stub_session_authorizer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -93,7 +92,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
           mediator{shell, mock_platform, graphics_display,
                    buffer_allocator, report,
                    std::make_shared<NullEventSink>(),
-                   resource_cache, std::make_shared<mtd::StubSessionAuthorizer>()},
+                   resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

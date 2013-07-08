@@ -32,7 +32,6 @@
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
-#include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test/fake_shared.h"
 #include "mir/events/event_sink.h"
@@ -145,7 +144,7 @@ struct SessionMediatorTest : public ::testing::Test
           mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, 
                    std::make_shared<NullEventSink>(),
-                   resource_cache, std::make_shared<mtd::StubSessionAuthorizer>()},
+                   resource_cache},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
