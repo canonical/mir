@@ -27,6 +27,8 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
+#include "mir_test_framework/udev_environment.h"
+
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 
@@ -39,6 +41,7 @@ namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir::mir_test_framework;
 
 namespace
 {
@@ -80,6 +83,8 @@ public:
         .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
 
         setup_sample_modes();
+
+        fake_devices.add_standard_drm_devices();
     }
 
     std::shared_ptr<mgg::GBMPlatform> create_platform()
@@ -110,6 +115,8 @@ public:
     std::vector<drmModeModeInfo> modes0;
     std::vector<mg::DisplayConfigurationMode> conf_modes0;
     std::vector<drmModeModeInfo> modes_empty;
+
+    mtf::UdevEnvironment fake_devices;
 };
 
 }

@@ -46,7 +46,7 @@ void MirWaitHandle::result_received()
     wait_condition.notify_all();
 }
 
-void MirWaitHandle::wait_for_result()
+void MirWaitHandle::wait_for_all()  // wait for all results you expect
 {
     std::unique_lock<std::mutex> lock(guard);
 
@@ -55,5 +55,17 @@ void MirWaitHandle::wait_for_result()
 
     received = 0;
     expecting = 0;
+}
+
+void MirWaitHandle::wait_for_one()  // wait for any single result
+{
+    std::unique_lock<std::mutex> lock(guard);
+
+    while (received == 0)
+        wait_condition.wait(lock);
+
+    received--;
+    if (expecting > 0)
+        expecting--;
 }
 

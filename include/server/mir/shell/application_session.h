@@ -33,15 +33,20 @@ namespace shell
 {
 class SurfaceFactory;
 class Surface;
+class SnapshotStrategy;
 
 class ApplicationSession : public Session
 {
 public:
-    explicit ApplicationSession(std::shared_ptr<SurfaceFactory> const& surface_factory, std::string const& session_name);
+    ApplicationSession(
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::string const& session_name,
+        std::shared_ptr<SnapshotStrategy> const& snapshot_strategy);
 
     ApplicationSession(
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::string const& session_name,
+        std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<events::EventSink> const& sink);
 
     ~ApplicationSession();
@@ -50,6 +55,7 @@ public:
     void destroy_surface(frontend::SurfaceId surface);
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
 
+    void take_snapshot(SnapshotCallback const& snapshot_taken);
     std::shared_ptr<Surface> default_surface() const;
 
     std::string name() const;
@@ -68,6 +74,7 @@ protected:
 private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
+    std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<events::EventSink> const event_sink;
 
     frontend::SurfaceId next_id();

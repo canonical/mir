@@ -23,6 +23,7 @@
 
 #include <stdexcept>
 #include <unistd.h>
+#include <dlfcn.h>
 
 namespace mgg=mir::test::doubles;
 namespace geom = mir::geometry;
@@ -235,6 +236,12 @@ mgg::MockDRM::MockDRM()
 
     ON_CALL(*this, drmModeGetConnector(_, _))
     .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_connector)));
+
+    ON_CALL(*this, drmSetInterfaceVersion(_, _))
+    .WillByDefault(Return(0));
+
+    ON_CALL(*this, drmGetBusid(_))
+    .WillByDefault(WithoutArgs(Invoke([]{ return static_cast<char*>(malloc(10)); })));
 }
 
 mgg::MockDRM::~MockDRM() noexcept
@@ -370,4 +377,69 @@ int drmModeSetCursor(int fd, uint32_t crtcId, uint32_t bo_handle, uint32_t width
 int drmModeMoveCursor(int fd, uint32_t crtcId, int x, int y)
 {
     return global_mock->drmModeMoveCursor(fd, crtcId, x, y);
+}
+
+int drmSetInterfaceVersion(int fd, drmSetVersion* sv)
+{
+    return global_mock->drmSetInterfaceVersion(fd, sv);
+}
+
+char* drmGetBusid(int fd)
+{
+    return global_mock->drmGetBusid(fd);
+}
+
+// We need to wrap open as we sometimes open() the DRM device 
+// We need to explicitly mark this as C because we don't match the
+// libc header; we only care about the three-parameter version
+extern "C" 
+{
+int open(char const* path, int flags, mode_t mode)
+{
+    char const* drm_prefix = "/dev/dri/";
+    if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
+        return global_mock->drmOpen("i915", NULL);
+
+    int (*real_open)(char const *path, int flags, mode_t mode);
+    *(void **)(&real_open) = dlsym(RTLD_NEXT, "open");
+
+    return (*real_open)(path, flags, mode);
+}
+
+int open64(char const* path, int flags, mode_t mode)
+{
+    char const* drm_prefix = "/dev/dri/";
+    if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
+        return global_mock->drmOpen("i915", NULL);
+
+    int (*real_open64)(char const *path, int flags, mode_t mode);
+    *(void **)(&real_open64) = dlsym(RTLD_NEXT, "open64");
+
+    return (*real_open64)(path, flags, mode);
+}
+
+int __open(char const* path, int flags, mode_t mode)
+{
+    char const* drm_prefix = "/dev/dri/";
+    if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
+        return global_mock->drmOpen("i915", NULL);
+
+    int (*real_open)(char const *path, int flags, mode_t mode);
+    *(void **)(&real_open) = dlsym(RTLD_NEXT, "__open");
+
+    return (*real_open)(path, flags, mode);
+}
+
+int __open64(char const* path, int flags, mode_t mode)
+{
+    char const* drm_prefix = "/dev/dri/";
+    if (!strncmp(path, drm_prefix, strlen(drm_prefix)))
+        return global_mock->drmOpen("i915", NULL);
+
+    int (*real_open64)(char const *path, int flags, mode_t mode);
+    *(void **)(&real_open64) = dlsym(RTLD_NEXT, "__open64");
+
+    return (*real_open64)(path, flags, mode);
+}
+
 }

@@ -56,6 +56,7 @@ public:
     /* From DRMAuthenticator */
     void drm_auth_magic(drm_magic_t magic);
 
+    helpers::UdevHelper udev;
     helpers::DRMHelper drm;
     helpers::GBMHelper gbm;
 
@@ -66,6 +67,8 @@ public:
     static bool internal_display_clients_present;
     static std::shared_ptr<InternalNativeDisplay> internal_native_display;
 };
+
+extern "C" int mir_server_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display);
 
 }
 }

@@ -60,6 +60,10 @@ public:
     MOCK_METHOD2(register_signal_handler,
                  void(std::initializer_list<int>,
                       std::function<void(int)> const&));
+
+    MOCK_METHOD2(register_fd_handler,
+                 void(std::initializer_list<int>,
+                      std::function<void(int)> const&));
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,
@@ -115,7 +119,7 @@ public:
             .WillOnce(Return(0));
     }
 
-    void set_up_expectations_for_vt_setup(int vt_num)
+    void set_up_expectations_for_vt_setup(int vt_num, bool activate)
     {
         using namespace testing;
 
@@ -124,6 +128,15 @@ public:
 
         EXPECT_CALL(mock_fops, open(StrEq(ss.str()), _))
             .WillOnce(Return(fake_vt_fd));
+
+        if (activate)
+        {
+            EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_ACTIVATE, vt_num))
+                    .WillOnce(Return(0));
+
+            EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_WAITACTIVE, vt_num))
+                    .WillOnce(Return(0));
+        }
 
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDGETMODE, An<void*>()))
             .WillOnce(DoAll(SetIoctlPointee<int>(fake_kd_mode), Return(0)));
@@ -162,6 +175,23 @@ public:
 };
 
 
+TEST_F(LinuxVirtualTerminalTest, use_provided_vt)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+    set_up_expectations_for_vt_setup(vt_num, true);
+    set_up_expectations_for_vt_teardown();
+
+    auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
+    auto null_report = std::make_shared<mg::NullDisplayReport>();
+
+    mgg::LinuxVirtualTerminal vt{fops, vt_num, null_report};
+}
+
 TEST_F(LinuxVirtualTerminalTest, sets_up_current_vt)
 {
     using namespace testing;
@@ -171,13 +201,13 @@ TEST_F(LinuxVirtualTerminalTest, sets_up_current_vt)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
     auto null_report = std::make_shared<mg::NullDisplayReport>();
 
-    mgg::LinuxVirtualTerminal vt{fops, null_report};
+    mgg::LinuxVirtualTerminal vt{fops, 0, null_report};
 }
 
 TEST_F(LinuxVirtualTerminalTest, failure_to_find_current_vt_throws)
@@ -203,7 +233,7 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_find_current_vt_throws)
     auto null_report = std::make_shared<mg::NullDisplayReport>();
 
     EXPECT_THROW({
-        mgg::LinuxVirtualTerminal vt(fops, null_report);
+        mgg::LinuxVirtualTerminal vt(fops, 0, null_report);
     }, std::runtime_error);
 }
 
@@ -216,7 +246,7 @@ TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
 
     EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
         .WillOnce(Return(0));
@@ -226,7 +256,7 @@ TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
     auto null_report = std::make_shared<mg::NullDisplayReport>();
 
-    mgg::LinuxVirtualTerminal vt(fops, null_report);
+    mgg::LinuxVirtualTerminal vt(fops, 0, null_report);
     vt.set_graphics_mode();
 }
 
@@ -239,7 +269,7 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
 
     EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
         .WillOnce(Return(-1));
@@ -249,7 +279,7 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
     auto null_report = std::make_shared<mg::NullDisplayReport>();
 
-    mgg::LinuxVirtualTerminal vt(fops, null_report);
+    mgg::LinuxVirtualTerminal vt(fops, 0, null_report);
     EXPECT_THROW({
         vt.set_graphics_mode();
     }, std::runtime_error);
@@ -265,14 +295,14 @@ TEST_F(LinuxVirtualTerminalTest, uses_sigusr1_for_switch_handling)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_switch_handler(SIGUSR1);
     set_up_expectations_for_vt_teardown();
 
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
     auto null_report = std::make_shared<mg::NullDisplayReport>();
 
-    mgg::LinuxVirtualTerminal vt(fops, null_report);
+    mgg::LinuxVirtualTerminal vt(fops, 0, null_report);
 
     auto null_handler = [] { return true; };
     vt.register_switch_handlers(mock_main_loop, null_handler, null_handler);
@@ -288,7 +318,7 @@ TEST_F(LinuxVirtualTerminalTest, allows_vt_switch_on_switch_away_handler_success
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_switch_handler(SIGUSR1);
 
     EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
@@ -298,7 +328,7 @@ TEST_F(LinuxVirtualTerminalTest, allows_vt_switch_on_switch_away_handler_success
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
     auto null_report = std::make_shared<mg::NullDisplayReport>();
 
-    mgg::LinuxVirtualTerminal vt(fops, null_report);
+    mgg::LinuxVirtualTerminal vt(fops, 0, null_report);
 
     auto succeeding_handler = [] { return true; };
     vt.register_switch_handlers(mock_main_loop, succeeding_handler, succeeding_handler);
@@ -318,7 +348,7 @@ TEST_F(LinuxVirtualTerminalTest, disallows_vt_switch_on_switch_away_handler_fail
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_switch_handler(SIGUSR1);
 
     /* First switch away attempt */
@@ -335,7 +365,7 @@ TEST_F(LinuxVirtualTerminalTest, disallows_vt_switch_on_switch_away_handler_fail
 
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
 
-    mgg::LinuxVirtualTerminal vt(fops, mt::fake_shared(mock_report));
+    mgg::LinuxVirtualTerminal vt(fops, 0, mt::fake_shared(mock_report));
 
     auto failing_handler = [] { return false; };
     vt.register_switch_handlers(mock_main_loop, failing_handler, failing_handler);
@@ -357,7 +387,7 @@ TEST_F(LinuxVirtualTerminalTest, reports_failed_vt_switch_back_attempt)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_switch_handler(SIGUSR1);
 
     /* Switch away */
@@ -371,7 +401,7 @@ TEST_F(LinuxVirtualTerminalTest, reports_failed_vt_switch_back_attempt)
 
     auto fops = mt::fake_shared<mgg::VTFileOperations>(mock_fops);
 
-    mgg::LinuxVirtualTerminal vt(fops, mt::fake_shared(mock_report));
+    mgg::LinuxVirtualTerminal vt(fops, 0, mt::fake_shared(mock_report));
 
     auto succeeding_handler = [] { return true; };
     auto failing_handler = [] { return false; };

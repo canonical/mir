@@ -25,6 +25,9 @@
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+//for GL extensions
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 namespace mir
 {
@@ -84,9 +87,9 @@ public:
 
     MOCK_METHOD0(eglGetError, EGLint (void));
 
-    /* extensions */
     MOCK_METHOD5(eglCreateImageKHR, EGLImageKHR(EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint*));
     MOCK_METHOD2(eglDestroyImageKHR,EGLBoolean(EGLDisplay, EGLImageKHR));
+    MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
 
     EGLDisplay fake_egl_display;
     EGLConfig* fake_configs;

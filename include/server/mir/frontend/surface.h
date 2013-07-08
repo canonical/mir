@@ -53,10 +53,7 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
 
-    // TODO client code always (and necessarily) calls advance_client_buffer()
-    // TODO and then client_buffer(). That's a bad interface.
-    virtual void advance_client_buffer() = 0;
-    virtual std::shared_ptr<compositor::Buffer> client_buffer() const = 0;
+    virtual std::shared_ptr<compositor::Buffer> advance_client_buffer() = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;

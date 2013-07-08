@@ -26,9 +26,20 @@ namespace mir
 namespace client
 {
 
+/**
+ * Factory for creating the native client platform.
+ * \ingroup platform_enablement
+ */
 class NativeClientPlatformFactory : public ClientPlatformFactory
 {
 public:
+    /**
+     * Creates a client platform.
+     *
+     * This method needs to be implemented by each platform.
+     *
+     * \param [in] context information about the client
+     */
     std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context);
 };
 

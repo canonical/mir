@@ -36,6 +36,9 @@ extern "C" {
  * Request a connection to the Mir server. The supplied callback is called when
  * the connection is established, or fails. The returned wait handle remains
  * valid until the connection has been released.
+ *   \warning callback could be called from another thread. You must do any
+ *            locking appropriate to protect your data accessed in the
+ *            callback.
  *   \param [in] server       File path of the server socket to connect to, or
  *                            NULL to choose the default server
  *   \param [in] app_name     A name referring to the application
@@ -109,6 +112,9 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
  * Request a new Mir surface on the supplied connection with the supplied
  * parameters. The returned handle remains valid until the surface has been
  * released.
+ *   \warning callback could be called from another thread. You must do any
+ *            locking appropriate to protect your data accessed in the
+ *            callback.
  *   \param [in] connection          The connection
  *   \param [in] surface_parameters  Request surface parameters
  *   \param [in] callback            Callback function to be invoked when
@@ -120,7 +126,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 MirWaitHandle *mir_connection_create_surface(
     MirConnection *connection,
     MirSurfaceParameters const *surface_parameters,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void *context);
 
 /**
@@ -136,6 +142,11 @@ MirSurface *mir_connection_create_surface_sync(
 
 /**
  * Set the event handler to be called when events arrive for a surface.
+ *   \warning event_handler could be called from another thread. You must do
+ *            and locking appropriate to protect your data accessed in the
+ *            callback. There is also a chance that different events will be
+ *            called back in different threads, for the same surface,
+ *            simultaneously.
  *   \param [in] surface        The surface
  *   \param [in] event_handler  The event handler to call
  */
@@ -206,29 +217,35 @@ void mir_surface_get_graphics_region(
 
 /**
  * Advance a surface's buffer. The returned handle remains valid until the next
- * call to mir_surface_next_buffer, until the surface has been released or the
+ * call to mir_surface_swap_buffers, until the surface has been released or the
  * connection to the server has been released.
+ *   \warning callback could be called from another thread. You must do any
+ *            locking appropriate to protect your data accessed in the
+ *            callback.
  *   \param [in] surface      The surface
  *   \param [in] callback     Callback function to be invoked when the request
  *                            completes
  *   \param [in,out] context  User data passed to the callback function
  *   \return                  A handle that can be passed to mir_wait_for
  */
-MirWaitHandle *mir_surface_next_buffer(
+MirWaitHandle *mir_surface_swap_buffers(
     MirSurface *surface,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void *context);
 
 /**
- * Advance a surface's buffer as in mir_surface_next_buffer(), but also wait
+ * Advance a surface's buffer as in mir_surface_swap_buffers(), but also wait
  * for the operation to complete.
  *   \param [in] surface  The surface whose buffer to advance
  */
-void mir_surface_next_buffer_sync(MirSurface *surface);
+void mir_surface_swap_buffers_sync(MirSurface *surface);
 
 /**
  * Release the supplied surface and any associated buffer. The returned wait
  * handle remains valid until the connection to the server is released.
+ *   \warning callback could be called from another thread. You must do any
+ *            locking appropriate to protect your data accessed in the
+ *            callback.
  *   \param [in] surface      The surface
  *   \param [in] callback     Callback function to be invoked when the request
  *                            completes
@@ -237,7 +254,7 @@ void mir_surface_next_buffer_sync(MirSurface *surface);
  */
 MirWaitHandle *mir_surface_release(
     MirSurface *surface,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void *context);
 
 /**
@@ -248,10 +265,20 @@ MirWaitHandle *mir_surface_release(
 void mir_surface_release_sync(MirSurface *surface);
 
 /**
- * Wait on the supplied handle until the associated request has completed.
+ * Wait on the supplied handle until all instances of the associated request
+ * have completed.
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
 void mir_wait_for(MirWaitHandle *wait_handle);
+
+/**
+ * Wait on the supplied handle until one instance of the associated request
+ * has completed. Use this instead of mir_wait_for in a threaded environment
+ * to ensure that the act of waiting does not clear all results associated
+ * with the wait handle; only one.
+ *   \param [in] wait_handle  Handle returned by an asynchronous request
+ */
+void mir_wait_for_one(MirWaitHandle *wait_handle);
 
 /**
  * Return the ID of a surface (only useful for debug output).
@@ -292,6 +319,27 @@ MirWaitHandle* mir_surface_set_state(MirSurface *surface,
  *   \return              The state of the surface
  */
 MirSurfaceState mir_surface_get_state(MirSurface *surface);
+
+/**
+ * Set the swapinterval for mir_surface_swap_buffers. EGL users should use
+ * eglSwapInterval directly.
+ * At the time being, only swapinterval of 0 or 1 is supported. 
+ *   \param [in] surface  The surface to operate on
+ *   \param [in] interval The number of vblank signals that
+ *                        mir_surface_swap_buffers will wait for 
+ *   \return              A wait handle that can be passed to mir_wait_for,
+ *                        or NULL if the interval could not be supported 
+ */
+MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
+
+/**
+ * Query the swapinterval that the surface is operating with.
+ * The default interval is 1.
+ *   \param [in] surface  The surface to operate on
+ *   \return              The swapinterval value that the client is operating with.
+ *                        Returns -1 if surface is invalid.
+ */
+int mir_surface_get_swapinterval(MirSurface* surface);
 
 #ifdef __cplusplus
 }

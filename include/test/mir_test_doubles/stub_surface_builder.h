@@ -24,7 +24,9 @@
 #include "mir/surfaces/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 
-#include "mir_test_doubles/null_buffer_bundle.h"
+#include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test_doubles/mock_input_info.h"
 
 namespace mir
 {
@@ -37,14 +39,17 @@ class StubSurfaceBuilder : public shell::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_bundle(std::make_shared<NullBufferBundle>()),
+        buffer_stream(std::make_shared<StubBufferStream>()),
         dummy_surface()
     {
     }
 
-    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const& param)
+    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const&)
     {
-        dummy_surface = std::make_shared<surfaces::Surface>(param.name, param.top_left, buffer_bundle, 
+        auto info = std::make_shared<MockSurfaceInfo>();
+        auto input_info = std::make_shared<MockInputInfo>();
+        dummy_surface = std::make_shared<surfaces::Surface>(
+            info, input_info, buffer_stream, 
             std::shared_ptr<input::InputChannel>(), []{});
         return dummy_surface;
     }
@@ -53,7 +58,7 @@ public:
     {
     }
 private:
-    std::shared_ptr<surfaces::BufferBundle> const buffer_bundle;
+    std::shared_ptr<surfaces::BufferStream> const buffer_stream;
     std::shared_ptr<surfaces::Surface>  dummy_surface;
 };
 }

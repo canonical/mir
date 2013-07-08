@@ -46,7 +46,6 @@ target_link_libraries(
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
@@ -59,7 +58,7 @@ add_library(
 target_link_libraries(
   mir-test-doubles-platform
 
-  ${GTEST_BOTH_LIBRARIES}
+  -ldl
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.

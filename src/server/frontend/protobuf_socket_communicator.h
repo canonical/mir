@@ -41,7 +41,6 @@ class Message;
 
 namespace mir
 {
-namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class ResourceCache;
@@ -52,6 +51,8 @@ namespace detail
 struct SocketSession;
 }
 
+class CommunicatorReport;
+
 class ProtobufSocketCommunicator : public Communicator
 {
 public:
@@ -61,7 +62,8 @@ public:
         const std::string& socket_file,
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
         int threads,
-        std::function<void()> const& force_requests_to_complete);
+        std::function<void()> const& force_requests_to_complete,
+        std::shared_ptr<CommunicatorReport> const& report);
     ~ProtobufSocketCommunicator();
     void start();
     void stop();
@@ -79,6 +81,7 @@ private:
     std::atomic<int> next_session_id;
     std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
     std::function<void()> const force_requests_to_complete;
+    std::shared_ptr<CommunicatorReport> const report;
 };
 
 }

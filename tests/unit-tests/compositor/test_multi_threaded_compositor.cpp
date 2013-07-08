@@ -19,7 +19,7 @@
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/compositing_strategy.h"
 #include "mir/compositor/renderables.h"
-#include "mir/graphics/display.h"
+#include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 
@@ -40,55 +40,31 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubDisplay : public mg::Display
+class StubDisplay : public mtd::NullDisplay
 {
  public:
     StubDisplay(unsigned int nbuffers) : buffers{nbuffers} {}
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         for (auto& db : buffers)
             f(db);
     }
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
-    {
-        return std::shared_ptr<mg::DisplayConfiguration>();
-    }
-    void register_pause_resume_handlers(mir::MainLoop&,
-                                        mg::DisplayPauseHandler const&,
-                                        mg::DisplayResumeHandler const&)
-    {
-    }
-    void pause() {}
-    void resume() {}
-    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 
 private:
     std::vector<mtd::NullDisplayBuffer> buffers;
 };
 
-class StubDisplayWithMockBuffers : public mg::Display
+class StubDisplayWithMockBuffers : public mtd::NullDisplay
 {
  public:
     StubDisplayWithMockBuffers(unsigned int nbuffers) : buffers{nbuffers} {}
-    geom::Rectangle view_area() const { return geom::Rectangle(); }
+
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
     {
         for (auto& db : buffers)
             f(db);
     }
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
-    {
-        return std::shared_ptr<mg::DisplayConfiguration>();
-    }
-    void register_pause_resume_handlers(mir::MainLoop&,
-                                        mg::DisplayPauseHandler const&,
-                                        mg::DisplayResumeHandler const&)
-    {
-    }
-    void pause() {}
-    void resume() {}
-    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 
     void for_each_mock_buffer(std::function<void(mtd::MockDisplayBuffer&)> const& f)
     {
@@ -345,7 +321,7 @@ TEST(MultiThreadedCompositor, surface_update_from_render_doesnt_deadlock)
     compositor.stop();
 }
 
-TEST(MultiThreadedCompositor, releases_display_buffer_context_when_stopping)
+TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 {
     using namespace testing;
 
@@ -358,6 +334,7 @@ TEST(MultiThreadedCompositor, releases_display_buffer_context_when_stopping)
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {
+        EXPECT_CALL(mock_buf, make_current()).Times(1);
         EXPECT_CALL(mock_buf, release_current()).Times(1);
     });
 

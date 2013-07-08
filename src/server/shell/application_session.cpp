@@ -19,6 +19,7 @@
 #include "mir/shell/application_session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
+#include "mir/shell/snapshot_strategy.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -34,9 +35,11 @@ namespace msh = mir::shell;
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name,
+    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<me::EventSink> const& sink) :
     surface_factory(surface_factory),
     session_name(session_name),
+    snapshot_strategy(snapshot_strategy),
     event_sink(sink),
     next_surface_id(0)
 {
@@ -45,8 +48,9 @@ msh::ApplicationSession::ApplicationSession(
 
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::string const& session_name) :
-    ApplicationSession(surface_factory, session_name, std::shared_ptr<me::EventSink>())
+    std::string const& session_name,
+    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy) :
+    ApplicationSession(surface_factory, session_name, snapshot_strategy, std::shared_ptr<me::EventSink>())
 {
 }
 
@@ -89,6 +93,11 @@ std::shared_ptr<mf::Surface> msh::ApplicationSession::get_surface(mf::SurfaceId 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
     return checked_find(id)->second;
+}
+
+void msh::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
+{
+    snapshot_strategy->take_snapshot_of(default_surface(), snapshot_taken);
 }
 
 std::shared_ptr<msh::Surface> msh::ApplicationSession::default_surface() const

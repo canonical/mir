@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     assert(egl_surface != EGL_NO_SURFACE);
 
     context = eglCreateContext(disp, egl_config, EGL_NO_CONTEXT, context_attribs);
-    assert(egl_surface != EGL_NO_CONTEXT);
+    assert(context != EGL_NO_CONTEXT);
 
     rc = eglMakeCurrent(disp, egl_surface, egl_surface, context);
     assert(rc == EGL_TRUE);
@@ -127,9 +127,6 @@ int main(int argc, char* argv[])
         gl_animation.render_gl();
         rc = eglSwapBuffers(disp, egl_surface);
         assert(rc == EGL_TRUE);
-
-        usleep(167);//60fps
-
         gl_animation.step();
     }
 
@@ -142,6 +139,8 @@ int main(int argc, char* argv[])
 
     mir_connection_release(connection);
     puts("Connection released");
+
+    (void)rc;
 
     return 0;
 }

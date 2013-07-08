@@ -18,7 +18,7 @@
 
 /// \example demo_shell.cpp A simple mir shell
 
-#include "application_switcher.h"
+#include "window_manager.h"
 #include "fullscreen_placement_strategy.h"
 
 #include "mir/run_mir.h"
@@ -76,14 +76,15 @@ struct DemoServerConfiguration : mir::DefaultServerConfiguration
 int main(int argc, char const* argv[])
 try
 {
-    auto app_switcher = std::make_shared<me::ApplicationSwitcher>();
-    me::DemoServerConfiguration config(argc, argv, {app_switcher});
-    
-    mir::run_mir(config, [&config, &app_switcher](mir::DisplayServer&)
+    auto wm = std::make_shared<me::WindowManager>();
+    me::DemoServerConfiguration config(argc, argv, {wm});
+
+    mir::run_mir(config, [&config, &wm](mir::DisplayServer&)
         {
             // We use this strange two stage initialization to avoid a circular dependency between the EventFilters
             // and the SessionStore
-            app_switcher->set_focus_controller(config.the_focus_controller());
+            wm->set_focus_controller(config.the_focus_controller());
+            wm->set_session_manager(config.the_session_manager());
         });
     return 0;
 }

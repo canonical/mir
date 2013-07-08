@@ -1,6 +1,6 @@
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
+set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirclient")
 
 configure_file(
@@ -54,6 +54,7 @@ set(
   gbm/gbm_client_buffer_factory.cpp
   gbm/gbm_client_buffer.cpp
   gbm/mesa_native_display_container.cpp
+  gbm/gbm_native_surface.cpp
   ${CLIENT_SOURCES}
 )
 endif()
@@ -69,8 +70,25 @@ set_target_properties(
 
   PROPERTIES
   VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
-  SOVERSION ${MIR_VERSION_MAJOR}
+  SOVERSION 1
 )
+
+#
+# The version of libEGL.so.N installed on the build machine will often link
+# to an older version of libmirclient.so.N than we're trying to build. But if
+# we allow EGL clients to link to both then they will depend on TWO different
+# sonames of mirclient and get linkage errors. This hack ensures that all EGL
+# mir clients in our source tree will only ever link to one version of
+# mirclient; that is the new one here.
+# It might sound nasty, but it's much nicer than having to maintain mirclient
+# and mirserver in different source packages.
+#
+add_custom_target(mirclient_compat_links
+  COMMAND ln -fs libmirclient.so.1 libmirclient.so.0
+  WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+)
+# Ensure mirclient_compat_links exist before any dependents of mirclient
+add_dependencies(mirclient mirclient_compat_links)
 
 set(
   MIR_CLIENT_LIBRARIES
@@ -100,8 +118,8 @@ target_link_libraries(
 
 install(
   TARGETS mirclient
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib)
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit
@@ -110,5 +128,5 @@ install(
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
-  DESTINATION lib/pkgconfig
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )

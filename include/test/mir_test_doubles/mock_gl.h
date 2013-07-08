@@ -20,11 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_GL_H_
 
 #include <gmock/gmock.h>
-
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
 #include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
 
 namespace mir
 {
@@ -38,9 +34,8 @@ class MockGL
 public:
     MockGL();
     ~MockGL();
-    void silence_uninteresting();
 
-    MOCK_METHOD2(glEGLImageTargetTexture2DOES, void(GLenum, GLeglImageOES));
+    MOCK_METHOD0(glGetError, GLenum ());
     MOCK_METHOD1(glGetString, const GLubyte*(GLenum));
     MOCK_METHOD1(glUseProgram, void (GLuint));
     MOCK_METHOD1(glEnable, void (GLenum));
@@ -72,6 +67,10 @@ public:
     MOCK_METHOD3(glGetProgramiv, void (GLuint, GLenum, GLint *));
     MOCK_METHOD4(glGetProgramInfoLog, void (GLuint, GLsizei, GLsizei *, GLchar *));
     MOCK_METHOD9(glTexImage2D, void(GLenum,GLint,GLint,GLsizei,GLsizei,GLint,GLenum,GLenum,const GLvoid*));
+    MOCK_METHOD2(glGenFramebuffers, void(GLsizei, GLuint *));
+    MOCK_METHOD2(glBindFramebuffer, void(GLenum, GLuint));
+    MOCK_METHOD5(glFramebufferTexture2D, void(GLenum, GLenum, GLenum, GLuint, GLint));
+    MOCK_METHOD7(glReadPixels, void(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLvoid*));
 };
 
 }

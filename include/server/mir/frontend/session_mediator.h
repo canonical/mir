@@ -24,6 +24,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -39,6 +40,7 @@ class ViewableArea;
 
 namespace compositor
 {
+class Buffer;
 class GraphicBufferAllocator;
 }
 
@@ -67,6 +69,8 @@ public:
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<events::EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
+
+    ~SessionMediator() noexcept;
 
     /* Platform independent requests */
     void connect(::google::protobuf::RpcController* controller,
@@ -120,6 +124,9 @@ private:
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 
+    std::shared_ptr<compositor::Buffer> client_buffer_resource;
+
+    std::mutex session_mutex;
     std::shared_ptr<Session> session;
 };
 

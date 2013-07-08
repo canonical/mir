@@ -124,7 +124,7 @@ void mir_connection_release(MirConnection * connection)
     if (!error_connections.contains(connection))
     {
         auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_result();
+        wait_handle->wait_for_all();
     }
     else
     {
@@ -142,7 +142,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 MirWaitHandle* mir_connection_create_surface(
     MirConnection* connection,
     MirSurfaceParameters const* params,
-    mir_surface_lifecycle_callback callback,
+    mir_surface_callback callback,
     void* context)
 {
     if (error_connections.contains(connection)) return 0;
@@ -166,7 +166,7 @@ MirSurface* mir_connection_create_surface_sync(
     MirSurface *surface = nullptr;
 
     mir_wait_for(mir_connection_create_surface(connection, params,
-        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        reinterpret_cast<mir_surface_callback>(assign_result),
         &surface));
 
     return surface;
@@ -180,7 +180,7 @@ void mir_surface_set_event_handler(MirSurface *surface,
 
 MirWaitHandle* mir_surface_release(
     MirSurface * surface,
-    mir_surface_lifecycle_callback callback, void * context)
+    mir_surface_callback callback, void * context)
 {
     return surface->release_surface(callback, context);
 }
@@ -188,7 +188,7 @@ MirWaitHandle* mir_surface_release(
 void mir_surface_release_sync(MirSurface *surface)
 {
     mir_wait_for(mir_surface_release(surface,
-        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+        reinterpret_cast<mir_surface_callback>(assign_result),
         nullptr));
 }
 
@@ -238,22 +238,28 @@ void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * g
     surface->get_cpu_region( *graphics_region);
 }
 
-MirWaitHandle* mir_surface_next_buffer(MirSurface *surface, mir_surface_lifecycle_callback callback, void * context)
+MirWaitHandle* mir_surface_swap_buffers(MirSurface *surface, mir_surface_callback callback, void * context)
 {
     return surface->next_buffer(callback, context);
 }
 
-void mir_surface_next_buffer_sync(MirSurface *surface)
+void mir_surface_swap_buffers_sync(MirSurface *surface)
 {
-    mir_wait_for(mir_surface_next_buffer(surface,
-        reinterpret_cast<mir_surface_lifecycle_callback>(assign_result),
+    mir_wait_for(mir_surface_swap_buffers(surface,
+        reinterpret_cast<mir_surface_callback>(assign_result),
         nullptr));
 }
 
 void mir_wait_for(MirWaitHandle* wait_handle)
 {
     if (wait_handle)
-        wait_handle->wait_for_result();
+        wait_handle->wait_for_all();
+}
+
+void mir_wait_for_one(MirWaitHandle* wait_handle)
+{
+    if (wait_handle)
+        wait_handle->wait_for_one();
 }
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
@@ -307,7 +313,7 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
         if (s == mir_surface_state_unknown)
         {
             surf->configure(mir_surface_attrib_state,
-                            mir_surface_state_unknown)->wait_for_result();
+                            mir_surface_state_unknown)->wait_for_all();
             s = surf->attrib(mir_surface_attrib_state);
         }
 
@@ -315,4 +321,16 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
     }
 
     return state;
+}
+
+MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
+{
+    if ((interval < 0) || (interval > 1))
+        return NULL;
+    return surf ? surf->configure(mir_surface_attrib_swapinterval, interval) : NULL;
+}
+
+int mir_surface_get_swapinterval(MirSurface* surf)
+{
+    return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
 }

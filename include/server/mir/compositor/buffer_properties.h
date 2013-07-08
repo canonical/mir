@@ -27,13 +27,24 @@ namespace mir
 namespace compositor
 {
 
+/**
+ * How a buffer is going to be used.
+ *
+ * The usage is not just a hint; for example, depending on the platform, a
+ * 'hardware' buffer may not support direct pixel access.
+ */
 enum class BufferUsage
 {
     undefined,
+    /** rendering using GL */
     hardware,
+    /** rendering using direct pixel access */
     software
 };
 
+/**
+ * Buffer creation properties.
+ */
 struct BufferProperties
 {
     BufferProperties() :

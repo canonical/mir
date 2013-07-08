@@ -18,19 +18,20 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/swapper_factory.h"
-#include "mir/compositor/buffer_swapper.h"
+#include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/platform.h"
-#include "mir/graphics/platform_ipc_package.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_swapper_factory.h"
+#include "mir_test_doubles/null_platform.h"
+#include "mir_test_doubles/null_display.h"
 
 #include <thread>
 #include <atomic>
@@ -54,34 +55,6 @@ geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
 
-geom::Rectangle const default_view_area = geom::Rectangle{geom::Point(),
-                                                          geom::Size{geom::Width(1600),
-                                                                     geom::Height(1600)}};
-
-struct MockBufferAllocationStrategy : public mc::BufferAllocationStrategy
-{
-    MockBufferAllocationStrategy()
-    {
-        using testing::_;
-        ON_CALL(*this, create_swapper(_, _))
-            .WillByDefault(testing::Invoke(this, &MockBufferAllocationStrategy::on_create_swapper));
-    }
-
-    MOCK_METHOD2(
-        create_swapper,
-        std::unique_ptr<mc::BufferSwapper>(mc::BufferProperties&, mc::BufferProperties const&));
-
-    std::unique_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties& actual,
-                                                         mc::BufferProperties const& requested)
-    {
-        actual = requested;
-        auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
-        auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
-        std::initializer_list<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
-        return std::unique_ptr<mc::BufferSwapper>(
-            new mc::BufferSwapperMulti(list));
-    }
-};
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -118,31 +91,15 @@ namespace mir
 namespace
 {
 
-class StubDisplay : public mg::Display
+class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const
+    geom::Rectangle view_area() const override
     {
-        return default_view_area;
+        return geom::Rectangle{geom::Point(),
+                               geom::Size{geom::Width(1600),
+                                          geom::Height(1600)}};
     }
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
-    {
-        (void)f;
-        std::this_thread::yield();
-    }
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
-    {
-        auto null_configuration = std::shared_ptr<mg::DisplayConfiguration>();
-        return null_configuration;
-    }
-    void register_pause_resume_handlers(mir::MainLoop&,
-                                        mg::DisplayPauseHandler const&,
-                                        mg::DisplayResumeHandler const&)
-    {
-    }
-    void pause() {}
-    void resume() {}
-    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
 };
 
 struct SurfaceSync
@@ -253,10 +210,8 @@ void wait_for_surface_release(SurfaceSync* context)
 }
 }
 
-TEST_F(SurfaceLoop,
-       creating_a_client_surface_allocates_buffer_swapper_on_server)
+TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server)
 {
-
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mc::BufferAllocationStrategy> the_buffer_allocation_strategy()
@@ -264,14 +219,28 @@ TEST_F(SurfaceLoop,
             using namespace testing;
 
             if (!buffer_allocation_strategy)
-                buffer_allocation_strategy = std::make_shared<MockBufferAllocationStrategy>();
+            {
+                using testing::_;
+                buffer_allocation_strategy = std::make_shared<mtd::MockSwapperFactory>();
 
-            EXPECT_CALL(*buffer_allocation_strategy, create_swapper(_, buffer_properties)).Times(1);
-
-            return buffer_allocation_strategy;
+                ON_CALL(*buffer_allocation_strategy, create_swapper_new_buffers(_,_,_))
+                    .WillByDefault(testing::Invoke(this, &ServerConfig::on_create_swapper));
+            }
+                return buffer_allocation_strategy;
         }
 
-        std::shared_ptr<MockBufferAllocationStrategy> buffer_allocation_strategy;
+        std::shared_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties& actual,
+                                                             mc::BufferProperties const& requested,
+                                                             mc::SwapperType)
+        {
+            actual = requested;
+            auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
+            auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
+            std::vector<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
+            return std::make_shared<mc::BufferSwapperMulti>(list, list.size());
+        }
+
+        std::shared_ptr<mtd::MockSwapperFactory> buffer_allocation_strategy;
     } server_config;
 
     launch_server_process(server_config);
@@ -334,11 +303,11 @@ namespace
  */
 struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 {
-    class StubPlatform : public mg::Platform
+    class StubPlatform : public mtd::NullPlatform
     {
      public:
         std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-                const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
         {
             using testing::AtLeast;
 
@@ -347,24 +316,9 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return buffer_allocator;
         }
 
-        std::shared_ptr<mg::Display> create_display()
+        std::shared_ptr<mg::Display> create_display() override
         {
             return std::make_shared<StubDisplay>();
-        }
-
-        std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-        {
-            return std::make_shared<mg::PlatformIPCPackage>();
-        }
-
-        std::shared_ptr<mg::InternalClient> create_internal_client()
-        {
-            return std::shared_ptr<mg::InternalClient>();   
-        }
- 
-        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
-                              std::shared_ptr<mc::Buffer> const&) const
-        {
         }
     };
 
@@ -381,8 +335,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 
 }
 
-TEST_F(SurfaceLoop,
-       creating_a_client_surface_allocates_buffers_on_server)
+TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffers_on_server)
 {
 
     ServerConfigAllocatesBuffersOnServer server_config;
@@ -475,33 +428,18 @@ struct BufferCounterConfig : TestingServerConfiguration
         }
     };
 
-    class StubPlatform : public mg::Platform
+    class StubPlatform : public mtd::NullPlatform
     {
     public:
         std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
-                const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/)
+            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
         {
             return std::make_shared<StubGraphicBufferAllocator>();
         }
 
-        std::shared_ptr<mg::Display> create_display()
+        std::shared_ptr<mg::Display> create_display() override
         {
             return std::make_shared<StubDisplay>();
-        }
-
-        std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
-        {
-            return std::make_shared<mg::PlatformIPCPackage>();
-        }
-
-        std::shared_ptr<mg::InternalClient> create_internal_client()
-        {
-            return std::shared_ptr<mg::InternalClient>();   
-        }
-
-        void fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const&,
-                              std::shared_ptr<mc::Buffer> const&) const
-        {
         }
     };
 

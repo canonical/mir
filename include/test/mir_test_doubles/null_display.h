@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "null_gl_context.h"
 #include <thread>
 
 namespace mir
@@ -42,6 +43,12 @@ class NullDisplay : public graphics::Display
     {
         return std::shared_ptr<graphics::DisplayConfiguration>();
     }
+    void configure(graphics::DisplayConfiguration const&) {}
+    void register_configuration_change_handler(
+        MainLoop&,
+        graphics::DisplayConfigurationChangeHandler const&)
+    {
+    }
     void register_pause_resume_handlers(MainLoop&,
                                         graphics::DisplayPauseHandler const&,
                                         graphics::DisplayResumeHandler const&)
@@ -50,6 +57,10 @@ class NullDisplay : public graphics::Display
     void pause() {}
     void resume() {}
     std::weak_ptr<graphics::Cursor> the_cursor() { return {}; }
+    std::unique_ptr<graphics::GLContext> create_gl_context()
+    {
+        return std::unique_ptr<NullGLContext>{new NullGLContext()};
+    }
 };
 
 }

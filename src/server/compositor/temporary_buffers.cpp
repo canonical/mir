@@ -16,7 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_swapper.h"
+#include "mir/compositor/back_buffer_strategy.h"
+
+#include "buffer_bundle.h"
 #include "temporary_buffers.h"
 
 namespace mc=mir::compositor;
@@ -27,7 +29,7 @@ mc::TemporaryBuffer::TemporaryBuffer(std::shared_ptr<Buffer> const& real_buffer)
 {
 }
 
-mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
+mc::TemporaryClientBuffer::TemporaryClientBuffer(std::shared_ptr<BufferBundle> const& buffer_swapper)
     : TemporaryBuffer(buffer_swapper->client_acquire()),
       allocating_swapper(buffer_swapper)
 {
@@ -39,16 +41,17 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
         swapper->client_release(buffer);
 }
 
-mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(std::shared_ptr<BufferSwapper> const& buffer_swapper)
-    : TemporaryBuffer(buffer_swapper->compositor_acquire()),
-      allocating_swapper(buffer_swapper)
+mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
+    std::shared_ptr<BackBufferStrategy> const& back_buffer_strategy)
+    : TemporaryBuffer(back_buffer_strategy->acquire()),
+      back_buffer_strategy(back_buffer_strategy)
 {
 }
 
 mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
 {
-    if (auto swapper = allocating_swapper.lock())
-        swapper->compositor_release(buffer);
+    if (auto strategy = back_buffer_strategy.lock())
+        strategy->release(buffer);
 }
 
 geom::Size mc::TemporaryBuffer::size() const

@@ -21,6 +21,8 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 
+#include "mir_test_framework/udev_environment.h"
+
 #include "src/server/graphics/gbm/gbm_platform.h"
 #include "src/server/graphics/gbm/gbm_buffer.h"
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
@@ -43,6 +45,7 @@ namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
+namespace mtf=mir::mir_test_framework;
 
 class GBMGraphicBufferBasic : public ::testing::Test
 {
@@ -50,6 +53,8 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
+
+        fake_devices.add_standard_drm_devices();
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::argb_8888;
@@ -68,15 +73,6 @@ protected:
 
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
-
-        typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
-
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglCreateImageKHR)));
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(eglDestroyImageKHR)));
-        ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
-            .WillByDefault(Return(reinterpret_cast<func_ptr_t>(glEGLImageTargetTexture2DOES)));
 
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
                                                       std::make_shared<mtd::NullVirtualTerminal>());
@@ -98,6 +94,8 @@ protected:
     geom::Stride stride;
     mc::BufferUsage usage;
     mc::BufferProperties buffer_properties;
+
+    mtf::UdevEnvironment fake_devices;
 };
 
 TEST_F(GBMGraphicBufferBasic, dimensions_test)
@@ -218,7 +216,7 @@ TEST_F(GBMGraphicBufferBasic, bind_to_texture_uses_egl_image)
         EXPECT_CALL(mock_egl, eglCreateImageKHR(_,_,_,_,_))
             .Times(Exactly(1));
 
-        EXPECT_CALL(mock_gl, glEGLImageTargetTexture2DOES(_,mock_egl.fake_egl_image))
+        EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_,mock_egl.fake_egl_image))
             .Times(Exactly(1));
 
         EXPECT_CALL(mock_egl, eglDestroyImageKHR(_,mock_egl.fake_egl_image))

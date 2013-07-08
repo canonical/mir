@@ -20,6 +20,20 @@
 
 namespace mc = mir::compositor;
 
+
+mc::BufferSwapperSpin::BufferSwapperSpin(
+    std::vector<std::shared_ptr<mc::Buffer>>& buffer_list, size_t swapper_size)
+    : buffer_queue{buffer_list.begin(), buffer_list.end()},
+      in_use_by_client{0},
+      swapper_size{swapper_size}
+{
+    if (swapper_size != 3)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("BufferSwapperSpin is only validated for 3 buffers"));
+    }
+}
+
 std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::client_acquire()
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};
@@ -76,6 +90,25 @@ void mc::BufferSwapperSpin::compositor_release(std::shared_ptr<Buffer> const& re
         buffer_queue.push_front(released_buffer);
 }
 
+void mc::BufferSwapperSpin::force_client_abort()
+{
+}
+
 void mc::BufferSwapperSpin::force_requests_to_complete()
 {
+}
+
+
+void mc::BufferSwapperSpin::end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers,
+                                                size_t& size)
+{
+    std::lock_guard<std::mutex> lg{swapper_mutex};
+
+    while(!buffer_queue.empty())
+    {
+        buffers.push_back(buffer_queue.back());
+        buffer_queue.pop_back();
+    }
+
+    size = swapper_size;
 }

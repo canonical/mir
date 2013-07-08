@@ -20,12 +20,15 @@
 #define MIR_SURFACES_SURFACESTACK_H_
 
 #include "surface_stack_model.h"
+
 #include "mir/compositor/renderables.h"
+#include "mir/surfaces/depth_id.h"
 #include "mir/input/input_targets.h"
 
 #include <memory>
 #include <vector>
 #include <mutex>
+#include <map>
 
 namespace mir
 {
@@ -44,21 +47,21 @@ struct SurfaceCreationParameters;
 namespace input
 {
 class InputChannelFactory;
-class SurfaceTarget;
+class InputChannel;
 }
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
-class BufferBundleFactory;
+class BufferStreamFactory;
 class InputRegistrar;
 class Surface;
 
 class SurfaceStack : public compositor::Renderables, public input::InputTargets, public SurfaceStackModel
 {
 public:
-    explicit SurfaceStack(std::shared_ptr<BufferBundleFactory> const& bb_factory,
+    explicit SurfaceStack(std::shared_ptr<BufferStreamFactory> const& bb_factory,
                           std::shared_ptr<input::InputChannelFactory> const& input_factory,
                           std::shared_ptr<InputRegistrar> const& input_registrar);
     virtual ~SurfaceStack() noexcept(true) {}
@@ -68,12 +71,14 @@ public:
     virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets
-    void for_each(std::function<void(std::shared_ptr<input::SurfaceTarget> const&)> const& callback);
+    void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
-    // From SurfaceStackModel
-    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);
+    // From SurfaceStackModel 
+    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params, DepthId depth);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
+    
+    virtual void raise(std::weak_ptr<Surface> const& surface);
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
@@ -82,10 +87,13 @@ private:
     void emit_change_notification();
 
     std::mutex guard;
-    std::shared_ptr<BufferBundleFactory> const buffer_bundle_factory;
+    std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
-    std::vector<std::shared_ptr<Surface>> surfaces;
+
+    typedef std::vector<std::shared_ptr<Surface>> Layer;
+    std::map<DepthId, Layer> layers_by_depth;
+
     std::mutex notify_change_mutex;
     std::function<void()> notify_change;
 };

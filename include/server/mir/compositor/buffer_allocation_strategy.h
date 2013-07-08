@@ -23,27 +23,36 @@
 
 #include "mir/compositor/buffer.h"
 
+#include <vector>
 #include <memory>
 
 namespace mir
 {
 namespace compositor
 {
+
 class GraphicBufferAllocator;
 class BufferSwapper;
 struct BufferProperties;
 
+enum class SwapperType
+{
+    synchronous,
+    framedropping,
+    bypass
+};
+
 class BufferAllocationStrategy
 {
 public:
-
-    virtual std::unique_ptr<BufferSwapper> create_swapper(
-        BufferProperties& actual_buffer_properties,
-        BufferProperties const& requested_buffer_properties) = 0;
+    virtual std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(BufferProperties const&,
+        std::vector<std::shared_ptr<Buffer>>&, size_t, SwapperType) const = 0;
+    virtual std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
+        BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const = 0;
 
 protected:
-    ~BufferAllocationStrategy() {}
     BufferAllocationStrategy() {}
+    virtual ~BufferAllocationStrategy() { /* TODO: make nothrow */ }
 
     BufferAllocationStrategy(const BufferAllocationStrategy&);
     BufferAllocationStrategy& operator=(const BufferAllocationStrategy& );

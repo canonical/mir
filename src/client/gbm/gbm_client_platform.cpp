@@ -21,6 +21,7 @@
 #include "gbm_client_buffer_factory.h"
 #include "mesa_native_display_container.h"
 #include "drm_fd_handler.h"
+#include "gbm_native_surface.h"
 #include "../mir_connection.h"
 #include "../client_buffer_factory.h"
 #include "../native_client_platform_factory.h"
@@ -129,11 +130,32 @@ std::shared_ptr<mcl::ClientBufferFactory> mclg::GBMClientPlatform::create_buffer
     return std::make_shared<mclg::GBMClientBufferFactory>(drm_fd_handler);
 }
 
+namespace
+{
+struct NativeWindowDeleter
+{
+    NativeWindowDeleter(mclg::GBMNativeSurface* window)
+     : window(window) {}
+
+    void operator()(EGLNativeWindowType* type)
+    {
+        delete type;
+        delete window;
+    }
+
+private:
+    mclg::GBMNativeSurface* window;
+};
+}
+
 std::shared_ptr<EGLNativeWindowType> mclg::GBMClientPlatform::create_egl_native_window(ClientSurface* client_surface)
 {
-    auto window_type = std::make_shared<EGLNativeWindowType>();
-    *window_type = reinterpret_cast<EGLNativeWindowType>(client_surface);
-    return window_type;
+    //TODO: this is awkward on both android and gbm...
+    auto gbm_window = new GBMNativeSurface(*client_surface);
+    auto egl_native_window = new EGLNativeWindowType;
+    *egl_native_window = gbm_window; 
+    NativeWindowDeleter deleter(gbm_window);
+    return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mclg::GBMClientPlatform::create_egl_native_display()

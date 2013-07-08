@@ -39,6 +39,7 @@ class FocusSequence;
 class FocusSetter;
 class Session;
 class InputRegistrar;
+class SnapshotStrategy;
 class SessionListener;
 struct SurfaceCreationParameters;
 
@@ -49,6 +50,7 @@ public:
                             std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<FocusSequence> const& focus_sequence,
                             std::shared_ptr<FocusSetter> const& focus_setter,
+                            std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionListener> const& session_listener);
     virtual ~SessionManager();
 
@@ -59,6 +61,8 @@ public:
                                  SurfaceCreationParameters const& params);
 
     void focus_next();
+    std::weak_ptr<Session> focussed_application() const;
+    void set_focus_to(std::shared_ptr<Session> const& focus);
 
 protected:
     SessionManager(const SessionManager&) = delete;
@@ -69,12 +73,11 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<FocusSequence> const focus_sequence;
     std::shared_ptr<FocusSetter> const focus_setter;
+    std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionListener> const session_listener;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;
-    typedef std::vector<std::pair<int, std::shared_ptr<Session>>> Tags;
-    Tags tags;
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 };

@@ -51,5 +51,5 @@ target_link_libraries(
 )
 
 install(TARGETS mirserverlttng
-  LIBRARY DESTINATION lib
+  LIBRARY DESTINATION ${MIR_TRACEPOINT_LIB_INSTALL_DIR}
 )

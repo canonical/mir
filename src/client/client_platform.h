@@ -31,12 +31,18 @@ class ClientBufferFactory;
 class ClientSurface;
 class ClientContext;
 
+/**
+ * Interface to client-side platform specific support for graphics operations.
+ * \ingroup platform_enablement
+ */
 class ClientPlatform
 {
 public:
     ClientPlatform() = default;
     ClientPlatform(const ClientPlatform& p) = delete;
     ClientPlatform& operator=(const ClientPlatform& p) = delete;
+
+    virtual ~ClientPlatform() { /* TODO: make nothrow */ }
 
     virtual MirPlatformType platform_type() const = 0; 
     virtual std::shared_ptr<ClientBufferFactory> create_buffer_factory() = 0;

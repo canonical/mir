@@ -53,7 +53,7 @@ using namespace ::testing;
 
 struct StubInputTargets : public mi::InputTargets
 {
-    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const&)
+    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const&)
     {
     }
 };
@@ -124,7 +124,7 @@ TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motio
     EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1);
 
     // The stack doesn't like shutting down while events are still moving through
-    EXPECT_CALL(*event_filter, handles(_))
+    EXPECT_CALL(*event_filter, handle(_))
             .WillOnce(mt::ReturnFalseAndWakeUp(wait_condition));
 
     fake_event_hub->synthesize_builtin_cursor_added();

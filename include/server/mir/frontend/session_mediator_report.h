@@ -30,6 +30,8 @@ namespace frontend
 class SessionMediatorReport
 {
 public:
+    virtual ~SessionMediatorReport() { /* TODO: make nothrow */ }
+
     virtual void session_connect_called(std::string const& app_name) = 0;
 
     virtual void session_create_surface_called(std::string const& app_name) = 0;

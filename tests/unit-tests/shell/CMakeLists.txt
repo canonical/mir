@@ -7,6 +7,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_consuming_placement_strategy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_organising_surface_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_threaded_snapshot_strategy.cpp
 )
 
 set(

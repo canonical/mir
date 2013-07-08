@@ -38,10 +38,11 @@ namespace mgg = mir::graphics::gbm;
 
 mgg::LinuxVirtualTerminal::LinuxVirtualTerminal(
     std::shared_ptr<VTFileOperations> const& fops,
+    int vt_number,
     std::shared_ptr<DisplayReport> const& report)
     : fops{fops},
       report{report},
-      vt_fd{fops, open_vt(find_active_vt_number())},
+      vt_fd{fops, open_vt(vt_number)},
       prev_kd_mode{0},
       prev_vt_mode(),
       active{true}
@@ -173,6 +174,13 @@ int mgg::LinuxVirtualTerminal::find_active_vt_number()
 
 int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
 {
+    auto activate = true;
+    if (vt_number <= 0)
+    {
+        vt_number = find_active_vt_number();
+        activate = false;
+    }
+
     std::stringstream vt_path_stream;
     vt_path_stream << "/dev/tty" << vt_number;
 
@@ -187,6 +195,28 @@ int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
                 std::runtime_error("Failed to open current VT"))
                     << boost::errinfo_file_name(active_vt_path)
                     << boost::errinfo_errno(errno));
+    }
+
+    if (activate)
+    {
+        auto status = fops->ioctl(vt_fd, VT_ACTIVATE, vt_number);
+        if (status < 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to activate VT"))
+                        << boost::errinfo_file_name(active_vt_path)
+                        << boost::errinfo_errno(errno));
+        }
+        status = fops->ioctl(vt_fd, VT_WAITACTIVE, vt_number);
+        if (status < 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to wait for VT to become active"))
+                        << boost::errinfo_file_name(active_vt_path)
+                        << boost::errinfo_errno(errno));
+        }
     }
 
     return vt_fd;

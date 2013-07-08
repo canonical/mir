@@ -41,11 +41,17 @@ public:
         std::initializer_list<int> signals,
         std::function<void(int)> const& handler);
 
+    void register_fd_handler(
+        std::initializer_list<int> fd,
+        std::function<void(int)> const& handler);
+
 private:
     class SignalHandler;
+    class FDHandler;
 
     boost::asio::io_service io;
     std::vector<std::unique_ptr<SignalHandler>> signal_handlers;
+    std::vector<std::unique_ptr<FDHandler>> fd_handlers;
 };
 
 }

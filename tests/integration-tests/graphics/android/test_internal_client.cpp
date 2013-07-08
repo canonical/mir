@@ -21,7 +21,7 @@
 #include "src/server/graphics/android/interpreter_cache.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/buffer_stream_factory.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
 #include "mir/graphics/android/mir_native_window.h"
@@ -34,6 +34,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/input/input_channel_factory.h"
+#include "mir/options/program_option.h"
 
 #include "mir_test_doubles/stub_input_registrar.h"
 
@@ -52,6 +53,7 @@ namespace msh=mir::shell;
 namespace mf=mir::frontend;
 namespace mi=mir::input;
 namespace mtd=mir::test::doubles;
+namespace mo=mir::options;
 
 namespace
 {
@@ -89,14 +91,15 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
-    auto buffer_bundle_factory = std::make_shared<mc::BufferBundleManager>(strategy);
-    auto ss = std::make_shared<ms::SurfaceStack>(buffer_bundle_factory, stub_input_factory, stub_input_registrar);
+    auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(strategy);
+    auto ss = std::make_shared<ms::SurfaceStack>(buffer_stream_factory, stub_input_factory, stub_input_registrar);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller);
     auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());
 
+    auto options = std::shared_ptr<mo::ProgramOption>(); 
     auto report = std::shared_ptr<mg::NullDisplayReport>(); 
-    auto platform = mg::create_platform(report);
+    auto platform = mg::create_platform(options, report);
     auto internal_client = platform->create_internal_client();
 
     int major, minor, n;

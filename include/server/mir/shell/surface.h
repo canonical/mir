@@ -20,6 +20,7 @@
 #ifndef MIR_SHELL_SURFACE_H_
 #define MIR_SHELL_SURFACE_H_
 
+#include "mir/shell/surface_buffer_access.h"
 #include "mir/frontend/surface.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/surfaces/surface.h"
@@ -34,6 +35,10 @@ namespace events
 {
 class EventSink;
 }
+namespace input
+{
+class InputRegion;
+}
 
 namespace shell
 {
@@ -41,7 +46,7 @@ class InputTargeter;
 class SurfaceBuilder;
 struct SurfaceCreationParameters;
 
-class Surface : public frontend::Surface
+class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
     Surface(
@@ -54,11 +59,11 @@ public:
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink);
 
-    ~Surface();
+    ~Surface() noexcept;
 
     virtual void hide();
-
     virtual void show();
+    virtual bool visible();
 
     virtual void destroy();
 
@@ -66,25 +71,28 @@ public:
 
     virtual std::string name() const;
 
+    virtual void move_to(geometry::Point const& top_left);
+
     virtual geometry::Size size() const;
     virtual geometry::Point top_left() const;
 
     virtual geometry::PixelFormat pixel_format() const;
 
-    virtual void advance_client_buffer();
-
-    virtual std::shared_ptr<compositor::Buffer> client_buffer() const;
+    virtual void with_most_recent_buffer_do(
+        std::function<void(compositor::Buffer&)> const& exec);
+    virtual std::shared_ptr<compositor::Buffer> advance_client_buffer();
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;
-    virtual int server_input_fd() const;
 
     virtual int configure(MirSurfaceAttrib attrib, int value);
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
     virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
+    virtual void set_input_region(std::vector<geometry::Rectangle> const& region);
 
+    virtual void allow_framedropping(bool); 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);

@@ -19,10 +19,12 @@
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/compositor/buffer_swapper_multi.h"
+#include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/compositor/buffer_id.h"
 #include "mir/geometry/dimensions.h"
+#include "switching_bundle.h"
 
 #include <initializer_list>
 #include <vector>
@@ -30,36 +32,86 @@
 
 namespace mc = mir::compositor;
 
-/* todo: once we move to gcc 4.7 it would be slightly better to have a delegated constructor */
 mc::SwapperFactory::SwapperFactory(
-    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc) :
-    gr_allocator(gr_alloc),
-    number_of_buffers(2)
+        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
+        int number_of_buffers)
+    : gr_allocator(gr_alloc),
+      synchronous_number_of_buffers(number_of_buffers),
+      spin_number_of_buffers(3) //spin algorithm always takes 3 buffers
 {
-    assert(gr_alloc);
 }
 
 mc::SwapperFactory::SwapperFactory(
-    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc, int number_of_buffers) :
-    gr_allocator(gr_alloc),
-    number_of_buffers(number_of_buffers)
+    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc)
+    : SwapperFactory(gr_alloc, 2)
 {
-    assert(gr_alloc);
 }
 
-std::unique_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper(
-    BufferProperties& actual_buffer_properties,
-    BufferProperties const& requested_buffer_properties)
+void mc::SwapperFactory::change_swapper_size(
+    std::vector<std::shared_ptr<mc::Buffer>>& list,
+    size_t const desired_size, size_t current_size, BufferProperties const& buffer_properties) const
 {
-    std::vector<std::shared_ptr<mc::Buffer>> buffers;
-
-    for(auto i=0; i< number_of_buffers; i++)
+    while (current_size < desired_size)
     {
-        buffers.push_back(
-            gr_allocator->alloc_buffer(requested_buffer_properties));
+        list.push_back(gr_allocator->alloc_buffer(buffer_properties));
+        current_size++;
+    }
+ 
+    while (current_size > desired_size)
+    {
+        if (list.empty())
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("SwapperFactory could not change algorithm"));
+        }
+        else
+        {
+            list.pop_back();
+            current_size--;
+        }
+    }
+}
+
+std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buffers(
+    BufferProperties const& buffer_properties, std::vector<std::shared_ptr<Buffer>>& list,
+    size_t buffer_num, SwapperType type) const
+{
+    if (type == mc::SwapperType::synchronous)
+    {
+        change_swapper_size(list, synchronous_number_of_buffers, buffer_num, buffer_properties);
+        return std::make_shared<mc::BufferSwapperMulti>(list, synchronous_number_of_buffers); 
+    }
+    else
+    {
+        change_swapper_size(list, spin_number_of_buffers, buffer_num, buffer_properties);
+        return std::make_shared<mc::BufferSwapperSpin>(list, spin_number_of_buffers);
+    }
+}
+
+std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_new_buffers(
+    BufferProperties& actual_buffer_properties,
+    BufferProperties const& requested_buffer_properties, SwapperType type) const
+{
+    std::vector<std::shared_ptr<mc::Buffer>> list;
+    std::shared_ptr<mc::BufferSwapper> new_swapper;
+
+    if (type == mc::SwapperType::synchronous)
+    {
+        for(auto i=0u; i< synchronous_number_of_buffers; i++)
+        {
+            list.push_back(gr_allocator->alloc_buffer(requested_buffer_properties));
+        }
+        new_swapper = std::make_shared<mc::BufferSwapperMulti>(list, synchronous_number_of_buffers);
+    }
+    else
+    {
+        for(auto i=0u; i < spin_number_of_buffers; i++)
+        {
+            list.push_back(gr_allocator->alloc_buffer(requested_buffer_properties));
+        }
+        new_swapper = std::make_shared<mc::BufferSwapperSpin>(list, spin_number_of_buffers);
     }
 
-    actual_buffer_properties = BufferProperties{buffers[0]->size(), buffers[0]->pixel_format(), requested_buffer_properties.usage};
-
-    return std::unique_ptr<BufferSwapper>(new mc::BufferSwapperMulti(buffers));
+    actual_buffer_properties = BufferProperties{
+        list[0]->size(), list[0]->pixel_format(), requested_buffer_properties.usage};
+    return new_swapper;
 }

@@ -16,7 +16,6 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#include "mir/surfaces/buffer_bundle.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
@@ -26,7 +25,7 @@
 #include "mir/surfaces/surface.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_surface.h"
@@ -51,6 +50,7 @@ struct MockShellSession : public msh::Session
     MOCK_METHOD1(destroy_surface, void(mf::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<mf::Surface>(mf::SurfaceId));
 
+    MOCK_METHOD1(take_snapshot, void(msh::SnapshotCallback const&));
     MOCK_CONST_METHOD0(default_surface, std::shared_ptr<msh::Surface>());
 
     MOCK_CONST_METHOD0(name, std::string());

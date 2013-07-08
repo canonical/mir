@@ -19,11 +19,12 @@
 #include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
+#include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_bundle_manager.h"
+#include "mir/compositor/buffer_stream_factory.h"
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
@@ -39,9 +40,12 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
+#include "mir/shell/threaded_snapshot_strategy.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/gl_pixel_buffer.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
@@ -68,6 +72,8 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/default_configuration.h"
 
+#include <map>
+
 namespace mc = mir::compositor;
 namespace me = mir::events;
 namespace geom = mir::geometry;
@@ -82,6 +88,7 @@ namespace mia = mi::android;
 namespace
 {
 std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
+mir::SharedLibrary const* load_library(std::string const& libname);
 }
 
 namespace
@@ -156,6 +163,9 @@ char const* const off_opt_value = "off";
 char const* const log_opt_value = "log";
 char const* const lttng_opt_value = "lttng";
 
+char const* const platform_graphics_lib = "platform-graphics-lib";
+char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+
 void parse_arguments(
     boost::program_options::options_description desc,
     std::shared_ptr<mir::options::ProgramOption> const& options,
@@ -163,8 +173,6 @@ void parse_arguments(
     char const* argv[])
 {
     namespace po = boost::program_options;
-
-    bool exit_with_helptext = false;
 
     try
     {
@@ -175,19 +183,15 @@ void parse_arguments(
 
         if (options->is_set("help"))
         {
-            exit_with_helptext = true;
+            std::ostringstream help_text;
+            help_text << desc;
+            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
         }
     }
     catch (po::error const& error)
     {
-        exit_with_helptext = true;
-    }
-
-    if (exit_with_helptext)
-    {
         std::ostringstream help_text;
-        help_text << desc;
-
+        help_text << "Failed to parse command line options: " << error.what() << "." << std::endl << desc;
         BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
     }
 }
@@ -212,6 +216,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     add_options()
         ("file,f", po::value<std::string>(),
             "Socket filename")
+        (platform_graphics_lib, po::value<std::string>(),
+            "Library to use for platform graphics support [default=libmirplatformgraphics.so")
         ("enable-input,i", po::value<bool>(),
             "Enable input. [bool:default=true]")
         (display_report_opt, po::value<std::string>(),
@@ -242,7 +248,9 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
             "directory instead of the default logging directory."
             " [string:default=\"\"]")
         ("ipc-thread-pool", po::value<int>(),
-            "threads in frontend thread pool. [int:default=10]");
+            "threads in frontend thread pool. [int:default=10]")
+        ("vt", po::value<int>(),
+            "VT to run on or 0 to use current. [int:default=0]");
 }
 
 boost::program_options::options_description_easy_init mir::DefaultServerConfiguration::add_options()
@@ -288,18 +296,15 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
         });
 }
 
+
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
         [this]()
         {
-            // TODO I doubt we need the extra level of indirection provided by
-            // mg::create_platform() - we just need to move the implementation
-            // of DefaultServerConfiguration::the_graphics_platform() to the
-            // graphics libraries.
-            // Alternatively, if we want to dynamically load the graphics library
-            // then this would be the place to do that.
-            return mg::create_platform(the_display_report());
+            auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
+            auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
+            return create_platform(the_options(), the_display_report());
         });
 }
 
@@ -319,7 +324,7 @@ mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
     return buffer_allocation_strategy(
         [this]()
         {
-             return std::make_shared<mc::SwapperFactory>(the_buffer_allocator());
+            return std::make_shared<mc::SwapperFactory>(the_buffer_allocator());
         });
 }
 
@@ -392,10 +397,32 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
+                the_shell_snapshot_strategy(),
                 the_shell_session_listener());
         });
 }
 
+std::shared_ptr<msh::PixelBuffer>
+mir::DefaultServerConfiguration::the_shell_pixel_buffer()
+{
+    return shell_pixel_buffer(
+        [this]()
+        {
+            return std::make_shared<mg::GLPixelBuffer>(
+                the_display()->create_gl_context());
+        });
+}
+
+std::shared_ptr<msh::SnapshotStrategy>
+mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
+{
+    return shell_snapshot_strategy(
+        [this]()
+        {
+            return std::make_shared<msh::ThreadedSnapshotStrategy>(
+                the_shell_pixel_buffer());
+        });
+}
 
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
@@ -520,7 +547,7 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_stream_factory(), the_input_channel_factory(), the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;
         });
@@ -532,7 +559,7 @@ mir::DefaultServerConfiguration::the_renderables()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_bundle_factory(), the_input_channel_factory(), the_input_registrar());
+            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_stream_factory(), the_input_channel_factory(), the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;
         });
@@ -589,13 +616,13 @@ mir::DefaultServerConfiguration::the_compositing_strategy()
         });
 }
 
-std::shared_ptr<ms::BufferBundleFactory>
-mir::DefaultServerConfiguration::the_buffer_bundle_factory()
+std::shared_ptr<ms::BufferStreamFactory>
+mir::DefaultServerConfiguration::the_buffer_stream_factory()
 {
-    return buffer_bundle_manager(
+    return buffer_stream_factory(
         [this]()
         {
-            return std::make_shared<mc::BufferBundleManager>(the_buffer_allocation_strategy());
+            return std::make_shared<mc::BufferStreamFactory>(the_buffer_allocation_strategy());
         });
 }
 
@@ -728,4 +755,23 @@ std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
         {
             return std::make_shared<mir::AsioMainLoop>();
         });
+}
+
+namespace
+{
+mir::SharedLibrary const* load_library(std::string const& libname)
+{
+    // There's no point in loading twice, and it isn't safe to unload...
+    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
+
+    if (auto& ptr = libraries_cache[libname])
+    {
+        return ptr.get();
+    }
+    else
+    {
+        ptr = std::make_shared<mir::SharedLibrary>(libname);
+        return ptr.get();
+    }
+}
 }

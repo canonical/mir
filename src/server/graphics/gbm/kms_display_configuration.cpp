@@ -69,13 +69,15 @@ mgg::KMSDisplayConfiguration::KMSDisplayConfiguration(int drm_fd)
     });
 }
 
-void mgg::KMSDisplayConfiguration::for_each_card(std::function<void(DisplayConfigurationCard const&)> f)
+void mgg::KMSDisplayConfiguration::for_each_card(
+    std::function<void(DisplayConfigurationCard const&)> f) const
 {
     DisplayConfigurationCard const card{DisplayConfigurationCardId{0}};
     f(card);
 }
 
-void mgg::KMSDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput const&)> f)
+void mgg::KMSDisplayConfiguration::for_each_output(
+    std::function<void(DisplayConfigurationOutput const&)> f) const
 {
     for (auto const& output : outputs)
         f(output);

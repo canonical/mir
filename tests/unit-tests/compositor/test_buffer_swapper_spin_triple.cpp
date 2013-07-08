@@ -19,6 +19,7 @@
 #include "mir/compositor/buffer_swapper_spin.h"
 
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_swapper.h"
 
 #include <gtest/gtest.h>
 
@@ -35,18 +36,17 @@ struct BufferSwapperSpinTriple : testing::Test
     BufferSwapperSpinTriple()
         : buffer_a{std::make_shared<mtd::StubBuffer>()},
           buffer_b{std::make_shared<mtd::StubBuffer>()},
-          buffer_c{std::make_shared<mtd::StubBuffer>()},
-          swapper{std::make_shared<mc::BufferSwapperSpin>(
-                      std::initializer_list<std::shared_ptr<mc::Buffer>>(
-                          {buffer_a, buffer_b, buffer_c}))}
+          buffer_c{std::make_shared<mtd::StubBuffer>()}
     {
+          auto list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+          swapper = std::make_shared<mc::BufferSwapperSpin>(list, list.size());
     }
 
     std::shared_ptr<mc::Buffer> const buffer_a;
     std::shared_ptr<mc::Buffer> const buffer_b;
     std::shared_ptr<mc::Buffer> const buffer_c;
 
-    std::shared_ptr<mc::BufferSwapper> const swapper;
+    std::shared_ptr<mc::BufferSwapper> swapper;
 };
 
 }
@@ -177,4 +177,36 @@ TEST_F(BufferSwapperSpinTriple, compositor_release_makes_buffer_available_to_cli
     EXPECT_TRUE(client_buffers[0] == comp_buf ||
                 client_buffers[1] == comp_buf ||
                 client_buffers[2] == comp_buf);
+}
+    
+TEST_F(BufferSwapperSpinTriple, buffer_transfer_triple_all_owned)
+{
+    size_t test_size;
+    std::vector<std::shared_ptr<mc::Buffer>> list;
+    swapper->end_responsibility(list, test_size);
+
+    auto res1 = std::find(list.begin(), list.end(), buffer_a);
+    auto res2 = std::find(list.begin(), list.end(), buffer_b);
+    auto res3 = std::find(list.begin(), list.end(), buffer_c);
+    EXPECT_EQ(3u, list.size());
+    EXPECT_NE(list.end(), res1);
+    EXPECT_NE(list.end(), res2);
+    EXPECT_NE(list.end(), res3);
+
+    EXPECT_EQ(3u, test_size);
+}
+
+TEST_F(BufferSwapperSpinTriple, buffer_transfer_triple_some_not_owned)
+{
+    auto acquired_buffer = swapper->client_acquire();
+
+    size_t test_size;
+    std::vector<std::shared_ptr<mc::Buffer>> list;
+    swapper->end_responsibility(list, test_size);
+
+    auto res1 = std::find(list.begin(), list.end(), acquired_buffer);
+    EXPECT_EQ(2u, list.size());
+    EXPECT_EQ(list.end(), res1); //acquired_buffer should not be in list
+
+    EXPECT_EQ(3u, test_size);
 }

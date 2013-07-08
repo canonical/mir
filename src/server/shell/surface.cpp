@@ -33,6 +33,7 @@ namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace ms = mir::surfaces;
+namespace geom = mir::geometry;
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
@@ -60,7 +61,7 @@ msh::Surface::Surface(
 {
 }
 
-msh::Surface::~Surface()
+msh::Surface::~Surface() noexcept
 {
     if (surface.lock())
     {
@@ -74,6 +75,10 @@ void msh::Surface::hide()
     {
         s->set_hidden(true);
     }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
 }
 
 void msh::Surface::show()
@@ -81,6 +86,22 @@ void msh::Surface::show()
     if (auto const& s = surface.lock())
     {
         s->set_hidden(false);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
+bool msh::Surface::visible()
+{
+    if (auto const& s = surface.lock())
+    {
+        return s->should_be_rendered();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
 }
 
@@ -102,6 +123,18 @@ mir::geometry::Size msh::Surface::size() const
     if (auto const& s = surface.lock())
     {
         return s->size();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
+void msh::Surface::move_to(geometry::Point const& p)
+{
+    if (auto const& s = surface.lock())
+    {
+        s->move_to(p);
     }
     else
     {
@@ -145,19 +178,33 @@ mir::geometry::PixelFormat msh::Surface::pixel_format() const
     }
 }
 
-void msh::Surface::advance_client_buffer()
+std::shared_ptr<mc::Buffer> msh::Surface::advance_client_buffer()
 {
     if (auto const& s = surface.lock())
     {
-        s->advance_client_buffer();
+        return s->advance_client_buffer();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
 }
 
-std::shared_ptr<mc::Buffer> msh::Surface::client_buffer() const
+void msh::Surface::allow_framedropping(bool allow)
 {
     if (auto const& s = surface.lock())
     {
-        return s->client_buffer();
+        s->allow_framedropping(allow);
+    }
+}
+ 
+void msh::Surface::with_most_recent_buffer_do(
+    std::function<void(mc::Buffer&)> const& exec)
+{
+    if (auto const& s = surface.lock())
+    {
+        auto buf = s->compositor_buffer();
+        exec(*buf);
     }
     else
     {
@@ -189,22 +236,10 @@ int msh::Surface::client_input_fd() const
     }
 }
 
-int msh::Surface::server_input_fd() const
-{
-    if (auto const& s = surface.lock())
-    {
-        return s->server_input_fd();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
-}
-
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;
-
+    bool allow_dropping = false;
     /*
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
@@ -225,6 +260,11 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
         break;
     case mir_surface_attrib_focus:
         notify_change(attrib, value);
+        break;
+    case mir_surface_attrib_swapinterval:
+        allow_dropping = (value == 0);
+        allow_framedropping(allow_dropping);
+        result = value;
         break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
@@ -298,7 +338,19 @@ void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& t
 {
     auto s = surface.lock();
     if (s)
-        targeter->focus_changed(s);
+        targeter->focus_changed(s->input_channel());
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+}
+
+void msh::Surface::set_input_region(std::vector<geom::Rectangle> const& region)
+{
+    if (auto const& s = surface.lock())
+    {
+        s->set_input_region(region);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
 }

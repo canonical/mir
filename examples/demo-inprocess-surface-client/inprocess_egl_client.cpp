@@ -106,10 +106,12 @@ void me::InprocessEGLClient::thread_loop()
     {
         gl_animation.render_gl();
         rc = eglSwapBuffers(helper.the_display(), helper.the_surface());
-        assert(rc = EGL_TRUE);
+        assert(rc == EGL_TRUE);
 
         gl_animation.step();
     }
+
+    (void)rc;
 
     input_thread->stop();
     ///\internal [loop_tag]

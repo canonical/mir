@@ -17,14 +17,15 @@
  */
 
 #include "gbm_platform.h"
-
 #include "gbm_buffer_allocator.h"
 #include "gbm_display.h"
 #include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
+#include "udev_video_devices.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/options/option.h"
 
 #include "drm_close_threadsafe.h"
 
@@ -34,6 +35,7 @@
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mc = mir::compositor;
+namespace mo = mir::options;
 namespace
 {
 
@@ -83,7 +85,7 @@ mgg::GBMPlatform::GBMPlatform(std::shared_ptr<DisplayReport> const& listener,
     : listener{listener},
       vt{vt}
 {
-    drm.setup();
+    drm.setup(udev);
     gbm.setup(drm);
     internal_display_clients_present = false;
 }
@@ -106,6 +108,7 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 {
     return std::make_shared<mgg::GBMDisplay>(
         this->shared_from_this(),
+        std::make_shared<UdevVideoDevices>(udev.ctx),
         listener);
 }
 
@@ -143,27 +146,15 @@ std::shared_ptr<mg::InternalClient> mgg::GBMPlatform::create_internal_client()
     return std::make_shared<mgg::InternalClient>(internal_native_display);
 }
 
-std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<DisplayReport> const& report)
+extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
-    auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, report);
+    auto vt = std::make_shared<mgg::LinuxVirtualTerminal>(real_fops, options->get("vt", 0), report);
     return std::make_shared<mgg::GBMPlatform>(report, vt);
 }
 
-extern "C"
-{
-int mir_server_internal_display_is_valid(MirMesaEGLNativeDisplay* display)
+extern "C" int mir_server_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
     return ((mgg::GBMPlatform::internal_display_clients_present) &&
             (display == mgg::GBMPlatform::internal_native_display.get()));
-}
-
-/* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different
- *       implementations and both have symbols for it.
- *       bug filed: lp:1177902
- */
-int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
-{
-    return mir_server_internal_display_is_valid(display);
-}
 }

@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <functional>
+#include <mutex>
 
 namespace mir
 {
@@ -63,19 +64,19 @@ public:
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceParameters const& params,
-        mir_surface_lifecycle_callback callback, void * context);
+        mir_surface_callback callback, void * context);
 
     ~MirSurface();
 
     MirWaitHandle* release_surface(
-        mir_surface_lifecycle_callback callback,
+        mir_surface_callback callback,
         void *context);
 
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
     bool is_valid() const;
-    MirWaitHandle* next_buffer(mir_surface_lifecycle_callback callback, void * context);
+    MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 
     std::shared_ptr<MirNativeBuffer> get_current_buffer_package();
@@ -92,11 +93,13 @@ public:
     void handle_event(MirEvent const& e);
 
 private:
+    mutable std::recursive_mutex mutex; // Protects all members of *this
+
     void on_configured();
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);
-    void created(mir_surface_lifecycle_callback callback, void * context);
-    void new_buffer(mir_surface_lifecycle_callback callback, void * context);
+    void created(mir_surface_callback callback, void * context);
+    void new_buffer(mir_surface_callback callback, void * context);
     mir::geometry::PixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
 
     /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential

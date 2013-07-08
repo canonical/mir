@@ -23,6 +23,8 @@
 
 #include <mir_toolkit/event.h>
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 /**
  * \defgroup mir_toolkit MIR graphics tools API
@@ -55,13 +57,13 @@ typedef void (*mir_connected_callback)(MirConnection *connection, void *client_c
 /**
  * Callback to be passed when calling:
  *  - mir_connection_create_surface
- *  - mir_surface_next_buffer
+ *  - mir_surface_swap_buffers
  *  - mir_surface_release
  *   \param [in] surface             the surface being updated
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_surface_lifecycle_callback)(MirSurface *surface, void *client_context);
+typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context);
 
 /**
  * Callback member of MirEventDelegate for handling of events.
@@ -158,8 +160,9 @@ enum { mir_supported_pixel_format_max = 32 };
  */
 typedef struct MirDisplayInfo
 {
-    int width;
-    int height;
+    uint32_t width;
+    uint32_t height;
+    
     int supported_pixel_format_items;
     MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;

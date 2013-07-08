@@ -3,6 +3,7 @@ include_directories(
     ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
+    ${UDEV_INCLUDE_DIRS}
 )
 
 # gbm.h and drm.h have trailing commas at the end of enum definitions
@@ -11,7 +12,7 @@ string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 
 add_library(
-  mirplatformgraphics STATIC
+  mirplatformgraphics SHARED
 
   gbm_platform.cpp
   gbm_buffer_allocator.cpp
@@ -27,17 +28,21 @@ add_library(
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
   internal_native_display.cpp
+  internal_native_surface.cpp
   internal_client.cpp
   drm_close_threadsafe.cpp
+  udev_video_devices.cpp
 )
 
 target_link_libraries(
   mirplatformgraphics
-  mircompositor
-  mirlogging
+  mirserver
 
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
+
+install(TARGETS mirplatformgraphics LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

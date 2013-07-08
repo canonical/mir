@@ -31,7 +31,7 @@ namespace compositor
 {
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
-class BufferBundleManager;
+class BufferStreamFactory;
 class Renderables;
 class Drawer;
 class CompositingStrategy;
@@ -59,6 +59,8 @@ class PlacementStrategy;
 class SessionListener;
 class FocusController;
 class SessionManager;
+class PixelBuffer;
+class SnapshotStrategy;
 }
 namespace time
 {
@@ -66,7 +68,7 @@ class TimeSource;
 }
 namespace surfaces
 {
-class BufferBundleFactory;
+class BufferStreamFactory;
 class SurfaceStackModel;
 class SurfaceStack;
 class SurfaceController;
@@ -158,6 +160,8 @@ public:
     virtual std::shared_ptr<shell::FocusSequence>     the_shell_focus_sequence();
     virtual std::shared_ptr<shell::PlacementStrategy> the_shell_placement_strategy();
     virtual std::shared_ptr<shell::SessionListener>   the_shell_session_listener();
+    virtual std::shared_ptr<shell::PixelBuffer>       the_shell_pixel_buffer();
+    virtual std::shared_ptr<shell::SnapshotStrategy>  the_shell_snapshot_strategy();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -176,7 +180,7 @@ public:
     /** @name surfaces configuration - dependencies
      * dependencies of surfaces on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<surfaces::BufferBundleFactory> the_buffer_bundle_factory();
+    virtual std::shared_ptr<surfaces::BufferStreamFactory> the_buffer_stream_factory();
     /** @} */
 
 
@@ -229,7 +233,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
-    CachedPtr<compositor::BufferBundleManager> buffer_bundle_manager;
+    CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
     CachedPtr<shell::SessionContainer>  shell_session_container;
@@ -237,6 +241,8 @@ protected:
     CachedPtr<shell::FocusSequence>     shell_focus_sequence;
     CachedPtr<shell::PlacementStrategy> shell_placement_strategy;
     CachedPtr<shell::SessionListener> shell_session_listener;
+    CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;
+    CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
     CachedPtr<compositor::CompositingStrategy> compositing_strategy;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;

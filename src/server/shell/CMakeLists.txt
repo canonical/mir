@@ -11,6 +11,7 @@ set(
   surface_source.cpp
   surface.cpp
   surface_creation_parameters.cpp
+  threaded_snapshot_strategy.cpp
 )
 
 add_library(

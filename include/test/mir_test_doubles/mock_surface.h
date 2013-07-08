@@ -41,20 +41,22 @@ struct MockSurface : public shell::Surface
     {
     }
 
+    ~MockSurface() noexcept {}
+
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+    MOCK_METHOD0(visible, bool());
+
     MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(force_requests_to_complete, void());
-    MOCK_METHOD0(advance_client_buffer, void());
+    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<compositor::Buffer>());
 
-    MOCK_CONST_METHOD0(name, std::string ());
-    MOCK_CONST_METHOD0(size, geometry::Size ());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat ());
-    MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<compositor::Buffer> ());
+    MOCK_CONST_METHOD0(name, std::string());
+    MOCK_CONST_METHOD0(size, geometry::Size());
+    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
 
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
-    MOCK_CONST_METHOD0(server_input_fd, int());
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
     MOCK_METHOD1(take_input_focus, void(std::shared_ptr<shell::InputTargeter> const&));

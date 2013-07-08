@@ -23,12 +23,14 @@
 #include "mir/shell/surface_builder.h"
 #include "mir/events/event_sink.h"
 
-#include "mir_test_doubles/null_buffer_bundle.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 #include "mir_test_doubles/stub_input_targeter.h"
+#include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test_doubles/mock_input_info.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_matchers.h"
 
@@ -59,14 +61,16 @@ class StubSurfaceBuilder : public msh::SurfaceBuilder
 {
 public:
     StubSurfaceBuilder() :
-        buffer_bundle(new mtd::NullBufferBundle()),
+        stub_buffer_stream_(std::make_shared<mtd::StubBufferStream>()),
         dummy_surface()
     {
     }
 
     std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& )
     {
-        dummy_surface = std::make_shared<ms::Surface>(msh::a_surface().name, msh::a_surface().top_left, buffer_bundle, 
+        auto info = std::make_shared<mtd::MockSurfaceInfo>();
+        auto input_info = std::make_shared<mtd::MockInputInfo>();
+        dummy_surface = std::make_shared<ms::Surface>(info, input_info, stub_buffer_stream_,
             std::shared_ptr<mi::InputChannel>(), []{});
         return dummy_surface;
     }
@@ -81,8 +85,13 @@ public:
         dummy_surface.reset();
     }
 
+    std::shared_ptr<mtd::StubBufferStream> stub_buffer_stream()
+    {
+        return stub_buffer_stream_;
+    }
+
 private:
-    std::shared_ptr<ms::BufferBundle> const buffer_bundle;
+    std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream_;
     std::shared_ptr<ms::Surface> dummy_surface;
 };
 
@@ -107,22 +116,22 @@ private:
     StubSurfaceBuilder self;
 };
 
-typedef testing::NiceMock<mtd::MockBufferBundle> StubBufferBundle;
+typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
 
 
 struct ShellSurface : testing::Test
 {
-    std::shared_ptr<StubBufferBundle> const buffer_bundle;
+    std::shared_ptr<StubBufferStream> const buffer_stream;
     StubSurfaceBuilder surface_builder;
 
     ShellSurface() :
-        buffer_bundle(std::make_shared<StubBufferBundle>())
+        buffer_stream(std::make_shared<StubBufferStream>())
     {
         using namespace testing;
 
-        ON_CALL(*buffer_bundle, bundle_size()).WillByDefault(Return(geom::Size()));
-        ON_CALL(*buffer_bundle, get_bundle_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
-        ON_CALL(*buffer_bundle, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mtd::StubBuffer>()));
+        ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
+        ON_CALL(*buffer_stream, get_stream_pixel_format()).WillByDefault(Return(geom::PixelFormat::abgr_8888));
+        ON_CALL(*buffer_stream, secure_client_buffer()).WillByDefault(Return(std::shared_ptr<mtd::StubBuffer>()));
     }
 };
 }
@@ -183,23 +192,6 @@ TEST_F(ShellSurface, destroy)
 
     Mock::VerifyAndClearExpectations(&test);
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
-}
-
-TEST_F(ShellSurface, client_buffer_throw_behavior)
-{
-    msh::Surface test(
-            mt::fake_shared(surface_builder),
-            msh::a_surface());
-
-    EXPECT_NO_THROW({
-        test.client_buffer();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.client_buffer();
-    }, std::runtime_error);
 }
 
 TEST_F(ShellSurface, size_throw_behavior)
@@ -282,9 +274,9 @@ TEST_F(ShellSurface, hide_throw_behavior)
 
     surface_builder.reset_surface();
 
-    EXPECT_NO_THROW({
+    EXPECT_THROW({
         test.hide();
-    });
+    }, std::runtime_error);
 }
 
 TEST_F(ShellSurface, show_throw_behavior)
@@ -299,9 +291,26 @@ TEST_F(ShellSurface, show_throw_behavior)
 
     surface_builder.reset_surface();
 
-    EXPECT_NO_THROW({
+    EXPECT_THROW({
         test.show();
+    }, std::runtime_error);
+}
+
+TEST_F(ShellSurface, visible_throw_behavior)
+{
+    msh::Surface test(
+            mt::fake_shared(surface_builder),
+            msh::a_surface());
+
+    EXPECT_NO_THROW({
+        test.visible();
     });
+
+    surface_builder.reset_surface();
+
+    EXPECT_THROW({
+        test.visible();
+    }, std::runtime_error);
 }
 
 TEST_F(ShellSurface, destroy_throw_behavior)
@@ -350,9 +359,9 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 
     surface_builder.reset_surface();
 
-    EXPECT_NO_THROW({
+    EXPECT_THROW({
         test.advance_client_buffer();
-    });
+    }, std::runtime_error);
 }
 
 TEST_F(ShellSurface, input_fds_throw_behavior)
@@ -363,9 +372,6 @@ TEST_F(ShellSurface, input_fds_throw_behavior)
 
     surface_builder.reset_surface();
 
-    EXPECT_THROW({
-            test.server_input_fd();
-    }, std::runtime_error);
     EXPECT_THROW({
             test.client_input_fd();
     }, std::runtime_error);
@@ -499,4 +505,41 @@ TEST_F(ShellSurface, take_input_focus_throw_behavior)
     EXPECT_THROW({
             test.take_input_focus(mt::fake_shared(targeter));
     }, std::runtime_error);
+}
+
+TEST_F(ShellSurface, set_input_region_throw_behavior)
+{
+    using namespace ::testing;
+    
+    msh::Surface test(
+        mt::fake_shared(surface_builder),
+        msh::a_surface());
+    
+    EXPECT_NO_THROW({
+            test.set_input_region(std::vector<geom::Rectangle>{});
+    });
+
+    surface_builder.reset_surface();
+
+    EXPECT_THROW({
+            test.set_input_region(std::vector<geom::Rectangle>{});
+    }, std::runtime_error);
+}
+
+TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
+{
+    msh::Surface test(
+        mt::fake_shared(surface_builder),
+        msh::a_surface());
+
+    mc::Buffer* buf_ptr{nullptr};
+
+    test.with_most_recent_buffer_do(
+        [&](mc::Buffer& buffer)
+        {
+            buf_ptr = &buffer;
+        });
+
+    EXPECT_EQ(surface_builder.stub_buffer_stream()->stub_compositor_buffer.get(),
+              buf_ptr);
 }

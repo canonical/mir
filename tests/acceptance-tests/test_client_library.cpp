@@ -27,6 +27,7 @@
 
 #include <gtest/gtest.h>
 #include <chrono>
+#include <thread>
 #include <cstring>
 
 namespace mf = mir::frontend;
@@ -546,7 +547,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
             ASSERT_TRUE(surface != NULL);
 
             buffers = 0;
-            mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+            mir_wait_for(mir_surface_swap_buffers(surface, next_buffer_callback, this));
             EXPECT_EQ(buffers, 1);
 
             mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
@@ -586,9 +587,81 @@ TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
-            mir_surface_next_buffer_sync(surface);
+            mir_surface_swap_buffers_sync(surface);
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            mir_surface_release_sync(surface);
+
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, highly_threaded_client)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        static void nosey_thread(MirSurface *surf)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                mir_wait_for_one(mir_surface_set_state(surf,
+                                                mir_surface_state_maximized));
+                mir_wait_for_one(mir_surface_set_type(surf,
+                                                mir_surface_type_normal));
+                mir_wait_for_one(mir_surface_set_state(surf,
+                                                mir_surface_state_restored));
+                mir_wait_for_one(mir_surface_set_type(surf,
+                                                mir_surface_type_utility));
+                mir_wait_for_one(mir_surface_set_state(surf,
+                                                mir_surface_state_fullscreen));
+                mir_wait_for_one(mir_surface_set_type(surf,
+                                                mir_surface_type_dialog));
+                mir_wait_for_one(mir_surface_set_state(surf,
+                                                mir_surface_state_minimized));
+            }
+        }
+
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket,
+                                          __PRETTY_FUNCTION__);
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_software
+            };
+
+            surface = mir_connection_create_surface_sync(connection,
+                                                         &request_params);
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            std::thread a(nosey_thread, surface);
+            std::thread b(nosey_thread, surface);
+            std::thread c(nosey_thread, surface);
+
+            a.join();
+            b.join();
+            c.join();
+
+            EXPECT_EQ(mir_surface_type_dialog,
+                      mir_surface_get_type(surface));
+            EXPECT_EQ(mir_surface_state_minimized,
+                      mir_surface_get_state(surface));
 
             mir_surface_release_sync(surface);
 
@@ -627,7 +700,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
 {
-    static const int default_display_width = 1600, default_display_height = 1600;
+    static const unsigned int default_display_width = 1600, default_display_height = 1600;
 
     struct ClientConfig : ClientConfigCommon
     {
@@ -691,7 +764,7 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
 
             mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 // TODO surface_create needs to fail safe too. After that is done we should add the following:
-// TODO    mir_wait_for(mir_surface_next_buffer(surface, next_buffer_callback, this));
+// TODO    mir_wait_for(mir_surface_swap_buffers(surface, next_buffer_callback, this));
 // TODO    mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
 
             mir_connection_release(connection);

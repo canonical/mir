@@ -58,10 +58,10 @@ mtd::MockGL::~MockGL()
         return type;                        \
     }
 
-void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
+GLenum glGetError()
 {
-    CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glEGLImageTargetTexture2DOES(target, image);
+    CHECK_GLOBAL_MOCK(GLenum);
+    return global_mock_gl->glGetError();
 }
 
 const GLubyte* glGetString(GLenum name)
@@ -268,9 +268,30 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat,
     global_mock_gl->glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
-void mtd::MockGL::silence_uninteresting()
+void glGenFramebuffers(GLsizei n, GLuint *framebuffers)
 {
-    using namespace testing;
-    EXPECT_CALL(*this, glEGLImageTargetTexture2DOES(_,_))
-        .Times(AtLeast(0));
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glGenFramebuffers(n, framebuffers);
+}
+
+void glBindFramebuffer(GLenum target, GLuint framebuffer)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glBindFramebuffer(target, framebuffer);
+}
+
+void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
+                            GLuint texture, GLint level)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glFramebufferTexture2D(target, attachment, textarget,
+                                           texture, level);
+
+}
+
+void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
+                  GLenum format, GLenum type, GLvoid* pixels)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glReadPixels(x, y, width, height, format, type, pixels);
 }

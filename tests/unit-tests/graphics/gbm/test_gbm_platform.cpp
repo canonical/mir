@@ -28,6 +28,8 @@
 
 #include <gtest/gtest.h>
 
+#include "mir_test_framework/udev_environment.h"
+
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 
@@ -42,6 +44,7 @@
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir::mir_test_framework;
 
 namespace
 {
@@ -53,6 +56,7 @@ public:
     {
         ::testing::Mock::VerifyAndClearExpectations(&mock_drm);
         ::testing::Mock::VerifyAndClearExpectations(&mock_gbm);
+        fake_devices.add_standard_drm_devices();
     }
 
     std::shared_ptr<mg::Platform> create_platform()
@@ -64,6 +68,7 @@ public:
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
+    mtf::UdevEnvironment fake_devices;
 };
 }
 
@@ -185,21 +190,17 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     }, std::runtime_error);
 }
 
-/* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different
- *       implementations and both have symbols for it. If the linking order of the test changes,
- *       specifically, if mir_egl_mesa_display_is_valid resolves into libmirclient, then this test will break. 
- */
 TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
 {
     MirMesaEGLNativeDisplay* native_display = nullptr;
-    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
+    EXPECT_EQ(0, mgg::mir_server_egl_mesa_display_is_valid(native_display));
     {
         auto platform = create_platform();
         auto client = platform->create_internal_client();
         native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
-        EXPECT_EQ(1, mir_server_internal_display_is_valid(native_display));
+        EXPECT_EQ(1, mgg::mir_server_egl_mesa_display_is_valid(native_display));
     }
-    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
+    EXPECT_EQ(0, mgg::mir_server_egl_mesa_display_is_valid(native_display));
 }
 
 namespace

@@ -32,6 +32,7 @@ namespace graphics
 {
 
 class BufferInitializer;
+class EGLExtensions;
 
 namespace android
 {
@@ -58,6 +59,7 @@ private:
     const hw_module_t    *hw_module;
     std::shared_ptr<GraphicAllocAdaptor> alloc_device;
     std::shared_ptr<BufferInitializer> const buffer_initializer;
+    std::shared_ptr<EGLExtensions> const egl_extensions;
 };
 
 }

@@ -1,0 +1,3 @@
+usr/bin/mir_stress
+usr/lib/*/mir/tools/libmirclientlttng.so
+usr/lib/*/mir/tools/libmirserverlttng.so

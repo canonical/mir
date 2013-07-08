@@ -1,11 +1,12 @@
 add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
-include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
+include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${UMOCKDEV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 
 set(
   UNIT_TEST_SOURCES
 
   test_gmock_fixes.cpp
   test_asio_main_loop.cpp
+  shared_library_test.cpp
 )
 
 add_subdirectory(options/)
@@ -29,12 +30,15 @@ target_link_libraries(
 
   mirclient
   mirserver
+  mirplatformgraphics
   mirdraw
   mirtestdraw
   mirlogging
 
+  mir-test
   mir-test-doubles
   mir-test-doubles-platform
+  mir-test-framework
 
   3rd_party
 
@@ -46,4 +50,12 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-mir_discover_tests(unit-tests)
+if (MIR_PLATFORM STREQUAL "gbm")
+  target_link_libraries(
+    unit-tests
+
+    ${UMOCKDEV_LIBRARIES}
+  )
+endif()  
+
+mir_discover_tests(unit-tests LD_PRELOAD=libumockdev-preload.so.0)

@@ -16,7 +16,7 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/buffer_bundle.h"
+#include "mir/surfaces/buffer_stream.h"
 #include "mir/shell/focus_sequence.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/default_session_container.h"
@@ -28,11 +28,11 @@
 #include "mir/surfaces/surface.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
-#include "mir_test_doubles/null_buffer_bundle.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/null_snapshot_strategy.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -71,6 +71,7 @@ struct SessionManagerSetup : public testing::Test
                         mt::fake_shared(container),
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
+                        std::make_shared<mtd::NullSnapshotStrategy>(),
                         mt::fake_shared(session_listener))
     {
     }
@@ -169,6 +170,8 @@ struct MockSessionListener : public msh::SessionListener
     virtual ~MockSessionListener() noexcept(true) {}
     MOCK_METHOD1(starting, void(std::shared_ptr<msh::Session> const&));
     MOCK_METHOD1(stopping, void(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD1(focused, void(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD0(unfocused, void());
 };
 
 struct SessionManagerSessionListenerSetup : public testing::Test
@@ -178,6 +181,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
                         mt::fake_shared(container),
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
+                        std::make_shared<mtd::NullSnapshotStrategy>(),
                         mt::fake_shared(session_listener))
     {
     }
@@ -193,12 +197,14 @@ struct SessionManagerSessionListenerSetup : public testing::Test
 };
 }
 
-TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifecycle)
+TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifecycle_and_focus)
 {
     using namespace ::testing;
 
     EXPECT_CALL(session_listener, starting(_)).Times(1);
+    EXPECT_CALL(session_listener, focused(_)).Times(1);
     EXPECT_CALL(session_listener, stopping(_)).Times(1);
+    EXPECT_CALL(session_listener, unfocused()).Times(1);
 
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
     

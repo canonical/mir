@@ -33,24 +33,39 @@ namespace graphics
 typedef IntWrapper<IntWrapperTypeTag::GraphicsConfCardId> DisplayConfigurationCardId;
 typedef IntWrapper<IntWrapperTypeTag::GraphicsConfOutputId> DisplayConfigurationOutputId;
 
+/**
+ * Configuration information for a display card.
+ */
 struct DisplayConfigurationCard
 {
     DisplayConfigurationCardId id;
 };
 
+/**
+ * Configuration information for a display output mode.
+ */
 struct DisplayConfigurationMode
 {
     geometry::Size size;
     double vrefresh_hz;
 };
 
+/**
+ * Configuration information for a display output.
+ */
 struct DisplayConfigurationOutput
 {
+    /** The output's id. */
     DisplayConfigurationOutputId id;
+    /** The id of the card the output is connected to. */
     DisplayConfigurationCardId card_id;
+    /** The modes supported by the output. */
     std::vector<DisplayConfigurationMode> modes;
+    /** The physical size of the output. */
     geometry::Size physical_size_mm;
+    /** Whether the output is connected. */
     bool connected;
+    /** The index in the 'modes' vector of the current output mode. */
     size_t current_mode_index;
 };
 
@@ -62,13 +77,18 @@ std::ostream& operator<<(std::ostream& out, DisplayConfigurationOutput const& va
 bool operator==(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
 bool operator!=(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
 
+/**
+ * Interface to a configuration of display cards and outputs.
+ */
 class DisplayConfiguration
 {
 public:
     virtual ~DisplayConfiguration() {}
 
-    virtual void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) = 0;
-    virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) = 0;
+    /** Executes a function object for each card in the configuration. */
+    virtual void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const = 0;
+    /** Executes a function object for each output in the configuration. */
+    virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const = 0;
 
 protected:
     DisplayConfiguration() = default;
