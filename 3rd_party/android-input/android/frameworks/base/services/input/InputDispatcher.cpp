@@ -1151,8 +1151,6 @@ int32_t InputDispatcher::findTouchedWindowTargetsLocked(nsecs_t currentTime,
 
         // Traverse windows from front to back to find touched window and outside targets.
         mEnumerator->for_each([&](sp<InputWindowHandle> const& windowHandle){
-            if (newTouchedWindowHandle != NULL)
-                return;
             const InputWindowInfo* windowInfo = windowHandle->getInfo();
             int32_t flags = windowInfo->layoutParamsFlags;
 
