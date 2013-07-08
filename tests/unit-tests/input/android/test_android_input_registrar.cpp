@@ -20,7 +20,7 @@
 
 #include "mir_test_doubles/mock_input_configuration.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/stub_surface_target.h"
+#include "mir_test_doubles/stub_input_channel.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -69,11 +69,11 @@ MATCHER_P(WindowHandleFor, surface, "")
 
 }
 
-TEST_F(AndroidInputRegistrarFdSetup, input_surface_opened_behavior)
+TEST_F(AndroidInputRegistrarFdSetup, input_channel_opened_behavior)
 {    
     using namespace ::testing;
 
-    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+    auto surface = std::make_shared<mtd::StubInputChannel>(test_input_fd);
 
     EXPECT_CALL(config, the_dispatcher()).Times(1)
         .WillOnce(Return(dispatcher));
@@ -82,18 +82,18 @@ TEST_F(AndroidInputRegistrarFdSetup, input_surface_opened_behavior)
 
     mia::InputRegistrar registrar(mt::fake_shared(config));
     
-     registrar.input_surface_opened(surface);
+     registrar.input_channel_opened(surface);
      EXPECT_THROW({
              // We can't open a surface twice
-             registrar.input_surface_opened(surface);
+             registrar.input_channel_opened(surface);
      }, std::logic_error);
 }
 
-TEST_F(AndroidInputRegistrarFdSetup, input_surface_closed_behavior)
+TEST_F(AndroidInputRegistrarFdSetup, input_channel_closed_behavior)
 {
     using namespace ::testing;
 
-    auto surface = std::make_shared<mtd::StubSurfaceTarget>(test_input_fd);
+    auto surface = std::make_shared<mtd::StubInputChannel>(test_input_fd);
 
     EXPECT_CALL(config, the_dispatcher()).Times(1)
         .WillOnce(Return(dispatcher));
@@ -104,13 +104,13 @@ TEST_F(AndroidInputRegistrarFdSetup, input_surface_closed_behavior)
     
     EXPECT_THROW({
             // We can't close a surface which hasn't been opened
-            registrar.input_surface_closed(surface);
+            registrar.input_channel_closed(surface);
     }, std::logic_error);
-    registrar.input_surface_opened(surface);
-    registrar.input_surface_closed(surface);
+    registrar.input_channel_opened(surface);
+    registrar.input_channel_closed(surface);
     EXPECT_THROW({
             // Nor can we close a surface twice
-            registrar.input_surface_closed(surface);
+            registrar.input_channel_closed(surface);
     }, std::logic_error);
 }
 

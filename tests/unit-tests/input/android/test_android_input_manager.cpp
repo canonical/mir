@@ -21,12 +21,11 @@
 #include "src/server/input/android/android_input_constants.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/input/surface_target.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test_doubles/stub_surface_target.h"
+#include "mir_test_doubles/stub_input_channel.h"
 
 #include <EventHub.h>
 #include <utils/StrongPointer.h>

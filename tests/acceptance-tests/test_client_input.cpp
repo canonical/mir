@@ -18,7 +18,6 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
-#include "mir/input/rectangles_input_region.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"
@@ -541,7 +540,7 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
     RegionApplyingSurfaceFactory(std::shared_ptr<msh::SurfaceFactory> real_factory,
         std::initializer_list<geom::Rectangle> const& input_rectangles)
         : underlying_factory(real_factory),
-          input_region(std::make_shared<mi::RectanglesInputRegion>(input_rectangles))
+          input_rectangles(input_rectangles)
     {
     }
     
@@ -550,16 +549,16 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
                                                  std::shared_ptr<me::EventSink> const& sink)
     {
         auto surface = underlying_factory->create_surface(params, id, sink);
-        surface->set_input_region(input_region);
+
+        surface->set_input_region(input_rectangles);
 
         return surface;
     }
     
     std::shared_ptr<msh::SurfaceFactory> const underlying_factory;
-    std::shared_ptr<mi::InputRegion> const input_region;
+    std::vector<geom::Rectangle> const input_rectangles;
 };
 }
-
 TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 {
     using namespace ::testing;

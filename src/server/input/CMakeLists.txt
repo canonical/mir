@@ -2,8 +2,8 @@ set(
   INPUT_SOURCES
 
   event_filter_chain.cpp
-  rectangles_input_region.cpp
 
+  surface_data_storage.cpp
   null_input_configuration.cpp
   null_input_report.cpp
 )

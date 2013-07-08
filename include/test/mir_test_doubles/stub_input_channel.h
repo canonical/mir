@@ -16,33 +16,44 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_RECTANGLES_INPUT_REGION_H_
-#define MIR_INPUT_RECTANGLES_INPUT_REGION_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
 
-#include "mir/input/input_region.h"
-#include "mir/geometry/rectangle.h"
-
-#include <initializer_list>
-#include <vector>
+#include "mir/input/input_channel.h"
 
 namespace mir
 {
-namespace input
+namespace test
+{
+namespace doubles
 {
 
-class RectanglesInputRegion : public InputRegion
+struct StubInputChannel : public input::InputChannel
 {
-public:
-    RectanglesInputRegion(std::initializer_list<geometry::Rectangle> const& input_rectangles);
-    virtual ~RectanglesInputRegion() noexcept(true) = default;
+    StubInputChannel(int fd)
+      : input_fd(fd)
+    {
+    }
 
-    bool contains(geometry::Point const& point) const;
+    StubInputChannel()
+     : StubInputChannel(0)
+    {
+    }
 
-private:
-    std::vector<geometry::Rectangle> input_rectangles;
+    int client_fd() const override
+    {
+        return input_fd;
+    }
+    int server_fd() const override
+    {
+        return input_fd;
+    }
+    int input_fd;
 };
 
 }
 }
+} // namespace mir
 
-#endif // MIR_INPUT_RECTANGLES_INPUT_REGION
+#endif // MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
+
