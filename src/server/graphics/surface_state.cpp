@@ -22,16 +22,21 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 mg::SurfaceState::SurfaceState(std::shared_ptr<ms::SurfaceInfo> const& basic_info,
                                std::function<void()> change_cb)
+    : notify_change(change_cb),
+      surface_alpha(1.0f)
 {
-    (void) basic_info; (void) change_cb;
+    (void) basic_info;
 }
 
 void mg::SurfaceState::apply_alpha(float alpha)
 {
-    (void) alpha;
+    std::unique_lock<std::mutex> lk(guard);
+    surface_alpha = alpha;
+    notify_change();
 }
 
 float mg::SurfaceState::alpha() const
 {
-    return 1.0f;
+    std::unique_lock<std::mutex> lk(guard);
+    return surface_alpha;
 }

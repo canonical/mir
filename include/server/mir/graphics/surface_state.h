@@ -21,6 +21,7 @@
 
 #include "surface_info.h"
 
+#include <mutex>
 #include <memory>
 #include <functional>
 
@@ -41,6 +42,10 @@ public:
 
     void apply_alpha(float alpha);
     float alpha() const;
+private:
+    std::function<void()> const notify_change;
+    std::mutex mutable guard;
+    float surface_alpha;
 };
 
 }
