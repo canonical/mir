@@ -73,7 +73,7 @@ struct BypassFilter : public mc::FilterForRenderables
         if (!bypassed)
         {
             auto reg = renderable.graphic_region();
-            native_bo = reg->native_buffer();  // FIXME: always NULL
+            native_bo = reg->native_buffer();
             if (native_bo)
             {
                 bypassed = true;

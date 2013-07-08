@@ -37,7 +37,6 @@ public:
     virtual geometry::PixelFormat pixel_format() const = 0;
     virtual void bind_to_texture() = 0;
     virtual void* native_buffer() { return NULL; }
-    virtual void bind_to_fb() {}
 
 protected:
     GraphicRegion() = default;
