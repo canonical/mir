@@ -88,19 +88,7 @@ struct MockFilterForRenderables : public mc::FilterForRenderables
 
 struct MockOperatorForRenderables : public mc::OperatorForRenderables
 {
-    MockOperatorForRenderables(mg::Renderer *renderer) :
-        renderer(renderer)
-    {
-    }
-
     MOCK_METHOD1(renderable_operator, void(mg::Renderable&));
-    void operator()(mg::Renderable& r)
-    {
-        // We just use this for expectations
-        renderable_operator(r);
-        renderer->render([] (std::shared_ptr<void> const&) {}, r);
-    }
-    mg::Renderer* renderer;
 };
 
 struct StubOperatorForRenderables : public mc::OperatorForRenderables
@@ -158,18 +146,25 @@ struct SurfaceStack : public ::testing::Test
         auto input_info = std::make_shared<mtd::MockInputInfo>();
         auto gfx_info = std::make_shared<mtd::MockGraphicsInfo>();
         auto buffer_stream = std::make_shared<mtd::StubBufferStream>();
-        stub_surface = std::make_shared<ms::Surface>(
-            info, gfx_info, buffer_stream,
+
+        //TODO: this should be a real Stub from mtd, once ms::Surface is an interface
+        stub_surface1 = std::make_shared<ms::Surface>(info, gfx_info, buffer_stream,
+            input_info, std::shared_ptr<mir::input::InputChannel>(), []{});
+        stub_surface2 = std::make_shared<ms::Surface>(info, gfx_info, buffer_stream,
+            input_info, std::shared_ptr<mir::input::InputChannel>(), []{});
+        stub_surface3 = std::make_shared<ms::Surface>(info, gfx_info, buffer_stream,
             input_info, std::shared_ptr<mir::input::InputChannel>(), []{});
 
         ON_CALL(mock_surface_allocator, create_surface(_,_))
-            .WillByDefault(Return(stub_surface));
+            .WillByDefault(Return(stub_surface1));
     }
 
     mtd::StubInputRegistrar input_registrar;
     MockSurfaceAllocator mock_surface_allocator;
     msh::SurfaceCreationParameters default_params;
-    std::shared_ptr<ms::Surface> stub_surface;
+    std::shared_ptr<ms::Surface> stub_surface1;
+    std::shared_ptr<ms::Surface> stub_surface2;
+    std::shared_ptr<ms::Surface> stub_surface3;
 };
 
 }
@@ -180,19 +175,57 @@ TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
 
     EXPECT_CALL(mock_surface_allocator, create_surface(_,_))
         .Times(1)
-        .WillOnce(Return(stub_surface));
+        .WillOnce(Return(stub_surface1));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
 
-    auto use_count = stub_surface.use_count();
+    auto use_count = stub_surface1.use_count();
 
     auto surface = stack.create_surface(default_params, default_depth);
-
-    EXPECT_LT(use_count, stub_surface.use_count());
+        {
+            EXPECT_EQ(stub_surface1, surface.lock());
+        }
+    EXPECT_LT(use_count, stub_surface1.use_count());
 
     stack.destroy_surface(surface);
 
-    EXPECT_EQ(use_count, stub_surface.use_count());
+    EXPECT_EQ(use_count, stub_surface1.use_count());
+}
+
+TEST_F(SurfaceStack, view_applies_renderer_to_all_surfaces_in_view)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(mock_surface_allocator, create_surface(_,_))
+        .WillOnce(Return(stub_surface1))
+        .WillOnce(Return(stub_surface2))
+        .WillOnce(Return(stub_surface3));
+
+    ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
+    stack.create_surface(default_params, default_depth);
+    stack.create_surface(default_params, default_depth);
+    stack.create_surface(default_params, default_depth);
+
+    MockFilterForRenderables filter;
+    MockOperatorForRenderables renderable_operator;
+
+    Sequence seq1, seq2;
+    EXPECT_CALL(filter, filter(info1))
+        .InSequence(seq1)
+        .WillOnce(Return(true));
+    EXPECT_CALL(filter, filter(info2))
+        .InSequence(seq1)
+        .WillOnce(Return(false));
+    EXPECT_CALL(filter, filter(info3))
+        .InSequence(seq1)
+        .WillOnce(Return(true));
+
+    EXPECT_CALL(renderable_operator, renderable_operator(info1, texture1))
+        .InSequence(seq2);
+    EXPECT_CALL(renderablne_operator, renderable_operator(info3, texture3))
+        .InSequence(seq2);
+
+    stack.for_each_if(filter, renderable_operator);
 }
 
 #if 0
@@ -225,47 +258,6 @@ TEST(
     }
 }
 
-/* FIXME: Why is this test working in terms of a renderer which is unrelated
-   to the functionality of SurfaceStack? */
-TEST(SurfaceStack, view_applies_renderer_to_all_surfaces_in_view)
-{
-    using namespace ::testing;
-
-    MockBufferStreamFactory buffer_stream_factory;
-    StubInputChannelFactory input_factory;
-    mtd::StubInputRegistrar input_registrar;
-
-    EXPECT_CALL(
-        buffer_stream_factory,
-        create_buffer_stream(_)).Times(AtLeast(1));
-
-    ms::SurfaceStack stack(mt::fake_shared(buffer_stream_factory), 
-        mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
-
-    auto surface1 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
-    auto surface2 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
-    auto surface3 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
-
-    mtd::MockSurfaceRenderer renderer;
-    MockFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator(&renderer);
-
-    ON_CALL(filter, filter(_)).WillByDefault(Return(true));
-    ON_CALL(filter, filter(Ref(*surface3.lock()))).WillByDefault(Return(false));
-
-    EXPECT_CALL(filter, filter(_)).Times(3);
-    EXPECT_CALL(renderable_operator, renderable_operator(_)).Times(2);
-
-    EXPECT_CALL(renderer,
-                render(_,Ref(*surface1.lock()))).Times(Exactly(1));
-    EXPECT_CALL(renderer,
-                render(_,Ref(*surface2.lock()))).Times(Exactly(1));
-
-    stack.for_each_if(filter, renderable_operator);
-}
 
 TEST(SurfaceStack, test_stacking_order)
 {
