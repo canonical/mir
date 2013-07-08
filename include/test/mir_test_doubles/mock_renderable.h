@@ -19,6 +19,7 @@
 #define MIR_TEST_DOUBLES_MOCK_RENDERABLE_H_
 
 #include "mir/graphics/renderable.h"
+#include "mir/compositor/buffer.h"
 #include "mir_test_doubles/mock_graphic_region.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include <gmock/gmock.h>
@@ -44,6 +45,7 @@ public:
     MOCK_CONST_METHOD0(top_left, geometry::Point());
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(graphic_region, std::shared_ptr<surfaces::GraphicRegion>());
+    MOCK_CONST_METHOD0(compositor_buffer, std::shared_ptr<compositor::Buffer>());
     MOCK_CONST_METHOD0(transformation, const glm::mat4&());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(should_be_rendered, bool());

@@ -20,6 +20,7 @@
 
 #include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
+#include "mir/compositor/buffer.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
@@ -64,27 +65,22 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
 
 struct BypassFilter : public mc::FilterForRenderables
 {
-    BypassFilter() : bypassed(false), native_bo(nullptr)
+    BypassFilter() : bypass_buf(nullptr)
     {
     }
     bool operator()(mg::Renderable& renderable)
     {
-        // TODO
-        if (!bypassed)
+        // TODO: More conditional checks for appropriateness to bypass
+        if (!bypass_buf)
         {
-            auto reg = renderable.graphic_region();
-            native_bo = reg->native_buffer();
-            if (native_bo)
-            {
-                bypassed = true;
+            bypass_buf = renderable.compositor_buffer();
+            if (bypass_buf)
                 return true;
-            }
         }
         return false;
     }
 
-    bool bypassed;
-    void *native_bo; // HACK
+    std::shared_ptr<mc::Buffer> bypass_buf;
 };
 
 }
@@ -106,10 +102,13 @@ void mc::DefaultCompositingStrategy::render(
 
         display_buffer.make_current();
         renderables->for_each_if(bypass_filter, bypass);
-        bypassed = bypass_filter.bypassed;
 
-        if (bypassed)
-            display_buffer.post_update(bypass_filter.native_bo);
+        if (bypass_filter.bypass_buf)
+        {
+            void *native_bo = bypass_filter.bypass_buf->native_buffer_addr();
+            display_buffer.post_update(native_bo);
+            bypassed = true;
+        }
     }
 
     if (!bypassed)

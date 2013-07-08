@@ -31,6 +31,10 @@
 
 namespace mir
 {
+namespace compositor
+{
+class Buffer;
+}
 namespace surfaces
 {
 class GraphicRegion;
@@ -47,6 +51,8 @@ public:
     virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
     virtual std::shared_ptr<surfaces::GraphicRegion> graphic_region() const = 0;
+    // XXX Doesn't compositor_buffer() remove the need for graphic_region() ?
+    virtual std::shared_ptr<compositor::Buffer> compositor_buffer() const = 0;
     virtual const glm::mat4& transformation() const = 0;
     virtual float alpha() const = 0;
     virtual bool should_be_rendered() const = 0;

@@ -84,7 +84,7 @@ std::shared_ptr<MirNativeBuffer> mc::TemporaryBuffer::native_buffer_handle() con
     return buffer->native_buffer_handle();
 }
 
-void* mc::TemporaryBuffer::native_buffer()
+void* mc::TemporaryBuffer::native_buffer_addr() const
 {
-    return buffer->native_buffer();
+    return buffer->native_buffer_addr();
 }

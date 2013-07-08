@@ -134,7 +134,7 @@ std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
     return temp;
 }
 
-void* mgg::GBMBuffer::native_buffer()
+void* mgg::GBMBuffer::native_buffer_addr() const
 {
     struct gbm_bo *bo = gbm_handle.get();
     assert(bo != NULL);

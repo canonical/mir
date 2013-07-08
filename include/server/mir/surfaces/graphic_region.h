@@ -36,7 +36,6 @@ public:
     virtual geometry::Stride stride() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
     virtual void bind_to_texture() = 0;
-    virtual void* native_buffer() { return NULL; }
 
 protected:
     GraphicRegion() = default;
