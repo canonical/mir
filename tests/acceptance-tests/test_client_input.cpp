@@ -692,6 +692,80 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
             positions[test_client_name_2] = smaller_geometry;
             
             return std::make_shared<StaticPlacementStrategy>(positions);
+       }
+        
+        std::shared_ptr<msh::SurfaceBuilder> the_surface_builder() override
+        {
+            static DepthList depths;
+            depths[test_client_name_1] = ms::DepthId{0};
+            depths[test_client_name_2] = ms::DepthId{1};
+            
+            return std::make_shared<StackingSurfaceController>(the_surface_stack_model(), depths);
         }
-    };
+        
+        void inject_input() override
+        {
+            wait_until_client_appears(test_client_name_1);
+            wait_until_client_appears(test_client_name_2);
+            
+            // First we will move the cursor in to the region where client 2 obscures client 1
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+            // Now we move to the unobscured region of client 1
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(50, 0));
+            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+        }
+    } server_config;
+    
+    launch_server_process(server_config);
+
+    struct ClientConfigOne : InputClient
+    {
+        ClientConfigOne()
+            : InputClient(test_client_name_1)
+        {
+        }
+
+        void expect_input(mt::WaitCondition& events_received) override
+        {
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(MovementEvent())).Times(AnyNumber());
+
+            {
+                // We should only see one button event sequence.
+                InSequence seq;
+                EXPECT_CALL(*handler, handle_input(ButtonDownEvent(51, 1))).Times(1);
+                EXPECT_CALL(*handler, handle_input(ButtonUpEvent(51, 1))).Times(1)
+                    .WillOnce(mt::WakeUp(&events_received));
+            }
+        }
+    } client_config_1;
+    launch_client_process(client_config_1);
+
+    struct ClientConfigTwo : InputClient
+    {
+        ClientConfigTwo()
+            : InputClient(test_client_name_2)
+        {
+        }
+
+        void expect_input(mt::WaitCondition& events_received) override
+        {
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(MovementEvent())).Times(AnyNumber());
+
+            {
+                // Likewise we should only see one button sequence.
+              InSequence seq;
+              EXPECT_CALL(*handler, handle_input(ButtonDownEvent(1, 1))).Times(1);
+              EXPECT_CALL(*handler, handle_input(ButtonUpEvent(1, 1))).Times(1)
+                  .WillOnce(mt::WakeUp(&events_received));
+            }
+        }
+    } client_config_2;
+    launch_client_process(client_config_2);
 }
