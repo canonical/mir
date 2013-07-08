@@ -161,6 +161,11 @@ geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
     return {{geom::X(0), geom::Y(0)}, size};
 }
 
+void mgg::GBMDisplayBuffer::post_update()
+{
+    post_update(nullptr);
+}
+
 void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
 {
     /*
@@ -170,52 +175,9 @@ void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
     if (!egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
-    auto bufobj = get_native_buffer_object((struct gbm_bo*)native_buffer);
-    if (!bufobj)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
-
-    /*
-     * Schedule the current front buffer object for display, and wait
-     * for it to be actually displayed (flipped).
-     *
-     * If the flip fails, release the buffer object to make it available
-     * for future rendering.
-     */
-    if (!needs_set_crtc && !schedule_and_wait_for_page_flip(bufobj))
-    {
-        bufobj->release();
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
-    }
-    else if (needs_set_crtc)
-    {
-        for (auto& output : outputs)
-        {
-            if (!output->set_crtc(bufobj->get_drm_fb_id()))
-                BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
-        }
-        needs_set_crtc = false;
-    }
-
-    /*
-     * Release the last flipped buffer object (which is not displayed anymore)
-     * to make it available for future rendering.
-     */
-    if (last_flipped_bufobj)
-        last_flipped_bufobj->release();
-
-    last_flipped_bufobj = bufobj;
-}
-
-void mgg::GBMDisplayBuffer::post_update()
-{
-    /*
-     * Bring the back buffer to the front and get the buffer object
-     * corresponding to the front buffer.
-     */
-    if (!egl.swap_buffers())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
-
-    auto bufobj = get_front_buffer_object();
+    auto bufobj = native_buffer ?
+                  get_buffer_object((struct gbm_bo*)native_buffer) :
+                  get_front_buffer_object();
     if (!bufobj)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
 
@@ -254,7 +216,7 @@ void mgg::GBMDisplayBuffer::post_update()
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
 {
     auto front = gbm_surface_lock_front_buffer(surface_gbm.get());
-    auto ret = get_native_buffer_object(front);
+    auto ret = get_buffer_object(front);
 
     if (!ret)
         gbm_surface_release_buffer(surface_gbm.get(), front);
@@ -262,7 +224,7 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
     return ret;
 }
 
-mgg::BufferObject* mgg::GBMDisplayBuffer::get_native_buffer_object(
+mgg::BufferObject* mgg::GBMDisplayBuffer::get_buffer_object(
     struct gbm_bo *bo)
 {
     if (!bo)

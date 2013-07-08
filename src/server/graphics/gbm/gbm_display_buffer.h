@@ -64,7 +64,7 @@ public:
 
 private:
     BufferObject* get_front_buffer_object();
-    BufferObject* get_native_buffer_object(struct gbm_bo *bo);
+    BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;
