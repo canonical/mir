@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <libudev.h>
-#include <boost/iterator/iterator_facade.hpp>
 
 namespace mir
 {
