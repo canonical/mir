@@ -643,7 +643,7 @@ mir::DefaultServerConfiguration::the_session_authorizer()
 {
     struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
     {
-        bool connection_is_allowed(pid_t /* pid */, std::string const& /* name */)
+        bool connection_is_allowed(pid_t /* pid */)
         {
             return true;
         }

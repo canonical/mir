@@ -30,7 +30,7 @@ namespace doubles
 
 class StubSessionAuthorizer : public frontend::SessionAuthorizer
 {
-    bool connection_is_allowed(pid_t /* pid */, std::string const& /* name */)
+    bool connection_is_allowed(pid_t /* pid */)
     {
         return true;
     }

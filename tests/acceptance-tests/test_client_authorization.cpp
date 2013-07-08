@@ -137,7 +137,7 @@ struct ClientPidTestFixture : BespokeDisplayServerTestFixture
 
 struct MockSessionAuthorizer : public mf::SessionAuthorizer
 {
-    MOCK_METHOD2(connection_is_allowed, bool(pid_t, std::string const&));
+    MOCK_METHOD1(connection_is_allowed, bool(pid_t));
 };
 
 }
@@ -156,7 +156,7 @@ TEST_F(ClientPidTestFixture, session_authorizer_receives_pid_of_connecting_clien
             using namespace ::testing;
             pid_t client_pid = shared_region->get_client_process_pid();
 
-            EXPECT_CALL(mock_authorizer, connection_is_allowed(client_pid, _)).Times(1)
+            EXPECT_CALL(mock_authorizer, connection_is_allowed(client_pid)).Times(1)
                 .WillOnce(Return(true));
         }
         
@@ -207,7 +207,7 @@ TEST_F(ClientPidTestFixture, authorizer_may_prevent_connection_of_clients)
             using namespace ::testing;
             pid_t client_pid = shared_region->get_client_process_pid();
 
-            EXPECT_CALL(mock_authorizer, connection_is_allowed(client_pid, _)).Times(1)
+            EXPECT_CALL(mock_authorizer, connection_is_allowed(client_pid)).Times(1)
                 .WillOnce(Return(false));
         }
         

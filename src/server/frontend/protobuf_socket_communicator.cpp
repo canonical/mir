@@ -148,7 +148,7 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        if (!session_authorizer->connection_is_allowed(session->client_pid(), "stub"))
+        if (!session_authorizer->connection_is_allowed(session->client_pid()))
         {
             start_accept();
             return;

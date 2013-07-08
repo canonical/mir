@@ -19,8 +19,6 @@
 #ifndef MIR_FRONTEND_SESSION_AUTHORIZER_H_
 #define MIR_FRONTEND_SESSION_AUTHORIZER_H_
 
-#include <string>
-
 #include <sys/types.h>
 
 namespace mir
@@ -33,7 +31,7 @@ class SessionAuthorizer
 public:
     virtual ~SessionAuthorizer() {}
     
-    virtual bool connection_is_allowed(pid_t pid, std::string const& name) = 0;
+    virtual bool connection_is_allowed(pid_t pid) = 0;
 protected:
     SessionAuthorizer() = default;
     SessionAuthorizer(SessionAuthorizer const&) = delete;
