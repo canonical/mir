@@ -1,0 +1,42 @@
+/*
+ * Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ */
+
+#ifndef MIR_SURFACES_SURFACE_FACTORY_H_
+#define MIR_SURFACES_SURFACE_FACTORY_H_
+
+namespace mir
+{
+namespace surfaces
+{
+
+class SurfaceFactory
+{
+public:
+    SurfaceFactory();
+    ~SurfaceFactory() = default;
+
+    std::shared_ptr<Surface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()>);
+private:
+    SurfaceFactory(const SurfaceFactory&) = delete;
+    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
+};
+
+}
+}
+
+#endif /* MIR_SURFACES_SURFACE_FACTORY_H_ */
