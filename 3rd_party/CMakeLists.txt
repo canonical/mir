@@ -4,14 +4,8 @@ string (REPLACE " -Werror " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 
 list(
   APPEND MIR_3RD_PARTY_INCLUDE_DIRECTORIES
-  ${CMAKE_CURRENT_SOURCE_DIR}/libancillary
   ${CMAKE_CURRENT_SOURCE_DIR}/android-deps
   )
-
-list(
-  APPEND MIR_3RD_PARTY_SOURCES 
-  ${CMAKE_CURRENT_SOURCE_DIR}/libancillary/fd_send.c 
-  ${CMAKE_CURRENT_SOURCE_DIR}/libancillary/fd_recv.c)
 
 add_library(
   3rd_party 
