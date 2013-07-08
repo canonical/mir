@@ -190,7 +190,8 @@ void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
      */
     if (!needs_set_crtc && !schedule_and_wait_for_page_flip(bufobj))
     {
-        bufobj->release();
+        if (!native_buffer)
+            bufobj->release();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
     }
     else if (needs_set_crtc)
@@ -210,7 +211,7 @@ void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
     if (last_flipped_bufobj)
         last_flipped_bufobj->release();
 
-    last_flipped_bufobj = bufobj;
+    last_flipped_bufobj = native_buffer ? nullptr : bufobj;
 }
 
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
