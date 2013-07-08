@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_info.h"
 #include "mir_test_doubles/mock_input_info.h"
+#include "mir_test_doubles/mock_graphics_info.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
 
@@ -173,6 +174,7 @@ struct SurfaceCreation : public ::testing::Test
         mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
         mock_basic_info = std::make_shared<mtd::MockSurfaceInfo>();
         mock_input_info = std::make_shared<mtd::MockInputInfo>();
+        mock_graphics_info = std::make_shared<mtd::MockGraphicsInfo>();
 
         ON_CALL(*mock_buffer_stream, secure_client_buffer())
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
@@ -182,6 +184,7 @@ struct SurfaceCreation : public ::testing::Test
 
     std::shared_ptr<mtd::MockSurfaceInfo> mock_basic_info;
     std::shared_ptr<mtd::MockInputInfo> mock_input_info;
+    std::shared_ptr<mtd::MockGraphicsInfo> mock_graphics_info;
     std::string surface_name;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream;
     geom::PixelFormat pf;
@@ -193,6 +196,16 @@ struct SurfaceCreation : public ::testing::Test
     std::function<void()> mock_change_cb;
 };
 
+}
+
+TEST_F(SurfaceCreation, test_surface_returns_same_gfx_info)
+{
+    ms::Surface surf(mock_basic_info,
+                     mock_graphics_info, mock_buffer_stream,
+                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
+                     null_change_cb);
+
+    EXPECT_EQ(mock_graphics_info, surf);
 }
 
 TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
