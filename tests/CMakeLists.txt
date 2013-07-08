@@ -1,13 +1,6 @@
-if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_GRAPHICS})
-  message(STATUS "Tests are NOT run with real graphics support.")
-else()
-  message(STATUS "Tests are run with real graphics.")
-endif()
-
-if(NOT DEFINED ENV{MIR_TESTS_USE_REAL_INPUT})
-  message(STATUS "Tests are NOT run with real input.")
-else()
-  message(STATUS "Tests are run with real input.")
+pkg_check_modules(UMOCKDEV umockdev-1.0)
+if (NOT UMOCKDEV_FOUND)
+  message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
 endif()
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")

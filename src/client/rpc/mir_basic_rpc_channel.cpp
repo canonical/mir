@@ -85,14 +85,19 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     const google::protobuf::MethodDescriptor* method,
     const google::protobuf::Message* request)
 {
-    std::ostringstream buffer;
-    request->SerializeToOstream(&buffer);
+    char buffer[2048];
+
+    auto const size = request->ByteSize();
+    // In practice size will be 10s of bytes - but have a test to detect problems
+    assert(size < static_cast<decltype(size)>(sizeof buffer));
+
+    request->SerializeToArray(buffer, sizeof buffer);
 
     mir::protobuf::wire::Invocation invoke;
 
     invoke.set_id(next_id());
     invoke.set_method_name(method->name());
-    invoke.set_parameters(buffer.str());
+    invoke.set_parameters(buffer, size);
 
     return invoke;
 }

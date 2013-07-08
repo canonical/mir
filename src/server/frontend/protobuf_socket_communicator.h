@@ -41,7 +41,6 @@ class Message;
 
 namespace mir
 {
-namespace protobuf { class DisplayServer; }
 namespace frontend
 {
 class ResourceCache;
