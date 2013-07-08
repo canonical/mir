@@ -27,6 +27,7 @@
 
 #include <cstddef>
 #include <sstream>
+#include <unistd.h>
 
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
@@ -59,6 +60,13 @@ MirConnection::~MirConnection() noexcept
 {
     std::lock_guard<std::mutex> lock(connection_guard);
     valid_connections.erase(this);
+
+    if (connect_result.has_platform())
+    {
+        auto const& platform = connect_result.platform();
+        for (int i = 0, end = platform.fd_size(); i != end; ++i)
+            close(platform.fd(i));
+    }
 }
 
 MirWaitHandle* MirConnection::create_surface(
