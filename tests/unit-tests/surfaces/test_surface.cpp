@@ -151,6 +151,12 @@ TEST(SurfaceCreationParametersTest, inequality)
 namespace
 {
 
+class MockCallback
+{
+public:
+    MOCK_METHOD0(call, void());
+};
+
 struct SurfaceCreation : public ::testing::Test
 {
     virtual void SetUp()
@@ -163,6 +169,8 @@ struct SurfaceCreation : public ::testing::Test
         rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+        null_change_cb = []{};
+        mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
         mock_basic_info = std::make_shared<mtd::MockSurfaceInfo>();
         mock_input_info = std::make_shared<mtd::MockInputInfo>();
 
@@ -180,6 +188,9 @@ struct SurfaceCreation : public ::testing::Test
     geom::Stride stride;
     geom::Size size;
     geom::Rectangle rect;
+    MockCallback mock_callback;
+    std::function<void()> null_change_cb;
+    std::function<void()> mock_change_cb;
 };
 
 }
@@ -297,11 +308,74 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     surf.move_to(p);
 }
 
+TEST_F(SurfaceCreation, test_surface_set_rotation)
+{
+    using namespace testing;
+
+    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), null_change_cb);
+    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+
+    geom::Size s{geom::Width{55}, geom::Height{66}};
+    ON_CALL(*mock_basic_info, size_and_position())
+        .WillByDefault(Return(geom::Rectangle{geom::Point{geom::X{}, geom::Y{}},s}));
+
+    auto ret_transformation = surf.transformation();
+
+    EXPECT_NE(glm::mat4(), ret_transformation);
+}
+
+TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_callback, call()).Times(1);
+
+    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
+    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+}
+
 TEST_F(SurfaceCreation, test_get_input_channel)
 {
     auto mock_channel = std::make_shared<MockInputChannel>();
     ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream, mock_channel, mock_change_cb);
     EXPECT_EQ(mock_channel, surf.input_channel());
+}
+
+TEST_F(SurfaceCreation, test_surface_transformation_cache_refreshes)
+{
+    using namespace testing;
+
+    const geom::Size sz{geom::Width{85}, geom::Height{43}};
+    const geom::Rectangle origin{geom::Point{geom::X{77}, geom::Y{88}}, sz};
+    const geom::Rectangle moved_pt{geom::Point{geom::X{55}, geom::Y{66}}, sz};
+
+    Sequence seq;
+    EXPECT_CALL(*mock_basic_info, size_and_position())
+        .InSequence(seq)
+        .WillOnce(Return(origin));
+    EXPECT_CALL(*mock_basic_info, size_and_position())
+        .InSequence(seq)
+        .WillOnce(Return(moved_pt));
+    EXPECT_CALL(*mock_basic_info, size_and_position())
+        .InSequence(seq)
+        .WillOnce(Return(origin));
+    EXPECT_CALL(*mock_basic_info, size_and_position())
+        .InSequence(seq)
+        .WillOnce(Return(origin));
+
+    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), null_change_cb);
+    glm::mat4 t0 = surf.transformation();
+    surf.move_to(moved_pt.top_left);
+    EXPECT_NE(t0, surf.transformation());
+    surf.move_to(origin.top_left);
+    EXPECT_EQ(t0, surf.transformation());
+
+    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+    glm::mat4 t1 = surf.transformation();
+    EXPECT_NE(t0, t1);
 }
 
 TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
@@ -338,6 +412,43 @@ TEST_F(SurfaceCreation, test_surface_compositor_buffer_locks_back_buffer_from_st
     EXPECT_EQ(buffer_resource, comp_resource);
 }
 
+TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
+{
+    using namespace testing;
+
+    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), null_change_cb);
+
+    auto ret_alpha = surf.alpha();
+
+    EXPECT_EQ(1.0f, ret_alpha);
+}
+
+TEST_F(SurfaceCreation, test_surface_set_alpha)
+{
+    using namespace testing;
+
+    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), null_change_cb);
+    float alpha = 0.67f;
+
+    surf.set_alpha(alpha);
+    auto ret_alpha = surf.alpha();
+
+    EXPECT_EQ(alpha, ret_alpha);
+}
+
+TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_callback, call()).Times(1);
+
+    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
+    surf.set_alpha(0.5f);
+}
+
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
 {
     using namespace testing;
@@ -361,6 +472,18 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
     surf.allow_framedropping(true);
 }
 
+TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second_frame)
+{
+    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
+
+    EXPECT_FALSE(surf.should_be_rendered());
+    surf.advance_client_buffer();
+    EXPECT_FALSE(surf.should_be_rendered());
+    surf.advance_client_buffer();
+    EXPECT_TRUE(surf.should_be_rendered());
+}
+
 TEST_F(SurfaceCreation, input_fds)
 {
     using namespace testing;
@@ -378,4 +501,18 @@ TEST_F(SurfaceCreation, input_fds)
     ms::Surface input_surf(mock_basic_info, mock_input_info, mock_buffer_stream,
         mt::fake_shared(channel), mock_change_cb);
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
+}
+
+TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
+{
+    using namespace testing;
+
+    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
+
+    EXPECT_FALSE(surf.should_be_rendered());
+
+    surf.flag_for_render();
+
+    EXPECT_TRUE(surf.should_be_rendered());
 }
