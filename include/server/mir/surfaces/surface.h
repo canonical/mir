@@ -41,6 +41,7 @@ namespace input
 {
 class InputChannel;
 class InputRegion;
+class SurfaceInfo;
 class SurfaceInfoController;
 }
 namespace graphics
@@ -96,10 +97,11 @@ public:
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
 
     std::shared_ptr<graphics::SurfaceInfo> graphics_info();
+    std::shared_ptr<input::SurfaceInfo> input_info() const;
 private:
     //TODO: surfaces::SurfaceInfo shouldn't be here, rather, something like mg::SurfaceInfo
     std::shared_ptr<surfaces::SurfaceInfoController> basic_info;
-    std::shared_ptr<input::SurfaceInfoController> input_info;
+    std::shared_ptr<input::SurfaceInfoController> surface_input_info;
     std::shared_ptr<graphics::SurfaceInfoController> gfx_info;
 
     std::shared_ptr<BufferStream> buffer_stream;

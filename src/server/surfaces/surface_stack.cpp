@@ -27,6 +27,7 @@
 #include "mir/input/surface_data_storage.h"
 #include "mir/surfaces/surface_data_storage.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_factory.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
@@ -45,15 +46,12 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferStreamFactory> const& bb_factory,
-                               std::shared_ptr<mi::InputChannelFactory> const& input_factory,
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
                                std::shared_ptr<ms::InputRegistrar> const& input_registrar)
-    : buffer_stream_factory{bb_factory},
-      input_factory{input_factory},
+    : surface_factory{surface_factory},
       input_registrar{input_registrar},
       notify_change{[]{}}
 {
-    assert(buffer_stream_factory);
 }
 
 void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
@@ -79,31 +77,14 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 
 std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params, ms::DepthId depth)
 {
-    mc::BufferProperties buffer_properties{params.size,
-                                           params.pixel_format,
-                                           params.buffer_usage};
-
     auto change_cb = [this]() { emit_change_notification(); };
-
-    auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
-    auto basic_info = std::make_shared<ms::SurfaceDataStorage>(params.name,
-                                                         params.top_left,
-                                                         buffer_stream->stream_size());
-    auto graphics_info = std::make_shared<mg::SurfaceState>(basic_info, change_cb);
-    auto input_info = std::make_shared<mi::SurfaceDataStorage>(basic_info);
-    auto input_channel = input_factory->make_input_channel();
-    auto surface = std::make_shared<ms::Surface>(
-                        basic_info,
-                        graphics_info, buffer_stream,
-                        input_info, input_channel,
-                        change_cb);
-    
+    auto surface = surface_factory->create_surface(params, change_cb); 
     {
         std::lock_guard<std::mutex> lg(guard);
         layers_by_depth[depth].push_back(surface);
     }
 
-    input_registrar->input_channel_opened(surface->input_channel(), input_info);
+    input_registrar->input_channel_opened(surface->input_channel(), surface->input_info());
 
     emit_change_notification();
 

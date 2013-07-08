@@ -54,15 +54,14 @@ class InputChannel;
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace surfaces
 {
-class BufferStreamFactory;
+class SurfaceFactory;
 class InputRegistrar;
 class Surface;
 
 class SurfaceStack : public compositor::Renderables, public input::InputTargets, public SurfaceStackModel
 {
 public:
-    explicit SurfaceStack(std::shared_ptr<BufferStreamFactory> const& bb_factory,
-                          std::shared_ptr<input::InputChannelFactory> const& input_factory,
+    explicit SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
                           std::shared_ptr<InputRegistrar> const& input_registrar);
     virtual ~SurfaceStack() noexcept(true) {}
 
@@ -87,8 +86,7 @@ private:
     void emit_change_notification();
 
     std::mutex guard;
-    std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
-    std::shared_ptr<input::InputChannelFactory> const input_factory;
+    std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
 
     typedef std::vector<std::shared_ptr<Surface>> Layer;

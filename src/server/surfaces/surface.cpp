@@ -47,7 +47,7 @@ ms::Surface::Surface(
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
     basic_info(basic_info),
-    input_info(input_info),
+    surface_input_info(input_info),
     gfx_info(graphics_info),
     buffer_stream(buffer_stream),
     server_input_channel(input_channel),
@@ -223,7 +223,12 @@ std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
     return server_input_channel;
 }
 
+std::shared_ptr<mi::SurfaceInfo> ms::Surface::input_info() const
+{
+    return surface_input_info;
+}
+
 void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
-    input_info->set_input_region(input_rectangles);
+    surface_input_info->set_input_region(input_rectangles);
 }

@@ -19,18 +19,23 @@
 #ifndef MIR_SURFACES_SURFACE_FACTORY_H_
 #define MIR_SURFACES_SURFACE_FACTORY_H_
 
+#include "mir/shell/surface_creation_parameters.h"
+#include <memory>
+#include <functional>
+
 namespace mir
 {
 namespace surfaces
 {
 
+class Surface;
 class SurfaceFactory
 {
 public:
-    SurfaceFactory();
-    ~SurfaceFactory() = default;
+    SurfaceFactory() {};
+    virtual ~SurfaceFactory() = default;
 
-    std::shared_ptr<Surface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()>);
+    virtual std::shared_ptr<Surface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()>) = 0;
 private:
     SurfaceFactory(const SurfaceFactory&) = delete;
     SurfaceFactory& operator=(const SurfaceFactory&) = delete;
