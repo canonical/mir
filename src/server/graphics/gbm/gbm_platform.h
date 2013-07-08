@@ -68,7 +68,7 @@ public:
     static std::shared_ptr<InternalNativeDisplay> internal_native_display;
 };
 
-extern "C" int mir_server_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display);
+extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display);
 
 }
 }
