@@ -65,7 +65,6 @@ struct SurfaceGraphicsState : public ::testing::Test
 TEST_F(SurfaceGraphicsState, test_surface_set_alpha_notifies_changes)
 {
     using namespace testing;
-
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
@@ -76,14 +75,15 @@ TEST_F(SurfaceGraphicsState, test_surface_set_alpha_notifies_changes)
     EXPECT_THAT(alpha, FloatEq(surface_state.alpha()));
 }
 
-#if 0
 TEST_F(SurfaceGraphicsState, test_surface_is_opaque_by_default)
 {
-    mg::SurfaceState surface_state(mt::fake_shared(primitive_info), mock_change_callback);
-    EXPECT_TRUE(FloatEq(1.0, surf.alpha()));
+    using namespace testing;
+    mg::SurfaceState surface_state(mt::fake_shared(primitive_info), mock_change_cb);
+    EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
 }
 
 
+#if 0
 TEST_F(SurfaceGraphicsState, test_surface_set_rotation_notifies_changes)
 {
     using namespace testing;
