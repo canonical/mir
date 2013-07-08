@@ -109,7 +109,7 @@ std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
 {
     return std::make_shared<mgg::GBMDisplay>(
         this->shared_from_this(),
-        std::make_shared<UdevVideoDevices>(udev->ctx),
+        std::make_shared<UdevVideoDevices>(udev->ctx()),
         listener);
 }
 

@@ -42,7 +42,10 @@ public:
     UdevContext(UdevContext const&) = delete;
     UdevContext& operator=(UdevContext const&) = delete;
 
-    udev* ctx;
+    udev* ctx();
+
+private:
+	udev* context;
 };
 
 class UdevDevice

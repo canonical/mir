@@ -29,7 +29,7 @@ namespace mgg = mir::graphics::gbm;
 
 mgg::UdevDevice::UdevDevice(std::shared_ptr<UdevContext> const& ctx, std::string const& syspath)
 {
-    dev = udev_device_new_from_syspath(ctx->ctx, syspath.c_str());
+    dev = udev_device_new_from_syspath(ctx->ctx(), syspath.c_str());
     if (!dev)
         BOOST_THROW_EXCEPTION(std::runtime_error("Udev device does not exist"));
 }
@@ -135,7 +135,7 @@ mgg::UdevDevice const& mgg::UdevEnumerator::iterator::operator*() const
 
 mgg::UdevEnumerator::UdevEnumerator(std::shared_ptr<UdevContext> const& ctx) :
     ctx(ctx),
-    enumerator(udev_enumerate_new(ctx->ctx)),
+    enumerator(udev_enumerate_new(ctx->ctx())),
     scanned(false)
 {
 }
@@ -186,11 +186,16 @@ mgg::UdevEnumerator::iterator mgg::UdevEnumerator::end()
 
 mgg::UdevContext::UdevContext()
 {
-    ctx = udev_new();
-    if (!ctx)
+    context = udev_new();
+    if (!context)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create udev context"));
 }
 mgg::UdevContext::~UdevContext() noexcept
 {
-    udev_unref(ctx);
+    udev_unref(context);
+}
+
+udev* mgg::UdevContext::ctx()
+{
+    return context;
 }
