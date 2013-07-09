@@ -57,10 +57,10 @@ namespace mtd = mt::doubles;
 namespace
 {
 
-class StubbedSession : public mtd::StubSession
+class StubSession : public mtd::StubSession
 {
 public:
-    StubbedSession()
+    StubSession()
     {
         using namespace ::testing;
 
@@ -86,7 +86,7 @@ public:
     static int const testing_client_input_fd;
 };
 
-int const StubbedSession::testing_client_input_fd{11};
+int const StubSession::testing_client_input_fd{11};
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
@@ -159,8 +159,9 @@ public:
 
 struct SessionMediatorTest : public ::testing::Test
 {
-    SessionMediatorTest(std::shared_ptr<mf::Shell> const& shell, std::shared_ptr<me::EventSink> const& event_sink)
-        : shell{shell},
+    SessionMediatorTest()
+        : stub_session{std::make_shared<StubSession>()},
+          shell{std::make_shared<StubShell>(stub_session)},
           graphics_platform{std::make_shared<MockPlatform>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
@@ -168,17 +169,13 @@ struct SessionMediatorTest : public ::testing::Test
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, 
-                   event_sink,
+                   std::make_shared<NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
 
-    SessionMediatorTest()
-        : SessionMediatorTest(std::make_shared<StubShell>(mt::fake_shared(stubbed_session)), std::make_shared<NullEventSink>())
-    {
-    }
-
+    std::shared_ptr<StubSession> stub_session;
     std::shared_ptr<mf::Shell> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
@@ -186,7 +183,6 @@ struct SessionMediatorTest : public ::testing::Test
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;
-    StubbedSession stubbed_session;
 
     std::unique_ptr<google::protobuf::Closure> null_callback;
 };
@@ -205,9 +201,9 @@ TEST_F(SessionMediatorTest, disconnect_releases_session)
         std::make_shared<NullEventSink>(),
         resource_cache};
     
-    auto stubbed_session = std::make_shared<StubbedSession>();
+    auto stub_session = std::make_shared<StubSession>();
 
-    EXPECT_CALL(*mock_shell, open_session(_, _)).Times(1).WillOnce(Return(stubbed_session));
+    EXPECT_CALL(*mock_shell, open_session(_, _)).Times(1).WillOnce(Return(stub_session));
     EXPECT_CALL(*mock_shell, close_session(_)).Times(1);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
@@ -370,7 +366,7 @@ TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)
         mp::Surface response;
 
         mediator.create_surface(nullptr, &request, &response, null_callback.get());
-        EXPECT_EQ(StubbedSession::testing_client_input_fd, response.fd(0));
+        EXPECT_EQ(StubSession::testing_client_input_fd, response.fd(0));
     }
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
@@ -380,10 +376,10 @@ TEST_F(SessionMediatorTest, no_input_channel_is_nonfatal)
 {
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
-    EXPECT_CALL(*stubbed_session.mock_surface, supports_input())
+    EXPECT_CALL(*stub_session->mock_surface, supports_input())
         .Times(1)
         .WillOnce(testing::Return(false));
-    EXPECT_CALL(*stubbed_session.mock_surface, client_input_fd())
+    EXPECT_CALL(*stub_session->mock_surface, client_input_fd())
         .Times(0);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
@@ -408,7 +404,7 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     {
-        EXPECT_CALL(*stubbed_session.mock_buffer, id())
+        EXPECT_CALL(*stub_session->mock_buffer, id())
             .WillOnce(Return(mc::BufferID{4}))
             .WillOnce(Return(mc::BufferID{5}))
             .WillOnce(Return(mc::BufferID{4}))
@@ -418,7 +414,7 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
         mp::SurfaceId buffer_request;
         mp::Buffer buffer_response[3];
 
-        std::shared_ptr<mc::Buffer> tmp_buffer = stubbed_session.mock_buffer;
+        std::shared_ptr<mc::Buffer> tmp_buffer = stub_session->mock_buffer;
         EXPECT_CALL(*graphics_platform, fill_ipc_package(_, tmp_buffer))
             .Times(2);
 
@@ -432,50 +428,103 @@ TEST_F(SessionMediatorTest, session_only_sends_needed_buffers)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
+
+TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
+{
+    using namespace testing;
+
+    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
+    auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mp::Surface surface_response;
+    mp::SurfaceId buffer_request;
+    mp::Buffer buffer_response;
+    mp::SurfaceParameters surface_request;
+
+    EXPECT_CALL(*stub_session->mock_surface, advance_client_buffer())
+        .Times(2)
+        .WillOnce(Return(stub_buffer1))
+        .WillOnce(Return(stub_buffer2));
+ 
+    auto refcount = stub_buffer1.use_count();
+    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
+    EXPECT_EQ(refcount+1, stub_buffer1.use_count());
+
+    auto refcount2 = stub_buffer2.use_count();
+    mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
+    EXPECT_EQ(refcount, stub_buffer1.use_count());
+    EXPECT_EQ(refcount2+1, stub_buffer2.use_count());
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
 namespace
 {
 
 struct MockEventSink : public me::EventSink
 {
-    ~MockEventSink() noexcept(true) {}
-    MOCK_METHOD1(handle_event, void(MirEvent const&));
+     ~MockEventSink() noexcept(true) {}
+     MOCK_METHOD1(handle_event, void(MirEvent const&));
 
-    // Not part of the EventSink interface but used for sequencing expectations.
-    MOCK_METHOD0(closure_run, void());
+     // Not part of the EventSink interface but used for sequencing expectations.
+     MOCK_METHOD0(closure_run, void());
 };
 
 class EventProducingShell : public mf::Shell
 {
-    std::shared_ptr<mf::Session> open_session(std::string const& /* name */, std::shared_ptr<me::EventSink> const& sink)
-    {
-        event_sink = sink;
-        return std::make_shared<StubbedSession>();
-    }
-    void close_session(std::shared_ptr<mf::Session> const&)
-    {
-    }
+     std::shared_ptr<mf::Session> open_session(std::string const& /* name */, std::shared_ptr<me::EventSink> const& sink)
+     {
+         event_sink = sink;
+         return std::make_shared<StubSession>();
+     }
+     void close_session(std::shared_ptr<mf::Session> const&)
+     {
+     }
     
-    mf::SurfaceId create_surface_for(std::shared_ptr<mf::Session> const&,
-                                     msh::SurfaceCreationParameters const&)
+     mf::SurfaceId create_surface_for(std::shared_ptr<mf::Session> const&,
+                                      msh::SurfaceCreationParameters const&)
         
-    {
-        MirEvent any_event;
-        event_sink->handle_event(any_event);
+     {
+         MirEvent any_event;
+         event_sink->handle_event(any_event);
 
-        return mf::SurfaceId{1};
-    }
+         return mf::SurfaceId{1};
+     }
 
-    std::shared_ptr<me::EventSink> event_sink;
+     std::shared_ptr<me::EventSink> event_sink;
 };
 
-struct SessionMediatorEventTest : public SessionMediatorTest
+struct SessionMediatorEventTest : public ::testing::Test
 {
     SessionMediatorEventTest()
-        : SessionMediatorTest(mt::fake_shared(shell), mt::fake_shared(mock_event_sink))
+        : shell{std::make_shared<EventProducingShell>()},
+          graphics_platform{std::make_shared<MockPlatform>()},
+          graphics_display{std::make_shared<mtd::NullDisplay>()},
+          buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
+          report{std::make_shared<mf::NullSessionMediatorReport>()},
+          resource_cache{std::make_shared<mf::ResourceCache>()},
+          mediator{shell, graphics_platform, graphics_display,
+                   buffer_allocator, report, 
+                   mt::fake_shared(mock_event_sink),
+                   resource_cache},
+          null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
+
     MockEventSink mock_event_sink;
-    EventProducingShell shell;
+    std::shared_ptr<mf::Shell> const shell;
+    std::shared_ptr<MockPlatform> const graphics_platform;
+    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
+    std::shared_ptr<mf::SessionMediatorReport> const report;
+    std::shared_ptr<mf::ResourceCache> const resource_cache;
+    mf::SessionMediator mediator;
+
+    std::unique_ptr<google::protobuf::Closure> null_callback;
 };
 
 }
@@ -519,39 +568,6 @@ TEST_F(SessionMediatorEventTest, event_sink_is_clogged_during_surface_creation)
 
         mediator.create_surface(nullptr, &request, &response, &notifying_callback);
     }
-
-    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
-}
-
-TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
-{
-    using namespace testing;
-
-    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
-    auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
-
-    mp::ConnectParameters connect_parameters;
-    mp::Connection connection;
-
-    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-    mp::Surface surface_response;
-    mp::SurfaceId buffer_request;
-    mp::Buffer buffer_response;
-    mp::SurfaceParameters surface_request;
-
-    EXPECT_CALL(*stubbed_session.mock_surface, advance_client_buffer())
-        .Times(2)
-        .WillOnce(Return(stub_buffer1))
-        .WillOnce(Return(stub_buffer2));
- 
-    auto refcount = stub_buffer1.use_count();
-    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
-    EXPECT_EQ(refcount+1, stub_buffer1.use_count());
-
-    auto refcount2 = stub_buffer2.use_count();
-    mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
-    EXPECT_EQ(refcount, stub_buffer1.use_count());
-    EXPECT_EQ(refcount2+1, stub_buffer2.use_count());
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }

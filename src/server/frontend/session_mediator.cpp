@@ -41,6 +41,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <mutex>
+#include <functional>
 
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
@@ -61,10 +62,30 @@ public:
     {
     }
     
-    void clog()
+    class Impediment
+    {
+    public:
+        ~Impediment()
+        {
+            remove_callback();
+        }
+    protected:
+        friend class CloggableEventSink;
+        Impediment(std::function<void()> const& remove) :
+            remove_callback(remove)
+        {
+        }
+    private:
+        std::function<void()> const remove_callback;
+    };
+    
+    std::unique_ptr<Impediment> clog()
     {
         std::unique_lock<std::mutex> lg(lock);
         clogged = true;
+        
+        return std::unique_ptr<Impediment>(new Impediment(
+            std::bind(std::mem_fn(&CloggableEventSink::unclog), this)));
     }
 
     void handle_event(MirEvent const& ev)
@@ -75,7 +96,8 @@ public:
         else
             drain->handle_event(ev);
     }
-    
+
+private:
     void unclog()
     {
         std::unique_lock<std::mutex> lg(lock);
@@ -86,7 +108,6 @@ public:
         buffered_events.clear();
     }
 
-private:
     std::shared_ptr<me::EventSink> const drain;
     bool clogged;
     
@@ -168,6 +189,8 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
+    std::unique_ptr<CloggableEventSink::Impediment> blockage;
+
     {
         std::unique_lock<std::mutex> lock(session_mutex);
 
@@ -176,7 +199,7 @@ void mf::SessionMediator::create_surface(
 
         report->session_create_surface_called(session->name());
 
-        event_sink->clog();
+        blockage = event_sink->clog();
         auto const id = shell->create_surface_for(session,
             msh::SurfaceCreationParameters()
             .of_name(request->surface_name())
@@ -209,7 +232,6 @@ void mf::SessionMediator::create_surface(
             }
             client_tracker->add(id);
         }
-        event_sink->unclog();
     }
 
     done->Run();
