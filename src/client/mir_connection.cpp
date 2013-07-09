@@ -175,8 +175,6 @@ MirWaitHandle* MirConnection::connect(
         &connect_result,
         google::protobuf::NewCallback(
             this, &MirConnection::connected, callback, context));
-
-
     return &connect_wait_handle;
 }
 

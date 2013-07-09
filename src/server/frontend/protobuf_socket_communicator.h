@@ -72,7 +72,7 @@ public:
 
 private:
     void start_accept();
-    void on_new_connection(std::shared_ptr<detail::SocketSession>& session, const boost::system::error_code& ec);
+    void on_new_connection(std::shared_ptr<detail::SocketSession> const& session, const boost::system::error_code& ec);
     int next_id();
 
     const std::string socket_file;

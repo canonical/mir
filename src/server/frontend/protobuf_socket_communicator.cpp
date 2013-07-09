@@ -143,7 +143,7 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 }
 
 void mf::ProtobufSocketCommunicator::on_new_connection(
-    std::shared_ptr<mfd::SocketSession>& session,
+    std::shared_ptr<mfd::SocketSession> const& session,
     const boost::system::error_code& ec)
 {
     if (!ec)
@@ -154,9 +154,8 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
             return;
         }
 
-        session->read_next_message();
         connected_sessions->add(session);
-
+        session->read_next_message();
     }
     start_accept();
 }

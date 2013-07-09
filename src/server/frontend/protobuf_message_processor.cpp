@@ -120,41 +120,6 @@ void mfd::ProtobufMessageProcessor::invoke(
     }
 }
 
-template<class ResultMessage>
-void mfd::ProtobufMessageProcessor::invoke(
-    void (protobuf::DisplayServer::*function)(
-        ::google::protobuf::RpcController* controller,
-        const ::mir::protobuf::ConnectParameters* request,
-        ResultMessage* response,
-        ::google::protobuf::Closure* done),
-    mir::protobuf::wire::Invocation const& invocation)
-{
-    ::mir::protobuf::ConnectParameters parameter_message;
-    parameter_message.ParseFromString(invocation.parameters());
-    parameter_message.set_client_pid(sender->client_pid());
-    ResultMessage result_message;
-
-    try
-    {
-        std::unique_ptr<google::protobuf::Closure> callback(
-            google::protobuf::NewPermanentCallback(this,
-                &ProtobufMessageProcessor::send_response,
-                invocation.id(),
-                &result_message));
-
-        (display_server.get()->*function)(
-            0,
-            &parameter_message,
-            &result_message,
-            callback.get());
-    }
-    catch (std::exception const& x)
-    {
-        result_message.set_error(boost::diagnostic_information(x));
-        send_response(invocation.id(), &result_message);
-    }
-}
-
 void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
