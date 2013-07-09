@@ -516,7 +516,24 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
     surf.allow_framedropping(true);
 }
 
-#if 0
+TEST_F(SurfaceCreation, hide_and_show)
+{
+    ms::Surface surf(mock_basic_info,
+                     mock_graphics_info, mock_buffer_stream,
+                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
+                     null_change_cb);
+
+    EXPECT_CALL(*mock_graphics_info, set_hidden(true))
+        .Times(1);
+    surf.set_hidden(true);
+    testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
+    
+    EXPECT_CALL(*mock_graphics_info, set_hidden(false))
+        .Times(1);
+    surf.set_hidden(false);
+    testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
+}
+
 TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second_frame)
 {
     ms::Surface surf(mock_basic_info,
@@ -524,13 +541,16 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second
                      mock_input_info, std::shared_ptr<mi::InputChannel>(),
                      null_change_cb);
 
-    EXPECT_FALSE(surf.should_be_rendered());
+    EXPECT_CALL(*mock_graphics_info, set_hidden(true))
+        .Times(0);
     surf.advance_client_buffer();
-    EXPECT_FALSE(surf.should_be_rendered());
+    testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
+    
+    EXPECT_CALL(*mock_graphics_info, set_hidden(true))
+        .Times(1);
     surf.advance_client_buffer();
-    EXPECT_TRUE(surf.should_be_rendered());
+    testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
 }
-#endif
 
 TEST_F(SurfaceCreation, input_fds)
 {
