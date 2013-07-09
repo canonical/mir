@@ -152,12 +152,6 @@ TEST(SurfaceCreationParametersTest, inequality)
 namespace
 {
 
-class MockCallback
-{
-public:
-    MOCK_METHOD0(call, void());
-};
-
 struct SurfaceCreation : public ::testing::Test
 {
     virtual void SetUp()
@@ -170,8 +164,6 @@ struct SurfaceCreation : public ::testing::Test
         rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-        null_change_cb = []{};
-        mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
         mock_basic_info = std::make_shared<mtd::MockSurfaceInfo>();
         mock_input_info = std::make_shared<mtd::MockInputInfo>();
         mock_graphics_info = std::make_shared<mtd::MockGraphicsInfo>();
@@ -191,9 +183,6 @@ struct SurfaceCreation : public ::testing::Test
     geom::Stride stride;
     geom::Size size;
     geom::Rectangle rect;
-    MockCallback mock_callback;
-    std::function<void()> null_change_cb;
-    std::function<void()> mock_change_cb;
 };
 
 }
@@ -202,22 +191,18 @@ TEST_F(SurfaceCreation, test_surface_returns_same_gfx_info)
 {
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
 
     EXPECT_EQ(mock_graphics_info, surf.graphics_info());
 }
 
-
-//TODO: WHO NEEDS THIS?
 TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 {
     using namespace testing;
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
 
     EXPECT_CALL(*mock_buffer_stream, get_stream_pixel_format())
         .Times(1)
@@ -237,8 +222,7 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
 
     EXPECT_EQ(surface_name, surf.name());
 }
@@ -252,8 +236,7 @@ TEST_F(SurfaceCreation, test_surface_queries_info_for_size)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     EXPECT_EQ(size, surf.size());
 }
 
@@ -262,8 +245,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
     using namespace testing;
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     auto graphics_resource = std::make_shared<mtd::StubBuffer>();
 
     EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
@@ -273,13 +255,14 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
     EXPECT_EQ(graphics_resource, surf.advance_client_buffer());
 }
 
+/*
 TEST_F(SurfaceCreation, test_surface_next_buffer_notifies_changes)
 {
     using namespace testing;
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     mock_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
+
     auto graphics_resource = std::make_shared<mtd::StubBuffer>();
 
     EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
@@ -290,6 +273,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_notifies_changes)
 
     surf.advance_client_buffer();
 }
+*/
 
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 {
@@ -299,8 +283,7 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
         .Times(1)
         .WillOnce(Return(stub_buffer));
@@ -315,8 +298,7 @@ TEST_F(SurfaceCreation, test_surface_gets_top_left)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
 
     auto ret_top_left = surf.top_left();
 
@@ -334,8 +316,7 @@ TEST_F(SurfaceCreation, test_surface_move_to)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     mock_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     surf.move_to(p);
 }
 
@@ -350,8 +331,7 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     surf.set_rotation(angle, mat);
 
 #if 0
@@ -420,8 +400,7 @@ TEST_F(SurfaceCreation, test_surface_compositor_buffer_locks_back_buffer_from_st
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     auto buffer_resource = std::make_shared<mtd::StubBuffer>();
 
     EXPECT_CALL(*mock_buffer_stream, lock_back_buffer())
@@ -434,7 +413,7 @@ TEST_F(SurfaceCreation, test_surface_compositor_buffer_locks_back_buffer_from_st
 }
 
 
-TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
+TEST_F(SurfaceCreation, test_surface_set_alpha)
 {
     using namespace testing;
 
@@ -444,8 +423,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
 
     surf.set_alpha(alpha);
 }
@@ -511,8 +489,7 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     surf.allow_framedropping(true);
 }
 
@@ -520,8 +497,7 @@ TEST_F(SurfaceCreation, hide_and_show)
 {
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
 
     EXPECT_CALL(*mock_graphics_info, set_hidden(true))
         .Times(1);
@@ -538,8 +514,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second
 {
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
 
     EXPECT_CALL(*mock_graphics_info, first_frame_posted())
         .Times(0);
@@ -558,8 +533,7 @@ TEST_F(SurfaceCreation, input_fds)
     
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     EXPECT_THROW({
             surf.client_input_fd();
     }, std::logic_error);
@@ -570,8 +544,7 @@ TEST_F(SurfaceCreation, input_fds)
 
     ms::Surface input_surf(mock_basic_info,
                            mock_graphics_info, mock_buffer_stream,
-                           mock_input_info, mt::fake_shared(channel),
-                           null_change_cb);
+                           mock_input_info, mt::fake_shared(channel));
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
 }
 
@@ -582,8 +555,7 @@ TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
 
     surf.flag_for_render();
 }

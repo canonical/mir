@@ -23,6 +23,15 @@
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
+namespace
+{
+class MockCallback
+{
+public:
+    MOCK_METHOD0(call, void());
+};
+}
+
 struct SurfaceInfoTest : public testing::Test
 {
     void SetUp()
@@ -30,24 +39,33 @@ struct SurfaceInfoTest : public testing::Test
         name = std::string("aa");
         top_left = geom::Point{geom::X{4}, geom::Y{7}};
         size = geom::Size{geom::Width{5}, geom::Height{9}};
+        null_change_cb = []{};
+        mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
     }
     std::string name;
     geom::Point top_left;
     geom::Size size;
+
+    MockCallback mock_callback;
+    std::function<void()> null_change_cb;
+    std::function<void()> mock_change_cb;
 };
 
 TEST_F(SurfaceInfoTest, basics)
 { 
     geom::Rectangle rect{top_left, size};
-    ms::SurfaceDataStorage storage{name, top_left, size};
+    ms::SurfaceDataStorage storage{name, top_left, size, null_change_cb};
     EXPECT_EQ(name, storage.name());
     EXPECT_EQ(rect, storage.size_and_position());
 }
 
 TEST_F(SurfaceInfoTest, update_position)
 { 
+    EXPECT_CALL(mock_callback, call())
+        .Times(1);
+
     geom::Rectangle rect1{top_left, size};
-    ms::SurfaceDataStorage storage{name, top_left, size};
+    ms::SurfaceDataStorage storage{name, top_left, size, mock_change_cb};
     EXPECT_EQ(rect1, storage.size_and_position());
 
     auto new_top_left = geom::Point{geom::X{5}, geom::Y{10}};
@@ -58,8 +76,11 @@ TEST_F(SurfaceInfoTest, update_position)
 
 TEST_F(SurfaceInfoTest, test_surface_set_rotation_updates_transform)
 {
+    EXPECT_CALL(mock_callback, call())
+        .Times(1);
+
     geom::Size s{geom::Width{55}, geom::Height{66}};
-    ms::SurfaceDataStorage storage{name, top_left, s};
+    ms::SurfaceDataStorage storage{name, top_left, s, mock_change_cb};
     auto original_transformation = storage.transformation();
 
     storage.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
