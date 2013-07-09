@@ -39,7 +39,12 @@ public:
     void apply_rotation(float degrees, glm::vec3 const&);
 private:
     std::mutex mutable guard;
+
     std::string surface_name;
+    glm::mat4 rotation_matrix;
+    mutable glm::mat4 transformation_matrix;
+    mutable geometry::Size transformation_size;
+    mutable bool transformation_dirty;
     geometry::Point surface_top_left;
     geometry::Size surface_size;
 };
