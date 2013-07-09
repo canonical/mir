@@ -67,6 +67,7 @@ void mg::SurfaceState::set_hidden(bool hide)
 {
     std::unique_lock<std::mutex> lk(guard);
     hidden = hide;
+    notify_change();
 }
 
 bool mg::SurfaceState::should_be_rendered() const
