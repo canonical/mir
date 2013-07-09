@@ -37,6 +37,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     resource_cache(resource_cache),
     report(report)
 {
+    send_response_buffer.reserve(2048); // TODO kill magic numbers
 }
 
 template<class ResultMessage>
@@ -124,17 +125,15 @@ void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
-    std::string buffer;
-    buffer.reserve(2048);
-    response->SerializeToString(&buffer);
+    response->SerializeToString(&send_response_buffer);
 
     mir::protobuf::wire::Result result;
     result.set_id(id);
-    result.set_response(buffer);
+    result.set_response(send_response_buffer);
 
-    result.SerializeToString(&buffer);
+    result.SerializeToString(&send_response_buffer);
 
-    sender->send(buffer);
+    sender->send(send_response_buffer);
 }
 
 void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
@@ -146,7 +145,7 @@ void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
     ev->set_raw(&e, sizeof(MirEvent));
 
     std::string buffer;
-    buffer.reserve(2048);
+    buffer.reserve(2048); // TODO kill magic numbers
     seq.SerializeToString(&buffer);
 
     mir::protobuf::wire::Result result;

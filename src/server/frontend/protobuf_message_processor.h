@@ -94,6 +94,8 @@ private:
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<MessageProcessorReport> const report;
+
+    std::string send_response_buffer;
 };
 }
 }
