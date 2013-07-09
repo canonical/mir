@@ -50,7 +50,7 @@ public:
     MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
     MOCK_METHOD2(apply_rotation, void(float, glm::vec3 const&));
 
-    MOCK_METHOD1(set_top_left, void(geometry::Point));
+    MOCK_METHOD1(move_to, void(geometry::Point));
 };
 
 typedef ::testing::NiceMock<MockSurfaceInfo> StubSurfaceInfo;

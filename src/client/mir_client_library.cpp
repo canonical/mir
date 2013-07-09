@@ -124,7 +124,7 @@ void mir_connection_release(MirConnection * connection)
     if (!error_connections.contains(connection))
     {
         auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_result();
+        wait_handle->wait_for_all();
     }
     else
     {
@@ -253,7 +253,13 @@ void mir_surface_swap_buffers_sync(MirSurface *surface)
 void mir_wait_for(MirWaitHandle* wait_handle)
 {
     if (wait_handle)
-        wait_handle->wait_for_result();
+        wait_handle->wait_for_all();
+}
+
+void mir_wait_for_one(MirWaitHandle* wait_handle)
+{
+    if (wait_handle)
+        wait_handle->wait_for_one();
 }
 
 MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface)
@@ -307,7 +313,7 @@ MirSurfaceState mir_surface_get_state(MirSurface *surf)
         if (s == mir_surface_state_unknown)
         {
             surf->configure(mir_surface_attrib_state,
-                            mir_surface_state_unknown)->wait_for_result();
+                            mir_surface_state_unknown)->wait_for_all();
             s = surf->attrib(mir_surface_attrib_state);
         }
 

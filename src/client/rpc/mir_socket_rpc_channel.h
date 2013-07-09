@@ -71,10 +71,9 @@ private:
     unsigned char header_bytes[size_of_header];
 
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
-    void send_message(std::string const& body, detail::SendBuffer& buffer,
+    void receive_file_descriptors(std::vector<int> &fds);
+    void send_message(mir::protobuf::wire::Invocation const& body, detail::SendBuffer& buffer,
                       mir::protobuf::wire::Invocation const& invocation);
-    void on_message_sent(mir::protobuf::wire::Invocation const& invocation,
-                         boost::system::error_code const& error);
     void on_header_read(const boost::system::error_code& error);
 
     void read_message();

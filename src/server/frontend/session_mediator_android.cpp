@@ -29,10 +29,14 @@ void mir::frontend::SessionMediator::drm_auth_magic(
     mir::protobuf::DRMAuthMagicStatus* /*response*/,
     google::protobuf::Closure* /*done*/)
 {
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
 
-    report->session_drm_auth_magic_called(session->name());
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_drm_auth_magic_called(session->name());
+    }
 
     BOOST_THROW_EXCEPTION(std::logic_error("drm_auth_magic request not supported by the Android platform"));
 }

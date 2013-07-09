@@ -18,9 +18,9 @@
 
 #include "socket_session.h"
 
-#include "ancillary.h"
-
 #include <boost/signals2.hpp>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 namespace ba = boost::asio;
 namespace bs = boost::system;
@@ -61,11 +61,41 @@ void mfd::SocketSession::send(std::string const& body)
     ba::write(socket, ba::buffer(whole_message));
 }
 
-void mfd::SocketSession::send_fds(std::vector<int32_t> const& fd)
+void mfd::SocketSession::send_fds(std::vector<int32_t> const& fds)
 {
-    if (fd.size() > 0)
+    auto n_fds = fds.size();
+    if (n_fds > 0)
     {
-        ancil_send_fds(socket.native_handle(), fd.data(), fd.size());
+        // We send dummy data
+        struct iovec iov;
+        char dummy_iov_data = 'M';
+        iov.iov_base = &dummy_iov_data;
+        iov.iov_len = 1;
+
+        // Allocate space for control message
+        std::vector<char> control(sizeof(struct cmsghdr) + sizeof(int) * n_fds);
+
+        // Message to send
+        struct msghdr header;
+        header.msg_name = NULL;
+        header.msg_namelen = 0;
+        header.msg_iov = &iov;
+        header.msg_iovlen = 1;
+        header.msg_controllen = control.size();
+        header.msg_control = control.data();
+        header.msg_flags = 0;
+
+        // Control message contains file descriptors
+        struct cmsghdr *message = CMSG_FIRSTHDR(&header);
+        message->cmsg_len = header.msg_controllen;
+        message->cmsg_level = SOL_SOCKET;
+        message->cmsg_type = SCM_RIGHTS;
+        int *data = (int *)CMSG_DATA(message);
+        int i = 0;
+        for (auto &fd: fds)
+            data[i++] = fd;
+
+        sendmsg(socket.native_handle(), &header, 0);
     }
 }
 
@@ -86,7 +116,7 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
     }
 
     size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
-    // Read newline delimited messages for now
+
     ba::async_read(
          socket,
          message,

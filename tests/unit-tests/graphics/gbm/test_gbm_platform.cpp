@@ -190,21 +190,17 @@ TEST_F(GBMGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     }, std::runtime_error);
 }
 
-/* TODO: this function is a bit fragile because libmirserver and libmirclient both have very different
- *       implementations and both have symbols for it. If the linking order of the test changes,
- *       specifically, if mir_egl_mesa_display_is_valid resolves into libmirclient, then this test will break. 
- */
 TEST_F(GBMGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
 {
     MirMesaEGLNativeDisplay* native_display = nullptr;
-    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
+    EXPECT_EQ(MIR_MESA_FALSE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
     {
         auto platform = create_platform();
         auto client = platform->create_internal_client();
         native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
-        EXPECT_EQ(1, mir_server_internal_display_is_valid(native_display));
+        EXPECT_EQ(MIR_MESA_TRUE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
     }
-    EXPECT_EQ(0, mir_server_internal_display_is_valid(native_display));
+    EXPECT_EQ(MIR_MESA_FALSE, mgg::mir_server_mesa_egl_native_display_is_valid(native_display));
 }
 
 namespace

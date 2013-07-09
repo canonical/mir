@@ -71,7 +71,7 @@ TEST_F(SurfaceInfoTest, update_position)
 
     auto new_top_left = geom::Point{geom::X{5}, geom::Y{10}};
     geom::Rectangle rect2{new_top_left, size};
-    storage.set_top_left(new_top_left);
+    storage.move_to(new_top_left);
     EXPECT_EQ(rect2, storage.size_and_position());
 }
 
@@ -99,9 +99,9 @@ TEST_F(SurfaceInfoTest, test_surface_transformation_cache_refreshes)
     ms::SurfaceDataStorage storage{name, origin.top_left, sz, null_change_cb};
 
     glm::mat4 t0 = storage.transformation();
-    storage.set_top_left(moved_pt.top_left);
+    storage.move_to(moved_pt.top_left);
     EXPECT_NE(t0, storage.transformation());
-    storage.set_top_left(origin.top_left);
+    storage.move_to(origin.top_left);
     EXPECT_EQ(t0, storage.transformation());
 
     storage.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});

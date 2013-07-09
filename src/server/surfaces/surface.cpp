@@ -77,7 +77,7 @@ std::string const& ms::Surface::name() const
 
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
-    basic_info->set_top_left(top_left);
+    basic_info->move_to(top_left);
 }
 
 void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)

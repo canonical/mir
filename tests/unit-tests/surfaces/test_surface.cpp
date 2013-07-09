@@ -310,7 +310,7 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     using namespace testing;
     geom::Point p{geom::X{55}, geom::Y{66}};
 
-    EXPECT_CALL(*mock_basic_info, set_top_left(p))
+    EXPECT_CALL(*mock_basic_info, move_to(p))
         .Times(1);
 
     ms::Surface surf(mock_basic_info,
@@ -332,33 +332,7 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
                      mock_graphics_info, mock_buffer_stream,
                      mock_input_info, std::shared_ptr<mi::InputChannel>());
     surf.set_rotation(angle, mat);
-
-#if 0
-    geom::Size s{geom::Width{55}, geom::Height{66}};
-    ON_CALL(*mock_basic_info, size_and_position())
-        .WillByDefault(Return(geom::Rectangle{geom::Point{geom::X{}, geom::Y{}},s}));
-
-    auto ret_transformation = surf.transformation();
-
-    EXPECT_NE(glm::mat4(), ret_transformation);
-#endif
 }
-
-#if 0
-//TODO NOT NEEDED
-TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_callback, call()).Times(1);
-
-    ms::Surface surf(mock_basic_info,
-                     mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     mock_change_cb);
-    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
-}
-#endif
 
 TEST_F(SurfaceCreation, test_get_input_channel)
 {
@@ -368,29 +342,6 @@ TEST_F(SurfaceCreation, test_get_input_channel)
                      mock_input_info, mock_channel);
     EXPECT_EQ(mock_channel, surf.input_channel());
 }
-
-
-#if 0
-//TODO NOT NEEDED
-TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
-{
-    using namespace testing;
-
-    ms::Surface surf(mock_basic_info,
-                     mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
-    auto buffer_resource = std::make_shared<mtd::StubBuffer>();
-
-    EXPECT_CALL(*mock_buffer_stream, lock_back_buffer())
-        .Times(AtLeast(1))
-        .WillOnce(Return(buffer_resource));
-
-    auto comp_resource = surf.graphic_region();
-
-    EXPECT_EQ(buffer_resource, comp_resource);
-}
-#endif
 
 TEST_F(SurfaceCreation, test_surface_compositor_buffer_locks_back_buffer_from_stream)
 {
@@ -425,46 +376,6 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     surf.set_alpha(alpha);
 }
-#if 0
-TEST_F(SurfaceCreation, test_surface_gets_opaque_alpha)
-{
-    using namespace testing;
-
-    ms::Surface surf(mock_basic_info,
-                     mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
-
-    auto ret_alpha = surf.alpha();
-
-    EXPECT_EQ(1.0f, ret_alpha);
-}
-
-TEST_F(SurfaceCreation, test_surface_set_alpha)
-{
-    using namespace testing;
-
-    ms::Surface surf(mock_basic_info,
-                     mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
-    float alpha = 0.67f;
-
-    surf.set_alpha(alpha);
-    auto ret_alpha = surf.alpha();
-
-    EXPECT_EQ(alpha, ret_alpha);
-}
-TEST_F(SurfaceCreation, test_surface_set_alpha_notifies_changes)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_callback, call()).Times(1);
-
-    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
-    surf.set_alpha(0.5f);
-}
 
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
 {
@@ -472,11 +383,11 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
 
     EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
 
-    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
+    ms::Surface surf(mock_basic_info,
+                     mock_graphics_info, mock_buffer_stream,
+                     mock_input_info, std::shared_ptr<mi::InputChannel>());
     surf.force_requests_to_complete();
 }
-#endif
 
 TEST_F(SurfaceCreation, test_surface_allow_framedropping)
 {

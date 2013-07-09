@@ -35,7 +35,8 @@ public:
 
     void expect_result();
     void result_received();
-    void wait_for_result();
+    void wait_for_all();
+    void wait_for_one();
 
 private:
     std::mutex guard;

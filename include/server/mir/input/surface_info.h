@@ -21,16 +21,10 @@
 
 #include "mir/geometry/rectangle.h"
 #include <vector>
-#include <memory>
 #include <string>
 
 namespace mir
 {
-namespace surfaces
-{
-class SurfaceInfo;
-}
-
 namespace input
 {
 class SurfaceInfo 
@@ -55,7 +49,7 @@ public:
 
 protected:
     SurfaceInfoController() = default; 
-    virtual ~SurfaceInfoController() = default;
+    virtual ~SurfaceInfoController() noexcept = default;
     SurfaceInfoController(const SurfaceInfoController&) = delete;
     SurfaceInfoController& operator=(const SurfaceInfoController& ) = delete;
 };

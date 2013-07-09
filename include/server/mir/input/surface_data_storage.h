@@ -21,6 +21,8 @@
 
 #include "mir/input/surface_info.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace surfaces

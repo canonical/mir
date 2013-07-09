@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <functional>
+#include <mutex>
 
 namespace mir
 {
@@ -92,6 +93,8 @@ public:
     void handle_event(MirEvent const& e);
 
 private:
+    mutable std::recursive_mutex mutex; // Protects all members of *this
+
     void on_configured();
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);

@@ -265,10 +265,20 @@ MirWaitHandle *mir_surface_release(
 void mir_surface_release_sync(MirSurface *surface);
 
 /**
- * Wait on the supplied handle until the associated request has completed.
+ * Wait on the supplied handle until all instances of the associated request
+ * have completed.
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
 void mir_wait_for(MirWaitHandle *wait_handle);
+
+/**
+ * Wait on the supplied handle until one instance of the associated request
+ * has completed. Use this instead of mir_wait_for in a threaded environment
+ * to ensure that the act of waiting does not clear all results associated
+ * with the wait handle; only one.
+ *   \param [in] wait_handle  Handle returned by an asynchronous request
+ */
+void mir_wait_for_one(MirWaitHandle *wait_handle);
 
 /**
  * Return the ID of a surface (only useful for debug output).

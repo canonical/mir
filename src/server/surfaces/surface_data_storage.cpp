@@ -83,7 +83,7 @@ glm::mat4 const& ms::SurfaceDataStorage::transformation() const
     return transformation_matrix;
 }
 
-void ms::SurfaceDataStorage::set_top_left(geom::Point new_pt)
+void ms::SurfaceDataStorage::move_to(geom::Point new_pt)
 {
     {
         std::unique_lock<std::mutex> lk(guard);

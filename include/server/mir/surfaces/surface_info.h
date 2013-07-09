@@ -54,11 +54,11 @@ protected:
 class SurfaceInfoController : public SurfaceInfo
 {
 public:
-    virtual void set_top_left(geometry::Point) = 0;
+    virtual void move_to(geometry::Point) = 0;
 
 protected:
     SurfaceInfoController() = default; 
-    virtual ~SurfaceInfoController() = default;
+    virtual ~SurfaceInfoController() noexcept = default;
     SurfaceInfoController(const SurfaceInfoController&) = delete;
     SurfaceInfoController& operator=(const SurfaceInfoController& ) = delete;
 };
