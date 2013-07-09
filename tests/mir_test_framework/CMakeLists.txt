@@ -26,7 +26,7 @@ if (MIR_PLATFORM STREQUAL "gbm")
     udev_environment.cpp
   )
   # Umockdev uses glib, which uses the deprecated "register" storage qualifier
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=deprecated")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 endif()
 
 add_library(
