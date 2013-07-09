@@ -61,8 +61,9 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
-            mg::Renderable& renderable = **it;
-            if (filter(renderable)) renderable_operator(renderable);
+            mg::SurfaceInfo& info = *((*it)->graphics_info());
+            ms::BufferStream& stream = *((*it)->buffer_stream());
+            if (filter(info)) renderable_operator(info, stream);
         }
     }
 }

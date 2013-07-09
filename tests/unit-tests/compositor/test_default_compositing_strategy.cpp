@@ -61,12 +61,12 @@ struct FakeRenderables : mc::Renderables
     }
 
     // Ugly...should we use delegation?
-    void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
+    void for_each_if(mc::FilterForRenderables& /*filter*/, mc::OperatorForRenderables& /*renderable_operator*/)
     {
         for (auto it = renderables.begin(); it != renderables.end(); it++)
         {
-            mg::Renderable &renderable = **it;
-            if (filter(renderable)) renderable_operator(renderable);
+            //mg::Renderable &renderable = **it;
+            //if (filter(renderable)) renderable_operator(renderable);
         }
     }
 

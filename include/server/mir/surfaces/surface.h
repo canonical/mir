@@ -97,6 +97,9 @@ public:
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
 
     std::shared_ptr<graphics::SurfaceInfo> graphics_info();
+
+    std::shared_ptr<BufferStream> buffer_stream() const;
+
     std::shared_ptr<input::SurfaceInfo> input_info() const;
 private:
     //TODO: surfaces::SurfaceInfo shouldn't be here, rather, something like mg::SurfaceInfo
@@ -104,7 +107,7 @@ private:
     std::shared_ptr<input::SurfaceInfoController> surface_input_info;
     std::shared_ptr<graphics::SurfaceInfoController> gfx_info;
 
-    std::shared_ptr<BufferStream> buffer_stream;
+    std::shared_ptr<BufferStream> surface_buffer_stream;
 
     std::shared_ptr<input::InputChannel> const server_input_channel;
 

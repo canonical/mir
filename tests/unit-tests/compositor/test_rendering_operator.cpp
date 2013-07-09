@@ -19,7 +19,8 @@
 #include "mir/compositor/rendering_operator.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test_doubles/mock_graphic_region.h"
-#include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/mock_graphics_info.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -90,7 +91,8 @@ TEST(RenderingOperator, render_operator_saves_resources)
     using namespace testing;
 
     StubRenderer stub_renderer;
-    mtd::MockRenderable mock_renderable;
+    mtd::MockGraphicsInfo mock_info;
+    mtd::MockBufferStream mock_stream;
 
     auto use_count_before0 = stub_renderer.resource0.use_count();
     auto use_count_before1 = stub_renderer.resource1.use_count();
@@ -103,9 +105,9 @@ TEST(RenderingOperator, render_operator_saves_resources)
                 stub_renderer,
                 [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); });
 
-            rendering_operator(mock_renderable);
-            rendering_operator(mock_renderable);
-            rendering_operator(mock_renderable);
+            rendering_operator(mock_info, mock_stream);
+            rendering_operator(mock_info, mock_stream);
+            rendering_operator(mock_info, mock_stream);
         }
 
         EXPECT_EQ(use_count_before0 + 1, stub_renderer.resource0.use_count());

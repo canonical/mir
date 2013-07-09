@@ -42,31 +42,36 @@ namespace geom = mir::geometry;
 ms::Surface::Surface(
     std::shared_ptr<ms::SurfaceInfoController> const& basic_info,
     std::shared_ptr<mg::SurfaceInfoController> const& graphics_info,
-    std::shared_ptr<BufferStream> const& buffer_stream,
+    std::shared_ptr<ms::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::SurfaceInfoController> const& input_info,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
     basic_info(basic_info),
     surface_input_info(input_info),
     gfx_info(graphics_info),
-    buffer_stream(buffer_stream),
+    surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     transformation_dirty(true),
     is_hidden(false),
     buffer_count(0),
     notify_change(change_callback)
 {
-    assert(buffer_stream);
+    assert(surface_buffer_stream);
     assert(change_callback);
 }
 
 void ms::Surface::force_requests_to_complete()
 {
-    buffer_stream->force_requests_to_complete();
+    surface_buffer_stream->force_requests_to_complete();
 }
 
 ms::Surface::~Surface()
 {
+}
+
+std::shared_ptr<ms::BufferStream> ms::Surface::buffer_stream() const
+{
+    return surface_buffer_stream;
 }
 
 std::shared_ptr<mg::SurfaceInfo> ms::Surface::graphics_info()
@@ -177,7 +182,7 @@ bool ms::Surface::should_be_rendered() const
 //todo: kdub remove
 geom::PixelFormat ms::Surface::pixel_format() const
 {
-    return buffer_stream->get_stream_pixel_format();
+    return surface_buffer_stream->get_stream_pixel_format();
 }
 
 std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
@@ -186,17 +191,17 @@ std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
         buffer_count++;
 
     notify_change();
-    return buffer_stream->secure_client_buffer();
+    return surface_buffer_stream->secure_client_buffer();
 }
 
 void ms::Surface::allow_framedropping(bool allow)
 {
-    buffer_stream->allow_framedropping(allow);
+    surface_buffer_stream->allow_framedropping(allow);
 }
 
 std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
 {
-    return buffer_stream->lock_back_buffer();
+    return surface_buffer_stream->lock_back_buffer();
 }
 
 void ms::Surface::flag_for_render()

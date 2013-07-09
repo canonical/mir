@@ -27,6 +27,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/surface_info.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/input/input_channel.h"
@@ -79,8 +80,8 @@ public:
 struct MockFilterForRenderables : public mc::FilterForRenderables
 {
     // Can not mock operator overload so need to forward
-    MOCK_METHOD1(filter, bool(mg::Renderable&));
-    bool operator()(mg::Renderable& r)
+    MOCK_METHOD1(filter, bool(mg::SurfaceInfo const&));
+    bool operator()(mg::SurfaceInfo const& r)
     {
         return filter(r);
     }
@@ -88,12 +89,16 @@ struct MockFilterForRenderables : public mc::FilterForRenderables
 
 struct MockOperatorForRenderables : public mc::OperatorForRenderables
 {
-    MOCK_METHOD1(renderable_operator, void(mg::Renderable&));
+    MOCK_METHOD2(renderable_operator, void(mg::SurfaceInfo const&, ms::BufferStream&));
+    void operator()(mg::SurfaceInfo const& info, ms::BufferStream& stream)
+    {
+        renderable_operator(info, stream);
+    }
 };
 
 struct StubOperatorForRenderables : public mc::OperatorForRenderables
 {
-    void operator()(mg::Renderable&)
+    void operator()(mg::SurfaceInfo const&, ms::BufferStream&)
     {
     }
 };
@@ -202,27 +207,32 @@ TEST_F(SurfaceStack, view_applies_renderer_to_all_surfaces_in_view)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    stack.create_surface(default_params, default_depth);
-    stack.create_surface(default_params, default_depth);
-    stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params, default_depth);
+    auto info1 = s1.lock()->graphics_info();
+    auto stream1 = s1.lock()->buffer_stream();
+    auto s2 = stack.create_surface(default_params, default_depth);
+    auto info2 = s2.lock()->graphics_info();
+    auto stream2 = s2.lock()->buffer_stream();
+    auto s3 = stack.create_surface(default_params, default_depth);
+    auto info3 = s3.lock()->graphics_info();
+    auto stream3 = s3.lock()->buffer_stream();
 
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator;
 
     Sequence seq1, seq2;
-    EXPECT_CALL(filter, filter(info1))
+    EXPECT_CALL(filter, filter(Ref(*info1)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(filter, filter(info2))
+    EXPECT_CALL(filter, filter(Ref(*info2)))
         .InSequence(seq1)
         .WillOnce(Return(false));
-    EXPECT_CALL(filter, filter(info3))
+    EXPECT_CALL(filter, filter(Ref(*info3)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-
-    EXPECT_CALL(renderable_operator, renderable_operator(info1, texture1))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info1), Ref(*stream1)))
         .InSequence(seq2);
-    EXPECT_CALL(renderablne_operator, renderable_operator(info3, texture3))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info3), Ref(*stream3)))
         .InSequence(seq2);
 
     stack.for_each_if(filter, renderable_operator);

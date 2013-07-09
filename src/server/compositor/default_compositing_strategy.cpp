@@ -51,10 +51,12 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
         : enclosing_region(enclosing_region)
     {
     }
-    bool operator()(mg::Renderable& renderable)
+    bool operator()(mg::SurfaceInfo const& renderable)
     {
+        (void) renderable;
+        return true;
         // TODO check against enclosing_region
-        return renderable.should_be_rendered();
+//        return renderable.should_be_rendered();
     }
 
     mir::geometry::Rectangle const& enclosing_region;
