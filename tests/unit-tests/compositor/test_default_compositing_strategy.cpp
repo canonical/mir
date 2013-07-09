@@ -21,11 +21,13 @@
 #include "mir/compositor/renderables.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/surface_info.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/mock_graphics_info.h"
 #include "mir_test_doubles/null_display_buffer.h"
 
 #include <gmock/gmock.h>
@@ -55,24 +57,25 @@ struct MockOverlayRenderer : public mc::OverlayRenderer
 
 struct FakeRenderables : mc::Renderables
 {
-    FakeRenderables(std::vector<mg::Renderable*> renderables) :
-        renderables(renderables)
+    FakeRenderables(std::vector<mg::SurfaceInfo*> infos) :
+        infos(infos)
     {
     }
 
     // Ugly...should we use delegation?
-    void for_each_if(mc::FilterForRenderables& /*filter*/, mc::OperatorForRenderables& /*renderable_operator*/)
+    void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
     {
-        for (auto it = renderables.begin(); it != renderables.end(); it++)
+        for (auto it = infos.begin(); it != infos.end(); it++)
         {
-            //mg::Renderable &renderable = **it;
-            //if (filter(renderable)) renderable_operator(renderable);
+            mg::SurfaceInfo &info = **it;
+            if (filter(info)) renderable_operator(info, stub_stream);
         }
     }
 
     void set_change_callback(std::function<void()> const&) {}
 
-    std::vector<mg::Renderable*> renderables;
+    mtd::MockBufferStream stub_stream;
+    std::vector<mg::SurfaceInfo*> infos;
 };
 
 ACTION_P(InvokeArgWithParam, param)
@@ -133,7 +136,6 @@ TEST(DefaultCompositingStrategy, render_overlay)
     comp.render(display_buffer);
 }
 
-#if 0
 TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
 {
     using namespace testing;
@@ -142,20 +144,20 @@ TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
     mtd::NullDisplayBuffer display_buffer;
     NiceMock<MockOverlayRenderer> overlay_renderer;
 
-    NiceMock<mtd::MockRenderable> mr1, mr2, mr3;
+    NiceMock<mtd::MockGraphicsInfo> mr1, mr2, mr3;
 
     EXPECT_CALL(mr1, should_be_rendered()).WillOnce(Return(true));
     EXPECT_CALL(mr2, should_be_rendered()).WillOnce(Return(false));
     EXPECT_CALL(mr3, should_be_rendered()).WillOnce(Return(true));
 
-    std::vector<mg::Renderable*> renderable_vec;
+    std::vector<mg::SurfaceInfo*> renderable_vec;
     renderable_vec.push_back(&mr1);
     renderable_vec.push_back(&mr2);
     renderable_vec.push_back(&mr3);
 
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr1))).Times(1);
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr2))).Times(0);
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr3))).Times(1);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mr1),_)).Times(1);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mr2),_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mr3),_)).Times(1);
 
     FakeRenderables renderables(renderable_vec);
 
@@ -165,4 +167,3 @@ TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
 
     comp.render(display_buffer);
 }
-#endif

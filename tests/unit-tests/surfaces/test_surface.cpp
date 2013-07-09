@@ -255,26 +255,6 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
     EXPECT_EQ(graphics_resource, surf.advance_client_buffer());
 }
 
-/*
-TEST_F(SurfaceCreation, test_surface_next_buffer_notifies_changes)
-{
-    using namespace testing;
-    ms::Surface surf(mock_basic_info,
-                     mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>());
-
-    auto graphics_resource = std::make_shared<mtd::StubBuffer>();
-
-    EXPECT_CALL(*mock_buffer_stream, secure_client_buffer())
-        .Times(1)
-        .WillOnce(Return(graphics_resource));
-
-    EXPECT_CALL(mock_callback, call()).Times(1);
-
-    surf.advance_client_buffer();
-}
-*/
-
 TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
 {
     using namespace testing;
@@ -431,7 +411,9 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_gfx_info_on_first_frame)
     testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
     
     EXPECT_CALL(*mock_graphics_info, frame_posted())
-        .Times(1);
+        .Times(3);
+    surf.advance_client_buffer();
+    surf.advance_client_buffer();
     surf.advance_client_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
 }

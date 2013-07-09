@@ -93,7 +93,6 @@ public:
 
     void render(std::function<void(std::shared_ptr<void> const&)>, mg::SurfaceInfo const&, ms::BufferStream&)
     {
-    printf("render called.\n");
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
 

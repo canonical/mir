@@ -32,19 +32,7 @@ namespace doubles
 class MockGraphicsInfo : public graphics::SurfaceInfoController 
 {
 public:
-    MockGraphicsInfo()
-    {
-        using namespace testing;
-    /*
-        ON_CALL(*this, size_and_position())
-            .WillByDefault(
-                Return(geometry::Rectangle{
-                        geometry::Point{geometry::X{}, geometry::Y{}},
-                        geometry::Size{geometry::Width{}, geometry::Height{}}}));
-    */
-    }
     ~MockGraphicsInfo() noexcept {}
-   // MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_METHOD1(apply_alpha, void(float));
     MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
