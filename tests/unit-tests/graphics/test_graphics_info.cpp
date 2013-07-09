@@ -82,14 +82,14 @@ TEST_F(SurfaceGraphicsState, test_surface_is_opaque_by_default)
     EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
 }
 
-TEST_F(SurfaceGraphicsState, test_surface_get_rotation)
+TEST_F(SurfaceGraphicsState, test_surface_get_transformation)
 {
     using namespace testing;
-    EXPECT_CALL(primitive_info, rotation())
-        .Times(1)
+    EXPECT_CALL(primitive_info, transformation())
+        .Times(1);
 
     mg::SurfaceState surface_state(mt::fake_shared(primitive_info), mock_change_cb);
-    surface_state.rotation();
+    surface_state.transformation();
 }
 
 TEST_F(SurfaceGraphicsState, test_surface_apply_rotation)

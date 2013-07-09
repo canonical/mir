@@ -38,6 +38,7 @@
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace ms = mir::surfaces;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
@@ -90,7 +91,7 @@ public:
 
     void clear() {}
 
-    void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&)
+    void render(std::function<void(std::shared_ptr<void> const&)>, mg::SurfaceInfo const&, ms::BufferStream&)
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }

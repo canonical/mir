@@ -24,6 +24,7 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
 #include <mir/graphics/gl_renderer.h>
+#include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
 #include <mir_test_doubles/mock_graphics_info.h>
 #include <mir_test_doubles/mock_buffer_stream.h>
@@ -39,6 +40,7 @@ using testing::Return;
 using testing::ReturnRef;
 using testing::_;
 
+namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
@@ -296,7 +298,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     mtd::MockBufferStream stream;
     mtd::MockGraphicsInfo info;
     mtd::MockBuffer gr;
-    std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
 
     int save_count = 0;
     std::vector<std::shared_ptr<void>> saved_resources;
@@ -336,7 +337,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(stream, lock_back_buffer())
         .Times(1)
-        .WillOnce(Return(gr_ptr));
+        .WillOnce(Return(mt::fake_shared(gr)));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
@@ -350,6 +351,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     renderer->render(saving_lambda, info, stream);
 
     EXPECT_EQ(1, save_count);
-    auto result = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
+    auto result = std::find(saved_resources.begin(), saved_resources.end(), mt::fake_shared(gr));
     EXPECT_NE(saved_resources.end(), result);
 }

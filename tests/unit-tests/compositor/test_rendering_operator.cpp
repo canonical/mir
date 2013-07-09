@@ -30,6 +30,8 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace ms = mir::surfaces;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -46,7 +48,8 @@ public:
 
     void clear() {}
 
-    void render(std::function<void(std::shared_ptr<void> const&)> save_resource, mg::Renderable&)
+    void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
+                mg::SurfaceInfo const&, ms::BufferStream&)
     {
         std::shared_ptr<void> tmp;
         switch(counter++)
@@ -73,15 +76,6 @@ public:
     std::shared_ptr<int> resource1;
     std::shared_ptr<int> resource2;
     int counter;
-};
-
-class MockRenderer : public mg::Renderer
-{
-public:
-    MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&));
-    MOCK_METHOD0(clear, void ());
-
-    ~MockRenderer() noexcept {}
 };
 
 }

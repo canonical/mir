@@ -94,10 +94,11 @@ class StubGraphicPlatform : public mtd::NullPlatform
 class StubRenderer : public mg::Renderer
 {
 public:
-    virtual void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable& r)
+    virtual void render(std::function<void(std::shared_ptr<void> const&)>,
+                                   mg::SurfaceInfo const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
-        r.graphic_region();
+        stream.lock_back_buffer();
     }
 
     void clear() {}

@@ -18,7 +18,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
 
-#include "mir/graphics/renderable.h"
+#include "mir/surfaces/buffer_stream.h"
+#include "mir/graphics/surface_info.h"
 #include "mir/graphics/renderer.h"
 #include <gmock/gmock.h>
 
@@ -31,7 +32,8 @@ namespace doubles
 
 struct MockSurfaceRenderer : public graphics::Renderer
 {
-    MOCK_METHOD2(render, void(std::function<void(std::shared_ptr<void> const&)>, graphics::Renderable&));
+    MOCK_METHOD3(render, void(
+        std::function<void(std::shared_ptr<void> const&)>, graphics::SurfaceInfo const&, surfaces::BufferStream&));
     MOCK_METHOD0(clear, void());
 
     ~MockSurfaceRenderer() noexcept {}
