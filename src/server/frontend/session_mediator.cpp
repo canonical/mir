@@ -76,9 +76,6 @@ public:
             drain->handle_event(ev);
     }
     
-
-
-private:
     void unclog()
     {
         std::unique_lock<std::mutex> lg(lock);
@@ -89,6 +86,7 @@ private:
         buffered_events.clear();
     }
 
+private:
     std::shared_ptr<me::EventSink> const drain;
     bool clogged;
     
