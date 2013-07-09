@@ -289,23 +289,6 @@ TEST_F(ShellSurface, show_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST_F(ShellSurface, visible_throw_behavior)
-{
-    msh::Surface test(
-            mt::fake_shared(surface_builder),
-            msh::a_surface());
-
-    EXPECT_NO_THROW({
-        test.visible();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.visible();
-    }, std::runtime_error);
-}
-
 TEST_F(ShellSurface, destroy_throw_behavior)
 {
     msh::Surface test(

@@ -119,32 +119,6 @@ mir::geometry::Size ms::Surface::size() const
     return basic_info->size_and_position().size;
 }
 
-std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
-{
-//    return compositor_buffer();
-    return nullptr;
-}
-
-const glm::mat4& ms::Surface::transformation() const
-{
-    //TODO REMOVE THIS FUNCTION. use graphics_info()
-    return transformation_matrix;
-}
-
-float ms::Surface::alpha() const
-{
-    //TODO REMOVE THIS FUNCTION. use graphics_info()
-//    return alpha_value;
-        return 1.0f;
-}
-
-bool ms::Surface::should_be_rendered() const
-{
-    //TODO REMOVE THIS FUNCTION. use graphics_info()
-    return false;
-    //return !is_hidden && (buffer_count > 1);
-}
-
 //note: not sure the surface should be aware of pixel format. might be something that the
 //texture (which goes to compositor should be aware of though
 //todo: kdub remove

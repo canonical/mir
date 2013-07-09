@@ -93,18 +93,6 @@ void msh::Surface::show()
     }
 }
 
-bool msh::Surface::visible()
-{
-    if (auto const& s = surface.lock())
-    {
-        return s->should_be_rendered();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
-}
-
 void msh::Surface::destroy()
 {
     builder->destroy_surface(surface);

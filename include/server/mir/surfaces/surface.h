@@ -56,7 +56,7 @@ class BufferStream;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
-class Surface : public graphics::Renderable
+class Surface
 {
 public:
     Surface(std::shared_ptr<surfaces::SurfaceInfoController> const& basic_info,
@@ -77,10 +77,6 @@ public:
     /* From Renderable */
     geometry::Point top_left() const;
     geometry::Size size() const;
-    std::shared_ptr<GraphicRegion> graphic_region() const;
-    const glm::mat4& transformation() const override;
-    float alpha() const;
-    bool should_be_rendered() const;
 
     geometry::PixelFormat pixel_format() const;
 

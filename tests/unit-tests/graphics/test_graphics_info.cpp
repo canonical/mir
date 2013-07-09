@@ -127,19 +127,3 @@ TEST_F(SurfaceGraphicsState, test_surface_should_be_rendererd)
     surface_state.set_hidden(false);
     EXPECT_TRUE(surface_state.should_be_rendered());
 }
-
-#if 0
-TEST_F(SurfaceGraphicsState, flag_for_render_makes_surfaces_valid)
-{
-    using namespace testing;
-
-    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
-
-    EXPECT_FALSE(surf.should_be_rendered());
-
-    surf.flag_for_render();
-
-    EXPECT_TRUE(surf.should_be_rendered());
-}
-#endif
