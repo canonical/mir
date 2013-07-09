@@ -208,6 +208,8 @@ TEST_F(SurfaceCreation, test_surface_returns_same_gfx_info)
     EXPECT_EQ(mock_graphics_info, surf.graphics_info());
 }
 
+
+//TODO: WHO NEEDS THIS?
 TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
 {
     using namespace testing;

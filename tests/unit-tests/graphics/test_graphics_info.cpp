@@ -108,19 +108,21 @@ TEST_F(SurfaceGraphicsState, test_surface_apply_rotation)
     surface_state.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
-#if 0
-TEST_F(SurfaceGraphicsState, test_surface_next_buffer_does_not_set_valid_until_second_frame)
+TEST_F(SurfaceGraphicsState, test_surface_should_be_rendererd)
 {
-    ms::Surface surf(mock_basic_info, mock_input_info, mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(), mock_change_cb);
+    mg::SurfaceState surface_state(mt::fake_shared(primitive_info), mock_change_cb);
 
-    EXPECT_FALSE(surf.should_be_rendered());
-    surf.advance_client_buffer();
-    EXPECT_FALSE(surf.should_be_rendered());
-    surf.advance_client_buffer();
+    EXPECT_FALSE(surface_state.should_be_rendered());
+    surface_state.flag_for_render();
+    EXPECT_TRUE(surf.should_be_rendered());
+
+    surface_state.set_hidden(true);
+    EXPECT_FALSE(surface_state.should_be_rendered());
+    surface_state.set_hidden(false);
     EXPECT_TRUE(surf.should_be_rendered());
 }
 
+#if 0
 TEST_F(SurfaceGraphicsState, flag_for_render_makes_surfaces_valid)
 {
     using namespace testing;
