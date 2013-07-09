@@ -26,7 +26,8 @@ mg::SurfaceState::SurfaceState(std::shared_ptr<ms::SurfaceInfo> const& basic_inf
                                std::function<void()> change_cb)
     : basic_info(basic_info),
       notify_change(change_cb),
-      surface_alpha(1.0f)
+      surface_alpha(1.0f),
+      hidden(true)
 {
 }
 
@@ -54,11 +55,14 @@ glm::mat4 const& mg::SurfaceState::transformation() const
     return basic_info->transformation(); 
 }
 
-void mg::SurfaceState::set_hidden(bool)// hidden)
+void mg::SurfaceState::set_hidden(bool hide)
 {
+    std::unique_lock<std::mutex> lk(guard);
+    hidden = hide;
 }
 
 bool mg::SurfaceState::should_be_rendered() const
 {
-    return true;
+    std::unique_lock<std::mutex> lk(guard);
+    return !hidden;
 }

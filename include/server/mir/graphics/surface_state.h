@@ -53,6 +53,7 @@ private:
     std::function<void()> const notify_change;
     std::mutex mutable guard;
     float surface_alpha;
+    bool hidden;
 };
 
 }
