@@ -341,12 +341,18 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
 {
     using namespace testing;
 
+    auto angle = 60.0f;
+    auto mat = glm::vec3{0.0f, 0.0f, 1.0f};
+    EXPECT_CALL(*mock_basic_info, apply_rotation(FloatEq(angle), mat))
+        .Times(1);
+
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
                      mock_input_info, std::shared_ptr<mi::InputChannel>(),
                      null_change_cb);
-    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+    surf.set_rotation(angle, mat);
 
+#if 0
     geom::Size s{geom::Width{55}, geom::Height{66}};
     ON_CALL(*mock_basic_info, size_and_position())
         .WillByDefault(Return(geom::Rectangle{geom::Point{geom::X{}, geom::Y{}},s}));
@@ -354,6 +360,7 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
     auto ret_transformation = surf.transformation();
 
     EXPECT_NE(glm::mat4(), ret_transformation);
+#endif
 }
 
 TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
