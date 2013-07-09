@@ -284,10 +284,6 @@ public:
     glm::mat4           trans;
 };
 
-void NullGraphicRegionDeleter(mtd::MockGraphicRegion * /* gr */)
-{
-}
-
 }
 
 TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
