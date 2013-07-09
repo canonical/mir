@@ -96,6 +96,7 @@ private:
     std::shared_ptr<MessageProcessorReport> const report;
 
     std::string send_response_buffer;
+    mir::protobuf::wire::Result send_response_result;
 };
 }
 }

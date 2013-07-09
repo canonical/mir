@@ -127,11 +127,10 @@ void mfd::ProtobufMessageProcessor::send_response(
 {
     response->SerializeToString(&send_response_buffer);
 
-    mir::protobuf::wire::Result result;
-    result.set_id(id);
-    result.set_response(send_response_buffer);
+    send_response_result.set_id(id);
+    send_response_result.set_response(send_response_buffer);
 
-    result.SerializeToString(&send_response_buffer);
+    send_response_result.SerializeToString(&send_response_buffer);
 
     sender->send(send_response_buffer);
 }
