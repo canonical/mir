@@ -42,7 +42,7 @@ public:
     void apply_rotation(float degrees, glm::vec3 const&);
 private:
     std::mutex mutable guard;
-    std::function<void()> change_cb;
+    std::function<void()> notify_change;
     std::string surface_name;
     glm::mat4 rotation_matrix;
     mutable glm::mat4 transformation_matrix;
