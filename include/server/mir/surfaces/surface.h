@@ -21,9 +21,12 @@
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_properties.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wall"
+#include <glm/glm.hpp>
+#pragma GCC diagnostic pop
 #include <vector>
 #include <memory>
 #include <string>

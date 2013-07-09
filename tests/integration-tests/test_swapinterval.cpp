@@ -20,7 +20,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/renderer.h"
-#include "mir/graphics/renderable.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
 #include "mir/compositor/renderables.h"
