@@ -40,7 +40,7 @@ public:
     SurfaceState(std::shared_ptr<surfaces::SurfaceInfo> const& basic_info,
                  std::function<void()> change_cb);
 
-    void first_frame_posted();
+    void frame_posted();
     void set_hidden(bool hidden);
     bool should_be_rendered() const;
 
@@ -54,7 +54,7 @@ private:
     std::function<void()> const notify_change;
     std::mutex mutable guard;
     float surface_alpha;
-    bool frame_posted;
+    bool first_frame_posted;
     bool hidden;
 };
 

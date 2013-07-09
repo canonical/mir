@@ -29,9 +29,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
-#include <cassert>
-
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace mc = mir::compositor;
 namespace ms = mir::surfaces;
@@ -44,20 +41,13 @@ ms::Surface::Surface(
     std::shared_ptr<mg::SurfaceInfoController> const& graphics_info,
     std::shared_ptr<ms::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::SurfaceInfoController> const& input_info,
-    std::shared_ptr<input::InputChannel> const& input_channel,
-    std::function<void()> const& change_callback) :
-    basic_info(basic_info),
-    surface_input_info(input_info),
-    gfx_info(graphics_info),
-    surface_buffer_stream(buffer_stream),
-    server_input_channel(input_channel),
-    transformation_dirty(true),
-    is_hidden(false),
-    buffer_count(0),
-    notify_change(change_callback)
+    std::shared_ptr<input::InputChannel> const& input_channel)
+    : basic_info(basic_info),
+      surface_input_info(input_info),
+      gfx_info(graphics_info),
+      surface_buffer_stream(buffer_stream),
+      server_input_channel(input_channel)
 {
-    assert(surface_buffer_stream);
-    assert(change_callback);
 }
 
 void ms::Surface::force_requests_to_complete()
@@ -87,14 +77,11 @@ std::string const& ms::Surface::name() const
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
     basic_info->set_top_left(top_left);
-    transformation_dirty = true;
-    notify_change();
 }
 
 void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
 {
     basic_info->apply_rotation(degrees, axis);
-//    notify_change();
 }
 
 void ms::Surface::set_alpha(float alpha_v)
@@ -105,8 +92,6 @@ void ms::Surface::set_alpha(float alpha_v)
 void ms::Surface::set_hidden(bool hide)
 {
     gfx_info->set_hidden(hide);
-//    is_hidden = hide;
-//    notify_change();
 }
 
 geom::Point ms::Surface::top_left() const
@@ -129,12 +114,7 @@ geom::PixelFormat ms::Surface::pixel_format() const
 
 std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
 {
-    if (buffer_count < 2)
-        buffer_count++;
-    if (buffer_count > 1)
-        flag_for_render();
-
-    notify_change();
+    flag_for_render();
     return surface_buffer_stream->secure_client_buffer();
 }
 
@@ -151,7 +131,7 @@ std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
 //*TODO this is just used in example code, could be private
 void ms::Surface::flag_for_render()
 {
-    gfx_info->first_frame_posted();
+    gfx_info->frame_posted();
 }
 
 bool ms::Surface::supports_input() const

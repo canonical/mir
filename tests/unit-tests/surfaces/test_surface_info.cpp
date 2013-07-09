@@ -19,6 +19,7 @@
 #include "mir/surfaces/surface_data_storage.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
@@ -95,7 +96,7 @@ TEST_F(SurfaceInfoTest, test_surface_transformation_cache_refreshes)
     const geom::Size sz{geom::Width{85}, geom::Height{43}};
     const geom::Rectangle origin{geom::Point{geom::X{77}, geom::Y{88}}, sz};
     const geom::Rectangle moved_pt{geom::Point{geom::X{55}, geom::Y{66}}, sz};
-    ms::SurfaceDataStorage storage{name, origin.top_left, sz};
+    ms::SurfaceDataStorage storage{name, origin.top_left, sz, null_change_cb};
 
     glm::mat4 t0 = storage.transformation();
     storage.set_top_left(moved_pt.top_left);

@@ -52,7 +52,7 @@ public:
         auto gfx_info = std::make_shared<MockGraphicsInfo>();
         dummy_surface = std::make_shared<surfaces::Surface>(
             info, gfx_info, buffer_stream,
-            input_info, std::shared_ptr<input::InputChannel>(), []{});
+            input_info, std::shared_ptr<input::InputChannel>());
         return dummy_surface;
     }
 

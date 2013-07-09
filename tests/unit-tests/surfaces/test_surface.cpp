@@ -310,7 +310,6 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     using namespace testing;
     geom::Point p{geom::X{55}, geom::Y{66}};
 
-    EXPECT_CALL(mock_callback, call()).Times(1);
     EXPECT_CALL(*mock_basic_info, set_top_left(p))
         .Times(1);
 
@@ -366,8 +365,7 @@ TEST_F(SurfaceCreation, test_get_input_channel)
     auto mock_channel = std::make_shared<MockInputChannel>();
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, mock_channel,
-                     mock_change_cb);
+                     mock_input_info, mock_channel);
     EXPECT_EQ(mock_channel, surf.input_channel());
 }
 
@@ -510,18 +508,18 @@ TEST_F(SurfaceCreation, hide_and_show)
     testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
 }
 
-TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second_frame)
+TEST_F(SurfaceCreation, test_surface_next_buffer_tells_gfx_info_on_first_frame)
 {
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
                      mock_input_info, std::shared_ptr<mi::InputChannel>());
 
-    EXPECT_CALL(*mock_graphics_info, first_frame_posted())
+    EXPECT_CALL(*mock_graphics_info, frame_posted())
         .Times(0);
     surf.advance_client_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
     
-    EXPECT_CALL(*mock_graphics_info, first_frame_posted())
+    EXPECT_CALL(*mock_graphics_info, frame_posted())
         .Times(1);
     surf.advance_client_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
@@ -548,9 +546,10 @@ TEST_F(SurfaceCreation, input_fds)
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
 }
 
+/* todo: this test appears just for render_surfaces example apparently */
 TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
 {
-    EXPECT_CALL(*mock_graphics_info, first_frame_posted())
+    EXPECT_CALL(*mock_graphics_info, frame_posted())
         .Times(1);
 
     ms::Surface surf(mock_basic_info,

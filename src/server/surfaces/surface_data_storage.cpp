@@ -23,8 +23,9 @@ namespace geom=mir::geometry;
 namespace ms = mir::surfaces;
 
 ms::SurfaceDataStorage::SurfaceDataStorage(
-    std::string const& name, geom::Point top_left, geom::Size size)
-    : surface_name(name),
+    std::string const& name, geom::Point top_left, geom::Size size, std::function<void()> change_cb)
+    : change_cb(change_cb),
+      surface_name(name),
       transformation_dirty(true),
       surface_top_left(top_left),
       surface_size(size)
@@ -48,6 +49,7 @@ void ms::SurfaceDataStorage::set_top_left(geom::Point new_pt)
     std::unique_lock<std::mutex> lk(guard);
     surface_top_left = new_pt;
     transformation_dirty = true;
+//    notify_change();
 }
 
 void ms::SurfaceDataStorage::apply_rotation(float degrees, glm::vec3 const& axis)

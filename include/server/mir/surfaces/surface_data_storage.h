@@ -20,6 +20,8 @@
 #define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
 
 #include "mir/surfaces/surface_info.h"
+
+#include <functional>
 #include <mutex>
 
 namespace mir
@@ -30,7 +32,8 @@ namespace surfaces
 class SurfaceDataStorage : public SurfaceInfoController 
 {
 public:
-    SurfaceDataStorage(std::string const& name, geometry::Point top_left, geometry::Size size);
+    SurfaceDataStorage(std::string const& name, geometry::Point top_left, geometry::Size size,
+                       std::function<void()> change_cb);
 
     geometry::Rectangle size_and_position() const;
     std::string const& name() const;
@@ -39,7 +42,7 @@ public:
     void apply_rotation(float degrees, glm::vec3 const&);
 private:
     std::mutex mutable guard;
-
+    std::function<void()> change_cb;
     std::string surface_name;
     glm::mat4 rotation_matrix;
     mutable glm::mat4 transformation_matrix;

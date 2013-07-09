@@ -63,8 +63,7 @@ public:
             std::shared_ptr<graphics::SurfaceInfoController> const& graphics_info,
             std::shared_ptr<BufferStream> const& buffer_stream,
             std::shared_ptr<input::SurfaceInfoController> const& input_info,
-            std::shared_ptr<input::InputChannel> const& input_channel,
-            std::function<void()> const& change_callback);
+            std::shared_ptr<input::InputChannel> const& input_channel);
 
     ~Surface();
 
@@ -102,19 +101,8 @@ private:
     std::shared_ptr<surfaces::SurfaceInfoController> basic_info;
     std::shared_ptr<input::SurfaceInfoController> surface_input_info;
     std::shared_ptr<graphics::SurfaceInfoController> gfx_info;
-
     std::shared_ptr<BufferStream> surface_buffer_stream;
-
     std::shared_ptr<input::InputChannel> const server_input_channel;
-
-    glm::mat4 rotation_matrix;
-    mutable glm::mat4 transformation_matrix;
-    mutable geometry::Size transformation_size;
-    mutable bool transformation_dirty;
-
-    bool is_hidden;
-    unsigned int buffer_count;
-    std::function<void()> notify_change;
 };
 
 }

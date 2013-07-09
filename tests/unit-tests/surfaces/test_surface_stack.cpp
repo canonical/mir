@@ -169,11 +169,11 @@ struct SurfaceStack : public ::testing::Test
 
         //TODO: this should be a real Stub from mtd, once ms::Surface is an interface
         stub_surface1 = std::make_shared<ms::Surface>(info, gfx_info, buffer_stream,
-            input_info, std::shared_ptr<mir::input::InputChannel>(), []{});
+            input_info, std::shared_ptr<mir::input::InputChannel>());
         stub_surface2 = std::make_shared<ms::Surface>(info, gfx_info, buffer_stream,
-            input_info, std::shared_ptr<mir::input::InputChannel>(), []{});
+            input_info, std::shared_ptr<mir::input::InputChannel>());
         stub_surface3 = std::make_shared<ms::Surface>(info, gfx_info, buffer_stream,
-            input_info, std::shared_ptr<mir::input::InputChannel>(), []{});
+            input_info, std::shared_ptr<mir::input::InputChannel>());
 
         ON_CALL(mock_surface_allocator, create_surface(_,_))
             .WillByDefault(Return(stub_surface1));

@@ -64,7 +64,7 @@ public:
         auto input_info = std::make_shared<mtd::StubInputInfo>();
         auto gfx_info = std::make_shared<mtd::StubGraphicsInfo>();
         dummy_surface = std::make_shared<ms::Surface>(info, gfx_info, stub_buffer_stream_,
-            input_info, std::shared_ptr<mi::InputChannel>(), []{});
+            input_info, std::shared_ptr<mi::InputChannel>());
         return dummy_surface;
     }
 

@@ -48,13 +48,13 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
     auto basic_info = std::make_shared<ms::SurfaceDataStorage>(params.name,
                                                          params.top_left,
-                                                         buffer_stream->stream_size());
+                                                         buffer_stream->stream_size(),
+                                                         change_callback);
     auto graphics_info = std::make_shared<mg::SurfaceState>(basic_info, change_callback);
     auto input_info = std::make_shared<mi::SurfaceDataStorage>(basic_info);
     auto input_channel = input_factory->make_input_channel();
     return std::make_shared<ms::Surface>(
                         basic_info,
                         graphics_info, buffer_stream,
-                        input_info, input_channel,
-                        change_callback);
+                        input_info, input_channel);
 }
