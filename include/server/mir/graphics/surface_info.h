@@ -37,6 +37,7 @@ class SurfaceInfo
 public:
     virtual float alpha() const = 0;
     virtual glm::mat4 const& transformation() const = 0;
+    virtual bool should_be_rendered() const = 0;
 
     virtual ~SurfaceInfo() = default;
 
@@ -49,6 +50,7 @@ protected:
 class SurfaceInfoController : public SurfaceInfo
 {
 public:
+    virtual void set_hidden(bool hidden) = 0;
     virtual void apply_alpha(float alpha) = 0;
     virtual void apply_rotation(float degrees, glm::vec3 const&) = 0;
 

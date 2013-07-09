@@ -516,6 +516,7 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
     surf.allow_framedropping(true);
 }
 
+#if 0
 TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second_frame)
 {
     ms::Surface surf(mock_basic_info,
@@ -529,6 +530,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second
     surf.advance_client_buffer();
     EXPECT_TRUE(surf.should_be_rendered());
 }
+#endif
 
 TEST_F(SurfaceCreation, input_fds)
 {

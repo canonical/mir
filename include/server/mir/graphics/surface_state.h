@@ -40,6 +40,9 @@ public:
     SurfaceState(std::shared_ptr<surfaces::SurfaceInfo> const& basic_info,
                  std::function<void()> change_cb);
 
+    void set_hidden(bool hidden);
+    bool should_be_rendered() const;
+
     void apply_rotation(float degrees, glm::vec3 const&);
     glm::mat4 const& transformation() const;
 

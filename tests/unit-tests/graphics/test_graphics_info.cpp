@@ -113,13 +113,10 @@ TEST_F(SurfaceGraphicsState, test_surface_should_be_rendererd)
     mg::SurfaceState surface_state(mt::fake_shared(primitive_info), mock_change_cb);
 
     EXPECT_FALSE(surface_state.should_be_rendered());
-    surface_state.flag_for_render();
-    EXPECT_TRUE(surf.should_be_rendered());
-
+    surface_state.set_hidden(false);
+    EXPECT_TRUE(surface_state.should_be_rendered());
     surface_state.set_hidden(true);
     EXPECT_FALSE(surface_state.should_be_rendered());
-    surface_state.set_hidden(false);
-    EXPECT_TRUE(surf.should_be_rendered());
 }
 
 #if 0

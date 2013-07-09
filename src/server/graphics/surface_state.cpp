@@ -53,3 +53,12 @@ glm::mat4 const& mg::SurfaceState::transformation() const
 {
     return basic_info->transformation(); 
 }
+
+void mg::SurfaceState::set_hidden(bool)// hidden)
+{
+}
+
+bool mg::SurfaceState::should_be_rendered() const
+{
+    return true;
+}
