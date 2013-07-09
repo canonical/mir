@@ -112,11 +112,20 @@ TEST_F(SurfaceGraphicsState, test_surface_should_be_rendererd)
 {
     mg::SurfaceState surface_state(mt::fake_shared(primitive_info), mock_change_cb);
 
+    //not renderable by default
     EXPECT_FALSE(surface_state.should_be_rendered());
+
     surface_state.set_hidden(false);
-    EXPECT_TRUE(surface_state.should_be_rendered());
+    //not renderable if no first frame has been posted by client, regardless of hide state
+    EXPECT_FALSE(surface_state.should_be_rendered());
     surface_state.set_hidden(true);
     EXPECT_FALSE(surface_state.should_be_rendered());
+
+    surface_state.first_frame_posted();
+    EXPECT_FALSE(surface_state.should_be_rendered());
+
+    surface_state.set_hidden(false);
+    EXPECT_TRUE(surface_state.should_be_rendered());
 }
 
 #if 0

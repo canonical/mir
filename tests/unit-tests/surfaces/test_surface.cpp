@@ -541,12 +541,12 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_does_not_set_valid_until_second
                      mock_input_info, std::shared_ptr<mi::InputChannel>(),
                      null_change_cb);
 
-    EXPECT_CALL(*mock_graphics_info, set_hidden(true))
+    EXPECT_CALL(*mock_graphics_info, first_frame_posted())
         .Times(0);
     surf.advance_client_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
     
-    EXPECT_CALL(*mock_graphics_info, set_hidden(true))
+    EXPECT_CALL(*mock_graphics_info, first_frame_posted())
         .Times(1);
     surf.advance_client_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_graphics_info.get());
@@ -577,16 +577,13 @@ TEST_F(SurfaceCreation, input_fds)
 
 TEST_F(SurfaceCreation, flag_for_render_makes_surfaces_valid)
 {
-    using namespace testing;
+    EXPECT_CALL(*mock_graphics_info, first_frame_posted())
+        .Times(1);
 
     ms::Surface surf(mock_basic_info,
                      mock_graphics_info, mock_buffer_stream,
                      mock_input_info, std::shared_ptr<mi::InputChannel>(),
                      null_change_cb);
 
-    EXPECT_FALSE(surf.should_be_rendered());
-
     surf.flag_for_render();
-
-    EXPECT_TRUE(surf.should_be_rendered());
 }

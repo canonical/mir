@@ -158,7 +158,7 @@ std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
     if (buffer_count < 2)
         buffer_count++;
     if (buffer_count > 1)
-        gfx_info->first_frame_posted();
+        flag_for_render();
 
     notify_change();
     return surface_buffer_stream->secure_client_buffer();
@@ -174,9 +174,10 @@ std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
     return surface_buffer_stream->lock_back_buffer();
 }
 
+//*TODO this is just used in example code, could be private
 void ms::Surface::flag_for_render()
 {
-    buffer_count = 2;
+    gfx_info->first_frame_posted();
 }
 
 bool ms::Surface::supports_input() const
