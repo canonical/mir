@@ -46,7 +46,10 @@ struct SurfaceGraphicsState : public ::testing::Test
         using namespace testing;
         null_change_cb = []{};
         mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
-        
+
+        static glm::mat4 the_matrix;
+        ON_CALL(primitive_info, transformation())
+            .WillByDefault(ReturnRef(the_matrix)); 
         ON_CALL(primitive_info, size_and_position())
             .WillByDefault(Return(primitive_rect));
     }

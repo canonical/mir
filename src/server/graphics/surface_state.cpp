@@ -45,6 +45,7 @@ float mg::SurfaceState::alpha() const
 void mg::SurfaceState::apply_rotation(float degrees, glm::vec3 const& mat)
 {
     basic_info->apply_rotation(degrees, mat);
+    notify_change();
 }
 
 glm::mat4 const& mg::SurfaceState::transformation() const
