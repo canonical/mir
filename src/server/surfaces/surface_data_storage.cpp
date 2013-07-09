@@ -44,21 +44,6 @@ std::string const& ms::SurfaceDataStorage::name() const
     return surface_name;
 }
 
-void ms::SurfaceDataStorage::set_top_left(geom::Point new_pt)
-{
-    std::unique_lock<std::mutex> lk(guard);
-    surface_top_left = new_pt;
-    transformation_dirty = true;
-    notify_change();
-}
-
-void ms::SurfaceDataStorage::apply_rotation(float degrees, glm::vec3 const& axis)
-{
-    rotation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
-    transformation_dirty = true;
-    notify_change();
-}
-
 glm::mat4 const& ms::SurfaceDataStorage::transformation() const
 {
     std::unique_lock<std::mutex> lk(guard);
@@ -97,3 +82,24 @@ glm::mat4 const& ms::SurfaceDataStorage::transformation() const
 
     return transformation_matrix;
 }
+
+void ms::SurfaceDataStorage::set_top_left(geom::Point new_pt)
+{
+    {
+        std::unique_lock<std::mutex> lk(guard);
+        surface_top_left = new_pt;
+        transformation_dirty = true;
+    }
+    notify_change();
+}
+
+void ms::SurfaceDataStorage::apply_rotation(float degrees, glm::vec3 const& axis)
+{
+    {
+        std::unique_lock<std::mutex> lk(guard);
+        rotation_matrix = glm::rotate(glm::mat4{1.0f}, degrees, axis);
+        transformation_dirty = true;
+    }
+    notify_change();
+}
+
