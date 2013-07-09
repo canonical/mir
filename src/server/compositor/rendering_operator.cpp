@@ -34,7 +34,7 @@ mc::RenderingOperator::~RenderingOperator()
 {
 }
 
-void mc::RenderingOperator::operator()(mg::SurfaceInfo const&, ms::BufferStream&)
+void mc::RenderingOperator::operator()(mg::SurfaceInfo const& info, ms::BufferStream& stream)
 {
-//    renderer.render(save_resource, renderable);
+    renderer.render(save_resource, info, stream);
 }
