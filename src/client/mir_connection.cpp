@@ -119,7 +119,6 @@ void MirConnection::released(SurfaceRelease data)
         std::lock_guard<std::recursive_mutex> lock(mutex);
         valid_surfaces.erase(data.surface->id());
     }
-
     data.callback(data.surface, data.context);
     data.handle->result_received();
     delete data.surface;

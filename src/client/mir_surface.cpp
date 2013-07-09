@@ -221,8 +221,6 @@ MirWaitHandle* MirSurface::release_surface(
         mir_surface_callback callback,
         void * context)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     return connection->release_surface(this, callback, context);
 }
 
