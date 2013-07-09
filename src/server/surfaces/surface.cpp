@@ -46,7 +46,8 @@ ms::Surface::Surface(
       surface_input_info(input_info),
       gfx_info(graphics_info),
       surface_buffer_stream(buffer_stream),
-      server_input_channel(input_channel)
+      server_input_channel(input_channel),
+      surface_in_startup(true)
 {
 }
 
@@ -104,9 +105,6 @@ mir::geometry::Size ms::Surface::size() const
     return basic_info->size_and_position().size;
 }
 
-//note: not sure the surface should be aware of pixel format. might be something that the
-//texture (which goes to compositor should be aware of though
-//todo: kdub remove
 geom::PixelFormat ms::Surface::pixel_format() const
 {
     return surface_buffer_stream->get_stream_pixel_format();
@@ -114,7 +112,15 @@ geom::PixelFormat ms::Surface::pixel_format() const
 
 std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
 {
-    flag_for_render();
+    if (surface_in_startup)
+    {
+        surface_in_startup = false;
+    }
+    else
+    {
+        flag_for_render();
+    }
+
     return surface_buffer_stream->secure_client_buffer();
 }
 
@@ -128,7 +134,7 @@ std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
     return surface_buffer_stream->lock_back_buffer();
 }
 
-//*TODO this is just used in example code, could be private
+//TODO: this is just used in example code, could be private
 void ms::Surface::flag_for_render()
 {
     gfx_info->frame_posted();

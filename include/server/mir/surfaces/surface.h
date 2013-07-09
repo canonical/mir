@@ -97,12 +97,12 @@ public:
 
     std::shared_ptr<input::SurfaceInfo> input_info() const;
 private:
-    //TODO: surfaces::SurfaceInfo shouldn't be here, rather, something like mg::SurfaceInfo
     std::shared_ptr<surfaces::SurfaceInfoController> basic_info;
     std::shared_ptr<input::SurfaceInfoController> surface_input_info;
     std::shared_ptr<graphics::SurfaceInfoController> gfx_info;
     std::shared_ptr<BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
+    bool surface_in_startup;
 };
 
 }

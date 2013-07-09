@@ -46,8 +46,7 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
                                            params.pixel_format,
                                            params.buffer_usage};
     auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
-    auto basic_info = std::make_shared<ms::SurfaceDataStorage>(params.name,
-                                                         params.top_left,
+    auto basic_info = std::make_shared<ms::SurfaceDataStorage>(params.name, params.top_left,
                                                          buffer_stream->stream_size(),
                                                          change_callback);
     auto graphics_info = std::make_shared<mg::SurfaceState>(basic_info, change_callback);
