@@ -31,7 +31,9 @@
 #include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/stub_input_registrar.h"
+#include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 
@@ -125,7 +127,7 @@ struct StubInputChannelFactory : public mi::InputChannelFactory
 {
     std::shared_ptr<mi::InputChannel> make_input_channel()
     {
-        return std::shared_ptr<mi::InputChannel>();
+        return std::make_shared<mtd::StubInputChannel>();
     }
 };
 
@@ -430,12 +432,43 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
     
     auto s = stack.create_surface(
         msh::a_surface().of_size(requested_size).of_position(requested_top_left), default_depth);
-    
+
     {
         auto surface = s.lock();
         EXPECT_EQ(requested_top_left, surface->top_left());
-    }
+    } 
+}
+
+TEST(SurfaceStack, surface_gets_buffer_bundles_reported_size)
+{
+    using namespace ::testing;
+    geom::Point const requested_top_left{geom::X{50},
+                                         geom::Y{17}};
+    geom::Size const requested_size{geom::Width{1024}, geom::Height{768}}; 
+    geom::Size const stream_size{geom::Width{1025}, geom::Height{769}};
+
+    MockBufferStreamFactory buffer_stream_factory;
+    auto stream = std::make_shared<mtd::MockBufferStream>();
+    EXPECT_CALL(*stream, stream_size())
+        .Times(1)
+        .WillOnce(Return(stream_size));  
+    EXPECT_CALL(buffer_stream_factory,create_buffer_stream(_))
+        .Times(1)
+        .WillOnce(Return(stream));
+
+    ms::SurfaceStack stack{mt::fake_shared(buffer_stream_factory),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
     
+    auto s = stack.create_surface(
+        msh::a_surface()
+            .of_size(requested_size)
+            .of_position(requested_top_left), default_depth);
+    
+    {
+        auto surface = s.lock();
+        EXPECT_EQ(stream_size, surface->size());
+    }    
 }
 
 TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
@@ -443,11 +476,20 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     using namespace ::testing;
 
     mtd::MockInputRegistrar registrar;
-    EXPECT_CALL(registrar, input_surface_opened(_)).Times(1);
-    EXPECT_CALL(registrar, input_surface_closed(_)).Times(1);
+    Sequence seq;
+
+    auto channel = std::make_shared<StubInputChannel>(4,3);
+    MockInputChannelFactory input_factory; 
+    EXPECT_CALL(input_factory, make_input_channel())
+        .Times(1)
+        .WillOnce(Return(channel));
+    EXPECT_CALL(registrar, input_channel_opened(_,_))
+        .InSequence(seq);
+    EXPECT_CALL(registrar, input_channel_closed(_))
+        .InSequence(seq);
 
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
-        std::make_shared<StubInputChannelFactory>(),
+            mt::fake_shared(input_factory),
             mt::fake_shared(registrar)};
     
     auto s = stack.create_surface(msh::a_surface(), default_depth);
@@ -465,13 +507,13 @@ TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
     StubInputChannel input_channel(server_input_fd, client_input_fd);
     MockInputChannelFactory input_factory;
     
-    EXPECT_CALL(input_factory, make_input_channel()).Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
+    EXPECT_CALL(input_factory, make_input_channel())
+        .Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         mt::fake_shared(input_factory),
             std::make_shared<mtd::StubInputRegistrar>()};
 
     auto surface = stack.create_surface(msh::a_surface(), default_depth).lock();
-    EXPECT_EQ(server_input_fd, surface->server_input_fd());
     EXPECT_EQ(client_input_fd, surface->client_input_fd());
 }
 

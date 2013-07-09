@@ -18,8 +18,9 @@
 
 #include "mir_test_framework/input_testing_server_configuration.h"
 
-#include "mir/input/surface_target.h"
+#include "mir/input/input_channel.h"
 #include "mir/surfaces/input_registrar.h"
+#include "mir/input/surface_info.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
 
@@ -47,8 +48,8 @@ class SurfaceReadinessListener
 public:
     virtual ~SurfaceReadinessListener() = default;
     
-    virtual void surface_ready_for_input(std::string const& surface_name) = 0;
-    virtual void surface_finished_for_input(std::string const& surface_name) = 0;
+    virtual void channel_ready_for_input(std::string const& channel_name) = 0;
+    virtual void channel_finished_for_input(std::string const& channel_name) = 0;
 
 protected:
     SurfaceReadinessListener() = default;
@@ -68,18 +69,22 @@ public:
 
     ~ProxyInputRegistrar() noexcept(true) = default;
     
-    void input_surface_opened(std::shared_ptr<mi::SurfaceTarget> const& opened_surface)
+    void input_channel_opened(std::shared_ptr<mi::InputChannel> const& opened_channel,
+                              std::shared_ptr<mi::SurfaceInfo> const& info)
     {
-        underlying_registrar->input_surface_opened(opened_surface);
-        listener->surface_ready_for_input(opened_surface->name());
+        outstanding_channels[opened_channel] = info->name();
+        underlying_registrar->input_channel_opened(opened_channel, info);
+        listener->channel_ready_for_input(info->name());
     }
-    void input_surface_closed(std::shared_ptr<mi::SurfaceTarget> const& closed_surface)
+    void input_channel_closed(std::shared_ptr<mi::InputChannel> const& closed_channel)
     {
-        underlying_registrar->input_surface_closed(closed_surface);
-        listener->surface_finished_for_input(closed_surface->name());
+        auto channel = outstanding_channels[closed_channel];
+        underlying_registrar->input_channel_closed(closed_channel);
+        listener->channel_finished_for_input(channel);
     }
 
 private:
+    std::map<std::shared_ptr<mi::InputChannel>, std::string> outstanding_channels;
     std::shared_ptr<ms::InputRegistrar> const underlying_registrar;
     std::shared_ptr<SurfaceReadinessListener> const listener;
 };
@@ -144,17 +149,17 @@ std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_in
               client_lifecycles(client_lifecycles)
         {
         }
-        void surface_ready_for_input(std::string const& surface_name)
+        void channel_ready_for_input(std::string const& channel_name)
         {
             std::unique_lock<std::mutex> lg(lifecycle_lock);
-            client_lifecycles[surface_name] = mtf::ClientLifecycleState::appeared;
+            client_lifecycles[channel_name] = mtf::ClientLifecycleState::appeared;
             lifecycle_condition.notify_all();
         }
 
-        void surface_finished_for_input(std::string const& surface_name)
+        void channel_finished_for_input(std::string const& channel_name)
         {
             std::unique_lock<std::mutex> lg(lifecycle_lock);
-            client_lifecycles[surface_name] = mtf::ClientLifecycleState::vanished;
+            client_lifecycles[channel_name] = mtf::ClientLifecycleState::vanished;
             lifecycle_condition.notify_all();
         }
         std::mutex &lifecycle_lock;
@@ -188,25 +193,25 @@ std::shared_ptr<mg::ViewableArea> mtf::InputTestingServerConfiguration::the_view
     return view_area;
 }
 
-void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string const& surface_name)
+void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string const& channel_name)
 {
     std::unique_lock<std::mutex> lg(lifecycle_lock);
     
     std::chrono::seconds timeout(60);
     auto end_time = std::chrono::system_clock::now() + timeout;
     
-    if (client_lifecycles[surface_name] == vanished)
+    if (client_lifecycles[channel_name] == vanished)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to appear but it has already vanished"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + channel_name + ") to appear but it has already vanished"));
     }
-    while (client_lifecycles[surface_name] != appeared)
+    while (client_lifecycles[channel_name] != appeared)
     {
         if (lifecycle_condition.wait_until(lg, end_time) == std::cv_status::timeout)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to appear"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + channel_name + ") to appear"));
     }
 }
 
-void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::string const& surface_name)
+void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::string const& channel_name)
 {
     std::unique_lock<std::mutex> lg(lifecycle_lock);
 
@@ -214,13 +219,13 @@ void mtf::InputTestingServerConfiguration::wait_until_client_vanishes(std::strin
     auto end_time = std::chrono::system_clock::now() + timeout;
     
 
-    if (client_lifecycles[surface_name] == appeared)
+    if (client_lifecycles[channel_name] == appeared)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + surface_name + ") to vanish but it has already appeared"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Waiting for a client (" + channel_name + ") to vanish but it has already appeared"));
     }
-    while (client_lifecycles[surface_name] != vanished)
+    while (client_lifecycles[channel_name] != vanished)
     {
         if (lifecycle_condition.wait_until(lg, end_time) == std::cv_status::timeout)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + surface_name + ") to vanish"));
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timed out waiting for client (" + channel_name + ") to vanish"));
     }
 }

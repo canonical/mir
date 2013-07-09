@@ -26,8 +26,6 @@
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
-#include "ancillary.h"
-
 #include <boost/bind.hpp>
 #include <cstring>
 #include <sstream>
@@ -79,16 +77,12 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
         if (surface->fds_on_side_channel() > 0)
         {
-            std::vector<int32_t> buf(surface->fds_on_side_channel());
+            std::vector<int32_t> fds(surface->fds_on_side_channel());
+            receive_file_descriptors(fds);
+            for (auto &fd: fds)
+                surface->add_fd(fd);
 
-            int received = 0;
-            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
-                /* TODO avoid spinning forever */;
-
-            for (int i = 0; i != received; ++i)
-                surface->add_fd(buf[i]);
-
-            rpc_report->file_descriptors_received(*response, buf);
+            rpc_report->file_descriptors_received(*response, fds);
         }
     }
 
@@ -105,16 +99,12 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
         if (buffer->fds_on_side_channel() > 0)
         {
-            std::vector<int32_t> buf(buffer->fds_on_side_channel());
+            std::vector<int32_t> fds(buffer->fds_on_side_channel());
+            receive_file_descriptors(fds);
+            for (auto &fd: fds)
+                buffer->add_fd(fd);
 
-            int received = 0;
-            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
-                /* TODO avoid spinning forever */;
-
-            for (int i = 0; i != received; ++i)
-                buffer->add_fd(buf[i]);
-
-            rpc_report->file_descriptors_received(*response, buf);
+            rpc_report->file_descriptors_received(*response, fds);
         }
     }
 
@@ -132,21 +122,56 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
         if (platform->fds_on_side_channel() > 0)
         {
-            std::vector<int32_t> buf(platform->fds_on_side_channel());
+            std::vector<int32_t> fds(platform->fds_on_side_channel());
+            receive_file_descriptors(fds);
+            for (auto &fd: fds)
+                platform->add_fd(fd);
 
-            int received = 0;
-            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
-                /* TODO avoid spinning forever */;
-
-            for (int i = 0; i != received; ++i)
-                platform->add_fd(buf[i]);
-
-            rpc_report->file_descriptors_received(*response, buf);
+            rpc_report->file_descriptors_received(*response, fds);
         }
     }
 
 
     complete->Run();
+}
+
+void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int> &fds)
+{
+    // We send dummy data
+    struct iovec iov;
+    char dummy_iov_data = '\0';
+    iov.iov_base = &dummy_iov_data;
+    iov.iov_len = 1;
+
+    // Allocate space for control message
+    auto n_fds = fds.size();
+    std::vector<char> control(sizeof(struct cmsghdr) + sizeof(int) * n_fds);
+
+    // Message to send
+    struct msghdr header;
+    header.msg_name = NULL;
+    header.msg_namelen = 0;
+    header.msg_iov = &iov;
+    header.msg_iovlen = 1;
+    header.msg_controllen = control.size();
+    header.msg_control = control.data();
+    header.msg_flags = 0;
+
+    // Control message contains file descriptors
+    struct cmsghdr *message = CMSG_FIRSTHDR(&header);
+    message->cmsg_len = header.msg_controllen;
+    message->cmsg_level = SOL_SOCKET;
+    message->cmsg_type = SCM_RIGHTS;
+
+    while (recvmsg(socket.native_handle(), &header, 0) < 0)
+        ; // FIXME: Avoid spinning forever
+
+    // Copy file descriptors back to caller
+    n_fds = (message->cmsg_len - sizeof(struct cmsghdr)) / sizeof(int);
+    fds.resize(n_fds);
+    int *data = (int *)CMSG_DATA(message);
+    for (std::vector<int>::size_type i = 0; i < n_fds; i++)
+        fds[i] = data[i];
 }
 
 void mclr::MirSocketRpcChannel::CallMethod(

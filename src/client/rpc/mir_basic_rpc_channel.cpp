@@ -58,8 +58,14 @@ void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& res
         rpc_report->complete_response(result);
 
         completion.response->ParseFromString(result.response());
-        completion.complete->Run();
+
+        // Let the completion closure live a bit longer than our lock...
+        std::shared_ptr<google::protobuf::Closure> complete =
+            completion.complete;
         pending_calls.erase(call);
+
+        lock.unlock();  // Avoid deadlocks in callbacks
+        complete->Run();
     }
 }
 

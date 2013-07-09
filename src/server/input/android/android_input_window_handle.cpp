@@ -20,8 +20,7 @@
 #include "android_input_application_handle.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/input/input_region.h"
-#include "mir/input/surface_target.h"
+#include "mir/input/surface_info.h"
 
 #include <androidfw/InputTransport.h>
 
@@ -35,27 +34,26 @@ namespace
 {
 struct WindowInfo : public droidinput::InputWindowInfo
 {
-    WindowInfo(std::shared_ptr<mi::SurfaceTarget> const& surface)
-        : surface(surface)
+    WindowInfo(std::shared_ptr<mi::SurfaceInfo> const& info)
+        : info(info)
     {
     }
 
     bool touchableRegionContainsPoint(int32_t x, int32_t y) const override
     {
-        uint32_t rel_x = x-surface->top_left().x.as_uint32_t();
-        uint32_t rel_y = y-surface->top_left().y.as_uint32_t();
-        
-        return surface->input_region()->contains({geom::X{rel_x}, geom::Y{rel_y}});
+        return info->input_region_contains({geom::X{x}, geom::Y{y}});
     }
     
-    std::shared_ptr<mi::SurfaceTarget> const surface;
+    std::shared_ptr<mi::SurfaceInfo> const info;
 };
 }
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
-                                          std::shared_ptr<mi::SurfaceTarget> const& surface)
+                                          std::shared_ptr<mi::InputChannel> const& channel,
+                                          std::shared_ptr<mi::SurfaceInfo> const& info)
   : droidinput::InputWindowHandle(input_app_handle),
-    surface(surface)
+    input_channel(channel),
+    surface_info(info)
 {
     updateInfo();
 }
@@ -64,17 +62,19 @@ bool mia::InputWindowHandle::updateInfo()
 {
     if (!mInfo)
     {
-        mInfo = new WindowInfo(surface);
+        mInfo = new WindowInfo(surface_info);
 
         // TODO: How can we avoid recreating the InputChannel which the InputChannelFactory has already created?
         mInfo->inputChannel = new droidinput::InputChannel(droidinput::String8("TODO: Name"),
-                                                           surface->server_input_fd());
+                                                           input_channel->server_fd());
     }
 
-    auto surface_position = surface->top_left();
+    auto surface_rect = surface_info->size_and_position();
+    auto surface_position = surface_rect.top_left;
+    auto surface_size = surface_rect.size;
+
     mInfo->frameLeft = surface_position.x.as_uint32_t();
     mInfo->frameTop = surface_position.y.as_uint32_t();
-    auto surface_size = surface->size();
     mInfo->frameRight = mInfo->frameLeft + surface_size.width.as_uint32_t();
     mInfo->frameBottom = mInfo->frameTop + surface_size.height.as_uint32_t();
     
@@ -83,7 +83,7 @@ bool mia::InputWindowHandle::updateInfo()
     mInfo->touchableRegionRight = mInfo->frameRight;
     mInfo->touchableRegionBottom = mInfo->frameBottom;
 
-    mInfo->name = droidinput::String8(surface->name().c_str());
+    mInfo->name = droidinput::String8(surface_info->name().c_str());
     mInfo->layoutParamsFlags = droidinput::InputWindowInfo::FLAG_NOT_TOUCH_MODAL;
     mInfo->layoutParamsType = droidinput::InputWindowInfo::TYPE_APPLICATION;
     mInfo->scaleFactor = 1.f;
