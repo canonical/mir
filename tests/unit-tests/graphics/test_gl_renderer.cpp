@@ -24,7 +24,9 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
 #include <mir/graphics/gl_renderer.h>
-#include <mir_test_doubles/mock_renderable.h>
+#include <mir_test_doubles/mock_buffer.h>
+#include <mir_test_doubles/mock_graphics_info.h>
+#include <mir_test_doubles/mock_buffer_stream.h>
 #include <mir_test_doubles/mock_graphic_region.h>
 #include <mir/graphics/renderable.h>
 #include "mir/surfaces/graphic_region.h"
@@ -291,8 +293,9 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 {
     using namespace std::placeholders;
 
-    mtd::MockRenderable rd;
-    mtd::MockGraphicRegion gr;
+    mtd::MockBufferStream stream;
+    mtd::MockGraphicsInfo info;
+    mtd::MockBuffer gr;
     std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
 
     int save_count = 0;
@@ -319,11 +322,11 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(mock_gl, glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
 
-    EXPECT_CALL(rd, transformation())
+    EXPECT_CALL(info, transformation())
         .WillOnce(ReturnRef(trans));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
-    EXPECT_CALL(rd, alpha())
-        .WillOnce(Return(0));
+    EXPECT_CALL(info, alpha())
+        .WillOnce(Return(0.0f));
     EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
     EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3, GL_FLOAT, GL_FALSE, _, _));
@@ -331,7 +334,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(rd, graphic_region())
+    EXPECT_CALL(stream, lock_back_buffer())
         .Times(1)
         .WillOnce(Return(gr_ptr));
     EXPECT_CALL(gr, bind_to_texture());
@@ -344,7 +347,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(saving_lambda, rd);
+    renderer->render(saving_lambda, info, stream);
 
     EXPECT_EQ(1, save_count);
     auto result = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
