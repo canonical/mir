@@ -21,6 +21,7 @@
 
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
+
 mg::SurfaceState::SurfaceState(std::shared_ptr<ms::SurfaceInfo> const& basic_info,
                                std::function<void()> change_cb)
     : basic_info(basic_info),
