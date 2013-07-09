@@ -47,6 +47,8 @@ public:
    // MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_METHOD1(apply_alpha, void(float));
+    MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
+    MOCK_METHOD2(apply_rotation, void(float, glm::vec3 const&));
 };
 
 typedef ::testing::NiceMock<MockGraphicsInfo> StubGraphicsInfo;

@@ -40,9 +40,13 @@ public:
     SurfaceState(std::shared_ptr<surfaces::SurfaceInfo> const& basic_info,
                  std::function<void()> change_cb);
 
+    void apply_rotation(float degrees, glm::vec3 const&);
+    glm::mat4 const& transformation() const;
+
     void apply_alpha(float alpha);
     float alpha() const;
 private:
+    std::shared_ptr<surfaces::SurfaceInfo> const basic_info;
     std::function<void()> const notify_change;
     std::mutex mutable guard;
     float surface_alpha;

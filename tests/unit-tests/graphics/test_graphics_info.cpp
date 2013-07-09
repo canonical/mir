@@ -82,7 +82,7 @@ TEST_F(SurfaceGraphicsState, test_surface_is_opaque_by_default)
     EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
 }
 
-TEST_F(SurfaceGraphicsState, test_surface_apply_rotation)
+TEST_F(SurfaceGraphicsState, test_surface_get_rotation)
 {
     using namespace testing;
     EXPECT_CALL(primitive_info, rotation())

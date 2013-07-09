@@ -22,6 +22,10 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/size.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wall"
+#include <glm/glm.hpp>
+#pragma GCC diagnostic pop
 #include <vector>
 #include <memory>
 #include <string>
@@ -33,9 +37,13 @@ namespace surfaces
 class SurfaceInfo
 {
 public:
-    virtual geometry::Rectangle size_and_position() const = 0;
     virtual std::string const& name() const = 0;
 
+    /* TODO: consolidate representation of transformation with size/position? */
+    virtual geometry::Rectangle size_and_position() const = 0;
+    virtual glm::mat4 const& transformation() const = 0;
+
+    virtual void apply_rotation(float degrees, glm::vec3 const&) = 0;
 protected:
     SurfaceInfo() = default; 
     virtual ~SurfaceInfo() = default;

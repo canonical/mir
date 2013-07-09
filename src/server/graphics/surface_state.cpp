@@ -17,15 +17,16 @@
  */
 
 #include "mir/graphics/surface_state.h"
+#include "mir/surfaces/surface_info.h"
 
 namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 mg::SurfaceState::SurfaceState(std::shared_ptr<ms::SurfaceInfo> const& basic_info,
                                std::function<void()> change_cb)
-    : notify_change(change_cb),
+    : basic_info(basic_info),
+      notify_change(change_cb),
       surface_alpha(1.0f)
 {
-    (void) basic_info;
 }
 
 void mg::SurfaceState::apply_alpha(float alpha)
@@ -39,4 +40,14 @@ float mg::SurfaceState::alpha() const
 {
     std::unique_lock<std::mutex> lk(guard);
     return surface_alpha;
+}
+
+void mg::SurfaceState::apply_rotation(float degrees, glm::vec3 const& mat)
+{
+    basic_info->apply_rotation(degrees, mat);
+}
+
+glm::mat4 const& mg::SurfaceState::transformation() const
+{
+    return basic_info->transformation(); 
 }

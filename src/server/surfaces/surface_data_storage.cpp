@@ -40,8 +40,20 @@ std::string const& ms::SurfaceDataStorage::name() const
     std::unique_lock<std::mutex> lk(guard);
     return surface_name;
 }
+
 void ms::SurfaceDataStorage::set_top_left(geom::Point new_pt)
 {
     std::unique_lock<std::mutex> lk(guard);
     surface_top_left = new_pt;
+}
+
+void ms::SurfaceDataStorage::apply_rotation(float degrees, glm::vec3 const&)
+{
+    (void) degrees;
+}
+
+glm::mat4 const& ms::SurfaceDataStorage::transformation() const
+{
+    static glm::mat4 z;
+    return z;
 }

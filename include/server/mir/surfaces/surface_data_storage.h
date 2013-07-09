@@ -35,6 +35,8 @@ public:
     geometry::Rectangle size_and_position() const;
     std::string const& name() const;
     void set_top_left(geometry::Point);
+    glm::mat4 const& transformation() const;
+    void apply_rotation(float degrees, glm::vec3 const&);
 private:
     std::mutex mutable guard;
     std::string surface_name;
