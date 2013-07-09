@@ -209,6 +209,14 @@ int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
                         << boost::errinfo_errno(errno));
         }
         status = fops->ioctl(vt_fd, VT_WAITACTIVE, vt_number);
+        if (status < 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to wait for VT to become active"))
+                        << boost::errinfo_file_name(active_vt_path)
+                        << boost::errinfo_errno(errno));
+        }
     }
 
     return vt_fd;

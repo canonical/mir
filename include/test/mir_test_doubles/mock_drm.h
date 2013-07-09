@@ -124,6 +124,9 @@ public:
     MOCK_METHOD5(drmModeSetCursor, int (int fd, uint32_t crtcId, uint32_t bo_handle, uint32_t width, uint32_t height));
     MOCK_METHOD4(drmModeMoveCursor,int (int fd, uint32_t crtcId, int x, int y));
 
+    MOCK_METHOD2(drmSetInterfaceVersion, int (int fd, drmSetVersion* sv));
+    MOCK_METHOD1(drmGetBusid, char* (int fd));
+
     FakeDRMResources fake_drm;
 };
 

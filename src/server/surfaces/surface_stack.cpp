@@ -23,14 +23,20 @@
 #include "mir/graphics/renderer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
+#include "mir/input/surface_data_storage.h"
+#include "mir/surfaces/surface_data_storage.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
+
+#include <boost/throw_exception.hpp>
 
 #include <algorithm>
 #include <cassert>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 
 namespace ms = mir::surfaces;
 namespace mc = mir::compositor;
@@ -55,7 +61,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
     for (auto &layer : layers_by_depth)
     {
         auto surfaces = layer.second;
-        for (auto it = surfaces.rbegin(); it != surfaces.rend(); ++it)
+        for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
             mg::Renderable& renderable = **it;
             if (filter(renderable)) renderable_operator(renderable);
@@ -75,12 +81,14 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
     mc::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
                                            params.buffer_usage};
-
+    auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
+    auto basic_info = std::make_shared<ms::SurfaceDataStorage>(params.name,
+                                                         params.top_left,
+                                                         buffer_stream->stream_size());
+    auto input_info = std::make_shared<mi::SurfaceDataStorage>(basic_info);
+    auto input_channel = input_factory->make_input_channel();
     std::shared_ptr<ms::Surface> surface(
-        new ms::Surface(
-            params.name, params.top_left,
-            buffer_stream_factory->create_buffer_stream(buffer_properties),
-            input_factory->make_input_channel(),
+        new ms::Surface(basic_info, input_info, buffer_stream, input_channel,
             [this]() { emit_change_notification(); }));
     
     {
@@ -88,9 +96,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
         layers_by_depth[depth].push_back(surface);
     }
 
-    // TODO: It might be a nice refactoring to combine this with input channel creation
-    // i.e. client_fd = registrar->register_for_input(surface). ~racarr
-    input_registrar->input_surface_opened(surface);
+    input_registrar->input_channel_opened(surface->input_channel(), input_info);
 
     emit_change_notification();
 
@@ -118,7 +124,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
         }
     }
     if (found_surface)
-        input_registrar->input_surface_closed(keep_alive);
+        input_registrar->input_channel_closed(keep_alive->input_channel());
     emit_change_notification();
     // TODO: error logging when surface not found
 }
@@ -129,12 +135,39 @@ void ms::SurfaceStack::emit_change_notification()
     notify_change();
 }
 
-void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const& callback)
+void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
 {
     std::lock_guard<std::mutex> lg(guard);
     for (auto &layer : layers_by_depth)
     {
-        for (auto it = layer.second.rbegin(); it != layer.second.rend(); ++it)
-            callback(*it);
+        for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
+            callback((*it)->input_channel());
     }
+}
+
+void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
+{
+    auto surface = s.lock();
+
+    {
+        std::unique_lock<std::mutex> ul(guard);
+        for (auto &layer : layers_by_depth)
+        {
+            auto &surfaces = layer.second;
+            auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
+    
+            if (p != surfaces.end())
+            {
+                surfaces.erase(p);
+                surfaces.push_back(surface);
+            
+                ul.unlock();
+                emit_change_notification();
+
+                return;
+            }
+        }
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }

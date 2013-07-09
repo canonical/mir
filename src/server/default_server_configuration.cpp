@@ -41,9 +41,12 @@
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
+#include "mir/shell/threaded_snapshot_strategy.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/gl_pixel_buffer.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/platform.h"
@@ -172,8 +175,6 @@ void parse_arguments(
 {
     namespace po = boost::program_options;
 
-    bool exit_with_helptext = false;
-
     try
     {
         desc.add_options()
@@ -183,19 +184,15 @@ void parse_arguments(
 
         if (options->is_set("help"))
         {
-            exit_with_helptext = true;
+            std::ostringstream help_text;
+            help_text << desc;
+            BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
         }
     }
     catch (po::error const& error)
     {
-        exit_with_helptext = true;
-    }
-
-    if (exit_with_helptext)
-    {
         std::ostringstream help_text;
-        help_text << desc;
-
+        help_text << "Failed to parse command line options: " << error.what() << "." << std::endl << desc;
         BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
     }
 }
@@ -401,10 +398,32 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_session_container(),
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
+                the_shell_snapshot_strategy(),
                 the_shell_session_listener());
         });
 }
 
+std::shared_ptr<msh::PixelBuffer>
+mir::DefaultServerConfiguration::the_shell_pixel_buffer()
+{
+    return shell_pixel_buffer(
+        [this]()
+        {
+            return std::make_shared<mg::GLPixelBuffer>(
+                the_display()->create_gl_context());
+        });
+}
+
+std::shared_ptr<msh::SnapshotStrategy>
+mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
+{
+    return shell_snapshot_strategy(
+        [this]()
+        {
+            return std::make_shared<msh::ThreadedSnapshotStrategy>(
+                the_shell_pixel_buffer());
+        });
+}
 
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()

@@ -3,6 +3,7 @@ include_directories(
     ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
+    ${UDEV_INCLUDE_DIRS}
 )
 
 # gbm.h and drm.h have trailing commas at the end of enum definitions
@@ -30,6 +31,7 @@ add_library(
   internal_native_surface.cpp
   internal_client.cpp
   drm_close_threadsafe.cpp
+  udev_video_devices.cpp
 )
 
 target_link_libraries(
@@ -40,6 +42,7 @@ target_link_libraries(
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
 
 install(TARGETS mirplatformgraphics LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -5,6 +5,7 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cmake,
                cmake-data,
+               pkg-config,
                debhelper (>= 9),
                doxygen,
                xsltproc,
@@ -22,6 +23,10 @@ Build-Depends: cmake,
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev,
+               libumockdev-dev,
+               umockdev,
+               libudev-dev,
+               valgrind,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,

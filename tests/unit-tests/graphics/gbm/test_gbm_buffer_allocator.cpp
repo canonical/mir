@@ -27,6 +27,7 @@
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_buffer_initializer.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir_test_framework/udev_environment.h"
 #include "mir/graphics/null_display_report.h"
 
 #include <memory>
@@ -42,6 +43,7 @@ namespace mgg = mir::graphics::gbm;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir::mir_test_framework;
 
 class GBMBufferAllocatorTest  : public ::testing::Test
 {
@@ -49,6 +51,8 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
+
+        fake_devices.add_standard_drm_devices();
 
         size = geom::Size{geom::Width{300}, geom::Height{200}};
         pf = geom::PixelFormat::argb_8888;
@@ -77,6 +81,7 @@ protected:
     std::shared_ptr<mgg::GBMPlatform> platform;
     std::shared_ptr<testing::NiceMock<mtd::MockBufferInitializer>> mock_buffer_initializer;
     std::unique_ptr<mgg::GBMBufferAllocator> allocator;
+    mtf::UdevEnvironment fake_devices;
 };
 
 TEST_F(GBMBufferAllocatorTest, allocator_returns_non_null_buffer)

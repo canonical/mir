@@ -53,7 +53,7 @@ using namespace ::testing;
 
 struct StubInputTargets : public mi::InputTargets
 {
-    void for_each(std::function<void(std::shared_ptr<mi::SurfaceTarget> const&)> const&)
+    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const&)
     {
     }
 };

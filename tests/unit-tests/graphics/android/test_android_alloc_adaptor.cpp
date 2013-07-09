@@ -217,20 +217,13 @@ TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_fb)
     EXPECT_EQ(fb_usage_flags, handle->usage);
 }
 
-TEST_F(AdaptorICSTest, handle_has_reffable_incref)
+TEST_F(AdaptorICSTest, handle_has_strong_reference_for_c_drivers)
 {
-    struct android_native_base_t *native_base = nullptr;
     auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
     ASSERT_NE(nullptr, handle->common.incRef);
-    handle->common.incRef(native_base);
-}
-
-TEST_F(AdaptorICSTest, handle_has_reffable_decref)
-{
-    struct android_native_base_t *native_base = nullptr;
-    auto handle = alloc_adaptor->alloc_buffer(size, pf, usage);
     ASSERT_NE(nullptr, handle->common.decRef);
-    handle->common.decRef(native_base);
+    handle->common.incRef(&handle->common);
+    handle->common.decRef(&handle->common);
 }
 
 TEST_F(AdaptorICSTest, handle_has_right_magic)

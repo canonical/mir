@@ -28,7 +28,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 0)
-set(MIR_VERSION_PATCH 4)
+set(MIR_VERSION_PATCH 6)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -111,6 +111,7 @@ include_directories (${GLM_INCLUDE_DIRS})
 add_definitions(-DANDROID_USE_STD)
 
 if (MIR_PLATFORM STREQUAL "android")
+  find_package( PkgConfig )
   include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/3rd_party/android-deps)
   list(APPEND CMAKE_SYSTEM_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/3rd_party/android-deps")
 
@@ -127,6 +128,7 @@ elseif (MIR_PLATFORM STREQUAL "gbm")
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
+  pkg_check_modules( UDEV REQUIRED libudev )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__GBM__")
 else ()
   message (FATAL_ERROR "MIR_BACKEND must be either 'android' or 'gbm'")
@@ -140,6 +142,8 @@ include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
+set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
+
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 macro(uses_android_input _target_name)
   set_property(TARGET ${_target_name} APPEND_STRING PROPERTY COMPILE_FLAGS "${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
@@ -148,7 +152,7 @@ add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 set (OLD_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-# Don't treat warnings as errors in 3rd_party/{gmock,cucumber-cpp}
+# Don't treat warnings as errors in 3rd_party/{gmock}
 string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 # Pulling in local gmock version
@@ -175,14 +179,16 @@ set(GTEST_FOUND TRUE)
 include_directories (
   ${GTEST_INCLUDE_DIR}
 )
-# We need to build cucumber after gtest
-add_subdirectory(3rd_party/cucumber-cpp)
 
 # Restore -Werror for non-3rd-party code
 set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 
+option(MIR_ENABLE_TESTS "Build tests" ON)
+
+if (MIR_ENABLE_TESTS)
+  add_subdirectory(tests/)
+endif ()
 add_subdirectory(benchmarks/)
-add_subdirectory(tests/)
 add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(guides/)

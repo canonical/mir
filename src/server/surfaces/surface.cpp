@@ -19,6 +19,8 @@
  */
 
 #include "mir/surfaces/surface.h"
+#include "mir/surfaces/surface_info.h"
+#include "mir/input/surface_info.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/compositor/buffer.h"
@@ -37,22 +39,21 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
-    std::string const& name,
-    geom::Point const& top_left,
+    std::shared_ptr<ms::SurfaceInfoController> const& basic_info,
+    std::shared_ptr<mi::SurfaceInfoController> const& input_info,
     std::shared_ptr<BufferStream> buffer_stream,
     std::shared_ptr<input::InputChannel> const& input_channel,
     std::function<void()> const& change_callback) :
-    surface_name(name),
-    top_left_point(top_left),
+    basic_info(basic_info),
+    input_info(input_info),
     buffer_stream(buffer_stream),
-    input_channel(input_channel),
+    server_input_channel(input_channel),
     transformation_dirty(true),
     alpha_value(1.0f),
     is_hidden(false),
     buffer_count(0),
     notify_change(change_callback)
 {
-    // TODO(tvoss,kdub): Does a surface without a buffer_stream make sense?
     assert(buffer_stream);
     assert(change_callback);
 }
@@ -68,12 +69,12 @@ ms::Surface::~Surface()
 
 std::string const& ms::Surface::name() const
 {
-    return surface_name;
+    return basic_info->name();
 }
 
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
-    top_left_point = top_left;
+    basic_info->move_to(top_left);
     transformation_dirty = true;
     notify_change();
 }
@@ -99,12 +100,12 @@ void ms::Surface::set_hidden(bool hide)
 
 geom::Point ms::Surface::top_left() const
 {
-    return top_left_point;
+    return basic_info->size_and_position().top_left;
 }
 
 mir::geometry::Size ms::Surface::size() const
 {
-    return buffer_stream->stream_size();
+    return basic_info->size_and_position().size;
 }
 
 std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
@@ -114,12 +115,14 @@ std::shared_ptr<ms::GraphicRegion> ms::Surface::graphic_region() const
 
 const glm::mat4& ms::Surface::transformation() const
 {
-    const geom::Size sz = size();
+    auto rect = basic_info->size_and_position();
+    auto sz = rect.size;
 
     if (transformation_dirty || transformation_size != sz)
     {
-        const glm::vec3 top_left_vec{top_left_point.x.as_int(),
-                                     top_left_point.y.as_int(),
+        auto pt = rect.top_left;
+        const glm::vec3 top_left_vec{pt.x.as_int(),
+                                     pt.y.as_int(),
                                      0.0f};
         const glm::vec3 size_vec{sz.width.as_uint32_t(),
                                  sz.height.as_uint32_t(),
@@ -171,9 +174,16 @@ geom::PixelFormat ms::Surface::pixel_format() const
 
 std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
 {
-    flag_for_render();
+    if (buffer_count < 2)
+        buffer_count++;
+
     notify_change();
     return buffer_stream->secure_client_buffer();
+}
+
+void ms::Surface::allow_framedropping(bool allow)
+{
+    buffer_stream->allow_framedropping(allow);
 }
 
 std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
@@ -183,13 +193,12 @@ std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
 
 void ms::Surface::flag_for_render()
 {
-    if (buffer_count < 2)
-        buffer_count++;
+    buffer_count = 2;
 }
 
 bool ms::Surface::supports_input() const
 {
-    if (input_channel)
+    if (server_input_channel)
         return true;
     return false;
 }
@@ -198,12 +207,15 @@ int ms::Surface::client_input_fd() const
 {
     if (!supports_input())
         BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return input_channel->client_fd();
+    return server_input_channel->client_fd();
 }
 
-int ms::Surface::server_input_fd() const
+std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
 {
-    if (!supports_input())
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return input_channel->server_fd();
+    return server_input_channel;
+}
+
+void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
+{
+    input_info->set_input_region(input_rectangles);
 }

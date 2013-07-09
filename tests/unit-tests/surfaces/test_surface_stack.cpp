@@ -31,7 +31,9 @@
 #include "mir/input/input_channel.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/stub_input_registrar.h"
+#include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 
@@ -40,6 +42,7 @@
 #include "mir_test/gmock_fixes.h"
 
 #include <memory>
+#include <stdexcept>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -113,11 +116,18 @@ struct MockOperatorForRenderables : public mc::OperatorForRenderables
     mg::Renderer* renderer;
 };
 
+struct StubOperatorForRenderables : public mc::OperatorForRenderables
+{
+    void operator()(mg::Renderable&)
+    {
+    }
+};
+
 struct StubInputChannelFactory : public mi::InputChannelFactory
 {
     std::shared_ptr<mi::InputChannel> make_input_channel()
     {
-        return std::shared_ptr<mi::InputChannel>();
+        return std::make_shared<mtd::StubInputChannel>();
     }
 };
 
@@ -283,9 +293,10 @@ TEST(
 
     {
       InSequence seq;
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface3.lock()))).Times(1);
-      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface2.lock()))).Times(1);
+
       EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface1.lock()))).Times(1);
+      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface2.lock()))).Times(1);
+      EXPECT_CALL(renderable_operator, renderable_operator(Ref(*surface3.lock()))).Times(1);
     }
 
     stack.for_each_if(filter, renderable_operator);
@@ -396,10 +407,10 @@ TEST(SurfaceStack, surfaces_are_emitted_by_layer)
     {
         InSequence seq;
 
+        EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1)
+            .WillOnce(Return(false));
         EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1)
             .WillOnce(Return(false));
-        EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1)
-            .WillOnce(Return(false));                                  
         EXPECT_CALL(filter, filter(Ref(*surface2.lock()))).Times(1)
             .WillOnce(Return(false));
     }
@@ -421,12 +432,43 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
     
     auto s = stack.create_surface(
         msh::a_surface().of_size(requested_size).of_position(requested_top_left), default_depth);
-    
+
     {
         auto surface = s.lock();
         EXPECT_EQ(requested_top_left, surface->top_left());
-    }
+    } 
+}
+
+TEST(SurfaceStack, surface_gets_buffer_bundles_reported_size)
+{
+    using namespace ::testing;
+    geom::Point const requested_top_left{geom::X{50},
+                                         geom::Y{17}};
+    geom::Size const requested_size{geom::Width{1024}, geom::Height{768}}; 
+    geom::Size const stream_size{geom::Width{1025}, geom::Height{769}};
+
+    MockBufferStreamFactory buffer_stream_factory;
+    auto stream = std::make_shared<mtd::MockBufferStream>();
+    EXPECT_CALL(*stream, stream_size())
+        .Times(1)
+        .WillOnce(Return(stream_size));  
+    EXPECT_CALL(buffer_stream_factory,create_buffer_stream(_))
+        .Times(1)
+        .WillOnce(Return(stream));
+
+    ms::SurfaceStack stack{mt::fake_shared(buffer_stream_factory),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
     
+    auto s = stack.create_surface(
+        msh::a_surface()
+            .of_size(requested_size)
+            .of_position(requested_top_left), default_depth);
+    
+    {
+        auto surface = s.lock();
+        EXPECT_EQ(stream_size, surface->size());
+    }    
 }
 
 TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
@@ -434,11 +476,20 @@ TEST(SurfaceStack, input_registrar_is_notified_of_surfaces)
     using namespace ::testing;
 
     mtd::MockInputRegistrar registrar;
-    EXPECT_CALL(registrar, input_surface_opened(_)).Times(1);
-    EXPECT_CALL(registrar, input_surface_closed(_)).Times(1);
+    Sequence seq;
+
+    auto channel = std::make_shared<StubInputChannel>(4,3);
+    MockInputChannelFactory input_factory; 
+    EXPECT_CALL(input_factory, make_input_channel())
+        .Times(1)
+        .WillOnce(Return(channel));
+    EXPECT_CALL(registrar, input_channel_opened(_,_))
+        .InSequence(seq);
+    EXPECT_CALL(registrar, input_channel_closed(_))
+        .InSequence(seq);
 
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
-        std::make_shared<StubInputChannelFactory>(),
+            mt::fake_shared(input_factory),
             mt::fake_shared(registrar)};
     
     auto s = stack.create_surface(msh::a_surface(), default_depth);
@@ -456,12 +507,95 @@ TEST(SurfaceStack, surface_receives_fds_from_input_channel_factory)
     StubInputChannel input_channel(server_input_fd, client_input_fd);
     MockInputChannelFactory input_factory;
     
-    EXPECT_CALL(input_factory, make_input_channel()).Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
+    EXPECT_CALL(input_factory, make_input_channel())
+        .Times(1).WillOnce(Return(mt::fake_shared(input_channel)));
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         mt::fake_shared(input_factory),
             std::make_shared<mtd::StubInputRegistrar>()};
 
     auto surface = stack.create_surface(msh::a_surface(), default_depth).lock();
-    EXPECT_EQ(server_input_fd, surface->server_input_fd());
     EXPECT_EQ(client_input_fd, surface->client_input_fd());
+}
+
+TEST(SurfaceStack, raise_to_top_alters_render_ordering)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
+
+    MockFilterForRenderables filter;
+    StubOperatorForRenderables stub_operator;
+    
+    auto surface1 = stack.create_surface(msh::a_surface(), default_depth);
+    auto surface2 = stack.create_surface(msh::a_surface(), default_depth);
+    auto surface3 = stack.create_surface(msh::a_surface(), default_depth);
+    
+    ON_CALL(filter, filter(_)).WillByDefault(Return(false));
+
+    {
+        InSequence seq;
+
+        // After surface creation.
+        EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1);
+        EXPECT_CALL(filter, filter(Ref(*surface2.lock()))).Times(1);
+        EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1);
+        // After raising surface1
+        EXPECT_CALL(filter, filter(Ref(*surface2.lock()))).Times(1);
+        EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1);
+        EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1);
+    }
+    stack.for_each_if(filter, stub_operator);
+    stack.raise(surface1.lock());
+    stack.for_each_if(filter, stub_operator);
+}
+
+TEST(SurfaceStack, depth_id_trumps_raise)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
+
+    MockFilterForRenderables filter;
+    StubOperatorForRenderables stub_operator;
+    
+    auto surface1 = stack.create_surface(msh::a_surface(), ms::DepthId{0});
+    auto surface2 = stack.create_surface(msh::a_surface(), ms::DepthId{0});
+    auto surface3 = stack.create_surface(msh::a_surface(), ms::DepthId{1});
+    
+    ON_CALL(filter, filter(_)).WillByDefault(Return(false));
+
+    {
+        InSequence seq;
+
+        // After surface creation.
+        EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1);
+        EXPECT_CALL(filter, filter(Ref(*surface2.lock()))).Times(1);
+        EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1);
+        // After raising surface1
+        EXPECT_CALL(filter, filter(Ref(*surface2.lock()))).Times(1);
+        EXPECT_CALL(filter, filter(Ref(*surface1.lock()))).Times(1);
+        EXPECT_CALL(filter, filter(Ref(*surface3.lock()))).Times(1);
+    }
+    stack.for_each_if(filter, stub_operator);
+    stack.raise(surface1);
+    stack.for_each_if(filter, stub_operator);
+}
+
+TEST(SurfaceStack, raise_throw_behavior)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
+        std::make_shared<StubInputChannelFactory>(),
+            std::make_shared<mtd::StubInputRegistrar>()};
+    
+    std::shared_ptr<ms::Surface> null_surface{nullptr};
+
+    EXPECT_THROW({
+            stack.raise(null_surface);
+    }, std::runtime_error);
 }

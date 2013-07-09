@@ -39,6 +39,7 @@ class GLContext;
 
 typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
+typedef std::function<void()> DisplayConfigurationChangeHandler;
 
 /**
  * Interface to the display subsystem.
@@ -60,6 +61,24 @@ public:
      * Gets the current output configuration.
      */
     virtual std::shared_ptr<DisplayConfiguration> configuration() = 0;
+
+    /**
+     * Sets a new output configuration.
+     */
+    virtual void configure(DisplayConfiguration const& conf) = 0;
+
+    /**
+     * Registers a handler for display configuration changes.
+     *
+     * Note that the handler is called only for hardware changes (e.g. monitor
+     * plugged/unplugged), not for changes initiated by software (e.g. modesetting).
+     *
+     * The implementation should use the functionality provided by the MainLoop
+     * to register the handlers in a way appropriate for the platform.
+     */
+    virtual void register_configuration_change_handler(
+        MainLoop& main_loop,
+        DisplayConfigurationChangeHandler const& conf_change_handler) = 0;
 
     /**
      * Registers handlers for pausing and resuming the display subsystem.

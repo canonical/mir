@@ -3,6 +3,7 @@ set(
 
   event_filter_chain.cpp
 
+  surface_data_storage.cpp
   null_input_configuration.cpp
   null_input_report.cpp
 )

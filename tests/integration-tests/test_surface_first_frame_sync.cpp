@@ -17,7 +17,6 @@
  */
 
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/renderable.h"
@@ -26,7 +25,7 @@
 #include "mir/compositor/renderables.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/null_gl_context.h"
+#include "mir_test_doubles/null_display.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -96,8 +95,6 @@ public:
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
 
-    void ensure_no_live_buffers_bound() {}
-
 private:
     int render_operations_fd;
 };
@@ -117,36 +114,17 @@ public:
     void post_update() {}
 };
 
-class StubDisplay : public mg::Display
+class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const
+    geom::Rectangle view_area() const override
     {
         return display_buffer.view_area();
     }
 
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         f(display_buffer);
-    }
-
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
-    {
-        return std::shared_ptr<mg::DisplayConfiguration>();
-    }
-
-    void register_pause_resume_handlers(mir::MainLoop&,
-                                        mg::DisplayPauseHandler const&,
-                                        mg::DisplayResumeHandler const&)
-    {
-    }
-
-    void pause() {}
-    void resume() {}
-    std::weak_ptr<mg::Cursor> the_cursor() { return {}; }
-    std::unique_ptr<mg::GLContext> create_gl_context()
-    {
-        return std::unique_ptr<mtd::NullGLContext>{new mtd::NullGLContext()};
     }
 
 private:

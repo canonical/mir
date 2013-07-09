@@ -19,9 +19,12 @@
 #include "src/client/android/android_client_buffer.h"
 #include "src/client/android/android_registrar_gralloc.h"
 #include "mir_test_doubles/mock_android_alloc_device.h"
+#include "mir_test/fake_shared.h"
 
 #include <system/graphics.h>
 #include <stdexcept>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -82,7 +85,7 @@ public:
         return registrar->unlock_interface(module, handle);
     }
 };
-
+typedef ::testing::NiceMock<MockRegistrarDevice> StubRegistrarDevice;
 
 class ClientAndroidRegistrarTest : public ::testing::Test
 {
@@ -91,8 +94,7 @@ protected:
     {
         using namespace testing;
 
-        mock_module = std::shared_ptr<MockRegistrarDevice>( new MockRegistrarDevice );
-        mock_addr = (gralloc_module_t*) mock_module.get();
+        mock_module = std::make_shared<NiceMock<MockRegistrarDevice>>();
 
         width = 41;
         height = 43;
@@ -101,70 +103,129 @@ protected:
         auto t = geom::X(top);
         auto l = geom::Y(left);
         auto pt = geom::Point{t,l};
-        rect = geom::Rectangle{ pt,
-                               {geom::Width(width), geom::Height(height)}};
-
-        fake_handle = std::make_shared<native_handle_t>();
-
-        EXPECT_CALL(*mock_module, lock_interface( _, _, _, _, _, _, _, _))
-            .Times(AtLeast(0));
-        EXPECT_CALL(*mock_module, unlock_interface( _, _))
-            .Times(AtLeast(0));
+        rect = geom::Rectangle{ pt, {geom::Width(width), geom::Height(height)}};
+        package = std::make_shared<MirBufferPackage>();
+        package->fd_items = 4;
+        package->data_items = 21;
+        for(auto i=0; i < package->fd_items; i++)
+            package->fd[i] = (i*4);
+        for(auto i=0; i < package->data_items; i++)
+            package->fd[i] = (i*3);
     }
 
     geom::Rectangle rect;
     uint32_t width, height, top, left;
 
-    std::shared_ptr<const native_handle_t> fake_handle;
+    std::shared_ptr<MirBufferPackage> package;
     std::shared_ptr<MockRegistrarDevice> mock_module;
-    gralloc_module_t * mock_addr;
 };
+
+TEST_F(ClientAndroidRegistrarTest, client_buffer_converts_package)
+{
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    auto handle = registrar.register_buffer(package);
+
+    ASSERT_NE(nullptr, handle);
+    ASSERT_EQ(package->fd_items, handle->numFds);
+    ASSERT_EQ(package->data_items, handle->numInts);
+    for(auto i = 0; i < package->fd_items; i++)
+        EXPECT_EQ(package->fd[i], handle->data[i]);
+    for(auto i = 0; i < package->data_items; i++)
+        EXPECT_EQ(package->data[i], handle->data[i + package->fd_items]);
+}
+
+TEST_F(ClientAndroidRegistrarTest, client_sets_correct_version)
+{
+    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    auto handle = registrar.register_buffer(package);
+    EXPECT_EQ(handle->version, static_cast<int>(sizeof(native_handle_t)));
+}
 
 TEST_F(ClientAndroidRegistrarTest, registrar_registers_using_module)
 {
     using namespace testing;
+    native_handle_t const* handle1 = nullptr;
+    native_handle_t const* handle2 = nullptr; 
+
+    EXPECT_CALL(*mock_module, registerBuffer_interface(mock_module.get(),_))
+        .Times(1)
+        .WillOnce(DoAll(SaveArg<1>(&handle1), Return(0)));
+    EXPECT_CALL(*mock_module, unregisterBuffer_interface(mock_module.get(),_))
+        .Times(1)
+        .WillOnce(DoAll(SaveArg<1>(&handle2), Return(0)));
+
     mcla::AndroidRegistrarGralloc registrar(mock_module);
-
-    EXPECT_CALL(*mock_module, registerBuffer_interface(mock_addr, _))
-        .Times(1);
-
-    registrar.register_buffer(fake_handle.get());
+    {
+        auto handle = registrar.register_buffer(package);
+        EXPECT_EQ(handle1, handle.get());
+    }
+    EXPECT_EQ(handle1, handle2);
 }
 
-TEST_F(ClientAndroidRegistrarTest, registrar_registers_buffer_given)
+TEST_F(ClientAndroidRegistrarTest, registrar_frees_fds)
 {
     using namespace testing;
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    StubRegistrarDevice stub_module;
+    auto package = std::make_shared<MirBufferPackage>();
+    package->data_items = 0;
+    package->fd_items = 2;
+    
+    int ret = pipe(static_cast<int*>(package->fd));
+    {
+        mcla::AndroidRegistrarGralloc registrar(mir::test::fake_shared(stub_module));
+        auto handle = registrar.register_buffer(package);
+    }
 
-    EXPECT_CALL(*mock_module, registerBuffer_interface(_, fake_handle.get()))
-        .Times(1);
-
-    registrar.register_buffer(fake_handle.get());
+    EXPECT_EQ(0, ret);
+    EXPECT_EQ(-1, fcntl(package->fd[0], F_GETFD));
+    EXPECT_EQ(-1, fcntl(package->fd[1], F_GETFD));
 }
 
-TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_using_module)
+
+TEST_F(ClientAndroidRegistrarTest, register_failure)
 {
     using namespace testing;
+    EXPECT_CALL(*mock_module, registerBuffer_interface(_, _))
+        .Times(1)
+        .WillOnce(Return(-1));
+    EXPECT_CALL(*mock_module, unregisterBuffer_interface(_,_))
+        .Times(0);
+
     mcla::AndroidRegistrarGralloc registrar(mock_module);
+    EXPECT_THROW({
+        registrar.register_buffer(package);
+    }, std::runtime_error);
 
-    EXPECT_CALL(*mock_module, unregisterBuffer_interface(mock_addr, _))
-        .Times(1);
-
-    registrar.unregister_buffer(fake_handle.get());
 }
 
-TEST_F(ClientAndroidRegistrarTest, registrar_unregisters_buffer_given)
+class AndroidSoftwareRegionTest : public ::testing::Test
 {
-    using namespace testing;
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+protected:
+    virtual void SetUp()
+    {
+        using namespace testing;
 
-    EXPECT_CALL(*mock_module, unregisterBuffer_interface(_, fake_handle.get()))
-        .Times(1);
+        mock_module = std::make_shared<MockRegistrarDevice>();
 
-    registrar.unregister_buffer(fake_handle.get());
-}
+        width = 41;
+        height = 43;
+        top = 0;
+        left = 1;
+        auto t = geom::X(top);
+        auto l = geom::Y(left);
+        auto pt = geom::Point{t,l};
+        rect = geom::Rectangle{ pt, {geom::Width(width), geom::Height(height)}};
+        fake_package = std::make_shared<native_handle_t>();
+    }
 
-TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
+    geom::Rectangle rect;
+    uint32_t width, height, top, left;
+
+    std::shared_ptr<native_handle_t> fake_package;
+    std::shared_ptr<MockRegistrarDevice> mock_module;
+};
+
+TEST_F(AndroidSoftwareRegionTest, region_is_cleaned_up_correctly)
 {
     using namespace testing;
     mcla::AndroidRegistrarGralloc registrar(mock_module);
@@ -185,13 +246,13 @@ TEST_F(ClientAndroidRegistrarTest, region_is_cleaned_up_correctly)
         SaveArg<1>(&handle_freed),
         Return(0)));
 
-    registrar.secure_for_cpu(fake_handle, rect );
+    registrar.secure_for_cpu(fake_package, rect);
 
     EXPECT_EQ(gralloc_dev_freed, gralloc_dev_alloc);
     EXPECT_EQ(handle_alloc, handle_freed);
 }
 
-TEST_F(ClientAndroidRegistrarTest, region_lock_usage_set_correctly)
+TEST_F(AndroidSoftwareRegionTest, region_lock_usage_set_correctly)
 {
     using namespace testing;
     mcla::AndroidRegistrarGralloc registrar(mock_module);
@@ -201,11 +262,11 @@ TEST_F(ClientAndroidRegistrarTest, region_lock_usage_set_correctly)
     EXPECT_CALL(*mock_module, lock_interface(_,_,usage,_,_,_,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rect );
+    registrar.secure_for_cpu(fake_package, rect);
 
 }
 
-TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_corner)
+TEST_F(AndroidSoftwareRegionTest, region_locks_from_top_corner)
 {
     using namespace testing;
     mcla::AndroidRegistrarGralloc registrar(mock_module);
@@ -213,10 +274,10 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_from_top_corner)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,top,_,_,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rect );
+    registrar.secure_for_cpu(fake_package, rect);
 }
 
-TEST_F(ClientAndroidRegistrarTest, region_locks_from_left_corner)
+TEST_F(AndroidSoftwareRegionTest, region_locks_from_left_corner)
 {
     using namespace testing;
     mcla::AndroidRegistrarGralloc registrar(mock_module);
@@ -224,10 +285,10 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_from_left_corner)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,left,_,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rect );
+    registrar.secure_for_cpu(fake_package, rect);
 }
 
-TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
+TEST_F(AndroidSoftwareRegionTest, region_locks_with_right_width)
 {
     using namespace testing;
     mcla::AndroidRegistrarGralloc registrar(mock_module);
@@ -235,10 +296,10 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_width)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,width,_,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rect );
+    registrar.secure_for_cpu(fake_package, rect);
 }
 
-TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
+TEST_F(AndroidSoftwareRegionTest, region_locks_with_right_height)
 {
     using namespace testing;
     mcla::AndroidRegistrarGralloc registrar(mock_module);
@@ -246,25 +307,11 @@ TEST_F(ClientAndroidRegistrarTest, region_locks_with_right_height)
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,height,_))
         .Times(1);
 
-    registrar.secure_for_cpu(fake_handle, rect );
+    registrar.secure_for_cpu(fake_package, rect);
 }
 
 
-TEST_F(ClientAndroidRegistrarTest, register_failure)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_module, registerBuffer_interface(_, _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
-    EXPECT_THROW({
-        registrar.register_buffer(fake_handle.get());
-    }, std::runtime_error);
-
-}
-
-TEST_F(ClientAndroidRegistrarTest, lock_failure)
+TEST_F(AndroidSoftwareRegionTest, lock_failure)
 {
     using namespace testing;
     EXPECT_CALL(*mock_module, lock_interface(_,_,_,_,_,_,_,_))
@@ -274,27 +321,12 @@ TEST_F(ClientAndroidRegistrarTest, lock_failure)
     mcla::AndroidRegistrarGralloc registrar(mock_module);
 
     EXPECT_THROW({
-        registrar.secure_for_cpu(fake_handle, rect );
+        registrar.secure_for_cpu(fake_package, rect);
     }, std::runtime_error);
 }
 
-/* unregister is called in destructor. should not throw */
-TEST_F(ClientAndroidRegistrarTest, unregister_failure)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_module, unregisterBuffer_interface(_, _))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
-
-    EXPECT_NO_THROW({
-        registrar.unregister_buffer(fake_handle.get());
-    });
-}
-
 /* unlock is called in destructor. should not throw */
-TEST_F(ClientAndroidRegistrarTest, unlock_failure)
+TEST_F(AndroidSoftwareRegionTest, unlock_failure)
 {
     using namespace testing;
     EXPECT_CALL(*mock_module, unlock_interface(_,_))
@@ -303,10 +335,9 @@ TEST_F(ClientAndroidRegistrarTest, unlock_failure)
 
     mcla::AndroidRegistrarGralloc registrar(mock_module);
 
-    auto region = registrar.secure_for_cpu(fake_handle, rect );
+    auto region = registrar.secure_for_cpu(fake_package, rect);
 
     EXPECT_NO_THROW({
         region.reset();
     });
-
 }

@@ -24,11 +24,14 @@
 #include "kms_output.h"
 #include "kms_page_flipper.h"
 #include "virtual_terminal.h"
+#include "video_devices.h"
 
+#include "mir/main_loop.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/geometry/rectangle.h"
 
+#include <boost/throw_exception.hpp>
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
@@ -72,8 +75,10 @@ private:
 }
 
 mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
+                            std::shared_ptr<VideoDevices> const& video_devices,
                             std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
+      video_devices(video_devices),
       listener(listener),
       output_container{platform->drm.fd,
                        std::make_shared<KMSPageFlipper>(platform->drm.fd)}
@@ -82,7 +87,7 @@ mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
 
     shared_egl.setup(platform->gbm);
 
-    configure(configuration());
+    configure(*configuration());
 
     shared_egl.make_current();
 }
@@ -110,16 +115,15 @@ std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
     return std::make_shared<mgg::KMSDisplayConfiguration>(platform->drm.fd);
 }
 
-void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const& conf)
+void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
-    display_buffers.clear();
     std::vector<std::shared_ptr<KMSOutput>> enabled_outputs;
 
     /* Create or reset the KMS outputs */
-    conf->for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
-        auto const& kms_conf = std::static_pointer_cast<KMSDisplayConfiguration>(conf);
-        uint32_t const connector_id = kms_conf->get_kms_connector_id(conf_output.id);
+        auto const& kms_conf = static_cast<KMSDisplayConfiguration const&>(conf);
+        uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
 
         auto output = output_container.get_kms_output_for(connector_id);
 
@@ -146,7 +150,22 @@ void mgg::GBMDisplay::configure(std::shared_ptr<mg::DisplayConfiguration> const&
     std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener, enabled_outputs,
                                                               std::move(surface), max_size,
                                                               shared_egl.context()}};
+
+    /*
+     * TODO: Investigate why we have to destroy the previous display buffers and
+     * their contexts after creating the new ones to avoid a crash in Mesa.
+     */
+    display_buffers.clear();
     display_buffers.push_back(std::move(db));
+}
+
+void mgg::GBMDisplay::register_configuration_change_handler(
+    MainLoop& main_loop,
+    DisplayConfigurationChangeHandler const& conf_change_handler)
+{
+    video_devices->register_change_handler(
+        main_loop,
+        conf_change_handler);
 }
 
 void mgg::GBMDisplay::register_pause_resume_handlers(

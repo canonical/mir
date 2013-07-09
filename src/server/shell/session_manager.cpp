@@ -37,11 +37,13 @@ msh::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& 
     std::shared_ptr<msh::SessionContainer> const& container,
     std::shared_ptr<msh::FocusSequence> const& sequence,
     std::shared_ptr<msh::FocusSetter> const& focus_setter,
+    std::shared_ptr<msh::SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<msh::SessionListener> const& session_listener) :
     surface_factory(surface_factory),
     app_container(container),
     focus_sequence(sequence),
     focus_setter(focus_setter),
+    snapshot_strategy(snapshot_strategy),
     session_listener(session_listener)
 {
     assert(surface_factory);
@@ -75,7 +77,9 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(
     std::string const& name,
     std::shared_ptr<events::EventSink> const& sink)
 {
-    std::shared_ptr<msh::Session> new_session = std::make_shared<msh::ApplicationSession>(surface_factory, name, sink);
+    std::shared_ptr<msh::Session> new_session =
+        std::make_shared<msh::ApplicationSession>(
+            surface_factory, name, snapshot_strategy, sink);
 
     app_container->insert_session(new_session);
     
@@ -119,13 +123,6 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
 
     std::unique_lock<std::mutex> lock(mutex);
     set_focus_to_locked(lock, focus_sequence->default_focus());
-
-    typedef Tags::value_type Pair;
-
-    auto remove = std::remove_if(tags.begin(), tags.end(),
-        [&](Pair const& v) { return v.second == shell_session;});
-
-    tags.erase(remove, tags.end());
 }
 
 void msh::SessionManager::focus_next()

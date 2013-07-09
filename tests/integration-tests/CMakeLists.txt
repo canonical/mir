@@ -7,6 +7,7 @@ set(
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
   test_surface_first_frame_sync.cpp
+  test_swapinterval.cpp
 )
 
 add_subdirectory(client/)
@@ -32,8 +33,6 @@ if(MIR_PLATFORM STREQUAL "gbm")
   list(APPEND INTEGRATION_TESTS_SRCS test_drm_auth_magic.cpp)
 endif()
 
-add_subdirectory(cucumber)
-
 add_executable(
   integration-tests
   ${INTEGRATION_TESTS_SRCS})
@@ -42,9 +41,9 @@ uses_android_input(integration-tests)
 target_link_libraries(
   integration-tests
 
+  mir-test
   mir-test-framework
   mir-test-doubles
-  mir-test-cucumber
 
   mirserver
   mirplatformgraphics

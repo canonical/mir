@@ -41,6 +41,8 @@ struct MockSurface : public shell::Surface
     {
     }
 
+    ~MockSurface() noexcept {}
+
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
     MOCK_METHOD0(visible, bool());
@@ -55,7 +57,6 @@ struct MockSurface : public shell::Surface
 
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
-    MOCK_CONST_METHOD0(server_input_fd, int());
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
     MOCK_METHOD1(take_input_focus, void(std::shared_ptr<shell::InputTargeter> const&));
