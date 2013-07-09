@@ -21,6 +21,7 @@
 
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/renderer.h>
+#include <mir/compositor/buffer.h>
 
 namespace mir
 {
@@ -43,7 +44,7 @@ public:
     virtual void release_current() = 0;
     /** Posts the DisplayBuffer to the screen. */
     virtual void post_update() = 0;
-    virtual void post_update(void * /*native_buffer*/) {} // Optional
+    virtual void post_update(std::shared_ptr<compositor::Buffer>) {} // Optional
     virtual Renderer *direct_renderer() { return NULL; } // TODO
 
 protected:

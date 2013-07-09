@@ -56,7 +56,7 @@ public:
     void make_current();
     void release_current();
     void post_update();
-    void post_update(void *native_buffer);
+    void post_update(std::shared_ptr<compositor::Buffer> client_buf);
 
     graphics::Renderer *direct_renderer() { return &bypass_renderer; }
 
@@ -68,6 +68,7 @@ private:
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;
+    std::shared_ptr<compositor::Buffer> last_flipped_client_buf;
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from GBMPlatform */

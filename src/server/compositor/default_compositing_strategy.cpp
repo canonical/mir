@@ -105,8 +105,7 @@ void mc::DefaultCompositingStrategy::render(
 
         if (bypass_filter.bypass_buf)
         {
-            void *native_bo = bypass_filter.bypass_buf->native_buffer_addr();
-            display_buffer.post_update(native_bo);
+            display_buffer.post_update(bypass_filter.bypass_buf);
             bypassed = true;
         }
     }

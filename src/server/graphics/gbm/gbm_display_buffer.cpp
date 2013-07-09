@@ -166,7 +166,8 @@ void mgg::GBMDisplayBuffer::post_update()
     post_update(nullptr);
 }
 
-void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
+void mgg::GBMDisplayBuffer::post_update(
+    std::shared_ptr<compositor::Buffer> client_buf)
 {
     /*
      * Bring the back buffer to the front and get the buffer object
@@ -175,9 +176,10 @@ void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
     if (!egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
-    auto bufobj = native_buffer ?
-                  get_buffer_object((struct gbm_bo*)native_buffer) :
-                  get_front_buffer_object();
+    auto bufobj = client_buf ?
+        get_buffer_object((struct gbm_bo*)client_buf->native_buffer_addr()) :
+        get_front_buffer_object();
+
     if (!bufobj)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
 
@@ -190,7 +192,7 @@ void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
      */
     if (!needs_set_crtc && !schedule_and_wait_for_page_flip(bufobj))
     {
-        if (!native_buffer)
+        if (!client_buf)
             bufobj->release();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
     }
@@ -209,9 +211,20 @@ void mgg::GBMDisplayBuffer::post_update(void *native_buffer)
      * to make it available for future rendering.
      */
     if (last_flipped_bufobj)
+    {
         last_flipped_bufobj->release();
+        last_flipped_client_buf.reset();
+    }
 
-    last_flipped_bufobj = native_buffer ? nullptr : bufobj;
+    if (client_buf)
+    {
+        last_flipped_bufobj = nullptr;
+        last_flipped_client_buf = client_buf;
+    }
+    else
+    {
+        last_flipped_bufobj = bufobj;
+    }
 }
 
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
