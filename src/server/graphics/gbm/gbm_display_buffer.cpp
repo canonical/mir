@@ -211,20 +211,10 @@ void mgg::GBMDisplayBuffer::post_update(
      * to make it available for future rendering.
      */
     if (last_flipped_bufobj)
-    {
         last_flipped_bufobj->release();
-        last_flipped_client_buf.reset();
-    }
 
-    if (client_buf)
-    {
-        last_flipped_bufobj = nullptr;
-        last_flipped_client_buf = client_buf;
-    }
-    else
-    {
-        last_flipped_bufobj = bufobj;
-    }
+    last_flipped_bufobj = client_buf ? nullptr : bufobj;
+    last_flipped_client_buf = client_buf;  // Can be nullptr
 }
 
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
