@@ -179,7 +179,7 @@ struct SurfaceStack : public ::testing::Test
     }
 
     mtd::StubInputRegistrar input_registrar;
-    MockSurfaceAllocator mock_surface_allocator;
+    testing::NiceMock<MockSurfaceAllocator> mock_surface_allocator;
     msh::SurfaceCreationParameters default_params;
     std::shared_ptr<ms::Surface> stub_surface1;
     std::shared_ptr<ms::Surface> stub_surface2;
@@ -288,7 +288,7 @@ TEST_F(SurfaceStack, stacking_order)
 TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
 {
     using namespace ::testing;
-    MockCallback mock_cb;
+    NiceMock<MockCallback> mock_cb;
     EXPECT_CALL(mock_cb, call())
         .Times(1);
 
