@@ -51,8 +51,10 @@ bool mg::SurfaceState::should_be_rendered() const
 
 void mg::SurfaceState::apply_alpha(float alpha)
 {
-    std::unique_lock<std::mutex> lk(guard);
-    surface_alpha = alpha;
+    {
+        std::unique_lock<std::mutex> lk(guard);
+        surface_alpha = alpha;
+    }
     notify_change();
 }
 
@@ -64,14 +66,18 @@ void mg::SurfaceState::apply_rotation(float degrees, glm::vec3 const& mat)
 
 void mg::SurfaceState::frame_posted()
 {
-    std::unique_lock<std::mutex> lk(guard);
-    first_frame_posted = true;
+    {
+        std::unique_lock<std::mutex> lk(guard);
+        first_frame_posted = true;
+    }
     notify_change();
 }
 
 void mg::SurfaceState::set_hidden(bool hide)
 {
-    std::unique_lock<std::mutex> lk(guard);
-    hidden = hide;
+    {
+        std::unique_lock<std::mutex> lk(guard);
+        hidden = hide;
+    }
     notify_change();
 }
