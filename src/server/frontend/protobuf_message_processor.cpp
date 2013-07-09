@@ -125,6 +125,7 @@ void mfd::ProtobufMessageProcessor::send_response(
     google::protobuf::Message* response)
 {
     std::string buffer;
+    buffer.reserve(2048);
     response->SerializeToString(&buffer);
 
     mir::protobuf::wire::Result result;
@@ -145,6 +146,7 @@ void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
     ev->set_raw(&e, sizeof(MirEvent));
 
     std::string buffer;
+    buffer.reserve(2048);
     seq.SerializeToString(&buffer);
 
     mir::protobuf::wire::Result result;
