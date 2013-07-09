@@ -50,6 +50,7 @@ protected:
 class SurfaceInfoController : public SurfaceInfo
 {
 public:
+    virtual void first_frame_posted() = 0;
     virtual void set_hidden(bool hidden) = 0;
     virtual void apply_alpha(float alpha) = 0;
     virtual void apply_rotation(float degrees, glm::vec3 const&) = 0;

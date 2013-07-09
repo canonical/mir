@@ -104,8 +104,9 @@ void ms::Surface::set_alpha(float alpha_v)
 
 void ms::Surface::set_hidden(bool hide)
 {
-    is_hidden = hide;
-    notify_change();
+    gfx_info->set_hidden(hide);
+//    is_hidden = hide;
+//    notify_change();
 }
 
 geom::Point ms::Surface::top_left() const
@@ -139,7 +140,9 @@ float ms::Surface::alpha() const
 
 bool ms::Surface::should_be_rendered() const
 {
-    return !is_hidden && (buffer_count > 1);
+    //TODO REMOVE THIS FUNCTION. use graphics_info()
+    return false;
+    //return !is_hidden && (buffer_count > 1);
 }
 
 //note: not sure the surface should be aware of pixel format. might be something that the
@@ -154,6 +157,8 @@ std::shared_ptr<mc::Buffer> ms::Surface::advance_client_buffer()
 {
     if (buffer_count < 2)
         buffer_count++;
+    if (buffer_count > 1)
+        gfx_info->first_frame_posted();
 
     notify_change();
     return surface_buffer_stream->secure_client_buffer();

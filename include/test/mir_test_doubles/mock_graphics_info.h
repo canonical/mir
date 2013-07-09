@@ -49,6 +49,7 @@ public:
     MOCK_METHOD1(apply_alpha, void(float));
     MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
     MOCK_METHOD2(apply_rotation, void(float, glm::vec3 const&));
+    MOCK_METHOD0(first_frame_posted, void());
     MOCK_METHOD1(set_hidden, void(bool));
     MOCK_CONST_METHOD0(should_be_rendered, bool());
 };
