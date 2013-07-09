@@ -82,6 +82,28 @@ TEST_F(SurfaceGraphicsState, test_surface_is_opaque_by_default)
     EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
 }
 
+TEST_F(SurfaceGraphicsState, test_surface_apply_rotation)
+{
+    using namespace testing;
+    EXPECT_CALL(primitive_info, rotation())
+        .Times(1)
+
+    mg::SurfaceState surface_state(mt::fake_shared(primitive_info), mock_change_cb);
+    surface_state.rotation();
+}
+
+TEST_F(SurfaceGraphicsState, test_surface_apply_rotation)
+{
+    using namespace testing;
+    InSequence seq;
+    EXPECT_CALL(primitive_info, apply_rotation(FloatEq(60.0f),glm::vec3{0.0f, 0.0f, 1.0f}))
+        .Times(1);
+    EXPECT_CALL(mock_callback, call())
+        .Times(1);
+
+    mg::SurfaceState surface_state(mt::fake_shared(primitive_info), mock_change_cb);
+    surface_state.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
+}
 
 #if 0
 TEST_F(SurfaceGraphicsState, test_surface_set_rotation_notifies_changes)
