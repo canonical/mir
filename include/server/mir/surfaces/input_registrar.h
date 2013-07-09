@@ -26,7 +26,8 @@ namespace mir
 namespace input
 {
 class SessionTarget;
-class SurfaceTarget;
+class InputChannel;
+class SurfaceInfo;
 }
 
 namespace surfaces
@@ -39,8 +40,9 @@ class InputRegistrar
 public:
     virtual ~InputRegistrar() = default;
     
-    virtual void input_surface_opened(std::shared_ptr<input::SurfaceTarget> const& opened_surface) = 0;
-    virtual void input_surface_closed(std::shared_ptr<input::SurfaceTarget> const& closed_surface) = 0;
+    virtual void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
+                                      std::shared_ptr<input::SurfaceInfo> const& info) = 0;
+    virtual void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel) = 0;
 
 protected:
     InputRegistrar() = default;

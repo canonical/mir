@@ -26,8 +26,6 @@
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
-#include "ancillary.h"
-
 #include <boost/bind.hpp>
 #include <cstring>
 #include <sstream>
@@ -79,16 +77,12 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
         if (surface->fds_on_side_channel() > 0)
         {
-            std::vector<int32_t> buf(surface->fds_on_side_channel());
+            std::vector<int32_t> fds(surface->fds_on_side_channel());
+            receive_file_descriptors(fds);
+            for (auto &fd: fds)
+                surface->add_fd(fd);
 
-            int received = 0;
-            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
-                /* TODO avoid spinning forever */;
-
-            for (int i = 0; i != received; ++i)
-                surface->add_fd(buf[i]);
-
-            rpc_report->file_descriptors_received(*response, buf);
+            rpc_report->file_descriptors_received(*response, fds);
         }
     }
 
@@ -105,16 +99,12 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
         if (buffer->fds_on_side_channel() > 0)
         {
-            std::vector<int32_t> buf(buffer->fds_on_side_channel());
+            std::vector<int32_t> fds(buffer->fds_on_side_channel());
+            receive_file_descriptors(fds);
+            for (auto &fd: fds)
+                buffer->add_fd(fd);
 
-            int received = 0;
-            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
-                /* TODO avoid spinning forever */;
-
-            for (int i = 0; i != received; ++i)
-                buffer->add_fd(buf[i]);
-
-            rpc_report->file_descriptors_received(*response, buf);
+            rpc_report->file_descriptors_received(*response, fds);
         }
     }
 
@@ -132,21 +122,56 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
 
         if (platform->fds_on_side_channel() > 0)
         {
-            std::vector<int32_t> buf(platform->fds_on_side_channel());
+            std::vector<int32_t> fds(platform->fds_on_side_channel());
+            receive_file_descriptors(fds);
+            for (auto &fd: fds)
+                platform->add_fd(fd);
 
-            int received = 0;
-            while ((received = ancil_recv_fds(socket.native_handle(), buf.data(), buf.size())) == -1)
-                /* TODO avoid spinning forever */;
-
-            for (int i = 0; i != received; ++i)
-                platform->add_fd(buf[i]);
-
-            rpc_report->file_descriptors_received(*response, buf);
+            rpc_report->file_descriptors_received(*response, fds);
         }
     }
 
 
     complete->Run();
+}
+
+void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int> &fds)
+{
+    // We send dummy data
+    struct iovec iov;
+    char dummy_iov_data = '\0';
+    iov.iov_base = &dummy_iov_data;
+    iov.iov_len = 1;
+
+    // Allocate space for control message
+    auto n_fds = fds.size();
+    std::vector<char> control(sizeof(struct cmsghdr) + sizeof(int) * n_fds);
+
+    // Message to send
+    struct msghdr header;
+    header.msg_name = NULL;
+    header.msg_namelen = 0;
+    header.msg_iov = &iov;
+    header.msg_iovlen = 1;
+    header.msg_controllen = control.size();
+    header.msg_control = control.data();
+    header.msg_flags = 0;
+
+    // Control message contains file descriptors
+    struct cmsghdr *message = CMSG_FIRSTHDR(&header);
+    message->cmsg_len = header.msg_controllen;
+    message->cmsg_level = SOL_SOCKET;
+    message->cmsg_type = SCM_RIGHTS;
+
+    while (recvmsg(socket.native_handle(), &header, 0) < 0)
+        ; // FIXME: Avoid spinning forever
+
+    // Copy file descriptors back to caller
+    n_fds = (message->cmsg_len - sizeof(struct cmsghdr)) / sizeof(int);
+    fds.resize(n_fds);
+    int *data = (int *)CMSG_DATA(message);
+    for (std::vector<int>::size_type i = 0; i < n_fds; i++)
+        fds[i] = data[i];
 }
 
 void mclr::MirSocketRpcChannel::CallMethod(
@@ -160,9 +185,6 @@ void mclr::MirSocketRpcChannel::CallMethod(
 
     rpc_report->invocation_requested(invocation);
 
-    std::ostringstream buffer;
-    invocation.SerializeToOstream(&buffer);
-
     std::shared_ptr<google::protobuf::Closure> callback(
         google::protobuf::NewPermanentCallback(this, &MirSocketRpcChannel::receive_file_descriptors, response, complete));
 
@@ -170,15 +192,15 @@ void mclr::MirSocketRpcChannel::CallMethod(
     auto& send_buffer = pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
-    send_message(buffer.str(), send_buffer, invocation);
+    send_message(invocation, send_buffer, invocation);
 }
 
 void mclr::MirSocketRpcChannel::send_message(
-    std::string const& body,
+    mir::protobuf::wire::Invocation const& body,
     detail::SendBuffer& send_buffer,
     mir::protobuf::wire::Invocation const& invocation)
 {
-    const size_t size = body.size();
+    const size_t size = body.ByteSize();
     const unsigned char header_bytes[2] =
     {
         static_cast<unsigned char>((size >> 8) & 0xff),
@@ -187,19 +209,14 @@ void mclr::MirSocketRpcChannel::send_message(
 
     send_buffer.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
-    std::copy(body.begin(), body.end(), send_buffer.begin() + sizeof header_bytes);
+    body.SerializeToArray(send_buffer.data() + sizeof header_bytes, size);
 
-    boost::asio::async_write(
+    boost::system::error_code error;
+    boost::asio::write(
         socket,
         boost::asio::buffer(send_buffer),
-        boost::bind(&MirSocketRpcChannel::on_message_sent, this,
-            invocation, boost::asio::placeholders::error));
-}
+        error);
 
-void mclr::MirSocketRpcChannel::on_message_sent(
-    mir::protobuf::wire::Invocation const& invocation,
-    boost::system::error_code const& error)
-{
     if (error)
         rpc_report->invocation_failed(invocation, error);
     else

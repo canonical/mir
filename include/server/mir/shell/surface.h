@@ -84,14 +84,13 @@ public:
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;
-    virtual int server_input_fd() const;
 
     virtual int configure(MirSurfaceAttrib attrib, int value);
     virtual MirSurfaceType type() const;
     virtual MirSurfaceState state() const;
 
     virtual void take_input_focus(std::shared_ptr<InputTargeter> const& targeter);
-    virtual void set_input_region(std::shared_ptr<input::InputRegion> const& region);
+    virtual void set_input_region(std::vector<geometry::Rectangle> const& region);
 
     virtual void allow_framedropping(bool); 
 private:

@@ -52,8 +52,7 @@ struct MirMesaEGLNativeSurface
                                    MirSurfaceParameters* surface_parameters);
 };
 
-int mir_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display);
-int mir_server_internal_display_is_valid(MirMesaEGLNativeDisplay* display);
+typedef int (*MirMesaEGLNativeDisplayIsValidFunc)(MirMesaEGLNativeDisplay* display);
 
 #ifdef __cplusplus
 } // extern "C"

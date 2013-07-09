@@ -33,6 +33,7 @@ namespace msh = mir::shell;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
 namespace ms = mir::surfaces;
+namespace geom = mir::geometry;
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
@@ -235,18 +236,6 @@ int msh::Surface::client_input_fd() const
     }
 }
 
-int msh::Surface::server_input_fd() const
-{
-    if (auto const& s = surface.lock())
-    {
-        return s->server_input_fd();
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
-}
-
 int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;
@@ -346,12 +335,12 @@ void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& t
 {
     auto s = surface.lock();
     if (s)
-        targeter->focus_changed(s);
+        targeter->focus_changed(s->input_channel());
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 }
 
-void msh::Surface::set_input_region(std::shared_ptr<mi::InputRegion> const& region)
+void msh::Surface::set_input_region(std::vector<geom::Rectangle> const& region)
 {
     if (auto const& s = surface.lock())
     {

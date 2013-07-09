@@ -18,7 +18,6 @@
  */
 
 #include "mir/graphics/viewable_area.h"
-#include "mir/input/surface_target.h"
 
 #include "android_input_manager.h"
 #include "android_input_constants.h"

@@ -172,7 +172,7 @@ TEST_F(MirConnectionTest, returns_correct_egl_native_display)
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     EGLNativeDisplayType connection_native_display = connection->egl_native_display();
 
@@ -195,13 +195,13 @@ TEST_F(MirConnectionTest, client_drm_auth_magic_calls_server_drm_auth_magic)
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     int const no_error{0};
     int status{67};
 
     wait_handle = connection->drm_auth_magic(drm_magic, drm_auth_magic_callback, &status);
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     EXPECT_EQ(no_error, status);
 }
@@ -239,7 +239,7 @@ TEST_F(MirConnectionTest, populates_display_info_correctly)
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     MirDisplayInfo info;
 
@@ -264,7 +264,7 @@ TEST_F(MirConnectionTest, populates_display_info_without_overflowing)
 
     MirWaitHandle* wait_handle = connection->connect("MirConnectionTest",
                                                      connected_callback, 0);
-    wait_handle->wait_for_result();
+    wait_handle->wait_for_all();
 
     MirDisplayInfo info;
 

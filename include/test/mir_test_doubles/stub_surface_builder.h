@@ -25,6 +25,8 @@
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test_doubles/mock_input_info.h"
 
 namespace mir
 {
@@ -42,9 +44,12 @@ public:
     {
     }
 
-    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const& param)
+    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const&)
     {
-        dummy_surface = std::make_shared<surfaces::Surface>(param.name, param.top_left, buffer_stream, 
+        auto info = std::make_shared<MockSurfaceInfo>();
+        auto input_info = std::make_shared<MockInputInfo>();
+        dummy_surface = std::make_shared<surfaces::Surface>(
+            info, input_info, buffer_stream, 
             std::shared_ptr<input::InputChannel>(), []{});
         return dummy_surface;
     }
