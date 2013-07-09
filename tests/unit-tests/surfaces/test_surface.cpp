@@ -363,6 +363,8 @@ TEST_F(SurfaceCreation, test_surface_set_rotation)
 #endif
 }
 
+#if 0
+//TODO NOT NEEDED
 TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
 {
     using namespace testing;
@@ -375,6 +377,7 @@ TEST_F(SurfaceCreation, test_surface_set_rotation_notifies_changes)
                      mock_change_cb);
     surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
+#endif
 
 TEST_F(SurfaceCreation, test_get_input_channel)
 {
@@ -386,43 +389,9 @@ TEST_F(SurfaceCreation, test_get_input_channel)
     EXPECT_EQ(mock_channel, surf.input_channel());
 }
 
-TEST_F(SurfaceCreation, test_surface_transformation_cache_refreshes)
-{
-    using namespace testing;
 
-    const geom::Size sz{geom::Width{85}, geom::Height{43}};
-    const geom::Rectangle origin{geom::Point{geom::X{77}, geom::Y{88}}, sz};
-    const geom::Rectangle moved_pt{geom::Point{geom::X{55}, geom::Y{66}}, sz};
-
-    Sequence seq;
-    EXPECT_CALL(*mock_basic_info, size_and_position())
-        .InSequence(seq)
-        .WillOnce(Return(origin));
-    EXPECT_CALL(*mock_basic_info, size_and_position())
-        .InSequence(seq)
-        .WillOnce(Return(moved_pt));
-    EXPECT_CALL(*mock_basic_info, size_and_position())
-        .InSequence(seq)
-        .WillOnce(Return(origin));
-    EXPECT_CALL(*mock_basic_info, size_and_position())
-        .InSequence(seq)
-        .WillOnce(Return(origin));
-
-    ms::Surface surf(mock_basic_info,
-                     mock_graphics_info, mock_buffer_stream,
-                     mock_input_info, std::shared_ptr<mi::InputChannel>(),
-                     null_change_cb);
-    glm::mat4 t0 = surf.transformation();
-    surf.move_to(moved_pt.top_left);
-    EXPECT_NE(t0, surf.transformation());
-    surf.move_to(origin.top_left);
-    EXPECT_EQ(t0, surf.transformation());
-
-    surf.set_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
-    glm::mat4 t1 = surf.transformation();
-    EXPECT_NE(t0, t1);
-}
-
+#if 0
+//TODO NOT NEEDED
 TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
 {
     using namespace testing;
@@ -441,6 +410,7 @@ TEST_F(SurfaceCreation, test_surface_texture_locks_back_buffer_from_stream)
 
     EXPECT_EQ(buffer_resource, comp_resource);
 }
+#endif
 
 TEST_F(SurfaceCreation, test_surface_compositor_buffer_locks_back_buffer_from_stream)
 {
