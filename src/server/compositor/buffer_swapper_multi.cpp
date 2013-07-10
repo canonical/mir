@@ -76,8 +76,6 @@ void mc::BufferSwapperMulti::client_release(std::shared_ptr<Buffer> const& queue
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
     compositor_queue.push_back(queued_buffer);
-    if (in_use_by_client == 0)
-        BOOST_THROW_EXCEPTION(std::logic_error("More releases than acquires"));
     in_use_by_client--;
 
     /*
