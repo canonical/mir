@@ -155,30 +155,9 @@ set (OLD_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 # Don't treat warnings as errors in 3rd_party/{gmock}
 string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-# Pulling in local gmock version
-# While this seems evil, we are doing
-# it to ensure/allow for:
-#   (1.) a matching gmock/gtest version
-#   (2.) a stream-lined cross-compilation workflow
-set(
-  GTEST_INCLUDE_DIR
-
-  3rd_party/gmock/include
-  3rd_party/gmock/gtest/include)
-
-add_subdirectory(3rd_party/gmock/)
-set(GMOCK_LIBRARY gmock)
-set(GMOCK_MAIN_LIBRARY gmock_main)
-set(
-  GTEST_BOTH_LIBRARIES
-
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY})
-set(GTEST_FOUND TRUE)
-# GMock/GTest build finished and available to subsequent components
-include_directories (
-  ${GTEST_INCLUDE_DIR}
-)
+find_package(Gtest REQUIRED)
+include_directories(${GTEST_ALL_INCLUDES})
+message("INCLUDE DIR ${GTEST_ALL_INCLUDES}")
 
 # Restore -Werror for non-3rd-party code
 set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
@@ -186,7 +165,10 @@ set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 if (MIR_ENABLE_TESTS)
-  add_subdirectory(tests/)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-local-typedefs -Wno-error=deprecated")
+   add_subdirectory(tests/)
+  set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
+
 endif ()
 add_subdirectory(benchmarks/)
 add_subdirectory(tools/)
