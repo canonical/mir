@@ -157,18 +157,13 @@ string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 find_package(Gtest REQUIRED)
 include_directories(${GTEST_ALL_INCLUDES})
-message("INCLUDE DIR ${GTEST_ALL_INCLUDES}")
 
 # Restore -Werror for non-3rd-party code
 set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 
 option(MIR_ENABLE_TESTS "Build tests" ON)
-
 if (MIR_ENABLE_TESTS)
-#  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-local-typedefs -Wno-error=deprecated")
    add_subdirectory(tests/)
-#  set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
-
 endif ()
 add_subdirectory(benchmarks/)
 add_subdirectory(tools/)
