@@ -74,7 +74,7 @@ TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
     ON_CALL(app3, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
 
     msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model),
-        std::make_shared<mtd::StubInputTargeter>());
+                                                        std::make_shared<mtd::StubInputTargeter>());
 
     EXPECT_CALL(app1, show()).Times(1);
     EXPECT_CALL(app2, hide()).Times(1);
