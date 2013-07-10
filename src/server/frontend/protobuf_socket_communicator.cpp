@@ -148,14 +148,11 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        if (!session_authorizer->connection_is_allowed(session->client_pid()))
+        if (session_authorizer->connection_is_allowed(session->client_pid()))
         {
-            start_accept();
-            return;
+            connected_sessions->add(session);
+            session->read_next_message();
         }
-
-        connected_sessions->add(session);
-        session->read_next_message();
     }
     start_accept();
 }
