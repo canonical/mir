@@ -346,9 +346,9 @@ TEST_F(GBMDisplayTest, create_display_drm_failure)
 TEST_F(GBMDisplayTest, create_display_kms_failure)
 {
     using namespace testing;
-  
+
     auto platform = create_platform();
-  
+
     Mock::VerifyAndClearExpectations(&mock_drm);
 
     EXPECT_CALL(mock_drm, drmModeGetResources(_))
@@ -360,7 +360,7 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     EXPECT_CALL(mock_drm, drmClose(_))
         .Times(Exactly(1));
-  
+
     EXPECT_THROW({
         auto display = create_display(platform);
     }, std::runtime_error) << "Expected that c'tor of GBMDisplay throws";
