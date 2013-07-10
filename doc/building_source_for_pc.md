@@ -42,9 +42,6 @@ The next step is to build the source and run the tests:
     $ make (-j8)
     $ ctest
 
-Installing Mir
---------------
-
 To install Mir just use the normal make install command:
 
     $ make install
@@ -55,3 +52,29 @@ install to a non-standard location, keep in mind that you will probably need to
 properly set the PKG_CONFIG_PATH environment variable to allow other
 applications to build against Mir, and LD_LIBRARY_PATH to allow applications to
 find the Mir libraries at runtime.
+
+Building Mesa
+-------------
+
+For GL accelerated clients to use Mir they need to use a patched version of Mesa
+that supports Mir.
+
+The patch is hosted on GitHub:
+
+    $ git clone https://github.com/RAOF/mesa.git
+
+Compile as per normal instructions and pass --with-egl-platforms="mir" to the
+configure options. You will need libmirclient installed as shown above.
+
+Building X.Org
+--------------
+
+To run an X server inside Mir you need to build a patched version of the X.Org
+X server.
+
+The patch is hosted on GitHub:
+
+    $ git clone https://github.com/RAOF/xserver.git
+
+Compile as per normal instructions and pass --with-xmir to the configure
+options. You will need libmirclient installed as shown above.
