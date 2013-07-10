@@ -347,6 +347,10 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 {
     using namespace testing;
 
+    auto platform = create_platform();
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
     EXPECT_CALL(mock_drm, drmModeGetResources(_))
         .Times(Exactly(1))
         .WillOnce(Return(reinterpret_cast<drmModeRes*>(0)));
@@ -356,8 +360,6 @@ TEST_F(GBMDisplayTest, create_display_kms_failure)
 
     EXPECT_CALL(mock_drm, drmClose(_))
         .Times(Exactly(1));
-
-    auto platform = create_platform();
 
     EXPECT_THROW({
         auto display = create_display(platform);
