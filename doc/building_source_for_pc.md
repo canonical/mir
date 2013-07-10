@@ -76,7 +76,7 @@ The patch is hosted on GitHub:
 
     $ git clone https://github.com/RAOF/xserver.git
 
-Compile as per normal instructions and pass --with-xmir to the configure
+Compile as per normal instructions and pass --enable-xmir to the configure
 options. You will need libmirclient installed as shown above.
 
 Building Unity System Compositor
