@@ -54,7 +54,7 @@ class Session;
 class ResourceCache;
 class SessionMediatorReport;
 class ClientBufferTracker;
-struct CloggableEventSink;
+class CloggableEventSink;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer

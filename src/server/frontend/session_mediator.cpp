@@ -53,7 +53,7 @@ namespace mir
 namespace frontend
 {
 
-struct CloggableEventSink : public me::EventSink
+class CloggableEventSink : public me::EventSink
 {
 public:
     CloggableEventSink(std::shared_ptr<me::EventSink> const& drain)
