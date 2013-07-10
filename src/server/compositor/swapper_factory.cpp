@@ -43,7 +43,7 @@ mc::SwapperFactory::SwapperFactory(
 
 mc::SwapperFactory::SwapperFactory(
     std::shared_ptr<GraphicBufferAllocator> const& gr_alloc)
-    : SwapperFactory(gr_alloc, 2)
+    : SwapperFactory(gr_alloc, 3)
 {
 }
 
