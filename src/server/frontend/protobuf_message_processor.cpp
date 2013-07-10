@@ -20,6 +20,7 @@
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
+#include "mir/frontend/client_constants.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -37,7 +38,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     resource_cache(resource_cache),
     report(report)
 {
-    send_response_buffer.reserve(2048); // TODO kill magic numbers
+    send_response_buffer.reserve(serialization_buffer_size);
 }
 
 template<class ResultMessage>
@@ -144,7 +145,7 @@ void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
     ev->set_raw(&e, sizeof(MirEvent));
 
     std::string buffer;
-    buffer.reserve(2048); // TODO kill magic numbers
+    buffer.reserve(serialization_buffer_size);
     seq.SerializeToString(&buffer);
 
     mir::protobuf::wire::Result result;

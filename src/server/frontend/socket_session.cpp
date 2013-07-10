@@ -22,6 +22,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "mir/frontend/client_constants.h"
+
 namespace ba = boost::asio;
 namespace bs = boost::system;
 
@@ -36,7 +38,7 @@ mfd::SocketSession::SocketSession(
     connected_sessions(connected_sessions),
     processor(std::make_shared<NullMessageProcessor>())
 {
-    whole_message.reserve(2048); // TODO kill magic numbers
+    whole_message.reserve(serialization_buffer_size);
 }
 
 mfd::SocketSession::~SocketSession() noexcept
