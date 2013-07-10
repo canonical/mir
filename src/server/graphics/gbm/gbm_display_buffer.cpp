@@ -173,7 +173,7 @@ void mgg::GBMDisplayBuffer::post_update(
      * Bring the back buffer to the front and get the buffer object
      * corresponding to the front buffer.
      */
-    if (!egl.swap_buffers())
+    if (!client_buf && !egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
     auto bufobj = client_buf ?

@@ -100,7 +100,6 @@ void mc::DefaultCompositingStrategy::render(
             };
         RenderingOperator bypass(*bypass_renderer, save_resource);
 
-        display_buffer.make_current();
         renderables->for_each_if(bypass_filter, bypass);
 
         if (bypass_filter.bypass_buf)
