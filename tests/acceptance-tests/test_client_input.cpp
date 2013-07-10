@@ -471,9 +471,9 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
             static GeometryList positions;
-            positions[test_client_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
+            positions[test_client_1] = geom::Rectangle{geom::Point{0, 0},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
-            positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{screen_height/2}},
+            positions[test_client_2] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
 
             return std::make_shared<StaticPlacementStrategy>(positions);
@@ -481,7 +481,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         
         geom::Rectangle the_screen_geometry() override
         {
-            return geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
+            return geom::Rectangle{geom::Point{0, 0},
                     geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
         }
 
@@ -569,12 +569,12 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     static int const screen_width = 100;
     static int const screen_height = 100;
     
-    static geom::Rectangle const screen_geometry{geom::Point{geom::X{0}, geom::Y{0}},
+    static geom::Rectangle const screen_geometry{geom::Point{0, 0},
         geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
 
     static std::initializer_list<geom::Rectangle> client_input_regions = {
-        {{geom::X{0}, geom::Y{0}}, {geom::Width{screen_width-80}, geom::Height{screen_height}}},
-        {{geom::X{screen_width-20}, geom::Y{0}}, {geom::Width{screen_width-80}, geom::Height{screen_height}}}
+        {geom::Point{0, 0}, {geom::Width{screen_width-80}, geom::Height{screen_height}}},
+        {geom::Point{screen_width-20, 0}, {geom::Width{screen_width-80}, geom::Height{screen_height}}}
     };
 
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
@@ -676,7 +676,7 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
     static int const screen_width = 100;
     static int const screen_height = 100;
     
-    static geom::Rectangle const screen_geometry{geom::Point{geom::X{0}, geom::Y{0}},
+    static geom::Rectangle const screen_geometry{geom::Point{0, 0},
         geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
 
     struct ServerConiguration : mtf::InputTestingServerConfiguration

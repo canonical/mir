@@ -213,8 +213,7 @@ geom::Rectangle mga::AndroidDisplay::view_area() const
     geom::Width w(display_width);
     geom::Height h(display_height);
 
-    geom::Point pt { geom::X{0},
-                     geom::Y{0}};
+    geom::Point pt{0, 0};
     geom::Size sz{w,h};
     geom::Rectangle rect{pt, sz};
     return rect;

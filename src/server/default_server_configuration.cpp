@@ -481,7 +481,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
             {
                 if (auto c = cursor.lock())
                 {
-                    c->move_to(geom::Point{geom::X(abs_x), geom::Y(abs_y)});
+                    c->move_to(geom::Point{abs_x, abs_y});
                 }
             }
 
