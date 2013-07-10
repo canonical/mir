@@ -23,12 +23,12 @@ to get them is to use the packaging build dependencies:
 Building Mir
 ------------
 
-Mir is built using cmake. You first need to create the build directory and
+Mir is built using CMake. You first need to create the build directory and
 configure the build:
 
     $ mkdir build
     $ cd build
-    $ cmake .. (possibly passing configuration options to cmake)
+    $ cmake .. (possibly passing configuration options to CMake)
 
 There are many configuration options for the Mir project. The default options
 will work fine, but you may want to customize the build depending on your
