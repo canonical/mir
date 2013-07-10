@@ -78,3 +78,22 @@ The patch is hosted on GitHub:
 
 Compile as per normal instructions and pass --with-xmir to the configure
 options. You will need libmirclient installed as shown above.
+
+Building Unity System Compositor
+--------------------------------
+
+If you want to run a full system using XMir then you need to use a system
+compositor. For Ubuntu we have a system compositor project on Launchpad
+(https://launchpad.net/unity-system-compositor). Compile with the following:
+
+    $ bzr branch lp:unity-system-compositor
+    $ cd unity-system-compositor
+    $ mkdir build
+    $ cd build
+    $ cmake ..
+
+You will need libmirserver installed as shown above.
+
+To use the system compositor you need a display manager that supports it. At the
+time of writing LightDM is the only display manager with support and has been
+available since version 1.7.4.
