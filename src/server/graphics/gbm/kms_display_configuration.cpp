@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
 
@@ -102,11 +103,7 @@ void mgg::KMSDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used,
     geometry::Point top_left, size_t mode_index)
 {
-    auto iter = std::find_if(outputs.begin(), outputs.end(),
-                             [id](DisplayConfigurationOutput const& output)
-                             {
-                                return output.id == id;
-                             });
+    auto iter = find_output_with_id(id);
 
     if (iter != outputs.end())
     {
@@ -185,11 +182,7 @@ void mgg::KMSDisplayConfiguration::add_or_update_output(
     }
 
     /* Add or update the output */
-    auto iter = std::find_if(outputs.begin(), outputs.end(),
-                             [id](DisplayConfigurationOutput const& output)
-                             {
-                                return output.id == id;
-                             });
+    auto iter = find_output_with_id(id);
 
     if (iter == outputs.end())
     {
@@ -205,4 +198,14 @@ void mgg::KMSDisplayConfiguration::add_or_update_output(
         output.connected = connected;
         output.current_mode_index = current_mode_index;
     }
+}
+
+std::vector<mg::DisplayConfigurationOutput>::iterator
+mgg::KMSDisplayConfiguration::find_output_with_id(DisplayConfigurationOutputId id)
+{
+    return std::find_if(outputs.begin(), outputs.end(),
+                        [id](DisplayConfigurationOutput const& output)
+                        {
+                            return output.id == id;
+                        });
 }

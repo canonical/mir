@@ -51,6 +51,7 @@ public:
 
 private:
     void add_or_update_output(DRMModeResources const& resources, drmModeConnector const& connector);
+    std::vector<DisplayConfigurationOutput>::iterator find_output_with_id(DisplayConfigurationOutputId id);
 
     int drm_fd;
     std::vector<DisplayConfigurationOutput> outputs;
