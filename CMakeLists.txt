@@ -165,9 +165,9 @@ set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 if (MIR_ENABLE_TESTS)
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-local-typedefs -Wno-error=deprecated")
+#  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=unused-local-typedefs -Wno-error=deprecated")
    add_subdirectory(tests/)
-  set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
+#  set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 
 endif ()
 add_subdirectory(benchmarks/)
