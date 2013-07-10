@@ -70,6 +70,7 @@ private:
     boost::asio::streambuf message;
     static size_t const size_of_header = 2;
     unsigned char message_header_bytes[size_of_header];
+    std::vector<char> whole_message;
 };
 
 }

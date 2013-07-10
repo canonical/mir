@@ -51,8 +51,6 @@ void mfd::SocketSession::send(std::string const& body)
         static_cast<unsigned char>((size >> 0) & 0xff)
     };
 
-    // TODO: It might make sense to use a pool for these.
-    std::vector<char> whole_message;
     whole_message.resize(sizeof header_bytes + size);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
     std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
