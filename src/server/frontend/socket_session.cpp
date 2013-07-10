@@ -117,7 +117,7 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
     }
 
     size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
-    // Read newline delimited messages for now
+
     ba::async_read(
          socket,
          message,
