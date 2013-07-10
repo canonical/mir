@@ -185,7 +185,7 @@ MATCHER_P(InvocationMethodEq, name, "")
 }
 
 TEST_F(ProtobufCommunicator,
-       double_disconnection_attempt_has_no_effect)
+       double_disconnection_attempt_throws_exception)
 {
     using namespace testing;
 
@@ -212,10 +212,12 @@ TEST_F(ProtobufCommunicator,
     EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_));
     EXPECT_CALL(*client, disconnect_done()).Times(0);
 
+    EXPECT_THROW({
     // We don't know if this will be called, so it can't auto destruct
     std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
     client->display_server.disconnect(0, &client->ignored, &client->ignored, new_callback.get());
     client->wait_for_disconnect_done();
+    }, std::runtime_error);
 }
 
 TEST_F(ProtobufCommunicator,

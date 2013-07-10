@@ -224,16 +224,7 @@ void mclr::MirSocketRpcChannel::send_message(
     {
         rpc_report->invocation_failed(invocation, error);
         
-        mir::protobuf::Connection error_response;
-        error_response.set_error("Failed to connect to server");
-        std::string buffer;
-        error_response.SerializeToString(&buffer);
-
-        mir::protobuf::wire::Result error_result;
-        error_result.set_id(invocation.id());
-        error_result.set_response(buffer);
-        
-        pending_calls.complete_response(error_result);
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server"));
     }
     else
         rpc_report->invocation_succeeded(invocation);
