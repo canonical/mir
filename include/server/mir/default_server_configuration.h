@@ -90,6 +90,7 @@ class InputManager;
 class EventFilter;
 class InputChannelFactory;
 class InputConfiguration;
+class CursorListener;
 }
 
 namespace logging
@@ -191,6 +192,7 @@ public:
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     /** @} */
 
     /** @name logging configuration - customization
@@ -223,6 +225,7 @@ protected:
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<surfaces::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
+    CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
