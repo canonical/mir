@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "kms_output_container.h"
+#include "kms_display_configuration.h"
 #include "gbm_display_helpers.h"
 
 #include <vector>
@@ -36,6 +37,7 @@ namespace graphics
 
 class DisplayReport;
 class DisplayBuffer;
+class DisplayConfigurationPolicy;
 
 namespace gbm
 {
@@ -51,6 +53,7 @@ class GBMDisplay : public Display
 public:
     GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                std::shared_ptr<VideoDevices> const& video_devices,
+               std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                std::shared_ptr<DisplayReport> const& listener);
     ~GBMDisplay();
 
@@ -82,6 +85,7 @@ private:
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;
     KMSOutputContainer output_container;
+    KMSDisplayConfiguration current_display_configuration;
     std::shared_ptr<GBMCursor> cursor;
 };
 

@@ -59,7 +59,8 @@ std::shared_ptr<mga::FramebufferFactory> mga::AndroidPlatform::create_frame_buff
     return std::make_shared<mga::DefaultFramebufferFactory>(buffer_allocator);
 }
 
-std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
+std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
 {
     auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
     auto display_allocator = std::make_shared<mga::AndroidDisplayAllocator>();

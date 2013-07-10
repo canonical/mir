@@ -58,6 +58,10 @@ public:
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)>) const
     {
     }
+
+    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
+    {
+    }
 };
 
 class EGLContextStore

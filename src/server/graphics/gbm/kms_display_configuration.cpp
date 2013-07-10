@@ -24,6 +24,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <algorithm>
 
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
@@ -60,13 +61,27 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
 }
 
 mgg::KMSDisplayConfiguration::KMSDisplayConfiguration(int drm_fd)
+    : drm_fd{drm_fd}
 {
-    DRMModeResources resources{drm_fd};
+    update();
+}
 
-    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+mgg::KMSDisplayConfiguration::KMSDisplayConfiguration(
+    KMSDisplayConfiguration const& conf)
+    : DisplayConfiguration(), drm_fd{conf.drm_fd}, outputs{conf.outputs}
+{
+}
+
+mgg::KMSDisplayConfiguration& mgg::KMSDisplayConfiguration::operator=(
+    KMSDisplayConfiguration const& conf)
+{
+    if (&conf != this)
     {
-        add_output(resources, *connector);
-    });
+        drm_fd = conf.drm_fd;
+        outputs = conf.outputs;
+    }
+
+    return *this;
 }
 
 void mgg::KMSDisplayConfiguration::for_each_card(
@@ -83,6 +98,33 @@ void mgg::KMSDisplayConfiguration::for_each_output(
         f(output);
 }
 
+void mgg::KMSDisplayConfiguration::configure_output(
+    DisplayConfigurationOutputId id, bool used,
+    geometry::Point top_left, size_t mode_index)
+{
+    auto iter = std::find_if(outputs.begin(), outputs.end(),
+                             [id](DisplayConfigurationOutput const& output)
+                             {
+                                return output.id == id;
+                             });
+
+    if (iter != outputs.end())
+    {
+        auto& output = *iter;
+
+        if (used && mode_index >= output.modes.size())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
+
+        output.used = used;
+        output.top_left = top_left;
+        output.current_mode_index = mode_index;
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Trying to configure invalid output"));
+    }
+}
+
 uint32_t mgg::KMSDisplayConfiguration::get_kms_connector_id(DisplayConfigurationOutputId id) const
 {
     for (auto const& output : outputs)
@@ -94,8 +136,19 @@ uint32_t mgg::KMSDisplayConfiguration::get_kms_connector_id(DisplayConfiguration
     BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find DisplayConfigurationOutput with provided id"));
 }
 
-void mgg::KMSDisplayConfiguration::add_output(DRMModeResources const& resources,
-                                              drmModeConnector const& connector)
+void mgg::KMSDisplayConfiguration::update()
+{
+    DRMModeResources resources{drm_fd};
+
+    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+    {
+        add_or_update_output(resources, *connector);
+    });
+}
+
+void mgg::KMSDisplayConfiguration::add_or_update_output(
+    DRMModeResources const& resources,
+    drmModeConnector const& connector)
 {
     DisplayConfigurationOutputId id{static_cast<int>(connector.connector_id)};
     DisplayConfigurationCardId card_id{0};
@@ -131,7 +184,25 @@ void mgg::KMSDisplayConfiguration::add_output(DRMModeResources const& resources,
             current_mode_index = m;
     }
 
-    /* Add the output */
-    outputs.push_back({id, card_id, modes, physical_size,
-                       connected, current_mode_index});
+    /* Add or update the output */
+    auto iter = std::find_if(outputs.begin(), outputs.end(),
+                             [id](DisplayConfigurationOutput const& output)
+                             {
+                                return output.id == id;
+                             });
+
+    if (iter == outputs.end())
+    {
+        outputs.push_back({id, card_id, modes, physical_size,
+                           connected, false, geom::Point(), current_mode_index});
+    }
+    else
+    {
+        auto& output = *iter;
+
+        output.modes = modes;
+        output.physical_size_mm = physical_size;
+        output.connected = connected;
+        output.current_mode_index = current_mode_index;
+    }
 }

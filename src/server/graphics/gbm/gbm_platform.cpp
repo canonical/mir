@@ -104,11 +104,13 @@ std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allo
                                                      buffer_initializer);
 }
 
-std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
+std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display(
+    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy)
 {
     return std::make_shared<mgg::GBMDisplay>(
         this->shared_from_this(),
         std::make_shared<UdevVideoDevices>(udev.ctx),
+        initial_conf_policy,
         listener);
 }
 
