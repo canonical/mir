@@ -16,8 +16,6 @@ endif()
 set(GMOCK_INSTALL_DIR ${GMOCK_INSTALL_DIR}/gmock)
 find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
 
-set(GTEST_ALL_INCLUDES ${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
-
 set(GMOCK_PREFIX gmock)
 set(GMOCK_BINARY_DIR ${CMAKE_BINARY_DIR}/${GMOCK_PREFIX}/libs)
 set(GTEST_BINARY_DIR ${GMOCK_BINARY_DIR}/gtest)
@@ -50,8 +48,6 @@ set(GTEST_MAIN_LIBRARY ${GTEST_BINARY_DIR}/libgtest_main.a)
 set(GTEST_BOTH_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
 set(GTEST_ALL_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_BOTH_LIBRARIES})
 
-# handle the QUIETLY and REQUIRED arguments and set EGL_FOUND to TRUE
-# if all listed variables are TRUE
 find_package_handle_standard_args(GTest  DEFAULT_MSG
-                                  GTEST_ALL_LIBRARIES GTEST_ALL_INCLUDES)
-
+                                    GMOCK_INCLUDE_DIR
+                                    GTEST_INCLUDE_DIR)

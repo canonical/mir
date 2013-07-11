@@ -155,14 +155,15 @@ set (OLD_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 # Don't treat warnings as errors in 3rd_party/{gmock}
 string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-find_package(Gtest REQUIRED)
-include_directories(${GTEST_ALL_INCLUDES})
 
 # Restore -Werror for non-3rd-party code
 set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 
 option(MIR_ENABLE_TESTS "Build tests" ON)
+
 if (MIR_ENABLE_TESTS)
+   find_package(Gtest REQUIRED)
+   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
    add_subdirectory(tests/)
 endif ()
 add_subdirectory(benchmarks/)
