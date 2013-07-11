@@ -79,6 +79,21 @@ The patch is hosted on GitHub:
 Compile as per normal instructions and pass --enable-xmir to the configure
 options. You will need libmirclient installed as shown above.
 
+Building the X.Org drivers
+--------------------------
+
+To run an X server inside Mir you also need a patched version of your X.Org
+video driver.
+
+The three drivers - Intel, Radeon, and Nouveau -  are available on Launchpad:
+
+    $ bzr branch lp:~mir-team/mir/xf86-video-intel-vladmir
+    $ bzr branch lp:~mir-team/mir/xf86-video-ati-vladmir
+    $ bzr branch lp:~mir-team/mir/xf86-video-nouveau
+
+Compile as per normal instructions. These need to be built after the X server,
+as they depend on new interfaces there.
+
 Building Unity System Compositor
 --------------------------------
 
