@@ -27,6 +27,7 @@
 
 #include <gtest/gtest.h>
 #include <chrono>
+#include <thread>
 #include <cstring>
 
 namespace mf = mir::frontend;
@@ -601,6 +602,78 @@ TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
     launch_client_process(client_config);
 }
 
+TEST_F(DefaultDisplayServerTestFixture, highly_threaded_client)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        static void nosey_thread(MirSurface *surf)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                mir_wait_for_one(mir_surface_set_state(surf,
+                                                mir_surface_state_maximized));
+                mir_wait_for_one(mir_surface_set_type(surf,
+                                                mir_surface_type_normal));
+                mir_wait_for_one(mir_surface_set_state(surf,
+                                                mir_surface_state_restored));
+                mir_wait_for_one(mir_surface_set_type(surf,
+                                                mir_surface_type_utility));
+                mir_wait_for_one(mir_surface_set_state(surf,
+                                                mir_surface_state_fullscreen));
+                mir_wait_for_one(mir_surface_set_type(surf,
+                                                mir_surface_type_dialog));
+                mir_wait_for_one(mir_surface_set_state(surf,
+                                                mir_surface_state_minimized));
+            }
+        }
+
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket,
+                                          __PRETTY_FUNCTION__);
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_software
+            };
+
+            surface = mir_connection_create_surface_sync(connection,
+                                                         &request_params);
+            ASSERT_TRUE(surface != NULL);
+            EXPECT_TRUE(mir_surface_is_valid(surface));
+            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
+
+            std::thread a(nosey_thread, surface);
+            std::thread b(nosey_thread, surface);
+            std::thread c(nosey_thread, surface);
+
+            a.join();
+            b.join();
+            c.join();
+
+            EXPECT_EQ(mir_surface_type_dialog,
+                      mir_surface_get_type(surface));
+            EXPECT_EQ(mir_surface_state_minimized,
+                      mir_surface_get_state(surface));
+
+            mir_surface_release_sync(surface);
+
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
 TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package)
 {
     struct ClientConfig : ClientConfigCommon
@@ -700,4 +773,93 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
 
     launch_client_process(client_config);
 }
+
+bool signalled;
+static void SIGIO_handler(int /*signo*/)
+{
+    signalled = true;
+}
+
+TEST_F(DefaultDisplayServerTestFixture, ClientLibraryThreadsHandleNoSignals)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            signalled = false;
+
+            sigset_t sigset;
+            sigemptyset(&sigset);
+            struct sigaction act;
+            act.sa_handler = &SIGIO_handler;
+            act.sa_mask = sigset;
+            act.sa_flags = 0;
+            act.sa_restorer = nullptr;
+            if (sigaction(SIGIO, &act, NULL))
+                FAIL() << "Failed to set SIGIO action";
+
+            MirConnection* conn = NULL;
+            conn = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+
+            sigaddset(&sigset, SIGIO);
+            pthread_sigmask(SIG_BLOCK, &sigset, NULL);
+
+            // SIGIO should be blocked
+            if (kill(getpid(), SIGIO))
+                FAIL() << "Failed to send SIGIO signal";
+
+            // Make a roundtrip to the server to ensure the SIGIO has time to be handled
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_software
+            };
+
+            surface = mir_connection_create_surface_sync(conn, &request_params);
+
+            mir_connection_release(conn);
+
+            EXPECT_FALSE(signalled);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, ClientLibraryDoesNotInterfereWithClientSignalHandling)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            signalled = false;
+
+            sigset_t sigset;
+            sigemptyset(&sigset);
+            struct sigaction act;
+            act.sa_handler = &SIGIO_handler;
+            act.sa_mask = sigset;
+            act.sa_flags = 0;
+            act.sa_restorer = nullptr;
+            if (sigaction(SIGIO, &act, NULL))
+                FAIL() << "Failed to set SIGIO action";
+
+            MirConnection* conn = NULL;
+            conn = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+
+            // We should receieve SIGIO
+            if (kill(getpid(), SIGIO))
+                FAIL() << "Failed to send SIGIO signal";
+
+            mir_connection_release(conn);
+
+            EXPECT_TRUE(signalled);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
 }

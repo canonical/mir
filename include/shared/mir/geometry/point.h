@@ -29,6 +29,13 @@ namespace geometry
 
 struct Point
 {
+    Point() = default;
+    Point(Point const&) = default;
+    Point& operator=(Point const&) = default;
+
+    template<typename XType, typename YType>
+    Point(XType&& x, YType&& y) : x(x), y(y) {}
+
     X x;
     Y y;
 };

@@ -20,6 +20,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 
 #include "mir/logging/display_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -61,7 +62,8 @@ int main(int, char**)
     auto logger = std::make_shared<ml::DumbConsoleLogger>();
     auto report = std::make_shared<ml::DisplayReport>(logger);
     auto platform = libmirplatformgraphics.load_function<mg::CreatePlatform>("create_platform")(std::make_shared<mo::ProgramOption>(), report);
-    auto display = platform->create_display();
+    auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+    auto display = platform->create_display(conf_policy);
 
     mir::draw::glAnimationBasic gl_animation;
 

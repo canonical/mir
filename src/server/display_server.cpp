@@ -25,6 +25,7 @@
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration_policy.h"
 #include "mir/input/input_manager.h"
 
 #include <stdexcept>
@@ -92,7 +93,8 @@ struct mir::DisplayServer::Private
           compositor{config.the_compositor()},
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
-          main_loop{config.the_main_loop()}
+          main_loop{config.the_main_loop()},
+          display_configuration_policy{config.the_display_configuration_policy()}
     {
         display->register_configuration_change_handler(
             *main_loop,
@@ -162,7 +164,9 @@ struct mir::DisplayServer::Private
             [this] { compositor->stop(); },
             [this] { compositor->start(); }};
 
-        display->configure(*display->configuration());
+        auto conf = display->configuration();
+        display_configuration_policy->apply_to(*conf);
+        display->configure(*conf);
     }
 
     std::shared_ptr<mg::Display> display;
@@ -170,6 +174,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mf::Communicator> communicator;
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mir::MainLoop> main_loop;
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const display_configuration_policy;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :

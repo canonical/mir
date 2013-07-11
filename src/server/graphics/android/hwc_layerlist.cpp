@@ -99,7 +99,7 @@ void mga::HWCLayerList::set_fb_target(std::shared_ptr<mc::Buffer> const& buffer)
 {
     auto handle = buffer->native_buffer_handle();
 
-    geom::Point pt{geom::X{0}, geom::Y{0}};
+    geom::Point pt{0, 0};
     geom::Rectangle rect{pt, buffer->size()};
     HWCRect display_rect(rect);
 

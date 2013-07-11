@@ -56,6 +56,8 @@ if (MIR_PLATFORM STREQUAL "gbm")
 
     ${UMOCKDEV_LIBRARIES}
   )
+  # Umockdev uses glib, which uses the deprecated "register" allocation specifier
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 endif()  
 
 mir_discover_tests(unit-tests LD_PRELOAD=libumockdev-preload.so.0)

@@ -78,7 +78,10 @@ void mf::SessionMediator::connect(
 {
     report->session_connect_called(request->application_name());
 
-    session = shell->open_session(request->application_name(), event_sink);
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        session = shell->open_session(request->application_name(), event_sink);
+    }
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -109,42 +112,46 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_create_surface_called(session->name());
-
-    auto const id = shell->create_surface_for(session,
-        msh::SurfaceCreationParameters()
-        .of_name(request->surface_name())
-        .of_size(request->width(), request->height())
-        .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
-        .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
-        );
-
     {
-        auto surface = session->get_surface(id);
-        response->mutable_id()->set_value(id.as_value());
-        response->set_width(surface->size().width.as_uint32_t());
-        response->set_height(surface->size().height.as_uint32_t());
-        response->set_pixel_format((int)surface->pixel_format());
-        response->set_buffer_usage(request->buffer_usage());
+        std::unique_lock<std::mutex> lock(session_mutex);
 
-        if (surface->supports_input())
-            response->add_fd(surface->client_input_fd());
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        client_buffer_resource = surface->advance_client_buffer();
-        auto const& id = client_buffer_resource->id();
+        report->session_create_surface_called(session->name());
 
-        auto buffer = response->mutable_buffer();
-        buffer->set_buffer_id(id.as_uint32_t());
+        auto const id = shell->create_surface_for(session,
+            msh::SurfaceCreationParameters()
+            .of_name(request->surface_name())
+            .of_size(request->width(), request->height())
+            .of_buffer_usage(static_cast<compositor::BufferUsage>(request->buffer_usage()))
+            .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+            );
 
-        if (!client_tracker->client_has(id))
         {
-            auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
-            graphics_platform->fill_ipc_package(packer, client_buffer_resource);
+            auto surface = session->get_surface(id);
+            response->mutable_id()->set_value(id.as_value());
+            response->set_width(surface->size().width.as_uint32_t());
+            response->set_height(surface->size().height.as_uint32_t());
+            response->set_pixel_format((int)surface->pixel_format());
+            response->set_buffer_usage(request->buffer_usage());
+
+            if (surface->supports_input())
+                response->add_fd(surface->client_input_fd());
+
+            client_buffer_resource = surface->advance_client_buffer();
+            auto const& id = client_buffer_resource->id();
+
+            auto buffer = response->mutable_buffer();
+            buffer->set_buffer_id(id.as_uint32_t());
+
+            if (!client_tracker->client_has(id))
+            {
+                auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
+                graphics_platform->fill_ipc_package(packer, client_buffer_resource);
+            }
+            client_tracker->add(id);
         }
-        client_tracker->add(id);
     }
 
     done->Run();
@@ -156,15 +163,19 @@ void mf::SessionMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
 
-    report->session_next_buffer_called(session->name());
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto surface = session->get_surface(SurfaceId(request->value()));
+        report->session_next_buffer_called(session->name());
 
-    client_buffer_resource.reset();
-    client_buffer_resource = surface->advance_client_buffer();
+        auto surface = session->get_surface(SurfaceId(request->value()));
+
+        client_buffer_resource.reset();
+        client_buffer_resource = surface->advance_client_buffer();
+    }
 
     auto const& id = client_buffer_resource->id();
     response->set_buffer_id(id.as_uint32_t());
@@ -184,14 +195,18 @@ void mf::SessionMediator::release_surface(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
 
-    report->session_release_surface_called(session->name());
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const id = SurfaceId(request->value());
+        report->session_release_surface_called(session->name());
 
-    session->destroy_surface(id);
+        auto const id = SurfaceId(request->value());
+
+        session->destroy_surface(id);
+    }
 
     done->Run();
 }
@@ -202,13 +217,17 @@ void mf::SessionMediator::disconnect(
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
 {
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
 
-    report->session_disconnect_called(session->name());
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    shell->close_session(session);
-    session.reset();
+        report->session_disconnect_called(session->name());
+
+        shell->close_session(session);
+        session.reset();
+    }
 
     done->Run();
 }
@@ -225,16 +244,20 @@ void mf::SessionMediator::configure_surface(
     response->mutable_surfaceid()->CopyFrom(request->surfaceid());
     response->set_attrib(attrib);
 
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
 
-    report->session_configure_surface_called(session->name());
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const id = frontend::SurfaceId(request->surfaceid().value());
-    int value = request->ivalue();
-    int newvalue = session->configure_surface(id, attrib, value);
+        report->session_configure_surface_called(session->name());
 
-    response->set_ivalue(newvalue);
+        auto const id = frontend::SurfaceId(request->surfaceid().value());
+        int value = request->ivalue();
+        int newvalue = session->configure_surface(id, attrib, value);
+
+        response->set_ivalue(newvalue);
+    }
 
     done->Run();
 }

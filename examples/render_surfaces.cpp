@@ -127,7 +127,7 @@ void animate_cursor()
                 update_cursor(bg_color, fg_colors[fg_color]);
             }
 
-            cursor->move_to(geom::Point{geom::X(cursor_pos), geom::Y(cursor_pos)});
+            cursor->move_to(geom::Point{cursor_pos, cursor_pos});
         }
     }
 }
@@ -221,8 +221,7 @@ public:
 
         if (should_update)
         {
-            surface->move_to({geom::X{static_cast<uint32_t>(new_x)},
-                              geom::Y{static_cast<uint32_t>(new_y)}});
+            surface->move_to({new_x, new_y});
             x = new_x;
             y = new_y;
         }
@@ -399,7 +398,7 @@ public:
             uint32_t const x = w * (0.5 + 0.25 * cos(i * angular_step)) - surface_side / 2.0;
             uint32_t const y = h * (0.5 + 0.25 * sin(i * angular_step)) - surface_side / 2.0;
 
-            s->move_to({geom::X{x}, geom::Y{y}});
+            s->move_to({x, y});
             m = Moveable(*s, display_size,
                     cos(0.1f + i * M_PI / 6.0f) * w / 3.0f,
                     sin(0.1f + i * M_PI / 6.0f) * h / 3.0f,

@@ -38,15 +38,22 @@ class KMSDisplayConfiguration : public DisplayConfiguration
 {
 public:
     KMSDisplayConfiguration(int drm_fd);
+    KMSDisplayConfiguration(KMSDisplayConfiguration const& conf);
+    KMSDisplayConfiguration& operator=(KMSDisplayConfiguration const& conf);
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const;
+    void configure_output(DisplayConfigurationOutputId id, bool used,
+                          geometry::Point top_left, size_t mode_index);
 
     uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const;
+    void update();
 
 private:
-    void add_output(DRMModeResources const& resources, drmModeConnector const& connector);
+    void add_or_update_output(DRMModeResources const& resources, drmModeConnector const& connector);
+    std::vector<DisplayConfigurationOutput>::iterator find_output_with_id(DisplayConfigurationOutputId id);
 
+    int drm_fd;
     std::vector<DisplayConfigurationOutput> outputs;
 };
 

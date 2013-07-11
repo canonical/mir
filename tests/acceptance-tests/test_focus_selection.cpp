@@ -123,10 +123,6 @@ MATCHER(NonNullSession, "")
 {
     return arg != std::shared_ptr<msh::Session>();
 }
-MATCHER(NonNullSurfaceTarget, "")
-{
-    return arg != std::shared_ptr<mi::SurfaceTarget>();
-}
 }
 
 TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
@@ -188,7 +184,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
                 {
                     InSequence seq;
-                    EXPECT_CALL(*targeter, focus_changed(NonNullSurfaceTarget())).Times(1);
+                    EXPECT_CALL(*targeter, focus_changed(_)).Times(1);
                     expected = true;
                 }
             }

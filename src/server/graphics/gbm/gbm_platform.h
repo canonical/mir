@@ -46,7 +46,8 @@ public:
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
-    std::shared_ptr<Display> create_display();
+    std::shared_ptr<Display> create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package(); 
     std::shared_ptr<InternalClient> create_internal_client();
 
@@ -67,6 +68,8 @@ public:
     static bool internal_display_clients_present;
     static std::shared_ptr<InternalNativeDisplay> internal_native_display;
 };
+
+extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display);
 
 }
 }

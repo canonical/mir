@@ -27,7 +27,7 @@ TEST(WaitHandle, symmetric_synchronous)
     for (int i = 0; i < 100; i++)
     {
         w.result_received();
-        w.wait_for_result();
+        w.wait_for_all();
     }
 
     EXPECT_TRUE(true);   // Failure would be hanging in the above loop
@@ -42,7 +42,7 @@ TEST(WaitHandle, asymmetric_synchronous)
         for (int j = 1; j <= i; j++)
             w.result_received();
 
-        w.wait_for_result();
+        w.wait_for_all();
     }
 
     EXPECT_TRUE(true);   // Failure would be hanging in the above loop
@@ -56,7 +56,7 @@ namespace
     {
         for (int i = 1; i <= max; i++)
         {
-            in->wait_for_result();
+            in->wait_for_all();
             symmetric_result = i;
             out->result_received();
         }
@@ -72,7 +72,7 @@ TEST(WaitHandle, symmetric_asynchronous)
     for (int i = 1; i <= max; i++)
     {
         in.result_received();
-        out.wait_for_result();
+        out.wait_for_all();
         ASSERT_EQ(symmetric_result, i);
     }
     t.join();
@@ -86,7 +86,7 @@ namespace
     {
         for (int i = 1; i <= max; i++)
         {
-            in->wait_for_result();
+            in->wait_for_all();
             asymmetric_result = i;
             for (int j = 1; j <= i; j++)
                 out->result_received();
@@ -105,8 +105,44 @@ TEST(WaitHandle, asymmetric_asynchronous)
         in.result_received();
         for (int j = 1; j <= i; j++)
             out.expect_result();
-        out.wait_for_result();
+        out.wait_for_all();
         ASSERT_EQ(asymmetric_result, i);
     }
     t.join();
 }
+
+namespace
+{
+    void crowded_thread(MirWaitHandle *w, int max)
+    {
+        for (int i = 0; i < max; i++)
+        {
+            /*
+             * This doesn't work with wait_for_all, because waiters will
+             * race and the winner would gobble up all the results, leaving
+             * the other waiters hanging forever. So we have wait_for_one()
+             * to allow many threads to safely wait on the same handle and
+             * guarantee that they will all get the number of results they
+             * expect.
+             */
+            w->wait_for_one();
+        }
+    }
+}
+
+TEST(WaitHandle, many_waiters)
+{
+    const int max = 100;
+    MirWaitHandle w;
+    std::thread a(crowded_thread, &w, max);
+    std::thread b(crowded_thread, &w, max);
+    std::thread c(crowded_thread, &w, max);
+
+    for (int n = 0; n < max * 3; n++)
+        w.result_received();
+
+    a.join();
+    b.join();
+    c.join();
+}
+
