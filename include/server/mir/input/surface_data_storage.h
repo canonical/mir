@@ -32,7 +32,7 @@ class SurfaceInfo;
 namespace input
 {
 
-class SurfaceDataStorage : public SurfaceInfoController 
+class SurfaceDataStorage : public SurfaceStateModifier 
 {
 public:
     SurfaceDataStorage(std::shared_ptr<surfaces::SurfaceInfo> const& surface_info);

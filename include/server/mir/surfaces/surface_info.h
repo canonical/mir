@@ -51,16 +51,16 @@ protected:
     SurfaceInfo& operator=(const SurfaceInfo& ) = delete;
 };
 
-class SurfaceInfoController : public SurfaceInfo
+class SurfaceStateModifier : public SurfaceInfo
 {
 public:
     virtual void move_to(geometry::Point) = 0;
 
 protected:
-    SurfaceInfoController() = default; 
-    virtual ~SurfaceInfoController() noexcept = default;
-    SurfaceInfoController(const SurfaceInfoController&) = delete;
-    SurfaceInfoController& operator=(const SurfaceInfoController& ) = delete;
+    SurfaceStateModifier() = default; 
+    virtual ~SurfaceStateModifier() noexcept = default;
+    SurfaceStateModifier(const SurfaceStateModifier&) = delete;
+    SurfaceStateModifier& operator=(const SurfaceStateModifier& ) = delete;
 };
 
 }

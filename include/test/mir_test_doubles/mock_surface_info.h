@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class MockSurfaceInfo : public surfaces::SurfaceInfoController 
+class MockSurfaceInfo : public surfaces::SurfaceStateModifier 
 {
 public:
     MockSurfaceInfo()

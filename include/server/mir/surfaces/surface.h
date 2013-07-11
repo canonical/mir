@@ -45,16 +45,16 @@ namespace input
 class InputChannel;
 class InputRegion;
 class SurfaceInfo;
-class SurfaceInfoController;
+class SurfaceStateModifier;
 }
 namespace graphics
 {
 class SurfaceInfo;
-class SurfaceInfoController;
+class SurfaceStateModifier;
 }
 namespace surfaces
 {
-class SurfaceInfoController;
+class SurfaceStateModifier;
 class BufferStream;
 
 // TODO this is ideally an implementation class. It is only in a public header
@@ -62,10 +62,10 @@ class BufferStream;
 class Surface
 {
 public:
-    Surface(std::shared_ptr<surfaces::SurfaceInfoController> const& basic_info,
-            std::shared_ptr<graphics::SurfaceInfoController> const& graphics_info,
+    Surface(std::shared_ptr<surfaces::SurfaceStateModifier> const& basic_info,
+            std::shared_ptr<graphics::SurfaceStateModifier> const& graphics_info,
             std::shared_ptr<BufferStream> const& buffer_stream,
-            std::shared_ptr<input::SurfaceInfoController> const& input_info,
+            std::shared_ptr<input::SurfaceStateModifier> const& input_info,
             std::shared_ptr<input::InputChannel> const& input_channel);
 
     ~Surface();
@@ -100,9 +100,9 @@ public:
 
     std::shared_ptr<input::SurfaceInfo> input_info() const;
 private:
-    std::shared_ptr<surfaces::SurfaceInfoController> basic_info;
-    std::shared_ptr<input::SurfaceInfoController> surface_input_info;
-    std::shared_ptr<graphics::SurfaceInfoController> gfx_info;
+    std::shared_ptr<surfaces::SurfaceStateModifier> basic_info;
+    std::shared_ptr<input::SurfaceStateModifier> surface_input_info;
+    std::shared_ptr<graphics::SurfaceStateModifier> gfx_info;
     std::shared_ptr<BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     bool surface_in_startup;

@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class MockGraphicsInfo : public graphics::SurfaceInfoController 
+class MockGraphicsInfo : public graphics::SurfaceStateModifier 
 {
 public:
     ~MockGraphicsInfo() noexcept {}

@@ -47,7 +47,7 @@ protected:
     SurfaceInfo& operator=(SurfaceInfo const&) = delete;
 };
 
-class SurfaceInfoController : public SurfaceInfo
+class SurfaceStateModifier : public SurfaceInfo
 {
 public:
     virtual void frame_posted() = 0;
@@ -55,12 +55,12 @@ public:
     virtual void apply_alpha(float alpha) = 0;
     virtual void apply_rotation(float degrees, glm::vec3 const&) = 0;
 
-    virtual ~SurfaceInfoController() = default;
+    virtual ~SurfaceStateModifier() = default;
 
 protected:
-    SurfaceInfoController() = default;
-    SurfaceInfoController(SurfaceInfoController const&) = delete;
-    SurfaceInfoController& operator=(SurfaceInfoController const&) = delete;
+    SurfaceStateModifier() = default;
+    SurfaceStateModifier(SurfaceStateModifier const&) = delete;
+    SurfaceStateModifier& operator=(SurfaceStateModifier const&) = delete;
 };
 
 }

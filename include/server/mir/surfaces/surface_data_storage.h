@@ -29,7 +29,7 @@ namespace mir
 namespace surfaces
 {
 
-class SurfaceDataStorage : public SurfaceInfoController 
+class SurfaceDataStorage : public SurfaceStateModifier 
 {
 public:
     SurfaceDataStorage(std::string const& name, geometry::Point top_left, geometry::Size size,
