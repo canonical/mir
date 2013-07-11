@@ -194,6 +194,20 @@ int mggh::DRMHelper::is_appropriate_device(UdevHelper const& udev, udev_device* 
     return ENOMEDIUM;
 }
 
+int mggh::DRMHelper::count_connections(int fd)
+{
+    DRMModeResources resources{fd};
+
+    int n_connected = 0;
+    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+    {
+        if (connector->connection == DRM_MODE_CONNECTED)
+            n_connected++;
+    });
+
+    return n_connected;
+}
+
 int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
 {    
     int tmp_fd = -1;
@@ -254,8 +268,12 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
             continue;
         }
 
-        // We currently only handle one DRM device
-        break;
+        // Stop if this device has connections to display on
+        if (count_connections(tmp_fd) > 0)
+            break;
+
+        close(tmp_fd);
+        tmp_fd = -1;
     }
     udev_enumerate_unref(enumerator);
 
