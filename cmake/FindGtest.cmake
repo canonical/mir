@@ -7,7 +7,10 @@ find_path(GTEST_INCLUDE_DIR gtest/gtest.h
             HINTS ${GTEST_INSTALL_DIR})
 
 #gmock
-set(GMOCK_INSTALL_DIR /usr/src/gmock)
+find_path(GMOCK_INSTALL_DIR gmock/CMakeLists.txt
+          HINTS /usr/src)
+set(GMOCK_INSTALL_DIR ${GMOCK_INSTALL_DIR}/gmock)
+message("INSTALLED AT ${GMOCK_INSTALL_DIR}")
 find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
 
 set(GTEST_ALL_INCLUDES ${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
