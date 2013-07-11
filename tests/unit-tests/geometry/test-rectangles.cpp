@@ -70,6 +70,29 @@ TEST(geometry, rectangles_not_empty)
                             [](bool b){return b;}));
 }
 
+TEST(geometry, rectangles_clear)
+{
+    using namespace geom;
+
+    std::vector<Rectangle> const rectangles_vec = {
+        {Point{1, 2}, Size{Width{10}, Height{11}}},
+        {Point{3, 4}, Size{Width{12}, Height{13}}},
+        {Point{5, 6}, Size{Width{14}, Height{15}}}
+    };
+
+    Rectangles rectangles;
+    Rectangles const rectangles_empty;
+
+    for (auto const& rect : rectangles_vec)
+        rectangles.add(rect);
+
+    EXPECT_NE(rectangles_empty, rectangles);
+
+    rectangles.clear();
+
+    EXPECT_EQ(rectangles_empty, rectangles);
+}
+
 TEST(geometry, rectangles_bounding_rectangle)
 {
     using namespace geom;

@@ -35,6 +35,7 @@ public:
     /* We want to keep implicit copy and move methods */
 
     void add(Rectangle const& rect);
+    void clear();
     Rectangle bounding_rectangle() const;
 
     typedef std::vector<Rectangle>::const_iterator const_iterator;

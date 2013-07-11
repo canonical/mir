@@ -50,6 +50,12 @@ void geom::Rectangles::add(geom::Rectangle const& rect)
     update_bounding_rectangle();
 }
 
+void geom::Rectangles::clear()
+{
+    rectangles.clear();
+    update_bounding_rectangle();
+}
+
 geom::Rectangle geom::Rectangles::bounding_rectangle() const
 {
     return bounding_rectangle_;
