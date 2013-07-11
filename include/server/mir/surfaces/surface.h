@@ -23,10 +23,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/compositor/buffer_properties.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic warning "-Wall"
 #include <glm/glm.hpp>
-#pragma GCC diagnostic pop
 #include <vector>
 #include <memory>
 #include <string>

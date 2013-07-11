@@ -20,12 +20,7 @@
 #define MIR_GRAPHICS_SURFACE_INFO_H_
 
 #include "mir/geometry/rectangle.h"
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic warning "-Wall"
 #include <glm/glm.hpp>
-#pragma GCC diagnostic pop
-
 
 namespace mir
 {
