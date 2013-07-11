@@ -9,8 +9,11 @@ find_path(GTEST_INCLUDE_DIR gtest/gtest.h
 #gmock
 find_path(GMOCK_INSTALL_DIR gmock/CMakeLists.txt
           HINTS /usr/src)
+if(${GMOCK_INSTALL_DIR} STREQUAL "GMOCK_INSTALL_DIR-NOTFOUND")
+    message(FATAL_ERROR "google-mock package not found")
+endif()
+
 set(GMOCK_INSTALL_DIR ${GMOCK_INSTALL_DIR}/gmock)
-message("INSTALLED AT ${GMOCK_INSTALL_DIR}")
 find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
 
 set(GTEST_ALL_INCLUDES ${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
@@ -18,6 +21,13 @@ set(GTEST_ALL_INCLUDES ${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
 set(GMOCK_PREFIX gmock)
 set(GMOCK_BINARY_DIR ${CMAKE_BINARY_DIR}/${GMOCK_PREFIX}/libs)
 set(GTEST_BINARY_DIR ${GMOCK_BINARY_DIR}/gtest)
+
+set(GTEST_CMAKE_ARGS "")
+if (${MIR_IS_CROSS_COMPILING})
+    set(GTEST_CMAKE_ARGS
+        -DCMAKE_TOOLCHAIN_FILE=${CMAKE_MODULE_PATH}/LinuxCrossCompile.cmake)
+endif()
+
 ExternalProject_Add(
     GMock
     #where to build in source tree
@@ -25,9 +35,7 @@ ExternalProject_Add(
     #where the source is external to the project
     SOURCE_DIR ${GMOCK_INSTALL_DIR}
     #forward the compilers to the subproject so cross-arch builds work
-    CMAKE_ARGS
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    CMAKE_ARGS ${GTEST_CMAKE_ARGS}
     BINARY_DIR ${GMOCK_BINARY_DIR}
 
     #we don't need to install, so skip
