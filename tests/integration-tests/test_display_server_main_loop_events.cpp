@@ -132,6 +132,7 @@ private:
 class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
 {
 public:
+    ~MockDisplayConfigurationPolicy() noexcept {}
     MOCK_METHOD1(apply_to, void(mg::DisplayConfiguration&));
 };
 
