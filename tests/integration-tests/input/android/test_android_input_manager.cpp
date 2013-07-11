@@ -64,9 +64,7 @@ namespace
 {
 using namespace ::testing;
 
-static const geom::Rectangle default_view_area =
-        geom::Rectangle{geom::Point(),
-                        geom::Size{geom::Width(1600), geom::Height(1400)}};
+static const geom::Rectangle default_view_area{geom::Point(), geom::Size{1600, 1400}};
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 

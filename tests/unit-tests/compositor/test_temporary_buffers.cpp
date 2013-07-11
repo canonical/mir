@@ -51,7 +51,7 @@ class TemporaryBuffersTest : public ::testing::Test
 {
 public:
     TemporaryBuffersTest()
-        : buffer_size{geom::Width{1024}, geom::Height{768}},
+        : buffer_size{1024, 768},
           buffer_stride{1024},
           buffer_pixel_format{geom::PixelFormat::abgr_8888},
           mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>(

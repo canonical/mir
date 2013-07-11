@@ -31,11 +31,11 @@ mg::DisplayConfigurationOutput const tmpl_output
     mg::DisplayConfigurationOutputId{3},
     mg::DisplayConfigurationCardId{2},
     {
-        {geom::Size{geom::Width{10}, geom::Height{20}}, 60.0},
-        {geom::Size{geom::Width{10}, geom::Height{20}}, 59.0},
-        {geom::Size{geom::Width{15}, geom::Height{20}}, 59.0}
+        {geom::Size{10, 20}, 60.0},
+        {geom::Size{10, 20}, 59.0},
+        {geom::Size{15, 20}, 59.0}
     },
-    geom::Size{geom::Width{10}, geom::Height{20}},
+    geom::Size{10, 20},
     true,
     true,
     geom::Point(),
@@ -46,7 +46,7 @@ mg::DisplayConfigurationOutput const tmpl_output
 
 TEST(DisplayConfiguration, mode_equality)
 {
-    geom::Size const size{geom::Width{10}, geom::Height{20}};
+    geom::Size const size{10, 20};
     double const vrefresh{59.9};
 
     mg::DisplayConfigurationMode const mode1{size, vrefresh};
@@ -59,8 +59,8 @@ TEST(DisplayConfiguration, mode_equality)
 
 TEST(DisplayConfiguration, mode_inequality)
 {
-    geom::Size const size1{geom::Width{10}, geom::Height{20}};
-    geom::Size const size2{geom::Width{10}, geom::Height{21}};
+    geom::Size const size1{10, 20};
+    geom::Size const size2{10, 21};
     double const vrefresh1{59.9};
     double const vrefresh2{60.0};
 
@@ -111,14 +111,14 @@ TEST(DisplayConfiguration, output_inequality_modes)
 
     std::vector<mg::DisplayConfigurationMode> const modes2
     {
-        {geom::Size{geom::Width{10}, geom::Height{20}}, 60.0},
-        {geom::Size{geom::Width{10}, geom::Height{20}}, 59.9},
-        {geom::Size{geom::Width{15}, geom::Height{20}}, 59.0}
+        {geom::Size{10, 20}, 60.0},
+        {geom::Size{10, 20}, 59.9},
+        {geom::Size{15, 20}, 59.0}
     };
     std::vector<mg::DisplayConfigurationMode> const modes3
     {
-        {geom::Size{geom::Width{10}, geom::Height{20}}, 60.0},
-        {geom::Size{geom::Width{10}, geom::Height{20}}, 59.0}
+        {geom::Size{10, 20}, 60.0},
+        {geom::Size{10, 20}, 59.0}
     };
 
     output2.modes = modes2;
@@ -137,7 +137,7 @@ TEST(DisplayConfiguration, output_inequality_physical_size)
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
 
-    geom::Size const physical_size2{geom::Width{11}, geom::Height{20}};
+    geom::Size const physical_size2{11, 20};
 
     output2.physical_size_mm = physical_size2;
 

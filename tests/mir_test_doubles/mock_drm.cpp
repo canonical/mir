@@ -65,7 +65,7 @@ mgg::FakeDRMResources::FakeDRMResources()
                   modes_empty, connector_encoder_ids, geom::Size());
     add_connector(connector1_id, DRM_MODE_CONNECTED, encoder1_id,
                   modes, connector_encoder_ids,
-                  geom::Size{geom::Width{121}, geom::Height{144}});
+                  geom::Size{121, 144});
 
     prepare();
 }

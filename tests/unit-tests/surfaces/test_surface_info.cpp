@@ -29,7 +29,7 @@ struct SurfaceInfoTest : public testing::Test
     {
         name = std::string("aa");
         top_left = geom::Point{geom::X{4}, geom::Y{7}};
-        size = geom::Size{geom::Width{5}, geom::Height{9}};
+        size = geom::Size{5, 9};
     }
     std::string name;
     geom::Point top_left;

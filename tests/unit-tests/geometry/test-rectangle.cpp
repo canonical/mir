@@ -27,7 +27,7 @@ TEST(geometry, rectangle)
 {
     using namespace geom;
     Point const x3y9{X(3), Y(9)};
-    Size const w2h4{Width(2), Height(4)};
+    Size const w2h4{2, 4};
     Rectangle const rect{x3y9, w2h4};
 
     EXPECT_EQ(x3y9, rect.top_left);

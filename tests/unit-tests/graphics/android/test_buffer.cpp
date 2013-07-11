@@ -45,7 +45,7 @@ protected:
 
         default_use = mga::BufferUsage::use_hardware;
         pf = geom::PixelFormat::abgr_8888;
-        size = geom::Size{geom::Width{300}, geom::Height{200}};
+        size = geom::Size{300, 200};
         extensions = std::make_shared<mg::EGLExtensions>();
     }
 
@@ -63,8 +63,7 @@ TEST_F(AndroidGraphicBufferBasic, size_query_test)
 
     mga::Buffer buffer(mock_buffer_handle, extensions);
 
-    geom::Size expected_size{geom::Width{mock_buffer_handle->width},
-                             geom::Height{mock_buffer_handle->height}};
+    geom::Size expected_size{mock_buffer_handle->width, mock_buffer_handle->height};
     EXPECT_EQ(expected_size, buffer.size());
 }
 

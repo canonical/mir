@@ -72,8 +72,7 @@ me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const&
 
 void me::InprocessEGLClient::thread_loop()
 {
-    geom::Size const surface_size = geom::Size{geom::Width{512},
-                                               geom::Height{512}};
+    geom::Size const surface_size{512, 512};
 
     ///\internal [setup_tag]
     auto params = msh::a_surface().of_name("Inprocess EGL Demo")
