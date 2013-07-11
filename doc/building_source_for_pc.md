@@ -63,8 +63,8 @@ The patch is hosted on GitHub:
 
     $ git clone https://github.com/RAOF/mesa.git
 
-Compile as per normal instructions and pass --with-egl-platforms="mir" to the
-configure options. You will need libmirclient installed as shown above.
+Compile as per normal instructions and pass --with-egl-platforms="mir,drm" to
+the configure options. You will need libmirclient installed as shown above.
 
 Building X.Org
 --------------
