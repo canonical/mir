@@ -38,7 +38,8 @@ class NullPlatform : public graphics::Platform
         return std::shared_ptr<compositor::GraphicBufferAllocator>();
     }
 
-    std::shared_ptr<graphics::Display> create_display()
+    std::shared_ptr<graphics::Display> create_display(
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
     {
         return std::make_shared<NullDisplay>();
     }

@@ -181,7 +181,7 @@ std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_in
 
 geom::Rectangle mtf::InputTestingServerConfiguration::the_screen_geometry()
 {
-    static geom::Rectangle const default_geometry{geom::Point{geom::X{0}, geom::Y{0}},
+    static geom::Rectangle const default_geometry{geom::Point{0, 0},
         geom::Size{geom::Width{1600}, geom::Height{1600}}};
     return default_geometry;
 }

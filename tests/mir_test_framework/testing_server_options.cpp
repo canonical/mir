@@ -85,7 +85,8 @@ class StubGraphicPlatform : public mtd::NullPlatform
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::Display> create_display() override
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
     {
         return std::make_shared<StubDisplay>();
     }

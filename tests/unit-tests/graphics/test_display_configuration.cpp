@@ -37,6 +37,8 @@ mg::DisplayConfigurationOutput const tmpl_output
     },
     geom::Size{geom::Width{10}, geom::Height{20}},
     true,
+    true,
+    geom::Point(),
     2
 };
 
