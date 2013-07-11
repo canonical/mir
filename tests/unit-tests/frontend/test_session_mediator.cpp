@@ -112,14 +112,16 @@ class MockPlatform : public mg::Platform
         using namespace testing;
         ON_CALL(*this, create_buffer_allocator(_))
             .WillByDefault(Return(std::shared_ptr<mc::GraphicBufferAllocator>()));
-        ON_CALL(*this, create_display())
+        ON_CALL(*this, create_display(_))
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
         ON_CALL(*this, get_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
     }
 
     MOCK_METHOD1(create_buffer_allocator, std::shared_ptr<mc::GraphicBufferAllocator>(std::shared_ptr<mg::BufferInitializer> const&));
-    MOCK_METHOD0(create_display, std::shared_ptr<mg::Display>());
+    MOCK_METHOD1(create_display,
+                 std::shared_ptr<mg::Display>(
+                     std::shared_ptr<mg::DisplayConfigurationPolicy> const&));
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
     MOCK_CONST_METHOD2(fill_ipc_package, void(std::shared_ptr<mc::BufferIPCPacker> const&,

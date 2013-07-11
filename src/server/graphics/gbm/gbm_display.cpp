@@ -29,6 +29,7 @@
 #include "mir/main_loop.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/graphics/display_configuration_policy.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
@@ -76,18 +77,22 @@ private:
 
 mgg::GBMDisplay::GBMDisplay(std::shared_ptr<GBMPlatform> const& platform,
                             std::shared_ptr<VideoDevices> const& video_devices,
+                            std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                             std::shared_ptr<DisplayReport> const& listener)
     : platform(platform),
       video_devices(video_devices),
       listener(listener),
       output_container{platform->drm.fd,
-                       std::make_shared<KMSPageFlipper>(platform->drm.fd)}
+                       std::make_shared<KMSPageFlipper>(platform->drm.fd)},
+      current_display_configuration{platform->drm.fd}
 {
     platform->vt->set_graphics_mode();
 
     shared_egl.setup(platform->gbm);
 
-    configure(*configuration());
+    initial_conf_policy->apply_to(current_display_configuration);
+
+    configure(current_display_configuration);
 
     shared_egl.make_current();
 }
@@ -112,22 +117,24 @@ void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)
 
 std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
 {
-    return std::make_shared<mgg::KMSDisplayConfiguration>(platform->drm.fd);
+    /* Give back a copy of the latest configuration information */
+    current_display_configuration.update();
+    return std::make_shared<mgg::KMSDisplayConfiguration>(current_display_configuration);
 }
 
 void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
     std::vector<std::shared_ptr<KMSOutput>> enabled_outputs;
+    auto const& kms_conf = dynamic_cast<KMSDisplayConfiguration const&>(conf);
 
     /* Create or reset the KMS outputs */
     conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
-        auto const& kms_conf = static_cast<KMSDisplayConfiguration const&>(conf);
         uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
 
         auto output = output_container.get_kms_output_for(connector_id);
 
-        if (conf_output.connected)
+        if (conf_output.connected && conf_output.used)
             enabled_outputs.push_back(output);
     });
 
@@ -157,6 +164,9 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
      */
     display_buffers.clear();
     display_buffers.push_back(std::move(db));
+
+    /* Store applied configuration */
+    current_display_configuration = kms_conf;
 }
 
 void mgg::GBMDisplay::register_configuration_change_handler(

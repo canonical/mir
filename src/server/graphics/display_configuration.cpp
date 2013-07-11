@@ -72,6 +72,8 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
 
     out << "], physical_size_mm: " << val.physical_size_mm.width << "x" << val.physical_size_mm.height;
     out << ", connected: " << (val.connected ? "true" : "false");
+    out << ", used: " << (val.used ? "true" : "false");
+    out << ", top_left: " << val.top_left;
     out << ", current_mode: " << val.current_mode_index << " (";
     if (val.current_mode_index < val.modes.size())
         out << val.modes[val.current_mode_index];
@@ -103,6 +105,8 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.card_id == val2.card_id) &&
                (val1.physical_size_mm == val2.physical_size_mm) &&
                (val1.connected == val2.connected) &&
+               (val1.used == val2.used) &&
+               (val1.top_left == val2.top_left) &&
                (val1.current_mode_index == val2.current_mode_index) &&
                (val1.modes.size() == val2.modes.size())};
 

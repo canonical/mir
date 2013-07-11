@@ -110,6 +110,7 @@ public:
     virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
     virtual std::shared_ptr<MainLoop>               the_main_loop();
+    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -251,6 +252,7 @@ protected:
     CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
+    CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
 
 private:
     int const argc;

@@ -316,7 +316,8 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return buffer_allocator;
         }
 
-        std::shared_ptr<mg::Display> create_display() override
+        std::shared_ptr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
         {
             return std::make_shared<StubDisplay>();
         }
@@ -437,7 +438,8 @@ struct BufferCounterConfig : TestingServerConfiguration
             return std::make_shared<StubGraphicBufferAllocator>();
         }
 
-        std::shared_ptr<mg::Display> create_display() override
+        std::shared_ptr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
         {
             return std::make_shared<StubDisplay>();
         }

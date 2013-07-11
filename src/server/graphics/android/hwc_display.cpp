@@ -35,7 +35,7 @@ mga::HWCDisplay::HWCDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>
 
 geom::Rectangle mga::HWCDisplay::view_area() const
 {
-    geom::Point origin_pt{geom::X{0}, geom::Y{0}};
+    geom::Point origin_pt{0, 0};
     auto size = hwc_device->display_size();
     return geom::Rectangle{origin_pt, size};
 }

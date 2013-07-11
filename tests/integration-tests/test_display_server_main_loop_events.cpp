@@ -19,6 +19,7 @@
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_configuration_policy.h"
 #include "mir/main_loop.h"
 
 #include "mir_test/pipe.h"
@@ -128,6 +129,13 @@ private:
     int const fd;
 };
 
+class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
+{
+public:
+    ~MockDisplayConfigurationPolicy() noexcept {}
+    MOCK_METHOD1(apply_to, void(mg::DisplayConfiguration&));
+};
+
 class ServerConfig : public mtf::TestingServerConfiguration
 {
 public:
@@ -201,6 +209,14 @@ public:
         return mock_communicator;
     }
 
+    std::shared_ptr<mg::DisplayConfigurationPolicy> the_display_configuration_policy() override
+    {
+        if (!mock_conf_policy)
+            mock_conf_policy = std::make_shared<MockDisplayConfigurationPolicy>();
+
+        return mock_conf_policy;
+    }
+
     std::shared_ptr<MockDisplay> the_mock_display()
     {
         the_display();
@@ -217,6 +233,12 @@ public:
     {
         the_communicator();
         return mock_communicator;
+    }
+
+    std::shared_ptr<MockDisplayConfigurationPolicy> the_mock_display_configuration_policy()
+    {
+        the_display_configuration_policy();
+        return mock_conf_policy;
     }
 
     void emit_pause_event()
@@ -238,6 +260,7 @@ private:
     std::shared_ptr<MockCompositor> mock_compositor;
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<MockCommunicator> mock_communicator;
+    std::shared_ptr<MockDisplayConfigurationPolicy> mock_conf_policy;
 
     mt::Pipe p;
     int const pause_signal;
@@ -394,6 +417,7 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
+    auto mock_conf_policy = server_config.the_mock_display_configuration_policy();
 
     {
         InSequence s;
@@ -404,6 +428,7 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
 
         /* Configuration change event */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_conf_policy, apply_to(_)).Times(1);
         EXPECT_CALL(*mock_display, configure(_)).Times(1);
         EXPECT_CALL(*mock_compositor, start())
             .Times(1)
