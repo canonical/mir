@@ -24,8 +24,14 @@ ifeq ($(DEB_HOST_ARCH),armhf)
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_PLATFORM=android
 else
+ifeq ($(DEB_HOST_ARCH),powerpc)
+	dh_auto_configure -- \
+	  $(COMMON_CONFIGURE_OPTIONS) \
+	  -DMIR_ENABLE_TESTS=NO
+else
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS)
+endif
 endif
 
 # TODO: we'll use a symbol file once mir is abi stable
