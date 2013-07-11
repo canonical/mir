@@ -52,6 +52,8 @@ struct ProtobufMessageProcessor : MessageProcessor,
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<MessageProcessorReport> const& report);
 
+    ~ProtobufMessageProcessor() noexcept {}
+
 private:
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
 
