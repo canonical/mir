@@ -183,7 +183,6 @@ struct SurfaceStack : public ::testing::Test
 
 }
 
-#if 0
 TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
 {
     using namespace testing;
@@ -218,31 +217,31 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
     auto s1 = stack.create_surface(default_params, default_depth);
-    auto info1 = s1.lock()->graphics_info();
+    auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params, default_depth);
-    auto info2 = s2.lock()->graphics_info();
+    auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params, default_depth);
-    auto info3 = s3.lock()->graphics_info();
+    auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
     MockFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator;
 
     Sequence seq1, seq2;
-    EXPECT_CALL(filter, filter(Ref(*info1)))
+    EXPECT_CALL(filter, filter(Ref(*criteria1)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(filter, filter(Ref(*info2)))
+    EXPECT_CALL(filter, filter(Ref(*criteria2)))
         .InSequence(seq1)
         .WillOnce(Return(false));
-    EXPECT_CALL(filter, filter(Ref(*info3)))
+    EXPECT_CALL(filter, filter(Ref(*criteria3)))
         .InSequence(seq1)
         .WillOnce(Return(true));
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq2);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
         .InSequence(seq2);
 
     stack.for_each_if(filter, renderable_operator);
@@ -258,24 +257,25 @@ TEST_F(SurfaceStack, stacking_order)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
+
     auto s1 = stack.create_surface(default_params, default_depth);
-    auto info1 = s1.lock()->graphics_info();
+    auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params, default_depth);
-    auto info2 = s2.lock()->graphics_info();
+    auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params, default_depth);
-    auto info3 = s3.lock()->graphics_info();
+    auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator;
     Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -308,24 +308,24 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, ms::DepthId{0});
-    auto info1 = s1.lock()->graphics_info();
+    auto s1 = stack.create_surface(default_params, default_depth);
+    auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, ms::DepthId{1});
-    auto info2 = s2.lock()->graphics_info();
+    auto s2 = stack.create_surface(default_params, default_depth);
+    auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, ms::DepthId{0});
-    auto info3 = s3.lock()->graphics_info();
+    auto s3 = stack.create_surface(default_params, default_depth);
+    auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator;
     Sequence seq;
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -360,31 +360,31 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
     auto s1 = stack.create_surface(default_params, default_depth);
-    auto info1 = s1.lock()->graphics_info();
+    auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
     auto s2 = stack.create_surface(default_params, default_depth);
-    auto info2 = s2.lock()->graphics_info();
+    auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
     auto s3 = stack.create_surface(default_params, default_depth);
-    auto info3 = s3.lock()->graphics_info();
+    auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator;
     Sequence seq;
     // After surface creation.
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
         .InSequence(seq);
     // After raising surface1
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info3), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -402,32 +402,32 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, ms::DepthId{0});
-    auto info1 = s1.lock()->graphics_info();
+    auto s1 = stack.create_surface(default_params, default_depth);
+    auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, ms::DepthId{1});
-    auto info2 = s2.lock()->graphics_info();
+    auto s2 = stack.create_surface(default_params, default_depth);
+    auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, ms::DepthId{0});
-    auto info3 = s3.lock()->graphics_info();
+    auto s3 = stack.create_surface(default_params, default_depth);
+    auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
     StubFilterForRenderables filter;
     MockOperatorForRenderables renderable_operator;
     Sequence seq;
     // After surface creation.
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info1), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info2), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info3), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream2)))
         .InSequence(seq);
     // After raising surface1
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info2), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info1), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream3)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*info3), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream1)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
@@ -446,4 +446,3 @@ TEST_F(SurfaceStack, raise_throw_behavior)
             stack.raise(null_surface);
     }, std::runtime_error);
 }
-#endif
