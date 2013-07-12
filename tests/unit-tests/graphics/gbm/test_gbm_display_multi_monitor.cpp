@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
 #include "mir_test_framework/udev_environment.h"
@@ -82,6 +83,13 @@ public:
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::Platform> const& platform)
+    {
+        auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+        return platform->create_display(conf_policy);
+    }
+
     void setup_outputs(int n)
     {
         mtd::FakeDRMResources& resources(mock_drm.fake_drm);
@@ -92,7 +100,7 @@ public:
         modes0.push_back(mtd::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
         modes0.push_back(mtd::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
 
-        geom::Size const connector_physical_size_mm{geom::Width{1597}, geom::Height{987}};
+        geom::Size const connector_physical_size_mm{1597, 987};
 
         resources.reset();
 
@@ -182,8 +190,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
             .After(crtc_setups);
     }
 
-    auto platform = create_platform();
-    auto display = platform->create_display();
+    auto display = create_display(create_platform());
 }
 
 TEST_F(GBMDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
@@ -215,8 +222,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
             .Times(1);
     }
 
-    auto platform = create_platform();
-    auto display = platform->create_display();
+    auto display = create_display(create_platform());
 }
 
 namespace
@@ -268,8 +274,7 @@ TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)));
 
-    auto platform = create_platform();
-    auto display = platform->create_display();
+    auto display = create_display(create_platform());
 
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {

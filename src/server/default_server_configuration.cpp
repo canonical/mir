@@ -51,6 +51,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_configuration.h"
 #include "mir/input/null_input_report.h"
@@ -465,35 +466,44 @@ mir::DefaultServerConfiguration::the_input_report()
         });
 }
 
+std::shared_ptr<mi::CursorListener>
+mir::DefaultServerConfiguration::the_cursor_listener()
+{
+    struct DefaultCursorListener : mi::CursorListener
+    {
+        DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor) :
+            cursor(cursor)
+        {
+        }
+
+        void cursor_moved_to(float abs_x, float abs_y)
+        {
+            if (auto c = cursor.lock())
+            {
+                c->move_to(geom::Point{abs_x, abs_y});
+            }
+        }
+
+        std::weak_ptr<mg::Cursor> const cursor;
+    };
+    return cursor_listener(
+        [this]() -> std::shared_ptr<mi::CursorListener>
+        {
+            return std::make_shared<DefaultCursorListener>(the_display()->the_cursor());
+        });
+}
+
 std::shared_ptr<mi::InputConfiguration>
 mir::DefaultServerConfiguration::the_input_configuration()
 {
     if (!input_configuration)
     {
-        struct DefaultCursorListener : mi::CursorListener
-        {
-            DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor) :
-                cursor(cursor)
-            {
-            }
-
-            void cursor_moved_to(float abs_x, float abs_y)
-            {
-                if (auto c = cursor.lock())
-                {
-                    c->move_to(geom::Point{geom::X(abs_x), geom::Y(abs_y)});
-                }
-            }
-
-            std::weak_ptr<mg::Cursor> const cursor;
-        };
-
         if (the_options()->get("enable-input", enable_input_default))
         {
             input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
                 the_event_filters(),
                 the_display(),
-                std::make_shared<DefaultCursorListener>(the_display()->the_cursor()),
+                the_cursor_listener(),
                 the_input_report());
         }
         else
@@ -532,7 +542,8 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]()
         {
-            return the_graphics_platform()->create_display();
+            return the_graphics_platform()->create_display(
+                the_display_configuration_policy());
         });
 }
 
@@ -754,6 +765,16 @@ std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
         []()
         {
             return std::make_shared<mir::AsioMainLoop>();
+        });
+}
+
+std::shared_ptr<mg::DisplayConfigurationPolicy>
+mir::DefaultServerConfiguration::the_display_configuration_policy()
+{
+    return display_configuration_policy(
+        []
+        {
+            return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
         });
 }
 

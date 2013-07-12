@@ -36,7 +36,7 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        test_size = geom::Size{geom::Width{88}, geom::Height{4}};
+        test_size = geom::Size{88, 4};
         test_pf = geom::PixelFormat::abgr_8888;
         test_numfb = 558u;
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();

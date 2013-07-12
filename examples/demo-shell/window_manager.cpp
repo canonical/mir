@@ -68,7 +68,7 @@ mir::geometry::Point average_pointer(MirMotionEvent const& motion)
     x /= count;
     y /= count;
 
-    return Point{X{x}, Y{y}};
+    return Point{x, y};
 }
 
 bool me::WindowManager::handle(MirEvent const& event)

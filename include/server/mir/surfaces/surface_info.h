@@ -50,7 +50,7 @@ public:
 
 protected:
     SurfaceInfoController() = default; 
-    virtual ~SurfaceInfoController() = default;
+    virtual ~SurfaceInfoController() noexcept = default;
     SurfaceInfoController(const SurfaceInfoController&) = delete;
     SurfaceInfoController& operator=(const SurfaceInfoController& ) = delete;
 };

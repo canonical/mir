@@ -20,6 +20,7 @@
 #include "rpc_report.h"
 
 #include "mir_protobuf_wire.pb.h"
+#include "mir/frontend/client_constants.h"
 
 #include <sstream>
 
@@ -91,7 +92,7 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     const google::protobuf::MethodDescriptor* method,
     const google::protobuf::Message* request)
 {
-    char buffer[2048];
+    char buffer[mir::frontend::serialization_buffer_size];
 
     auto const size = request->ByteSize();
     // In practice size will be 10s of bytes - but have a test to detect problems

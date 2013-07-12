@@ -105,8 +105,7 @@ public:
     geom::Rectangle view_area() const
     {
         return geom::Rectangle{geom::Point(),
-                               geom::Size{geom::Width(1600),
-                                          geom::Height(1600)}};
+                               geom::Size{1600, 1600}};
     }
     void make_current() {}
     void release_current() {}

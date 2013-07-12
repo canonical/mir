@@ -54,7 +54,7 @@ private:
     std::unordered_set<MirEGLNativeDisplayType> valid_displays;
 };
 
-extern "C" int mir_client_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display);
+extern "C" int mir_client_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display);
 
 }
 }

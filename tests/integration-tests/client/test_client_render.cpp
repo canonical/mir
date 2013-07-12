@@ -448,7 +448,7 @@ struct TestClientIPCRender : public testing::Test
     void SetUp() {
         ASSERT_FALSE(mtd::is_surface_flinger_running());
 
-        size = geom::Size{geom::Width{test_width}, geom::Height{test_height}};
+        size = geom::Size{test_width, test_height};
         pf = geom::PixelFormat::abgr_8888;
 
         auto initializer = std::make_shared<mg::NullBufferInitializer>();

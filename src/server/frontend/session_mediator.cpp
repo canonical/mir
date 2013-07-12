@@ -62,30 +62,20 @@ public:
     {
     }
     
-    class Impediment
-    {
-    public:
-        ~Impediment()
-        {
-            remove_callback();
-        }
-    protected:
-        friend class CloggableEventSink;
-        Impediment(std::function<void()> const& remove) :
-            remove_callback(remove)
-        {
-        }
-    private:
-        std::function<void()> const remove_callback;
-    };
-    
-    std::unique_ptr<Impediment> clog()
+    void clog()
     {
         std::unique_lock<std::mutex> lg(lock);
         clogged = true;
+    }
+
+    void unclog()
+    {
+        std::unique_lock<std::mutex> lg(lock);
+        clogged = false;
         
-        return std::unique_ptr<Impediment>(new Impediment(
-            std::bind(std::mem_fn(&CloggableEventSink::unclog), this)));
+        for (auto const& ev : buffered_events)
+            drain->handle_event(ev);
+        buffered_events.clear();
     }
 
     void handle_event(MirEvent const& ev)
@@ -98,22 +88,31 @@ public:
     }
 
 private:
-    void unclog()
-    {
-        std::unique_lock<std::mutex> lg(lock);
-        clogged = false;
-        
-        for (auto const& ev : buffered_events)
-            drain->handle_event(ev);
-        buffered_events.clear();
-    }
-
     std::shared_ptr<me::EventSink> const drain;
     bool clogged;
     
     std::vector<MirEvent> buffered_events;
 
     std::mutex lock;
+};
+
+class Clog
+{
+public:
+    Clog(CloggableEventSink& sink) : sink(sink)
+    {
+        sink.clog();
+    }
+    ~Clog()
+    {
+        sink.unclog();
+    }
+
+private:
+    Clog(Clog const&) = delete;
+    Clog& operator=(Clog const&) = delete;
+
+    CloggableEventSink& sink;
 };
 
 }
@@ -189,7 +188,7 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    std::unique_ptr<CloggableEventSink::Impediment> blockage;
+    Clog pause_events(*event_sink.get());
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
@@ -199,7 +198,6 @@ void mf::SessionMediator::create_surface(
 
         report->session_create_surface_called(session->name());
 
-        blockage = event_sink->clog();
         auto const id = shell->create_surface_for(session,
             msh::SurfaceCreationParameters()
             .of_name(request->surface_name())

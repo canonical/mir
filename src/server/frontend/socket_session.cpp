@@ -22,6 +22,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "mir/frontend/client_constants.h"
+
 namespace ba = boost::asio;
 namespace bs = boost::system;
 
@@ -36,6 +38,7 @@ mfd::SocketSession::SocketSession(
     connected_sessions(connected_sessions),
     processor(std::make_shared<NullMessageProcessor>())
 {
+    whole_message.reserve(serialization_buffer_size);
 }
 
 mfd::SocketSession::~SocketSession() noexcept
@@ -116,7 +119,7 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
     }
 
     size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
-    // Read newline delimited messages for now
+
     ba::async_read(
          socket,
          message,

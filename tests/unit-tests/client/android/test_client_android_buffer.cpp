@@ -94,7 +94,7 @@ TEST_F(ClientAndroidBufferTest, buffer_uses_registrar_for_secure)
 TEST_F(ClientAndroidBufferTest, buffer_uses_right_handle_to_secure)
 {
     using namespace testing;
-    geom::Point point{geom::X(0), geom::Y(0)};
+    geom::Point point{0, 0};
     geom::Size size{width, height};
     geom::Rectangle rect{point, size};
     std::shared_ptr<const native_handle_t> tmp = package;
