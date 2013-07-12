@@ -36,7 +36,7 @@ TEST(AndroidInputApplicationHandle, takes_name_from_surface_and_specifies_max_ti
 {
     using namespace ::testing;
     std::string testing_surface_name = "Cats";
-    auto surface_info = std::make_shared<mtd::MockInputInfo>();
+    auto surface_info = std::make_shared<mtd::MockInputSurface>();
 
     EXPECT_CALL(*surface_info, name())
         .Times(2)

@@ -42,7 +42,7 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 
 // Be careful on the locking in these two functions.
 void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChannel> const& channel,
-                                               std::shared_ptr<mi::SurfaceInfo> const& info)
+                                               std::shared_ptr<mi::Surface> const& info)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {

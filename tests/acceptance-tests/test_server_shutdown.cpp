@@ -44,7 +44,7 @@ class NullRenderer : public mg::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mg::SurfaceInfo const&, ms::BufferStream&)
+                                   mg::CompositingCriteria const&, ms::BufferStream&)
     {
         /* 
          * Do nothing, so that the Renderable's buffers are not consumed

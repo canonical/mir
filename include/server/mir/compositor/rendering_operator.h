@@ -35,7 +35,7 @@ public:
     explicit RenderingOperator(graphics::Renderer& renderer, std::function<void(std::shared_ptr<void> const&)> save_resource);
     ~RenderingOperator();
 
-    void operator()(graphics::SurfaceInfo const& info, surfaces::BufferStream&);
+    void operator()(graphics::CompositingCriteria const& info, surfaces::BufferStream&);
 
 private:
     graphics::Renderer& renderer;

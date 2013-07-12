@@ -18,8 +18,6 @@
 
 #include "mir/surfaces/surface_data.h"
 
-#include "mir/graphics/surface_state.h"
-#include "mir/input/surface_data_storage.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test_doubles/mock_surface_info.h"

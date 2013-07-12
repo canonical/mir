@@ -22,6 +22,7 @@
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/compositing_criteria.h"
 
 #include <cassert>
 
@@ -50,9 +51,8 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
         : enclosing_region(enclosing_region)
     {
     }
-    bool operator()(mg::SurfaceInfo const& info)
+    bool operator()(mg::CompositingCriteria const& info)
     {
-        // TODO check against enclosing_region
         return info.should_be_rendered();
     }
 

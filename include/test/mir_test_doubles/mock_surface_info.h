@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_
 
-#include "mir/surfaces/surface_info.h"
+#include "mir/surfaces/surface_state.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,10 +29,10 @@ namespace test
 namespace doubles
 {
 
-class MockSurfaceInfo : public surfaces::SurfaceStateModifier 
+class MockSurfaceState : public surfaces::SurfaceState
 {
 public:
-    MockSurfaceInfo()
+    MockSurfaceState()
     {
         using namespace testing;
         ON_CALL(*this, size_and_position())
@@ -44,16 +44,23 @@ public:
         ON_CALL(*this, name())
             .WillByDefault(testing::ReturnRef(n));
     }
-    ~MockSurfaceInfo() noexcept {}
+
+    ~MockSurfaceState() noexcept {}
     MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(name, std::string const&());
-    MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
     MOCK_METHOD2(apply_rotation, void(float, glm::vec3 const&));
-
     MOCK_METHOD1(move_to, void(geometry::Point));
+    MOCK_CONST_METHOD1(input_region_contains, bool(geometry::Point const&));
+    MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
+    MOCK_CONST_METHOD0(alpha, float());
+    MOCK_METHOD1(apply_alpha, void(float));
+    MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
+    MOCK_METHOD0(frame_posted, void());
+    MOCK_METHOD1(set_hidden, void(bool));
+    MOCK_CONST_METHOD0(should_be_rendered, bool());
 };
 
-typedef ::testing::NiceMock<MockSurfaceInfo> StubSurfaceInfo;
+typedef ::testing::NiceMock<MockSurfaceState> StubSurfaceInfo;
 }
 }
 }

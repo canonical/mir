@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_SURFACE_STATE_H_
 #define MIR_GRAPHICS_SURFACE_STATE_H_
 
-#include "surface_info.h"
+#include "surface_state.h"
 
 #include <mutex>
 #include <memory>

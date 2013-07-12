@@ -49,7 +49,7 @@ public:
     void clear() {}
 
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                mg::SurfaceInfo const&, ms::BufferStream&)
+                mg::CompositingCriteria const&, ms::BufferStream&)
     {
         std::shared_ptr<void> tmp;
         switch(counter++)

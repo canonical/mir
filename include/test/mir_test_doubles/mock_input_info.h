@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_INFO_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_INFO_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_SURFACE_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_SURFACE_H_
 
-#include "mir/input/surface_info.h"
+#include "mir/input/surface.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,10 +29,10 @@ namespace test
 namespace doubles
 {
 
-class MockInputInfo : public input::SurfaceStateModifier 
+class MockInputSurface : public input::Surface 
 {
 public:
-    MockInputInfo()
+    MockInputSurface()
     {
         using namespace testing;
         ON_CALL(*this, size_and_position())
@@ -44,7 +44,7 @@ public:
         ON_CALL(*this, name())
             .WillByDefault(testing::ReturnRef(n));
     }
-    ~MockInputInfo() noexcept {}
+    ~MockInputSurface() noexcept {}
     MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(name, std::string const&());
 
@@ -52,7 +52,7 @@ public:
     MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
 };
 
-typedef ::testing::NiceMock<MockInputInfo> StubInputInfo;
+typedef ::testing::NiceMock<MockInputSurface> StubInputInfo;
 }
 }
 }

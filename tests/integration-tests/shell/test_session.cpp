@@ -94,7 +94,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
         {
             void clear() {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mg::SurfaceInfo const&, mir::surfaces::BufferStream& stream)
+                        mg::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
             {
                 stream.lock_back_buffer();
             }

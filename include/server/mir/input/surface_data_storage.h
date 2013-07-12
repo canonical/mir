@@ -45,7 +45,6 @@ public:
 
 private:
     std::shared_ptr<surfaces::SurfaceInfo> surface_info;
-    std::vector<geometry::Rectangle> input_rectangles;
 };
 
 }

@@ -19,12 +19,10 @@
  */
 
 #include "mir/surfaces/surface.h"
-#include "mir/surfaces/surface_info.h"
-#include "mir/input/surface_info.h"
+#include "mir/surfaces/surface_state.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
 #include "mir/compositor/buffer.h"
-#include "mir/graphics/surface_info.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -37,14 +35,10 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::Surface::Surface(
-    std::shared_ptr<ms::SurfaceStateModifier> const& basic_info,
-    std::shared_ptr<mg::SurfaceStateModifier> const& graphics_info,
+    std::shared_ptr<ms::SurfaceState> const& state,
     std::shared_ptr<ms::BufferStream> const& buffer_stream,
-    std::shared_ptr<mi::SurfaceStateModifier> const& input_info,
     std::shared_ptr<input::InputChannel> const& input_channel)
-    : basic_info(basic_info),
-      surface_input_info(input_info),
-      gfx_info(graphics_info),
+    : surface_state(state),
       surface_buffer_stream(buffer_stream),
       server_input_channel(input_channel),
       surface_in_startup(true)
@@ -65,44 +59,44 @@ std::shared_ptr<ms::BufferStream> ms::Surface::buffer_stream() const
     return surface_buffer_stream;
 }
 
-std::shared_ptr<mg::SurfaceInfo> ms::Surface::graphics_info()
+std::shared_ptr<mg::CompositingCriteria> ms::Surface::compositing_criteria()
 {
-    return gfx_info;
+    return surface_state;
 }
 
 std::string const& ms::Surface::name() const
 {
-    return basic_info->name();
+    return surface_state->name();
 }
 
 void ms::Surface::move_to(geometry::Point const& top_left)
 {
-    basic_info->move_to(top_left);
+    surface_state->move_to(top_left);
 }
 
 void ms::Surface::set_rotation(float degrees, glm::vec3 const& axis)
 {
-    basic_info->apply_rotation(degrees, axis);
+    surface_state->apply_rotation(degrees, axis);
 }
 
 void ms::Surface::set_alpha(float alpha_v)
 {
-    gfx_info->apply_alpha(alpha_v);
+    surface_state->apply_alpha(alpha_v);
 }
 
 void ms::Surface::set_hidden(bool hide)
 {
-    gfx_info->set_hidden(hide);
+    surface_state->set_hidden(hide);
 }
 
 geom::Point ms::Surface::top_left() const
 {
-    return basic_info->size_and_position().top_left;
+    return surface_state->size_and_position().top_left;
 }
 
 mir::geometry::Size ms::Surface::size() const
 {
-    return basic_info->size_and_position().size;
+    return surface_state->size_and_position().size;
 }
 
 geom::PixelFormat ms::Surface::pixel_format() const
@@ -137,7 +131,7 @@ std::shared_ptr<mc::Buffer> ms::Surface::compositor_buffer() const
 //TODO: this is just used in example code, could be private
 void ms::Surface::flag_for_render()
 {
-    gfx_info->frame_posted();
+    surface_state->frame_posted();
 }
 
 bool ms::Surface::supports_input() const
@@ -159,12 +153,12 @@ std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
     return server_input_channel;
 }
 
-std::shared_ptr<mi::SurfaceInfo> ms::Surface::input_info() const
+std::shared_ptr<mi::Surface> ms::Surface::input_info() const
 {
-    return surface_input_info;
+    return surface_state;
 }
 
 void ms::Surface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
-    surface_input_info->set_input_region(input_rectangles);
+    surface_state->set_input_region(input_rectangles);
 }

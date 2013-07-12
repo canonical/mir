@@ -20,11 +20,9 @@
 
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/renderer.h"
-#include "mir/graphics/surface_state.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
-#include "mir/input/surface_data_storage.h"
-#include "mir/surfaces/surface_data_storage.h"
+#include "mir/surfaces/surface_state.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_factory.h"
 #include "mir/surfaces/buffer_stream.h"
@@ -61,7 +59,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
-            mg::SurfaceInfo& info = *((*it)->graphics_info());
+            mg::CompositingCriteria& info = *((*it)->compositing_criteria());
             ms::BufferStream& stream = *((*it)->buffer_stream());
             if (filter(info)) renderable_operator(info, stream);
         }

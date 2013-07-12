@@ -95,7 +95,7 @@ class StubRenderer : public mg::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mg::SurfaceInfo const&, ms::BufferStream& stream)
+                                   mg::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
         stream.lock_back_buffer();

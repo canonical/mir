@@ -34,7 +34,7 @@ mc::RenderingOperator::~RenderingOperator()
 {
 }
 
-void mc::RenderingOperator::operator()(mg::SurfaceInfo const& info, ms::BufferStream& stream)
+void mc::RenderingOperator::operator()(mg::CompositingCriteria const& info, ms::BufferStream& stream)
 {
     renderer.render(save_resource, info, stream);
 }

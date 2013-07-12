@@ -20,7 +20,7 @@
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/renderables.h"
 #include "mir/graphics/renderer.h"
-#include "mir/graphics/surface_info.h"
+#include "mir/graphics/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test/fake_shared.h"
@@ -56,7 +56,7 @@ struct MockOverlayRenderer : public mc::OverlayRenderer
 
 struct FakeRenderables : mc::Renderables
 {
-    FakeRenderables(std::vector<mg::SurfaceInfo*> infos) :
+    FakeRenderables(std::vector<mg::CompositingCriteria*> infos) :
         infos(infos)
     {
     }
@@ -66,7 +66,7 @@ struct FakeRenderables : mc::Renderables
     {
         for (auto it = infos.begin(); it != infos.end(); it++)
         {
-            mg::SurfaceInfo &info = **it;
+            mg::CompositingCriteria &info = **it;
             if (filter(info)) renderable_operator(info, stub_stream);
         }
     }
@@ -74,7 +74,7 @@ struct FakeRenderables : mc::Renderables
     void set_change_callback(std::function<void()> const&) {}
 
     mtd::MockBufferStream stub_stream;
-    std::vector<mg::SurfaceInfo*> infos;
+    std::vector<mg::CompositingCriteria*> infos;
 };
 
 ACTION_P(InvokeArgWithParam, param)
@@ -149,7 +149,7 @@ TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
     EXPECT_CALL(mr2, should_be_rendered()).WillOnce(Return(false));
     EXPECT_CALL(mr3, should_be_rendered()).WillOnce(Return(true));
 
-    std::vector<mg::SurfaceInfo*> renderable_vec;
+    std::vector<mg::CompositingCriteria*> renderable_vec;
     renderable_vec.push_back(&mr1);
     renderable_vec.push_back(&mr2);
     renderable_vec.push_back(&mr3);

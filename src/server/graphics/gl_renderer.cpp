@@ -1,5 +1,5 @@
 #include "mir/graphics/gl_renderer.h"
-#include "mir/graphics/surface_info.h"
+#include "mir/graphics/compositing_criteria.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/compositor/buffer.h"
 
@@ -218,7 +218,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
 }
 
 void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                            mg::SurfaceInfo const& info, mir::surfaces::BufferStream& stream)
+                            mg::CompositingCriteria const& info, mir::surfaces::BufferStream& stream)
 {
     glUseProgram(resources.program);
 

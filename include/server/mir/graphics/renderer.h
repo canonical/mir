@@ -30,7 +30,7 @@ class BufferStream;
 }
 namespace graphics
 {
-class SurfaceInfo;
+class CompositingCriteria;
 
 class Renderer
 {
@@ -39,7 +39,7 @@ public:
 
     virtual void clear() = 0;
     virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                                           SurfaceInfo const& info, surfaces::BufferStream& stream) = 0;
+                                           CompositingCriteria const& info, surfaces::BufferStream& stream) = 0;
 
 protected:
     Renderer() = default;

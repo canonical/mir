@@ -20,7 +20,6 @@
 #define MIR_COMPOSITOR_RENDERABLES_H_
 
 #include "mir/geometry/forward.h"
-#include "mir/graphics/surface_info.h"
 
 #include <memory>
 #include <functional>
@@ -29,7 +28,7 @@ namespace mir
 {
 namespace graphics
 {
-class Renderable;
+class CompositingCriteria;
 }
 namespace surfaces
 {
@@ -42,7 +41,7 @@ class FilterForRenderables
 public:
     virtual ~FilterForRenderables() {}
 
-    virtual bool operator()(graphics::SurfaceInfo const&) = 0;
+    virtual bool operator()(graphics::CompositingCriteria const&) = 0;
 
 protected:
     FilterForRenderables() = default;
@@ -55,7 +54,7 @@ class OperatorForRenderables
 public:
     virtual ~OperatorForRenderables() {}
 
-    virtual void operator()(graphics::SurfaceInfo const&, surfaces::BufferStream&) = 0;
+    virtual void operator()(graphics::CompositingCriteria const&, surfaces::BufferStream&) = 0;
 
 protected:
     OperatorForRenderables() = default;

@@ -3,7 +3,7 @@ ADD_LIBRARY(
 
   surface.cpp
   surface_allocator.cpp
-  surface_data_storage.cpp
+  surface_data.cpp
   surface_stack.cpp
   surface_controller.cpp
 )

@@ -16,38 +16,36 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/surfaces/surface_data_storage.h"
+#include "mir/surfaces/surface_data.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace geom=mir::geometry;
 namespace ms = mir::surfaces;
 
-ms::SurfaceDataStorage::SurfaceDataStorage(
-    std::string const& name, geom::Point top_left, geom::Size size, std::function<void()> change_cb)
+ms::SurfaceData::SurfaceData(std::string const& name, geom::Rectangle rect, std::function<void()> change_cb)
     : notify_change(change_cb),
       surface_name(name),
+      surface_rect(rect),
       transformation_dirty(true),
-      surface_top_left(top_left),
-      surface_size(size)
+      surface_alpha(1.0f),
+      first_frame_posted(false),
+      hidden(false),
+      input_rectangles{surface_rect}
 {
 }
 
-geom::Rectangle ms::SurfaceDataStorage::size_and_position() const
+float ms::SurfaceData::alpha() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return geom::Rectangle{surface_top_left, surface_size};
+    return surface_alpha;
 }
 
-std::string const& ms::SurfaceDataStorage::name() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return surface_name;
-}
-
-glm::mat4 const& ms::SurfaceDataStorage::transformation() const
+glm::mat4 const& ms::SurfaceData::transformation() const
 {
     std::unique_lock<std::mutex> lk(guard);
 
+    auto surface_size = surface_rect.size;
+    auto surface_top_left = surface_rect.top_left; 
     if (transformation_dirty || transformation_size != surface_size)
     {
         const glm::vec3 top_left_vec{surface_top_left.x.as_int(),
@@ -83,17 +81,23 @@ glm::mat4 const& ms::SurfaceDataStorage::transformation() const
     return transformation_matrix;
 }
 
-void ms::SurfaceDataStorage::move_to(geom::Point new_pt)
+bool ms::SurfaceData::should_be_rendered() const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    return !hidden && first_frame_posted;
+}
+
+void ms::SurfaceData::apply_alpha(float alpha)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-        surface_top_left = new_pt;
-        transformation_dirty = true;
+        surface_alpha = alpha;
     }
     notify_change();
 }
 
-void ms::SurfaceDataStorage::apply_rotation(float degrees, glm::vec3 const& axis)
+
+void ms::SurfaceData::apply_rotation(float degrees, glm::vec3 const& axis)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
@@ -103,3 +107,83 @@ void ms::SurfaceDataStorage::apply_rotation(float degrees, glm::vec3 const& axis
     notify_change();
 }
 
+void ms::SurfaceData::frame_posted()
+{
+    {
+        std::unique_lock<std::mutex> lk(guard);
+        first_frame_posted = true;
+    }
+    notify_change();
+}
+
+void ms::SurfaceData::set_hidden(bool hide)
+{
+    {
+        std::unique_lock<std::mutex> lk(guard);
+        hidden = hide;
+    }
+    notify_change();
+}
+
+geom::Rectangle ms::SurfaceData::size_and_position() const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    return surface_rect;
+}
+
+std::string const& ms::SurfaceData::name() const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    return surface_name;
+}
+
+void ms::SurfaceData::move_to(geom::Point new_pt)
+{
+    {
+        std::unique_lock<std::mutex> lk(guard);
+        surface_rect.top_left = new_pt;
+        transformation_dirty = true;
+    }
+    notify_change();
+}
+
+namespace
+{
+
+bool rectangle_contains_point(geom::Rectangle const& rectangle, uint32_t px, uint32_t py)
+{
+    auto width = rectangle.size.width.as_uint32_t();
+    auto height = rectangle.size.height.as_uint32_t();
+    auto x = rectangle.top_left.x.as_uint32_t();
+    auto y = rectangle.top_left.y.as_uint32_t();
+
+    //TODO: what if (width == 0) || (height == 0) ?
+    
+    if (px < x)
+        return false;
+    else if (py < y)
+        return false;
+    else if (px > x + width)   
+        return false;
+    else if (py > y + height)
+        return false;
+    return true;
+}
+
+}
+bool ms::SurfaceData::input_region_contains(geom::Point const& point) const
+{
+    for (auto const& rectangle : input_rectangles)
+    {
+        if (rectangle_contains_point(rectangle, point.x.as_uint32_t(), point.y.as_uint32_t()))
+        {
+            return true;
+        } 
+    }
+    return false;
+}
+
+void ms::SurfaceData::set_input_region(std::vector<geom::Rectangle> const& rectangles)
+{
+    input_rectangles = rectangles;
+}

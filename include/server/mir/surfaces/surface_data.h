@@ -21,6 +21,7 @@
 
 #include "mir/surfaces/surface_state.h"
 
+#include <vector>
 #include <functional>
 #include <mutex>
 
@@ -32,7 +33,7 @@ namespace surfaces
 class SurfaceData : public SurfaceState
 {
 public:
-    SurfaceData(std::string const& name, geometry::Point top_left, geometry::Size size,
+    SurfaceData(std::string const& name, geometry::Rectangle rect,
                 std::function<void()> change_cb);
 
     //common to mi::Surface, mg::CompositingCriteria 
@@ -59,12 +60,15 @@ private:
     std::mutex mutable guard;
     std::function<void()> notify_change;
     std::string surface_name;
+    geometry::Rectangle surface_rect;
     glm::mat4 rotation_matrix;
     mutable glm::mat4 transformation_matrix;
     mutable geometry::Size transformation_size;
     mutable bool transformation_dirty;
-    geometry::Point surface_top_left;
-    geometry::Size surface_size;
+    float surface_alpha;
+    bool first_frame_posted;
+    bool hidden;
+    std::vector<geometry::Rectangle> input_rectangles;
 };
 
 }
