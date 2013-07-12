@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_DATA_STORAGE_H_
 #define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
 
-#include "mir/surfaces/surface_info.h"
+#include "mir/surfaces/surface_state.h"
 
 #include <functional>
 #include <mutex>
@@ -29,17 +29,32 @@ namespace mir
 namespace surfaces
 {
 
-class SurfaceDataStorage : public SurfaceStateModifier 
+class SurfaceData : public SurfaceState
 {
 public:
-    SurfaceDataStorage(std::string const& name, geometry::Point top_left, geometry::Size size,
-                       std::function<void()> change_cb);
+    SurfaceData(std::string const& name, geometry::Point top_left, geometry::Size size,
+                std::function<void()> change_cb);
 
+    //common to mi::Surface, mg::CompositingCriteria 
     geometry::Rectangle size_and_position() const;
-    std::string const& name() const;
-    void move_to(geometry::Point);
+
+    //mg::CompositingCriteria
     glm::mat4 const& transformation() const;
+    float alpha() const;
+    bool should_be_rendered() const;
+
+    //mi::Surface
+    std::string const& name() const;
+    bool input_region_contains(geometry::Point const& point) const;
+
+    //ms::MutableSurfaceState
+    void move_to(geometry::Point);
+    void frame_posted();
+    void set_hidden(bool hidden);
+    void apply_alpha(float alpha);
     void apply_rotation(float degrees, glm::vec3 const&);
+    void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
+
 private:
     std::mutex mutable guard;
     std::function<void()> notify_change;

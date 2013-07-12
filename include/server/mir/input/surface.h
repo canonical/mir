@@ -16,36 +16,30 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_INFO_H_
-#define MIR_SURFACES_SURFACE_INFO_H_
+#ifndef MIR_INPUT_SURFACE_H_
+#define MIR_INPUT_SURFACE_H_
 
 #include "mir/geometry/rectangle.h"
-
-#include <vector>
+#include <string>
 
 namespace mir
 {
-namespace surfaces
+namespace input
 {
-
-class MutableSurfaceState
+class Surface 
 {
 public:
-    virtual void move_to(geometry::Point) = 0;
-    virtual void frame_posted() = 0;
-    virtual void set_hidden(bool hidden) = 0;
-    virtual void apply_alpha(float alpha) = 0;
-    virtual void apply_rotation(float degrees, glm::vec3 const&) = 0;
-    virtual void set_input_region(
-        std::vector<geometry::Rectangle> const& input_rectangles) = 0;
+    virtual std::string const& name() const = 0;
+    virtual geometry::Rectangle size_and_position() const = 0;
+    virtual bool input_region_contains(geometry::Point const& point) const = 0;
 
 protected:
-    MutableSurfaceState() = default; 
-    virtual ~MutableSurfaceState() noexcept = default;
-    MutableSurfaceState(const MutableSurfaceState&) = delete;
-    MutableSurfaceState& operator=(const MutableSurfaceState& ) = delete;
+    Surface() = default; 
+    virtual ~Surface() = default;
+    Surface(const Surface&) = delete;
+    Surface& operator=(const Surface& ) = delete;
 };
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_INFO_H_ */
+#endif /* MIR_INPUT_SURFACE_H_ */

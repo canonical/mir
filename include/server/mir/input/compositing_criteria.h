@@ -16,18 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_INPUT_SURFACE_INFO_H_
-#define MIR_INPUT_SURFACE_INFO_H_
+#ifndef MIR_INPUT_SURFACE_H_
+#define MIR_INPUT_SURFACE_H_
 
 #include "mir/geometry/rectangle.h"
-#include <vector>
 #include <string>
 
 namespace mir
 {
 namespace input
 {
-class SurfaceInfo 
+class Surface 
 {
 public:
     virtual std::string const& name() const = 0;
@@ -35,25 +34,12 @@ public:
     virtual bool input_region_contains(geometry::Point const& point) const = 0;
 
 protected:
-    SurfaceInfo() = default; 
-    virtual ~SurfaceInfo() = default;
-    SurfaceInfo(const SurfaceInfo&) = delete;
-    SurfaceInfo& operator=(const SurfaceInfo& ) = delete;
-};
-
-class SurfaceStateModifier : public SurfaceInfo 
-{
-public:
-    virtual void set_input_region(
-        std::vector<geometry::Rectangle> const& input_rectangles) = 0;
-
-protected:
-    SurfaceStateModifier() = default; 
-    virtual ~SurfaceStateModifier() noexcept = default;
-    SurfaceStateModifier(const SurfaceStateModifier&) = delete;
-    SurfaceStateModifier& operator=(const SurfaceStateModifier& ) = delete;
+    Surface() = default; 
+    virtual ~Surface() = default;
+    Surface(const Surface&) = delete;
+    Surface& operator=(const Surface& ) = delete;
 };
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_INFO_H_ */
+#endif /* MIR_INPUT_SURFACE_H_ */

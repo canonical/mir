@@ -16,32 +16,24 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
-#define MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
-
-#include <glm/glm.hpp>
+#ifndef MIR_SURFACES_SURFACE_STATE_H_
+#define MIR_SURFACES_SURFACE_STATE_H_
 
 namespace mir
 {
-namespace graphics
+namespace surfaces
 {
 
-class CompositingCriteria 
+class SurfaceState : public graphics::CompositingCriteria, public input::Surface, 
+                     public MutableSurfaceState 
 {
-public:
-    virtual float alpha() const = 0;
-    virtual glm::mat4 const& transformation() const = 0;
-    virtual bool should_be_rendered() const = 0;
-
-    virtual ~CompositingCriteria() = default;
-
 protected:
-    CompositingCriteria() = default;
-    CompositingCriteria(CompositingCriteria const&) = delete;
-    CompositingCriteria& operator=(CompositingCriteria const&) = delete;
+    SurfaceState() = default; 
+    virtual ~SurfaceState() = default;
+    SurfaceState(const SurfaceState&) = delete;
+    SurfaceState& operator=(const SurfaceState& ) = delete;
 };
 
 }
 }
-
-#endif /* MIR_GRAPHICS_COMPOSITING_CRITERIA_H_ */
+#endif /* MIR_SURFACES_SURFACE_STATE_H_ */

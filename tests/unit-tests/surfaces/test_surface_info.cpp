@@ -16,14 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_surface_info.h"
-#include "mir_test/fake_shared.h"
+#include "mir/surfaces/surface_data.h"
+
 #include "mir/graphics/surface_state.h"
-#include "mir_test_doubles/mock_surface_info.h"
-#include "mir_test/fake_shared.h"
 #include "mir/input/surface_data_storage.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/surfaces/surface_data_storage.h"
+
+#include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test/fake_shared.h"
 
 #include <algorithm>
 #include <gtest/gtest.h>
