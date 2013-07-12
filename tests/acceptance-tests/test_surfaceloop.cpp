@@ -39,7 +39,7 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-geom::Size const size{geom::Width{640}, geom::Height{480}};
+geom::Size const size{640, 480};
 geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 }
 

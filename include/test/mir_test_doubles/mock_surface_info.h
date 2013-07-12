@@ -38,8 +38,8 @@ public:
         ON_CALL(*this, size_and_position())
             .WillByDefault(
                 Return(geometry::Rectangle{
-                        geometry::Point{geometry::X{}, geometry::Y{}},
-                        geometry::Size{geometry::Width{}, geometry::Height{}}}));
+                        geometry::Point{},
+                        geometry::Size{}}));
         static std::string n;
         ON_CALL(*this, name())
             .WillByDefault(testing::ReturnRef(n));

@@ -180,7 +180,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
 TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_set)
 {
     using namespace testing;
-    auto test_size = geom::Size{geom::Width{4}, geom::Height{5}};
+    geom::Size test_size{4, 5};
     EXPECT_CALL(*mock_display_poster, display_size())
         .Times(4)
         .WillRepeatedly(Return(test_size));

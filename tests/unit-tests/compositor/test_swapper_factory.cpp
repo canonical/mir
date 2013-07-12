@@ -33,7 +33,7 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-static geom::Size const buf_size{geom::Width{100}, geom::Height{121}};
+static geom::Size const buf_size{100, 121};
 static geom::PixelFormat const buf_pixel_format{geom::PixelFormat::xbgr_8888};
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -56,7 +56,7 @@ struct SwapperFactoryTest : testing::Test
 {
     SwapperFactoryTest()
         : mock_buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
-          size{geom::Width{10},geom::Height{20}},
+          size{10, 20},
           pf{geom::PixelFormat::abgr_8888},
           usage{mc::BufferUsage::hardware},
           properties{size, pf, usage}

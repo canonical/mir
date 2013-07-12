@@ -50,7 +50,7 @@ public:
 };
 
 geom::Rectangle const StubDisplay::rectangle{geom::Point{geom::X{25}, geom::Y{36}},
-                                             geom::Size{geom::Width{49}, geom::Height{64}}};
+                                             geom::Size{49, 64}};
 
 }
 }
@@ -93,7 +93,8 @@ public:
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::Display> create_display() override
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
     {
         return std::make_shared<StubDisplay>();
     }

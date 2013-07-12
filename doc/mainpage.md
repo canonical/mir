@@ -34,6 +34,7 @@ Using Mir
 
  - \ref using_mir_on_pc
  - \ref using_mir_on_android
+ - \ref debug_for_xmir
 
 Getting involved
 ----------------

@@ -50,7 +50,7 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-geom::Size const size{geom::Width{640}, geom::Height{480}};
+geom::Size const size{640, 480};
 geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
@@ -97,8 +97,7 @@ public:
     geom::Rectangle view_area() const override
     {
         return geom::Rectangle{geom::Point(),
-                               geom::Size{geom::Width(1600),
-                                          geom::Height(1600)}};
+                               geom::Size{1600, 1600}};
     }
 };
 
@@ -316,7 +315,8 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return buffer_allocator;
         }
 
-        std::shared_ptr<mg::Display> create_display() override
+        std::shared_ptr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
         {
             return std::make_shared<StubDisplay>();
         }
@@ -437,7 +437,8 @@ struct BufferCounterConfig : TestingServerConfiguration
             return std::make_shared<StubGraphicBufferAllocator>();
         }
 
-        std::shared_ptr<mg::Display> create_display() override
+        std::shared_ptr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
         {
             return std::make_shared<StubDisplay>();
         }

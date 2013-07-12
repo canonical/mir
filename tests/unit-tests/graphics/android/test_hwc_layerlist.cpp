@@ -35,8 +35,7 @@ public:
 
         width = 432; 
         height = 876; 
-        default_size = geom::Size{geom::Width{width},
-                       geom::Height{height}};
+        default_size = geom::Size{width, height};
 
         stub_handle_1 = std::make_shared<ANativeWindowBuffer>();
         stub_handle_2 = std::make_shared<ANativeWindowBuffer>();
@@ -66,11 +65,11 @@ TEST(HWCLayerDeepCopy, hwc_layer)
     EXPECT_EQ(nullptr, layer.visibleRegionScreen.rects);
 
     geom::Rectangle r0{geom::Point{geom::X{0},geom::Y{1}},
-                       geom::Size{geom::Width{2},geom::Height{3}}}; 
+                       geom::Size{2, 3}};
     geom::Rectangle r1{geom::Point{geom::X{0},geom::Y{1}},
-                       geom::Size{geom::Width{3},geom::Height{3}}}; 
+                       geom::Size{3, 3}};
     geom::Rectangle r2{geom::Point{geom::X{1},geom::Y{1}},
-                       geom::Size{geom::Width{2},geom::Height{3}}}; 
+                       geom::Size{2, 3}};
     mga::HWCRect a(r0), b(r1), c(r2);
     mga::HWCDefaultLayer original2({a, b, c});
     layer = original2;

@@ -128,7 +128,7 @@ mclg::GBMClientBuffer::GBMClientBuffer(
         geom::Size size, geom::PixelFormat pf)
     : drm_fd_handler{drm_fd_handler},
       creation_package(std::move(package)),
-      rect({{geom::X(0), geom::Y(0)}, size}),
+      rect({geom::Point{0, 0}, size}),
       buffer_pf{pf}
 {
 }

@@ -40,7 +40,7 @@ static int gbm_egl_display_get_platform(MirMesaEGLNativeDisplay* display,
     return MIR_MESA_TRUE;
 }
 
-int mir_client_egl_mesa_display_is_valid(MirMesaEGLNativeDisplay* display)
+int mir_client_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)
 {
     return mcl::EGLNativeDisplayContainer::instance().validate(display);
 }
