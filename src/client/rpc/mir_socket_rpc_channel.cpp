@@ -26,9 +26,15 @@
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
+
 #include <boost/bind.hpp>
 #include <cstring>
 #include <sstream>
+
+#include <pthread.h>
+#include <signal.h>
 
 namespace mclr = mir::client::rpc;
 
@@ -46,7 +52,24 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
 
     auto run_io_service = boost::bind(&boost::asio::io_service::run, &io_service);
 
+    // Our IO threads must not recieve any signals
+    sigset_t all_signals;
+    sigfillset(&all_signals);
+    sigset_t old_mask;
+    int error;
+    if ((error = pthread_sigmask(SIG_BLOCK, &all_signals, &old_mask)))
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
+            
+
     io_service_thread = std::move(std::thread(run_io_service));
+
+    // Restore previous signals.
+    if ((error = pthread_sigmask(SIG_SETMASK, &old_mask, NULL)))
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to restore signal mask")) << boost::errinfo_errno(error));
 
     boost::asio::async_read(
         socket,
