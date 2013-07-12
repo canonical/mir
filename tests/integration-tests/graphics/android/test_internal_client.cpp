@@ -77,8 +77,7 @@ struct StubInputFactory : public mi::InputChannelFactory
 
 TEST_F(AndroidInternalClient, internal_client_creation_and_use)
 {
-    auto size = geom::Size{geom::Width{334},
-                      geom::Height{122}};
+    auto size = geom::Size{334, 122};
     auto pf  = geom::PixelFormat::abgr_8888;
     msh::SurfaceCreationParameters params;
     params.name = std::string("test");

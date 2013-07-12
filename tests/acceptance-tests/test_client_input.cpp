@@ -125,6 +125,20 @@ struct InputClient : ClientConfig
     {
     }
 
+    virtual void surface_created(MirSurface* new_surface) override
+    {
+        ClientConfig::surface_created(new_surface);
+
+        MirEventDelegate const event_delegate =
+        {
+            handle_input,
+            this
+        };
+
+        // Set this in the callback, not main thread to avoid missing test events
+        mir_surface_set_event_handler(surface, &event_delegate);
+    }
+
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputClient *>(context);
@@ -132,10 +146,8 @@ struct InputClient : ClientConfig
         client->handler->handle_input(ev);
     }
 
-    virtual void expect_input(mt::WaitCondition&)
-    {
-    }
-    
+    virtual void expect_input(mt::WaitCondition&) = 0;
+
     virtual MirSurfaceParameters parameters()
     {
         MirSurfaceParameters const request_params =
@@ -161,32 +173,25 @@ struct InputClient : ClientConfig
             this));
          ASSERT_TRUE(connection != NULL);
 
-         MirEventDelegate const event_delegate =
-         {
-             handle_input,
-             this
-         };
          auto request_params = parameters();
          mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
-
-         mir_surface_set_event_handler(surface, &event_delegate);
 
          events_received.wait_for_at_most_seconds(60);
 
          mir_surface_release_sync(surface);
-         
+
          mir_connection_release(connection);
 
          // ClientConfiguration d'tor is not called on client side so we need this
          // in order to not leak the Mock object.
          handler.reset();
     }
-    
+
     std::shared_ptr<MockInputHandler> handler;
     mt::WaitCondition events_received;
-    
+
     std::string const surface_name;
-    
+
     static int const surface_width = 100;
     static int const surface_height = 100;
 };
@@ -472,17 +477,16 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         {
             static GeometryList positions;
             positions[test_client_1] = geom::Rectangle{geom::Point{0, 0},
-                geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
+                geom::Size{client_width, client_height}};
             positions[test_client_2] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
-                geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
+                geom::Size{client_width, client_height}};
 
             return std::make_shared<StaticPlacementStrategy>(positions);
         }
         
         geom::Rectangle the_screen_geometry() override
         {
-            return geom::Rectangle{geom::Point{0, 0},
-                    geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
+            return geom::Rectangle{geom::Point{0, 0}, geom::Size{screen_width, screen_height}};
         }
 
         void inject_input() override
@@ -570,11 +574,11 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     static int const screen_height = 100;
     
     static geom::Rectangle const screen_geometry{geom::Point{0, 0},
-        geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
+        geom::Size{screen_width, screen_height}};
 
     static std::initializer_list<geom::Rectangle> client_input_regions = {
-        {geom::Point{0, 0}, {geom::Width{screen_width-80}, geom::Height{screen_height}}},
-        {geom::Point{screen_width-20, 0}, {geom::Width{screen_width-80}, geom::Height{screen_height}}}
+        {geom::Point{0, 0}, {screen_width-80, screen_height}},
+        {geom::Point{screen_width-20, 0}, {screen_width-80, screen_height}}
     };
 
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
@@ -677,7 +681,7 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
     static int const screen_height = 100;
     
     static geom::Rectangle const screen_geometry{geom::Point{0, 0},
-        geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
+        geom::Size{screen_width, screen_height}};
 
     struct ServerConiguration : mtf::InputTestingServerConfiguration
     {

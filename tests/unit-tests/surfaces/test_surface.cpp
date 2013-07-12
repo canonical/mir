@@ -69,7 +69,7 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
 TEST(SurfaceCreationParametersTest, builder_mutators)
 {
     using namespace geom;
-    Size const size{Width{1024}, Height{768}};
+    Size const size{1024, 768};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
     geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
     std::string name{"surface"};
@@ -88,7 +88,7 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
 TEST(SurfaceCreationParametersTest, equality)
 {
     using namespace geom;
-    Size const size{Width{1024}, Height{768}};
+    Size const size{1024, 768};
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
     geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 
@@ -110,8 +110,8 @@ TEST(SurfaceCreationParametersTest, inequality)
 {
     using namespace geom;
 
-    std::vector<Size> const sizes{{Width{1024}, Height{768}},
-                                  {Width{1025}, Height{768}}};
+    std::vector<Size> const sizes{{1024, 768},
+                                  {1025, 768}};
 
     std::vector<mc::BufferUsage> const usages{mc::BufferUsage::hardware,
                                               mc::BufferUsage::software};
@@ -160,7 +160,7 @@ struct SurfaceCreation : public ::testing::Test
 
         surface_name = "test_surfaceA";
         pf = geom::PixelFormat::abgr_8888;
-        size = geom::Size{geom::Width{43}, geom::Height{420}};
+        size = geom::Size{43, 420};
         rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();

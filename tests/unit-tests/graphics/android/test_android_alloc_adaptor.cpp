@@ -48,7 +48,7 @@ public:
         alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device);
 
         pf = geom::PixelFormat::abgr_8888;
-        size = geom::Size{geom::Width{300}, geom::Height{200}};
+        size = geom::Size{300, 200};
         usage = mga::BufferUsage::use_hardware;
     }
 

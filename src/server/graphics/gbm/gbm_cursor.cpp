@@ -56,8 +56,7 @@ mgg::GBMCursor::GBMCursor(
         current_position(),
         buffer(*platform)
 {
-    set_image(black_arrow.pixel_data,
-              geometry::Size{geometry::Width(width), geometry::Height(height)});
+    set_image(black_arrow.pixel_data, geometry::Size{width, height});
 
     show_at_last_known_position();
 }
@@ -69,7 +68,7 @@ mgg::GBMCursor::~GBMCursor() noexcept
 
 void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
 {
-    if (size != geometry::Size{geometry::Width(width), geometry::Height(height)})
+    if (size != geometry::Size{width, height})
         BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
 
     auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);

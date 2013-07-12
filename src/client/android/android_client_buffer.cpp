@@ -66,8 +66,7 @@ std::shared_ptr<mcl::MemoryRegion> mcla::AndroidClientBuffer::secure_for_cpu_wri
 
 geom::Size mcla::AndroidClientBuffer::size() const
 {
-    return geom::Size{geom::Width{native_window_buffer->width},
-                      geom::Height{native_window_buffer->height}};
+    return {native_window_buffer->width, native_window_buffer->height};
 }
 
 geom::Stride mcla::AndroidClientBuffer::stride() const

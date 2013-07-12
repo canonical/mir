@@ -148,6 +148,15 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
 
 static ms::DepthId const default_depth{0};
 
+struct StubBufferStreamFactory : public ms::BufferStreamFactory
+{
+    std::shared_ptr<ms::BufferStream> create_buffer_stream(mc::BufferProperties const&)
+    {
+        return std::make_shared<mc::BufferStreamSurfaces>(
+            std::make_shared<NullBufferBundle>());
+    }
+};
+
 class MockCallback
 {
 public:
@@ -286,15 +295,11 @@ TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
     using namespace ::testing;
     NiceMock<MockCallback> mock_cb;
     EXPECT_CALL(mock_cb, call())
-        .Times(1);
+        .Times(2);
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
     auto surface = stack.create_surface(default_params, default_depth);
-
-    Mock::VerifyAndClearExpectations(&mock_cb);
-    EXPECT_CALL(mock_cb, call())
-        .Times(1);
     stack.destroy_surface(surface);
 }
 

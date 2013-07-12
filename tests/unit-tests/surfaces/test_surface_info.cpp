@@ -48,7 +48,7 @@ struct SurfaceDataTest : public testing::Test
     {
         name = std::string("aa");
         top_left = geom::Point{geom::X{4}, geom::Y{7}};
-        size = geom::Size{geom::Width{5}, geom::Height{9}};
+        size = geom::Size{5, 9};
         rect = geom::Rectangle{top_left, size};
         null_change_cb = []{};
         mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
