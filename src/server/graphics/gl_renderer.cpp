@@ -218,7 +218,7 @@ mg::GLRenderer::GLRenderer(const geom::Size& display_size)
 }
 
 void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                            mg::CompositingCriteria const& info, mir::surfaces::BufferStream& stream)
+                            mg::CompositingCriteria const& criteria, mir::surfaces::BufferStream& stream)
 {
     glUseProgram(resources.program);
 
@@ -226,8 +226,8 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
 
-    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(info.transformation()));
-    glUniform1f(resources.alpha_uniform_loc, info.alpha());
+    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(criteria.transformation()));
+    glUniform1f(resources.alpha_uniform_loc, criteria.alpha());
 
     /* Set up vertex attribute data */
     glBindBuffer(GL_ARRAY_BUFFER, resources.vertex_attribs_vbo);

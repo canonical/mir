@@ -56,15 +56,15 @@ struct MockOverlayRenderer : public mc::OverlayRenderer
 
 struct FakeRenderables : mc::Renderables
 {
-    FakeRenderables(std::vector<mg::CompositingCriteria*> infos) :
-        infos(infos)
+    FakeRenderables(std::vector<mg::CompositingCriteria*> surfaces) :
+        surfaces(surfaces)
     {
     }
 
     // Ugly...should we use delegation?
     void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
     {
-        for (auto it = infos.begin(); it != infos.end(); it++)
+        for (auto it = surfaces.begin(); it != surfaces.end(); it++)
         {
             mg::CompositingCriteria &info = **it;
             if (filter(info)) renderable_operator(info, stub_stream);
@@ -74,7 +74,7 @@ struct FakeRenderables : mc::Renderables
     void set_change_callback(std::function<void()> const&) {}
 
     mtd::MockBufferStream stub_stream;
-    std::vector<mg::CompositingCriteria*> infos;
+    std::vector<mg::CompositingCriteria*> surfaces;
 };
 
 ACTION_P(InvokeArgWithParam, param)
@@ -143,20 +143,20 @@ TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
     mtd::NullDisplayBuffer display_buffer;
     NiceMock<MockOverlayRenderer> overlay_renderer;
 
-    NiceMock<mtd::MockCompositingCriteria> mr1, mr2, mr3;
+    NiceMock<mtd::MockCompositingCriteria> mock_criteria1, mock_criteria2, mock_criteria3;
 
-    EXPECT_CALL(mr1, should_be_rendered()).WillOnce(Return(true));
-    EXPECT_CALL(mr2, should_be_rendered()).WillOnce(Return(false));
-    EXPECT_CALL(mr3, should_be_rendered()).WillOnce(Return(true));
+    EXPECT_CALL(mock_criteria1, should_be_rendered()).WillOnce(Return(true));
+    EXPECT_CALL(mock_criteria2, should_be_rendered()).WillOnce(Return(false));
+    EXPECT_CALL(mock_criteria3, should_be_rendered()).WillOnce(Return(true));
 
     std::vector<mg::CompositingCriteria*> renderable_vec;
-    renderable_vec.push_back(&mr1);
-    renderable_vec.push_back(&mr2);
-    renderable_vec.push_back(&mr3);
+    renderable_vec.push_back(&mock_criteria1);
+    renderable_vec.push_back(&mock_criteria2);
+    renderable_vec.push_back(&mock_criteria3);
 
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr1),_)).Times(1);
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr2),_)).Times(0);
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr3),_)).Times(1);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria1),_)).Times(1);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria2),_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria3),_)).Times(1);
 
     FakeRenderables renderables(renderable_vec);
 

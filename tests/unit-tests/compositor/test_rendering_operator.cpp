@@ -85,7 +85,7 @@ TEST(RenderingOperator, render_operator_saves_resources)
     using namespace testing;
 
     StubRenderer stub_renderer;
-    mtd::MockCompositingCriteria mock_info;
+    mtd::MockCompositingCriteria mock_criteria;
     mtd::MockBufferStream mock_stream;
 
     auto use_count_before0 = stub_renderer.resource0.use_count();
@@ -99,9 +99,9 @@ TEST(RenderingOperator, render_operator_saves_resources)
                 stub_renderer,
                 [&](std::shared_ptr<void> const& r) { saved_resources.push_back(r); });
 
-            rendering_operator(mock_info, mock_stream);
-            rendering_operator(mock_info, mock_stream);
-            rendering_operator(mock_info, mock_stream);
+            rendering_operator(mock_criteria, mock_stream);
+            rendering_operator(mock_criteria, mock_stream);
+            rendering_operator(mock_criteria, mock_stream);
         }
 
         EXPECT_EQ(use_count_before0 + 1, stub_renderer.resource0.use_count());

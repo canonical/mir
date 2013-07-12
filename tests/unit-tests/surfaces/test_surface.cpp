@@ -183,7 +183,7 @@ struct SurfaceCreation : public ::testing::Test
 
 }
 
-TEST_F(SurfaceCreation, test_surface_returns_same_gfx_info)
+TEST_F(SurfaceCreation, test_surface_returns_same_state)
 {
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>());
 
@@ -217,7 +217,7 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
     EXPECT_EQ(surface_name, surf.name());
 }
 
-TEST_F(SurfaceCreation, test_surface_queries_info_for_size)
+TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
 {
     using namespace testing;
     EXPECT_CALL(*mock_basic_state, size_and_position())
@@ -365,7 +365,7 @@ TEST_F(SurfaceCreation, hide_and_show)
     testing::Mock::VerifyAndClearExpectations(mock_basic_state.get());
 }
 
-TEST_F(SurfaceCreation, test_surface_next_buffer_tells_gfx_info_on_first_frame)
+TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
 {
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>());
 

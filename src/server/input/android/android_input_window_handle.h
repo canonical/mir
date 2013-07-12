@@ -41,7 +41,7 @@ class InputWindowHandle : public droidinput::InputWindowHandle
 public:
     InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
                       std::shared_ptr<input::InputChannel> const& channel,
-                      std::shared_ptr<input::Surface> const& info);
+                      std::shared_ptr<input::Surface> const& surface);
     ~InputWindowHandle() {}
 
     bool updateInfo();

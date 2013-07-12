@@ -34,17 +34,17 @@ namespace
 {
 struct WindowInfo : public droidinput::InputWindowInfo
 {
-    WindowInfo(std::shared_ptr<mi::Surface> const& info)
-        : info(info)
+    WindowInfo(std::shared_ptr<mi::Surface> const& surface)
+        : surface(surface)
     {
     }
 
     bool touchableRegionContainsPoint(int32_t x, int32_t y) const override
     {
-        return info->input_region_contains(geom::Point{x, y});
+        return surface->input_region_contains(geom::Point{x, y});
     }
 
-    std::shared_ptr<mi::Surface> const info;
+    std::shared_ptr<mi::Surface> const surface;
 };
 }
 
