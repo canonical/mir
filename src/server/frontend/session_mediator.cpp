@@ -62,15 +62,31 @@ public:
     {
     }
     
+    ~CloggableEventSink()
+    {
+        std::unique_lock<std::mutex> lg(lock);
+
+        if (clogged == true)
+            BOOST_THROW_EXCEPTION(std::logic_error("EventSink destroyed while clogged leading to lost events"));
+    }
+    
     void clog()
     {
         std::unique_lock<std::mutex> lg(lock);
+
+        if (clogged == true)
+            BOOST_THROW_EXCEPTION(std::logic_error("EventSink is already clogged"));
+        
         clogged = true;
     }
 
     void unclog()
     {
         std::unique_lock<std::mutex> lg(lock);
+
+        if (clogged == false)
+            BOOST_THROW_EXCEPTION(std::logic_error("EventSink is already unclogged"));
+
         clogged = false;
         
         for (auto const& ev : buffered_events)
