@@ -37,7 +37,7 @@ class StubSurface : public mir::frontend::Surface
     }
     geom::Size size() const
     {
-        return geom::Size{geom::Width{4},geom::Height{2}};
+        return {4, 2};
     }
     geom::PixelFormat pixel_format() const
     {

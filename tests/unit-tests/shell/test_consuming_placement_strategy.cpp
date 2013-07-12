@@ -31,8 +31,7 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
-                                                                 geom::Size{geom::Width(1600),
-                                                                            geom::Height(1600)}};
+                                                                 geom::Size{1600, 1600}};
 
 struct ConsumingPlacementStrategySetup : public testing::Test
 {
@@ -66,7 +65,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_forwarded)
 {
     using namespace ::testing;
 
-    const geom::Size requested_size = geom::Size{geom::Width{100}, geom::Height{100}};
+    const geom::Size requested_size = geom::Size{100, 100};
 
     EXPECT_CALL(*viewable_area, view_area()).Times(1);
 

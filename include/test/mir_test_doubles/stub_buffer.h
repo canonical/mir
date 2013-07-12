@@ -35,7 +35,7 @@ class StubBuffer : public compositor::BufferBasic
 {
 public:
     StubBuffer()
-        : buf_size{geometry::Size{geometry::Width{0}, geometry::Height{0}}},
+        : buf_size{0, 0},
           buf_pixel_format{geometry::PixelFormat::abgr_8888}
     {
     }

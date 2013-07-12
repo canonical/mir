@@ -71,9 +71,7 @@ class StubDisplay : public mtd::NullDisplay
 public:
     geom::Rectangle view_area() const override
     {
-        return geom::Rectangle{geom::Point(),
-                               geom::Size{geom::Width(1600),
-                                          geom::Height(1600)}};
+        return geom::Rectangle{geom::Point(), geom::Size{1600, 1600}};
     }
 };
 

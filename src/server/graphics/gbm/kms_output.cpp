@@ -132,7 +132,7 @@ void mgg::KMSOutput::reset()
 geom::Size mgg::KMSOutput::size() const
 {
     drmModeModeInfo const& mode(connector->modes[mode_index]);
-    return geom::Size{geom::Width{mode.hdisplay}, geom::Height{mode.vdisplay}};
+    return {mode.hdisplay, mode.vdisplay};
 }
 
 bool mgg::KMSOutput::set_crtc(uint32_t fb_id)

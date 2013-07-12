@@ -52,7 +52,7 @@ struct InternalClientWindow : public ::testing::Test
     void SetUp()
     {
         using namespace testing;
-        sz = geom::Size{geom::Width{4}, geom::Height{23}};
+        sz = geom::Size{4, 23};
         pf = geom::PixelFormat::abgr_8888;
         mock_cache = std::make_shared<mtd::MockInterpreterResourceCache>();
         mock_surface = std::make_shared<MockSurface>();

@@ -56,7 +56,7 @@ protected:
 
         fake_devices.add_standard_drm_devices();
 
-        size = geom::Size{geom::Width{300}, geom::Height{200}};
+        size = geom::Size{300, 200};
         pf = geom::PixelFormat::argb_8888;
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         usage = mc::BufferUsage::hardware;

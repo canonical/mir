@@ -477,17 +477,16 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         {
             static GeometryList positions;
             positions[test_client_1] = geom::Rectangle{geom::Point{0, 0},
-                geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
+                geom::Size{client_width, client_height}};
             positions[test_client_2] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
-                geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
+                geom::Size{client_width, client_height}};
 
             return std::make_shared<StaticPlacementStrategy>(positions);
         }
         
         geom::Rectangle the_screen_geometry() override
         {
-            return geom::Rectangle{geom::Point{0, 0},
-                    geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
+            return geom::Rectangle{geom::Point{0, 0}, geom::Size{screen_width, screen_height}};
         }
 
         void inject_input() override
@@ -575,11 +574,11 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     static int const screen_height = 100;
     
     static geom::Rectangle const screen_geometry{geom::Point{0, 0},
-        geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
+        geom::Size{screen_width, screen_height}};
 
     static std::initializer_list<geom::Rectangle> client_input_regions = {
-        {geom::Point{0, 0}, {geom::Width{screen_width-80}, geom::Height{screen_height}}},
-        {geom::Point{screen_width-20, 0}, {geom::Width{screen_width-80}, geom::Height{screen_height}}}
+        {geom::Point{0, 0}, {screen_width-80, screen_height}},
+        {geom::Point{screen_width-20, 0}, {screen_width-80, screen_height}}
     };
 
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
@@ -682,7 +681,7 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
     static int const screen_height = 100;
     
     static geom::Rectangle const screen_geometry{geom::Point{0, 0},
-        geom::Size{geom::Width{screen_width}, geom::Height{screen_height}}};
+        geom::Size{screen_width, screen_height}};
 
     struct ServerConiguration : mtf::InputTestingServerConfiguration
     {

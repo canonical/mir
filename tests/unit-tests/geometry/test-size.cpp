@@ -26,7 +26,7 @@ namespace geom = mir::geometry;
 TEST(geometry, size)
 {
     using namespace geom;
-    Size const size2x4{Width(2), Height(4)};
+    Size const size2x4{2, 4};
 
     EXPECT_EQ(Width(2), size2x4.width);
     EXPECT_EQ(Height(4), size2x4.height);

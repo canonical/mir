@@ -50,7 +50,7 @@ public:
 };
 
 geom::Rectangle const StubDisplay::rectangle{geom::Point{geom::X{25}, geom::Y{36}},
-                                             geom::Size{geom::Width{49}, geom::Height{64}}};
+                                             geom::Size{49, 64}};
 
 }
 }
