@@ -125,6 +125,20 @@ struct InputClient : ClientConfig
     {
     }
 
+    virtual void surface_created(MirSurface* new_surface) override
+    {
+        ClientConfig::surface_created(new_surface);
+
+        MirEventDelegate const event_delegate =
+        {
+            handle_input,
+            this
+        };
+
+        // Set this in the callback, not main thread to avoid missing test events
+        mir_surface_set_event_handler(surface, &event_delegate);
+    }
+
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
         auto client = static_cast<InputClient *>(context);
@@ -132,10 +146,8 @@ struct InputClient : ClientConfig
         client->handler->handle_input(ev);
     }
 
-    virtual void expect_input(mt::WaitCondition&)
-    {
-    }
-    
+    virtual void expect_input(mt::WaitCondition&) = 0;
+
     virtual MirSurfaceParameters parameters()
     {
         MirSurfaceParameters const request_params =
@@ -161,32 +173,25 @@ struct InputClient : ClientConfig
             this));
          ASSERT_TRUE(connection != NULL);
 
-         MirEventDelegate const event_delegate =
-         {
-             handle_input,
-             this
-         };
          auto request_params = parameters();
          mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
-
-         mir_surface_set_event_handler(surface, &event_delegate);
 
          events_received.wait_for_at_most_seconds(60);
 
          mir_surface_release_sync(surface);
-         
+
          mir_connection_release(connection);
 
          // ClientConfiguration d'tor is not called on client side so we need this
          // in order to not leak the Mock object.
          handler.reset();
     }
-    
+
     std::shared_ptr<MockInputHandler> handler;
     mt::WaitCondition events_received;
-    
+
     std::string const surface_name;
-    
+
     static int const surface_width = 100;
     static int const surface_height = 100;
 };
