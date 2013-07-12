@@ -57,7 +57,7 @@ public:
     {
     }
 
-    std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& )
+    std::weak_ptr<ms::Surface> create_surface(std::shared_ptr<msh::Session> const&, msh::SurfaceCreationParameters const& )
     {
         auto info = std::make_shared<mtd::MockSurfaceInfo>();
         auto input_info = std::make_shared<mtd::MockInputInfo>();
@@ -92,14 +92,14 @@ public:
     MockSurfaceBuilder()
     {
         using namespace testing;
-        ON_CALL(*this, create_surface(_)).
+        ON_CALL(*this, create_surface(_, _)).
             WillByDefault(Invoke(&self, &StubSurfaceBuilder::create_surface));
 
         ON_CALL(*this, destroy_surface(_)).
             WillByDefault(Invoke(&self, &StubSurfaceBuilder::destroy_surface));
     }
 
-    MOCK_METHOD1(create_surface, std::weak_ptr<ms::Surface> (const msh::SurfaceCreationParameters&));
+    MOCK_METHOD2(create_surface, std::weak_ptr<ms::Surface> (std::shared_ptr<msh::Session> const&, const msh::SurfaceCreationParameters&));
 
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<ms::Surface> const&));
 
@@ -133,12 +133,14 @@ TEST_F(ShellSurface, creation_and_destruction)
 
     msh::SurfaceCreationParameters const params;
     MockSurfaceBuilder surface_builder;
+    auto session = std::shared_ptr<msh::Session>();
 
     InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(params)).Times(1);
+    EXPECT_CALL(surface_builder, create_surface(session, params)).Times(1);
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(1);
 
     msh::Surface test(
+        session,
         mt::fake_shared(surface_builder),
         params);
 }
@@ -149,14 +151,16 @@ TEST_F(ShellSurface, creation_throws_means_no_destroy)
 
     msh::SurfaceCreationParameters const params;
     MockSurfaceBuilder surface_builder;
+    auto session = std::shared_ptr<msh::Session>();
 
     InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(params)).Times(1)
+    EXPECT_CALL(surface_builder, create_surface(session, params)).Times(1)
         .WillOnce(Throw(std::runtime_error(__PRETTY_FUNCTION__)));
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(Exactly(0));
 
     EXPECT_THROW({
         msh::Surface test(
+            session,
             mt::fake_shared(surface_builder),
             params);
     }, std::runtime_error);
@@ -166,12 +170,14 @@ TEST_F(ShellSurface, destroy)
 {
     using namespace testing;
     MockSurfaceBuilder surface_builder;
+    auto session = std::shared_ptr<msh::Session>();
 
     InSequence sequence;
-    EXPECT_CALL(surface_builder, create_surface(_)).Times(AnyNumber());
+    EXPECT_CALL(surface_builder, create_surface(session, _)).Times(AnyNumber());
     EXPECT_CALL(surface_builder, destroy_surface(_)).Times(0);
 
     msh::Surface test(
+            session,
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -188,6 +194,7 @@ TEST_F(ShellSurface, destroy)
 TEST_F(ShellSurface, size_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -205,6 +212,7 @@ TEST_F(ShellSurface, size_throw_behavior)
 TEST_F(ShellSurface, top_left_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -222,6 +230,7 @@ TEST_F(ShellSurface, top_left_throw_behavior)
 TEST_F(ShellSurface, name_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -239,6 +248,7 @@ TEST_F(ShellSurface, name_throw_behavior)
 TEST_F(ShellSurface, pixel_format_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -256,6 +266,7 @@ TEST_F(ShellSurface, pixel_format_throw_behavior)
 TEST_F(ShellSurface, hide_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -273,6 +284,7 @@ TEST_F(ShellSurface, hide_throw_behavior)
 TEST_F(ShellSurface, show_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -290,6 +302,7 @@ TEST_F(ShellSurface, show_throw_behavior)
 TEST_F(ShellSurface, visible_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -307,6 +320,7 @@ TEST_F(ShellSurface, visible_throw_behavior)
 TEST_F(ShellSurface, destroy_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -324,6 +338,7 @@ TEST_F(ShellSurface, destroy_throw_behavior)
 TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -341,6 +356,7 @@ TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
 TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -358,6 +374,7 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 TEST_F(ShellSurface, input_fds_throw_behavior)
 {
     msh::Surface test(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -373,6 +390,7 @@ TEST_F(ShellSurface, attributes)
     using namespace testing;
 
     msh::Surface surf(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -386,6 +404,7 @@ TEST_F(ShellSurface, types)
     using namespace testing;
 
     msh::Surface surf(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -420,6 +439,7 @@ TEST_F(ShellSurface, states)
     using namespace testing;
 
     msh::Surface surf(
+            std::shared_ptr<msh::Session>(),
             mt::fake_shared(surface_builder),
             msh::a_surface());
 
@@ -454,6 +474,7 @@ TEST_F(ShellSurface, take_input_focus)
     using namespace ::testing;
 
     msh::Surface test(
+        std::shared_ptr<msh::Session>(),
         mt::fake_shared(surface_builder),
         msh::a_surface());
     
@@ -468,6 +489,7 @@ TEST_F(ShellSurface, take_input_focus_throw_behavior)
     using namespace ::testing;
 
     msh::Surface test(
+        std::shared_ptr<msh::Session>(),
         mt::fake_shared(surface_builder),
         msh::a_surface());
     surface_builder.reset_surface();
@@ -484,6 +506,7 @@ TEST_F(ShellSurface, set_input_region_throw_behavior)
     using namespace ::testing;
     
     msh::Surface test(
+        std::shared_ptr<msh::Session>(),
         mt::fake_shared(surface_builder),
         msh::a_surface());
     
@@ -501,6 +524,7 @@ TEST_F(ShellSurface, set_input_region_throw_behavior)
 TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
 {
     msh::Surface test(
+        std::shared_ptr<msh::Session>(),
         mt::fake_shared(surface_builder),
         msh::a_surface());
 

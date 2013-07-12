@@ -44,22 +44,21 @@ TEST(ApplicationSession, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    mtd::StubSurfaceBuilder surface_builder;
-    auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
-
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
+    mtd::StubSurfaceBuilder surface_builder;
+    auto session = std::make_shared<msh::ApplicationSession>(mt::fake_shared(surface_factory), "Foo",
+                                                             std::make_shared<mtd::NullSnapshotStrategy>());
+    auto const mock_surface = std::make_shared<mtd::MockSurface>(session, mt::fake_shared(surface_builder));
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _));
+    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(Return(mock_surface));
+
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
     EXPECT_CALL(*mock_surface, destroy());
 
-    msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo",
-                                    std::make_shared<mtd::NullSnapshotStrategy>());
-
     msh::SurfaceCreationParameters params;
-    auto surf = session.create_surface(params);
+    auto surf = session->create_surface(params);
 
-    session.destroy_surface(surf);
+    session->destroy_surface(surf);
 }
 
 TEST(ApplicationSession, default_surface_is_first_surface)
@@ -67,52 +66,53 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     using namespace ::testing;
 
     mtd::MockSurfaceFactory surface_factory;
+
+    auto app_session = std::make_shared<msh::ApplicationSession>(mt::fake_shared(surface_factory), "Foo",
+                                                                 std::make_shared<mtd::NullSnapshotStrategy>());
+
     mtd::StubSurfaceBuilder surface_builder;
     {
         InSequence seq;
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
-            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
-            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
-            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
+            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(app_session, mt::fake_shared(surface_builder))));
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
+            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(app_session, mt::fake_shared(surface_builder))));
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
+            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(app_session, mt::fake_shared(surface_builder))));
     }
 
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
-                                        std::make_shared<mtd::NullSnapshotStrategy>());
-
     msh::SurfaceCreationParameters params;
-    auto id1 = app_session.create_surface(params);
-    auto id2 = app_session.create_surface(params);
-    auto id3 = app_session.create_surface(params);
+    auto id1 = app_session->create_surface(params);
+    auto id2 = app_session->create_surface(params);
+    auto id3 = app_session->create_surface(params);
 
-    auto default_surf = app_session.default_surface();
-    EXPECT_EQ(app_session.get_surface(id1), default_surf);
-    app_session.destroy_surface(id1);
+    auto default_surf = app_session->default_surface();
+    EXPECT_EQ(app_session->get_surface(id1), default_surf);
+    app_session->destroy_surface(id1);
 
-    default_surf = app_session.default_surface();
-    EXPECT_EQ(app_session.get_surface(id2), default_surf);
-    app_session.destroy_surface(id2);
+    default_surf = app_session->default_surface();
+    EXPECT_EQ(app_session->get_surface(id2), default_surf);
+    app_session->destroy_surface(id2);
 
-    default_surf = app_session.default_surface();
-    EXPECT_EQ(app_session.get_surface(id3), default_surf);
-    app_session.destroy_surface(id3);
+    default_surf = app_session->default_surface();
+    EXPECT_EQ(app_session->get_surface(id3), default_surf);
+    app_session->destroy_surface(id3);
 }
 
 TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
-    mtd::StubSurfaceBuilder surface_builder;
-    auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
-
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
+    auto app_session = std::make_shared<msh::ApplicationSession>(mt::fake_shared(surface_factory), "Foo",
+                                                                 std::make_shared<mtd::NullSnapshotStrategy>());
 
-    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
-                                        std::make_shared<mtd::NullSnapshotStrategy>());
+    mtd::StubSurfaceBuilder surface_builder;
+    auto const mock_surface = std::make_shared<mtd::MockSurface>(app_session, mt::fake_shared(surface_builder));
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _));
+    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(Return(mock_surface));
+
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
 
     {
         InSequence seq;
@@ -122,12 +122,12 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     }
 
     msh::SurfaceCreationParameters params;
-    auto surf = app_session.create_surface(params);
+    auto surf = app_session->create_surface(params);
 
-    app_session.hide();
-    app_session.show();
+    app_session->hide();
+    app_session->show();
 
-    app_session.destroy_surface(surf);
+    app_session->destroy_surface(surf);
 }
 
 TEST(Session, get_invalid_surface_throw_behavior)

@@ -43,6 +43,7 @@ class InputRegion;
 namespace shell
 {
 class InputTargeter;
+class Session;
 class SurfaceBuilder;
 struct SurfaceCreationParameters;
 
@@ -50,10 +51,12 @@ class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
     Surface(
+        std::shared_ptr<Session> const& session,
         std::shared_ptr<SurfaceBuilder> const& builder,
         SurfaceCreationParameters const& params);
 
     Surface(
+        std::shared_ptr<Session> const& session,
         std::shared_ptr<SurfaceBuilder> const& builder,
         SurfaceCreationParameters const& params,
         frontend::SurfaceId id,

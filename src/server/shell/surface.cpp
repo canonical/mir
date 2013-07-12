@@ -16,6 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/shell/input_targeter.h"
@@ -36,12 +37,13 @@ namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 
 msh::Surface::Surface(
+    std::shared_ptr<Session> const& session,
     std::shared_ptr<SurfaceBuilder> const& builder,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<events::EventSink> const& sink)
   : builder(builder),
-    surface(builder->create_surface(params)),
+    surface(builder->create_surface(session, params)),
     id(id),
     event_sink(sink),
     type_value(mir_surface_type_normal),
@@ -50,10 +52,11 @@ msh::Surface::Surface(
 }
 
 msh::Surface::Surface(
+    std::shared_ptr<Session> const& session,
     std::shared_ptr<SurfaceBuilder> const& builder,
     shell::SurfaceCreationParameters const& params)
   : builder(builder),
-    surface(builder->create_surface(params)),
+    surface(builder->create_surface(session, params)),
     id(),
     event_sink(),
     type_value(mir_surface_type_normal),

@@ -28,6 +28,7 @@ namespace mir
 
 namespace shell
 {
+class Session;
 class SurfaceBuilder;
 
 class SurfaceSource : public SurfaceFactory
@@ -37,6 +38,7 @@ public:
     virtual ~SurfaceSource() {}
 
     std::shared_ptr<Surface> create_surface(
+        std::shared_ptr<Session> const& session,
         shell::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink);

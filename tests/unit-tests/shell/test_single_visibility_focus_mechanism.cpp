@@ -96,7 +96,7 @@ TEST(SingleVisibilityFocusMechanism, sets_input_focus)
     using namespace ::testing;
     
     NiceMock<MockShellSession> app1;
-    mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
+    mtd::MockSurface mock_surface(mt::fake_shared(app1), std::make_shared<mtd::StubSurfaceBuilder>());
     {
         InSequence seq;
         EXPECT_CALL(app1, default_surface()).Times(1)
