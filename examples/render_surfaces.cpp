@@ -102,9 +102,7 @@ void update_cursor(uint32_t bg_color, uint32_t fg_color)
             image[(i+1) * height + i] = fg_color;
             image[i * height + i + 1] = fg_color;
         }
-        cursor->set_image(
-            image.data(),
-            geom::Size{ geom::Width(width), geom::Height(height) });
+        cursor->set_image(image.data(), geom::Size{width, height});
     }
 }
 
@@ -127,7 +125,7 @@ void animate_cursor()
                 update_cursor(bg_color, fg_colors[fg_color]);
             }
 
-            cursor->move_to(geom::Point{geom::X(cursor_pos), geom::Y(cursor_pos)});
+            cursor->move_to(geom::Point{cursor_pos, cursor_pos});
         }
     }
 }
@@ -221,8 +219,7 @@ public:
 
         if (should_update)
         {
-            surface->move_to({geom::X{static_cast<uint32_t>(new_x)},
-                              geom::Y{static_cast<uint32_t>(new_y)}});
+            surface->move_to({new_x, new_y});
             x = new_x;
             y = new_y;
         }
@@ -287,8 +284,7 @@ public:
         public:
             RenderResourcesBufferInitializer()
                 : img_renderer{mir_image.pixel_data,
-                               geom::Size{geom::Width{mir_image.width},
-                                          geom::Height{mir_image.height}},
+                               geom::Size{mir_image.width, mir_image.height},
                                mir_image.bytes_per_pixel}
             {
             }
@@ -369,8 +365,7 @@ public:
         auto const surface_builder = the_surface_builder();
         geom::Size const display_size{display->view_area().size};
         uint32_t const surface_side{300};
-        geom::Size const surface_size{geom::Width{surface_side},
-                                      geom::Height{surface_side}};
+        geom::Size const surface_size{surface_side, surface_side};
 
         float const angular_step = 2.0 * M_PI / moveables.size();
         float const w = display_size.width.as_uint32_t();
@@ -400,7 +395,7 @@ public:
             uint32_t const x = w * (0.5 + 0.25 * cos(i * angular_step)) - surface_side / 2.0;
             uint32_t const y = h * (0.5 + 0.25 * sin(i * angular_step)) - surface_side / 2.0;
 
-            s->move_to({geom::X{x}, geom::Y{y}});
+            s->move_to({x, y});
             m = Moveable(*s, display_size,
                     cos(0.1f + i * M_PI / 6.0f) * w / 3.0f,
                     sin(0.1f + i * M_PI / 6.0f) * h / 3.0f,

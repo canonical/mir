@@ -20,6 +20,7 @@
 #include "protobuf_message_processor.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/resource_cache.h"
+#include "mir/frontend/client_constants.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -37,6 +38,7 @@ mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
     resource_cache(resource_cache),
     report(report)
 {
+    send_response_buffer.reserve(serialization_buffer_size);
 }
 
 template<class ResultMessage>
@@ -124,16 +126,14 @@ void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id,
     google::protobuf::Message* response)
 {
-    std::string buffer;
-    response->SerializeToString(&buffer);
+    response->SerializeToString(&send_response_buffer);
 
-    mir::protobuf::wire::Result result;
-    result.set_id(id);
-    result.set_response(buffer);
+    send_response_result.set_id(id);
+    send_response_result.set_response(send_response_buffer);
 
-    result.SerializeToString(&buffer);
+    send_response_result.SerializeToString(&send_response_buffer);
 
-    sender->send(buffer);
+    sender->send(send_response_buffer);
 }
 
 void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
@@ -145,6 +145,7 @@ void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
     ev->set_raw(&e, sizeof(MirEvent));
 
     std::string buffer;
+    buffer.reserve(serialization_buffer_size);
     seq.SerializeToString(&buffer);
 
     mir::protobuf::wire::Result result;

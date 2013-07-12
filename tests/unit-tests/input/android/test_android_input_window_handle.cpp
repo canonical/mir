@@ -60,8 +60,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 {
     using namespace ::testing;
 
-    geom::Size const default_surface_size = geom::Size{geom::Width{256},
-                                                      geom::Height{256}};
+    geom::Size const default_surface_size{256, 256};
     geom::Point const default_surface_top_left = geom::Point{geom::X{10}, geom::Y{10}};
     std::string const testing_surface_name = "Test";
 

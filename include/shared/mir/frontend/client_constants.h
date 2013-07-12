@@ -29,6 +29,8 @@ namespace frontend
 /// mir::client::ClientBufferDepository and mir::frontend::ClientBufferTracker need to use the same value
 unsigned int const client_buffer_cache_size = 3;
 
+/// Buffers need to be big enough to support messages
+unsigned int const serialization_buffer_size = 2048;
 }
 }
 

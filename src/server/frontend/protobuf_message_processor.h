@@ -52,6 +52,8 @@ struct ProtobufMessageProcessor : MessageProcessor,
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<MessageProcessorReport> const& report);
 
+    ~ProtobufMessageProcessor() noexcept {}
+
 private:
     void send_response(::google::protobuf::uint32 id, google::protobuf::Message* response);
 
@@ -94,6 +96,9 @@ private:
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<MessageProcessorReport> const report;
+
+    std::string send_response_buffer;
+    mir::protobuf::wire::Result send_response_result;
 };
 }
 }

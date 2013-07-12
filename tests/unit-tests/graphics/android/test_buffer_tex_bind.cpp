@@ -38,7 +38,7 @@ public:
         using namespace testing;
 
         stub_buffer = std::make_shared<ANativeWindowBuffer>();
-        size = geom::Size{geom::Width{300}, geom::Height{220}};
+        size = geom::Size{300, 220};
         pf = geom::PixelFormat::abgr_8888;
         extensions = std::make_shared<mg::EGLExtensions>();
 

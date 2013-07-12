@@ -120,6 +120,22 @@ TEST_F(GBMGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_er
     FAIL() << "Expected an exception to be thrown.";
 }
 
+TEST_F(GBMGraphicsPlatform, fails_if_no_resources)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(mock_drm, drmModeGetResources(_))
+        .Times(Exactly(1))
+        .WillOnce(Return(reinterpret_cast<drmModeRes*>(0)));
+
+    EXPECT_CALL(mock_drm, drmModeFreeResources(_))
+        .Times(Exactly(0));
+
+    EXPECT_THROW({
+        auto platform = create_platform();
+    }, std::runtime_error) << "Expected that c'tor of GBMPlatform throws";
+}
+
 /* ipc packaging tests */
 TEST_F(GBMGraphicsPlatform, test_ipc_data_packed_correctly)
 {

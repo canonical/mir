@@ -41,7 +41,7 @@ struct InputSurfaceInfo : public testing::Test
     }
 
     geom::Point primitive_pt{geom::X{1}, geom::Y{1}};
-    geom::Size primitive_sz{geom::Width{1}, geom::Height{1}};
+    geom::Size primitive_sz{1, 1};
     geom::Rectangle primitive_rect{primitive_pt, primitive_sz};
     mtd::MockSurfaceInfo primitive_info;
 };
@@ -89,8 +89,8 @@ TEST_F(InputSurfaceInfo, default_region_is_surface_rectangle)
 TEST_F(InputSurfaceInfo, set_input_region)
 {
     std::vector<geom::Rectangle> const rectangles = {
-        {{geom::X{0}, geom::Y{0}}, {geom::Width{1}, geom::Height{1}}}, //region0
-        {{geom::X{1}, geom::Y{1}}, {geom::Width{1}, geom::Height{1}}}  //region1
+        {{geom::X{0}, geom::Y{0}}, geom::Size{1, 1}}, //region0
+        {{geom::X{1}, geom::Y{1}}, geom::Size{1, 1}}  //region1
     };
 
     mi::SurfaceDataStorage input_info(mt::fake_shared(primitive_info));

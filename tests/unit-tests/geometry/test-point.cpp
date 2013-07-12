@@ -41,3 +41,16 @@ TEST(geometry, point)
     EXPECT_EQ(Y(0), defaultValue.y);
     EXPECT_NE(pointx2y4, defaultValue);
 }
+
+TEST(geometry, point_is_usable)
+{
+    using namespace geom;
+
+    int x = 0;
+    int y = 1;
+
+    auto p = Point{x, y};
+
+    EXPECT_EQ(X(x), p.x);
+    EXPECT_EQ(Y(y), p.y);
+}

@@ -26,6 +26,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 
@@ -104,10 +105,11 @@ protected:
         else
             platform = std::make_shared<StubGraphicPlatform>();
 
-        display = platform->create_display();
+        auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+        display = platform->create_display(conf_policy);
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
-        size = geom::Size{geom::Width{100}, geom::Height{100}};
+        size = geom::Size{100, 100};
         pf = geom::PixelFormat::abgr_8888;
         usage = mc::BufferUsage::hardware;
         buffer_properties = mc::BufferProperties{size, pf, usage};

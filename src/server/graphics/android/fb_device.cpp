@@ -50,8 +50,7 @@ void mga::FBDevice::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buff
 
 geom::Size mga::FBDevice::display_size() const
 {
-    return geom::Size{geom::Width{fb_device->width},
-                      geom::Height{fb_device->height}};
+    return {fb_device->width, fb_device->height};
 } 
 
 geom::PixelFormat mga::FBDevice::display_format() const
