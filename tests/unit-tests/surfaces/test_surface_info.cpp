@@ -72,17 +72,15 @@ TEST_F(SurfaceDataTest, basics)
     EXPECT_EQ(rect, data.size_and_position());
 }
 
-#if 0
 TEST_F(SurfaceDataTest, update_position)
 { 
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    geom::Rectangle rect1{top_left, size};
-    ms::SurfaceData storage{name, top_left, size, mock_change_cb};
-    EXPECT_EQ(rect1, storage.size_and_position());
+    ms::SurfaceData storage{name, rect, mock_change_cb};
+    EXPECT_EQ(rect, storage.size_and_position());
 
-    auto new_top_left = geom::Point{geom::X{5}, geom::Y{10}};
+    auto new_top_left = geom::Point{geom::X{6}, geom::Y{10}};
     geom::Rectangle rect2{new_top_left, size};
     storage.move_to(new_top_left);
     EXPECT_EQ(rect2, storage.size_and_position());
@@ -93,8 +91,7 @@ TEST_F(SurfaceDataTest, test_surface_set_rotation_updates_transform)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    geom::Size s{geom::Width{55}, geom::Height{66}};
-    ms::SurfaceData storage{name, top_left, s, mock_change_cb};
+    ms::SurfaceData storage{name, rect, mock_change_cb};
     auto original_transformation = storage.transformation();
 
     storage.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
@@ -109,9 +106,7 @@ TEST_F(SurfaceDataTest, test_surface_transformation_cache_refreshes)
     const geom::Size sz{geom::Width{85}, geom::Height{43}};
     const geom::Rectangle origin{geom::Point{geom::X{77}, geom::Y{88}}, sz};
     const geom::Rectangle moved_pt{geom::Point{geom::X{55}, geom::Y{66}}, sz};
-    ms::SurfaceData storage{name, origin.top_left, sz, null_change_cb};
-    ms::SurfaceData surface_state(mt::fake_shared(primitive_info), mock_change_cb);
-    ms::SurfaceData input_info(mt::fake_shared(primitive_info));
+    ms::SurfaceData storage{name, origin, null_change_cb};
 
     glm::mat4 t0 = storage.transformation();
     storage.move_to(moved_pt.top_left);
@@ -130,6 +125,7 @@ TEST_F(SurfaceDataTest, test_surface_set_alpha_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
+    ms::SurfaceData surface_state{name, rect, mock_change_cb};
 
     float alpha = 0.5f;
     surface_state.apply_alpha(0.5f);
@@ -139,36 +135,22 @@ TEST_F(SurfaceDataTest, test_surface_set_alpha_notifies_changes)
 TEST_F(SurfaceDataTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
-    ms::SurfaceData surface_state(mt::fake_shared(primitive_info), mock_change_cb);
+    ms::SurfaceData surface_state{name, rect, null_change_cb};
     EXPECT_THAT(1.0f, FloatEq(surface_state.alpha()));
-}
-
-TEST_F(SurfaceDataTest, test_surface_get_transformation)
-{
-    using namespace testing;
-    EXPECT_CALL(primitive_info, transformation())
-        .Times(1);
-
-    ms::SurfaceData surface_state(mt::fake_shared(primitive_info), mock_change_cb);
-    surface_state.transformation();
 }
 
 TEST_F(SurfaceDataTest, test_surface_apply_rotation)
 {
-    using namespace testing;
-    InSequence seq;
-    EXPECT_CALL(primitive_info, apply_rotation(FloatEq(60.0f),glm::vec3{0.0f, 0.0f, 1.0f}))
-        .Times(1);
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state(mt::fake_shared(primitive_info), mock_change_cb);
+    ms::SurfaceData surface_state{name, rect, mock_change_cb};
     surface_state.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
 TEST_F(SurfaceDataTest, test_surface_should_be_rendererd)
 {
-    ms::SurfaceData surface_state(mt::fake_shared(primitive_info), mock_change_cb);
+    ms::SurfaceData surface_state{name, rect, mock_change_cb};
 
     //not renderable by default
     EXPECT_FALSE(surface_state.should_be_rendered());
@@ -192,7 +174,7 @@ TEST_F(SurfaceDataTest, test_surface_hidden_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state(mt::fake_shared(primitive_info), mock_change_cb);
+    ms::SurfaceData surface_state{name, rect, mock_change_cb};
     surface_state.set_hidden(true);
 }
 
@@ -202,25 +184,17 @@ TEST_F(SurfaceDataTest, test_surface_frame_posted_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::SurfaceData surface_state(mt::fake_shared(primitive_info), mock_change_cb);
+    ms::SurfaceData surface_state{name, rect, mock_change_cb};
     surface_state.frame_posted();
-}
-
-TEST_F(SurfaceDataTest, rect_comes_from_shared_data)
-{
-    using namespace testing;
-
-    EXPECT_CALL(primitive_info, size_and_position())
-        .Times(AtLeast(1))
-        .WillRepeatedly(Return(primitive_rect));
-    ms::SurfaceData input_info(mt::fake_shared(primitive_info));
-
-    EXPECT_EQ(primitive_rect, input_info.size_and_position());
 }
 
 // a 1x1 window at (1,1) will get events at (1,1), (1,2) (2,1), (2,2)
 TEST_F(SurfaceDataTest, default_region_is_surface_rectangle)
 {
+    geom::Point pt(1,1);
+    geom::Size one_by_one{geom::Width{1}, geom::Height{1}};
+    ms::SurfaceData surface_state{name, geom::Rectangle{pt, one_by_one}, mock_change_cb};
+
     std::initializer_list <geom::Point> contained_pt{geom::Point{geom::X{1}, geom::Y{1}},
                                        geom::Point{geom::X{1}, geom::Y{2}},
                                        geom::Point{geom::X{2}, geom::Y{1}},
@@ -231,7 +205,7 @@ TEST_F(SurfaceDataTest, default_region_is_surface_rectangle)
         for(auto y = 0; y <= 3; y++)
         {
             auto test_pt = geom::Point{geom::X{x}, geom::Y{y}};
-            auto contains = input_info.input_region_contains(test_pt);
+            auto contains = surface_state.input_region_contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);
@@ -244,7 +218,6 @@ TEST_F(SurfaceDataTest, default_region_is_surface_rectangle)
     }
 }
 
-
 TEST_F(SurfaceDataTest, set_input_region)
 {
     std::vector<geom::Rectangle> const rectangles = {
@@ -252,8 +225,8 @@ TEST_F(SurfaceDataTest, set_input_region)
         {{geom::X{1}, geom::Y{1}}, {geom::Width{1}, geom::Height{1}}}  //region1
     };
 
-    ms::SurfaceData input_info(mt::fake_shared(primitive_info));
-    input_info.set_input_region(rectangles);
+    ms::SurfaceData surface_state{name, rect, mock_change_cb};
+    surface_state.set_input_region(rectangles);
 
     std::initializer_list <geom::Point> contained_pt{//region0 points
                                                      geom::Point{geom::X{0}, geom::Y{0}},
@@ -272,7 +245,7 @@ TEST_F(SurfaceDataTest, set_input_region)
         for(auto y = 0; y <= 3; y++)
         {
             auto test_pt = geom::Point{geom::X{x}, geom::Y{y}};
-            auto contains = input_info.input_region_contains(test_pt);
+            auto contains = surface_state.input_region_contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);
@@ -284,4 +257,3 @@ TEST_F(SurfaceDataTest, set_input_region)
         }
     }
 }
-#endif
