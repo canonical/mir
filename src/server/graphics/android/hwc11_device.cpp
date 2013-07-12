@@ -60,7 +60,7 @@ geom::Size mga::HWC11Device::display_size() const
     hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
                                      size_request, size_values);
 
-    return geom::Size{geom::Width{size_values[0]}, geom::Height{size_values[1]}};
+    return {size_values[0], size_values[1]};
 }
 
 geom::PixelFormat mga::HWC11Device::display_format() const

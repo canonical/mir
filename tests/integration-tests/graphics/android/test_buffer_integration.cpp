@@ -42,8 +42,7 @@ class AndroidBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        size = geom::Size{geom::Width{334},
-                          geom::Height{122}};
+        size = geom::Size{334, 122};
         pf  = geom::PixelFormat::abgr_8888;
         buffer_properties = mc::BufferProperties{size, pf, mc::BufferUsage::software};
         null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();

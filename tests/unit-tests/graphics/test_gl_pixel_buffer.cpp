@@ -60,8 +60,7 @@ public:
         using namespace testing;
 
         ON_CALL(mock_buffer, size())
-            .WillByDefault(Return(geom::Size{geom::Width{100},
-                                             geom::Height{100}}));
+            .WillByDefault(Return(geom::Size{100, 100}));
     }
 
     testing::NiceMock<mtd::MockGL> mock_gl;
