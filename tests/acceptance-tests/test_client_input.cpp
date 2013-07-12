@@ -544,7 +544,7 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
     {
     }
     
-    std::shared_ptr<msh::Surface> create_surface(std::shared_ptr<msh::Session> const& session,
+    std::shared_ptr<msh::Surface> create_surface(msh::Session* session,
                                                  msh::SurfaceCreationParameters const& params,
                                                  mf::SurfaceId id,
                                                  std::shared_ptr<me::EventSink> const& sink)

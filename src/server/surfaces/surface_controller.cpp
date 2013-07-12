@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/session.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack_model.h"
 
@@ -28,7 +27,7 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 {
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(std::shared_ptr<msh::Session> const&, shell::SurfaceCreationParameters const& params)
+std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(msh::Session*, shell::SurfaceCreationParameters const& params)
 {
     static ms::DepthId const default_surface_depth{0};
     return surface_stack->create_surface(params, default_surface_depth);

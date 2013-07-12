@@ -34,7 +34,7 @@ struct SurfaceCreationParameters;
 class SurfaceBuilder
 {
 public:
-    virtual std::weak_ptr<surfaces::Surface> create_surface(std::shared_ptr<Session> const& session, SurfaceCreationParameters const& params) = 0;
+    virtual std::weak_ptr<surfaces::Surface> create_surface(Session* session, SurfaceCreationParameters const& params) = 0;
 
     virtual void destroy_surface(std::weak_ptr<surfaces::Surface> const& surface) = 0;
 protected:

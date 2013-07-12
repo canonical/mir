@@ -39,7 +39,7 @@ class SurfaceController : public shell::SurfaceBuilder
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    virtual std::weak_ptr<Surface> create_surface(std::shared_ptr<shell::Session> const& session, shell::SurfaceCreationParameters const& params);
+    virtual std::weak_ptr<Surface> create_surface(shell::Session* session, shell::SurfaceCreationParameters const& params);
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 
     virtual void raise(std::weak_ptr<Surface> const& surface);

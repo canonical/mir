@@ -153,38 +153,38 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
 {
     TestServerConfiguration conf;
 
-    auto session = std::make_shared<msh::ApplicationSession>(
+    msh::ApplicationSession session{
         conf.the_shell_surface_factory(),
         "stress",
-        conf.the_shell_snapshot_strategy());
-    session->create_surface(msh::a_surface());
+        conf.the_shell_snapshot_strategy()};
+    session.create_surface(msh::a_surface());
 
     auto compositor = conf.the_compositor();
 
     compositor->start();
 
     std::thread client_thread{
-        [session]
+        [&session]
         {
             for (int i = 0; i < 500; ++i)
             {
-                auto surface = session->default_surface();
+                auto surface = session.default_surface();
                 surface->advance_client_buffer();
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }
         }};
 
     std::thread snapshot_thread{
-        [session]
+        [&session]
         {
             for (int i = 0; i < 500; ++i)
             {
                 bool snapshot_taken1 = false;
                 bool snapshot_taken2 = false;
 
-                session->take_snapshot(
+                session.take_snapshot(
                     [&](msh::Snapshot const&) { snapshot_taken1 = true; });
-                session->take_snapshot(
+                session.take_snapshot(
                     [&](msh::Snapshot const&) { snapshot_taken2 = true; });
 
                 while (!snapshot_taken1 || !snapshot_taken2)

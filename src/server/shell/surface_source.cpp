@@ -16,7 +16,6 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/shell/session.h"
 #include "mir/shell/surface_source.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/shell/surface.h"
@@ -38,7 +37,7 @@ msh::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface
 }
 
 std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
-    std::shared_ptr<msh::Session> const& session,
+    msh::Session* session,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<events::EventSink> const& sink)

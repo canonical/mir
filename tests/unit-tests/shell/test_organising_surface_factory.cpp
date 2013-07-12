@@ -69,7 +69,7 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(msh::a_surface()));
 
-    factory.create_surface(std::shared_ptr<msh::Session>(), params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
+    factory.create_surface(nullptr, params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
 }
 
 TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_placement_strategy_to_underlying_factory)
@@ -84,8 +84,8 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
 
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
-    EXPECT_CALL(*underlying_surface_factory, create_surface(std::shared_ptr<msh::Session>(), placed_params, mf::SurfaceId(), std::shared_ptr<me::EventSink>()));
+    EXPECT_CALL(*underlying_surface_factory, create_surface(nullptr, placed_params, mf::SurfaceId(), std::shared_ptr<me::EventSink>()));
 
-    factory.create_surface(std::shared_ptr<msh::Session>(), params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
+    factory.create_surface(nullptr, params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
 }
 

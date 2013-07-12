@@ -35,7 +35,7 @@ class SurfaceFactory;
 class Surface;
 class SnapshotStrategy;
 
-class ApplicationSession : public Session, public std::enable_shared_from_this<ApplicationSession>
+class ApplicationSession : public Session
 {
 public:
     ApplicationSession(

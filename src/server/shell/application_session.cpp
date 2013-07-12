@@ -71,7 +71,7 @@ mf::SurfaceId msh::ApplicationSession::next_id()
 mf::SurfaceId msh::ApplicationSession::create_surface(const msh::SurfaceCreationParameters& params)
 {
     auto const id = next_id();
-    auto surf = surface_factory->create_surface(this->shared_from_this(), params, id, event_sink);
+    auto surf = surface_factory->create_surface(this, params, id, event_sink);
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;

@@ -39,7 +39,7 @@ class SurfaceFactory
 {
 public:
     virtual std::shared_ptr<Surface> create_surface(
-        std::shared_ptr<Session> const& session,
+        Session* session,
         SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink) = 0;
