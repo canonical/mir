@@ -38,9 +38,9 @@
 #include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/mock_surface_info.h"
-#include "mir_test_doubles/mock_input_info.h"
-#include "mir_test_doubles/mock_graphics_info.h"
+#include "mir_test_doubles/mock_surface_state.h"
+#include "mir_test_doubles/mock_input_surface.h"
+#include "mir_test_doubles/mock_compositing_criteria.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

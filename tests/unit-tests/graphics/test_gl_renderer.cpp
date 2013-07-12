@@ -26,7 +26,7 @@
 #include <mir/graphics/gl_renderer.h>
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
-#include <mir_test_doubles/mock_graphics_info.h>
+#include <mir_test_doubles/mock_compositing_criteria.h>
 #include <mir_test_doubles/mock_buffer_stream.h>
 #include <mir_test_doubles/mock_graphic_region.h>
 #include "mir/surfaces/graphic_region.h"
@@ -291,7 +291,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     using namespace std::placeholders;
 
     mtd::MockBufferStream stream;
-    mtd::MockGraphicsInfo state;
+    mtd::MockCompositingCriteria criteria;
     mtd::MockBuffer gr;
 
     int save_count = 0;
@@ -309,10 +309,10 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(mock_gl, glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
 
-    EXPECT_CALL(state, transformation())
+    EXPECT_CALL(criteria, transformation())
         .WillOnce(ReturnRef(trans));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
-    EXPECT_CALL(state, alpha())
+    EXPECT_CALL(criteria, alpha())
         .WillOnce(Return(0.0f));
     EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
     EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
@@ -334,7 +334,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(saving_lambda, state, stream);
+    renderer->render(saving_lambda, criteria, stream);
 
     EXPECT_EQ(1, save_count);
     auto result = std::find(saved_resources.begin(), saved_resources.end(), mt::fake_shared(gr));

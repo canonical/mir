@@ -20,7 +20,7 @@
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test_doubles/mock_graphic_region.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_graphics_info.h"
+#include "mir_test_doubles/mock_compositing_criteria.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -85,7 +85,7 @@ TEST(RenderingOperator, render_operator_saves_resources)
     using namespace testing;
 
     StubRenderer stub_renderer;
-    mtd::MockGraphicsInfo mock_info;
+    mtd::MockCompositingCriteria mock_info;
     mtd::MockBufferStream mock_stream;
 
     auto use_count_before0 = stub_renderer.resource0.use_count();

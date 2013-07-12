@@ -23,7 +23,7 @@
 #include "mir/input/input_channel.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_input_info.h"
+#include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 
 #include <cstdlib>

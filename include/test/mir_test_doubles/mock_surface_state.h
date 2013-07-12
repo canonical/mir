@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_
+#define MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_
 
 #include "mir/surfaces/surface_state.h"
 #include <gmock/gmock.h>
@@ -60,8 +60,8 @@ public:
     MOCK_CONST_METHOD0(should_be_rendered, bool());
 };
 
-typedef ::testing::NiceMock<MockSurfaceState> StubSurfaceInfo;
+typedef ::testing::NiceMock<MockSurfaceState> StubSurfaceState;
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_STATE_H_ */

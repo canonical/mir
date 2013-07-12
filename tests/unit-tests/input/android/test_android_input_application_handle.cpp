@@ -20,7 +20,7 @@
 
 #include "mir/input/input_channel.h"
 
-#include "mir_test_doubles/mock_input_info.h"
+#include "mir_test_doubles/mock_input_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

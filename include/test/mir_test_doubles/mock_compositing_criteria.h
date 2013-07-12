@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_GRAPHICS_INFO_H_
-#define MIR_TEST_DOUBLES_MOCK_GRAPHICS_INFO_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
+#define MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
 
 #include "mir/graphics/compositing_criteria.h"
 #include <gmock/gmock.h>
@@ -29,17 +29,17 @@ namespace test
 namespace doubles
 {
 
-class MockGraphicsInfo : public graphics::CompositingCriteria 
+class MockCompositingCriteria : public graphics::CompositingCriteria 
 {
 public:
-    ~MockGraphicsInfo() noexcept {}
+    ~MockCompositingCriteria() noexcept {}
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
     MOCK_CONST_METHOD0(should_be_rendered, bool());
 };
 
-typedef ::testing::NiceMock<MockGraphicsInfo> StubGraphicsInfo;
+typedef ::testing::NiceMock<MockCompositingCriteria> StubCompositingCriteria;
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_GRAPHICS_INFO_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_ */

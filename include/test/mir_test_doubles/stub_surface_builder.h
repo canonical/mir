@@ -25,7 +25,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 
 #include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test_doubles/mock_surface_state.h"
 
 namespace mir
 {

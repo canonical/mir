@@ -20,8 +20,7 @@
 
 #include "mir/geometry/rectangle.h"
 
-#include "mir_test_doubles/mock_surface_info.h"
-#include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test/fake_shared.h"
 
 #include <algorithm>

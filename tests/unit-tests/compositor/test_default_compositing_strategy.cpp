@@ -26,7 +26,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_graphics_info.h"
+#include "mir_test_doubles/mock_compositing_criteria.h"
 #include "mir_test_doubles/null_display_buffer.h"
 
 #include <gmock/gmock.h>
@@ -143,7 +143,7 @@ TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
     mtd::NullDisplayBuffer display_buffer;
     NiceMock<MockOverlayRenderer> overlay_renderer;
 
-    NiceMock<mtd::MockGraphicsInfo> mr1, mr2, mr3;
+    NiceMock<mtd::MockCompositingCriteria> mr1, mr2, mr3;
 
     EXPECT_CALL(mr1, should_be_rendered()).WillOnce(Return(true));
     EXPECT_CALL(mr2, should_be_rendered()).WillOnce(Return(false));

@@ -52,8 +52,8 @@ public:
     MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
 };
 
-typedef ::testing::NiceMock<MockInputSurface> StubInputInfo;
+typedef ::testing::NiceMock<MockInputSurface> StubInputSurface;
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_INPUT_INFO_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_INPUT_SURFACE_H_ */

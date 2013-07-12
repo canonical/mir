@@ -28,7 +28,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 #include "mir_test_doubles/stub_input_targeter.h"
-#include "mir_test_doubles/mock_surface_info.h"
+#include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test/fake_shared.h"
 
 #include <stdexcept>
