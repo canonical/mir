@@ -29,7 +29,7 @@ namespace geometry
 
 struct Size
 {
-    Size() = default;
+    Size() {}
     Size(Size const&) = default;
     Size& operator=(Size const&) = default;
 
