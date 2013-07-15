@@ -23,6 +23,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
@@ -53,10 +54,14 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     EXPECT_CALL(surface_factory, create_surface(_, _, _));
     EXPECT_CALL(*mock_surface, destroy());
+    
+    mtd::MockSessionListener listener;
+    EXPECT_CALL(listener, surface_created(_)).Times(1);
+    EXPECT_CALL(listener, destroying_surface(_)).Times(1);
 
     msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo",
                                     std::make_shared<mtd::NullSnapshotStrategy>(),
-                                    std::make_shared<msh::NullSessionListener>());
+                                    mt::fake_shared(listener));
 
     msh::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
