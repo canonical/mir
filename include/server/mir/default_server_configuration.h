@@ -45,6 +45,7 @@ class Communicator;
 class ProtobufIpcFactory;
 class SessionMediatorReport;
 class MessageProcessorReport;
+class SessionAuthorizer;
 }
 
 namespace shell
@@ -90,6 +91,7 @@ class InputManager;
 class EventFilter;
 class InputChannelFactory;
 class InputConfiguration;
+class CursorListener;
 }
 
 namespace logging
@@ -110,6 +112,7 @@ public:
     virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
     virtual std::shared_ptr<MainLoop>               the_main_loop();
+    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -146,6 +149,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
+    virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     /** @} */
 
@@ -191,6 +195,7 @@ public:
     virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     /** @} */
 
     /** @name logging configuration - customization
@@ -223,6 +228,7 @@ protected:
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<surfaces::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
+    CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
@@ -231,6 +237,7 @@ protected:
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
+    CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<graphics::Renderer> renderer;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
@@ -251,6 +258,7 @@ protected:
     CachedPtr<surfaces::SurfaceController> surface_controller;
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
+    CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
 
 private:
     int const argc;

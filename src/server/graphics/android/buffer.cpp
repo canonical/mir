@@ -51,8 +51,7 @@ mga::Buffer::~Buffer()
 
 geom::Size mga::Buffer::size() const
 {
-    return geom::Size{geom::Width{native_buffer->width},
-                      geom::Height{native_buffer->height}};
+    return {native_buffer->width, native_buffer->height};
 }
 
 geom::Stride mga::Buffer::stride() const

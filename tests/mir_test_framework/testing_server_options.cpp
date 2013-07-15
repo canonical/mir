@@ -71,9 +71,7 @@ class StubDisplay : public mtd::NullDisplay
 public:
     geom::Rectangle view_area() const override
     {
-        return geom::Rectangle{geom::Point(),
-                               geom::Size{geom::Width(1600),
-                                          geom::Height(1600)}};
+        return geom::Rectangle{geom::Point(), geom::Size{1600, 1600}};
     }
 };
 
@@ -85,7 +83,8 @@ class StubGraphicPlatform : public mtd::NullPlatform
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::Display> create_display() override
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
     {
         return std::make_shared<StubDisplay>();
     }

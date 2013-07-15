@@ -48,7 +48,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
     geometry::Width::ValueType width,
     geometry::Height::ValueType height)
 {
-    return of_size(geometry::Size(geometry::Width(width), geometry::Height(height)));
+    return of_size({width, height});
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_position(geometry::Point const& new_top_left)

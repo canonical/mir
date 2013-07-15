@@ -70,7 +70,7 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
 {
     using namespace testing;
 
-    geom::Size fake_display_size{geom::Width{223}, geom::Height{332}};
+    geom::Size fake_display_size{223, 332};
     EXPECT_CALL(*mock_hwc_device, display_size())
         .Times(1)
         .WillOnce(Return(fake_display_size)); 

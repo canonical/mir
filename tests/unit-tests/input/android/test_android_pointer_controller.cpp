@@ -36,8 +36,7 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 static const geom::Rectangle default_view_area = geom::Rectangle{geom::Point(),
-                                                                 geom::Size{geom::Width(1600),
-                                                                            geom::Height(1400)}};
+                                                                 geom::Size{1600, 1400}};
 
 namespace
 {

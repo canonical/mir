@@ -67,7 +67,7 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
     using namespace testing;
 
     void const* pixels{reinterpret_cast<void*>(0xabcd)};
-    geom::Size size{geom::Width{10}, geom::Height{11}};
+    geom::Size size{10, 11};
     geom::Stride stride{123};
 
     MockPixelBuffer pixel_buffer;
