@@ -317,7 +317,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_info)
 
     auto group = connection.display_group();
     ASSERT_EQ(1, group.display_info().size());
-    auto info = group.display_info(1);
+    auto info = group.display_info(0);
 
     ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(info.supported_pixel_format_size()));
 
