@@ -13,13 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_
+#ifndef MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_
 
-#include "display_allocator.h"
+#include "android_display_buffer_factory.h"
 
 namespace mir
 {
@@ -28,20 +28,17 @@ namespace graphics
 namespace android
 {
 
-class AndroidDisplayAllocator : public DisplayAllocator
+class GPUAndroidDisplayBufferFactory : public AndroidDisplayBufferFactory
 {
 public:
-    std::shared_ptr<AndroidDisplay> create_gpu_display(
-        std::shared_ptr<ANativeWindow> const&,
-        std::shared_ptr<DisplayReport> const&) const;
-
-    std::shared_ptr<AndroidDisplay> create_hwc_display(
-        std::shared_ptr<HWCDevice> const&,
-        std::shared_ptr<ANativeWindow> const&,
-        std::shared_ptr<DisplayReport> const&) const;
+    std::unique_ptr<DisplayBuffer> create_display_buffer(
+        std::shared_ptr<AndroidFramebufferWindowQuery> const& native_win,
+        EGLDisplay egl_display,
+        EGLContext egl_context_shared);
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_ALLOCATOR_H_ */
+
+#endif /* MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */

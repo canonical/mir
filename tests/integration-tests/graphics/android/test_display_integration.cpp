@@ -17,14 +17,16 @@
  */
 
 #include "mir/graphics/buffer_initializer.h"
+#include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/hwc10_device.h"
 #include "src/server/graphics/android/hwc11_device.h"
 #include "src/server/graphics/android/hwc_layerlist.h"
-#include "src/server/graphics/android/hwc_display.h"
 #include "src/server/graphics/android/hwc_vsync.h"
 #include "src/server/graphics/android/default_framebuffer_factory.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/server/graphics/android/gpu_android_display_buffer_factory.h"
+#include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
 #include "src/server/graphics/android/fb_device.h"
 
 #include "examples/graphics.h"
@@ -108,7 +110,10 @@ TEST_F(AndroidGPUDisplay, gpu_display_ok_with_gles)
     auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
     auto fb_window = fb_factory->create_fb_native_window(fb_device);
     auto window_query = std::make_shared<mga::AndroidFramebufferWindow>(fb_window);
-    auto display = std::make_shared<mga::AndroidDisplay>(window_query, mock_display_report);
+    auto db_factory = std::make_shared<mga::GPUAndroidDisplayBufferFactory>();
+    auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory,
+                                                         mock_display_report);
+
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();
@@ -140,7 +145,10 @@ TEST_F(AndroidGPUDisplay, hwc10_ok_with_gles)
 
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto hwc = std::make_shared<mga::HWC10Device>(hwc_device, fb_device, syncer);
-    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
+    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(hwc);
+    auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory,
+                                                         mock_display_report);
+
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();
@@ -165,7 +173,9 @@ TEST_F(AndroidGPUDisplay, hwc11_ok_with_gles)
 
     auto syncer = std::make_shared<mga::HWCVsync>();
     auto hwc = std::make_shared<mga::HWC11Device>(hwc_device, layerlist, fb_device, syncer);
-    auto display = std::make_shared<mga::HWCDisplay>(window_query, hwc, mock_display_report);
+    auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(hwc);
+    auto display = std::make_shared<mga::AndroidDisplay>(window_query, db_factory,
+                                                         mock_display_report);
 
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
