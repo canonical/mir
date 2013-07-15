@@ -160,12 +160,22 @@ enum { mir_supported_pixel_format_max = 32 };
  */
 typedef struct MirDisplayInfo
 {
+    uint32_t id;
+    uint32_t position_x;
+    uint32_t position_y;
     uint32_t width;
     uint32_t height;
     
     int supported_pixel_format_items;
     MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
+
+enum { mir_configurable_display_max = 16 };
+typedef struct MirDisplayGrouping
+{
+    uint32_t number_of_displays;
+    MirDisplayInfo display[mir_configurable_display_max];
+} MirDisplayGrouping;
 
 /**
  * MirEventDelegate may be used to specify (at surface creation time)

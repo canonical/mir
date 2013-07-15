@@ -128,8 +128,9 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
     puts("Connected");
 
-    MirDisplayInfo display_info;
-    mir_connection_get_display_info(connection, &display_info);
+    MirDisplayGrouping grouping;
+    mir_connection_get_display_grouping(connection, &grouping);
+    MirDisplayInfo display_info = grouping.display[0];
     assert(display_info.supported_pixel_format_items > 0);
 
     MirPixelFormat pixel_format = find_8888_format(&display_info);

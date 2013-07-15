@@ -96,10 +96,10 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 
 /**
  * Query the display
- *   \param [in]  connection    The connection
- *   \param [out] display_info  Structure to be populated
+ *   \param [in]  connection        The connection
+ *   \param [out] display_grouping  Structure to be populated that describes the display configuration
  */
-void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
+void mir_connection_get_display_grouping(MirConnection *connection, MirDisplayGrouping *display_grouping);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.

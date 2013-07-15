@@ -63,8 +63,10 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
     puts("Connected");
 
-    MirDisplayInfo display_info;
-    mir_connection_get_display_info(connection, &display_info);
+    MirDisplayGrouping display_grouping;
+    mir_connection_get_display_grouping(connection, &display_grouping);
+    MirDisplayInfo display_info = display_grouping.display[0];
+    
     assert(display_info.supported_pixel_format_items > 0);
 
     MirPixelFormat pixel_format = display_info.supported_pixel_format[0];

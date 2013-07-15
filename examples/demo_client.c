@@ -121,8 +121,10 @@ void demo_client(const char* server, int buffer_swap_count)
     }
 
     // We should identify a supported pixel format before...
-    MirDisplayInfo display_info;
-    mir_connection_get_display_info(mcd.connection, &display_info);
+    MirDisplayGrouping display_grouping;
+    mir_connection_get_display_grouping(mcd.connection, &display_grouping);
+    assert(display_grouping.number_of_displays > 0);
+    MirDisplayInfo display_info = display_grouping.display[0];
     assert(display_info.supported_pixel_format_items > 0);
 
     MirPixelFormat const pixel_format = display_info.supported_pixel_format[0];

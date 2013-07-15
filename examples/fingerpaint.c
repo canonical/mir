@@ -253,7 +253,6 @@ int main(int argc, char *argv[])
     static const Color background = {0x40, 0x40, 0x40, 0xff};
     MirConnection *conn;
     MirSurfaceParameters parm;
-    MirDisplayInfo dinfo;
     MirSurface *surf;
     MirGraphicsRegion canvas;
     MirEventDelegate delegate = {&on_event, &canvas};
@@ -268,7 +267,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    mir_connection_get_display_info(conn, &dinfo);
+    MirDisplayGrouping grouping;
+    mir_connection_get_display_grouping(conn, &grouping);
+    MirDisplayInfo dinfo = grouping.display[0];
 
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;

@@ -134,7 +134,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         mir_eglapp_handle_input,
         NULL
     };
-    MirDisplayInfo dinfo;
+    MirDisplayGrouping grouping;
     EGLConfig eglconfig;
     EGLint neglconfigs;
     EGLContext eglctx;
@@ -181,10 +181,13 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    mir_connection_get_display_info(connection, &dinfo);
+    mir_connection_get_display_grouping(connection, &grouping);
+    MirDisplayInfo dinfo = grouping.display[0];
 
-    printf("Connected to display: %dx%d, supports %d pixel formats\n",
+    printf("Connected to display #%d: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
+           dinfo.id,
            dinfo.width, dinfo.height,
+           dinfo.position_x, dinfo.position_y,
            dinfo.supported_pixel_format_items);
 
     surfaceparm.width = *width > 0 ? *width : dinfo.width;
