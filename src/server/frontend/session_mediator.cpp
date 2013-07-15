@@ -85,7 +85,7 @@ void mf::SessionMediator::connect(
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
-    auto display_group = response->mutable_display_group();
+    auto display_info = response->add_display_info();
 
     for (auto& data : ipc_package->ipc_data)
         platform->add_data(data);
@@ -93,7 +93,6 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto display_info = display_group->add_display_info();
     auto view_area = viewable_area->view_area();
     display_info->set_position_x(view_area.top_left.x.as_uint32_t());
     display_info->set_position_y(view_area.top_left.y.as_uint32_t());

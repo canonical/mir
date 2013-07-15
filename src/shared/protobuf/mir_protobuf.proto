@@ -60,17 +60,9 @@ message DisplayInfo {
 // But for the following result messages we either populate the "real"
 // attributes or, in the case of an error, the error attribute. So the
 // attributes are all "optional" (or "repeated").
-message DisplayGroup {
-  repeated DisplayInfo display_info = 1;
-}
-
-// Outside of the IPC code no-one should care as this is all wrapped up.
-// But for the following result messages we either populate the "real"
-// attributes or, in the case of an error, the error attribute. So the
-// attributes are all "optional" (or "repeated").
 message Connection {
   optional Platform platform = 1;
-  optional DisplayGroup display_group = 2;
+  repeated DisplayInfo display_info = 2;
 
   optional string error = 127;
 }

@@ -226,10 +226,9 @@ geom::Rectangle rects[number_of_displays] = {
 
 void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
 {
-    auto group = response->mutable_display_group();
     for (auto i=0; i < number_of_displays; i++)
     {
-        auto info = group->add_display_info();
+        auto info = response->add_display_info();
         auto const& rect = rects[i];
         info->set_position_x(rect.top_left.x.as_uint32_t());
         info->set_position_y(rect.top_left.y.as_uint32_t());
@@ -242,8 +241,7 @@ void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
 
 void fill_display_info_100(mp::ConnectParameters const*, mp::Connection* response)
 {
-    auto group = response->mutable_display_group();
-    auto info = group->add_display_info();
+    auto info = response->add_display_info();
     for (int i = 0; i < 100; i++)
         info->add_supported_pixel_format(static_cast<uint32_t>(mir_pixel_format_xbgr_8888));
 }

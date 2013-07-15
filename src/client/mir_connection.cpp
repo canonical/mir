@@ -302,14 +302,12 @@ void fill_display_info(MirDisplayInfo& display_info, mir::protobuf::DisplayInfo 
 //'mutex' must be locked for display_grouping
 void MirConnection::fill_display_grouping_from_connect_msg_locked()
 {
-    if (!connect_result.has_error() && connect_result.has_display_group())
+    display_grouping.number_of_displays = connect_result.display_info().size();
+    if (!connect_result.has_error() && (display_grouping.number_of_displays > 0))
     {
-        auto const& connection_display_group = connect_result.display_group();
-        display_grouping.number_of_displays = connection_display_group.display_info().size();
-
         for(auto i = 0u; i < display_grouping.number_of_displays; i++)
         {
-            auto const& connection_display_info = connection_display_group.display_info(i);
+            auto const& connection_display_info = connect_result.display_info(i);
             fill_display_info(display_grouping.display[i], connection_display_info);
         }
     }
