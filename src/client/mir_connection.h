@@ -151,6 +151,9 @@ private:
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
     void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
+
+    void fill_display_grouping_from_connect_msg_locked();
+    MirDisplayGrouping display_grouping;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

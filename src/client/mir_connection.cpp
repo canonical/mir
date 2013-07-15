@@ -155,6 +155,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          */
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
+
+        //if we got the information, fill the latest display information struct 
+        fill_display_grouping_from_connect_msg_locked();
     }
 
     callback(this, context);
@@ -296,25 +299,26 @@ void fill_display_info(MirDisplayInfo& display_info, mir::protobuf::DisplayInfo 
 } 
 }
 
-void MirConnection::populate(MirDisplayGrouping& display_group)
+//'mutex' must be locked for display_grouping
+void MirConnection::fill_display_grouping_from_connect_msg_locked()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
     if (!connect_result.has_error() && connect_result.has_display_group())
     {
         auto const& connection_display_group = connect_result.display_group();
-        display_group.number_of_displays = connection_display_group.display_info().size();
+        display_grouping.number_of_displays = connection_display_group.display_info().size();
 
-        for(auto i = 0u; i < display_group.number_of_displays; i++)
+        for(auto i = 0u; i < display_grouping.number_of_displays; i++)
         {
             auto const& connection_display_info = connection_display_group.display_info(i);
-            fill_display_info(display_group.display[i], connection_display_info);
+            fill_display_info(display_grouping.display[i], connection_display_info);
         }
     }
-    else
-    {
-        display_group.number_of_displays = 0;
-    }
+}
+
+void MirConnection::populate(MirDisplayGrouping& display_group)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+    display_group = display_grouping;
 }
 
 
