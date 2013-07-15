@@ -41,7 +41,7 @@ struct WindowInfo : public droidinput::InputWindowInfo
 
     bool touchableRegionContainsPoint(int32_t x, int32_t y) const override
     {
-        return surface->input_region_contains(geom::Point{x, y});
+        return surface->contains(geom::Point{x, y});
     }
 
     std::shared_ptr<mi::Surface> const surface;

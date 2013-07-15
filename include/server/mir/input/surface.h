@@ -31,7 +31,7 @@ class Surface
 public:
     virtual std::string const& name() const = 0;
     virtual geometry::Rectangle size_and_position() const = 0;
-    virtual bool input_region_contains(geometry::Point const& point) const = 0;
+    virtual bool contains(geometry::Point const& point) const = 0;
 
 protected:
     Surface() = default; 

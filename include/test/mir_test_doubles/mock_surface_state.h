@@ -50,7 +50,7 @@ public:
     MOCK_CONST_METHOD0(name, std::string const&());
     MOCK_METHOD2(apply_rotation, void(float, glm::vec3 const&));
     MOCK_METHOD1(move_to, void(geometry::Point));
-    MOCK_CONST_METHOD1(input_region_contains, bool(geometry::Point const&));
+    MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
     MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_METHOD1(apply_alpha, void(float));

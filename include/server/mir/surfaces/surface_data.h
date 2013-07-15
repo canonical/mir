@@ -46,7 +46,7 @@ public:
 
     //mi::Surface
     std::string const& name() const;
-    bool input_region_contains(geometry::Point const& point) const;
+    bool contains(geometry::Point const& point) const;
 
     //ms::MutableSurfaceState
     void move_to(geometry::Point);

@@ -48,7 +48,7 @@ public:
     MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(name, std::string const&());
 
-    MOCK_CONST_METHOD1(input_region_contains, bool(geometry::Point const&));
+    MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
     MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
 };
 

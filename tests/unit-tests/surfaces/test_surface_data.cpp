@@ -205,7 +205,7 @@ TEST_F(SurfaceDataTest, default_region_is_surface_rectangle)
         for(auto y = 0; y <= 3; y++)
         {
             auto test_pt = geom::Point{geom::X{x}, geom::Y{y}};
-            auto contains = surface_state.input_region_contains(test_pt);
+            auto contains = surface_state.contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);
@@ -245,7 +245,7 @@ TEST_F(SurfaceDataTest, set_input_region)
         for(auto y = 0; y <= 3; y++)
         {
             auto test_pt = geom::Point{geom::X{x}, geom::Y{y}};
-            auto contains = surface_state.input_region_contains(test_pt);
+            auto contains = surface_state.contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);

@@ -171,7 +171,7 @@ bool rectangle_contains_point(geom::Rectangle const& rectangle, uint32_t px, uin
 }
 
 }
-bool ms::SurfaceData::input_region_contains(geom::Point const& point) const
+bool ms::SurfaceData::contains(geom::Point const& point) const
 {
     for (auto const& rectangle : input_rectangles)
     {
