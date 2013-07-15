@@ -100,7 +100,7 @@ public:
         modes0.push_back(mtd::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
         modes0.push_back(mtd::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
 
-        geom::Size const connector_physical_size_mm{geom::Width{1597}, geom::Height{987}};
+        geom::Size const connector_physical_size_mm{1597, 987};
 
         resources.reset();
 

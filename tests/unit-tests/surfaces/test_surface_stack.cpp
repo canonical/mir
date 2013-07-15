@@ -181,7 +181,7 @@ TEST(
     ms::SurfaceStack stack(mt::fake_shared(buffer_stream_factory), 
         mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
 
     stack.destroy_surface(surface);
 }
@@ -235,11 +235,11 @@ TEST(
         mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
 
     auto surface1 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
     auto surface2 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
     auto surface3 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -277,11 +277,11 @@ TEST(
         mt::fake_shared(input_factory), mt::fake_shared(input_registrar));
 
     auto surface1 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
     auto surface2 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
     auto surface3 = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
 
     mtd::MockSurfaceRenderer renderer;
     MockFilterForRenderables filter;
@@ -311,7 +311,7 @@ TEST(SurfaceStack, created_buffer_stream_uses_requested_surface_parameters)
     mtd::StubInputRegistrar input_registrar;
 
 
-    geom::Size const size{geom::Size{geom::Width{1024}, geom::Height{768}}};
+    geom::Size const size{1024, 768};
     geom::PixelFormat const format{geom::PixelFormat::bgr_888};
     mc::BufferUsage const usage{mc::BufferUsage::software};
 
@@ -364,7 +364,7 @@ TEST(SurfaceStack, create_surface_notifies_changes)
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
 }
 
 TEST(SurfaceStack, destroy_surface_notifies_changes)
@@ -381,7 +381,7 @@ TEST(SurfaceStack, destroy_surface_notifies_changes)
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
 
     std::weak_ptr<ms::Surface> surface = stack.create_surface(
-        msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}), default_depth);
+        msh::a_surface().of_size({1024, 768}), default_depth);
 
     Mock::VerifyAndClearExpectations(&mock_cb);
     EXPECT_CALL(mock_cb, call()).Times(1);
@@ -423,8 +423,7 @@ TEST(SurfaceStack, surface_is_created_at_requested_position)
     using namespace ::testing;
     geom::Point const requested_top_left{geom::X{50},
                                          geom::Y{17}};
-    geom::Size const requested_size{geom::Width{1024}, 
-                                    geom::Height{768}};
+    geom::Size const requested_size{1024, 768};
     
     ms::SurfaceStack stack{std::make_shared<StubBufferStreamFactory>(),
         std::make_shared<StubInputChannelFactory>(),
@@ -444,8 +443,8 @@ TEST(SurfaceStack, surface_gets_buffer_bundles_reported_size)
     using namespace ::testing;
     geom::Point const requested_top_left{geom::X{50},
                                          geom::Y{17}};
-    geom::Size const requested_size{geom::Width{1024}, geom::Height{768}}; 
-    geom::Size const stream_size{geom::Width{1025}, geom::Height{769}};
+    geom::Size const requested_size{1024, 768};
+    geom::Size const stream_size{1025, 769};
 
     MockBufferStreamFactory buffer_stream_factory;
     auto stream = std::make_shared<mtd::MockBufferStream>();

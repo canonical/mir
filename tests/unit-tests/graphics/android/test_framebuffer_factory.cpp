@@ -59,7 +59,7 @@ public:
         ON_CALL(*mock_display_info_provider, display_format())
             .WillByDefault(Return(geom::PixelFormat::abgr_8888));
         ON_CALL(*mock_display_info_provider, display_size())
-            .WillByDefault(Return(geom::Size{geom::Width{2}, geom::Height{3}}));
+            .WillByDefault(Return(geom::Size{2, 3}));
         ON_CALL(*mock_display_info_provider, number_of_framebuffers_available())
             .WillByDefault(Return(fake_fb_num));
         ON_CALL(*mock_buffer_allocator, alloc_buffer_platform(_,_,_))

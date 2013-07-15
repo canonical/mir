@@ -105,8 +105,7 @@ mgg::GBMBuffer::~GBMBuffer()
 
 geom::Size mgg::GBMBuffer::size() const
 {
-    return {geom::Width{gbm_bo_get_width(gbm_handle.get())},
-            geom::Height{gbm_bo_get_height(gbm_handle.get())}};
+    return {gbm_bo_get_width(gbm_handle.get()), gbm_bo_get_height(gbm_handle.get())};
 }
 
 geom::Stride mgg::GBMBuffer::stride() const

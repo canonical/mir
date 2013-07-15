@@ -149,8 +149,7 @@ void mgg::KMSDisplayConfiguration::add_or_update_output(
 {
     DisplayConfigurationOutputId id{static_cast<int>(connector.connector_id)};
     DisplayConfigurationCardId card_id{0};
-    geom::Size physical_size{geom::Width{connector.mmWidth},
-                             geom::Height{connector.mmHeight}};
+    geom::Size physical_size{connector.mmWidth, connector.mmHeight};
     bool connected{connector.connection == DRM_MODE_CONNECTED};
     size_t current_mode_index{std::numeric_limits<size_t>::max()};
     std::vector<DisplayConfigurationMode> modes;
@@ -170,8 +169,7 @@ void mgg::KMSDisplayConfiguration::add_or_update_output(
     {
         drmModeModeInfo& mode_info = connector.modes[m];
 
-        geom::Size size{geom::Width{mode_info.hdisplay},
-                        geom::Height{mode_info.vdisplay}};
+        geom::Size size{mode_info.hdisplay, mode_info.vdisplay};
 
         double vrefresh_hz = calculate_vrefresh_hz(mode_info);
 

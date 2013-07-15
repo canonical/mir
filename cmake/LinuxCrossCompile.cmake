@@ -1,9 +1,9 @@
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_VERSION 1)
 
+set(MIR_IS_CROSS_COMPILING TRUE CACHE STRING "build is a cross compile")
 set(MIR_NDK_PATH $ENV{MIR_NDK_PATH} CACHE STRING "path of mir android bundle")
 set(MIR_ARM_EABI "arm-linux-gnueabihf")
-set (MIR_USES_BIONIC false CACHE BOOL "use the bionic libc/libstdc++")
 
 set(CMAKE_C_COMPILER   /usr/bin/${MIR_ARM_EABI}-gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/${MIR_ARM_EABI}-g++)

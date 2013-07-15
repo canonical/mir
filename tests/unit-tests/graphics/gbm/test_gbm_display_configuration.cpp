@@ -49,7 +49,7 @@ namespace
 
 mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode)
 {
-    geom::Size const size{geom::Width{mode.hdisplay}, geom::Height{mode.vdisplay}};
+    geom::Size const size{mode.hdisplay, mode.vdisplay};
     double vrefresh_hz{0.0};
 
     /* Calculate vertical refresh rate from DRM mode information */
@@ -141,7 +141,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     uint32_t const connector0_id{30};
     uint32_t const connector1_id{31};
     uint32_t const connector2_id{32};
-    geom::Size const connector0_physical_size_mm{geom::Width{480}, geom::Height{270}};
+    geom::Size const connector0_physical_size_mm{480, 270};
     geom::Size const connector1_physical_size_mm{};
     geom::Size const connector2_physical_size_mm{};
     std::vector<uint32_t> possible_encoder_ids_empty;
@@ -309,10 +309,10 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
     std::vector<uint32_t> const encoder_ids{20, 21};
     std::vector<uint32_t> const connector_ids{30, 31};
     std::vector<geom::Size> const connector_physical_sizes_mm_before{
-        {geom::Width{480}, geom::Height{270}}, {}
+        {480, 270}, {}
     };
     std::vector<geom::Size> const connector_physical_sizes_mm_after{
-        {}, {geom::Width{512}, geom::Height{642}}
+        {}, {512, 642}
     };
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};

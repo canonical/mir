@@ -146,8 +146,7 @@ TEST_F(InternalNativeSurface, surface_get_parameters)
 {
     using namespace ::testing;
     
-    geom::Size const test_surface_size = geom::Size{geom::Width{17},
-                                                    geom::Height{29}};
+    geom::Size const test_surface_size{17, 29};
     geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
     EXPECT_CALL(*mock_surface, size())
         .Times(1)
