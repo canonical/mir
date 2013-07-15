@@ -216,14 +216,17 @@ std::vector<MirPixelFormat> const supported_pixel_formats{
 
 void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
 {
-    auto info = response->mutable_display_info();
+    mp::DisplayInfo info;
     for (auto pf : supported_pixel_formats)
         info->add_supported_pixel_format(static_cast<uint32_t>(pf));
+
+    auto group = response->mutable_display_group();
+    group->add_display_info(info); 
 }
 
 void fill_display_info_100(mp::ConnectParameters const*, mp::Connection* response)
 {
-    auto info = response->mutable_display_info();
+    auto info = response->mutable_display_group();
     for (int i = 0; i < 100; i++)
         info->add_supported_pixel_format(static_cast<uint32_t>(mir_pixel_format_xbgr_8888));
 }
@@ -241,9 +244,12 @@ TEST_F(MirConnectionTest, populates_display_info_correctly)
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    MirDisplayInfo info;
+    MirDisplayGrouping grouping;
+    grouping.number_of_displays = 0;
 
     connection->populate(info);
+
+    EXPECT_EQ(2, grouping.number_of_displays);
 
     ASSERT_EQ(supported_pixel_formats.size(),
               static_cast<uint32_t>(info.supported_pixel_format_items));
