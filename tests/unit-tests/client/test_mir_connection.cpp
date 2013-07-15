@@ -218,10 +218,10 @@ std::vector<MirPixelFormat> const supported_pixel_formats{
 
 int const number_of_displays = 4;
 geom::Rectangle rects[number_of_displays] = {
-    geom::Rectangle{geom::Point(), geom::Size()},
-    geom::Rectangle{geom::Point(), geom::Size()},
-    geom::Rectangle{geom::Point(), geom::Size()},
-    geom::Rectangle{geom::Point(), geom::Size()},
+    geom::Rectangle{geom::Point(1,2), geom::Size(14,15)},
+    geom::Rectangle{geom::Point(3,4), geom::Size(12,13)},
+    geom::Rectangle{geom::Point(5,6), geom::Size(10,11)},
+    geom::Rectangle{geom::Point(7,8), geom::Size(9,10)},
 };
 
 void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
@@ -273,7 +273,7 @@ TEST_F(MirConnectionTest, populates_display_info_correctly)
         auto info = grouping.display[i];
         auto rect = rects[i];
         EXPECT_EQ(info.width, rect.size.width.as_uint32_t());
-        EXPECT_EQ(info.height, rect.size.width.as_uint32_t());
+        EXPECT_EQ(info.height, rect.size.height.as_uint32_t());
         EXPECT_EQ(info.position_x, rect.top_left.x.as_uint32_t());
         EXPECT_EQ(info.position_y, rect.top_left.y.as_uint32_t());
  
