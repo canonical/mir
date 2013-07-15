@@ -153,7 +153,7 @@ std::shared_ptr<mi::InputChannel> ms::Surface::input_channel() const
     return server_input_channel;
 }
 
-std::shared_ptr<mi::Surface> ms::Surface::input_info() const
+std::shared_ptr<mi::Surface> ms::Surface::input_surface() const
 {
     return surface_state;
 }

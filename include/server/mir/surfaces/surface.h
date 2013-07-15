@@ -91,7 +91,7 @@ public:
 
     std::shared_ptr<BufferStream> buffer_stream() const;
 
-    std::shared_ptr<input::Surface> input_info() const;
+    std::shared_ptr<input::Surface> input_surface() const;
 private:
     std::shared_ptr<surfaces::SurfaceState> surface_state;
     std::shared_ptr<BufferStream> surface_buffer_stream;
