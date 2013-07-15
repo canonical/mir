@@ -46,11 +46,11 @@ class StubDisplay : public mtd::NullDisplay
 public:
     geom::Rectangle view_area() const { return rectangle; }
 
-    static geom::Rectangle const rectangle;
+    static geom::Rectangle const rectangle[2];
 };
 
-geom::Rectangle const StubDisplay::rectangle{geom::Point{geom::X{25}, geom::Y{36}},
-                                             geom::Size{49, 64}};
+geom::Rectangle const StubDisplay::rectangle{geom::Rectangle{geom::Point{25,36}}, geom::Size{49, 64}}
+                                             geom::Rectangle{geom::Point{5,6}}, geom::Size{8, 6}}};
 
 }
 }
@@ -135,22 +135,26 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
                                      connection_callback, &connection));
 
-            MirDisplayInfo info;
+            MirDisplayGrouping grouping;
 
-            mir_connection_get_display_info(connection, &info);
+            mir_connection_get_display_grouping(connection, &grouping);
 
-            EXPECT_EQ(StubDisplay::rectangle.size.width.as_uint32_t(),
-                      static_cast<uint32_t>(info.width));
-            EXPECT_EQ(StubDisplay::rectangle.size.height.as_uint32_t(),
-                      static_cast<uint32_t>(info.height));
-
-            ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
-                      static_cast<uint32_t>(info.supported_pixel_format_items));
-
-            for (int i = 0; i < info.supported_pixel_format_items; ++i)
+            ASSERT_EQ(2, grouping.number_of_displays);
+            for (auto i=0; i < grouping.number_of_displays; i++)
             {
-                EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(info.supported_pixel_format[i]));
+                MirDisplayInfo info* = &grouping.display[i];
+                geom::Rectangle const& expected_rect = StubDisplay::rectangle[i];
+ 
+                EXPECT_EQ(expected_rect.size.width.as_uint32_t(), info->width);
+                EXPECT_EQ(expected_rect.size.height.as_uint32_t(), info->height);
+
+                ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
+                          static_cast<uint32_t>(info.supported_pixel_format_items));
+                for (int i = 0; i < info.supported_pixel_format_items; ++i)
+                {
+                    EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
+                              static_cast<geom::PixelFormat>(info.supported_pixel_format[i]));
+                }
             }
 
             mir_connection_release(connection);
