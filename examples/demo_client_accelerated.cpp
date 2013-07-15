@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
 
     MirDisplayGrouping display_grouping;
     mir_connection_get_display_grouping(connection, &display_grouping);
+    assert(display_grouping.number_of_displays > 0);
     MirDisplayInfo display_info = display_grouping.display[0];
     
     assert(display_info.supported_pixel_format_items > 0);

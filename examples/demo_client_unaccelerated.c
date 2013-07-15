@@ -130,6 +130,7 @@ int main(int argc, char* argv[])
 
     MirDisplayGrouping grouping;
     mir_connection_get_display_grouping(connection, &grouping);
+    assert(grouping.number_of_displays > 0);
     MirDisplayInfo display_info = grouping.display[0];
     assert(display_info.supported_pixel_format_items > 0);
 
