@@ -38,6 +38,9 @@ public:
     void focused(std::shared_ptr<Session> const&) override {}
     void unfocused() override {}
 
+    void surface_created(std::shared_ptr<Surface> const&) override {}
+    void destroying_surface(std::shared_ptr<Surface> const&) override {}
+
 protected:
     NullSessionListener(const NullSessionListener&) = delete;
     NullSessionListener& operator=(const NullSessionListener&) = delete;

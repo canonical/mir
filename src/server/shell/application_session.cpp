@@ -80,6 +80,8 @@ mf::SurfaceId msh::ApplicationSession::create_surface(const msh::SurfaceCreation
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
     
+    session_listener->surface_created(surf);
+    
     return id;
 }
 
@@ -119,6 +121,8 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
+    
+    session_listener->destroying_surface(p->second);
 
     p->second->destroy();
     surfaces.erase(p);
