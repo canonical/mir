@@ -160,6 +160,7 @@ enum { mir_supported_pixel_format_max = 32 };
  */
 typedef struct MirDisplayInfo
 {
+    uint32_t id;
     uint32_t position_x;
     uint32_t position_y;
     uint32_t width;
