@@ -95,8 +95,8 @@ void mf::SessionMediator::connect(
 
     auto display_info = display_group->add_display_info();
     auto view_area = viewable_area->view_area();
-    display_info->set_position_x(0);
-    display_info->set_position_y(0);
+    display_info->set_position_x(view_area.top_left.x.as_uint32_t());
+    display_info->set_position_y(view_area.top_left.y.as_uint32_t());
     display_info->set_width(view_area.size.width.as_uint32_t());
     display_info->set_height(view_area.size.height.as_uint32_t());
     auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();

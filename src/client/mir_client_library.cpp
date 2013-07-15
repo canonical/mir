@@ -230,9 +230,7 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 
 void mir_connection_get_display_grouping(MirConnection *connection, MirDisplayGrouping *display_grouping)
 {
-    (void) connection;
-    (void) display_grouping;
-//    connection->populate(*display_info);
+    connection->populate(*display_grouping);
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)

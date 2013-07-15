@@ -132,7 +132,8 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
 
             mir_connection_get_display_grouping(connection, &grouping);
 
-            ASSERT_EQ(2, grouping.number_of_displays);
+            /* TODO: expand test to test multimonitor */
+            ASSERT_EQ(1, grouping.number_of_displays);
             for (auto i=0u; i < grouping.number_of_displays; i++)
             {
                 MirDisplayInfo* info = &grouping.display[i];
