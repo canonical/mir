@@ -25,6 +25,7 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/graphics/renderer.h"
 #include "mir/frontend/communicator.h"
 
@@ -156,7 +157,8 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
     msh::ApplicationSession session{
         conf.the_shell_surface_factory(),
         "stress",
-        conf.the_shell_snapshot_strategy()};
+        conf.the_shell_snapshot_strategy(),
+        std::make_shared<msh::NullSessionListener>()};
     session.create_surface(msh::a_surface());
 
     auto compositor = conf.the_compositor();

@@ -20,6 +20,7 @@
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/snapshot_strategy.h"
+#include "mir/shell/session_listener.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -36,10 +37,12 @@ msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
+    std::shared_ptr<msh::SessionListener> const& session_listener,
     std::shared_ptr<me::EventSink> const& sink) :
     surface_factory(surface_factory),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
+    session_listener(session_listener),
     event_sink(sink),
     next_surface_id(0)
 {
@@ -49,8 +52,9 @@ msh::ApplicationSession::ApplicationSession(
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name,
-    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy) :
-    ApplicationSession(surface_factory, session_name, snapshot_strategy, std::shared_ptr<me::EventSink>())
+    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
+    std::shared_ptr<msh::SessionListener> const& session_listener) :
+    ApplicationSession(surface_factory, session_name, snapshot_strategy, session_listener, std::shared_ptr<me::EventSink>())
 {
 }
 
@@ -75,6 +79,7 @@ mf::SurfaceId msh::ApplicationSession::create_surface(const msh::SurfaceCreation
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
+    
     return id;
 }
 
