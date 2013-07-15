@@ -92,16 +92,15 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    mir::protobuf::DisplayInfo display_info;
+    auto display_group = response->mutable_display_group();
+    auto display_info = display_group->add_display_info();
     auto view_area = viewable_area->view_area();
-    display_info.set_width(view_area.size.width.as_uint32_t());
-    display_info.set_height(view_area.size.height.as_uint32_t());
+    display_info->set_width(view_area.size.width.as_uint32_t());
+    display_info->set_height(view_area.size.height.as_uint32_t());
     auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
     for (auto pf : supported_pixel_formats)
-        display_info.add_supported_pixel_format(static_cast<uint32_t>(pf));
+        display_info->add_supported_pixel_format(static_cast<uint32_t>(pf));
 
-    auto display_group = response->mutable_display_group();
-    display_group->add_display_info(display_info);
 
     resource_cache->save_resource(response, ipc_package);
 

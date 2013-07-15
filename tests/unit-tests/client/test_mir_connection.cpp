@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir/geometry/rectangle.h"
 #include "src/client/client_platform.h"
 #include "src/client/client_platform_factory.h"
 #include "src/client/mir_connection.h"
@@ -35,6 +36,7 @@
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -214,19 +216,34 @@ std::vector<MirPixelFormat> const supported_pixel_formats{
     mir_pixel_format_xbgr_8888
 };
 
+int const number_of_displays = 4;
+geom::Rectangle rects[number_of_displays] = {
+    geom::Rectangle{geom::Point(), geom::Size()},
+    geom::Rectangle{geom::Point(), geom::Size()},
+    geom::Rectangle{geom::Point(), geom::Size()},
+    geom::Rectangle{geom::Point(), geom::Size()},
+};
+
 void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
 {
-    mp::DisplayInfo info;
-    for (auto pf : supported_pixel_formats)
-        info->add_supported_pixel_format(static_cast<uint32_t>(pf));
-
     auto group = response->mutable_display_group();
-    group->add_display_info(info); 
+    for (auto i=0; i < number_of_displays; i++)
+    {
+        auto info = group->add_display_info();
+        auto const& rect = rects[i];
+        info->set_position_x(rect.top_left.x.as_uint32_t());
+        info->set_position_y(rect.top_left.y.as_uint32_t());
+        info->set_width(rect.size.width.as_uint32_t());
+        info->set_height(rect.size.height.as_uint32_t());
+        for (auto pf : supported_pixel_formats)
+            info->add_supported_pixel_format(static_cast<uint32_t>(pf));
+    }
 }
 
 void fill_display_info_100(mp::ConnectParameters const*, mp::Connection* response)
 {
-    auto info = response->mutable_display_group();
+    auto group = response->mutable_display_group();
+    auto info = group->add_display_info();
     for (int i = 0; i < 100; i++)
         info->add_supported_pixel_format(static_cast<uint32_t>(mir_pixel_format_xbgr_8888));
 }
@@ -247,17 +264,27 @@ TEST_F(MirConnectionTest, populates_display_info_correctly)
     MirDisplayGrouping grouping;
     grouping.number_of_displays = 0;
 
-    connection->populate(info);
+    connection->populate(grouping);
 
-    EXPECT_EQ(2, grouping.number_of_displays);
+    EXPECT_EQ(number_of_displays, grouping.number_of_displays);
 
-    ASSERT_EQ(supported_pixel_formats.size(),
-              static_cast<uint32_t>(info.supported_pixel_format_items));
-
-    for (size_t i = 0; i < supported_pixel_formats.size(); ++i)
+    for(auto i=0; i < number_of_displays; i++)
     {
-        EXPECT_EQ(supported_pixel_formats[i],
-                  info.supported_pixel_format[i]);
+        auto info = grouping.display[i];
+        auto rect = rects[i];
+        EXPECT_EQ(info.width, rect.size.width.as_uint32_t());
+        EXPECT_EQ(info.height, rect.size.width.as_uint32_t());
+        EXPECT_EQ(info.position_x, rect.top_left.x.as_uint32_t());
+        EXPECT_EQ(info.position_y, rect.top_left.y.as_uint32_t());
+ 
+        ASSERT_EQ(supported_pixel_formats.size(),
+                  static_cast<uint32_t>(info.supported_pixel_format_items));
+
+        for (size_t i = 0; i < supported_pixel_formats.size(); ++i)
+        {
+            EXPECT_EQ(supported_pixel_formats[i],
+                      info.supported_pixel_format[i]);
+        }
     }
 }
 
@@ -272,9 +299,10 @@ TEST_F(MirConnectionTest, populates_display_info_without_overflowing)
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    MirDisplayInfo info;
-
-    connection->populate(info);
+    MirDisplayGrouping grouping;
+    connection->populate(grouping);
+    EXPECT_EQ(1, grouping.number_of_displays);
+    MirDisplayInfo info = grouping.display[0];
 
     ASSERT_EQ(mir_supported_pixel_format_max,
               info.supported_pixel_format_items);

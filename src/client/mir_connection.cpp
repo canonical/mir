@@ -271,35 +271,43 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
     }
 }
 
-void MirConnection::populate(MirDisplayInfo& display_info)
+void MirConnection::populate(MirDisplayGrouping& display_group)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    if (!connect_result.has_error() && connect_result.has_display_info())
+    if (!connect_result.has_error() && connect_result.has_display_group())
     {
-        auto const& connection_display_info = connect_result.display_info();
+        auto const& connection_display_group = connect_result.display_group();
+        display_group.number_of_displays = connection_display_group.display_info().size();
 
-        display_info.width = connection_display_info.width();
-        display_info.height = connection_display_info.height();
-
-        auto const pf_size = connection_display_info.supported_pixel_format_size();
-
-        /* Ensure we don't overflow the supported_pixel_format array */
-        display_info.supported_pixel_format_items = pf_size > mir_supported_pixel_format_max ?
-                                                    mir_supported_pixel_format_max :
-                                                    pf_size;
-
-        for (int i = 0; i < display_info.supported_pixel_format_items; ++i)
+        for(auto i = 0u; i < display_group.number_of_displays; i++)
         {
-            display_info.supported_pixel_format[i] =
-                static_cast<MirPixelFormat>(connection_display_info.supported_pixel_format(i));
+            auto const& connection_display_info = connection_display_group.display_info(i);
+
+            MirDisplayInfo display_info;
+            display_info.position_x = connection_display_info.position_x();
+            display_info.position_y = connection_display_info.position_y();
+            display_info.width = connection_display_info.width();
+            display_info.height = connection_display_info.height();
+
+            auto const pf_size = connection_display_info.supported_pixel_format_size();
+
+            /* Ensure we don't overflow the supported_pixel_format array */
+            display_info.supported_pixel_format_items = pf_size > mir_supported_pixel_format_max ?
+                                                        mir_supported_pixel_format_max :
+                                                        pf_size;
+
+            for (int i = 0; i < display_info.supported_pixel_format_items; ++i)
+            {
+                display_info.supported_pixel_format[i] =
+                    static_cast<MirPixelFormat>(connection_display_info.supported_pixel_format(i));
+            }
+            display_group.display[i] = display_info;
         }
     }
     else
     {
-        display_info.width = 0;
-        display_info.height = 0;
-        display_info.supported_pixel_format_items = 0;
+        display_group.number_of_displays = 0;
     }
 }
 

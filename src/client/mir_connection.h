@@ -99,7 +99,7 @@ public:
                                   void* context);
 
     void populate(MirPlatformPackage& platform_package);
-    void populate(MirDisplayInfo& display_info);
+    void populate(MirDisplayGrouping& display_info);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 

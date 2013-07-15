@@ -297,7 +297,7 @@ TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, connect_queries_supported_pixel_formats)
+TEST_F(SessionMediatorTest, connect_packs_display_info)
 {
     using namespace testing;
 
@@ -315,7 +315,9 @@ TEST_F(SessionMediatorTest, connect_queries_supported_pixel_formats)
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    auto info = connection.display_info();
+    auto group = connection.display_group();
+    ASSERT_EQ(1, group.display_info().size());
+    auto info = group.display_info(1);
 
     ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(info.supported_pixel_format_size()));
 
