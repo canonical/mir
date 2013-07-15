@@ -74,10 +74,12 @@ struct ClientConfigCommon : TestingClientConfiguration
     MirConnection* connection;
     MirSurface* surface;
 };
+
 struct MockEventObserver
 {
     MOCK_METHOD1(see, void(MirEvent const*));
 };
+
 struct EventObservingClient : ClientConfigCommon
 {
     EventObservingClient()
