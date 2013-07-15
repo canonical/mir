@@ -184,8 +184,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     mir_connection_get_display_grouping(connection, &grouping);
     MirDisplayInfo dinfo = grouping.display[0];
 
-    printf("Connected to display #%d: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
-           dinfo.id,
+    printf("Connected to display: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
            dinfo.width, dinfo.height,
            dinfo.position_x, dinfo.position_y,
            dinfo.supported_pixel_format_items);
