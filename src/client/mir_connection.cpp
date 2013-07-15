@@ -156,7 +156,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
 
-        //if we got the information, fill the latest display information struct 
         fill_display_grouping_from_connect_msg_locked();
     }
 
