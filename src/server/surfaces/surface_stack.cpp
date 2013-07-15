@@ -76,7 +76,7 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::SurfaceCreationParameters& params, ms::DepthId depth)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::SurfaceCreationParameters& params)
 {
     mc::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
@@ -93,7 +93,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::Surface
     
     {
         std::lock_guard<std::mutex> lg(guard);
-        layers_by_depth[depth].push_back(surface);
+        layers_by_depth[params.depth].push_back(surface);
     }
 
     input_registrar->input_channel_opened(surface->input_channel(), input_info);

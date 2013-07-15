@@ -431,26 +431,37 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 
 namespace
 {
-typedef std::map<std::string, geom::Rectangle> GeometryList;
+typedef std::map<std::string, geom::Rectangle> GeometryMap;
+typedef std::map<std::string, ms::DepthId> DepthMap;
 
 struct StaticPlacementStrategy : public msh::PlacementStrategy
 {
-    StaticPlacementStrategy(GeometryList const& positions)
-        : surface_geometry_by_name(positions)
+    StaticPlacementStrategy(GeometryMap const& positions,
+                            DepthMap const& depths)
+        : surface_geometry_by_name(positions),
+          surface_depths_by_name(depths)
+    {
+    }
+
+    StaticPlacementStrategy(GeometryMap const& positions)
+        : StaticPlacementStrategy(positions, DepthMap())
     {
     }
 
     msh::SurfaceCreationParameters place(msh::SurfaceCreationParameters const& request_parameters)
     {
         auto placed = request_parameters;
-        auto geometry = surface_geometry_by_name[request_parameters.name];
+        auto const& name = request_parameters.name;
+        auto geometry = surface_geometry_by_name[name];
 
         placed.top_left = geometry.top_left;
         placed.size = geometry.size;
+        placed.depth = surface_depths_by_name[name];
         
         return placed;
     }
-    GeometryList surface_geometry_by_name;
+    GeometryMap surface_geometry_by_name;
+    DepthMap surface_depths_by_name;
 };
 
 }
@@ -470,7 +481,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     {
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
-            static GeometryList positions;
+            static GeometryMap positions;
             positions[test_client_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
                 geom::Size{geom::Width{client_width}, geom::Height{client_height}}};
             positions[test_client_2] = geom::Rectangle{geom::Point{geom::X{screen_width/2}, geom::Y{screen_height/2}},
@@ -581,7 +592,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     {
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
-            static GeometryList positions;
+            static GeometryMap positions;
             positions[test_client_name] = screen_geometry;
             
             return std::make_shared<StaticPlacementStrategy>(positions);
@@ -645,27 +656,6 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     launch_client_process(client_config);
 }
 
-namespace
-{
-typedef std::map<std::string, ms::DepthId> DepthList;
-
-struct StackingSurfaceController : public ms::SurfaceController
-{
-    StackingSurfaceController(std::shared_ptr<ms::SurfaceStackModel> const& surface_stack_model, DepthList const& depths)
-        : SurfaceController(surface_stack_model),
-          surface_depths_by_name(depths)
-    {
-    }
-    
-    std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& params) override
-    {
-        return surface_stack->create_surface(params, surface_depths_by_name[params.name]);
-    }
-    
-    DepthList surface_depths_by_name;
-};
-}
-
 TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
 {
     using namespace ::testing;
@@ -683,23 +673,18 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
     {
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
-            static GeometryList positions;
+            static GeometryMap positions;
             positions[test_client_name_1] = screen_geometry;
             
             auto smaller_geometry = screen_geometry;
             smaller_geometry.size.width = geom::Width{screen_width/2};
             positions[test_client_name_2] = smaller_geometry;
             
-            return std::make_shared<StaticPlacementStrategy>(positions);
-       }
-        
-        std::shared_ptr<msh::SurfaceBuilder> the_surface_builder() override
-        {
-            static DepthList depths;
+            static DepthMap depths;
             depths[test_client_name_1] = ms::DepthId{0};
             depths[test_client_name_2] = ms::DepthId{1};
             
-            return std::make_shared<StackingSurfaceController>(the_surface_stack_model(), depths);
+            return std::make_shared<StaticPlacementStrategy>(positions, depths);
         }
         
         void inject_input() override
