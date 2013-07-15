@@ -22,20 +22,20 @@
 
 #include "mir/frontend/communicator_report.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/protobuf/google_protobuf_guard.h"
 #include "event_pipe.h"
 
 #include <boost/signals2.hpp>
 
-
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
-
 mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     std::string const& socket_file,
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     int threads,
     std::function<void()> const& force_requests_to_complete,
     std::shared_ptr<CommunicatorReport> const& report)
@@ -43,6 +43,7 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
     acceptor(io_service, socket_file),
     io_service_threads(threads),
     ipc_factory(ipc_factory),
+    session_authorizer(session_authorizer),
     next_session_id(0),
     connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>()),
     force_requests_to_complete(force_requests_to_complete),
@@ -147,9 +148,11 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        connected_sessions->add(session);
-
-        session->read_next_message();
+        if (session_authorizer->connection_is_allowed(session->client_pid()))
+        {
+            connected_sessions->add(session);
+            session->read_next_message();
+        }
     }
     start_accept();
 }
