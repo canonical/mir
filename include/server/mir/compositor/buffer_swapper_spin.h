@@ -59,9 +59,6 @@ public:
     void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
 
 private:
-    template<class T>
-    void initialize_queues(T);
-
     std::mutex swapper_mutex;
 
     std::deque<std::shared_ptr<Buffer>> buffer_queue;
