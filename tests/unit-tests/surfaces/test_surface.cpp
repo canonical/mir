@@ -168,8 +168,10 @@ struct SurfaceCreation : public ::testing::Test
 
         ON_CALL(*mock_buffer_stream, secure_client_buffer())
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
-        ON_CALL(*mock_basic_state, size_and_position())
-            .WillByDefault(Return(rect));
+        ON_CALL(*mock_basic_state, size())
+            .WillByDefault(Return(rect.size));
+        ON_CALL(*mock_basic_state, position())
+            .WillByDefault(Return(rect.top_left));
     }
 
     std::shared_ptr<mtd::MockSurfaceState> mock_basic_state;
@@ -220,9 +222,9 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
 TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_basic_state, size_and_position())
+    EXPECT_CALL(*mock_basic_state, size())
         .Times(1)
-        .WillOnce(Return(rect));
+        .WillOnce(Return(rect.size));
 
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>());
     EXPECT_EQ(size, surf.size());

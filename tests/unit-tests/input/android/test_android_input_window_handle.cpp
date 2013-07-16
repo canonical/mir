@@ -80,9 +80,12 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     // For now since we are just doing keyboard input we only need surface size,
     // for touch/pointer events we will need a position
-    EXPECT_CALL(mock_surface, size_and_position())
+    EXPECT_CALL(mock_surface, size())
         .Times(1)
-        .WillOnce(Return(geom::Rectangle{default_surface_top_left, default_surface_size}));
+        .WillOnce(Return(default_surface_size));
+    EXPECT_CALL(mock_surface, position())
+        .Times(1)
+        .WillOnce(Return(default_surface_top_left));
     EXPECT_CALL(mock_surface, name())
         .Times(1)
         .WillOnce(ReturnRef(testing_surface_name));
