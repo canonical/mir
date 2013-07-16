@@ -153,24 +153,33 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
-enum { mir_supported_pixel_format_max = 32 };
-
 /**
  * MirDisplayInfo provides details of the graphics environment.
  */
+
+typedef struct MirDisplayMode
+{
+    uint32_t vertical_resolution;
+    uint32_t horizontal_resolution;
+    double refresh_rate;
+}MirDisplayMode;
+
 typedef struct MirDisplayInfo
 {
-    uint32_t id;
+    uint32_t card_id;
+    uint32_t output_id;
     uint32_t position_x;
     uint32_t position_y;
-    uint32_t width;
-    uint32_t height;
-    
-    int supported_pixel_format_items;
-    MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
+
+    int num_modes;
+    int current_mode;
+    MirDisplayMode modes[];
+ 
+    int num_pixel_formats;
+    int current_format;
+    MirPixelFormat pixel_formats[];
 } MirDisplayInfo;
 
-enum { mir_configurable_display_max = 16 };
 typedef struct MirDisplayConfiguration
 {
     uint32_t number_of_displays;
