@@ -28,8 +28,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 #include "mir_test_doubles/stub_input_targeter.h"
-#include "mir_test_doubles/mock_surface_info.h"
-#include "mir_test_doubles/mock_input_info.h"
+#include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test/fake_shared.h"
 
 #include <stdexcept>
@@ -59,10 +58,8 @@ public:
 
     std::weak_ptr<ms::Surface> create_surface(msh::SurfaceCreationParameters const& )
     {
-        auto info = std::make_shared<mtd::MockSurfaceInfo>();
-        auto input_info = std::make_shared<mtd::MockInputInfo>();
-        dummy_surface = std::make_shared<ms::Surface>(info, input_info, stub_buffer_stream_,
-            std::shared_ptr<mi::InputChannel>(), []{});
+        auto state = std::make_shared<mtd::MockSurfaceState>();
+        dummy_surface = std::make_shared<ms::Surface>(state, stub_buffer_stream_, std::shared_ptr<mi::InputChannel>());
         return dummy_surface;
     }
 
@@ -284,23 +281,6 @@ TEST_F(ShellSurface, show_throw_behavior)
 
     EXPECT_THROW({
         test.show();
-    }, std::runtime_error);
-}
-
-TEST_F(ShellSurface, visible_throw_behavior)
-{
-    msh::Surface test(
-            mt::fake_shared(surface_builder),
-            msh::a_surface());
-
-    EXPECT_NO_THROW({
-        test.visible();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.visible();
     }, std::runtime_error);
 }
 

@@ -20,39 +20,30 @@
 #define MIR_SURFACES_SURFACE_INFO_H_
 
 #include "mir/geometry/rectangle.h"
-#include "mir/geometry/size.h"
 
 #include <vector>
-#include <memory>
-#include <string>
 
 namespace mir
 {
 namespace surfaces
 {
-class SurfaceInfo
-{
-public:
-    virtual geometry::Rectangle size_and_position() const = 0;
-    virtual std::string const& name() const = 0;
 
-protected:
-    SurfaceInfo() = default; 
-    virtual ~SurfaceInfo() = default;
-    SurfaceInfo(const SurfaceInfo&) = delete;
-    SurfaceInfo& operator=(const SurfaceInfo& ) = delete;
-};
-
-class SurfaceInfoController : public SurfaceInfo
+class MutableSurfaceState
 {
 public:
     virtual void move_to(geometry::Point) = 0;
+    virtual void frame_posted() = 0;
+    virtual void set_hidden(bool hidden) = 0;
+    virtual void apply_alpha(float alpha) = 0;
+    virtual void apply_rotation(float degrees, glm::vec3 const&) = 0;
+    virtual void set_input_region(
+        std::vector<geometry::Rectangle> const& input_rectangles) = 0;
 
 protected:
-    SurfaceInfoController() = default; 
-    virtual ~SurfaceInfoController() noexcept = default;
-    SurfaceInfoController(const SurfaceInfoController&) = delete;
-    SurfaceInfoController& operator=(const SurfaceInfoController& ) = delete;
+    MutableSurfaceState() = default; 
+    virtual ~MutableSurfaceState() noexcept = default;
+    MutableSurfaceState(const MutableSurfaceState&) = delete;
+    MutableSurfaceState& operator=(const MutableSurfaceState& ) = delete;
 };
 
 }

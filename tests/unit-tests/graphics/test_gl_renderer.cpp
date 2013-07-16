@@ -24,9 +24,11 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
 #include <mir/graphics/gl_renderer.h>
-#include <mir_test_doubles/mock_renderable.h>
+#include <mir_test/fake_shared.h>
+#include <mir_test_doubles/mock_buffer.h>
+#include <mir_test_doubles/mock_compositing_criteria.h>
+#include <mir_test_doubles/mock_buffer_stream.h>
 #include <mir_test_doubles/mock_graphic_region.h>
-#include <mir/graphics/renderable.h>
 #include "mir/surfaces/graphic_region.h"
 #include <mir/surfaces/buffer_stream.h>
 #include <mir_test_doubles/mock_gl.h>
@@ -37,6 +39,7 @@ using testing::Return;
 using testing::ReturnRef;
 using testing::_;
 
+namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
@@ -281,19 +284,15 @@ public:
     glm::mat4           trans;
 };
 
-void NullGraphicRegionDeleter(mtd::MockGraphicRegion * /* gr */)
-{
-}
-
 }
 
 TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 {
     using namespace std::placeholders;
 
-    mtd::MockRenderable rd;
-    mtd::MockGraphicRegion gr;
-    std::shared_ptr<mtd::MockGraphicRegion> gr_ptr(&gr, std::bind(NullGraphicRegionDeleter, _1));
+    mtd::MockBufferStream stream;
+    mtd::MockCompositingCriteria criteria;
+    mtd::MockBuffer gr;
 
     int save_count = 0;
     std::vector<std::shared_ptr<void>> saved_resources;
@@ -303,15 +302,6 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
         saved_resources.push_back(saved_resource);
     };
 
-    mir::geometry::Point tl;
-    mir::geometry::Size  s;
-
-    tl.x = mir::geometry::X(1);
-    tl.y = mir::geometry::Y(2);
-
-    s.width = mir::geometry::Width(10);
-    s.height = mir::geometry::Height(20);
-
     InSequence seq;
 
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
@@ -319,11 +309,11 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(mock_gl, glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
 
-    EXPECT_CALL(rd, transformation())
+    EXPECT_CALL(criteria, transformation())
         .WillOnce(ReturnRef(trans));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
-    EXPECT_CALL(rd, alpha())
-        .WillOnce(Return(0));
+    EXPECT_CALL(criteria, alpha())
+        .WillOnce(Return(0.0f));
     EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
     EXPECT_CALL(mock_gl, glBindBuffer(GL_ARRAY_BUFFER, stub_vbo));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3, GL_FLOAT, GL_FALSE, _, _));
@@ -331,9 +321,9 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(rd, graphic_region())
+    EXPECT_CALL(stream, lock_back_buffer())
         .Times(1)
-        .WillOnce(Return(gr_ptr));
+        .WillOnce(Return(mt::fake_shared(gr)));
     EXPECT_CALL(gr, bind_to_texture());
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
@@ -344,9 +334,9 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    renderer->render(saving_lambda, rd);
+    renderer->render(saving_lambda, criteria, stream);
 
     EXPECT_EQ(1, save_count);
-    auto result = std::find(saved_resources.begin(), saved_resources.end(), gr_ptr);
+    auto result = std::find(saved_resources.begin(), saved_resources.end(), mt::fake_shared(gr));
     EXPECT_NE(saved_resources.end(), result);
 }

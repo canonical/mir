@@ -18,14 +18,13 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/surfaces/buffer_stream_factory.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/renderer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
-#include "mir/input/surface_data_storage.h"
-#include "mir/surfaces/surface_data_storage.h"
+#include "mir/surfaces/surface_state.h"
 #include "mir/surfaces/surface_stack.h"
+#include "mir/surfaces/surface_factory.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
@@ -44,15 +43,12 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::SurfaceStack::SurfaceStack(std::shared_ptr<BufferStreamFactory> const& bb_factory,
-                               std::shared_ptr<mi::InputChannelFactory> const& input_factory,
+ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
                                std::shared_ptr<ms::InputRegistrar> const& input_registrar)
-    : buffer_stream_factory{bb_factory},
-      input_factory{input_factory},
+    : surface_factory{surface_factory},
       input_registrar{input_registrar},
       notify_change{[]{}}
 {
-    assert(buffer_stream_factory);
 }
 
 void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
@@ -63,8 +59,9 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
-            mg::Renderable& renderable = **it;
-            if (filter(renderable)) renderable_operator(renderable);
+            mg::CompositingCriteria& info = *((*it)->compositing_criteria());
+            ms::BufferStream& stream = *((*it)->buffer_stream());
+            if (filter(info)) renderable_operator(info, stream);
         }
     }
 }
@@ -76,27 +73,16 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(const shell::SurfaceCreationParameters& params, ms::DepthId depth)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params, ms::DepthId depth)
 {
-    mc::BufferProperties buffer_properties{params.size,
-                                           params.pixel_format,
-                                           params.buffer_usage};
-    auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);
-    auto basic_info = std::make_shared<ms::SurfaceDataStorage>(params.name,
-                                                         params.top_left,
-                                                         buffer_stream->stream_size());
-    auto input_info = std::make_shared<mi::SurfaceDataStorage>(basic_info);
-    auto input_channel = input_factory->make_input_channel();
-    std::shared_ptr<ms::Surface> surface(
-        new ms::Surface(basic_info, input_info, buffer_stream, input_channel,
-            [this]() { emit_change_notification(); }));
-    
+    auto change_cb = [this]() { emit_change_notification(); };
+    auto surface = surface_factory->create_surface(params, change_cb); 
     {
         std::lock_guard<std::mutex> lg(guard);
         layers_by_depth[depth].push_back(surface);
     }
 
-    input_registrar->input_channel_opened(surface->input_channel(), input_info);
+    input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface());
 
     emit_change_notification();
 

@@ -19,13 +19,14 @@
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/renderables.h"
-#include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
+#include "mir/graphics/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_buffer.h"
+#include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/mock_compositing_criteria.h"
 #include "mir_test_doubles/null_display_buffer.h"
 
 #include <gmock/gmock.h>
@@ -55,24 +56,25 @@ struct MockOverlayRenderer : public mc::OverlayRenderer
 
 struct FakeRenderables : mc::Renderables
 {
-    FakeRenderables(std::vector<mg::Renderable*> renderables) :
-        renderables(renderables)
+    FakeRenderables(std::vector<mg::CompositingCriteria*> surfaces) :
+        surfaces(surfaces)
     {
     }
 
     // Ugly...should we use delegation?
     void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
     {
-        for (auto it = renderables.begin(); it != renderables.end(); it++)
+        for (auto it = surfaces.begin(); it != surfaces.end(); it++)
         {
-            mg::Renderable &renderable = **it;
-            if (filter(renderable)) renderable_operator(renderable);
+            mg::CompositingCriteria &info = **it;
+            if (filter(info)) renderable_operator(info, stub_stream);
         }
     }
 
     void set_change_callback(std::function<void()> const&) {}
 
-    std::vector<mg::Renderable*> renderables;
+    mtd::MockBufferStream stub_stream;
+    std::vector<mg::CompositingCriteria*> surfaces;
 };
 
 ACTION_P(InvokeArgWithParam, param)
@@ -95,7 +97,7 @@ TEST(DefaultCompositingStrategy, render)
                                         mt::fake_shared(mock_renderer),
                                         mt::fake_shared(overlay_renderer));
 
-    EXPECT_CALL(mock_renderer, render(_,_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(_,_,_)).Times(0);
 
     EXPECT_CALL(display_buffer, view_area())
         .Times(1)
@@ -141,20 +143,20 @@ TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
     mtd::NullDisplayBuffer display_buffer;
     NiceMock<MockOverlayRenderer> overlay_renderer;
 
-    NiceMock<mtd::MockRenderable> mr1, mr2, mr3;
+    NiceMock<mtd::MockCompositingCriteria> mock_criteria1, mock_criteria2, mock_criteria3;
 
-    EXPECT_CALL(mr1, should_be_rendered()).WillOnce(Return(true));
-    EXPECT_CALL(mr2, should_be_rendered()).WillOnce(Return(false));
-    EXPECT_CALL(mr3, should_be_rendered()).WillOnce(Return(true));
+    EXPECT_CALL(mock_criteria1, should_be_rendered()).WillOnce(Return(true));
+    EXPECT_CALL(mock_criteria2, should_be_rendered()).WillOnce(Return(false));
+    EXPECT_CALL(mock_criteria3, should_be_rendered()).WillOnce(Return(true));
 
-    std::vector<mg::Renderable*> renderable_vec;
-    renderable_vec.push_back(&mr1);
-    renderable_vec.push_back(&mr2);
-    renderable_vec.push_back(&mr3);
+    std::vector<mg::CompositingCriteria*> renderable_vec;
+    renderable_vec.push_back(&mock_criteria1);
+    renderable_vec.push_back(&mock_criteria2);
+    renderable_vec.push_back(&mock_criteria3);
 
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr1))).Times(1);
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr2))).Times(0);
-    EXPECT_CALL(mock_renderer, render(_,Ref(mr3))).Times(1);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria1),_)).Times(1);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria2),_)).Times(0);
+    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria3),_)).Times(1);
 
     FakeRenderables renderables(renderable_vec);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,25 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/rendering_operator.h"
+#ifndef MIR_SURFACES_SURFACE_STATE_H_
+#define MIR_SURFACES_SURFACE_STATE_H_
 
-namespace ms=mir::surfaces;
-namespace mc=mir::compositor;
-namespace mg=mir::graphics;
+#include "mir/graphics/compositing_criteria.h"
+#include "mir/input/surface.h"
+#include "mir/surfaces/mutable_surface_state.h"
 
-mc::RenderingOperator::RenderingOperator(
-    graphics::Renderer& renderer,
-    std::function<void(std::shared_ptr<void> const&)> save_resource) :
-    renderer(renderer),
-    save_resource(save_resource)
+namespace mir
 {
-}
-
-mc::RenderingOperator::~RenderingOperator()
+namespace surfaces
 {
-}
 
-void mc::RenderingOperator::operator()(mg::CompositingCriteria const& info, ms::BufferStream& stream)
+class SurfaceState : public graphics::CompositingCriteria, public input::Surface, 
+                     public MutableSurfaceState 
 {
-    renderer.render(save_resource, info, stream);
+protected:
+    SurfaceState() = default; 
+    virtual ~SurfaceState() = default;
+    SurfaceState(const SurfaceState&) = delete;
+    SurfaceState& operator=(const SurfaceState& ) = delete;
+};
+
 }
+}
+#endif /* MIR_SURFACES_SURFACE_STATE_H_ */

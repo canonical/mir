@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,12 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_RENDERER_H_
-#define MIR_GRAPHICS_RENDERER_H_
+#ifndef MIR_SURFACES_SURFACE_FACTORY_H_
+#define MIR_SURFACES_SURFACE_FACTORY_H_
 
+#include "mir/shell/surface_creation_parameters.h"
 #include <memory>
 #include <functional>
 
@@ -26,28 +27,22 @@ namespace mir
 {
 namespace surfaces
 {
-class BufferStream;
-}
-namespace graphics
-{
-class CompositingCriteria;
 
-class Renderer
+class Surface;
+class SurfaceFactory
 {
 public:
-    virtual ~Renderer() = default;
+    SurfaceFactory() {};
+    virtual ~SurfaceFactory() = default;
 
-    virtual void clear() = 0;
-    virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                                           CompositingCriteria const& info, surfaces::BufferStream& stream) = 0;
-
-protected:
-    Renderer() = default;
-    Renderer(const Renderer&) = delete;
-    Renderer& operator=(const Renderer&) = delete;
+    virtual std::shared_ptr<Surface> create_surface(
+        shell::SurfaceCreationParameters const&, std::function<void()> const&) = 0;
+private:
+    SurfaceFactory(const SurfaceFactory&) = delete;
+    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
 };
 
 }
 }
 
-#endif // MIR_GRAPHICS_RENDERER_H_
+#endif /* MIR_SURFACES_SURFACE_FACTORY_H_ */

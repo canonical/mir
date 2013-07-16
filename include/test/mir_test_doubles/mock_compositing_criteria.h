@@ -13,14 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_REGISTRAR_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_REGISTRAR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
+#define MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
 
-#include "mir/surfaces/input_registrar.h"
-
+#include "mir/graphics/compositing_criteria.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -30,16 +29,17 @@ namespace test
 namespace doubles
 {
 
-struct MockInputRegistrar : public surfaces::InputRegistrar
+class MockCompositingCriteria : public graphics::CompositingCriteria 
 {
-    virtual ~MockInputRegistrar() noexcept(true) {}
-    MOCK_METHOD2(input_channel_opened, void(std::shared_ptr<input::InputChannel> const&,
-                                            std::shared_ptr<input::Surface> const&));
-    MOCK_METHOD1(input_channel_closed, void(std::shared_ptr<input::InputChannel> const&));
+public:
+    ~MockCompositingCriteria() noexcept {}
+    MOCK_CONST_METHOD0(alpha, float());
+    MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
+    MOCK_CONST_METHOD0(should_be_rendered, bool());
 };
 
+typedef ::testing::NiceMock<MockCompositingCriteria> StubCompositingCriteria;
 }
 }
-} // namespace mir
-
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_REGISTRAR_H_
+}
+#endif /* MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_ */

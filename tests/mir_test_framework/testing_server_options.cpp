@@ -20,7 +20,6 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/renderer.h"
-#include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -93,10 +92,11 @@ class StubGraphicPlatform : public mtd::NullPlatform
 class StubRenderer : public mg::Renderer
 {
 public:
-    virtual void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable& r)
+    virtual void render(std::function<void(std::shared_ptr<void> const&)>,
+                                   mg::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
-        r.graphic_region();
+        stream.lock_back_buffer();
     }
 
     void clear() {}
