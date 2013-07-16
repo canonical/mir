@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/default_compositing_strategy.h"
-
+#include "mir/compositor/buffer_swapper_exceptions.h"
 #include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/buffer.h"
@@ -73,7 +73,14 @@ struct BypassFilter : public mc::FilterForRenderables
         // TODO: More conditional checks for appropriateness to bypass
         if (!bypass_buf)
         {
-            bypass_buf = renderable.compositor_buffer();
+            try
+            {
+                bypass_buf = renderable.compositor_buffer();
+            }
+            catch (const mc::BufferSwapperOutOfBuffersException &)
+            {
+                return false;
+            }
             if (bypass_buf)
                 return true;
         }
