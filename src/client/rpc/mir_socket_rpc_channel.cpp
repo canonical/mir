@@ -30,8 +30,11 @@
 #include <boost/throw_exception.hpp>
 
 #include <boost/bind.hpp>
+#include <boost/throw_exception.hpp>
+
 #include <cstring>
 #include <sstream>
+#include <stdexcept>
 
 #include <pthread.h>
 #include <signal.h>
@@ -241,7 +244,11 @@ void mclr::MirSocketRpcChannel::send_message(
         error);
 
     if (error)
+    {
         rpc_report->invocation_failed(invocation, error);
+        
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server"));
+    }
     else
         rpc_report->invocation_succeeded(invocation);
 }

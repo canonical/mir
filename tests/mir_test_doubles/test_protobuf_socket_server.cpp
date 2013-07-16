@@ -18,6 +18,7 @@
 
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test_doubles/stub_ipc_factory.h"
+#include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir/frontend/communicator_report.h"
 #include "src/server/frontend/protobuf_socket_communicator.h"
 
@@ -35,6 +36,7 @@ std::shared_ptr<mf::Communicator> make_communicator(
     return std::make_shared<mf::ProtobufSocketCommunicator>(
         socket_name,
         factory,
+        std::make_shared<mtd::StubSessionAuthorizer>(),
         10,
         []{},
         report);
