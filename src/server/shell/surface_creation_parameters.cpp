@@ -86,9 +86,12 @@ bool msh::operator==(
     const SurfaceCreationParameters& lhs,
     const msh::SurfaceCreationParameters& rhs)
 {
-    return lhs.size == rhs.size &&
-           lhs.buffer_usage == rhs.buffer_usage &&
-           lhs.pixel_format == rhs.pixel_format;
+    return lhs.name == rhs.name && 
+        lhs.size == rhs.size &&
+        lhs.top_left == rhs.top_left &&
+        lhs.buffer_usage == rhs.buffer_usage &&
+        lhs.pixel_format == rhs.pixel_format &&
+        lhs.depth == rhs.depth;
 }
 
 bool msh::operator!=(
