@@ -62,12 +62,16 @@ public:
     {
     }
     
+    ~CloggableEventSink()
+    {
+        assert(clogged == false);
+    }
+    
     void clog()
     {
         std::unique_lock<std::mutex> lg(lock);
 
-        if (clogged == true)
-            BOOST_THROW_EXCEPTION(std::logic_error("EventSink is already clogged"));
+        assert(clogged == false);
         
         clogged = true;
     }
@@ -76,8 +80,7 @@ public:
     {
         std::unique_lock<std::mutex> lg(lock);
 
-        if (clogged == false)
-            BOOST_THROW_EXCEPTION(std::logic_error("EventSink is already unclogged"));
+        assert(clogged == true);
 
         clogged = false;
         
