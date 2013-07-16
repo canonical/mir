@@ -132,7 +132,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             mir_connection_get_display_grouping(connection, &grouping);
 
             /* TODO: expand test to test multimonitor situations */
-            ASSERT_EQ(1, grouping.number_of_displays);
+            ASSERT_EQ(1u, grouping.number_of_displays);
             MirDisplayInfo* info = &grouping.display[0];
             geom::Rectangle const& expected_rect = StubDisplay::rectangle;
 

@@ -216,7 +216,7 @@ std::vector<MirPixelFormat> const supported_pixel_formats{
     mir_pixel_format_xbgr_8888
 };
 
-int const number_of_displays = 4;
+unsigned int const number_of_displays = 4;
 geom::Rectangle rects[number_of_displays] = {
     geom::Rectangle{geom::Point(1,2), geom::Size(14,15)},
     geom::Rectangle{geom::Point(3,4), geom::Size(12,13)},
@@ -226,7 +226,7 @@ geom::Rectangle rects[number_of_displays] = {
 
 void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
 {
-    for (auto i=0; i < number_of_displays; i++)
+    for (auto i=0u; i < number_of_displays; i++)
     {
         auto info = response->add_display_info();
         auto const& rect = rects[i];
@@ -266,7 +266,7 @@ TEST_F(MirConnectionTest, populates_display_info_correctly_on_startup)
 
     EXPECT_EQ(number_of_displays, grouping.number_of_displays);
 
-    for(auto i=0; i < number_of_displays; i++)
+    for(auto i=0u; i < number_of_displays; i++)
     {
         auto info = grouping.display[i];
         auto rect = rects[i];
@@ -304,7 +304,7 @@ TEST_F(MirConnectionTest, populates_display_info_correctly_on_new_configuration_
 
     EXPECT_EQ(number_of_displays, grouping.number_of_displays);
 
-    for(auto i=0; i < number_of_displays; i++)
+    for(auto i=0u; i < number_of_displays; i++)
     {
         auto info = grouping.display[i];
         auto rect = rects[i];
@@ -337,7 +337,7 @@ TEST_F(MirConnectionTest, populates_display_info_without_overflowing)
 
     MirDisplayGrouping grouping;
     connection->populate(grouping);
-    EXPECT_EQ(1, grouping.number_of_displays);
+    EXPECT_EQ(1u, grouping.number_of_displays);
     MirDisplayInfo info = grouping.display[0];
 
     ASSERT_EQ(mir_supported_pixel_format_max,
