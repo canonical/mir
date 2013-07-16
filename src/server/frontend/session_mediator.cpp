@@ -96,11 +96,14 @@ void mf::SessionMediator::connect(
     auto view_area = viewable_area->view_area();
     display_info->set_position_x(view_area.top_left.x.as_uint32_t());
     display_info->set_position_y(view_area.top_left.y.as_uint32_t());
-    display_info->set_width(view_area.size.width.as_uint32_t());
-    display_info->set_height(view_area.size.height.as_uint32_t());
+    auto mode = display_info->add_mode();
+    mode->set_horizontal_resolution(view_area.size.width.as_uint32_t());
+    mode->set_vertical_resolution(view_area.size.width.as_uint32_t());
+    mode->set_refresh_rate(0.0f);
+
     auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
     for (auto pf : supported_pixel_formats)
-        display_info->add_supported_pixel_format(static_cast<uint32_t>(pf));
+        display_info->add_pixel_format(static_cast<uint32_t>(pf));
 
     resource_cache->save_resource(response, ipc_package);
 

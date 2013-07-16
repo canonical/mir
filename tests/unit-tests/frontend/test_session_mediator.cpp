@@ -318,11 +318,11 @@ TEST_F(SessionMediatorTest, connect_packs_display_info)
     ASSERT_EQ(1, connection.display_info().size());
     auto info = connection.display_info(0);
 
-    ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(info.supported_pixel_format_size()));
+    ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(info.pixel_format_size()));
 
     for (size_t i = 0; i < pixel_formats.size(); ++i)
     {
-        EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(info.supported_pixel_format(i)))
+        EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(info.pixel_format(i)))
             << "i = " << i;
     }
 }

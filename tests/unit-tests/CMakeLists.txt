@@ -31,7 +31,6 @@ target_link_libraries(
   mirclient
   mirserver
   mirplatformgraphics
-  mirdraw
   mirtestdraw
   mirlogging
 

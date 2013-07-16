@@ -168,7 +168,7 @@ if (MIR_ENABLE_TESTS)
 endif ()
 add_subdirectory(benchmarks/)
 add_subdirectory(tools/)
-add_subdirectory(examples/)
+#add_subdirectory(examples/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 

@@ -278,6 +278,7 @@ namespace
 {
 void fill_display_info(MirDisplayInfo& display_info, mir::protobuf::DisplayInfo const& info_message)
 {
+(void) display_info; (void) info_message;
 #if 0
     display_info.position_x = info_message.position_x();
     display_info.position_y = info_message.position_y();
@@ -304,13 +305,13 @@ void fill_display_info(MirDisplayInfo& display_info, mir::protobuf::DisplayInfo 
 //'mutex' must be locked for display_configuration
 void MirConnection::fill_display_configuration_from_connect_msg_locked()
 {
-    display_configuration.number_of_displays = connect_result.display_info().size();
-    if (!connect_result.has_error() && (display_configuration.number_of_displays > 0))
+    display_configuration.num_displays = connect_result.display_info().size();
+    if (!connect_result.has_error() && (display_configuration.num_displays > 0))
     {
-        for(auto i = 0u; i < display_configuration.number_of_displays; i++)
+        for(auto i = 0u; i < display_configuration.num_displays; i++)
         {
-            auto const& connection_display_info = connect_result.display_info(i);
-            fill_display_info(display_configuration.display[i], connection_display_info);
+//            auto const& connection_display_info = connect_result.display_info(i);
+//            fill_display_info(display_configuration.display[i], connection_display_info);
         }
     }
 }
