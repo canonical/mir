@@ -69,8 +69,8 @@ TEST_F(SurfaceDataTest, basics)
 { 
     ms::SurfaceData data{name, rect, null_change_cb};
     EXPECT_EQ(name, data.name());
-    EXPECT_EQ(rect.size(), data.size());
-    EXPECT_EQ(rect.top_left(), data.position());
+    EXPECT_EQ(rect.size, data.size());
+    EXPECT_EQ(rect.top_left, data.position());
 }
 
 TEST_F(SurfaceDataTest, update_position)
@@ -79,7 +79,7 @@ TEST_F(SurfaceDataTest, update_position)
         .Times(1);
 
     ms::SurfaceData storage{name, rect, mock_change_cb};
-    EXPECT_EQ(rect.size, storage.position());
+    EXPECT_EQ(rect.top_left, storage.position());
 
     auto new_top_left = geom::Point{geom::X{6}, geom::Y{10}};
     storage.move_to(new_top_left);

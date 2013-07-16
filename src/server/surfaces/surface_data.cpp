@@ -125,10 +125,16 @@ void ms::SurfaceData::set_hidden(bool hide)
     notify_change();
 }
 
-geom::Rectangle ms::SurfaceData::size_and_position() const
+geom::Point ms::SurfaceData::position() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return surface_rect;
+    return surface_rect.top_left;
+}
+
+geom::Size ms::SurfaceData::size() const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    return surface_rect.size;
 }
 
 std::string const& ms::SurfaceData::name() const

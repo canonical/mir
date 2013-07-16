@@ -35,21 +35,21 @@ public:
     MockInputSurface()
     {
         using namespace testing;
-        ON_CALL(*this, size_and_position())
+        ON_CALL(*this, position())
             .WillByDefault(
-                Return(geometry::Rectangle{
-                        geometry::Point{},
-                        geometry::Size{}}));
+                Return(geometry::Point{}));
+        ON_CALL(*this, size())
+            .WillByDefault(
+                Return(geometry::Size{}));
         static std::string n;
         ON_CALL(*this, name())
             .WillByDefault(testing::ReturnRef(n));
     }
     ~MockInputSurface() noexcept {}
-    MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
+    MOCK_CONST_METHOD0(position, geometry::Point());
+    MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(name, std::string const&());
-
     MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
-    MOCK_METHOD1(set_input_region, void(std::vector<geometry::Rectangle> const&));
 };
 
 typedef ::testing::NiceMock<MockInputSurface> StubInputSurface;

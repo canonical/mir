@@ -36,9 +36,6 @@ public:
     SurfaceData(std::string const& name, geometry::Rectangle rect,
                 std::function<void()> change_cb);
 
-    //common to mi::Surface, mg::CompositingCriteria 
-    geometry::Rectangle size_and_position() const;
-
     //mg::CompositingCriteria
     glm::mat4 const& transformation() const;
     float alpha() const;
@@ -46,6 +43,8 @@ public:
 
     //mi::Surface
     std::string const& name() const;
+    geometry::Point position() const;
+    geometry::Size size() const;
     bool contains(geometry::Point const& point) const;
 
     //ms::MutableSurfaceState

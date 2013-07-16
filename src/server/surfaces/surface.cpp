@@ -91,12 +91,12 @@ void ms::Surface::set_hidden(bool hide)
 
 geom::Point ms::Surface::top_left() const
 {
-    return surface_state->size_and_position().top_left;
+    return surface_state->position();
 }
 
 mir::geometry::Size ms::Surface::size() const
 {
-    return surface_state->size_and_position().size;
+    return surface_state->size();
 }
 
 geom::PixelFormat ms::Surface::pixel_format() const

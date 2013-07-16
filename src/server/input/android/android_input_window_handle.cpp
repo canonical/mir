@@ -69,9 +69,8 @@ bool mia::InputWindowHandle::updateInfo()
                                                            input_channel->server_fd());
     }
 
-    auto surface_rect = surface->size_and_position();
-    auto surface_position = surface_rect.top_left;
-    auto surface_size = surface_rect.size;
+    auto surface_size = surface->size();
+    auto surface_position = surface->position();
 
     mInfo->frameLeft = surface_position.x.as_uint32_t();
     mInfo->frameTop = surface_position.y.as_uint32_t();
