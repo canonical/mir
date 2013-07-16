@@ -33,6 +33,7 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_mediator.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
@@ -664,6 +665,23 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_message_processor_report(),
                 the_graphics_platform(),
                 display, allocator);
+        });
+}
+
+std::shared_ptr<mf::SessionAuthorizer>
+mir::DefaultServerConfiguration::the_session_authorizer()
+{
+    struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
+    {
+        bool connection_is_allowed(pid_t /* pid */)
+        {
+            return true;
+        }
+    };
+    return session_authorizer(
+        [&]()
+        {
+            return std::make_shared<DefaultSessionAuthorizer>();
         });
 }
 

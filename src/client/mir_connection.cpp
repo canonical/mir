@@ -197,11 +197,16 @@ MirWaitHandle* MirConnection::disconnect()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    server.disconnect(
-        0,
-        &ignored,
-        &ignored,
-        google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
+    try 
+    {
+        server.disconnect(0, &ignored, &ignored,
+                          google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
+    }
+    catch (std::exception const& x)
+    {
+        set_error_message(std::string("disconnect: ") + x.what());
+        disconnect_wait_handle.result_received();
+    }
 
     return &disconnect_wait_handle;
 }
