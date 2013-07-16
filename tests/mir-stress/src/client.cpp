@@ -60,12 +60,12 @@ bool UnacceleratedClient::connect(std::string unique_name, const char* socket_fi
 
 bool UnacceleratedClient::create_surface()
 {
-    MirDisplayGrouping display_grouping;
-    mir_connection_get_display_grouping(connection_, &display_grouping);
-    if (display_grouping.number_of_displays < 1)
+    MirDisplayConfiguration display_configuration;
+    mir_connection_get_display_configuration(connection_, &display_configuration);
+    if (display_configuration.number_of_displays < 1)
         return false;
 
-    MirDisplayInfo display_info = display_grouping.display[0]; 
+    MirDisplayInfo display_info = display_configuration.display[0]; 
     if (display_info.supported_pixel_format_items < 1)
         return false;
 

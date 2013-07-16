@@ -259,16 +259,16 @@ TEST_F(MirConnectionTest, populates_display_info_correctly_on_startup)
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    MirDisplayGrouping grouping;
-    grouping.number_of_displays = 0;
+    MirDisplayConfiguration configuration;
+    configuration.number_of_displays = 0;
 
-    connection->populate(grouping);
+    connection->populate(configuration);
 
-    EXPECT_EQ(number_of_displays, grouping.number_of_displays);
+    EXPECT_EQ(number_of_displays, configuration.number_of_displays);
 
     for(auto i=0u; i < number_of_displays; i++)
     {
-        auto info = grouping.display[i];
+        auto info = configuration.display[i];
         auto rect = rects[i];
         EXPECT_EQ(info.width, rect.size.width.as_uint32_t());
         EXPECT_EQ(info.height, rect.size.height.as_uint32_t());
@@ -297,16 +297,16 @@ TEST_F(MirConnectionTest, populates_display_info_correctly_on_new_configuration_
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    MirDisplayGrouping grouping;
-    grouping.number_of_displays = 0;
+    MirDisplayConfiguration configuration;
+    configuration.number_of_displays = 0;
 
-    connection->populate(grouping);
+    connection->populate(configuration);
 
-    EXPECT_EQ(number_of_displays, grouping.number_of_displays);
+    EXPECT_EQ(number_of_displays, configuration.number_of_displays);
 
     for(auto i=0u; i < number_of_displays; i++)
     {
-        auto info = grouping.display[i];
+        auto info = configuration.display[i];
         auto rect = rects[i];
         EXPECT_EQ(info.width, rect.size.width.as_uint32_t());
         EXPECT_EQ(info.height, rect.size.height.as_uint32_t());
@@ -335,10 +335,10 @@ TEST_F(MirConnectionTest, populates_display_info_without_overflowing)
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    MirDisplayGrouping grouping;
-    connection->populate(grouping);
-    EXPECT_EQ(1u, grouping.number_of_displays);
-    MirDisplayInfo info = grouping.display[0];
+    MirDisplayConfiguration configuration;
+    connection->populate(configuration);
+    EXPECT_EQ(1u, configuration.number_of_displays);
+    MirDisplayInfo info = configuration.display[0];
 
     ASSERT_EQ(mir_supported_pixel_format_max,
               info.supported_pixel_format_items);

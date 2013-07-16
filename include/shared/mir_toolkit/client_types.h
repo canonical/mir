@@ -171,11 +171,11 @@ typedef struct MirDisplayInfo
 } MirDisplayInfo;
 
 enum { mir_configurable_display_max = 16 };
-typedef struct MirDisplayGrouping
+typedef struct MirDisplayConfiguration
 {
     uint32_t number_of_displays;
     MirDisplayInfo display[mir_configurable_display_max];
-} MirDisplayGrouping;
+} MirDisplayConfiguration;
 
 /**
  * MirEventDelegate may be used to specify (at surface creation time)

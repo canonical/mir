@@ -709,14 +709,14 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
             ASSERT_TRUE(connection != NULL);
 
-            MirDisplayGrouping display_grouping;
-            display_grouping.display[0].width = -1;
-            display_grouping.display[0].height = -1;
+            MirDisplayConfiguration display_configuration;
+            display_configuration.display[0].width = -1;
+            display_configuration.display[0].height = -1;
 
-            mir_connection_get_display_grouping(connection, &display_grouping);
+            mir_connection_get_display_configuration(connection, &display_configuration);
 
-            EXPECT_EQ(1u, display_grouping.number_of_displays);
-            MirDisplayInfo display_info = display_grouping.display[0];
+            EXPECT_EQ(1u, display_configuration.number_of_displays);
+            MirDisplayInfo display_info = display_configuration.display[0];
             EXPECT_GE(default_display_width, display_info.width);
             EXPECT_GE(default_display_height, display_info.height);
 

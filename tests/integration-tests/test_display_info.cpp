@@ -127,27 +127,50 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
                                      connection_callback, &connection));
 
-            MirDisplayGrouping grouping;
+            MirDisplayConfiguration configuration;
 
-            mir_connection_get_display_grouping(connection, &grouping);
+            mir_connection_get_display_configuration(connection, &configuration);
 
             /* TODO: expand test to test multimonitor situations */
-            ASSERT_EQ(1u, grouping.number_of_displays);
-            MirDisplayInfo* info = &grouping.display[0];
+            ASSERT_EQ(1u, configuration.number_of_displays);
+            auto const& info = &configuration.display[0];
             geom::Rectangle const& expected_rect = StubDisplay::rectangle;
 
-            EXPECT_EQ(expected_rect.top_left.x.as_uint32_t(), info->position_x); 
-            EXPECT_EQ(expected_rect.top_left.y.as_uint32_t(), info->position_y); 
-            EXPECT_EQ(expected_rect.size.width.as_uint32_t(), info->width);
-            EXPECT_EQ(expected_rect.size.height.as_uint32_t(), info->height);
+            //state
+            EXPECT_EQ(1, info.connected)
+            EXPECT_EQ(1, info.used)
 
+            //id's
+            EXPECT_EQ(0, info.output_id);
+            EXPECT_EQ(0, info.card_id);
+
+            //sizing
+            EXPECT_EQ(expected_mm.width, info.physical_width_mm);
+            EXPECT_EQ(expected_mm.height, info.physical_height_mm);
+
+            //position
+            EXPECT_EQ(expected_rect.top_left.x.as_uint32_t(), info.position_x); 
+            EXPECT_EQ(expected_rect.top_left.y.as_uint32_t(), info.position_y); 
+
+            //mode selection
+            EXPECT_EQ(1, info.num_modes);
+            ASSERT_EQ(0, info.current_mode);
+            auto const& mode = info.modes[info.current_mode];
+
+            //current mode 
+            EXPECT_EQ(expected_rect.size.width.as_uint32_t(), mode.width);
+            EXPECT_EQ(expected_rect.size.height.as_uint32_t(), mode.height);
+            EXPECT_THAT(refresh_rate, FloatEq(mode.vrefresh));
+
+            //pixel formats
             ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
-                      static_cast<uint32_t>(info->supported_pixel_format_items));
-            for (int i = 0; i < info->supported_pixel_format_items; ++i)
+                      static_cast<uint32_t>(info.supported_pixel_formats));
+            for (int i = 0; i < info.supported_pixel_format_items; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(info->supported_pixel_format[i]));
+                          static_cast<geom::PixelFormat>(info.supported_pixel_format[i]));
             }
+            EXPECT_EQ(0, info.current_display_pixel_format);
 
             mir_connection_release(connection);
         }
