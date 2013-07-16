@@ -278,14 +278,16 @@ namespace
 {
 void fill_display_info(MirDisplayInfo& display_info, mir::protobuf::DisplayInfo const& info_message)
 {
+#if 0
     display_info.position_x = info_message.position_x();
     display_info.position_y = info_message.position_y();
-    display_info.width = info_message.width();
-    display_info.height = info_message.height();
+
+//    display_info.horizontal_resolution = info_message.width();
+//    display_info.veritical_resolution = info_message.height();
 
     auto const pf_size = info_message.supported_pixel_format_size();
+    display_info.pixel_formats = ::operator new(sizeof(int) * pf_size);
 
-    /* Ensure we don't overflow the supported_pixel_format array */
     display_info.supported_pixel_format_items = pf_size > mir_supported_pixel_format_max ?
                                                 mir_supported_pixel_format_max :
                                                 pf_size;
@@ -295,6 +297,7 @@ void fill_display_info(MirDisplayInfo& display_info, mir::protobuf::DisplayInfo 
         display_info.supported_pixel_format[i] =
             static_cast<MirPixelFormat>(info_message.supported_pixel_format(i));
     }
+#endif
 } 
 }
 

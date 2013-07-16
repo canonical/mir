@@ -168,22 +168,23 @@ typedef struct MirDisplayInfo
 {
     uint32_t card_id;
     uint32_t output_id;
-    uint32_t position_x;
-    uint32_t position_y;
 
-    int num_modes;
-    int current_mode;
-    MirDisplayMode modes[];
+    uint32_t num_modes;
+    MirDisplayMode* modes;
+    uint32_t current_format;
  
-    int num_pixel_formats;
-    int current_format;
-    MirPixelFormat pixel_formats[];
+    uint32_t num_pixel_formats;
+    MirPixelFormat* pixel_formats;
+    uint32_t current_mode;
+
+    int32_t position_x;
+    int32_t position_y;
 } MirDisplayInfo;
 
 typedef struct MirDisplayConfiguration
 {
-    uint32_t number_of_displays;
-    MirDisplayInfo display[mir_configurable_display_max];
+    uint32_t num_displays;
+    MirDisplayInfo* displays;
 } MirDisplayConfiguration;
 
 /**
