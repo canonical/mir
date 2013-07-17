@@ -13,37 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_BYPASS_RENDERER_H_
-#define MIR_GRAPHICS_GBM_BYPASS_RENDERER_H_
+#ifndef MIR_SURFACES_SURFACE_FACTORY_H_
+#define MIR_SURFACES_SURFACE_FACTORY_H_
 
-#include "mir/graphics/renderer.h"
-#include "mir/geometry/size.h"
+#include "mir/shell/surface_creation_parameters.h"
+#include <memory>
+#include <functional>
 
 namespace mir
 {
-namespace graphics
-{
-namespace gbm
+namespace surfaces
 {
 
-class GBMBypassRenderer : public Renderer
+class Surface;
+class SurfaceFactory
 {
 public:
-    /* From renderer */
-    void render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable);
-    void clear();
+    SurfaceFactory() {};
+    virtual ~SurfaceFactory() = default;
 
-    ~GBMBypassRenderer() noexcept {}
-
+    virtual std::shared_ptr<Surface> create_surface(
+        shell::SurfaceCreationParameters const&, std::function<void()> const&) = 0;
 private:
-
+    SurfaceFactory(const SurfaceFactory&) = delete;
+    SurfaceFactory& operator=(const SurfaceFactory&) = delete;
 };
 
 }
 }
-}
 
-#endif // MIR_GRAPHICS_GBM_BYPASS_RENDERER_H_
+#endif /* MIR_SURFACES_SURFACE_FACTORY_H_ */

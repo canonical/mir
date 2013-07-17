@@ -22,10 +22,9 @@
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/buffer.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/renderable.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/surfaces/graphic_region.h"
+#include "mir/graphics/compositing_criteria.h"
 
 #include <cassert>
 
@@ -54,40 +53,12 @@ struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
         : enclosing_region(enclosing_region)
     {
     }
-    bool operator()(mg::Renderable& renderable)
+    bool operator()(mg::CompositingCriteria const& info)
     {
-        // TODO check against enclosing_region
-        return renderable.should_be_rendered();
+        return info.should_be_rendered();
     }
 
     mir::geometry::Rectangle const& enclosing_region;
-};
-
-struct BypassFilter : public mc::FilterForRenderables
-{
-    BypassFilter() : bypass_buf(nullptr)
-    {
-    }
-    bool operator()(mg::Renderable& renderable)
-    {
-        // TODO: More conditional checks for appropriateness to bypass
-        if (!bypass_buf)
-        {
-            try
-            {
-                bypass_buf = renderable.compositor_buffer();
-            }
-            catch (const mc::BufferSwapperOutOfBuffersException &)
-            {
-                return false;
-            }
-            if (bypass_buf)
-                return true;
-        }
-        return false;
-    }
-
-    std::shared_ptr<mc::Buffer> bypass_buf;
 };
 
 }
@@ -95,23 +66,16 @@ struct BypassFilter : public mc::FilterForRenderables
 void mc::DefaultCompositingStrategy::render(
     graphics::DisplayBuffer& display_buffer)
 {
-    graphics::Renderer *bypass_renderer = display_buffer.direct_renderer();
     bool bypassed = false;
 
-    if (bypass_renderer)  // Some platforms can do bypass, not all
+    if (1)  // TODO: detect bypass support
     {
-        BypassFilter bypass_filter;
-        auto save_resource =
-            [&](std::shared_ptr<void> const&)
-            {
-            };
-        RenderingOperator bypass(*bypass_renderer, save_resource);
-
-        renderables->for_each_if(bypass_filter, bypass);
-
-        if (bypass_filter.bypass_buf)
+        // TODO filter for a candidate bypass surface
+        std::shared_ptr<compositor::Buffer> bypass =
+            renderables->bypass_buffer();
+        if (bypass)
         {
-            display_buffer.post_update(bypass_filter.bypass_buf);
+            display_buffer.post_update(bypass);
             bypassed = true;
         }
     }

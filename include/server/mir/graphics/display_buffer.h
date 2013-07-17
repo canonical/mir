@@ -45,7 +45,6 @@ public:
     /** Posts the DisplayBuffer to the screen. */
     virtual void post_update() = 0;
     virtual void post_update(std::shared_ptr<compositor::Buffer>) {} // Optional
-    virtual Renderer *direct_renderer() { return NULL; } // TODO
 
 protected:
     DisplayBuffer() = default;

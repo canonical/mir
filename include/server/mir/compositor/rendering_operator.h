@@ -29,15 +29,13 @@ namespace mir
 namespace compositor
 {
 
-class Renderable;
-
 class RenderingOperator : public OperatorForRenderables
 {
 public:
     explicit RenderingOperator(graphics::Renderer& renderer, std::function<void(std::shared_ptr<void> const&)> save_resource);
     ~RenderingOperator();
 
-    void operator()(graphics::Renderable& renderable);
+    void operator()(graphics::CompositingCriteria const& info, surfaces::BufferStream&);
 
 private:
     graphics::Renderer& renderer;

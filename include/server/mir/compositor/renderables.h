@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_RENDERABLES_H_
 
 #include "mir/geometry/forward.h"
+#include "mir/compositor/buffer.h"
 
 #include <memory>
 #include <functional>
@@ -28,9 +29,12 @@ namespace mir
 {
 namespace graphics
 {
-class Renderable;
+class CompositingCriteria;
 }
-
+namespace surfaces
+{
+class BufferStream;
+}
 namespace compositor
 {
 class FilterForRenderables
@@ -38,7 +42,7 @@ class FilterForRenderables
 public:
     virtual ~FilterForRenderables() {}
 
-    virtual bool operator()(graphics::Renderable& renderable) = 0;
+    virtual bool operator()(graphics::CompositingCriteria const&) = 0;
 
 protected:
     FilterForRenderables() = default;
@@ -51,7 +55,7 @@ class OperatorForRenderables
 public:
     virtual ~OperatorForRenderables() {}
 
-    virtual void operator()(graphics::Renderable& renderable) = 0;
+    virtual void operator()(graphics::CompositingCriteria const&, surfaces::BufferStream&) = 0;
 
 protected:
     OperatorForRenderables() = default;
@@ -65,6 +69,8 @@ class Renderables
 public:
     virtual ~Renderables() {}
 
+    virtual std::shared_ptr<compositor::Buffer> bypass_buffer()
+        { return std::shared_ptr<compositor::Buffer>(); }
     virtual void for_each_if(FilterForRenderables& filter, OperatorForRenderables& renderable_operator) = 0;
 
     /**

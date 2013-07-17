@@ -19,7 +19,6 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/renderer.h"
-#include "mir/graphics/renderable.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
 #include "mir/compositor/renderables.h"
@@ -38,6 +37,7 @@
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace ms = mir::surfaces;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
@@ -90,7 +90,7 @@ public:
 
     void clear() {}
 
-    void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&)
+    void render(std::function<void(std::shared_ptr<void> const&)>, mg::CompositingCriteria const&, ms::BufferStream&)
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
