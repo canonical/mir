@@ -170,13 +170,10 @@ struct SurfaceStack : public ::testing::Test
         using namespace testing;
         default_params = msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
-        auto state = std::make_shared<mtd::MockSurfaceState>();
-        auto buffer_stream = std::make_shared<mtd::StubBufferStream>();
-
         //TODO: this should be a real Stub from mtd, once ms::Surface is an interface
-        stub_surface1 = std::make_shared<ms::Surface>(state, buffer_stream, std::shared_ptr<mir::input::InputChannel>());
-        stub_surface2 = std::make_shared<ms::Surface>(state, buffer_stream, std::shared_ptr<mir::input::InputChannel>());
-        stub_surface3 = std::make_shared<ms::Surface>(state, buffer_stream, std::shared_ptr<mir::input::InputChannel>());
+        stub_surface1 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>());
+        stub_surface2 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>());
+        stub_surface3 = std::make_shared<ms::Surface>(std::make_shared<mtd::MockSurfaceState>(), std::make_shared<mtd::StubBufferStream>(), std::shared_ptr<mir::input::InputChannel>());
 
         ON_CALL(mock_surface_allocator, create_surface(_,_))
             .WillByDefault(Return(stub_surface1));
@@ -313,13 +310,13 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params, ms::DepthId{0});
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, default_depth);
+    auto s2 = stack.create_surface(default_params, ms::DepthId{1});
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, default_depth);
+    auto s3 = stack.create_surface(default_params, ms::DepthId{0});
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -380,9 +377,9 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     // After surface creation.
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
-        .InSequence(seq);
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
+        .InSequence(seq);
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
         .InSequence(seq);
     // After raising surface1
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
@@ -407,13 +404,13 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params, ms::DepthId{0});
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, default_depth);
+    auto s2 = stack.create_surface(default_params, ms::DepthId{0});
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, default_depth);
+    auto s3 = stack.create_surface(default_params, ms::DepthId{1});
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -423,16 +420,16 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     // After surface creation.
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream2)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
         .InSequence(seq);
     // After raising surface1
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria2), Ref(*stream2)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream3)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
-    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream1)))
+    EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria3), Ref(*stream3)))
         .InSequence(seq);
 
     stack.for_each_if(filter, renderable_operator);
