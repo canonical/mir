@@ -32,9 +32,10 @@ class DisplayConfiguration
 public:
     DisplayConfiguration();
 
-    void fill_configuration(MirDisplayConfiguration&);
+    operator MirDisplayConfiguration&();
     void set_from_message(protobuf::Connection& connection_msg);
 private:
+    MirDisplayConfiguration config;
 //    std::
 };
 }

@@ -26,8 +26,7 @@ namespace mp = mir::protobuf;
 TEST(ClientDisplayConfiguration, configuration_struct_empty)
 {
     mcl::DisplayConfiguration internal_config;
-    MirDisplayConfiguration config;
-    internal_config.fill_configuration(config);
+    MirDisplayConfiguration config = internal_config;
 
     EXPECT_EQ(0, config.num_displays);
     EXPECT_EQ(nullptr, config.displays);
@@ -37,8 +36,7 @@ TEST(ClientDisplayConfiguration, configuration_struct_error)
 {
     mcl::DisplayConfiguration internal_config;
     MirDisplayConfiguration config{3, nullptr};
-
-    internal_config.fill_configuration(config);
+    config = internal_config;
 
     EXPECT_EQ(0, config.num_displays);
     EXPECT_EQ(nullptr, config.displays);
@@ -78,7 +76,7 @@ TEST(ClientDisplayConfiguration, configuration_struct_set)
     ///end setup message
     mcl::DisplayConfiguration internal_config;
     internal_config.set_from_message(msg);
-    auto config = internal_config;
+    MirDisplayConfiguration config = internal_config;
 
     //display_struct
     ASSERT_EQ(msg.display_info_size(), config.num_displays);
