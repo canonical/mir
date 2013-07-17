@@ -25,7 +25,9 @@ namespace mir
 {
 namespace surfaces
 {
-typedef IntWrapper<IntWrapperTypeTag::DepthId> DepthId;
+namespace detail { struct DepthIdIdTag; }
+
+typedef IntWrapper<detail::DepthIdIdTag> DepthId;
 }
 } // namespace mir
 
