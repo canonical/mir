@@ -68,7 +68,7 @@ class Scene
 public:
     virtual ~Scene() {}
 
-    virtual void for_each_if(FilterForScene& filter, OperatorForScene& renderable_operator) = 0;
+    virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
 
     /**
      * Sets a callback to be called whenever the state of the

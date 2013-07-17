@@ -66,7 +66,7 @@ public:
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
-    virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &renderable_operator);
+    virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
     virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets

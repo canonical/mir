@@ -89,11 +89,11 @@ TEST(DefaultCompositingStrategy, render)
     using namespace testing;
 
     mtd::MockSurfaceRenderer mock_renderer;
-    MockScene renderables;
+    MockScene scene;
     NiceMock<MockOverlayRenderer> overlay_renderer;
     mtd::MockDisplayBuffer display_buffer;
 
-    mc::DefaultCompositingStrategy comp(mt::fake_shared(renderables),
+    mc::DefaultCompositingStrategy comp(mt::fake_shared(scene),
                                         mt::fake_shared(mock_renderer),
                                         mt::fake_shared(overlay_renderer));
 
@@ -109,7 +109,7 @@ TEST(DefaultCompositingStrategy, render)
     EXPECT_CALL(display_buffer, post_update())
             .Times(1);
 
-    EXPECT_CALL(renderables, for_each_if(_,_))
+    EXPECT_CALL(scene, for_each_if(_,_))
                 .Times(1);
 
     comp.render(display_buffer);
@@ -120,11 +120,11 @@ TEST(DefaultCompositingStrategy, render_overlay)
     using namespace testing;
 
     NiceMock<mtd::MockSurfaceRenderer> mock_renderer;
-    NiceMock<MockScene> renderables;
+    NiceMock<MockScene> scene;
     NiceMock<mtd::MockDisplayBuffer> display_buffer;
     MockOverlayRenderer overlay_renderer;
 
-    mc::DefaultCompositingStrategy comp(mt::fake_shared(renderables),
+    mc::DefaultCompositingStrategy comp(mt::fake_shared(scene),
                                         mt::fake_shared(mock_renderer),
                                         mt::fake_shared(overlay_renderer));
     ON_CALL(display_buffer, view_area())
@@ -135,7 +135,7 @@ TEST(DefaultCompositingStrategy, render_overlay)
     comp.render(display_buffer);
 }
 
-TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
+TEST(DefaultCompositingStrategy, skips_scene_that_should_not_be_rendered)
 {
     using namespace testing;
 
@@ -158,9 +158,9 @@ TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
     EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria2),_)).Times(0);
     EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria3),_)).Times(1);
 
-    FakeScene renderables(renderable_vec);
+    FakeScene scene(renderable_vec);
 
-    mc::DefaultCompositingStrategy comp(mt::fake_shared(renderables),
+    mc::DefaultCompositingStrategy comp(mt::fake_shared(scene),
                                         mt::fake_shared(mock_renderer),
                                         mt::fake_shared(overlay_renderer));
 

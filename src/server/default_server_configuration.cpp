@@ -569,7 +569,7 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
 }
 
 std::shared_ptr<mc::Scene>
-mir::DefaultServerConfiguration::the_renderables()
+mir::DefaultServerConfiguration::the_scene()
 {
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
@@ -629,7 +629,7 @@ mir::DefaultServerConfiguration::the_compositing_strategy()
     return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer(), the_overlay_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_scene(), the_renderer(), the_overlay_renderer());
         });
 }
 
@@ -650,7 +650,7 @@ mir::DefaultServerConfiguration::the_compositor()
         [this]()
         {
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
-                                                                 the_renderables(),
+                                                                 the_scene(),
                                                                  the_compositing_strategy());
         });
 }

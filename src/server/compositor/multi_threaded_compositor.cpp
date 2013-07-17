@@ -125,10 +125,10 @@ private:
 
 mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
-    std::shared_ptr<mc::Scene> const& renderables,
+    std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<mc::CompositingStrategy> const& strategy)
     : display{display},
-      renderables{renderables},
+      scene{scene},
       compositing_strategy{strategy}
 {
 }
@@ -150,8 +150,8 @@ void mc::MultiThreadedCompositor::start()
         thread_functors.push_back(std::move(thread_functor));
     });
 
-    /* Recomposite whenever the renderables change */
-    renderables->set_change_callback([this]()
+    /* Recomposite whenever the scene changes */
+    scene->set_change_callback([this]()
     {
         for (auto& f : thread_functors)
             f->schedule_compositing();
@@ -164,7 +164,7 @@ void mc::MultiThreadedCompositor::start()
 
 void mc::MultiThreadedCompositor::stop()
 {
-    renderables->set_change_callback([]{});
+    scene->set_change_callback([]{});
 
     for (auto& f : thread_functors)
         f->stop();

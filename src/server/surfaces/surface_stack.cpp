@@ -51,7 +51,7 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_fa
 {
 }
 
-void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
+void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)
 {
     std::lock_guard<std::mutex> lock(guard);
     for (auto &layer : layers_by_depth)
@@ -61,7 +61,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
         {
             mg::CompositingCriteria& info = *((*it)->compositing_criteria());
             ms::BufferStream& stream = *((*it)->buffer_stream());
-            if (filter(info)) renderable_operator(info, stream);
+            if (filter(info)) op(info, stream);
         }
     }
 }

@@ -40,16 +40,16 @@ class DefaultCompositingStrategy : public BasicCompositingStrategy
 {
 public:
     DefaultCompositingStrategy(
-        std::shared_ptr<Scene> const& renderables,
+        std::shared_ptr<Scene> const& scene,
         std::shared_ptr<graphics::Renderer> const& renderer,
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
-    void compose_renderables(
+    void compose(
         mir::geometry::Rectangle const& view_area,
         std::function<void(std::shared_ptr<void> const&)> save_resource);
 
 private:
-    std::shared_ptr<Scene> const renderables;
+    std::shared_ptr<Scene> const scene;
     std::shared_ptr<graphics::Renderer> const renderer;
     std::shared_ptr<OverlayRenderer> const overlay_renderer;
 };
