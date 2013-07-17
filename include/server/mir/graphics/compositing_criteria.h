@@ -16,33 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_DATA_STORAGE_H_
-#define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
+#ifndef MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
+#define MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
 
-#include "mir/surfaces/surface_info.h"
-#include <memory>
-#include <mutex>
+#include <glm/glm.hpp>
 
 namespace mir
 {
-namespace surfaces
+namespace graphics
 {
 
-class SurfaceDataStorage : public SurfaceInfoController 
+class CompositingCriteria 
 {
 public:
-    SurfaceDataStorage(std::string const& name, geometry::Point top_left, geometry::Size size);
+    virtual float alpha() const = 0;
+    virtual glm::mat4 const& transformation() const = 0;
+    virtual bool should_be_rendered() const = 0;
 
-    geometry::Rectangle size_and_position() const;
-    std::string const& name() const;
-    void move_to(geometry::Point);
-private:
-    std::mutex mutable guard;
-    std::string surface_name;
-    geometry::Point surface_top_left;
-    geometry::Size surface_size;
+    virtual ~CompositingCriteria() = default;
+
+protected:
+    CompositingCriteria() = default;
+    CompositingCriteria(CompositingCriteria const&) = delete;
+    CompositingCriteria& operator=(CompositingCriteria const&) = delete;
 };
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_DATA_STORAGE_H_ */
+
+#endif /* MIR_GRAPHICS_COMPOSITING_CRITERIA_H_ */

@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_SURFACE_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_SURFACE_H_
 
-#include "mir/surfaces/surface_info.h"
+#include "mir/input/surface.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,30 +29,31 @@ namespace test
 namespace doubles
 {
 
-class MockSurfaceInfo : public surfaces::SurfaceInfoController 
+class MockInputSurface : public input::Surface 
 {
 public:
-    MockSurfaceInfo()
+    MockInputSurface()
     {
         using namespace testing;
-        ON_CALL(*this, size_and_position())
+        ON_CALL(*this, position())
             .WillByDefault(
-                Return(geometry::Rectangle{
-                        geometry::Point{},
-                        geometry::Size{}}));
+                Return(geometry::Point{}));
+        ON_CALL(*this, size())
+            .WillByDefault(
+                Return(geometry::Size{}));
         static std::string n;
         ON_CALL(*this, name())
             .WillByDefault(testing::ReturnRef(n));
     }
-    ~MockSurfaceInfo() noexcept {}
-    MOCK_CONST_METHOD0(size_and_position, geometry::Rectangle());
+    ~MockInputSurface() noexcept {}
+    MOCK_CONST_METHOD0(position, geometry::Point());
+    MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(name, std::string const&());
-
-    MOCK_METHOD1(move_to, void(geometry::Point));
+    MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
 };
 
-typedef ::testing::NiceMock<MockSurfaceInfo> StubSurfaceInfo;
+typedef ::testing::NiceMock<MockInputSurface> StubInputSurface;
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_INFO_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_INPUT_SURFACE_H_ */

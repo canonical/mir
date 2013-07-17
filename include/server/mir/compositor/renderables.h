@@ -28,9 +28,12 @@ namespace mir
 {
 namespace graphics
 {
-class Renderable;
+class CompositingCriteria;
 }
-
+namespace surfaces
+{
+class BufferStream;
+}
 namespace compositor
 {
 class FilterForRenderables
@@ -38,7 +41,7 @@ class FilterForRenderables
 public:
     virtual ~FilterForRenderables() {}
 
-    virtual bool operator()(graphics::Renderable& renderable) = 0;
+    virtual bool operator()(graphics::CompositingCriteria const&) = 0;
 
 protected:
     FilterForRenderables() = default;
@@ -51,7 +54,7 @@ class OperatorForRenderables
 public:
     virtual ~OperatorForRenderables() {}
 
-    virtual void operator()(graphics::Renderable& renderable) = 0;
+    virtual void operator()(graphics::CompositingCriteria const&, surfaces::BufferStream&) = 0;
 
 protected:
     OperatorForRenderables() = default;

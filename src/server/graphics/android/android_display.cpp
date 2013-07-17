@@ -19,15 +19,16 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/graphics/egl_resources.h"
 #include "android_display.h"
+#include "android_display_buffer_factory.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
-
-#include <GLES2/gl2.h>
 
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
@@ -35,7 +36,8 @@ namespace geom=mir::geometry;
 
 namespace
 {
-static const EGLint default_egl_context_attr [] =
+
+static EGLint const default_egl_context_attr[] =
 {
     EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_NONE
@@ -64,49 +66,22 @@ public:
     }
 };
 
-class EGLContextStore
+EGLDisplay create_and_initialize_display()
 {
-public:
-    EGLContextStore(EGLDisplay egl_display, EGLContext egl_context)
-        : egl_display_{egl_display}, egl_context_{egl_context}
-    {
-        if (egl_context_ == EGL_NO_CONTEXT)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Could not create egl context\n"));
-    }
+    EGLint major, minor;
 
-    ~EGLContextStore() noexcept { eglDestroyContext(egl_display_, egl_context_); }
+    auto egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (egl_display == EGL_NO_DISPLAY)
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglGetDisplay failed\n"));
 
-    operator EGLContext() const { return egl_context_; }
+    if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("eglInitialize failure\n"));
 
-private:
-    EGLContextStore(EGLContextStore const&) = delete;
-    EGLContextStore& operator=(EGLContextStore const&) = delete;
+    if ((major != 1) || (minor != 4))
+        BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
 
-    EGLDisplay const egl_display_;
-    EGLContext const egl_context_;
-};
-
-class EGLSurfaceStore
-{
-public:
-    EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface)
-        : egl_display_{egl_display}, egl_surface_{egl_surface}
-    {
-        if (egl_surface_ == EGL_NO_SURFACE)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Could not create egl surface\n"));
-    }
-
-    ~EGLSurfaceStore() noexcept { eglDestroySurface(egl_display_, egl_surface_); }
-
-    operator EGLSurface() const { return egl_surface_; }
-
-private:
-    EGLSurfaceStore(EGLSurfaceStore const&) = delete;
-    EGLSurfaceStore& operator=(EGLSurfaceStore const&) = delete;
-
-    EGLDisplay const egl_display_;
-    EGLSurface const egl_surface_;
-};
+    return egl_display;
+}
 
 class AndroidGLContext : public mg::GLContext
 {
@@ -143,54 +118,30 @@ public:
 
 private:
     EGLDisplay const egl_display;
-    EGLContextStore const egl_context;
-    EGLSurfaceStore const egl_surface;
+    mg::EGLContextStore const egl_context;
+    mg::EGLSurfaceStore const egl_surface;
 };
 
 }
 
 mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWindowQuery>& native_win,
+                                    std::shared_ptr<AndroidDisplayBufferFactory> const& db_factory,
                                     std::shared_ptr<DisplayReport> const& display_report)
-    : egl_display{EGL_NO_DISPLAY},
-      egl_surface{EGL_NO_SURFACE},
-      native_window{native_win},
-      egl_config{0},
-      egl_context{EGL_NO_CONTEXT},
-      egl_context_shared{EGL_NO_CONTEXT},
-      egl_surface_dummy{EGL_NO_SURFACE}
+    : native_window{native_win},
+      egl_display{create_and_initialize_display()},
+      egl_config{native_window->android_display_egl_config(egl_display)},
+      egl_context_shared{egl_display,
+                         eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT,
+                                          default_egl_context_attr)},
+      egl_surface_dummy{egl_display,
+                        eglCreatePbufferSurface(egl_display, egl_config,
+                                                dummy_pbuffer_attribs)},
+      display_buffer{db_factory->create_display_buffer(
+                         native_window, egl_display, egl_context_shared)}
 {
-    EGLint major, minor;
-
-    egl_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglGetDisplay failed\n"));
-
-    if (eglInitialize(egl_display, &major, &minor) == EGL_FALSE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglInitialize failure\n"));
-
-    if ((major != 1) || (minor != 4))
-        BOOST_THROW_EXCEPTION(std::runtime_error("must have EGL 1.4\n"));
-
-    egl_config = native_window->android_display_egl_config(egl_display);
-    EGLNativeWindowType native_win_type = native_window->android_native_window_type();
-    egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_win_type, NULL);
-    if(egl_surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl surface\n"));
-
     display_report->report_successful_setup_of_native_resources();
 
-    egl_context_shared = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, default_egl_context_attr);
-    if (egl_context_shared == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context dummy\n"));
-
-    egl_context = eglCreateContext(egl_display, egl_config, egl_context_shared, default_egl_context_attr);
-    if (egl_context == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not create egl context\n"));
-
-    egl_surface_dummy = eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs);
-    if (egl_surface_dummy == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not create dummy egl surface\n"));
-
+    /* Make the shared context current */
     if (eglMakeCurrent(egl_display, egl_surface_dummy, egl_surface_dummy, egl_context_shared) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not activate dummy surface with eglMakeCurrent\n"));
 
@@ -202,38 +153,17 @@ mga::AndroidDisplay::AndroidDisplay(const std::shared_ptr<AndroidFramebufferWind
 mga::AndroidDisplay::~AndroidDisplay()
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroyContext(egl_display, egl_context);
-    eglDestroySurface(egl_display, egl_surface);
-    eglDestroyContext(egl_display, egl_context_shared);
-    eglDestroySurface(egl_display, egl_surface_dummy);
     eglTerminate(egl_display);
 }
 
 geom::Rectangle mga::AndroidDisplay::view_area() const
 {
-    int display_width, display_height;
-    eglQuerySurface(egl_display, egl_surface, EGL_WIDTH, &display_width);
-    eglQuerySurface(egl_display, egl_surface, EGL_HEIGHT, &display_height);
-    geom::Width w(display_width);
-    geom::Height h(display_height);
-
-    geom::Point pt{0, 0};
-    geom::Size sz{w,h};
-    geom::Rectangle rect{pt, sz};
-    return rect;
-}
-
-void mga::AndroidDisplay::post_update()
-{
-    if (eglSwapBuffers(egl_display, egl_surface) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("eglSwapBuffers failure\n"));
-    }
+    return display_buffer->view_area();
 }
 
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
-    f(*this);
+    f(*display_buffer);
 }
 
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
@@ -265,20 +195,6 @@ void mga::AndroidDisplay::pause()
 void mga::AndroidDisplay::resume()
 {
 }
-
-void mga::AndroidDisplay::make_current()
-{
-    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not activate surface with eglMakeCurrent\n"));
-    }
-}
-
-void mga::AndroidDisplay::release_current()
-{
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-}
-
 
 auto mga::AndroidDisplay::the_cursor() -> std::weak_ptr<Cursor>
 {

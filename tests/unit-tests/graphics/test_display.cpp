@@ -31,6 +31,7 @@
 #else
 #include "src/server/graphics/android/android_framebuffer_window_query.h"
 #include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/gpu_android_display_buffer_factory.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #endif
 
@@ -86,6 +87,7 @@ public:
 
         return std::make_shared<mg::android::AndroidDisplay>(
             std::make_shared<StubAndroidFramebufferWindowQuery>(),
+            std::make_shared<mg::android::GPUAndroidDisplayBufferFactory>(),
             std::make_shared<mg::NullDisplayReport>());
 #else
         auto platform = std::make_shared<mg::gbm::GBMPlatform>(

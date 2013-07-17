@@ -69,6 +69,7 @@
 #include "mir/lttng/message_processor_report.h"
 #include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
+#include "mir/surfaces/surface_allocator.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/time/high_resolution_clock.h"
@@ -559,7 +560,9 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_stream_factory(), the_input_channel_factory(), the_input_registrar());
+            auto factory = std::make_shared<ms::SurfaceAllocator>(
+                the_buffer_stream_factory(), the_input_channel_factory());
+            auto ss = std::make_shared<ms::SurfaceStack>(factory, the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;
         });
@@ -571,7 +574,9 @@ mir::DefaultServerConfiguration::the_renderables()
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
         {
-            auto ss = std::make_shared<ms::SurfaceStack>(the_buffer_stream_factory(), the_input_channel_factory(), the_input_registrar());
+            auto factory = std::make_shared<ms::SurfaceAllocator>(
+                the_buffer_stream_factory(), the_input_channel_factory());
+            auto ss = std::make_shared<ms::SurfaceStack>(factory, the_input_registrar());
             the_input_configuration()->set_input_targets(ss);
             return ss;
         });

@@ -23,19 +23,11 @@
 
 namespace mir
 {
-enum class IntWrapperTypeTag
-{
-    SessionsSurfaceId,
-    GraphicsConfCardId,
-    GraphicsConfOutputId,
-    DepthId
-};
-
-template<IntWrapperTypeTag Tag, typename ValueType_ = int>
+template<typename Tag>
 class IntWrapper
 {
 public:
-    typedef ValueType_ ValueType;
+    typedef int ValueType;
 
     IntWrapper() : value(0) {}
 
@@ -46,39 +38,39 @@ private:
     ValueType value;
 };
 
-template<IntWrapperTypeTag Tag, typename ValueType>
-std::ostream& operator<<(std::ostream& out, IntWrapper<Tag,ValueType> const& value)
+template<typename Tag>
+std::ostream& operator<<(std::ostream& out, IntWrapper<Tag> const& value)
 {
     out << value.as_value();
     return out;
 }
 
-template<IntWrapperTypeTag Tag, typename ValueType>
-inline bool operator == (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+template<typename Tag>
+inline bool operator == (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_value() == rhs.as_value();
 }
 
-template<IntWrapperTypeTag Tag, typename ValueType>
-inline bool operator != (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+template<typename Tag>
+inline bool operator != (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_value() != rhs.as_value();
 }
 
-template<IntWrapperTypeTag Tag, typename ValueType>
-inline bool operator <= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+template<typename Tag>
+inline bool operator <= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_value() <= rhs.as_value();
 }
 
-template<IntWrapperTypeTag Tag, typename ValueType>
-inline bool operator >= (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+template<typename Tag>
+inline bool operator >= (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_value() >= rhs.as_value();
 }
 
-template<IntWrapperTypeTag Tag, typename ValueType>
-inline bool operator < (IntWrapper<Tag,ValueType> const& lhs, IntWrapper<Tag,ValueType> const& rhs)
+template<typename Tag>
+inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 {
     return lhs.as_value() < rhs.as_value();
 }
