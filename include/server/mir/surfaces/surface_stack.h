@@ -21,7 +21,7 @@
 
 #include "surface_stack_model.h"
 
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 #include "mir/surfaces/depth_id.h"
 #include "mir/input/input_targets.h"
 
@@ -35,8 +35,8 @@ namespace mir
 namespace compositor
 {
 class RenderableCollection;
-class FilterForRenderables;
-class OperatorForRenderables;
+class FilterForScene;
+class OperatorForScene;
 }
 
 namespace frontend
@@ -58,15 +58,15 @@ class SurfaceFactory;
 class InputRegistrar;
 class Surface;
 
-class SurfaceStack : public compositor::Renderables, public input::InputTargets, public SurfaceStackModel
+class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
 {
 public:
     explicit SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_factory,
                           std::shared_ptr<InputRegistrar> const& input_registrar);
     virtual ~SurfaceStack() noexcept(true) {}
 
-    // From Renderables
-    virtual void for_each_if(compositor::FilterForRenderables &filter, compositor::OperatorForRenderables &renderable_operator);
+    // From Scene
+    virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &renderable_operator);
     virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets

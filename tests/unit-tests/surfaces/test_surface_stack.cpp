@@ -22,7 +22,7 @@
 #include "mir/surfaces/buffer_stream_factory.h"
 #include "src/server/compositor/buffer_bundle.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
@@ -76,7 +76,7 @@ public:
 };
 
 
-struct MockFilterForRenderables : public mc::FilterForRenderables
+struct MockFilterForScene : public mc::FilterForScene
 {
     // Can not mock operator overload so need to forward
     MOCK_METHOD1(filter, bool(mg::CompositingCriteria const&));
@@ -86,7 +86,7 @@ struct MockFilterForRenderables : public mc::FilterForRenderables
     }
 };
 
-struct StubFilterForRenderables : public mc::FilterForRenderables
+struct StubFilterForScene : public mc::FilterForScene
 {
     MOCK_METHOD1(filter, bool(mg::CompositingCriteria const&));
     bool operator()(mg::CompositingCriteria const&)
@@ -95,7 +95,7 @@ struct StubFilterForRenderables : public mc::FilterForRenderables
     }
 };
 
-struct MockOperatorForRenderables : public mc::OperatorForRenderables
+struct MockOperatorForScene : public mc::OperatorForScene
 {
     MOCK_METHOD2(renderable_operator, void(mg::CompositingCriteria const&, ms::BufferStream&));
     void operator()(mg::CompositingCriteria const& state, ms::BufferStream& stream)
@@ -104,7 +104,7 @@ struct MockOperatorForRenderables : public mc::OperatorForRenderables
     }
 };
 
-struct StubOperatorForRenderables : public mc::OperatorForRenderables
+struct StubOperatorForScene : public mc::OperatorForScene
 {
     void operator()(mg::CompositingCriteria const&, ms::BufferStream&)
     {
@@ -235,8 +235,8 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
-    MockFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator;
+    MockFilterForScene filter;
+    MockOperatorForScene renderable_operator;
 
     Sequence seq1, seq2;
     EXPECT_CALL(filter, filter(Ref(*criteria1)))
@@ -277,8 +277,8 @@ TEST_F(SurfaceStack, stacking_order)
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
-    StubFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator;
+    StubFilterForScene filter;
+    MockOperatorForScene renderable_operator;
     Sequence seq;
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
@@ -323,8 +323,8 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
-    StubFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator;
+    StubFilterForScene filter;
+    MockOperatorForScene renderable_operator;
     Sequence seq;
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
         .InSequence(seq);
@@ -374,8 +374,8 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
-    StubFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator;
+    StubFilterForScene filter;
+    MockOperatorForScene renderable_operator;
     Sequence seq;
     // After surface creation.
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))
@@ -417,8 +417,8 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
-    StubFilterForRenderables filter;
-    MockOperatorForRenderables renderable_operator;
+    StubFilterForScene filter;
+    MockOperatorForScene renderable_operator;
     Sequence seq;
     // After surface creation.
     EXPECT_CALL(renderable_operator, renderable_operator(Ref(*criteria1), Ref(*stream1)))

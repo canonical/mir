@@ -21,7 +21,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/null_display.h"
@@ -50,7 +50,7 @@ class SynchronousCompositor : public mc::Compositor
 {
 public:
     SynchronousCompositor(std::shared_ptr<mg::Display> const& display,
-                          std::shared_ptr<mc::Renderables> const& renderables,
+                          std::shared_ptr<mc::Scene> const& renderables,
                           std::shared_ptr<mc::CompositingStrategy> const& strategy)
         : display{display},
           renderables{renderables},
@@ -76,7 +76,7 @@ public:
 
 private:
     std::shared_ptr<mg::Display> const display;
-    std::shared_ptr<mc::Renderables> const renderables;
+    std::shared_ptr<mc::Scene> const renderables;
     std::shared_ptr<mc::CompositingStrategy> const compositing_strategy;
 };
 

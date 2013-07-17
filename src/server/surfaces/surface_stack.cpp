@@ -51,7 +51,7 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_fa
 {
 }
 
-void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
+void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
 {
     std::lock_guard<std::mutex> lock(guard);
     for (auto &layer : layers_by_depth)

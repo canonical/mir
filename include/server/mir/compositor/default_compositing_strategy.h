@@ -34,13 +34,13 @@ class Renderer;
 namespace compositor
 {
 class OverlayRenderer;
-class Renderables;
+class Scene;
 
 class DefaultCompositingStrategy : public BasicCompositingStrategy
 {
 public:
     DefaultCompositingStrategy(
-        std::shared_ptr<Renderables> const& renderables,
+        std::shared_ptr<Scene> const& renderables,
         std::shared_ptr<graphics::Renderer> const& renderer,
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
@@ -49,7 +49,7 @@ public:
         std::function<void(std::shared_ptr<void> const&)> save_resource);
 
 private:
-    std::shared_ptr<Renderables> const renderables;
+    std::shared_ptr<Scene> const renderables;
     std::shared_ptr<graphics::Renderer> const renderer;
     std::shared_ptr<OverlayRenderer> const overlay_renderer;
 };

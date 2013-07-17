@@ -311,7 +311,7 @@ public:
         class RenderSurfacesCompositingStrategy : public mc::CompositingStrategy
         {
         public:
-            RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
+            RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Scene> const& renderables,
                                               std::shared_ptr<mg::Renderer> const& renderer,
                                               std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
                                               std::vector<Moveable>& moveables)

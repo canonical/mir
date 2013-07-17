@@ -30,7 +30,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
-    std::shared_ptr<Renderables> const& renderables,
+    std::shared_ptr<Scene> const& renderables,
     std::shared_ptr<mg::Renderer> const& renderer,
     std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer)
     : renderables(renderables),
@@ -45,9 +45,9 @@ mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
 namespace
 {
 
-struct FilterForVisibleRenderablesInRegion : public mc::FilterForRenderables
+struct FilterForVisibleSceneInRegion : public mc::FilterForScene
 {
-    FilterForVisibleRenderablesInRegion(mir::geometry::Rectangle const& enclosing_region)
+    FilterForVisibleSceneInRegion(mir::geometry::Rectangle const& enclosing_region)
         : enclosing_region(enclosing_region)
     {
     }
@@ -68,7 +68,7 @@ void mc::DefaultCompositingStrategy::compose_renderables(
     renderer->clear();
 
     RenderingOperator applicator(*renderer, save_resource);
-    FilterForVisibleRenderablesInRegion selector(view_area);
+    FilterForVisibleSceneInRegion selector(view_area);
     renderables->for_each_if(selector, applicator);
 
     overlay_renderer->render(view_area, save_resource);

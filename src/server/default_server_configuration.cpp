@@ -568,7 +568,7 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
         });
 }
 
-std::shared_ptr<mc::Renderables>
+std::shared_ptr<mc::Scene>
 mir::DefaultServerConfiguration::the_renderables()
 {
     return surface_stack(

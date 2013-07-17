@@ -32,7 +32,7 @@ namespace compositor
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 class BufferStreamFactory;
-class Renderables;
+class Scene;
 class Drawer;
 class CompositingStrategy;
 class Compositor;
@@ -141,7 +141,7 @@ public:
      * dependencies of compositor on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<compositor::Renderables>            the_renderables();
+    virtual std::shared_ptr<compositor::Scene>            the_renderables();
     /** @} */
 
     /** @name frontend configuration - dependencies

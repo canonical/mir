@@ -18,7 +18,7 @@
 
 #include "mir/compositor/default_compositing_strategy.h"
 #include "mir/compositor/overlay_renderer.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 #include "mir/graphics/renderer.h"
 #include "mir/graphics/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
@@ -41,9 +41,9 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockRenderables : mc::Renderables
+struct MockScene : mc::Scene
 {
-    MOCK_METHOD2(for_each_if, void(mc::FilterForRenderables&, mc::OperatorForRenderables&));
+    MOCK_METHOD2(for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
     MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
 };
 
@@ -54,15 +54,15 @@ struct MockOverlayRenderer : public mc::OverlayRenderer
     ~MockOverlayRenderer() noexcept {}
 };
 
-struct FakeRenderables : mc::Renderables
+struct FakeScene : mc::Scene
 {
-    FakeRenderables(std::vector<mg::CompositingCriteria*> surfaces) :
+    FakeScene(std::vector<mg::CompositingCriteria*> surfaces) :
         surfaces(surfaces)
     {
     }
 
     // Ugly...should we use delegation?
-    void for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
+    void for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
     {
         for (auto it = surfaces.begin(); it != surfaces.end(); it++)
         {
@@ -89,7 +89,7 @@ TEST(DefaultCompositingStrategy, render)
     using namespace testing;
 
     mtd::MockSurfaceRenderer mock_renderer;
-    MockRenderables renderables;
+    MockScene renderables;
     NiceMock<MockOverlayRenderer> overlay_renderer;
     mtd::MockDisplayBuffer display_buffer;
 
@@ -120,7 +120,7 @@ TEST(DefaultCompositingStrategy, render_overlay)
     using namespace testing;
 
     NiceMock<mtd::MockSurfaceRenderer> mock_renderer;
-    NiceMock<MockRenderables> renderables;
+    NiceMock<MockScene> renderables;
     NiceMock<mtd::MockDisplayBuffer> display_buffer;
     MockOverlayRenderer overlay_renderer;
 
@@ -158,7 +158,7 @@ TEST(DefaultCompositingStrategy, skips_renderables_that_should_not_be_rendered)
     EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria2),_)).Times(0);
     EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria3),_)).Times(1);
 
-    FakeRenderables renderables(renderable_vec);
+    FakeScene renderables(renderable_vec);
 
     mc::DefaultCompositingStrategy comp(mt::fake_shared(renderables),
                                         mt::fake_shared(mock_renderer),

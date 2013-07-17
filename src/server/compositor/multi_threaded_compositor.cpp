@@ -20,7 +20,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 
 #include <thread>
 #include <condition_variable>
@@ -125,7 +125,7 @@ private:
 
 mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<mg::Display> const& display,
-    std::shared_ptr<mc::Renderables> const& renderables,
+    std::shared_ptr<mc::Scene> const& renderables,
     std::shared_ptr<mc::CompositingStrategy> const& strategy)
     : display{display},
       renderables{renderables},
