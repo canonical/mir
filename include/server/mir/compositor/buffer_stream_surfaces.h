@@ -55,6 +55,7 @@ protected:
 
 private:
     std::shared_ptr<BufferBundle> const buffer_bundle;
+    std::shared_ptr<BackBufferStrategy> const back_buffer_strategy;
 };
 
 }

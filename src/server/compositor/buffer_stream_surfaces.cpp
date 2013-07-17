@@ -20,6 +20,7 @@
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "buffer_bundle.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir/compositor/multi_acquisition_back_buffer_strategy.h"
 
 #include "temporary_buffers.h"
 
@@ -27,7 +28,9 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle)
-    : buffer_bundle(buffer_bundle)
+    : buffer_bundle(buffer_bundle),
+      back_buffer_strategy(
+          std::make_shared<MultiAcquisitionBackBufferStrategy>(buffer_bundle))
 {
 }
 
@@ -37,7 +40,7 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 
 std::shared_ptr<mc::Buffer> mc::BufferStreamSurfaces::lock_back_buffer()
 {
-    return std::make_shared<mc::TemporaryCompositorBuffer>(buffer_bundle);
+    return std::make_shared<mc::TemporaryCompositorBuffer>(back_buffer_strategy);
 }
 
 std::shared_ptr<mc::Buffer> mc::BufferStreamSurfaces::secure_client_buffer()

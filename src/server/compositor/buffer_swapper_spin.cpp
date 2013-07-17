@@ -67,23 +67,16 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::compositor_acquire()
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};
 
-    if (!compositor_acquired)
-    {
-        compositor_acquired = buffer_queue.front();
-        buffer_queue.pop_front();
-        client_submitted_new_buffer = false;
-    }
+    auto dequeued_buffer = buffer_queue.front();
+    buffer_queue.pop_front();
+    client_submitted_new_buffer = false;
 
-    return compositor_acquired;
+    return dequeued_buffer;
 }
 
 void mc::BufferSwapperSpin::compositor_release(std::shared_ptr<Buffer> const& released_buffer)
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};
-
-    if (released_buffer.use_count() <= 2 &&
-        released_buffer == compositor_acquired)
-        compositor_acquired.reset();
 
     /*
      * If the client didn't submit a new buffer while the compositor was

@@ -134,15 +134,21 @@ void mc::BufferSwapperMulti::force_requests_to_complete()
                              " the client is trying to acquire all buffers"));
     }
 
-    while (!compositor_queue.empty())
+    if (client_queue.empty())
     {
+        if (compositor_queue.empty())
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error("BufferSwapperMulti is not able to force requests to complete:"
+                                 " all buffers are acquired"));
+        }
+
         auto dequeued_buffer = compositor_queue.front();
         compositor_queue.pop_front();
         client_queue.push_back(dequeued_buffer);
     }
 
-    if (!client_queue.empty())
-        client_available_cv.notify_all();
+    client_available_cv.notify_all();
 }
 
 

@@ -62,7 +62,6 @@ private:
     std::mutex swapper_mutex;
 
     std::deque<std::shared_ptr<Buffer>> buffer_queue;
-    std::shared_ptr<Buffer> compositor_acquired;
     unsigned int in_use_by_client;
     bool client_submitted_new_buffer;
     size_t const swapper_size;
