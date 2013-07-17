@@ -31,6 +31,7 @@ class DisplayConfiguration
 {
 public:
     DisplayConfiguration();
+    ~DisplayConfiguration();
 
     operator MirDisplayConfiguration&();
     void set_from_message(protobuf::Connection& connection_msg);

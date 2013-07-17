@@ -94,15 +94,17 @@ TEST(ClientDisplayConfiguration, configuration_struct_set)
         ASSERT_EQ(msg_disp_info.mode().size(), result_info.num_modes);
         for(auto j=0u; j<result_info.num_modes; j++)
         {
-//    MirDisplayMode* modes;
-            
+            auto mode = msg_disp_info.mode(j);
+            EXPECT_EQ(mode.horizontal_resolution(), result_info.modes[j].horizontal_resolution);
+            EXPECT_EQ(mode.vertical_resolution(), result_info.modes[j].vertical_resolution);
+            EXPECT_DOUBLE_EQ(mode.refresh_rate(), result_info.modes[j].refresh_rate); 
         }
         EXPECT_EQ(msg_disp_info.current_mode(), result_info.current_mode);
  
         ASSERT_EQ(msg_disp_info.pixel_format().size(), result_info.num_pixel_formats);
         for(auto j=0u; j<result_info.num_modes; j++)
         {
-//            MirPixelFormat* pixel_formats;
+            EXPECT_EQ(msg_disp_info.pixel_format(j), j);
         }
         EXPECT_EQ(msg_disp_info.current_format(), result_info.current_format);
     }
