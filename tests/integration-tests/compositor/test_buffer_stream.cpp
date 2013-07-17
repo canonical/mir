@@ -118,14 +118,14 @@ TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
-    auto comp_size = comp1->id();
+    auto comp_id = comp1->id();
 
     comp1.reset();
     comp2.reset();
 
     auto client1 = buffer_stream.secure_client_buffer();
 
-    EXPECT_EQ(comp_size, client1->id());
+    EXPECT_EQ(comp_id, client1->id());
 }
 
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
