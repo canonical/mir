@@ -22,7 +22,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_swapper_spin.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/geometry/dimensions.h"
 #include "switching_bundle.h"
 

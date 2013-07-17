@@ -21,7 +21,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 #define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 
 #include <memory>

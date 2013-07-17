@@ -17,7 +17,7 @@
  */
 
 #include "../../src/server/frontend/client_buffer_tracker.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 #include <gtest/gtest.h>
 

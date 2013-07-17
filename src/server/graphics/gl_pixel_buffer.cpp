@@ -18,7 +18,7 @@
 
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_pixel_buffer.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>

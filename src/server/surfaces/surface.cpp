@@ -22,7 +22,7 @@
 #include "mir/surfaces/surface_state.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/input/input_channel.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include <boost/throw_exception.hpp>
 

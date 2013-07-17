@@ -17,7 +17,7 @@
  */
 
 #include "buffer_render_target.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include <GLES2/gl2ext.h>
 #include <stdexcept>

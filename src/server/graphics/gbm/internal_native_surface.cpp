@@ -17,7 +17,7 @@
  */
 
 #include "mir/frontend/surface.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 #include "internal_native_surface.h"
 #include <cstring>
 namespace mgg = mir::graphics::gbm;

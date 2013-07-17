@@ -21,7 +21,7 @@
 
 #include "mir/compositor/buffer_basic.h"
 #include "mir/geometry/size.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

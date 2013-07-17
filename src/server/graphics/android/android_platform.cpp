@@ -26,7 +26,7 @@
 #include "internal_client.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/compositor/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 

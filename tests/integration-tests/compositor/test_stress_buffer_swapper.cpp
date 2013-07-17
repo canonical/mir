@@ -20,7 +20,7 @@
 #include "multithread_harness.h"
 
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 #include <thread>
 #include <chrono>

@@ -18,8 +18,8 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BASIC_H_
 #define MIR_COMPOSITOR_BUFFER_BASIC_H_
 
-#include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer.h"
+#include "mir/graphics/buffer_id.h"
 
 namespace mir
 {

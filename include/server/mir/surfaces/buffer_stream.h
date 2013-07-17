@@ -22,7 +22,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 #include <memory>
 

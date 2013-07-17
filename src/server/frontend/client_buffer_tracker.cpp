@@ -19,7 +19,7 @@
 #include <algorithm>
 
 #include "client_buffer_tracker.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;

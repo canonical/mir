@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir_test_doubles/stub_buffer.h"
 
 #include <gmock/gmock.h>

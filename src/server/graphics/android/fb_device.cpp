@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include "fb_device.h"
 #include "buffer.h"
