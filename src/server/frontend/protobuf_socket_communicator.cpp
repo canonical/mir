@@ -81,9 +81,9 @@ void mf::ProtobufSocketCommunicator::start_accept()
 
 int mf::ProtobufSocketCommunicator::next_id()
 {
-    int id = next_session_id.load();
-    while (!next_session_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
-    return id;
+//    int id = next_session_id.load();
+//    while (!next_session_id.compare_exchange_weak(id, id + 1)) std::this_thread::yield();
+    return next_session_id++;
 }
 
 
