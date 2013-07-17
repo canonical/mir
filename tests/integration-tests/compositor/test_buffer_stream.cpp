@@ -91,13 +91,6 @@ struct BufferStreamTest : public ::testing::Test
 
 }
 
-/*
- * In the following tests, since GraphicRegion doesn't expose an ID, and we
- * can't compare TemporaryBuffers for equality of the underlying buffers, we
- * resort to using the buffer size as an ID. StubBufferAllocator gives each
- * buffer a different size.
- */
-
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_one_is_released)
 {
     buffer_stream.secure_client_buffer().reset();
@@ -106,13 +99,13 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_one_is_released)
     auto comp1 = buffer_stream.lock_back_buffer();
     auto comp2 = buffer_stream.lock_back_buffer();
 
-    EXPECT_EQ(comp1->size(), comp2->size());
+    EXPECT_EQ(comp1->id(), comp2->id());
 
     comp1.reset();
 
     auto comp3 = buffer_stream.lock_back_buffer();
 
-    EXPECT_NE(comp2->size(), comp3->size());
+    EXPECT_NE(comp2->id(), comp3->id());
 }
 
 TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
@@ -123,16 +116,16 @@ TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
     auto comp1 = buffer_stream.lock_back_buffer();
     auto comp2 = buffer_stream.lock_back_buffer();
 
-    EXPECT_EQ(comp1->size(), comp2->size());
+    EXPECT_EQ(comp1->id(), comp2->id());
 
-    auto comp_size = comp1->size();
+    auto comp_size = comp1->id();
 
     comp1.reset();
     comp2.reset();
 
     auto client1 = buffer_stream.secure_client_buffer();
 
-    EXPECT_EQ(comp_size, client1->size());
+    EXPECT_EQ(comp_size, client1->id());
 }
 
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
@@ -143,13 +136,13 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
     auto comp1 = buffer_stream.lock_back_buffer();
     auto comp2 = buffer_stream.lock_back_buffer();
 
-    EXPECT_EQ(comp1->size(), comp2->size());
+    EXPECT_EQ(comp1->id(), comp2->id());
 
     comp1.reset();
 
     auto comp3 = buffer_stream.lock_back_buffer();
 
-    EXPECT_EQ(comp2->size(), comp3->size());
+    EXPECT_EQ(comp2->id(), comp3->id());
 }
 
 namespace
@@ -234,7 +227,7 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
          */
         for (auto& info : compositors)
         {
-            EXPECT_NE(info->back_buffer->size(), client_buffer->size());
+            EXPECT_NE(info->back_buffer->id(), client_buffer->id());
             info->back_buffer.reset();
         }
         client_buffer.reset();
