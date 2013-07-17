@@ -28,8 +28,6 @@
 #include <mir_test_doubles/mock_buffer.h>
 #include <mir_test_doubles/mock_compositing_criteria.h>
 #include <mir_test_doubles/mock_buffer_stream.h>
-#include <mir_test_doubles/mock_graphic_region.h>
-#include "mir/surfaces/graphic_region.h"
 #include <mir/surfaces/buffer_stream.h>
 #include <mir_test_doubles/mock_gl.h>
 
