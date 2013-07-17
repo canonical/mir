@@ -19,7 +19,6 @@
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/surfaces/graphic_region.h"
 #include "src/server/compositor/switching_bundle.h"
 
 #include "mir_test_doubles/stub_buffer.h"
@@ -171,7 +170,7 @@ void client_request_loop(std::shared_ptr<mc::Buffer>& out_buffer,
     }
 }
 
-void back_buffer_loop(std::shared_ptr<ms::GraphicRegion>& out_region,
+void back_buffer_loop(std::shared_ptr<mc::Buffer>& out_region,
                       mt::SynchronizerSpawned& synchronizer,
                       ms::BufferStream& stream)
 {
@@ -203,7 +202,7 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
         }
 
         mt::Synchronizer sync;
-        std::shared_ptr<ms::GraphicRegion> back_buffer;
+        std::shared_ptr<mc::Buffer> back_buffer;
         std::thread thread;
     };
 
