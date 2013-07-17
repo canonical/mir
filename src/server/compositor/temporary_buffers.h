@@ -61,11 +61,11 @@ class TemporaryCompositorBuffer : public TemporaryBuffer
 {
 public:
     explicit TemporaryCompositorBuffer(
-        std::shared_ptr<BackBufferStrategy> const& back_buffer_strategy);
+        std::shared_ptr<BufferBundle> const& bundle);
     ~TemporaryCompositorBuffer();
 
 private:
-    std::weak_ptr<BackBufferStrategy> const back_buffer_strategy;
+    std::weak_ptr<BufferBundle> const bundle;
 };
 
 }
