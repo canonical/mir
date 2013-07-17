@@ -45,7 +45,7 @@ public:
     AndroidGraphicBufferAllocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer);
 
-    std::shared_ptr<compositor::Buffer> alloc_buffer(
+    std::shared_ptr<graphics::Buffer> alloc_buffer(
         compositor::BufferProperties const& buffer_properties);
 
     std::shared_ptr<Buffer> alloc_buffer_platform(

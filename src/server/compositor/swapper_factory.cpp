@@ -31,6 +31,7 @@
 #include <cassert>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 mc::SwapperFactory::SwapperFactory(
         std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
@@ -48,7 +49,7 @@ mc::SwapperFactory::SwapperFactory(
 }
 
 void mc::SwapperFactory::change_swapper_size(
-    std::vector<std::shared_ptr<mc::Buffer>>& list,
+    std::vector<std::shared_ptr<mg::Buffer>>& list,
     size_t const desired_size, size_t current_size, BufferProperties const& buffer_properties) const
 {
     while (current_size < desired_size)
@@ -72,7 +73,7 @@ void mc::SwapperFactory::change_swapper_size(
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buffers(
-    BufferProperties const& buffer_properties, std::vector<std::shared_ptr<Buffer>>& list,
+    BufferProperties const& buffer_properties, std::vector<std::shared_ptr<mg::Buffer>>& list,
     size_t buffer_num, SwapperType type) const
 {
     if (type == mc::SwapperType::synchronous)
@@ -91,7 +92,7 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_new_buffer
     BufferProperties& actual_buffer_properties,
     BufferProperties const& requested_buffer_properties, SwapperType type) const
 {
-    std::vector<std::shared_ptr<mc::Buffer>> list;
+    std::vector<std::shared_ptr<mg::Buffer>> list;
     std::shared_ptr<mc::BufferSwapper> new_swapper;
 
     if (type == mc::SwapperType::synchronous)

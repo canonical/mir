@@ -23,10 +23,10 @@
 #include <stdexcept>
 
 namespace geom = mir::geometry;
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mt = mir::tools;
 
-mt::BufferRenderTarget::BufferRenderTarget(mc::Buffer& buffer)
+mt::BufferRenderTarget::BufferRenderTarget(mg::Buffer& buffer)
     : buffer(buffer)
 {
     resources.setup(buffer);
@@ -55,7 +55,7 @@ mt::BufferRenderTarget::Resources::~Resources()
         glDeleteFramebuffers(1, &fbo);
 }
 
-void mt::BufferRenderTarget::Resources::setup(mc::Buffer& buffer)
+void mt::BufferRenderTarget::Resources::setup(mg::Buffer& buffer)
 {
     geom::Size buf_size = buffer.size();
 

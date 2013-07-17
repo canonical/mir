@@ -39,13 +39,13 @@ public:
         int number_of_buffers);
 
     std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(BufferProperties const&,
-        std::vector<std::shared_ptr<Buffer>>&, size_t, SwapperType) const;
+        std::vector<std::shared_ptr<graphics::Buffer>>&, size_t, SwapperType) const;
     std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
         BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const;
 
 private:
     void change_swapper_size(
-        std::vector<std::shared_ptr<Buffer>>&, size_t const, size_t, BufferProperties const&) const;
+        std::vector<std::shared_ptr<graphics::Buffer>>&, size_t const, size_t, BufferProperties const&) const;
 
     std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
     unsigned int const synchronous_number_of_buffers;

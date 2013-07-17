@@ -32,10 +32,12 @@ namespace mir
 {
 namespace compositor
 {
-class Buffer;
 class GraphicRegion;
 struct BufferIPCPackage;
-class BufferID;
+}
+namespace graphics
+{
+class Buffer;
 }
 namespace input
 {
@@ -75,8 +77,8 @@ public:
 
     geometry::PixelFormat pixel_format() const;
 
-    std::shared_ptr<compositor::Buffer> compositor_buffer() const;
-    std::shared_ptr<compositor::Buffer> advance_client_buffer();
+    std::shared_ptr<graphics::Buffer> compositor_buffer() const;
+    std::shared_ptr<graphics::Buffer> advance_client_buffer();
     void force_requests_to_complete();
     void flag_for_render();
 

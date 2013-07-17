@@ -19,10 +19,10 @@
 #include "mir/compositor/buffer_swapper_spin.h"
 
 namespace mc = mir::compositor;
-
+namespace mg = mir::graphics;
 
 mc::BufferSwapperSpin::BufferSwapperSpin(
-    std::vector<std::shared_ptr<mc::Buffer>>& buffer_list, size_t swapper_size)
+    std::vector<std::shared_ptr<mg::Buffer>>& buffer_list, size_t swapper_size)
     : buffer_queue{buffer_list.begin(), buffer_list.end()},
       in_use_by_client{0},
       swapper_size{swapper_size}
@@ -34,7 +34,7 @@ mc::BufferSwapperSpin::BufferSwapperSpin(
     }
 }
 
-std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::client_acquire()
+std::shared_ptr<mg::Buffer> mc::BufferSwapperSpin::client_acquire()
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};
 
@@ -54,7 +54,7 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::client_acquire()
     return dequeued_buffer;
 }
 
-void mc::BufferSwapperSpin::client_release(std::shared_ptr<Buffer> const& queued_buffer)
+void mc::BufferSwapperSpin::client_release(std::shared_ptr<mg::Buffer> const& queued_buffer)
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};
 
@@ -63,7 +63,7 @@ void mc::BufferSwapperSpin::client_release(std::shared_ptr<Buffer> const& queued
     client_submitted_new_buffer = true;
 }
 
-std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::compositor_acquire()
+std::shared_ptr<mg::Buffer> mc::BufferSwapperSpin::compositor_acquire()
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};
 
@@ -74,7 +74,7 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperSpin::compositor_acquire()
     return dequeued_buffer;
 }
 
-void mc::BufferSwapperSpin::compositor_release(std::shared_ptr<Buffer> const& released_buffer)
+void mc::BufferSwapperSpin::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};
 
@@ -99,7 +99,7 @@ void mc::BufferSwapperSpin::force_requests_to_complete()
 }
 
 
-void mc::BufferSwapperSpin::end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers,
+void mc::BufferSwapperSpin::end_responsibility(std::vector<std::shared_ptr<mg::Buffer>>& buffers,
                                                 size_t& size)
 {
     std::lock_guard<std::mutex> lg{swapper_mutex};

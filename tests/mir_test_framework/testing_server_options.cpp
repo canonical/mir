@@ -54,9 +54,9 @@ char const** argv = dummy;
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& properties)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const& properties)
     {
-        return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(properties));
+        return std::unique_ptr<mg::Buffer>(new mtd::StubBuffer(properties));
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()

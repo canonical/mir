@@ -26,6 +26,7 @@
 #include <chrono>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -60,15 +61,15 @@ public:
 
     void test_distinct_buffers(mc::BufferSwapper& swapper);
     void test_valid_buffers(mc::BufferSwapper& swapper);
-    void test_wait_situation(std::vector<std::shared_ptr<mc::Buffer>>& compositor_output_buffers,
-                             std::vector<std::shared_ptr<mc::Buffer>>& client_output_buffers,
+    void test_wait_situation(std::vector<std::shared_ptr<mg::Buffer>>& compositor_output_buffers,
+                             std::vector<std::shared_ptr<mg::Buffer>>& client_output_buffers,
                              mc::BufferSwapper& swapper,
                              unsigned int number_of_client_requests_to_make);
     void test_last_posted(mc::BufferSwapper& swapper);
 
-    std::shared_ptr<mc::Buffer> buffer_a;
-    std::shared_ptr<mc::Buffer> buffer_b;
-    std::shared_ptr<mc::Buffer> buffer_c;
+    std::shared_ptr<mg::Buffer> buffer_a;
+    std::shared_ptr<mg::Buffer> buffer_b;
+    std::shared_ptr<mg::Buffer> buffer_c;
 };
 
 void main_test_loop_pause(std::chrono::microseconds duration)
@@ -76,7 +77,7 @@ void main_test_loop_pause(std::chrono::microseconds duration)
     std::this_thread::sleep_for(duration);
 }
 
-void client_request_loop(std::shared_ptr<mc::Buffer>& out_buffer, mt::SynchronizerSpawned& synchronizer,
+void client_request_loop(std::shared_ptr<mg::Buffer>& out_buffer, mt::SynchronizerSpawned& synchronizer,
                          mc::BufferSwapper& swapper)
 {
     for(;;)
@@ -92,7 +93,7 @@ void client_request_loop(std::shared_ptr<mc::Buffer>& out_buffer, mt::Synchroniz
     }
 }
 
-void compositor_grab_loop(std::shared_ptr<mc::Buffer>& out_buffer, mt::SynchronizerSpawned& synchronizer,
+void compositor_grab_loop(std::shared_ptr<mg::Buffer>& out_buffer, mt::SynchronizerSpawned& synchronizer,
                           mc::BufferSwapper& swapper)
 {
     for(;;)
@@ -111,8 +112,8 @@ void compositor_grab_loop(std::shared_ptr<mc::Buffer>& out_buffer, mt::Synchroni
    buffer */
 void BufferSwapperStress::test_distinct_buffers(mc::BufferSwapper& swapper)
 {
-    std::shared_ptr<mc::Buffer> compositor_buffer;
-    std::shared_ptr<mc::Buffer> client_buffer;
+    std::shared_ptr<mg::Buffer> compositor_buffer;
+    std::shared_ptr<mg::Buffer> client_buffer;
 
     thread1 = std::thread(compositor_grab_loop, std::ref(compositor_buffer),
                           std::ref(compositor_controller), std::ref(swapper));
@@ -140,18 +141,18 @@ void BufferSwapperStress::test_distinct_buffers(mc::BufferSwapper& swapper)
 
 TEST_F(BufferSwapperStress, distinct_and_valid_double_buffers_in_client_and_compositor)
 {
-    auto double_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+    auto double_list = std::vector<std::shared_ptr<mg::Buffer>>{buffer_a, buffer_b};
     mc::BufferSwapperMulti double_swapper(double_list, double_list.size());
     test_distinct_buffers(double_swapper);
 }
 TEST_F(BufferSwapperStress, distinct_and_valid_triple_buffers_in_client_and_compositor)
 {
-    auto triple_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+    auto triple_list = std::vector<std::shared_ptr<mg::Buffer>>{buffer_a, buffer_b, buffer_c};
     mc::BufferSwapperMulti triple_swapper(triple_list, triple_list.size());
     test_distinct_buffers(triple_swapper);
 }
 
-void client_request_loop_finite(std::vector<std::shared_ptr<mc::Buffer>>& buffers,
+void client_request_loop_finite(std::vector<std::shared_ptr<mg::Buffer>>& buffers,
                       mt::SynchronizerSpawned& synchronizer,
                       mc::BufferSwapper& swapper,
                       int const number_of_requests_to_make)
@@ -167,7 +168,7 @@ void client_request_loop_finite(std::vector<std::shared_ptr<mc::Buffer>>& buffer
     synchronizer.child_enter_wait();
 }
 
-void compositor_grab(std::vector<std::shared_ptr<mc::Buffer>>& buffers,
+void compositor_grab(std::vector<std::shared_ptr<mg::Buffer>>& buffers,
                      mt::SynchronizerSpawned& synchronizer,
                      mc::BufferSwapper& swapper)
 {
@@ -180,8 +181,8 @@ void compositor_grab(std::vector<std::shared_ptr<mc::Buffer>>& buffers,
     synchronizer.child_enter_wait();
 }
 
-void BufferSwapperStress::test_wait_situation(std::vector<std::shared_ptr<mc::Buffer>>& compositor_output_buffers,
-                                              std::vector<std::shared_ptr<mc::Buffer>>& client_output_buffers,
+void BufferSwapperStress::test_wait_situation(std::vector<std::shared_ptr<mg::Buffer>>& compositor_output_buffers,
+                                              std::vector<std::shared_ptr<mg::Buffer>>& client_output_buffers,
                                               mc::BufferSwapper& swapper,
                                               unsigned int const number_of_client_requests_to_make)
 {
@@ -209,10 +210,10 @@ void BufferSwapperStress::test_wait_situation(std::vector<std::shared_ptr<mc::Bu
 
 TEST_F(BufferSwapperStress, double_test_wait_situation)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> client_buffers;
-    std::vector<std::shared_ptr<mc::Buffer>> compositor_buffers;
+    std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
+    std::vector<std::shared_ptr<mg::Buffer>> compositor_buffers;
     /* a double buffered client should stall on the second request without the compositor running */
-    auto double_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+    auto double_list = std::vector<std::shared_ptr<mg::Buffer>>{buffer_a, buffer_b};
     mc::BufferSwapperMulti double_swapper(double_list, double_list.size());
     test_wait_situation(compositor_buffers, client_buffers, double_swapper, 2);
 
@@ -221,9 +222,9 @@ TEST_F(BufferSwapperStress, double_test_wait_situation)
 
 TEST_F(BufferSwapperStress, triple_test_wait_situation)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> client_buffers;
-    std::vector<std::shared_ptr<mc::Buffer>> compositor_buffers;
-    auto triple_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+    std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
+    std::vector<std::shared_ptr<mg::Buffer>> compositor_buffers;
+    auto triple_list = std::vector<std::shared_ptr<mg::Buffer>>{buffer_a, buffer_b, buffer_c};
     mc::BufferSwapperMulti triple_swapper(triple_list, triple_list.size());
     /* a triple buffered client should stall on the third request without the compositor running */
     test_wait_situation(compositor_buffers, client_buffers, triple_swapper, 3);
@@ -231,7 +232,7 @@ TEST_F(BufferSwapperStress, triple_test_wait_situation)
     EXPECT_EQ(client_buffers.at(0), compositor_buffers.at(0));
 }
 
-void client_request_loop_with_wait(std::shared_ptr<mc::Buffer>& out_buffer, mt::SynchronizerSpawned& synchronizer,
+void client_request_loop_with_wait(std::shared_ptr<mg::Buffer>& out_buffer, mt::SynchronizerSpawned& synchronizer,
                                    mc::BufferSwapper& swapper)
 {
     bool wait_request = false;
@@ -249,10 +250,10 @@ void client_request_loop_with_wait(std::shared_ptr<mc::Buffer>& out_buffer, mt::
     }
 }
 
-void compositor_grab_loop_with_wait(std::shared_ptr<mc::Buffer>& out_buffer, mt::SynchronizerSpawned& synchronizer,
+void compositor_grab_loop_with_wait(std::shared_ptr<mg::Buffer>& out_buffer, mt::SynchronizerSpawned& synchronizer,
                                     mc::BufferSwapper& swapper)
 {
-    std::shared_ptr<mc::Buffer> buffer_ref;
+    std::shared_ptr<mg::Buffer> buffer_ref;
     bool wait_request = false;
     for(;;)
     {
@@ -274,8 +275,8 @@ void compositor_grab_loop_with_wait(std::shared_ptr<mc::Buffer>& out_buffer, mt:
 
 void BufferSwapperStress::test_last_posted(mc::BufferSwapper& swapper)
 {
-    std::shared_ptr<mc::Buffer> compositor_buffer;
-    std::shared_ptr<mc::Buffer> client_buffer;
+    std::shared_ptr<mg::Buffer> compositor_buffer;
+    std::shared_ptr<mg::Buffer> client_buffer;
 
     thread1 = std::thread(compositor_grab_loop_with_wait, std::ref(compositor_buffer), std::ref(compositor_controller), std::ref(swapper));
     thread2 = std::thread(client_request_loop_with_wait,  std::ref(client_buffer), std::ref(client_controller), std::ref(swapper));
@@ -301,7 +302,7 @@ void BufferSwapperStress::test_last_posted(mc::BufferSwapper& swapper)
 
 TEST_F(BufferSwapperStress, double_test_last_posted)
 {
-    auto double_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+    auto double_list = std::vector<std::shared_ptr<mg::Buffer>>{buffer_a, buffer_b};
     mc::BufferSwapperMulti double_swapper(double_list, double_list.size());
     test_last_posted(double_swapper);
 }

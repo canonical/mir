@@ -78,7 +78,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
 }
 
 void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
-                                            std::shared_ptr<mc::Buffer> const& buffer) const
+                                            std::shared_ptr<mg::Buffer> const& buffer) const
 {
     auto native_buffer = buffer->native_buffer_handle();
     auto buffer_handle = native_buffer->handle;

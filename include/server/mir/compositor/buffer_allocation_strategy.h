@@ -46,7 +46,7 @@ class BufferAllocationStrategy
 {
 public:
     virtual std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(BufferProperties const&,
-        std::vector<std::shared_ptr<Buffer>>&, size_t, SwapperType) const = 0;
+        std::vector<std::shared_ptr<graphics::Buffer>>&, size_t, SwapperType) const = 0;
     virtual std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
         BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const = 0;
 

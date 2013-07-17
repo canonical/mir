@@ -25,6 +25,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace
@@ -38,14 +39,14 @@ struct BufferSwapperTriple : testing::Test
         buffer_b = std::make_shared<mtd::StubBuffer>();
         buffer_c = std::make_shared<mtd::StubBuffer>();
 
-        auto triple_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+        auto triple_list = std::vector<std::shared_ptr<mg::Buffer>>{buffer_a, buffer_b, buffer_c};
         swapper = std::make_shared<mc::BufferSwapperMulti>(triple_list, triple_list.size());
 
     }
 
-    std::shared_ptr<mc::Buffer> buffer_a;
-    std::shared_ptr<mc::Buffer> buffer_b;
-    std::shared_ptr<mc::Buffer> buffer_c;
+    std::shared_ptr<mg::Buffer> buffer_a;
+    std::shared_ptr<mg::Buffer> buffer_b;
+    std::shared_ptr<mg::Buffer> buffer_c;
 
     std::shared_ptr<mc::BufferSwapper> swapper;
 };

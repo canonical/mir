@@ -79,7 +79,7 @@ void mg::GLPixelBuffer::prepare()
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
-void mg::GLPixelBuffer::fill_from(compositor::Buffer& buffer)
+void mg::GLPixelBuffer::fill_from(Buffer& buffer)
 {
     auto width = buffer.size().width.as_uint32_t();
     auto height = buffer.size().height.as_uint32_t();

@@ -23,11 +23,12 @@
 #include <gtest/gtest.h>
 
 namespace mc=mir::compositor;
+namespace mg = mir::graphics;
 
 TEST(buffer_id, value_set )
 {
     unsigned int id_as_int = 44;
-    mc::BufferID id{id_as_int};
+    mg::BufferID id{id_as_int};
     EXPECT_EQ(id_as_int, id.as_uint32_t());
 }
 
@@ -36,8 +37,8 @@ TEST(buffer_id, equality_testable)
     unsigned int id_as_int0 = 44;
     unsigned int id_as_int1 = 41;
 
-    mc::BufferID id0{id_as_int0};
-    mc::BufferID id1{id_as_int1};
+    mg::BufferID id0{id_as_int0};
+    mg::BufferID id1{id_as_int1};
 
     EXPECT_EQ(id0, id0);
     EXPECT_EQ(id1, id1);
@@ -50,8 +51,8 @@ TEST(buffer_id, less_than_testable)
     unsigned int id_as_int0 = 44;
     unsigned int id_as_int1 = 41;
 
-    mc::BufferID id0{id_as_int0};
-    mc::BufferID id1{id_as_int1};
+    mg::BufferID id0{id_as_int0};
+    mg::BufferID id1{id_as_int1};
 
     EXPECT_LT(id1, id0);
 }
@@ -60,14 +61,14 @@ TEST(unique_generator, generate_unique)
 {
     using mir::test::doubles::StubBuffer;
     int const ids = 542;
-    std::vector<mc::BufferID> generated_ids;
+    std::vector<mg::BufferID> generated_ids;
 
     for (auto i=0; i < ids; i++)
         generated_ids.push_back(StubBuffer().id());
 
     while (!generated_ids.empty())
     {
-        mc::BufferID test_id = generated_ids.back();
+        mg::BufferID test_id = generated_ids.back();
 
         generated_ids.pop_back();
 

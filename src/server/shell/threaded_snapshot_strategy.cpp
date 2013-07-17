@@ -72,7 +72,7 @@ public:
     void take_snapshot(WorkItem const& wi)
     {
         wi.surface_buffer_access->with_most_recent_buffer_do(
-            [this](compositor::Buffer& buffer)
+            [this](graphics::Buffer& buffer)
             {
                 pixels->fill_from(buffer);
             });

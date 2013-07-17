@@ -72,9 +72,9 @@ private:
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>(new StubBufferThread());
+        return std::shared_ptr<mg::Buffer>(new StubBufferThread());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -139,13 +139,13 @@ struct BufferCreatorThread
     }
 
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
-    std::shared_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mg::Buffer> buffer;
     mc::BufferProperties buffer_properties;
 };
 
 struct BufferDestructorThread
 {
-    BufferDestructorThread(std::shared_ptr<mc::Buffer> buffer)
+    BufferDestructorThread(std::shared_ptr<mg::Buffer> buffer)
         : buffer{std::move(buffer)}
     {
     }
@@ -157,12 +157,12 @@ struct BufferDestructorThread
         ASSERT_EQ(EGL_SUCCESS, eglGetError());
     }
 
-    std::shared_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mg::Buffer> buffer;
 };
 
 struct BufferTextureInstantiatorThread
 {
-    BufferTextureInstantiatorThread(const std::shared_ptr<mc::Buffer>& buffer)
+    BufferTextureInstantiatorThread(const std::shared_ptr<mg::Buffer>& buffer)
         : buffer(buffer), exception_thrown(false)
     {
     }
@@ -183,7 +183,7 @@ struct BufferTextureInstantiatorThread
         ASSERT_NE(EGL_SUCCESS, eglGetError());
     }
 
-    const std::shared_ptr<mc::Buffer>& buffer;
+    const std::shared_ptr<mg::Buffer>& buffer;
     bool exception_thrown;
 };
 

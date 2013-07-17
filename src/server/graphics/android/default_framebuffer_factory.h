@@ -25,9 +25,10 @@
 
 namespace mir
 {
-namespace compositor { class Buffer; }
 namespace graphics
 {
+class Buffer;
+
 namespace android
 {
 
@@ -43,11 +44,11 @@ public:
 private:
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
 
-    virtual std::vector<std::shared_ptr<compositor::Buffer>> create_buffers(
+    virtual std::vector<std::shared_ptr<graphics::Buffer>> create_buffers(
         std::shared_ptr<DisplaySupportProvider> const& info_provider) const;
 
     virtual std::shared_ptr<FBSwapper> create_swapper(
-        std::vector<std::shared_ptr<compositor::Buffer>> const& buffers) const;
+        std::vector<std::shared_ptr<graphics::Buffer>> const& buffers) const;
 };
 
 }

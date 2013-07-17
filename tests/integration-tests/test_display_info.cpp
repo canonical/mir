@@ -65,9 +65,9 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>(new mtd::StubBuffer());
+        return std::shared_ptr<mg::Buffer>(new mtd::StubBuffer());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()

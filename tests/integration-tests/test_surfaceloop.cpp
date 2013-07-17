@@ -68,7 +68,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
     MOCK_METHOD1(
         alloc_buffer,
-        std::shared_ptr<mc::Buffer> (mc::BufferProperties const&));
+        std::shared_ptr<mg::Buffer> (mc::BufferProperties const&));
 
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -76,9 +76,9 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
         return std::vector<geom::PixelFormat>();
     }
 
-    std::unique_ptr<mc::Buffer> on_create_swapper(mc::BufferProperties const&)
+    std::unique_ptr<mg::Buffer> on_create_swapper(mc::BufferProperties const&)
     {
-        return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(::buffer_properties));
+        return std::unique_ptr<mg::Buffer>(new mtd::StubBuffer(::buffer_properties));
     }
 
     ~MockGraphicBufferAllocator() noexcept {}
@@ -235,7 +235,7 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server
             actual = requested;
             auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
             auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
-            std::vector<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
+            std::vector<std::shared_ptr<mg::Buffer>> list = {stub_buffer_a, stub_buffer_b};
             return std::make_shared<mc::BufferSwapperMulti>(list, list.size());
         }
 
@@ -416,10 +416,10 @@ struct BufferCounterConfig : TestingServerConfiguration
     class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     {
      public:
-        virtual std::shared_ptr<mc::Buffer> alloc_buffer(
+        virtual std::shared_ptr<mg::Buffer> alloc_buffer(
             mc::BufferProperties const&)
         {
-            return std::unique_ptr<mc::Buffer>(new CountingStubBuffer());
+            return std::unique_ptr<mg::Buffer>(new CountingStubBuffer());
         }
 
         std::vector<geom::PixelFormat> supported_pixel_formats()

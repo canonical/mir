@@ -21,8 +21,9 @@
 #include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
-mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>>& buffer_list, size_t swapper_size)
+mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<mg::Buffer>>& buffer_list, size_t swapper_size)
  : in_use_by_client(0),
    swapper_size(swapper_size),
    clients_trying_to_acquire(0),
@@ -39,7 +40,7 @@ mc::BufferSwapperMulti::BufferSwapperMulti(std::vector<std::shared_ptr<composito
     }
 }
 
-std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
+std::shared_ptr<mg::Buffer> mc::BufferSwapperMulti::client_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -71,7 +72,7 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::client_acquire()
     return dequeued_buffer;
 }
 
-void mc::BufferSwapperMulti::client_release(std::shared_ptr<Buffer> const& queued_buffer)
+void mc::BufferSwapperMulti::client_release(std::shared_ptr<mg::Buffer> const& queued_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
@@ -87,11 +88,11 @@ void mc::BufferSwapperMulti::client_release(std::shared_ptr<Buffer> const& queue
      */
 }
 
-std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::compositor_acquire()
+std::shared_ptr<mg::Buffer> mc::BufferSwapperMulti::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
 
-    std::shared_ptr<mc::Buffer> dequeued_buffer;
+    std::shared_ptr<mg::Buffer> dequeued_buffer;
 
     if (!compositor_queue.empty())
     {
@@ -111,7 +112,7 @@ std::shared_ptr<mc::Buffer> mc::BufferSwapperMulti::compositor_acquire()
     return dequeued_buffer;
 }
 
-void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<Buffer> const& released_buffer)
+void mc::BufferSwapperMulti::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);
     client_queue.push_back(released_buffer);
@@ -152,7 +153,7 @@ void mc::BufferSwapperMulti::force_requests_to_complete()
 }
 
 
-void mc::BufferSwapperMulti::end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers,
+void mc::BufferSwapperMulti::end_responsibility(std::vector<std::shared_ptr<mg::Buffer>>& buffers,
                                                 size_t& size)
 {
     std::unique_lock<std::mutex> lk(swapper_mutex);

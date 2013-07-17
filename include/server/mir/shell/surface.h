@@ -78,8 +78,8 @@ public:
     virtual geometry::PixelFormat pixel_format() const;
 
     virtual void with_most_recent_buffer_do(
-        std::function<void(compositor::Buffer&)> const& exec);
-    virtual std::shared_ptr<compositor::Buffer> advance_client_buffer();
+        std::function<void(graphics::Buffer&)> const& exec);
+    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer();
 
     virtual bool supports_input() const;
     virtual int client_input_fd() const;

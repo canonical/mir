@@ -29,6 +29,7 @@
 #include <thread>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
@@ -41,13 +42,13 @@ struct BufferSwapperDouble : testing::Test
         buffer_a = std::make_shared<mtd::StubBuffer>();
         buffer_b = std::make_shared<mtd::StubBuffer>();
 
-        auto double_list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b};
+        auto double_list = std::vector<std::shared_ptr<mg::Buffer>>{buffer_a, buffer_b};
         swapper = std::make_shared<mc::BufferSwapperMulti>(double_list, double_list.size());
 
     }
 
-    std::shared_ptr<mc::Buffer> buffer_a;
-    std::shared_ptr<mc::Buffer> buffer_b;
+    std::shared_ptr<mg::Buffer> buffer_a;
+    std::shared_ptr<mg::Buffer> buffer_b;
 
     std::shared_ptr<mc::BufferSwapper> swapper;
 };
