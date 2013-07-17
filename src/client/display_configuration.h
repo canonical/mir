@@ -20,6 +20,7 @@
 #define MIR_CLIENT_DISPLAY_CONFIGURATION_H_
 
 #include "mir_toolkit/client_types.h"
+#include "mir_protobuf.pb.h"
 
 namespace mir
 {
@@ -30,9 +31,13 @@ class DisplayConfiguration
 {
 public:
     DisplayConfiguration();
+
+    void fill_configuration(MirDisplayConfiguration&);
+    void set_from_message(protobuf::Connection& connection_msg);
 private:
 //    std::
 };
 }
 }
+
 #endif /* MIR_CLIENT_DISPLAY_CONFIGURATION_H_ */

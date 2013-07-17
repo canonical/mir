@@ -21,16 +21,29 @@
 #include <gtest/gtest.h>
 
 namespace mcl = mir::client;
+namespace mp = mir::protobuf;
 
 TEST(ClientDisplayConfiguration, configuration_struct_empty)
 {
     mcl::DisplayConfiguration internal_config;
-    MirDisplayConfiguration config = internal_config; 
+    MirDisplayConfiguration config;
+    internal_config.fill_configuration(config);
+
     EXPECT_EQ(0, config.num_displays);
     EXPECT_EQ(nullptr, config.displays);
 }
 
-#if 0
+TEST(ClientDisplayConfiguration, configuration_struct_error)
+{
+    mcl::DisplayConfiguration internal_config;
+    MirDisplayConfiguration config{3, nullptr};
+
+    internal_config.fill_configuration(config);
+
+    EXPECT_EQ(0, config.num_displays);
+    EXPECT_EQ(nullptr, config.displays);
+}
+
 TEST(ClientDisplayConfiguration, configuration_struct_set)
 {
     int const num_displays = 4;
@@ -38,52 +51,52 @@ TEST(ClientDisplayConfiguration, configuration_struct_set)
     int const num_modes = 4;
 
     ///setup message
-    mp::DisplayConfiguration msg;
+    mp::Connection msg;
     for(auto i=0u; i < num_displays; i++)
     {
         auto disp = msg.add_display_info();
         for(auto j=0u; j < num_pfs; j++)
         {
-            auto pf = disp.add_pixel_format(j);
+            disp->add_pixel_format(j);
         }
         disp->set_current_format(1);
 
         for(auto j=0u; j < num_modes; j++)
         {
-            auto mode = disp.add_mode();
+            auto mode = disp->add_mode();
             mode->set_horizontal_resolution(6*j); 
             mode->set_vertical_resolution(4*j); 
             mode->set_refresh_rate(j*40.0f); 
         }
         disp->set_current_mode(2);
 
-        disp->set_position_x();
-        disp->set_position_y();
-        disp->set_card_id();
-        disp->set_output_id();
+        disp->set_position_x(3);
+        disp->set_position_y(3);
+        disp->set_card_id(4);
+        disp->set_output_id(5);
     }
     ///end setup message
-
-    mcl::DisplayConfiguration config;
-    config.set_from_message(msg);
+    mcl::DisplayConfiguration internal_config;
+    internal_config.set_from_message(msg);
+    auto config = internal_config;
 
     //display_struct
-    ASSERT_EQ(msg.display_info().size(), result_info.num_displays);
+    ASSERT_EQ(msg.display_info_size(), config.num_displays);
     ASSERT_NE(nullptr, config.displays);
-    for(auto i=0u; i < config.num_display; i++)
+    for(auto i=0u; i < config.num_displays; i++)
     {
         auto msg_disp_info = msg.display_info(i);
-        auto result_info = config.display_info[i];
+        auto result_info = config.displays[i];
 
-        EXPECT_EQ(msg_disp_info->card_id(), result_info.card_id)
-        EXPECT_EQ(msg_disp_info->output_id(), result_info.output_id)
-        EXPECT_EQ(msg_disp_info->position_x(), result_info.position_x);
-        EXPECT_EQ(msg_disp_info->position_y(), result_info.position_y);
+        EXPECT_EQ(msg_disp_info.card_id(), result_info.card_id);
+        EXPECT_EQ(msg_disp_info.output_id(), result_info.output_id);
+        EXPECT_EQ(msg_disp_info.position_x(), result_info.position_x);
+        EXPECT_EQ(msg_disp_info.position_y(), result_info.position_y);
 
         ASSERT_EQ(msg_disp_info.mode().size(), result_info.num_modes);
         for(auto j=0u; j<result_info.num_modes; j++)
         {
-    MirDisplayMode* modes;
+//    MirDisplayMode* modes;
             
         }
         EXPECT_EQ(msg_disp_info.current_mode(), result_info.current_mode);
@@ -91,9 +104,8 @@ TEST(ClientDisplayConfiguration, configuration_struct_set)
         ASSERT_EQ(msg_disp_info.pixel_format().size(), result_info.num_pixel_formats);
         for(auto j=0u; j<result_info.num_modes; j++)
         {
-            MirPixelFormat* pixel_formats;
+//            MirPixelFormat* pixel_formats;
         }
         EXPECT_EQ(msg_disp_info.current_format(), result_info.current_format);
     }
 }
-#endif
