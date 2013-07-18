@@ -19,32 +19,13 @@
 #include "display_configuration.h"
 
 #include <cstring>
+
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 
 mcl::DisplayConfiguration::DisplayConfiguration()
     : config{0, nullptr}
 {
-}
-
-void mcl::copy_mir_configuration(MirDisplayConfiguration& out, MirDisplayConfiguration const& in)
-{
-    out.num_displays = in.num_displays;
-    out.displays = (MirDisplayState*) ::operator new(sizeof(MirDisplayState)* out.num_displays);
-
-    for(auto i=0u; i < out.num_displays; i++)
-    {
-        MirDisplayState* in_info = &in.displays[i];
-        MirDisplayState* out_info = &out.displays[i];
-
-        std::memcpy(out_info, in_info, sizeof(MirDisplayState));
-
-        out_info->modes = (MirDisplayMode*) ::operator new(sizeof(MirDisplayMode) * out_info->num_modes); 
-        std::memcpy(out_info->modes, in_info->modes, sizeof(MirDisplayMode) * out_info->num_modes);
-
-        out_info->pixel_formats = (MirPixelFormat*) ::operator new(sizeof(MirPixelFormat) * out_info->num_pixel_formats);
-        std::memcpy(out_info->pixel_formats, in_info->pixel_formats, sizeof(MirPixelFormat) * out_info->num_pixel_formats);
-    }
 }
 
 void mcl::delete_config_storage(MirDisplayConfiguration& config)

@@ -27,9 +27,8 @@ namespace mir
 namespace client
 {
 
-
+//convenient helper
 void delete_config_storage(MirDisplayConfiguration& config);
-void copy_mir_configuration(MirDisplayConfiguration& out, MirDisplayConfiguration const& in);
 
 class DisplayConfiguration
 {
@@ -41,7 +40,6 @@ public:
     void set_from_message(protobuf::Connection& connection_msg);
 private:
     MirDisplayConfiguration config;
-//    std::
 };
 }
 }
