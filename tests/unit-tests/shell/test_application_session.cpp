@@ -56,8 +56,8 @@ TEST(ApplicationSession, create_and_destroy_surface)
     EXPECT_CALL(*mock_surface, destroy());
     
     mtd::MockSessionListener listener;
-    EXPECT_CALL(listener, surface_created(_)).Times(1);
-    EXPECT_CALL(listener, destroying_surface(_)).Times(1);
+    EXPECT_CALL(listener, surface_created(_, _)).Times(1);
+    EXPECT_CALL(listener, destroying_surface(_, _)).Times(1);
 
     msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo",
                                     std::make_shared<mtd::NullSnapshotStrategy>(),
