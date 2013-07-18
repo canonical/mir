@@ -50,7 +50,7 @@ void msh::DisplaySurfaceBoundaries::clip_to_screen(geometry::Rectangle& rect)
 
         rectangles.confine_point(br);
 
-        rect.size = 
+        rect.size =
             geom::Size{br.x.as_int() - tl.x.as_int() + 1,
                        br.y.as_int() - tl.y.as_int() + 1};
     }

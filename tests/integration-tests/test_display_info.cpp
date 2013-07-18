@@ -23,7 +23,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -42,17 +42,6 @@ namespace mir /* So that std::this_thread::yield() can be found on android... */
 namespace
 {
 
-class StubDisplayBuffer : public mtd::NullDisplayBuffer
-{
-public:
-    StubDisplayBuffer(geom::Rectangle const& view_area_) : view_area_(view_area_) {}
-    StubDisplayBuffer(StubDisplayBuffer const& s) : view_area_(s.view_area_) {}
-    geom::Rectangle view_area() const override { return view_area_; }
-
-private:
-    geom::Rectangle view_area_;
-};
-
 class StubDisplay : public mtd::NullDisplay
 {
 public:
@@ -69,7 +58,7 @@ public:
     static geom::Rectangle rectangle;
 
 private:
-    StubDisplayBuffer display_buffer;
+    mtd::StubDisplayBuffer display_buffer;
 };
 
 geom::Rectangle StubDisplay::rectangle{geom::Point{25,36}, geom::Size{49,64}};
