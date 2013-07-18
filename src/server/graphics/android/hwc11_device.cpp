@@ -23,7 +23,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
+namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -60,7 +60,7 @@ geom::Size mga::HWC11Device::display_size() const
     hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
                                      size_request, size_values);
 
-    return geom::Size{geom::Width{size_values[0]}, geom::Height{size_values[1]}};
+    return {size_values[0], size_values[1]};
 }
 
 geom::PixelFormat mga::HWC11Device::display_format() const
@@ -74,8 +74,8 @@ unsigned int mga::HWC11Device::number_of_framebuffers_available() const
     //us a hint to triple buffer. Taking this hint is currently not supported.
     return 2u;
 }
- 
-void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mc::Buffer> const& buffer)
+
+void mga::HWC11Device::set_next_frontbuffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     layer_organizer->set_fb_target(buffer);
 

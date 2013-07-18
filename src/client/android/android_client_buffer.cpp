@@ -53,7 +53,7 @@ mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept
 
 std::shared_ptr<mcl::MemoryRegion> mcla::AndroidClientBuffer::secure_for_cpu_write()
 {
-    auto rect = geom::Rectangle{{geom::X(0),geom::Y(0)}, size()};
+    auto rect = geom::Rectangle{geom::Point{0, 0}, size()};
     auto vaddr = buffer_registrar->secure_for_cpu(native_handle, rect);
     auto region =  std::make_shared<mcl::MemoryRegion>();
     region->vaddr = vaddr;
@@ -66,8 +66,7 @@ std::shared_ptr<mcl::MemoryRegion> mcla::AndroidClientBuffer::secure_for_cpu_wri
 
 geom::Size mcla::AndroidClientBuffer::size() const
 {
-    return geom::Size{geom::Width{native_window_buffer->width},
-                      geom::Height{native_window_buffer->height}};
+    return {native_window_buffer->width, native_window_buffer->height};
 }
 
 geom::Stride mcla::AndroidClientBuffer::stride() const

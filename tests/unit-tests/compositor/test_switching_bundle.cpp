@@ -27,6 +27,7 @@
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
+namespace mg = mir::graphics;
 
 struct SwitchingBundleTest : public ::testing::Test
 {
@@ -37,7 +38,7 @@ struct SwitchingBundleTest : public ::testing::Test
         mock_default_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         mock_secondary_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         stub_buffer = std::make_shared<mtd::StubBuffer>();
-        properties = mc::BufferProperties{geom::Size{geom::Width{4}, geom::Height{2}},
+        properties = mc::BufferProperties{geom::Size{4, 2},
                                           geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
 
         ON_CALL(*mock_swapper_factory, create_swapper_new_buffers(_,_,_))
@@ -47,14 +48,14 @@ struct SwitchingBundleTest : public ::testing::Test
     std::shared_ptr<mtd::MockSwapperFactory> mock_swapper_factory;
     std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
     std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
-    std::shared_ptr<mc::Buffer> stub_buffer;
+    std::shared_ptr<mg::Buffer> stub_buffer;
     mc::BufferProperties properties;
 };
 
 TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
     using namespace testing;
-    auto actual_properties = mc::BufferProperties{geom::Size{geom::Width{7}, geom::Height{8}},
+    auto actual_properties = mc::BufferProperties{geom::Size{7, 8},
                                                   geom::PixelFormat::argb_8888, mc::BufferUsage::software};
     EXPECT_CALL(*mock_swapper_factory, create_swapper_new_buffers(_,_,mc::SwapperType::synchronous))
         .Times(1)

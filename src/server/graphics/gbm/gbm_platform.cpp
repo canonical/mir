@@ -104,11 +104,13 @@ std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allo
                                                      buffer_initializer);
 }
 
-std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display()
+std::shared_ptr<mg::Display> mgg::GBMPlatform::create_display(
+    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy)
 {
     return std::make_shared<mgg::GBMDisplay>(
         this->shared_from_this(),
         std::make_shared<UdevVideoDevices>(udev.ctx),
+        initial_conf_policy,
         listener);
 }
 
@@ -118,7 +120,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
 }
 
 void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
-                                        std::shared_ptr<compositor::Buffer> const& buffer) const
+                                        std::shared_ptr<Buffer> const& buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
     for(auto i=0; i<native_handle->data_items; i++)

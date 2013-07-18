@@ -30,17 +30,17 @@ namespace mir
 {
 namespace graphics
 {
-
+class Buffer;
 class GLContext;
 
-/** Extracts the pixels from a compositor::Buffer using GL facilities. */
+/** Extracts the pixels from a graphics::Buffer using GL facilities. */
 class GLPixelBuffer : public shell::PixelBuffer
 {
 public:
     GLPixelBuffer(std::unique_ptr<GLContext> gl_context);
     ~GLPixelBuffer() noexcept;
 
-    void fill_from(compositor::Buffer& buffer);
+    void fill_from(Buffer& buffer);
     void const* as_argb_8888();
     geometry::Size size() const;
     geometry::Stride stride() const;

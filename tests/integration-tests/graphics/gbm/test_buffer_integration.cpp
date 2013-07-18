@@ -20,12 +20,13 @@
 #include "src/server/graphics/gbm/gbm_display.h"
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/compositor/buffer_basic.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
 
@@ -71,9 +72,9 @@ private:
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>(new StubBufferThread());
+        return std::shared_ptr<mg::Buffer>(new StubBufferThread());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -104,10 +105,11 @@ protected:
         else
             platform = std::make_shared<StubGraphicPlatform>();
 
-        display = platform->create_display();
+        auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+        display = platform->create_display(conf_policy);
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);
-        size = geom::Size{geom::Width{100}, geom::Height{100}};
+        size = geom::Size{100, 100};
         pf = geom::PixelFormat::abgr_8888;
         usage = mc::BufferUsage::hardware;
         buffer_properties = mc::BufferProperties{size, pf, usage};
@@ -137,13 +139,13 @@ struct BufferCreatorThread
     }
 
     std::shared_ptr<mc::GraphicBufferAllocator> allocator;
-    std::shared_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mg::Buffer> buffer;
     mc::BufferProperties buffer_properties;
 };
 
 struct BufferDestructorThread
 {
-    BufferDestructorThread(std::shared_ptr<mc::Buffer> buffer)
+    BufferDestructorThread(std::shared_ptr<mg::Buffer> buffer)
         : buffer{std::move(buffer)}
     {
     }
@@ -155,12 +157,12 @@ struct BufferDestructorThread
         ASSERT_EQ(EGL_SUCCESS, eglGetError());
     }
 
-    std::shared_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mg::Buffer> buffer;
 };
 
 struct BufferTextureInstantiatorThread
 {
-    BufferTextureInstantiatorThread(const std::shared_ptr<mc::Buffer>& buffer)
+    BufferTextureInstantiatorThread(const std::shared_ptr<mg::Buffer>& buffer)
         : buffer(buffer), exception_thrown(false)
     {
     }
@@ -181,7 +183,7 @@ struct BufferTextureInstantiatorThread
         ASSERT_NE(EGL_SUCCESS, eglGetError());
     }
 
-    const std::shared_ptr<mc::Buffer>& buffer;
+    const std::shared_ptr<mg::Buffer>& buffer;
     bool exception_thrown;
 };
 

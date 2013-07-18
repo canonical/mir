@@ -33,6 +33,7 @@ namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
+namespace ms = mir::surfaces;
 
 namespace
 {
@@ -42,7 +43,8 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class NullRenderer : public mg::Renderer
 {
 public:
-    void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable&)
+    virtual void render(std::function<void(std::shared_ptr<void> const&)>,
+                                   mg::CompositingCriteria const&, ms::BufferStream&)
     {
         /* 
          * Do nothing, so that the Renderable's buffers are not consumed

@@ -21,7 +21,7 @@
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/graphics/display.h"
 
@@ -50,7 +50,7 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-geom::Size const size{geom::Width{640}, geom::Height{480}};
+geom::Size const size{640, 480};
 geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 mc::BufferUsage const usage{mc::BufferUsage::hardware};
 mc::BufferProperties const buffer_properties{size, format, usage};
@@ -68,7 +68,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
     MOCK_METHOD1(
         alloc_buffer,
-        std::shared_ptr<mc::Buffer> (mc::BufferProperties const&));
+        std::shared_ptr<mg::Buffer> (mc::BufferProperties const&));
 
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -76,9 +76,9 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
         return std::vector<geom::PixelFormat>();
     }
 
-    std::unique_ptr<mc::Buffer> on_create_swapper(mc::BufferProperties const&)
+    std::unique_ptr<mg::Buffer> on_create_swapper(mc::BufferProperties const&)
     {
-        return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(::buffer_properties));
+        return std::unique_ptr<mg::Buffer>(new mtd::StubBuffer(::buffer_properties));
     }
 
     ~MockGraphicBufferAllocator() noexcept {}
@@ -97,8 +97,7 @@ public:
     geom::Rectangle view_area() const override
     {
         return geom::Rectangle{geom::Point(),
-                               geom::Size{geom::Width(1600),
-                                          geom::Height(1600)}};
+                               geom::Size{1600, 1600}};
     }
 };
 
@@ -236,7 +235,7 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server
             actual = requested;
             auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
             auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
-            std::vector<std::shared_ptr<mc::Buffer>> list = {stub_buffer_a, stub_buffer_b};
+            std::vector<std::shared_ptr<mg::Buffer>> list = {stub_buffer_a, stub_buffer_b};
             return std::make_shared<mc::BufferSwapperMulti>(list, list.size());
         }
 
@@ -316,7 +315,8 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
             return buffer_allocator;
         }
 
-        std::shared_ptr<mg::Display> create_display() override
+        std::shared_ptr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
         {
             return std::make_shared<StubDisplay>();
         }
@@ -416,10 +416,10 @@ struct BufferCounterConfig : TestingServerConfiguration
     class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     {
      public:
-        virtual std::shared_ptr<mc::Buffer> alloc_buffer(
+        virtual std::shared_ptr<mg::Buffer> alloc_buffer(
             mc::BufferProperties const&)
         {
-            return std::unique_ptr<mc::Buffer>(new CountingStubBuffer());
+            return std::unique_ptr<mg::Buffer>(new CountingStubBuffer());
         }
 
         std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -437,7 +437,8 @@ struct BufferCounterConfig : TestingServerConfiguration
             return std::make_shared<StubGraphicBufferAllocator>();
         }
 
-        std::shared_ptr<mg::Display> create_display() override
+        std::shared_ptr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
         {
             return std::make_shared<StubDisplay>();
         }

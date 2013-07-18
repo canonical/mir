@@ -45,23 +45,6 @@ bool mir_test_framework::detect_server(
     }
     while (error && std::chrono::system_clock::now() < limit);
 
-    // TODO the code between here and "return" doesn't change error
-    // TODO does it do anything useful?
-    struct sockaddr_un remote;
-    auto sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
-    remote.sun_family = AF_UNIX;
-    strcpy(remote.sun_path, socket_file.c_str());
-    auto len = strlen(remote.sun_path) + sizeof(remote.sun_family);
-
-    do
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(0));
-    }
-    while ((connect(sockfd, (struct sockaddr *)&remote, len) == -1)
-            && (std::chrono::system_clock::now() < limit));
-
-    close(sockfd);
-
     return !error;
 }
 

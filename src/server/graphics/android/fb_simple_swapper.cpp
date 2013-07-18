@@ -22,10 +22,10 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
+namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 
-std::shared_ptr<mc::Buffer> mga::FBSimpleSwapper::compositor_acquire()
+std::shared_ptr<mg::Buffer> mga::FBSimpleSwapper::compositor_acquire()
 {
     std::unique_lock<std::mutex> lk(queue_lock);
     while (queue.empty())
@@ -38,7 +38,7 @@ std::shared_ptr<mc::Buffer> mga::FBSimpleSwapper::compositor_acquire()
     return buffer;
 }
 
-void mga::FBSimpleSwapper::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
+void mga::FBSimpleSwapper::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lk(queue_lock);
 

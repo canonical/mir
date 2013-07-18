@@ -26,6 +26,7 @@
 #include <stdexcept>
 
 namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
@@ -36,7 +37,7 @@ protected:
     virtual void SetUp()
     {
         using namespace testing;
-        test_size = geom::Size{geom::Width{88}, geom::Height{4}};
+        test_size = geom::Size{88, 4};
         test_pf = geom::PixelFormat::abgr_8888;
         test_numfb = 558u;
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
@@ -90,7 +91,7 @@ TEST_F(HWC10Device, hwc10_gets_numfb_from_fb_dev)
 
 TEST_F(HWC10Device, hwc10_set_next_frontbuffer)
 {
-    std::shared_ptr<mc::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
+    std::shared_ptr<mg::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*mock_fbdev, set_next_frontbuffer(mock_buffer))
         .Times(1);
 

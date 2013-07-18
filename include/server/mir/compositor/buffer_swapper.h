@@ -25,10 +25,10 @@
 
 namespace mir
 {
+namespace graphics { class Buffer; }
+
 namespace compositor
 {
-class Buffer;
-
 class BufferSwapper
 {
 public:
@@ -41,12 +41,12 @@ public:
      *
      * May throw a mc::BufferSwapperRequestAbortedException.
      */
-    virtual std::shared_ptr<Buffer> client_acquire() = 0;
+    virtual std::shared_ptr<graphics::Buffer> client_acquire() = 0;
 
     /**
      * Releases a client buffer, making it available to the compositor.
      */
-    virtual void client_release(std::shared_ptr<Buffer> const& queued_buffer) = 0;
+    virtual void client_release(std::shared_ptr<graphics::Buffer> const& queued_buffer) = 0;
 
     /**
      * Acquires the last posted buffer.
@@ -61,12 +61,12 @@ public:
      *
      * May throw a mc::BufferSwapperOutOfBuffersException.
      */
-    virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
+    virtual std::shared_ptr<graphics::Buffer> compositor_acquire() = 0;
 
     /**
      * Releases a compositor buffer, making it available to the client.
      */
-    virtual void compositor_release(std::shared_ptr<Buffer> const& released_buffer) = 0;
+    virtual void compositor_release(std::shared_ptr<graphics::Buffer> const& released_buffer) = 0;
 
     /**
      * Forces client requests on the buffer swapper to abort.
@@ -110,7 +110,7 @@ public:
      * After the completion of this call, neither the client, nor the compositor can
      * continue to request or return buffers to this swapper.
      */
-    virtual void end_responsibility(std::vector<std::shared_ptr<Buffer>>& buffers, size_t& original_size) = 0;
+    virtual void end_responsibility(std::vector<std::shared_ptr<graphics::Buffer>>& buffers, size_t& original_size) = 0;
 
     /**
      * If the swapper has been used, and you want to preserve the buffers that have been used, 

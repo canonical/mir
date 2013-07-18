@@ -19,8 +19,14 @@
 #include "socket_session.h"
 
 #include <boost/signals2.hpp>
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
+
 #include <sys/types.h>
 #include <sys/socket.h>
+
+#include "mir/frontend/client_constants.h"
 
 namespace ba = boost::asio;
 namespace bs = boost::system;
@@ -36,6 +42,7 @@ mfd::SocketSession::SocketSession(
     connected_sessions(connected_sessions),
     processor(std::make_shared<NullMessageProcessor>())
 {
+    whole_message.reserve(serialization_buffer_size);
 }
 
 mfd::SocketSession::~SocketSession() noexcept
@@ -152,4 +159,16 @@ void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size
         connected_sessions->remove(id());
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
+}
+
+pid_t mfd::SocketSession::client_pid()
+{
+    struct ucred cr;
+    socklen_t cl = sizeof(cr);
+    
+    auto status = getsockopt(socket.native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
+    
+    if (status)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
+    return cr.pid;
 }

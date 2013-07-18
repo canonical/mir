@@ -21,9 +21,9 @@
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_properties.h"
 
+#include <glm/glm.hpp>
 #include <vector>
 #include <memory>
 #include <string>
@@ -32,34 +32,35 @@ namespace mir
 {
 namespace compositor
 {
-class Buffer;
-class GraphicRegion;
 struct BufferIPCPackage;
-class BufferID;
+}
+namespace graphics
+{
+class Buffer;
 }
 namespace input
 {
 class InputChannel;
 class InputRegion;
-class SurfaceInfoController;
+class Surface;
 }
-
+namespace graphics
+{
+class CompositingCriteria;
+}
 namespace surfaces
 {
-class SurfaceInfoController;
+class SurfaceState;
 class BufferStream;
 
 // TODO this is ideally an implementation class. It is only in a public header
 // TODO because it is used in some example code (which probably needs rethinking).
-class Surface : public graphics::Renderable
+class Surface
 {
 public:
-    //TODO: surfaces::SurfaceInfo shouldn't be here, rather, something like mg::SurfaceInfo
-    Surface(std::shared_ptr<surfaces::SurfaceInfoController> const& basic_info,
-            std::shared_ptr<input::SurfaceInfoController> const& input_info,
-            std::shared_ptr<BufferStream> buffer_stream,
-            std::shared_ptr<input::InputChannel> const& input_channel,
-            std::function<void()> const& change_callback);
+    Surface(std::shared_ptr<surfaces::SurfaceState> const& surface_state,
+            std::shared_ptr<BufferStream> const& buffer_stream,
+            std::shared_ptr<input::InputChannel> const& input_channel);
 
     ~Surface();
 
@@ -72,15 +73,11 @@ public:
     /* From Renderable */
     geometry::Point top_left() const;
     geometry::Size size() const;
-    std::shared_ptr<GraphicRegion> graphic_region() const;
-    const glm::mat4& transformation() const override;
-    float alpha() const;
-    bool should_be_rendered() const;
 
     geometry::PixelFormat pixel_format() const;
 
-    std::shared_ptr<compositor::Buffer> compositor_buffer() const;
-    std::shared_ptr<compositor::Buffer> advance_client_buffer();
+    std::shared_ptr<graphics::Buffer> compositor_buffer() const;
+    std::shared_ptr<graphics::Buffer> advance_client_buffer();
     void force_requests_to_complete();
     void flag_for_render();
 
@@ -91,24 +88,16 @@ public:
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
 
+    std::shared_ptr<graphics::CompositingCriteria> compositing_criteria();
+
+    std::shared_ptr<BufferStream> buffer_stream() const;
+
+    std::shared_ptr<input::Surface> input_surface() const;
 private:
-    //TODO: surfaces::SurfaceInfo shouldn't be here, rather, something like mg::SurfaceInfo
-    std::shared_ptr<surfaces::SurfaceInfoController> basic_info;
-    std::shared_ptr<input::SurfaceInfoController> input_info;
-
-    std::shared_ptr<BufferStream> buffer_stream;
-
+    std::shared_ptr<surfaces::SurfaceState> surface_state;
+    std::shared_ptr<BufferStream> surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
-
-    glm::mat4 rotation_matrix;
-    mutable glm::mat4 transformation_matrix;
-    mutable geometry::Size transformation_size;
-    mutable bool transformation_dirty;
-    float alpha_value;
-
-    bool is_hidden;
-    unsigned int buffer_count;
-    std::function<void()> notify_change;
+    bool surface_in_startup;
 };
 
 }

@@ -38,7 +38,8 @@ class NullPlatform : public graphics::Platform
         return std::shared_ptr<compositor::GraphicBufferAllocator>();
     }
 
-    std::shared_ptr<graphics::Display> create_display()
+    std::shared_ptr<graphics::Display> create_display(
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
     {
         return std::make_shared<NullDisplay>();
     }
@@ -54,7 +55,7 @@ class NullPlatform : public graphics::Platform
     }
 
     void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const&,
-                          std::shared_ptr<compositor::Buffer> const&) const
+                          std::shared_ptr<graphics::Buffer> const&) const
     {
     }
 };

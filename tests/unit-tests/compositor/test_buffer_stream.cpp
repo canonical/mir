@@ -45,7 +45,7 @@ protected:
 
 TEST_F(BufferStreamTest, size_query)
 {
-    geom::Size size{geom::Width{4},geom::Height{5}};
+    geom::Size size{4, 5};
     mc::BufferProperties properties {size, geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
     EXPECT_CALL(*mock_bundle, properties())
         .Times(1)
@@ -59,8 +59,7 @@ TEST_F(BufferStreamTest, size_query)
 TEST_F(BufferStreamTest, pixel_format_query)
 {
     geom::PixelFormat format{geom::PixelFormat::abgr_8888};
-    mc::BufferProperties properties {geom::Size{geom::Width{4},geom::Height{5}},
-                                     format, mc::BufferUsage::hardware};
+    mc::BufferProperties properties {geom::Size{4, 5}, format, mc::BufferUsage::hardware};
     EXPECT_CALL(*mock_bundle, properties())
         .Times(1)
         .WillOnce(testing::Return(properties));

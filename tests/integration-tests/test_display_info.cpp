@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -50,7 +50,7 @@ public:
 };
 
 geom::Rectangle const StubDisplay::rectangle{geom::Point{geom::X{25}, geom::Y{36}},
-                                             geom::Size{geom::Width{49}, geom::Height{64}}};
+                                             geom::Size{49, 64}};
 
 }
 }
@@ -65,9 +65,9 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>(new mtd::StubBuffer());
+        return std::shared_ptr<mg::Buffer>(new mtd::StubBuffer());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -93,7 +93,8 @@ public:
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::Display> create_display() override
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
     {
         return std::make_shared<StubDisplay>();
     }

@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/application_session.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir_test/fake_shared.h"

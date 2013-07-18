@@ -36,7 +36,8 @@ public:
     GLRenderer(const geometry::Size& display_size);
 
     /* From renderer */
-    void render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable);
+    void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
+                                   CompositingCriteria const& info, surfaces::BufferStream& stream);
     void clear();
 
     ~GLRenderer() noexcept {}

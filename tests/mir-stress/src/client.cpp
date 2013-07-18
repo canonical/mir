@@ -92,12 +92,6 @@ void UnacceleratedClient::disconnect()
 {
     if (connection_ != nullptr)
     {
-        // The next three lines are a workaround to prevent the client API
-        // from leaking file descriptors.
-        MirPlatformPackage pkg;
-        mir_connection_get_platform(connection_, &pkg);
-        close(pkg.fd[0]);
-
         mir_connection_release(connection_);
         connection_ = nullptr;
     }

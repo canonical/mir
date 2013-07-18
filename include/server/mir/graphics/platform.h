@@ -31,7 +31,6 @@ class Surface;
 namespace compositor
 {
 class GraphicBufferAllocator;
-class Buffer;
 class BufferIPCPacker;
 }
 namespace options
@@ -44,11 +43,13 @@ class Option;
 namespace graphics
 {
 
+class Buffer;
 class Display;
 struct PlatformIPCPackage;
 class BufferInitializer;
 class InternalClient;
 class DisplayReport;
+class DisplayConfigurationPolicy;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -81,7 +82,8 @@ public:
     /**
      * Creates the display subsystem.
      */
-    virtual std::shared_ptr<Display> create_display() = 0;
+    virtual std::shared_ptr<Display> create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy) = 0;
 
     /**
      * Gets the IPC package for the platform.
@@ -100,7 +102,7 @@ public:
      * \param [in] buffer the buffer to fill the IPC package for
      */
     virtual void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
-                                  std::shared_ptr<compositor::Buffer> const& buffer) const = 0;
+                                  std::shared_ptr<graphics::Buffer> const& buffer) const = 0;
 
     /**
      * Creates the in-process client support object.

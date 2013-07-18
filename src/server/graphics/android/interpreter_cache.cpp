@@ -20,15 +20,15 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 
-void mga::InterpreterCache::store_buffer(std::shared_ptr<compositor::Buffer>const& buffer, ANativeWindowBuffer* key)
+void mga::InterpreterCache::store_buffer(std::shared_ptr<mg::Buffer>const& buffer, ANativeWindowBuffer* key)
 {
     buffers_in_driver[key] = buffer;
 }
 
-std::shared_ptr<mc::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindowBuffer* returned_handle)
+std::shared_ptr<mg::Buffer> mga::InterpreterCache::retrieve_buffer(ANativeWindowBuffer* returned_handle)
 {
     auto buffer_it = buffers_in_driver.find(returned_handle); 
     if (buffer_it == buffers_in_driver.end())

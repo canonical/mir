@@ -40,6 +40,7 @@ mir::DefaultServerConfiguration::the_communicator()
             return std::make_shared<mf::ProtobufSocketCommunicator>(
                 the_socket_file(),
                 the_ipc_factory(the_frontend_shell(), the_viewable_area(), the_buffer_allocator()),
+                the_session_authorizer(),
                 threads,
                 [shell_sessions]
                 {

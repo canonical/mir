@@ -28,12 +28,13 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
-static geom::Size const buf_size{geom::Width{100}, geom::Height{121}};
+static geom::Size const buf_size{100, 121};
 static geom::PixelFormat const buf_pixel_format{geom::PixelFormat::xbgr_8888};
 
 class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
@@ -46,7 +47,7 @@ public:
         ON_CALL(*this, alloc_buffer(_))
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>(properties)));
     }
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&));
+    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mc::BufferProperties const&));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 
     ~MockGraphicBufferAllocator() noexcept {}
@@ -56,7 +57,7 @@ struct SwapperFactoryTest : testing::Test
 {
     SwapperFactoryTest()
         : mock_buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
-          size{geom::Width{10},geom::Height{20}},
+          size{10, 20},
           pf{geom::PixelFormat::abgr_8888},
           usage{mc::BufferUsage::hardware},
           properties{size, pf, usage}
@@ -148,7 +149,7 @@ TEST_F(SwapperFactoryTest, create_async_reuse)
     using namespace testing;
 
     mc::BufferProperties properties;
-    std::vector<std::shared_ptr<mc::Buffer>> list {};
+    std::vector<std::shared_ptr<mg::Buffer>> list {};
     size_t size = 3;
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
@@ -163,7 +164,7 @@ TEST_F(SwapperFactoryTest, create_sync_reuse)
     using namespace testing;
 
     mc::BufferProperties properties;
-    std::vector<std::shared_ptr<mc::Buffer>> list;
+    std::vector<std::shared_ptr<mg::Buffer>> list;
     size_t size = 3;
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
@@ -182,7 +183,7 @@ TEST_F(SwapperFactoryTest, reuse_drop_unneeded_buffer)
     auto buffer = std::make_shared<mtd::StubBuffer>();
     {
         size_t size = 3;
-        std::vector<std::shared_ptr<mc::Buffer>> list{buffer};
+        std::vector<std::shared_ptr<mg::Buffer>> list{buffer};
 
         auto swapper = strategy.create_swapper_reuse_buffers(
             properties, list, size, mc::SwapperType::synchronous);
@@ -197,7 +198,7 @@ TEST_F(SwapperFactoryTest, reuse_drop_unneeded_buffer_error)
     mc::SwapperFactory strategy(mock_buffer_allocator, 2);
 
     size_t size = 3;
-    std::vector<std::shared_ptr<mc::Buffer>> list{};
+    std::vector<std::shared_ptr<mg::Buffer>> list{};
 
     EXPECT_THROW({
         strategy.create_swapper_reuse_buffers(
@@ -214,7 +215,7 @@ TEST_F(SwapperFactoryTest, reuse_alloc_additional_buffer_for_framedropping)
     mc::SwapperFactory strategy(mock_buffer_allocator);
 
     size_t size = 2;
-    std::vector<std::shared_ptr<mc::Buffer>> list{};
+    std::vector<std::shared_ptr<mg::Buffer>> list{};
     auto swapper = strategy.create_swapper_reuse_buffers(
         properties, list, size, mc::SwapperType::framedropping);
 }

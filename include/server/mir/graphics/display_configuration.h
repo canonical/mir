@@ -21,6 +21,7 @@
 
 #include "mir/int_wrapper.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 
 #include <functional>
 #include <vector>
@@ -29,9 +30,10 @@ namespace mir
 {
 namespace graphics
 {
+namespace detail { struct GraphicsConfCardIdTag; struct GraphicsConfOutputIdTag; }
 
-typedef IntWrapper<IntWrapperTypeTag::GraphicsConfCardId> DisplayConfigurationCardId;
-typedef IntWrapper<IntWrapperTypeTag::GraphicsConfOutputId> DisplayConfigurationOutputId;
+typedef IntWrapper<detail::GraphicsConfCardIdTag> DisplayConfigurationCardId;
+typedef IntWrapper<detail::GraphicsConfOutputIdTag> DisplayConfigurationOutputId;
 
 /**
  * Configuration information for a display card.
@@ -65,6 +67,10 @@ struct DisplayConfigurationOutput
     geometry::Size physical_size_mm;
     /** Whether the output is connected. */
     bool connected;
+    /** Whether the output is used in the configuration. */
+    bool used;
+    /** The top left point of this output in the virtual coordinate space. */
+    geometry::Point top_left;
     /** The index in the 'modes' vector of the current output mode. */
     size_t current_mode_index;
 };
@@ -89,6 +95,10 @@ public:
     virtual void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const = 0;
     /** Executes a function object for each output in the configuration. */
     virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const = 0;
+
+    /** Configures an output. */
+    virtual void configure_output(DisplayConfigurationOutputId id, bool used,
+                                  geometry::Point top_left, size_t mode_index) = 0;
 
 protected:
     DisplayConfiguration() = default;

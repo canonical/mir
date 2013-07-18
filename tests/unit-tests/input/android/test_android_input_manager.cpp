@@ -100,8 +100,7 @@ struct AndroidInputManagerSetup : public testing::Test
         using namespace ::testing;
 
         const geom::Rectangle default_view_area =
-            geom::Rectangle{geom::Point(),
-                            geom::Size{geom::Width(1600), geom::Height(1400)}};
+            geom::Rectangle{geom::Point(), geom::Size{1600, 1400}};
 
 
         ON_CALL(view_area, view_area())

@@ -25,6 +25,8 @@
 
 #include <boost/asio.hpp>
 
+#include <sys/types.h>
+
 namespace mir
 {
 namespace frontend
@@ -54,6 +56,8 @@ struct SocketSession : public MessageSender
     {
         return socket;
     }
+
+    pid_t client_pid();
 
 private:
     void send(std::string const& body);

@@ -72,7 +72,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         static const geom::Rectangle visible_rectangle
         {
             geom::Point(),
-            geom::Size{geom::Width(1024), geom::Height(1024)}
+            geom::Size{1024, 1024}
         };
 
         event_filter = std::make_shared<MockEventFilter>();

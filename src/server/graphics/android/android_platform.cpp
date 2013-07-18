@@ -26,7 +26,7 @@
 #include "internal_client.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/compositor/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 
@@ -59,7 +59,8 @@ std::shared_ptr<mga::FramebufferFactory> mga::AndroidPlatform::create_frame_buff
     return std::make_shared<mga::DefaultFramebufferFactory>(buffer_allocator);
 }
 
-std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display()
+std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> const&)
 {
     auto hwc_factory = std::make_shared<mga::AndroidHWCFactory>();
     auto display_allocator = std::make_shared<mga::AndroidDisplayAllocator>();
@@ -77,7 +78,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
 }
 
 void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
-                                            std::shared_ptr<mc::Buffer> const& buffer) const
+                                            std::shared_ptr<mg::Buffer> const& buffer) const
 {
     auto native_buffer = buffer->native_buffer_handle();
     auto buffer_handle = native_buffer->handle;

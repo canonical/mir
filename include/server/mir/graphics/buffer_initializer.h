@@ -21,12 +21,9 @@
 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
 namespace graphics
 {
+class Buffer;
 
 /**
  * Interface to buffer initialization.
@@ -37,7 +34,7 @@ public:
     virtual ~BufferInitializer() {}
 
     /** Operator to call to initialize a buffer. */
-    virtual void operator()(compositor::Buffer& buffer) = 0;
+    virtual void operator()(Buffer& buffer) = 0;
 
 protected:
     BufferInitializer() = default;
@@ -48,7 +45,7 @@ protected:
 class NullBufferInitializer : public BufferInitializer
 {
 public:
-    void operator()(compositor::Buffer& /*buffer*/) {}
+    void operator()(Buffer& /*buffer*/) {}
 };
 
 }

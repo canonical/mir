@@ -20,7 +20,6 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/renderer.h"
-#include "mir/graphics/renderable.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -55,9 +54,9 @@ char const** argv = dummy;
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
  public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& properties)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const& properties)
     {
-        return std::unique_ptr<mc::Buffer>(new mtd::StubBuffer(properties));
+        return std::unique_ptr<mg::Buffer>(new mtd::StubBuffer(properties));
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -71,9 +70,7 @@ class StubDisplay : public mtd::NullDisplay
 public:
     geom::Rectangle view_area() const override
     {
-        return geom::Rectangle{geom::Point(),
-                               geom::Size{geom::Width(1600),
-                                          geom::Height(1600)}};
+        return geom::Rectangle{geom::Point(), geom::Size{1600, 1600}};
     }
 };
 
@@ -85,7 +82,8 @@ class StubGraphicPlatform : public mtd::NullPlatform
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::Display> create_display() override
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
     {
         return std::make_shared<StubDisplay>();
     }
@@ -94,10 +92,11 @@ class StubGraphicPlatform : public mtd::NullPlatform
 class StubRenderer : public mg::Renderer
 {
 public:
-    virtual void render(std::function<void(std::shared_ptr<void> const&)>, mg::Renderable& r)
+    virtual void render(std::function<void(std::shared_ptr<void> const&)>,
+                                   mg::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
-        r.graphic_region();
+        stream.lock_back_buffer();
     }
 
     void clear() {}

@@ -50,7 +50,7 @@ public:
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mc::Buffer>());
+    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mg::Buffer>());
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
@@ -146,8 +146,7 @@ TEST_F(InternalNativeSurface, surface_get_parameters)
 {
     using namespace ::testing;
     
-    geom::Size const test_surface_size = geom::Size{geom::Width{17},
-                                                    geom::Height{29}};
+    geom::Size const test_surface_size{17, 29};
     geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
     EXPECT_CALL(*mock_surface, size())
         .Times(1)

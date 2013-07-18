@@ -46,12 +46,13 @@ public:
     /* From Platform */
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
-    std::shared_ptr<Display> create_display();
+    std::shared_ptr<Display> create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package(); 
     std::shared_ptr<InternalClient> create_internal_client();
 
     void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
-                          std::shared_ptr<compositor::Buffer> const& buffer) const;
+                          std::shared_ptr<Buffer> const& buffer) const;
 
     /* From DRMAuthenticator */
     void drm_auth_magic(drm_magic_t magic);
