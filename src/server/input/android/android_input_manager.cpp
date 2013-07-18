@@ -29,7 +29,6 @@
 #include <memory>
 #include <vector>
 
-namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mi::android;
 

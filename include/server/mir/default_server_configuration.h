@@ -81,7 +81,6 @@ namespace graphics
 class Renderer;
 class Platform;
 class Display;
-class ViewableArea;
 class BufferInitializer;
 class DisplayReport;
 }
@@ -122,7 +121,6 @@ public:
      *  @{ */
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<graphics::Renderer>          the_renderer();
-    virtual std::shared_ptr<graphics::ViewableArea>      the_viewable_area();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -275,7 +273,7 @@ private:
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::ViewableArea> const& display,
+        std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;

@@ -33,7 +33,6 @@ namespace doubles
 class NullDisplay : public graphics::Display
 {
  public:
-    geometry::Rectangle view_area() const { return geometry::Rectangle(); }
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&)
     {
         /* yield() is needed to ensure reasonable runtime under valgrind for some tests */

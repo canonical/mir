@@ -21,8 +21,6 @@
 #include "mir/input/input_channel.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/surface.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/viewable_area.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
@@ -89,18 +87,6 @@ private:
     std::shared_ptr<SurfaceReadinessListener> const listener;
 };
 
-struct SizedViewArea : public mg::ViewableArea
-{
-    SizedViewArea(geom::Rectangle const& area)
-        : area(area)
-    {
-    }
-    geom::Rectangle view_area() const override
-    {
-        return area;
-    }
-    geom::Rectangle area;
-};
 }
 
 mtf::InputTestingServerConfiguration::InputTestingServerConfiguration()
@@ -177,19 +163,6 @@ std::shared_ptr<ms::InputRegistrar> mtf::InputTestingServerConfiguration::the_in
     }
 
     return input_registrar;
-}
-
-geom::Rectangle mtf::InputTestingServerConfiguration::the_screen_geometry()
-{
-    static geom::Rectangle const default_geometry{geom::Point{0, 0}, geom::Size{1600, 1600}};
-    return default_geometry;
-}
-
-std::shared_ptr<mg::ViewableArea> mtf::InputTestingServerConfiguration::the_viewable_area()
-{
-    if (!view_area)
-        view_area = std::make_shared<SizedViewArea>(the_screen_geometry());
-    return view_area;
 }
 
 void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string const& channel_name)

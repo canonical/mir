@@ -116,11 +116,6 @@ public:
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const override
-    {
-        return display_buffer.view_area();
-    }
-
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         f(display_buffer);

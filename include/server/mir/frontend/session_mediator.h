@@ -35,7 +35,7 @@ class EventSink;
 namespace graphics
 {
 class Platform;
-class ViewableArea;
+class Display;
 }
 
 namespace compositor
@@ -63,7 +63,7 @@ public:
     SessionMediator(
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
-        std::shared_ptr<graphics::ViewableArea> const& viewable_area,
+        std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<events::EventSink> const& event_sink,
@@ -114,7 +114,7 @@ private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
     // TODO this is a dubious dependency - to get display_info (is there only one?)
-    std::shared_ptr<graphics::ViewableArea> const viewable_area;
+    std::shared_ptr<graphics::Display> const display;
     // TODO this is a dubious dependency - to get supported_pixel_formats
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
 

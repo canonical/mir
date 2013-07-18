@@ -30,9 +30,11 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/viewable_area.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
+#include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
@@ -41,18 +43,20 @@
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
+namespace geom = mir::geometry;
+namespace mg = mir::graphics;
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
-    std::shared_ptr<graphics::ViewableArea> const& viewable_area,
+    std::shared_ptr<graphics::Display> const& display,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<events::EventSink> const& event_sink,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
-    viewable_area(viewable_area),
+    display(display),
     buffer_allocator(buffer_allocator),
     report(report),
     event_sink(event_sink),
@@ -93,9 +97,15 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto view_area = viewable_area->view_area();
-    display_info->set_width(view_area.size.width.as_uint32_t());
-    display_info->set_height(view_area.size.height.as_uint32_t());
+    /* TODO: Get proper configuration */
+    geom::Rectangles view_area;
+    display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
+    {
+        view_area.add(db.view_area());
+    });
+    geom::Rectangle const view_rect = view_area.bounding_rectangle();
+    display_info->set_width(view_rect.size.width.as_uint32_t());
+    display_info->set_height(view_rect.size.height.as_uint32_t());
 
     auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
     for (auto pf : supported_pixel_formats)

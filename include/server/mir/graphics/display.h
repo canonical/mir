@@ -19,8 +19,6 @@
 #ifndef MIR_GRAPHICS_DISPLAY_H_
 #define MIR_GRAPHICS_DISPLAY_H_
 
-#include "mir/graphics/viewable_area.h"
-
 #include <memory>
 #include <functional>
 
@@ -44,14 +42,9 @@ typedef std::function<void()> DisplayConfigurationChangeHandler;
 /**
  * Interface to the display subsystem.
  */
-class Display : public ViewableArea
+class Display
 {
 public:
-    /**
-     * The display's view area.
-     */
-    virtual geometry::Rectangle view_area() const = 0;
-
     /**
      * Executes a functor for each output framebuffer.
      */
