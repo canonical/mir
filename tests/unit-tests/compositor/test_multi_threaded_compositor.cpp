@@ -18,7 +18,7 @@
 
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
@@ -76,12 +76,12 @@ private:
     std::vector<mtd::MockDisplayBuffer> buffers;
 };
 
-class StubRenderables : public mc::Renderables
+class StubScene : public mc::Scene
 {
 public:
-    StubRenderables() : callback{[]{}} {}
+    StubScene() : callback{[]{}} {}
 
-    void for_each_if(mc::FilterForRenderables&, mc::OperatorForRenderables&)
+    void for_each_if(mc::FilterForScene&, mc::OperatorForScene&)
     {
     }
 
@@ -202,15 +202,15 @@ private:
 class SurfaceUpdatingCompositingStrategy : public mc::CompositingStrategy
 {
 public:
-    SurfaceUpdatingCompositingStrategy(std::shared_ptr<StubRenderables> const& renderables)
-        : renderables{renderables},
+    SurfaceUpdatingCompositingStrategy(std::shared_ptr<StubScene> const& scene)
+        : scene{scene},
           render_count{0}
     {
     }
 
     void render(mg::DisplayBuffer&)
     {
-        renderables->emit_change_event();
+        scene->emit_change_event();
         ++render_count;
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
@@ -223,7 +223,7 @@ public:
     }
 
 private:
-    std::shared_ptr<StubRenderables> const renderables;
+    std::shared_ptr<StubScene> const scene;
     unsigned int render_count;
 };
 
@@ -242,14 +242,14 @@ TEST(MultiThreadedCompositor, compositing_happens_in_different_threads)
     unsigned int const nbuffers{3};
 
     auto display = std::make_shared<StubDisplay>(nbuffers);
-    auto renderables = std::make_shared<StubRenderables>();
+    auto scene = std::make_shared<StubScene>();
     auto strategy = std::make_shared<RecordingCompositingStrategy>();
-    mc::MultiThreadedCompositor compositor{display, renderables, strategy};
+    mc::MultiThreadedCompositor compositor{display, scene, strategy};
 
     compositor.start();
 
     while (!strategy->enough_records_gathered(nbuffers))
-        renderables->emit_change_event();
+        scene->emit_change_event();
 
     compositor.stop();
 
@@ -273,9 +273,9 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
     unsigned int const nbuffers{3};
 
     auto display = std::make_shared<StubDisplay>(nbuffers);
-    auto renderables = std::make_shared<StubRenderables>();
+    auto scene = std::make_shared<StubScene>();
     auto strategy = std::make_shared<RecordingCompositingStrategy>();
-    mc::MultiThreadedCompositor compositor{display, renderables, strategy};
+    mc::MultiThreadedCompositor compositor{display, scene, strategy};
 
     auto at_least_one = [](unsigned int n){return n >= 1;};
     auto at_least_two = [](unsigned int n){return n >= 2;};
@@ -287,7 +287,7 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
     while (!strategy->check_record_count_for_each_buffer(nbuffers, at_least_one))
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    renderables->emit_change_event();
+    scene->emit_change_event();
 
     /* Wait until buffers have been rendered to twice (initial render + change) */
     while (!strategy->check_record_count_for_each_buffer(nbuffers, at_least_two))
@@ -309,9 +309,9 @@ TEST(MultiThreadedCompositor, surface_update_from_render_doesnt_deadlock)
     unsigned int const nbuffers{3};
 
     auto display = std::make_shared<StubDisplay>(nbuffers);
-    auto renderables = std::make_shared<StubRenderables>();
-    auto strategy = std::make_shared<SurfaceUpdatingCompositingStrategy>(renderables);
-    mc::MultiThreadedCompositor compositor{display, renderables, strategy};
+    auto scene = std::make_shared<StubScene>();
+    auto strategy = std::make_shared<SurfaceUpdatingCompositingStrategy>(scene);
+    mc::MultiThreadedCompositor compositor{display, scene, strategy};
 
     compositor.start();
 
@@ -328,9 +328,9 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
     unsigned int const nbuffers{3};
 
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
-    auto renderables = std::make_shared<StubRenderables>();
+    auto scene = std::make_shared<StubScene>();
     auto strategy = std::make_shared<NullCompositingStrategy>();
-    mc::MultiThreadedCompositor compositor{display, renderables, strategy};
+    mc::MultiThreadedCompositor compositor{display, scene, strategy};
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {

@@ -44,7 +44,7 @@ class BasicCompositingStrategy : public CompositingStrategy
 public:
 
     virtual void render(graphics::DisplayBuffer& display_buffer);
-    virtual void compose_renderables(
+    virtual void compose(
         mir::geometry::Rectangle const& view_area,
         std::function<void(std::shared_ptr<void> const&)> save_resource) = 0;
 };
