@@ -25,7 +25,6 @@
 #include "rpc/mir_basic_rpc_channel.h"
 #include "connection_configuration.h"
 
-#include <cstring>
 #include <cstddef>
 #include <sstream>
 #include <unistd.h>
