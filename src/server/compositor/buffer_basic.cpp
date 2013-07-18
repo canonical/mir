@@ -19,20 +19,22 @@
 #include "mir/compositor/buffer_basic.h"
 #include <atomic>
 
+namespace mg = mir::graphics;
+
 namespace mir
 {
 namespace compositor
 {
 namespace
 {
-BufferID generate_next_buffer_id()
+mg::BufferID generate_next_buffer_id()
 {
     static std::atomic<uint32_t> next_id{0};
 
-    auto id = BufferID(next_id.fetch_add(1));
+    auto id = mg::BufferID(next_id.fetch_add(1));
 
     // Avoid returning an "invalid" id. (Not sure we need invalid ids)
-    while (!id.is_valid()) id = BufferID(next_id.fetch_add(1));
+    while (!id.is_valid()) id = mg::BufferID(next_id.fetch_add(1));
 
     return id;
 }

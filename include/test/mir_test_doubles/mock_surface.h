@@ -49,7 +49,7 @@ struct MockSurface : public shell::Surface
 
     MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(force_requests_to_complete, void());
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<compositor::Buffer>());
+    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<graphics::Buffer>());
 
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(size, geometry::Size());

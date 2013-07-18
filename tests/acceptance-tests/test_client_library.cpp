@@ -736,7 +736,8 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_handled)
             char const* error = mir_connection_get_error_message(connection);
 
             if (std::strcmp("connect: No such file or directory", error) &&
-                std::strcmp("Can't find MIR server", error))
+                std::strcmp("Can't find MIR server", error) &&
+                std::strcmp("Failed to connect to server socket", error))
             {
                 FAIL() << error;
             }

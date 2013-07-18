@@ -25,6 +25,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_test_doubles/stub_ipc_factory.h"
+#include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_doubles/mock_rpc_report.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
@@ -184,7 +185,7 @@ MATCHER_P(InvocationMethodEq, name, "")
 }
 
 TEST_F(ProtobufCommunicator,
-       double_disconnection_attempt_has_no_effect)
+       double_disconnection_attempt_throws_exception)
 {
     using namespace testing;
 
@@ -211,10 +212,12 @@ TEST_F(ProtobufCommunicator,
     EXPECT_CALL(*client->rpc_report, invocation_failed(InvocationMethodEq("disconnect"),_));
     EXPECT_CALL(*client, disconnect_done()).Times(0);
 
+    EXPECT_THROW({
     // We don't know if this will be called, so it can't auto destruct
     std::unique_ptr<google::protobuf::Closure> new_callback(google::protobuf::NewPermanentCallback(client.get(), &mt::TestProtobufClient::disconnect_done));
     client->display_server.disconnect(0, &client->ignored, &client->ignored, new_callback.get());
     client->wait_for_disconnect_done();
+    }, std::runtime_error);
 }
 
 TEST_F(ProtobufCommunicator,
@@ -318,7 +321,8 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
         .Times(2);
 
     auto comms = std::make_shared<mf::ProtobufSocketCommunicator>(
-                    "./test_socket1", ipc_factory, 10,
+                    "./test_socket1", ipc_factory, 
+                    std::make_shared<mtd::StubSessionAuthorizer>(), 10,
                     std::bind(&MockForceRequests::force_requests_to_complete,
                               &mock_force_requests),
                     std::make_shared<mf::NullCommunicatorReport>());

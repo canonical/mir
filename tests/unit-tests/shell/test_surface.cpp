@@ -28,8 +28,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 #include "mir_test_doubles/stub_input_targeter.h"
-#include "mir_test_doubles/mock_surface_info.h"
-#include "mir_test_doubles/mock_input_info.h"
+#include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test/fake_shared.h"
 
 #include <stdexcept>
@@ -41,6 +40,7 @@ namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -59,10 +59,8 @@ public:
 
     std::weak_ptr<ms::Surface> create_surface(msh::Session*, msh::SurfaceCreationParameters const& )
     {
-        auto info = std::make_shared<mtd::MockSurfaceInfo>();
-        auto input_info = std::make_shared<mtd::MockInputInfo>();
-        dummy_surface = std::make_shared<ms::Surface>(info, input_info, stub_buffer_stream_,
-            std::shared_ptr<mi::InputChannel>(), []{});
+        auto state = std::make_shared<mtd::MockSurfaceState>();
+        dummy_surface = std::make_shared<ms::Surface>(state, stub_buffer_stream_, std::shared_ptr<mi::InputChannel>());
         return dummy_surface;
     }
 
@@ -296,24 +294,6 @@ TEST_F(ShellSurface, show_throw_behavior)
     }, std::runtime_error);
 }
 
-TEST_F(ShellSurface, visible_throw_behavior)
-{
-    msh::Surface test(
-            nullptr,
-            mt::fake_shared(surface_builder),
-            msh::a_surface());
-
-    EXPECT_NO_THROW({
-        test.visible();
-    });
-
-    surface_builder.reset_surface();
-
-    EXPECT_THROW({
-        test.visible();
-    }, std::runtime_error);
-}
-
 TEST_F(ShellSurface, destroy_throw_behavior)
 {
     msh::Surface test(
@@ -525,10 +505,10 @@ TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
         mt::fake_shared(surface_builder),
         msh::a_surface());
 
-    mc::Buffer* buf_ptr{nullptr};
+    mg::Buffer* buf_ptr{nullptr};
 
     test.with_most_recent_buffer_do(
-        [&](mc::Buffer& buffer)
+        [&](mg::Buffer& buffer)
         {
             buf_ptr = &buffer;
         });

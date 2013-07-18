@@ -23,18 +23,17 @@
 
 namespace mir
 {
+namespace graphics { class Buffer; }
+
 namespace compositor
 {
-
-class Buffer;
-
 class BackBufferStrategy
 {
 public:
     virtual ~BackBufferStrategy() = default;
 
-    virtual std::shared_ptr<Buffer> acquire() = 0;
-    virtual void release(std::shared_ptr<Buffer> const& buffer) = 0;
+    virtual std::shared_ptr<graphics::Buffer> acquire() = 0;
+    virtual void release(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
 
 protected:
     BackBufferStrategy() = default;

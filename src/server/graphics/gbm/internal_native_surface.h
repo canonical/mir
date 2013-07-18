@@ -28,7 +28,7 @@ namespace frontend
 {
 class Surface;
 }
-namespace compositor
+namespace graphics
 {
 class Buffer;
 }
@@ -53,7 +53,7 @@ private:
                                       MirSurfaceParameters* parameters);
 
     std::shared_ptr<frontend::Surface> surface;
-    std::shared_ptr<compositor::Buffer> current_buffer;
+    std::shared_ptr<graphics::Buffer> current_buffer;
 };
 
 }

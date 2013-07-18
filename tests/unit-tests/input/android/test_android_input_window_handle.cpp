@@ -23,7 +23,7 @@
 #include "mir/input/input_channel.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 
 #include <cstdlib>
@@ -72,7 +72,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
     unlink(filename);
 
     MockInputChannel mock_channel;
-    mtd::MockInputInfo mock_info;
+    mtd::MockInputSurface mock_surface;
 
     EXPECT_CALL(mock_channel, server_fd())
         .Times(1)
@@ -80,15 +80,18 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     // For now since we are just doing keyboard input we only need surface size,
     // for touch/pointer events we will need a position
-    EXPECT_CALL(mock_info, size_and_position())
+    EXPECT_CALL(mock_surface, size())
         .Times(1)
-        .WillOnce(Return(geom::Rectangle{default_surface_top_left, default_surface_size}));
-    EXPECT_CALL(mock_info, name())
+        .WillOnce(Return(default_surface_size));
+    EXPECT_CALL(mock_surface, position())
+        .Times(1)
+        .WillOnce(Return(default_surface_top_left));
+    EXPECT_CALL(mock_surface, name())
         .Times(1)
         .WillOnce(ReturnRef(testing_surface_name));
 
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
-                                  mt::fake_shared(mock_channel), mt::fake_shared(mock_info));
+                                  mt::fake_shared(mock_channel), mt::fake_shared(mock_surface));
 
     auto info = handle.getInfo();
 

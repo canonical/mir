@@ -24,10 +24,13 @@
 
 namespace mir
 {
+namespace surfaces
+{
+class BufferStream;
+}
 namespace graphics
 {
-
-class Renderable;
+class CompositingCriteria;
 
 class Renderer
 {
@@ -35,7 +38,8 @@ public:
     virtual ~Renderer() = default;
 
     virtual void clear() = 0;
-    virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource, Renderable& renderable) = 0;
+    virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
+                                           CompositingCriteria const& info, surfaces::BufferStream& stream) = 0;
 
 protected:
     Renderer() = default;

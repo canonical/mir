@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -65,9 +65,9 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>(new mtd::StubBuffer());
+        return std::shared_ptr<mg::Buffer>(new mtd::StubBuffer());
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()

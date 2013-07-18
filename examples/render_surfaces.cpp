@@ -289,7 +289,7 @@ public:
             {
             }
 
-            void operator()(mc::Buffer& buffer)
+            void operator()(mg::Buffer& buffer)
             {
                 mt::BufferRenderTarget brt{buffer};
                 brt.make_current();
@@ -311,11 +311,11 @@ public:
         class RenderSurfacesCompositingStrategy : public mc::CompositingStrategy
         {
         public:
-            RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Renderables> const& renderables,
+            RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Scene> const& scene,
                                               std::shared_ptr<mg::Renderer> const& renderer,
                                               std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
                                               std::vector<Moveable>& moveables)
-                : default_compositing_strategy{renderables, renderer, overlay_renderer},
+                : default_compositing_strategy{scene, renderer, overlay_renderer},
                   frames{0},
                   moveables(moveables)
             {
@@ -348,7 +348,7 @@ public:
             std::vector<Moveable>& moveables;
         };
 
-        return std::make_shared<RenderSurfacesCompositingStrategy>(the_renderables(),
+        return std::make_shared<RenderSurfacesCompositingStrategy>(the_scene(),
                                                                    the_renderer(),
                                                                    the_overlay_renderer(),
                                                                    moveables);

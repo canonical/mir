@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 class Buffer;
 }
@@ -44,7 +44,7 @@ public:
      *
      * \param [in] buffer the buffer to get the pixels of
      */
-    virtual void fill_from(compositor::Buffer& buffer) = 0;
+    virtual void fill_from(graphics::Buffer& buffer) = 0;
 
     /**
      * The pixels in 0xAARRGGBB format.

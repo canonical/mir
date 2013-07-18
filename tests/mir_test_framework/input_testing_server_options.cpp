@@ -20,7 +20,7 @@
 
 #include "mir/input/input_channel.h"
 #include "mir/surfaces/input_registrar.h"
-#include "mir/input/surface_info.h"
+#include "mir/input/surface.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/viewable_area.h"
 
@@ -70,11 +70,11 @@ public:
     ~ProxyInputRegistrar() noexcept(true) = default;
     
     void input_channel_opened(std::shared_ptr<mi::InputChannel> const& opened_channel,
-                              std::shared_ptr<mi::SurfaceInfo> const& info)
+                              std::shared_ptr<mi::Surface> const& surface)
     {
-        outstanding_channels[opened_channel] = info->name();
-        underlying_registrar->input_channel_opened(opened_channel, info);
-        listener->channel_ready_for_input(info->name());
+        outstanding_channels[opened_channel] = surface->name();
+        underlying_registrar->input_channel_opened(opened_channel, surface);
+        listener->channel_ready_for_input(surface->name());
     }
     void input_channel_closed(std::shared_ptr<mi::InputChannel> const& closed_channel)
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,32 +13,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored By: Robert Carr <racarr@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
-#define MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
 
-#include "mir/surfaces/graphic_region.h"
-#include <gmock/gmock.h>
+#ifndef MIR_FRONTEND_SESSION_AUTHORIZER_H_
+#define MIR_FRONTEND_SESSION_AUTHORIZER_H_
+
+#include <sys/types.h>
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace frontend
 {
 
-class MockGraphicRegion : public surfaces::GraphicRegion
+class SessionAuthorizer
 {
 public:
-    MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(stride, geometry::Stride());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
-    MOCK_METHOD0(bind_to_texture, void());
+    virtual ~SessionAuthorizer() {}
+    
+    virtual bool connection_is_allowed(pid_t pid) = 0;
+protected:
+    SessionAuthorizer() = default;
+    SessionAuthorizer(SessionAuthorizer const&) = delete;
+    SessionAuthorizer& operator=(SessionAuthorizer const&) = delete;
 };
 
 }
-}
-}
 
-#endif /* MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_ */
+} // namespace mir
+
+#endif // MIR_FRONTEND_SESSION_AUTHORIZER_H_
