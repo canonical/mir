@@ -16,7 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/graphics/android/hwc_display.h"
+#include "mir/graphics/display_buffer.h"
+#include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
 
 #include "mir_test_doubles/mock_hwc_interface.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
@@ -43,6 +45,12 @@ protected:
         mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     }
 
+    std::shared_ptr<mga::AndroidDisplay> create_display()
+    {
+        auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(mock_hwc_device);
+        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_display_report);
+    }
+
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
     std::shared_ptr<mtd::MockHWCInterface> mock_hwc_device;
@@ -54,13 +62,13 @@ TEST_F(AndroidTestHWCFramebuffer, test_post_submits_right_egl_parameters)
 {
     using namespace testing;
 
-    mga::HWCDisplay display(native_win, mock_hwc_device, mock_display_report);
+    auto display = create_display();
 
     testing::InSequence sequence_enforcer;
     EXPECT_CALL(*mock_hwc_device, commit_frame(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
         .Times(1);
 
-    display.for_each_display_buffer([](mg::DisplayBuffer& buffer)
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
         buffer.post_update();
     });
@@ -74,9 +82,9 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
     EXPECT_CALL(*mock_hwc_device, display_size())
         .Times(1)
         .WillOnce(Return(fake_display_size)); 
-    mga::HWCDisplay display(native_win, mock_hwc_device, mock_display_report);
+    auto display = create_display();
     
-    auto view_area = display.view_area();
+    auto view_area = display->view_area();
 
     geom::Point origin_pt{geom::X{0}, geom::Y{0}};
     EXPECT_EQ(view_area.size, fake_display_size);

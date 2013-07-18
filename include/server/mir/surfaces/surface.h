@@ -33,7 +33,6 @@ namespace mir
 namespace compositor
 {
 class Buffer;
-class GraphicRegion;
 struct BufferIPCPackage;
 class BufferID;
 }

@@ -19,8 +19,9 @@
 #ifndef MIR_COMPOSITOR_BUFFER_H_
 #define MIR_COMPOSITOR_BUFFER_H_
 
-#include "mir/surfaces/graphic_region.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir/geometry/size.h"
+#include "mir/geometry/pixel_format.h"
 
 #include <memory>
 
@@ -31,7 +32,7 @@ namespace compositor
 struct BufferIPCPackage;
 class BufferID;
 
-class Buffer : public surfaces::GraphicRegion
+class Buffer
 {
 public:
     virtual ~Buffer() {}
@@ -40,6 +41,10 @@ public:
     // TODO: Merge native_buffer_addr() into native_buffer_handle()
     virtual void* native_buffer_addr() const { return NULL; }
     virtual BufferID id() const = 0;
+    virtual geometry::Size size() const = 0;
+    virtual geometry::Stride stride() const = 0;
+    virtual geometry::PixelFormat pixel_format() const = 0;
+    virtual void bind_to_texture() = 0;
 
 protected:
     Buffer() = default;
