@@ -44,14 +44,13 @@ message Platform {
   optional string error = 127;
 }
 
-
 message DisplayMode {
     optional uint32 vertical_resolution = 1;
     optional uint32 horizontal_resolution = 2;
     optional double refresh_rate = 3;
 }
 
-message DisplayInfo {
+message DisplayState {
   repeated uint32 pixel_format = 1;
   optional uint32 current_format = 2;
   repeated DisplayMode mode = 3;
@@ -66,13 +65,25 @@ message DisplayInfo {
   optional uint32 physical_height_mm = 12;
 }
 
+// DEPRECATED
+// Outside of the IPC code no-one should care as this is all wrapped up. 
+// But for the following result messages we either populate the "real"
+// attributes or, in the case of an error, the error attribute. So the
+// attributes are all "optional" (or "repeated").
+message DisplayInfo {
+  required uint32 width = 1;
+  required uint32 height = 2;
+  repeated uint32 supported_pixel_format = 3;
+}
+
 // Outside of the IPC code no-one should care as this is all wrapped up.
 // But for the following result messages we either populate the "real"
 // attributes or, in the case of an error, the error attribute. So the
 // attributes are all "optional" (or "repeated").
 message Connection {
   optional Platform platform = 1;
-  repeated DisplayInfo display_info = 2;
+  optional DisplayInfo display_info = 2;
+  repeated DisplayState display_state = 3;
 
   optional string error = 127;
 }

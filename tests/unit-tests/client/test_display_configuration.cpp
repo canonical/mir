@@ -52,7 +52,7 @@ TEST(ClientDisplayConfiguration, configuration_struct_set)
     mp::Connection msg;
     for(auto i=0u; i < num_displays; i++)
     {
-        auto disp = msg.add_display_info();
+        auto disp = msg.add_display_state();
         for(auto j=0u; j < num_pfs; j++)
         {
             disp->add_pixel_format(j);
@@ -79,33 +79,33 @@ TEST(ClientDisplayConfiguration, configuration_struct_set)
     MirDisplayConfiguration config = internal_config;
 
     //display_struct
-    ASSERT_EQ(msg.display_info_size(), config.num_displays);
+    ASSERT_EQ(msg.display_state_size(), config.num_displays);
     ASSERT_NE(nullptr, config.displays);
     for(auto i=0u; i < config.num_displays; i++)
     {
-        auto msg_disp_info = msg.display_info(i);
-        auto result_info = config.displays[i];
+        auto msg_disp_state = msg.display_state(i);
+        auto result_state = config.displays[i];
 
-        EXPECT_EQ(msg_disp_info.card_id(), result_info.card_id);
-        EXPECT_EQ(msg_disp_info.output_id(), result_info.output_id);
-        EXPECT_EQ(msg_disp_info.position_x(), result_info.position_x);
-        EXPECT_EQ(msg_disp_info.position_y(), result_info.position_y);
+        EXPECT_EQ(msg_disp_state.card_id(), result_state.card_id);
+        EXPECT_EQ(msg_disp_state.output_id(), result_state.output_id);
+        EXPECT_EQ(msg_disp_state.position_x(), result_state.position_x);
+        EXPECT_EQ(msg_disp_state.position_y(), result_state.position_y);
 
-        ASSERT_EQ(msg_disp_info.mode().size(), result_info.num_modes);
-        for(auto j=0u; j<result_info.num_modes; j++)
+        ASSERT_EQ(msg_disp_state.mode().size(), result_state.num_modes);
+        for(auto j=0u; j<result_state.num_modes; j++)
         {
-            auto mode = msg_disp_info.mode(j);
-            EXPECT_EQ(mode.horizontal_resolution(), result_info.modes[j].horizontal_resolution);
-            EXPECT_EQ(mode.vertical_resolution(), result_info.modes[j].vertical_resolution);
-            EXPECT_DOUBLE_EQ(mode.refresh_rate(), result_info.modes[j].refresh_rate); 
+            auto mode = msg_disp_state.mode(j);
+            EXPECT_EQ(mode.horizontal_resolution(), result_state.modes[j].horizontal_resolution);
+            EXPECT_EQ(mode.vertical_resolution(), result_state.modes[j].vertical_resolution);
+            EXPECT_DOUBLE_EQ(mode.refresh_rate(), result_state.modes[j].refresh_rate); 
         }
-        EXPECT_EQ(msg_disp_info.current_mode(), result_info.current_mode);
+        EXPECT_EQ(msg_disp_state.current_mode(), result_state.current_mode);
  
-        ASSERT_EQ(msg_disp_info.pixel_format().size(), result_info.num_pixel_formats);
-        for(auto j=0u; j<result_info.num_pixel_formats; j++)
+        ASSERT_EQ(msg_disp_state.pixel_format().size(), result_state.num_pixel_formats);
+        for(auto j=0u; j<result_state.num_pixel_formats; j++)
         {
-            EXPECT_EQ(msg_disp_info.pixel_format(j), result_info.pixel_formats[j]);
+            EXPECT_EQ(msg_disp_state.pixel_format(j), result_state.pixel_formats[j]);
         }
-        EXPECT_EQ(msg_disp_info.current_format(), result_info.current_format);
+        EXPECT_EQ(msg_disp_state.current_format(), result_state.current_format);
     }
 }

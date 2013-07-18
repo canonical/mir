@@ -45,47 +45,47 @@ void mcl::delete_config_storage(MirDisplayConfiguration& config)
 
 namespace
 {
-void fill_display_info(MirDisplayState& info, mp::DisplayInfo const& msg)
+void fill_display_state(MirDisplayState& state, mp::DisplayState const& msg)
 {
-    info.card_id = msg.card_id();
-    info.output_id = msg.output_id();
+    state.card_id = msg.card_id();
+    state.output_id = msg.output_id();
 
-    for(auto i=0u; i < info.num_modes; i++)
+    for(auto i=0u; i < state.num_modes; i++)
     {
         auto mode = msg.mode(i);
-        info.modes[i].horizontal_resolution = mode.horizontal_resolution(); 
-        info.modes[i].vertical_resolution = mode.vertical_resolution(); 
-        info.modes[i].refresh_rate = mode.refresh_rate();
+        state.modes[i].horizontal_resolution = mode.horizontal_resolution(); 
+        state.modes[i].vertical_resolution = mode.vertical_resolution(); 
+        state.modes[i].refresh_rate = mode.refresh_rate();
     }
-    info.current_mode = msg.current_mode();
+    state.current_mode = msg.current_mode();
 
-    for(auto i=0u; i < info.num_pixel_formats; i++)
+    for(auto i=0u; i < state.num_pixel_formats; i++)
     {
-        info.pixel_formats[i] = (MirPixelFormat) msg.pixel_format(i);
+        state.pixel_formats[i] = (MirPixelFormat) msg.pixel_format(i);
     }
-    info.current_format = msg.current_format();
+    state.current_format = msg.current_format();
 
-    info.position_x = msg.position_x();
-    info.position_y = msg.position_y();
-    info.connected = msg.connected();
-    info.used = msg.used();
-    info.physical_width_mm = msg.physical_width_mm();
-    info.physical_height_mm = msg.physical_height_mm();
+    state.position_x = msg.position_x();
+    state.position_y = msg.position_y();
+    state.connected = msg.connected();
+    state.used = msg.used();
+    state.physical_width_mm = msg.physical_width_mm();
+    state.physical_height_mm = msg.physical_height_mm();
 }
 
 void alloc_storage_from_msg(MirDisplayConfiguration& config, mp::Connection& msg)
 {
-    config.num_displays = msg.display_info_size();
+    config.num_displays = msg.display_state_size();
     config.displays = static_cast<MirDisplayState*>(::operator new(sizeof(MirDisplayState) * config.num_displays));
 
     for(auto i=0u; i < config.num_displays; i++)
     {
-        auto info = msg.display_info(i);
-        config.displays[i].num_pixel_formats = info.pixel_format_size();
+        auto state = msg.display_state(i);
+        config.displays[i].num_pixel_formats = state.pixel_format_size();
         config.displays[i].pixel_formats = static_cast<MirPixelFormat*>(
             ::operator new(sizeof(MirPixelFormat)*config.displays[i].num_pixel_formats));
  
-        config.displays[i].num_modes = info.mode_size();
+        config.displays[i].num_modes = state.mode_size();
         config.displays[i].modes = static_cast<MirDisplayMode*>(
             ::operator new(sizeof(MirDisplayMode)*config.displays[i].num_modes));
     }
@@ -109,6 +109,6 @@ void mcl::DisplayConfiguration::set_from_message(protobuf::Connection& connectio
 
     for(auto i=0u; i < config.num_displays; i++)
     {
-        fill_display_info(config.displays[i], connection_msg.display_info(i));
+        fill_display_state(config.displays[i], connection_msg.display_state(i));
     }
 }

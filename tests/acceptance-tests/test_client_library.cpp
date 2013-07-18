@@ -710,15 +710,15 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             MirDisplayConfiguration configuration;
             mir_connection_display_config_init(connection, &configuration);
 
-            ASSERT_GT(0, configuration.num_displays);
+            ASSERT_GT(configuration.num_displays, 0);
             ASSERT_NE(nullptr, configuration.displays);
 
             for(auto i=0u; i < configuration.num_displays; i++)
             {
                 MirDisplayState* disp = &configuration.displays[i];
                 ASSERT_NE(nullptr, disp); 
-                EXPECT_GT(disp->num_modes, disp->current_mode);
-                EXPECT_GT(disp->num_pixel_formats, disp->current_format);
+                EXPECT_GE(disp->num_modes, disp->current_mode);
+                EXPECT_GE(disp->num_pixel_formats, disp->current_format);
             }
 
             mir_destroy_display_config(&configuration);

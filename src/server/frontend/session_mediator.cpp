@@ -85,7 +85,7 @@ void mf::SessionMediator::connect(
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
-    auto display_info = response->add_display_info();
+    auto display_state = response->add_display_state();
 
     for (auto& data : ipc_package->ipc_data)
         platform->add_data(data);
@@ -94,20 +94,22 @@ void mf::SessionMediator::connect(
         platform->add_fd(ipc_fds);
 
     auto view_area = viewable_area->view_area();
-    display_info->set_connected(1);
-    display_info->set_used(1);
-    display_info->set_physical_width_mm(0);
-    display_info->set_physical_height_mm(0);
-    display_info->set_position_x(view_area.top_left.x.as_uint32_t());
-    display_info->set_position_y(view_area.top_left.y.as_uint32_t());
-    auto mode = display_info->add_mode();
+    display_state->set_connected(1);
+    display_state->set_used(1);
+    display_state->set_physical_width_mm(0);
+    display_state->set_physical_height_mm(0);
+    display_state->set_position_x(view_area.top_left.x.as_uint32_t());
+    display_state->set_position_y(view_area.top_left.y.as_uint32_t());
+    auto mode = display_state->add_mode();
     mode->set_horizontal_resolution(view_area.size.width.as_uint32_t());
     mode->set_vertical_resolution(view_area.size.height.as_uint32_t());
     mode->set_refresh_rate(60.0f);
+    display_state->set_current_mode(0);
 
     auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
     for (auto pf : supported_pixel_formats)
-        display_info->add_pixel_format(static_cast<uint32_t>(pf));
+        display_state->add_pixel_format(static_cast<uint32_t>(pf));
+    display_state->set_current_format(0);
 
     resource_cache->save_resource(response, ipc_package);
 
