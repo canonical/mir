@@ -15,8 +15,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gl_renderer.h"
-#include "mir/graphics/compositing_criteria.h"
+#include "mir/compositor/gl_renderer.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/graphics/buffer.h"
 

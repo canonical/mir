@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
-#include <mir/graphics/gl_renderer.h>
+#include <mir/compositor/gl_renderer.h>
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
 #include <mir_test_doubles/mock_compositing_criteria.h>

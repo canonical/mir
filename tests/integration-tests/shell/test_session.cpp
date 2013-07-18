@@ -26,7 +26,7 @@
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/buffer_stream.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/frontend/communicator.h"
 
 #include "mir_test_doubles/stub_buffer.h"

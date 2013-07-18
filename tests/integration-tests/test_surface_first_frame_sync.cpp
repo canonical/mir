@@ -18,7 +18,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
 #include "mir/compositor/scene.h"

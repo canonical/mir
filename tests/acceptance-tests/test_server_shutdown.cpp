@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/fake_event_hub_input_configuration.h"

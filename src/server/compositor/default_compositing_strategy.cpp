@@ -21,8 +21,8 @@
 #include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/renderer.h"
-#include "mir/graphics/compositing_criteria.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/compositing_criteria.h"
 
 #include <cassert>
 
