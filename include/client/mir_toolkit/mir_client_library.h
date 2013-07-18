@@ -99,7 +99,7 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
  *   \param [in]  connection        The connection
  *   \param [out] display_configuration  Structure to be populated that describes the display configuration
  */
-void mir_connection_get_display_configuration(MirConnection *connection, MirDisplayConfiguration *display_configuration);
+void mir_connection_get_display_configuration(MirConnection *connection, MirDisplayConfiguration* display_configuration);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.

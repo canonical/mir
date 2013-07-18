@@ -102,9 +102,9 @@ TEST(ClientDisplayConfiguration, configuration_struct_set)
         EXPECT_EQ(msg_disp_info.current_mode(), result_info.current_mode);
  
         ASSERT_EQ(msg_disp_info.pixel_format().size(), result_info.num_pixel_formats);
-        for(auto j=0u; j<result_info.num_modes; j++)
+        for(auto j=0u; j<result_info.num_pixel_formats; j++)
         {
-            EXPECT_EQ(msg_disp_info.pixel_format(j), j);
+            EXPECT_EQ(msg_disp_info.pixel_format(j), result_info.pixel_formats[j]);
         }
         EXPECT_EQ(msg_disp_info.current_format(), result_info.current_format);
     }

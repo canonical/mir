@@ -166,15 +166,16 @@ typedef struct MirDisplayMode
 
 typedef struct MirDisplayInfo
 {
+    uint32_t num_modes;
+    MirDisplayMode* modes;
+
+    uint32_t num_pixel_formats;
+    MirPixelFormat* pixel_formats;
+
     uint32_t card_id;
     uint32_t output_id;
 
-    uint32_t num_modes;
-    MirDisplayMode* modes;
-    uint32_t current_mode;
- 
-    uint32_t num_pixel_formats;
-    MirPixelFormat* pixel_formats;
+    uint32_t current_mode; 
     uint32_t current_format;
 
     int32_t position_x;

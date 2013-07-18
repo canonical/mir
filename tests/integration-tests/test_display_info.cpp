@@ -48,9 +48,11 @@ public:
     }
 
     static geom::Rectangle const rectangle;
+    static geom::Size const expected_dimensions_mm;
 };
 
 geom::Rectangle const StubDisplay::rectangle {geom::Point{3,6}, geom::Size{1,7}};
+geom::Size const StubDisplay::expected_dimensions_mm{0,0};
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
@@ -127,9 +129,9 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
                                      connection_callback, &connection));
 
-            MirDisplayConfiguration configuration;
 
-            mir_connection_get_display_configuration(connection, &configuration);
+            MirDisplayConfiguration configuration;
+            mir_connection_display_config_init(&configuration);
 
             /* TODO: expand test to test multimonitor situations */
             ASSERT_EQ(1u, configuration.num_displays);
@@ -145,10 +147,8 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             EXPECT_EQ(0, info.card_id);
 
             //sizing
-//            EXPECT_EQ(expected_mm.width, info.physical_width_mm);
-//            EXPECT_EQ(expected_mm.height, info.physical_height_mm);
-            EXPECT_EQ(9, info.physical_width_mm);
-            EXPECT_EQ(8, info.physical_height_mm);
+            EXPECT_EQ(StubDisplay::expected_dimensions_mm.width.as_uint32_t(), info.physical_width_mm);
+            EXPECT_EQ(StubDisplay::expected_dimensions_mm.height.as_uint32_t(), info.physical_height_mm);
 
             //position
             EXPECT_EQ(expected_rect.top_left.x.as_uint32_t(), info.position_x); 
@@ -162,7 +162,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             //current mode 
             EXPECT_EQ(expected_rect.size.width.as_uint32_t(), mode.horizontal_resolution);
             EXPECT_EQ(expected_rect.size.height.as_uint32_t(), mode.vertical_resolution);
-//            EXPECT_THAT(60.0f, testing::FloatEq(mode.refresh_rate));
+            EXPECT_FLOAT_EQ(60.0f, mode.refresh_rate);
 
             //pixel formats
             ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
@@ -174,6 +174,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             }
             EXPECT_EQ(0, info.current_format);
 
+            mir_display_config_destroy(&configuration);
             mir_connection_release(connection);
         }
     } client_config;

@@ -94,12 +94,16 @@ void mf::SessionMediator::connect(
         platform->add_fd(ipc_fds);
 
     auto view_area = viewable_area->view_area();
+    display_info->set_connected(1);
+    display_info->set_used(1);
+    display_info->set_physical_width_mm(0);
+    display_info->set_physical_height_mm(0);
     display_info->set_position_x(view_area.top_left.x.as_uint32_t());
     display_info->set_position_y(view_area.top_left.y.as_uint32_t());
     auto mode = display_info->add_mode();
     mode->set_horizontal_resolution(view_area.size.width.as_uint32_t());
-    mode->set_vertical_resolution(view_area.size.width.as_uint32_t());
-    mode->set_refresh_rate(0.0f);
+    mode->set_vertical_resolution(view_area.size.height.as_uint32_t());
+    mode->set_refresh_rate(60.0f);
 
     auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
     for (auto pf : supported_pixel_formats)

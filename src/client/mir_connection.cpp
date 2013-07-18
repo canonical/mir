@@ -155,8 +155,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          */
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
-
-        fill_display_configuration_from_connect_msg_locked();
+        display_configuration.set_from_message(connect_result);
     }
 
     callback(this, context);
@@ -273,53 +272,21 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
     }
 }
 
-
 namespace
 {
-void fill_display_info(MirDisplayInfo& display_info, mir::protobuf::DisplayInfo const& info_message)
+void display_config_copy(MirDisplayConfiguration* out, MirDisplayConfiguration const& in)
 {
-(void) display_info; (void) info_message;
-#if 0
-    display_info.position_x = info_message.position_x();
-    display_info.position_y = info_message.position_y();
-
-//    display_info.horizontal_resolution = info_message.width();
-//    display_info.veritical_resolution = info_message.height();
-
-    auto const pf_size = info_message.supported_pixel_format_size();
-    display_info.pixel_formats = ::operator new(sizeof(int) * pf_size);
-
-    display_info.supported_pixel_format_items = pf_size > mir_supported_pixel_format_max ?
-                                                mir_supported_pixel_format_max :
-                                                pf_size;
-
-    for (int i = 0; i < display_info.supported_pixel_format_items; ++i)
+    out->num_displays = std::min(out->num_displays, in.num_displays);
+    for(auto i =0u; i < min; i++)
     {
-        display_info.supported_pixel_format[i] =
-            static_cast<MirPixelFormat>(info_message.supported_pixel_format(i));
-    }
-#endif
-} 
-}
-
-//'mutex' must be locked for display_configuration
-void MirConnection::fill_display_configuration_from_connect_msg_locked()
-{
-    display_configuration.num_displays = connect_result.display_info().size();
-    if (!connect_result.has_error() && (display_configuration.num_displays > 0))
-    {
-        for(auto i = 0u; i < display_configuration.num_displays; i++)
-        {
-//            auto const& connection_display_info = connect_result.display_info(i);
-//            fill_display_info(display_configuration.display[i], connection_display_info);
-        }
+        std::memcpy(out->displays, in.displays, sizeof(MirDisplayInfo) * out->num_displays);
     }
 }
-
-void MirConnection::populate(MirDisplayConfiguration& display_group)
+}
+void MirConnection::display_config(MirDisplayConfiguration* configuration)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    display_group = display_configuration;
+    display_config_copy(out_configuration, display_configuration);
 }
 
 

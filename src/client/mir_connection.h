@@ -32,6 +32,7 @@
 
 #include "client_platform.h"
 #include "client_context.h"
+#include "display_configuration.h"
 
 #include "mir_wait_handle.h"
 #include "mir/events/event_sink.h"
@@ -99,7 +100,7 @@ public:
                                   void* context);
 
     void populate(MirPlatformPackage& platform_package);
-    void populate(MirDisplayConfiguration& display_info);
+    void fill_display_config(MirDisplayConfiguration*);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 
@@ -152,8 +153,7 @@ private:
     void released(SurfaceRelease );
     void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
 
-    void fill_display_configuration_from_connect_msg_locked();
-    MirDisplayConfiguration display_configuration;
+    mir::client::DisplayConfiguration display_configuration;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */
