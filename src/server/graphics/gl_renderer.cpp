@@ -26,7 +26,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mg=mir::graphics;
+namespace mc = mir::compositor;
 namespace geom=mir::geometry;
 
 namespace
@@ -115,7 +115,7 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
 
 }
 
-mg::GLRenderer::Resources::Resources() :
+mc ::GLRenderer::Resources::Resources() :
     vertex_shader(0),
     fragment_shader(0),
     program(0),
@@ -128,7 +128,7 @@ mg::GLRenderer::Resources::Resources() :
 {
 }
 
-mg::GLRenderer::Resources::~Resources()
+mc ::GLRenderer::Resources::~Resources()
 {
     if (vertex_shader)
         glDeleteShader(vertex_shader);
@@ -142,7 +142,7 @@ mg::GLRenderer::Resources::~Resources()
         glDeleteTextures(1, &texture);
 }
 
-void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
+void mc ::GLRenderer::Resources::setup(const geometry::Size& display_size)
 {
     GLint param = 0;
 
@@ -229,13 +229,13 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glUseProgram(0);
 }
 
-mg::GLRenderer::GLRenderer(const geom::Size& display_size)
+mc ::GLRenderer::GLRenderer(const geom::Size& display_size)
 {
     resources.setup(display_size);
 }
 
-void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                            mg::CompositingCriteria const& criteria, mir::surfaces::BufferStream& stream)
+void mc ::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource,
+                            CompositingCriteria const& criteria, mir::surfaces::BufferStream& stream)
 {
     glUseProgram(resources.program);
 
@@ -267,7 +267,7 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     glDisableVertexAttribArray(resources.position_attr_loc);
 }
 
-void mg::GLRenderer::clear()
+void mc ::GLRenderer::clear()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 }

@@ -88,13 +88,13 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             });
     }
 
-    std::shared_ptr<mg::Renderer> the_renderer() override
+    std::shared_ptr<mc::Renderer> the_renderer() override
     {
-        struct NullRenderer : public mg::Renderer
+        struct NullRenderer : public mc::Renderer
         {
             void clear() {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mg::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
+                        mc::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
             {
                 stream.lock_back_buffer();
             }

@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class MockCompositingCriteria : public graphics::CompositingCriteria 
+class MockCompositingCriteria : public compositor::CompositingCriteria
 {
 public:
     ~MockCompositingCriteria() noexcept {}

@@ -56,7 +56,7 @@ struct MockOverlayRenderer : public mc::OverlayRenderer
 
 struct FakeScene : mc::Scene
 {
-    FakeScene(std::vector<mg::CompositingCriteria*> surfaces) :
+    FakeScene(std::vector<mc::CompositingCriteria*> surfaces) :
         surfaces(surfaces)
     {
     }
@@ -66,7 +66,7 @@ struct FakeScene : mc::Scene
     {
         for (auto it = surfaces.begin(); it != surfaces.end(); it++)
         {
-            mg::CompositingCriteria &info = **it;
+            mc::CompositingCriteria &info = **it;
             if (filter(info)) renderable_operator(info, stub_stream);
         }
     }
@@ -74,7 +74,7 @@ struct FakeScene : mc::Scene
     void set_change_callback(std::function<void()> const&) {}
 
     mtd::MockBufferStream stub_stream;
-    std::vector<mg::CompositingCriteria*> surfaces;
+    std::vector<mc::CompositingCriteria*> surfaces;
 };
 
 ACTION_P(InvokeArgWithParam, param)
@@ -149,7 +149,7 @@ TEST(DefaultCompositingStrategy, skips_scene_that_should_not_be_rendered)
     EXPECT_CALL(mock_criteria2, should_be_rendered()).WillOnce(Return(false));
     EXPECT_CALL(mock_criteria3, should_be_rendered()).WillOnce(Return(true));
 
-    std::vector<mg::CompositingCriteria*> renderable_vec;
+    std::vector<mc::CompositingCriteria*> renderable_vec;
     renderable_vec.push_back(&mock_criteria1);
     renderable_vec.push_back(&mock_criteria2);
     renderable_vec.push_back(&mock_criteria3);

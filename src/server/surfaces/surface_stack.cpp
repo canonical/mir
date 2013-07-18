@@ -59,7 +59,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
-            mg::CompositingCriteria& info = *((*it)->compositing_criteria());
+            mc::CompositingCriteria& info = *((*it)->compositing_criteria());
             ms::BufferStream& stream = *((*it)->buffer_stream());
             if (filter(info)) op(info, stream);
         }

@@ -28,7 +28,7 @@ namespace mir
 namespace surfaces
 {
 
-class SurfaceState : public graphics::CompositingCriteria, public input::Surface, 
+class SurfaceState : public compositor::CompositingCriteria, public input::Surface,
                      public MutableSurfaceState 
 {
 protected:
