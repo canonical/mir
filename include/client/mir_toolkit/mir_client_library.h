@@ -94,6 +94,11 @@ void mir_connection_release(MirConnection *connection);
  */
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
+/** 
+ * DEPRECATED. use mir_connection_display_config_init
+ */
+void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
+
 /**
  * Query the display
  *   \warning this function can overwrite the contents of display_configuration. 

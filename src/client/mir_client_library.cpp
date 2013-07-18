@@ -241,6 +241,35 @@ void mir_destroy_display_config(MirDisplayConfiguration* configuration)
         mcl::delete_config_storage(*configuration);
 }
 
+//TODO: DEPRECATED: remove this function
+void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
+{
+    MirDisplayConfiguration config;
+    mir_connection_display_config_init(connection, &config);
+    if (config.num_displays < 1)
+        return;
+    MirDisplayState* state = &config.displays[0];
+    MirDisplayMode mode = state->modes[state->current_mode];
+   
+    display_info->width = mode.horizontal_resolution;
+    display_info->height = mode.vertical_resolution;
+
+    unsigned int format_items;
+    if (state->num_pixel_formats > mir_supported_pixel_format_max) 
+         format_items = mir_supported_pixel_format_max;
+    else
+         format_items = state->num_pixel_formats;
+
+    display_info->supported_pixel_format_items = format_items; 
+    for(auto i=0u; i < format_items; i++)
+    {
+        display_info->supported_pixel_format[i] = state->pixel_formats[i];
+    }
+
+    mir_destroy_display_config(&config);
+}
+
+
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
 {
     surface->get_cpu_region( *graphics_region);

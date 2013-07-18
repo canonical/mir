@@ -153,6 +153,19 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
+/** 
+ * DEPRECATED. use MirDisplayConfiguration
+ */
+enum { mir_supported_pixel_format_max = 32 };
+typedef struct MirDisplayInfo
+{
+    uint32_t width;
+    uint32_t height;
+    
+    int supported_pixel_format_items;
+    MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
+} MirDisplayInfo;
+
 /**
  * MirDisplayState provides details of the graphics environment.
  */
