@@ -269,7 +269,6 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     mir_destroy_display_config(&config);
 }
 
-
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
 {
     surface->get_cpu_region( *graphics_region);
