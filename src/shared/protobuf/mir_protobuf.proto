@@ -55,8 +55,8 @@ message DisplayState {
   optional uint32 current_format = 2;
   repeated DisplayMode mode = 3;
   optional uint32 current_mode = 4;
-  optional int32 position_x = 5;
-  optional int32 position_y = 6;
+  optional sint32 position_x = 5;
+  optional sint32 position_y = 6;
   optional uint32 card_id = 7;
   optional uint32 output_id = 8;
   optional uint32 connected = 9;
