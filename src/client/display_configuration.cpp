@@ -40,7 +40,7 @@ void mcl::delete_config_storage(MirDisplayConfiguration& config)
     if (config.displays)
         ::operator delete (config.displays);
 
-    std::memset(&config, 0, sizeof(MirDisplayConfiguration));
+    config.num_displays = 0;
 }
 
 namespace
@@ -76,18 +76,18 @@ void fill_display_info(MirDisplayState& info, mp::DisplayInfo const& msg)
 void alloc_storage_from_msg(MirDisplayConfiguration& config, mp::Connection& msg)
 {
     config.num_displays = msg.display_info_size();
-    config.displays = (MirDisplayState*) ::operator new(sizeof(MirDisplayState) * config.num_displays);
+    config.displays = static_cast<MirDisplayState*>(::operator new(sizeof(MirDisplayState) * config.num_displays));
 
     for(auto i=0u; i < config.num_displays; i++)
     {
         auto info = msg.display_info(i);
         config.displays[i].num_pixel_formats = info.pixel_format_size();
-        config.displays[i].pixel_formats = (MirPixelFormat*)
-            ::operator new(sizeof(MirPixelFormat)*config.displays[i].num_pixel_formats);
+        config.displays[i].pixel_formats = static_cast<MirPixelFormat*>(
+            ::operator new(sizeof(MirPixelFormat)*config.displays[i].num_pixel_formats));
  
         config.displays[i].num_modes = info.mode_size();
-        config.displays[i].modes = (MirDisplayMode*)
-            ::operator new(sizeof(MirDisplayMode)*config.displays[i].num_modes);
+        config.displays[i].modes = static_cast<MirDisplayMode*>(
+            ::operator new(sizeof(MirDisplayMode)*config.displays[i].num_modes));
     }
 }
 }
