@@ -42,6 +42,9 @@ namespace mir
 /// The client-side library implementation namespace
 namespace client
 {
+
+void delete_config_storage(MirDisplayConfiguration& config);
+
 class ConnectionConfiguration;
 class ClientPlatformFactory;
 
@@ -100,7 +103,7 @@ public:
                                   void* context);
 
     void populate(MirPlatformPackage& platform_package);
-    void fill_display_config(MirDisplayConfiguration*);
+    void create_copy_of_display_config(MirDisplayConfiguration&);
 
     std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 

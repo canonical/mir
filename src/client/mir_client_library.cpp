@@ -21,6 +21,7 @@
 #include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir_connection.h"
+#include "display_configuration.h"
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
@@ -228,9 +229,16 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
     connection->populate(*platform_package);
 }
 
-void mir_connection_get_display_configuration(MirConnection *connection, MirDisplayConfiguration* configuration)
+void mir_connection_display_config_init(MirConnection *connection, MirDisplayConfiguration* configuration)
 {
-    connection->fill_display_config(configuration);
+    if (connection && configuration) 
+        connection->create_copy_of_display_config(*configuration);
+}
+
+void mir_destroy_display_config(MirDisplayConfiguration* configuration)
+{
+    if(configuration)
+        mcl::delete_config_storage(*configuration);
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)

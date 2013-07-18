@@ -27,6 +27,10 @@ namespace mir
 namespace client
 {
 
+
+void delete_config_storage(MirDisplayConfiguration& config);
+void copy_mir_configuration(MirDisplayConfiguration& out, MirDisplayConfiguration const& in);
+
 class DisplayConfiguration
 {
 public:

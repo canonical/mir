@@ -131,7 +131,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
 
 
             MirDisplayConfiguration configuration;
-            mir_connection_display_config_init(&configuration);
+            mir_connection_display_config_init(connection, &configuration);
 
             /* TODO: expand test to test multimonitor situations */
             ASSERT_EQ(1u, configuration.num_displays);
@@ -174,7 +174,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             }
             EXPECT_EQ(0, info.current_format);
 
-            mir_display_config_destroy(&configuration);
+            mir_destroy_display_config(&configuration);
             mir_connection_release(connection);
         }
     } client_config;

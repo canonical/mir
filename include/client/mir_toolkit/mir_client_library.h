@@ -96,10 +96,18 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 
 /**
  * Query the display
+ *   \warning this function can overwrite the contents of display_configuration. 
+ *   \warning display_configuration must be destroyed via mir_destroy_display_config() 
  *   \param [in]  connection        The connection
  *   \param [out] display_configuration  Structure to be populated that describes the display configuration
  */
-void mir_connection_get_display_configuration(MirConnection *connection, MirDisplayConfiguration* display_configuration);
+void mir_connection_display_config_init(MirConnection *connection, MirDisplayConfiguration* display_configuration);
+
+/**
+ * Destroy the DisplayConfiguration resource acquired from mir_connection_display_config_init
+ *   \param [in] display_configuration  The display_configuration information resource to be destroyed 
+ */
+void mir_destroy_display_config(MirDisplayConfiguration* display_configuration);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.

@@ -233,18 +233,11 @@ void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
         info->set_position_x(rect.top_left.x.as_uint32_t());
         info->set_position_y(rect.top_left.y.as_uint32_t());
         auto mode = info->add_mode();
-        mode->set_vertical_resolution(rect.size.width.as_uint32_t());
-        mode->set_horizontal_resolution(rect.size.height.as_uint32_t());
+        mode->set_horizontal_resolution(rect.size.width.as_uint32_t());
+        mode->set_vertical_resolution(rect.size.height.as_uint32_t());
         for (auto pf : supported_pixel_formats)
             info->add_pixel_format(static_cast<uint32_t>(pf));
     }
-}
-
-void fill_display_info_100(mp::ConnectParameters const*, mp::Connection* response)
-{
-    auto info = response->add_display_info();
-    for (int i = 0; i < 100; i++)
-        info->add_pixel_format(static_cast<uint32_t>(mir_pixel_format_xbgr_8888));
 }
 
 }
@@ -260,16 +253,21 @@ TEST_F(MirConnectionTest, populates_display_info_correctly_on_startup)
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    auto configuration = connection->display_config();
+    MirDisplayConfiguration configuration{0, nullptr};
+    std::cout << configuration.displays << std::endl;
+    connection->create_copy_of_display_config(configuration);
 
-    EXPECT_EQ(number_of_displays, configuration->num_displays);
-
+    ASSERT_EQ(number_of_displays, configuration.num_displays);
     for(auto i=0u; i < number_of_displays; i++)
     {
-        auto info = configuration->displays[i];
+        auto info = configuration.displays[i];
         auto rect = rects[i];
-        //EXPECT_EQ(info.width, rect.size.width.as_uint32_t());
-        //EXPECT_EQ(info.height, rect.size.height.as_uint32_t());
+
+        ASSERT_EQ(1, info.num_modes);
+        ASSERT_NE(nullptr, info.modes);
+        EXPECT_EQ(rect.size.width.as_uint32_t(), info.modes[0].horizontal_resolution);
+        EXPECT_EQ(rect.size.height.as_uint32_t(), info.modes[0].vertical_resolution);
+
         EXPECT_EQ(info.position_x, rect.top_left.x.as_uint32_t());
         EXPECT_EQ(info.position_y, rect.top_left.y.as_uint32_t());
  
@@ -281,70 +279,6 @@ TEST_F(MirConnectionTest, populates_display_info_correctly_on_startup)
             EXPECT_EQ(supported_pixel_formats[i], info.pixel_formats[i]);
         }
     }
+
+    mcl::delete_config_storage(configuration);
 }
-
-#if 0
-
-TEST_F(MirConnectionTest, populates_display_info_correctly_on_new_configuration_event)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_info));
-
-    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
-                                                     connected_callback, 0);
-    wait_handle->wait_for_all();
-
-    MirDisplayConfiguration configuration;
-    configuration.number_of_displays = 0;
-
-    connection->populate(configuration);
-
-    EXPECT_EQ(number_of_displays, configuration.number_of_displays);
-
-    for(auto i=0u; i < number_of_displays; i++)
-    {
-        auto info = configuration.display[i];
-        auto rect = rects[i];
-        EXPECT_EQ(info.width, rect.size.width.as_uint32_t());
-        EXPECT_EQ(info.height, rect.size.height.as_uint32_t());
-        EXPECT_EQ(info.position_x, rect.top_left.x.as_uint32_t());
-        EXPECT_EQ(info.position_y, rect.top_left.y.as_uint32_t());
- 
-        ASSERT_EQ(supported_pixel_formats.size(),
-                  static_cast<uint32_t>(info.supported_pixel_format_items));
-
-        for (size_t i = 0; i < supported_pixel_formats.size(); ++i)
-        {
-            EXPECT_EQ(supported_pixel_formats[i],
-                      info.supported_pixel_format[i]);
-        }
-    }
-}
-TEST_F(MirConnectionTest, populates_display_info_without_overflowing)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_info_100));
-
-    MirWaitHandle* wait_handle = connection->connect("MirConnectionTest",
-                                                     connected_callback, 0);
-    wait_handle->wait_for_all();
-
-    MirDisplayConfiguration configuration;
-    connection->populate(configuration);
-    EXPECT_EQ(1u, configuration.number_of_displays);
-    MirDisplayInfo info = configuration.display[0];
-
-    ASSERT_EQ(mir_supported_pixel_format_max,
-              info.supported_pixel_format_items);
-
-    for (size_t i = 0; i < mir_supported_pixel_format_max; ++i)
-    {
-        EXPECT_EQ(mir_pixel_format_xbgr_8888,
-                  info.supported_pixel_format[i]);
-    }
-}
-#endif

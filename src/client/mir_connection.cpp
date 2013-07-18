@@ -25,6 +25,7 @@
 #include "rpc/mir_basic_rpc_channel.h"
 #include "connection_configuration.h"
 
+#include <cstring>
 #include <cstddef>
 #include <sstream>
 #include <unistd.h>
@@ -272,21 +273,11 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
     }
 }
 
-namespace
-{
-void display_config_copy(MirDisplayConfiguration* out, MirDisplayConfiguration const& in)
-{
-    out->num_displays = std::min(out->num_displays, in.num_displays);
-    for(auto i =0u; i < min; i++)
-    {
-        std::memcpy(out->displays, in.displays, sizeof(MirDisplayInfo) * out->num_displays);
-    }
-}
-}
-void MirConnection::display_config(MirDisplayConfiguration* configuration)
+
+void MirConnection::create_copy_of_display_config(MirDisplayConfiguration& out_configuration)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    display_config_copy(out_configuration, display_configuration);
+    mcl::copy_mir_configuration(out_configuration, display_configuration);
 }
 
 
