@@ -96,7 +96,9 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& 
 
 void mc::SwitchingBundle::force_requests_to_complete()
 {
-    // TODO, if anything?
+    std::unique_lock<std::mutex> lock(guard);
+    ready = -1;
+    cond.notify_all();
 }
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
