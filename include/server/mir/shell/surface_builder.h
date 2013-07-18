@@ -28,7 +28,7 @@ namespace surfaces { class Surface; }
 
 namespace shell
 {
-struct Session;
+class Session;
 struct SurfaceCreationParameters;
 
 class SurfaceBuilder
