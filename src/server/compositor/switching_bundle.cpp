@@ -27,30 +27,59 @@ mc::SwitchingBundle::SwitchingBundle(
     : bundle_properties{property_request},
       gralloc{gralloc}
 {
+    for (int i = 0; i < 3; i++)
+        ring[i] = gralloc->alloc_buffer(bundle_properties);
+
+    client = -1;
+    ready = -1;
+    compositor = -1;
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
 {
-    std::shared_ptr<mc::Buffer> ret; // TODO
-    return ret;
+    std::unique_lock<std::mutex> lock(guard);
+
+    while (client >= 0)
+        cond.wait(lock);
+
+    client = (compositor + 1) % 3;
+    if (client == ready)
+        client = (client + 1) % 3;
+
+    return ring[client];
 }
 
 void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
     // TODO
     (void)released_buffer;
+
+    std::unique_lock<std::mutex> lock(guard);
+    ready = client;
+    client = -1;
+    cond.notify_one();
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
-    std::shared_ptr<mc::Buffer> ret; // TODO
-    return ret;
+    std::unique_lock<std::mutex> lock(guard);
+
+    while (ready < 0)
+        cond.wait(lock);
+
+    compositor = ready;
+    ready = -1;
+
+    return ring[compositor];
 }
 
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
     // TODO
     (void)released_buffer;
+
+    std::unique_lock<std::mutex> lock(guard);
+    compositor = -1;
 }
 
 void mc::SwitchingBundle::force_requests_to_complete()

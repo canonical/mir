@@ -23,8 +23,8 @@
 #include "buffer_bundle.h"
 #include "rw_lock.h"
 #include <condition_variable>
+#include <mutex>
 #include <memory>
-#include <atomic>
 
 namespace mir
 {
@@ -51,6 +51,14 @@ public:
 private:
     BufferProperties bundle_properties; //must be before swapper
     std::shared_ptr<GraphicBufferAllocator> gralloc;
+
+    std::shared_ptr<Buffer> ring[3];
+    int client;
+    int ready;
+    int compositor;
+
+    std::mutex guard;
+    std::condition_variable cond;
 };
 
 }
