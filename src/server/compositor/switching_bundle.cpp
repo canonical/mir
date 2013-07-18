@@ -75,12 +75,21 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    while (ready < 0)
+    while (ready < 0 && !ncompositors)
         cond.wait(lock);
 
-    compositor = ready;
-    ready = -1;
-    cond.notify_all();
+    if (ncompositors)
+    {
+        assert(compositor >= 0);
+    }
+    else
+    {
+        compositor = ready;
+        ready = -1;
+        cond.notify_all();
+    }
+
+    ncompositors++;
 
     return ring[compositor];
 }
@@ -89,7 +98,9 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& 
 {
     std::unique_lock<std::mutex> lock(guard);
     assert(ring[compositor] == released_buffer);
-    compositor = -1;
+    ncompositors--;
+    if (ncompositors == 0)
+        compositor = -1;
 }
 
 void mc::SwitchingBundle::force_requests_to_complete()
