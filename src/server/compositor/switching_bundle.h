@@ -52,13 +52,17 @@ private:
     BufferProperties bundle_properties; //must be before swapper
     std::shared_ptr<GraphicBufferAllocator> gralloc;
 
+    int steal(int n);
+
     enum {MAX_BUFFERS = 3};
     int nbuffers;
     std::shared_ptr<Buffer> ring[MAX_BUFFERS];
-    int client;
-    int ready;
-    int compositor;
+    int first_compositor;
     int ncompositors;
+    int first_ready;
+    int nready;
+    int first_client;
+    int nclients;
 
     std::mutex guard;
     std::condition_variable cond;

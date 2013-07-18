@@ -27,36 +27,68 @@ mc::SwitchingBundle::SwitchingBundle(
     std::shared_ptr<GraphicBufferAllocator> &gralloc, BufferProperties const& property_request)
     : bundle_properties{property_request},
       gralloc{gralloc},
-      nbuffers{MAX_BUFFERS},
-      client{-1},
-      ready{-1},
-      compositor{-1},
-      ncompositors{0},
+      nbuffers{3},
+      first_compositor{0}, ncompositors{0},
+      first_ready{0}, nready{0},
+      first_client{0}, nclients{0},
       framedropping{true}
 {
+    assert(nbuffers > 0 && nbuffers <= MAX_BUFFERS);
     for (int i = 0; i < MAX_BUFFERS; i++)
         ring[i] = gralloc->alloc_buffer(bundle_properties);
+}
+
+int mc::SwitchingBundle::steal(int n)
+{
+    int stolen = -1;
+
+    if (n > nready)
+        n = nready;
+
+    if (n > 0)
+    {
+        first_client = (first_ready + nready - n) % nbuffers;
+        nready--;
+        nclients++;
+        auto tmp = ring[first_client];
+        stolen = (first_client + nclients - n) % nbuffers;
+
+        for (int i = first_client; i != stolen; i = (i + 1) % nbuffers)
+            ring[i] = ring[(i + n) % nbuffers];
+
+        ring[stolen] = tmp;
+    }
+
+    return stolen;
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
+    int client;
 
     if (framedropping)
     {
-        while (client >= 0)
-            cond.wait(lock);
-    
-        client = (compositor + 1) % nbuffers;
-        if (client == ready)
-            client = (client + 1) % nbuffers;
+        if (ncompositors + nready + nclients >= nbuffers)
+        {
+            while (nready == 0)
+                cond.wait(lock);
+
+            client = steal(1);
+        }
+        else
+        {
+            client = (first_client + nclients) % nbuffers;
+            nclients++;
+        }
     }
     else
     {
-        while (client >= 0 || ready >= 0)
+        while (ncompositors + nready + nclients >= nbuffers)
             cond.wait(lock);
-    
-        client = (compositor + 1) % nbuffers;
+
+        client = (first_client + nclients) % nbuffers;
+        nclients++;
     }
 
     return ring[client];
@@ -65,30 +97,24 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
 void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
-    assert(ring[client] == released_buffer);
-    ready = client;
-    client = -1;
+    assert(ring[first_client] == released_buffer);
+    first_client = (first_client + 1) % nbuffers;
+    nclients--;
+    nready++;
     cond.notify_all();
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
+    int compositor;
 
-    while (ready < 0 && !ncompositors)
+    while (nready <= 0)
         cond.wait(lock);
 
-    if (ncompositors)
-    {
-        assert(compositor >= 0);
-    }
-    else
-    {
-        compositor = ready;
-        ready = -1;
-        cond.notify_all();
-    }
-
+    compositor = first_ready;
+    first_ready = (first_ready + 1) % nbuffers;
+    nready--;
     ncompositors++;
 
     return ring[compositor];
@@ -97,16 +123,16 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
-    assert(ring[compositor] == released_buffer);
+    assert(ring[first_compositor] == released_buffer);
+    first_compositor = (first_compositor + 1) % nbuffers;
     ncompositors--;
-    if (ncompositors == 0)
-        compositor = -1;
+    cond.notify_all();
 }
 
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
-    ready = -1;
+    steal(nready);
     cond.notify_all();
 }
 
