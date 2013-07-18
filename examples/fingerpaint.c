@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
     MirSurface *surf;
     MirGraphicsRegion canvas;
     MirEventDelegate delegate = {&on_event, &canvas};
-    int f;
+    unsigned int f;
 
     (void)argc;
 
@@ -267,17 +267,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirDisplayGrouping grouping;
-    mir_connection_get_display_grouping(conn, &grouping);
-    MirDisplayInfo dinfo = grouping.display[0];
+    MirDisplayConfiguration display_config;
+    mir_connection_display_config_init(conn, &display_config);
+    MirDisplayState* dinfo = &display_config.displays[0];
 
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < dinfo.supported_pixel_format_items; f++)
+    for (f = 0; f < dinfo->num_pixel_formats; f++)
     {
-        if (BYTES_PER_PIXEL(dinfo.supported_pixel_format[f]) == 4)
+        if (BYTES_PER_PIXEL(dinfo->pixel_formats[f]) == 4)
         {
-            parm.pixel_format = dinfo.supported_pixel_format[f];
+            parm.pixel_format = dinfo->pixel_formats[f];
             break;
         }
     }
@@ -289,8 +289,11 @@ int main(int argc, char *argv[])
     }
 
     parm.name = "Paint Canvas";
-    parm.width = dinfo.width;
-    parm.height = dinfo.height;
+    parm.width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
+    parm.height = dinfo->modes[dinfo->current_mode].vertical_resolution;
+
+    mir_destroy_display_config(&display_config);
+
     surf = mir_connection_create_surface_sync(conn, &parm);
     if (surf != NULL)
     {

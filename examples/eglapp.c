@@ -134,7 +134,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         mir_eglapp_handle_input,
         NULL
     };
-    MirDisplayGrouping grouping;
     EGLConfig eglconfig;
     EGLint neglconfigs;
     EGLContext eglctx;
@@ -181,17 +180,22 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    mir_connection_get_display_grouping(connection, &grouping);
-    MirDisplayInfo dinfo = grouping.display[0];
+    MirDisplayConfiguration display_config;
+    mir_connection_display_config_init(connection, &display_config);
+    MirDisplayState* display_state = &display_config.displays[0];
+    MirDisplayMode mode = display_state->modes[display_state->current_mode];
 
     printf("Connected to display: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
-           dinfo.width, dinfo.height,
-           dinfo.position_x, dinfo.position_y,
-           dinfo.supported_pixel_format_items);
+           mode.horizontal_resolution, mode.vertical_resolution,
+           display_state->position_x, display_state->position_y,
+           display_state->num_pixel_formats);
 
-    surfaceparm.width = *width > 0 ? *width : dinfo.width;
-    surfaceparm.height = *height > 0 ? *height : dinfo.height;
-    surfaceparm.pixel_format = dinfo.supported_pixel_format[0];
+    surfaceparm.width = *width > 0 ? *width : mode.horizontal_resolution;
+    surfaceparm.height = *height > 0 ? *height : mode.vertical_resolution;
+    surfaceparm.pixel_format = display_state->pixel_formats[0];
+
+    mir_destroy_display_config(&display_config);
+
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
     unsigned int bpp = get_bpp(surfaceparm.pixel_format);
     EGLint attribs[] =
