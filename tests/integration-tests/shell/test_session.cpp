@@ -25,6 +25,7 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/surfaces/buffer_stream.h"
 #include "mir/graphics/renderer.h"
 #include "mir/frontend/communicator.h"
 
@@ -72,7 +73,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubBufferAllocator : public mc::GraphicBufferAllocator
         {
-            std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const& buffer_properties)
+            std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const& buffer_properties)
             {
                 return std::make_shared<mtd::StubBuffer>(buffer_properties);
             }
@@ -93,9 +94,9 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
         {
             void clear() {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mg::Renderable& renderable)
+                        mg::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
             {
-                renderable.graphic_region();
+                stream.lock_back_buffer();
             }
 
             void ensure_no_live_buffers_bound() {}
@@ -109,7 +110,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubPixelBuffer : public msh::PixelBuffer
         {
-            void fill_from(mc::Buffer&) {}
+            void fill_from(mg::Buffer&) {}
             void const* as_argb_8888() { return nullptr; }
             geom::Size size() const { return geom::Size(); }
             geom::Stride stride() const { return geom::Stride(); }

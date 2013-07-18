@@ -31,7 +31,7 @@ namespace doubles
 struct StubInputRegistrar : public surfaces::InputRegistrar
 {
     void input_channel_opened(std::shared_ptr<input::InputChannel> const&,
-                              std::shared_ptr<input::SurfaceInfo> const&)
+                              std::shared_ptr<input::Surface> const&)
     {
     }
     void input_channel_closed(std::shared_ptr<input::InputChannel> const&)

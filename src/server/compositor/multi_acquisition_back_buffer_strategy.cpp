@@ -23,6 +23,7 @@
 #include <algorithm>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 mc::MultiAcquisitionBackBufferStrategy::MultiAcquisitionBackBufferStrategy(
     std::shared_ptr<BufferBundle> const& buffer_bundle)
@@ -30,7 +31,7 @@ mc::MultiAcquisitionBackBufferStrategy::MultiAcquisitionBackBufferStrategy(
 {
 }
 
-std::shared_ptr<mc::Buffer> mc::MultiAcquisitionBackBufferStrategy::acquire()
+std::shared_ptr<mg::Buffer> mc::MultiAcquisitionBackBufferStrategy::acquire()
 {
     std::lock_guard<std::mutex> lg{mutex};
 
@@ -41,7 +42,7 @@ std::shared_ptr<mc::Buffer> mc::MultiAcquisitionBackBufferStrategy::acquire()
                         return info.partly_released == false;
                     });
 
-    std::shared_ptr<mc::Buffer> buffer;
+    std::shared_ptr<mg::Buffer> buffer;
 
     if (iter != acquired_buffers.end())
     {
@@ -78,7 +79,7 @@ std::shared_ptr<mc::Buffer> mc::MultiAcquisitionBackBufferStrategy::acquire()
     return buffer;
 }
 
-void mc::MultiAcquisitionBackBufferStrategy::release(std::shared_ptr<Buffer> const& buffer)
+void mc::MultiAcquisitionBackBufferStrategy::release(std::shared_ptr<mg::Buffer> const& buffer)
 {
     std::lock_guard<std::mutex> lg{mutex};
 
@@ -108,7 +109,7 @@ void mc::MultiAcquisitionBackBufferStrategy::release(std::shared_ptr<Buffer> con
 }
 
 std::vector<mc::detail::AcquiredBufferInfo>::iterator
-mc::MultiAcquisitionBackBufferStrategy::find_info(std::shared_ptr<Buffer> const& buffer)
+mc::MultiAcquisitionBackBufferStrategy::find_info(std::shared_ptr<mg::Buffer> const& buffer)
 {
     return std::find_if(acquired_buffers.begin(), acquired_buffers.end(),
                         [&buffer] (detail::AcquiredBufferInfo const& info)

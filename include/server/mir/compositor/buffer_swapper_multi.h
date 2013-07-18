@@ -34,28 +34,26 @@ namespace mir
 namespace compositor
 {
 
-class Buffer;
-
 class BufferSwapperMulti : public BufferSwapper
 {
 public:
-    explicit BufferSwapperMulti(std::vector<std::shared_ptr<compositor::Buffer>>& buffer_list, size_t swapper_size);
+    explicit BufferSwapperMulti(std::vector<std::shared_ptr<graphics::Buffer>>& buffer_list, size_t swapper_size);
 
-    std::shared_ptr<Buffer> client_acquire();
-    void client_release(std::shared_ptr<Buffer> const& queued_buffer);
-    std::shared_ptr<Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
+    std::shared_ptr<graphics::Buffer> client_acquire();
+    void client_release(std::shared_ptr<graphics::Buffer> const& queued_buffer);
+    std::shared_ptr<graphics::Buffer> compositor_acquire();
+    void compositor_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
 
     void force_client_abort();
     void force_requests_to_complete();
-    void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
+    void end_responsibility(std::vector<std::shared_ptr<graphics::Buffer>>&, size_t&);
 
 private:
     std::mutex swapper_mutex;
     std::condition_variable client_available_cv;
 
-    std::deque<std::shared_ptr<Buffer>> client_queue;
-    std::deque<std::shared_ptr<Buffer>> compositor_queue;
+    std::deque<std::shared_ptr<graphics::Buffer>> client_queue;
+    std::deque<std::shared_ptr<graphics::Buffer>> compositor_queue;
     unsigned int in_use_by_client;
     unsigned int const swapper_size;
     int clients_trying_to_acquire;

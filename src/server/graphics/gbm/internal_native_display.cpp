@@ -21,7 +21,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform.h"
 #include "mir/frontend/surface.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 

@@ -16,8 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/display_buffer.h"
 #include "mir_test_doubles/mock_android_framebuffer_window.h"
 #include "src/server/graphics/android/android_display.h"
+#include "src/server/graphics/android/gpu_android_display_buffer_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_egl.h"
 
@@ -39,6 +41,12 @@ protected:
         mock_display_report = std::make_shared<mtd::MockDisplayReport>();
     }
 
+    std::shared_ptr<mga::AndroidDisplay> create_display()
+    {
+        auto db_factory = std::make_shared<mga::GPUAndroidDisplayBufferFactory>();
+        return std::make_shared<mga::AndroidDisplay>(native_win, db_factory, mock_display_report);
+    }
+
     std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
 
     std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
@@ -48,7 +56,7 @@ protected:
 TEST_F(GPUFramebuffer, display_post_calls_swapbuffers_once)
 {
     using namespace testing;
-    auto display = std::make_shared<mga::AndroidDisplay>(native_win, mock_display_report);
+    auto display = create_display();
 
     EXPECT_CALL(mock_egl, eglSwapBuffers(mock_egl.fake_egl_display, mock_egl.fake_egl_surface))
         .Times(Exactly(1));
@@ -62,7 +70,7 @@ TEST_F(GPUFramebuffer, display_post_calls_swapbuffers_once)
 TEST_F(GPUFramebuffer, display_post_failure)
 {
     using namespace testing;
-    auto display = std::make_shared<mga::AndroidDisplay>(native_win, mock_display_report);
+    auto display = create_display();
 
     EXPECT_CALL(mock_egl, eglSwapBuffers(_,_))
     .Times(Exactly(1))
@@ -79,7 +87,7 @@ TEST_F(GPUFramebuffer, display_post_failure)
 TEST_F(GPUFramebuffer, framebuffer_correct_view_area)
 {
     using namespace testing;
-    auto display = std::make_shared<mga::AndroidDisplay>(native_win, mock_display_report);
+    auto display = create_display();
     unsigned int width = 456, height = 42111;
 
     EXPECT_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display,mock_egl.fake_egl_surface,EGL_WIDTH,_))

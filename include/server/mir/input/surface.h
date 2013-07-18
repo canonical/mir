@@ -16,38 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_INPUT_SURFACE_DATA_STORAGE_H_
-#define MIR_INPUT_SURFACE_DATA_STORAGE_H_
+#ifndef MIR_INPUT_SURFACE_H_
+#define MIR_INPUT_SURFACE_H_
 
-#include "mir/input/surface_info.h"
-
-#include <memory>
+#include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
+#include <string>
 
 namespace mir
 {
-namespace surfaces
-{
-class SurfaceInfo;
-}
 namespace input
 {
-
-class SurfaceDataStorage : public SurfaceInfoController 
+class Surface 
 {
 public:
-    SurfaceDataStorage(std::shared_ptr<surfaces::SurfaceInfo> const& surface_info);
+    virtual std::string const& name() const = 0;
+    virtual geometry::Point position() const = 0;
+    virtual geometry::Size size() const = 0;
+    virtual bool contains(geometry::Point const& point) const = 0;
 
-    geometry::Rectangle size_and_position() const;
-    std::string const& name() const;
-
-    bool input_region_contains(geometry::Point const& point) const;
-    void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
-
-private:
-    std::shared_ptr<surfaces::SurfaceInfo> surface_info;
-    std::vector<geometry::Rectangle> input_rectangles;
+protected:
+    Surface() = default; 
+    virtual ~Surface() = default;
+    Surface(const Surface&) = delete;
+    Surface& operator=(const Surface& ) = delete;
 };
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_DATA_STORAGE_H_ */
+#endif /* MIR_INPUT_SURFACE_H_ */

@@ -26,7 +26,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 // TODO I'm not clear why this code is in the CompositingStrategy hierarchy.
-//      (As opposed to the call site calling compose_renderables directly.)
+//      (As opposed to the call site calling compose directly.)
 //      But changing that breaks RecordingCompositingStrategy - which is too
 //      much churn for this refactoring.
 void mc::BasicCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
@@ -37,7 +37,7 @@ void mc::BasicCompositingStrategy::render(graphics::DisplayBuffer& display_buffe
 
     display_buffer.make_current();
 
-    compose_renderables(display_buffer.view_area(), save_resource);
+    compose(display_buffer.view_area(), save_resource);
 
     display_buffer.post_update();
 }
