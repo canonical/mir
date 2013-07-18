@@ -154,7 +154,7 @@ typedef struct MirGraphicsRegion
 } MirGraphicsRegion;
 
 /**
- * MirDisplayInfo provides details of the graphics environment.
+ * MirDisplayState provides details of the graphics environment.
  */
 
 typedef struct MirDisplayMode
@@ -164,7 +164,7 @@ typedef struct MirDisplayMode
     double refresh_rate;
 }MirDisplayMode;
 
-typedef struct MirDisplayInfo
+typedef struct MirDisplayState
 {
     uint32_t num_modes;
     MirDisplayMode* modes;
@@ -185,12 +185,12 @@ typedef struct MirDisplayInfo
 
     int32_t physical_width_mm;
     int32_t physical_height_mm;
-} MirDisplayInfo;
+} MirDisplayState;
 
 typedef struct MirDisplayConfiguration
 {
     uint32_t num_displays;
-    MirDisplayInfo* displays;
+    MirDisplayState* displays;
 } MirDisplayConfiguration;
 
 /**

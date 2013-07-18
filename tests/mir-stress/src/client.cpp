@@ -65,7 +65,7 @@ bool UnacceleratedClient::create_surface()
     if (display_configuration.number_of_displays < 1)
         return false;
 
-    MirDisplayInfo display_info = display_configuration.display[0]; 
+    MirDisplayState display_info = display_configuration.display[0]; 
     if (display_info.supported_pixel_format_items < 1)
         return false;
 

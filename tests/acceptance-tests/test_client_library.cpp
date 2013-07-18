@@ -717,7 +717,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             mir_connection_create_display_config(connection, &display_configuration);
 
             EXPECT_EQ(1u, display_configuration.number_of_displays);
-            MirDisplayInfo display_info = display_configuration.display[0];
+            MirDisplayState display_info = display_configuration.display[0];
             EXPECT_GE(default_display_width, display_info.width);
             EXPECT_GE(default_display_height, display_info.height);
 
