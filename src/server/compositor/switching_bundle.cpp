@@ -19,6 +19,7 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "switching_bundle.h"
+#include <cassert>
 
 namespace mc=mir::compositor;
 
@@ -26,14 +27,15 @@ mc::SwitchingBundle::SwitchingBundle(
     std::shared_ptr<GraphicBufferAllocator> &gralloc, BufferProperties const& property_request)
     : bundle_properties{property_request},
       gralloc{gralloc},
+      nbuffers{MAX_BUFFERS},
+      client{-1},
+      ready{-1},
+      compositor{-1},
+      ncompositors{0},
       framedropping{true}
 {
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < MAX_BUFFERS; i++)
         ring[i] = gralloc->alloc_buffer(bundle_properties);
-
-    client = -1;
-    ready = -1;
-    compositor = -1;
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
@@ -45,16 +47,16 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
         while (client >= 0)
             cond.wait(lock);
     
-        client = (compositor + 1) % 3;
+        client = (compositor + 1) % nbuffers;
         if (client == ready)
-            client = (client + 1) % 3;
+            client = (client + 1) % nbuffers;
     }
     else
     {
         while (client >= 0 || ready >= 0)
             cond.wait(lock);
     
-        client = (compositor + 1) % 3;
+        client = (compositor + 1) % nbuffers;
     }
 
     return ring[client];
@@ -62,10 +64,8 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
 
 void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    // TODO
-    (void)released_buffer;
-
     std::unique_lock<std::mutex> lock(guard);
+    assert(ring[client] == released_buffer);
     ready = client;
     client = -1;
     cond.notify_all();
@@ -87,10 +87,8 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    // TODO
-    (void)released_buffer;
-
     std::unique_lock<std::mutex> lock(guard);
+    assert(ring[compositor] == released_buffer);
     compositor = -1;
 }
 
