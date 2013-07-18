@@ -23,6 +23,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
+#include "mir/surfaces/depth_id.h"
 
 #include <memory>
 #include <string>
@@ -47,12 +48,15 @@ struct SurfaceCreationParameters
     SurfaceCreationParameters& of_buffer_usage(compositor::BufferUsage new_buffer_usage);
 
     SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
+    
+    SurfaceCreationParameters& of_depth(surfaces::DepthId const& new_depth);
 
     std::string name;
     geometry::Size size;
     geometry::Point top_left;
     compositor::BufferUsage buffer_usage;
     geometry::PixelFormat pixel_format;
+    surfaces::DepthId depth;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

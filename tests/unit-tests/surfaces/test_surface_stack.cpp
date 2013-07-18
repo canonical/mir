@@ -146,8 +146,6 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
                                                               std::function<void()> const&)); 
 };
 
-static ms::DepthId const default_depth{0};
-
 struct StubBufferStreamFactory : public ms::BufferStreamFactory
 {
     std::shared_ptr<ms::BufferStream> create_buffer_stream(mc::BufferProperties const&)
@@ -201,7 +199,7 @@ TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
 
     auto use_count = stub_surface1.use_count();
 
-    auto surface = stack.create_surface(default_params, default_depth);
+    auto surface = stack.create_surface(default_params);
         {
             EXPECT_EQ(stub_surface1, surface.lock());
         }
@@ -222,13 +220,13 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, default_depth);
+    auto s2 = stack.create_surface(default_params);
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, default_depth);
+    auto s3 = stack.create_surface(default_params);
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -264,13 +262,13 @@ TEST_F(SurfaceStack, stacking_order)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
 
-    auto s1 = stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, default_depth);
+    auto s2 = stack.create_surface(default_params);
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, default_depth);
+    auto s3 = stack.create_surface(default_params);
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -296,7 +294,7 @@ TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
-    auto surface = stack.create_surface(default_params, default_depth);
+    auto surface = stack.create_surface(default_params);
     stack.destroy_surface(surface);
 }
 
@@ -310,13 +308,13 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, ms::DepthId{0});
+    auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, ms::DepthId{1});
+    auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, ms::DepthId{0});
+    auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -347,7 +345,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(registrar));
     
-    auto s = stack.create_surface(msh::a_surface(), default_depth);
+    auto s = stack.create_surface(msh::a_surface());
     stack.destroy_surface(s);
 }
 
@@ -361,13 +359,13 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, default_depth);
+    auto s2 = stack.create_surface(default_params);
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, default_depth);
+    auto s3 = stack.create_surface(default_params);
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -404,13 +402,13 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, ms::DepthId{0});
+    auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, ms::DepthId{0});
+    auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, ms::DepthId{1});
+    auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 

@@ -28,8 +28,7 @@ ms::SurfaceController::SurfaceController(std::shared_ptr<SurfaceStackModel> cons
 
 std::weak_ptr<ms::Surface> ms::SurfaceController::create_surface(shell::SurfaceCreationParameters const& params)
 {
-    static ms::DepthId const default_surface_depth{0};
-    return surface_stack->create_surface(params, default_surface_depth);
+    return surface_stack->create_surface(params);
 }
 
 void ms::SurfaceController::destroy_surface(std::weak_ptr<Surface> const& surface)
