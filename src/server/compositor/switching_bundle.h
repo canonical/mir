@@ -59,6 +59,8 @@ private:
 
     std::mutex guard;
     std::condition_variable cond;
+
+    bool framedropping;
 };
 
 }

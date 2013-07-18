@@ -25,7 +25,8 @@ namespace mc=mir::compositor;
 mc::SwitchingBundle::SwitchingBundle(
     std::shared_ptr<GraphicBufferAllocator> &gralloc, BufferProperties const& property_request)
     : bundle_properties{property_request},
-      gralloc{gralloc}
+      gralloc{gralloc},
+      framedropping{true}
 {
     for (int i = 0; i < 3; i++)
         ring[i] = gralloc->alloc_buffer(bundle_properties);
@@ -39,12 +40,22 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    while (client >= 0)
-        cond.wait(lock);
-
-    client = (compositor + 1) % 3;
-    if (client == ready)
-        client = (client + 1) % 3;
+    if (framedropping)
+    {
+        while (client >= 0)
+            cond.wait(lock);
+    
+        client = (compositor + 1) % 3;
+        if (client == ready)
+            client = (client + 1) % 3;
+    }
+    else
+    {
+        while (client >= 0 || ready >= 0)
+            cond.wait(lock);
+    
+        client = (compositor + 1) % 3;
+    }
 
     return ring[client];
 }
@@ -57,7 +68,7 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& rele
     std::unique_lock<std::mutex> lock(guard);
     ready = client;
     client = -1;
-    cond.notify_one();
+    cond.notify_all();
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
@@ -69,6 +80,7 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 
     compositor = ready;
     ready = -1;
+    cond.notify_all();
 
     return ring[compositor];
 }
@@ -89,8 +101,7 @@ void mc::SwitchingBundle::force_requests_to_complete()
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
 {
-    // TODO
-    (void)allow_dropping;
+    framedropping = allow_dropping;
 }
 
 mc::BufferProperties mc::SwitchingBundle::properties() const
