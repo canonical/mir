@@ -156,11 +156,6 @@ mga::AndroidDisplay::~AndroidDisplay()
     eglTerminate(egl_display);
 }
 
-geom::Rectangle mga::AndroidDisplay::view_area() const
-{
-    return display_buffer->view_area();
-}
-
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
     f(*display_buffer);
