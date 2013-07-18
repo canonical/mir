@@ -25,11 +25,12 @@ namespace geom = mir::geometry;
 namespace
 {
 
-geom::Point rect_bottom_right(geom::Rectangle const& rect)
+template <typename T>
+T clamp(T x, T min, T max)
 {
-    return {geom::X{rect.top_left.x.as_int() + rect.size.width.as_int() - 1},
-            geom::Y{rect.top_left.y.as_int() + rect.size.height.as_int() - 1}};
+    return std::min(std::max(x, min), max);
 }
+
 
 geom::Rectangle rect_from_points(geom::Point const& tl, geom::Point const& br)
 {
@@ -47,18 +48,94 @@ geom::Rectangles::Rectangles()
 void geom::Rectangles::add(geom::Rectangle const& rect)
 {
     rectangles.push_back(rect);
-    update_bounding_rectangle();
 }
 
 void geom::Rectangles::clear()
 {
     rectangles.clear();
-    update_bounding_rectangle();
 }
+
+void geom::Rectangles::confine_point(geom::Point& point) const
+{
+    geom::Point ret_point{point};
+    geom::Displacement min_dp{geom::DeltaX{std::numeric_limits<int>::max()},
+                              geom::DeltaY{std::numeric_limits<int>::max()}};
+
+    for (auto const& rect : rectangles)
+    {
+        /*
+         * If a screen contains the point then no need to confine it further,
+         * otherwise confine the point, keeping the confined position that
+         * is closer to the original point.
+         */
+        if (rect.contains(point))
+        {
+            ret_point = point;
+            break;
+        }
+        else if (rect.size.width > geom::Width{0} &&
+                 rect.size.height > geom::Height{0})
+        {
+            auto br = rect.bottom_right();
+            auto min_x = rect.top_left.x;
+            auto max_x = br.x;
+            auto min_y = rect.top_left.y;
+            auto max_y = br.y;
+
+            geom::Point confined_point{clamp(point.x, min_x, max_x),
+                                       clamp(point.y, min_y, max_y)};
+
+            /*
+             * Keep the confined point that has the least distance to the
+             * original point
+             */
+            auto dp = confined_point - point;
+            if (dp < min_dp)
+            {
+                ret_point = confined_point;
+                min_dp = dp;
+            }
+        }
+    }
+
+    point = ret_point;
+}
+
 
 geom::Rectangle geom::Rectangles::bounding_rectangle() const
 {
-    return bounding_rectangle_;
+    if (rectangles.size() == 0)
+        return geom::Rectangle();
+
+    geom::Point tl;
+    geom::Point br;
+    bool points_initialized{false};
+
+    for (auto const& rect : rectangles)
+    {
+        if (rect.size.width.as_int() > 0 &&
+            rect.size.height.as_int() > 0)
+        {
+            geom::Point rtl = rect.top_left;
+            geom::Point rbr = rect.bottom_right();
+
+            if (!points_initialized)
+            {
+                tl = rtl;
+                br = rbr;
+                points_initialized = true;
+            }
+            else
+            {
+                tl.x = std::min(rtl.x, tl.x);
+                tl.y = std::min(rtl.y, tl.y);
+                br.x = std::max(rbr.x, br.x);
+                br.y = std::max(rbr.y, br.y);
+            }
+        }
+    }
+
+    return rect_from_points(tl, br);
 }
 
 geom::Rectangles::const_iterator geom::Rectangles::begin() const
@@ -108,45 +185,6 @@ bool geom::Rectangles::operator==(Rectangles const& other) const
 bool geom::Rectangles::operator!=(Rectangles const& rects) const
 {
     return !(*this == rects);
-}
-
-void geom::Rectangles::update_bounding_rectangle()
-{
-    if (rectangles.size() == 0)
-    {
-        bounding_rectangle_ = geom::Rectangle();
-        return;
-    }
-
-    geom::Point tl;
-    geom::Point br;
-    bool points_initialized{false};
-
-    for (auto& rect : rectangles)
-    {
-        if (rect.size.width.as_int() > 0 &&
-            rect.size.height.as_int() > 0)
-        {
-            geom::Point rtl = rect.top_left;
-            geom::Point rbr = rect_bottom_right(rect);
-
-            if (!points_initialized)
-            {
-                tl = rtl;
-                br = rbr;
-                points_initialized = true;
-            }
-            else
-            {
-                tl.x = std::min(rtl.x, tl.x);
-                tl.y = std::min(rtl.y, tl.y);
-                br.x = std::max(rbr.x, br.x);
-                br.y = std::max(rbr.y, br.y);
-            }
-        }
-    }
-
-    bounding_rectangle_ = rect_from_points(tl, br);
 }
 
 std::ostream& geom::operator<<(std::ostream& out, Rectangles const& value)

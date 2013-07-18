@@ -17,8 +17,6 @@
  *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
 
-#include "mir/graphics/viewable_area.h"
-
 #include "android_input_manager.h"
 #include "android_input_constants.h"
 #include "android_input_thread.h"

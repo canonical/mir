@@ -41,10 +41,6 @@ class EventHubInterface;
 
 namespace mir
 {
-namespace graphics
-{
-class ViewableArea;
-}
 namespace shell
 {
 class InputTargeter;
@@ -55,6 +51,7 @@ class EventFilter;
 class EventFilterChain;
 class CursorListener;
 class InputReport;
+class InputBoundaries;
 
 namespace android
 {
@@ -66,7 +63,7 @@ class DefaultInputConfiguration : public input::InputConfiguration
 {
 public:
     DefaultInputConfiguration(std::initializer_list<std::shared_ptr<EventFilter> const> const& filters,
-                              std::shared_ptr<graphics::ViewableArea> const& view_area,
+                              std::shared_ptr<input::InputBoundaries> const& input_boundaries,
                               std::shared_ptr<CursorListener> const& cursor_listener,
                               std::shared_ptr<input::InputReport> const& input_report);
     virtual ~DefaultInputConfiguration();
@@ -118,7 +115,7 @@ private:
     };
 
     std::shared_ptr<EventFilterChain> const filter_chain;
-    std::shared_ptr<graphics::ViewableArea> const view_area;
+    std::shared_ptr<input::InputBoundaries> const input_boundaries;
     std::shared_ptr<CursorListener> const cursor_listener;
     
     std::shared_ptr<input::InputReport> const input_report;

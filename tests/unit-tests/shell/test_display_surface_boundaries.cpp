@@ -1,0 +1,130 @@
+/*
+ * Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ */
+
+#include "mir/shell/display_surface_boundaries.h"
+
+#include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_display_buffer.h"
+
+#include <vector>
+#include <tuple>
+
+#include <gtest/gtest.h>
+
+namespace msh = mir::shell;
+namespace mg = mir::graphics;
+namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
+
+namespace
+{
+
+class StubDisplayBuffer : public mtd::NullDisplayBuffer
+{
+public:
+    StubDisplayBuffer(geom::Rectangle const& view_area_) : view_area_(view_area_) {}
+    StubDisplayBuffer(StubDisplayBuffer const& s) : view_area_(s.view_area_) {}
+    geom::Rectangle view_area() const override { return view_area_; }
+
+private:
+    geom::Rectangle view_area_;
+};
+
+class StubDisplay : public mtd::NullDisplay
+{
+public:
+    StubDisplay()
+        : display_buffers{
+              StubDisplayBuffer{geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}}},
+              StubDisplayBuffer{geom::Rectangle{geom::Point{0,600}, geom::Size{100,100}}},
+              StubDisplayBuffer{geom::Rectangle{geom::Point{800,0}, geom::Size{100,100}}}}
+    {
+
+    }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        for (auto& db : display_buffers)
+            f(db);
+    }
+
+private:
+    std::vector<StubDisplayBuffer> display_buffers;
+};
+
+}
+
+TEST(DisplaySurfaceBoundariesTest, clips_correctly)
+{
+    auto stub_display = std::make_shared<StubDisplay>();
+
+    msh::DisplaySurfaceBoundaries surface_boundaries{stub_display};
+
+    std::vector<std::tuple<geom::Rectangle,geom::Rectangle>> rect_tuples{
+        std::make_tuple(
+            geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}},
+            geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{750,50}, geom::Size{100,100}},
+            geom::Rectangle{geom::Point{750,50}, geom::Size{50,100}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{899,99}, geom::Size{100,100}},
+            geom::Rectangle{geom::Point{899,99}, geom::Size{1,1}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{-1,-1}, geom::Size{100,100}},
+            geom::Rectangle{geom::Point{-1,-1}, geom::Size{0,0}})
+    };
+
+    for (auto const& t : rect_tuples)
+    {
+        auto clipped_rect = std::get<0>(t);
+        auto const expected_rect = std::get<1>(t);
+        surface_boundaries.clip_to_screen(clipped_rect);
+        EXPECT_EQ(expected_rect, clipped_rect);
+    }
+}
+
+TEST(DisplaySurfaceBoundariesTest, makes_fullscreen_in_correct_screen)
+{
+    auto stub_display = std::make_shared<StubDisplay>();
+
+    msh::DisplaySurfaceBoundaries surface_boundaries{stub_display};
+
+    std::vector<std::tuple<geom::Rectangle,geom::Rectangle>> rect_tuples{
+        std::make_tuple(
+            geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}},
+            geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{750,50}, geom::Size{150,130}},
+            geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{899,99}, geom::Size{30,40}},
+            geom::Rectangle{geom::Point{800,0}, geom::Size{100,100}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{-1,-1}, geom::Size{100,100}},
+            geom::Rectangle{geom::Point{0,0}, geom::Size{0,0}})
+    };
+
+    for (auto const& t : rect_tuples)
+    {
+        auto fullscreen_rect = std::get<0>(t);
+        auto const expected_rect = std::get<1>(t);
+        surface_boundaries.make_fullscreen(fullscreen_rect);
+        EXPECT_EQ(expected_rect, fullscreen_rect);
+    }
+}

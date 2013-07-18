@@ -62,6 +62,7 @@ class FocusController;
 class SessionManager;
 class PixelBuffer;
 class SnapshotStrategy;
+class SurfaceBoundaries;
 }
 namespace time
 {
@@ -92,6 +93,7 @@ class EventFilter;
 class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
+class InputBoundaries;
 }
 
 namespace logging
@@ -166,6 +168,7 @@ public:
     virtual std::shared_ptr<shell::SessionListener>   the_shell_session_listener();
     virtual std::shared_ptr<shell::PixelBuffer>       the_shell_pixel_buffer();
     virtual std::shared_ptr<shell::SnapshotStrategy>  the_shell_snapshot_strategy();
+    virtual std::shared_ptr<shell::SurfaceBoundaries> the_shell_surface_boundaries();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -196,6 +199,7 @@ public:
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
+    virtual std::shared_ptr<input::InputBoundaries> the_input_boundaries();
     /** @} */
 
     /** @name logging configuration - customization
@@ -226,6 +230,7 @@ protected:
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::InputBoundaries> input_boundaries;
     CachedPtr<surfaces::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
@@ -250,6 +255,7 @@ protected:
     CachedPtr<shell::SessionListener> shell_session_listener;
     CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;
     CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
+    CachedPtr<shell::SurfaceBoundaries> shell_surface_boundaries;
     CachedPtr<compositor::CompositingStrategy> compositing_strategy;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;
