@@ -22,7 +22,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 

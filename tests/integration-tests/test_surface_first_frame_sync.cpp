@@ -21,7 +21,7 @@
 #include "mir/graphics/renderer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/null_display.h"
@@ -50,17 +50,17 @@ class SynchronousCompositor : public mc::Compositor
 {
 public:
     SynchronousCompositor(std::shared_ptr<mg::Display> const& display,
-                          std::shared_ptr<mc::Renderables> const& renderables,
+                          std::shared_ptr<mc::Scene> const& scene,
                           std::shared_ptr<mc::CompositingStrategy> const& strategy)
         : display{display},
-          renderables{renderables},
+          scene{scene},
           compositing_strategy{strategy}
     {
     }
 
     void start()
     {
-        renderables->set_change_callback([this]()
+        scene->set_change_callback([this]()
         {
             display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
             {
@@ -71,12 +71,12 @@ public:
 
     void stop()
     {
-        renderables->set_change_callback([]{});
+        scene->set_change_callback([]{});
     }
 
 private:
     std::shared_ptr<mg::Display> const display;
-    std::shared_ptr<mc::Renderables> const renderables;
+    std::shared_ptr<mc::Scene> const scene;
     std::shared_ptr<mc::CompositingStrategy> const compositing_strategy;
 };
 
@@ -200,7 +200,7 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
                 sync_compositor =
                     std::make_shared<SynchronousCompositor>(
                         the_display(),
-                        the_renderables(),
+                        the_scene(),
                         the_compositing_strategy());
             }
 

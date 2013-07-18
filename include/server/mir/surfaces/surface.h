@@ -32,7 +32,6 @@ namespace mir
 {
 namespace compositor
 {
-class GraphicRegion;
 struct BufferIPCPackage;
 }
 namespace graphics

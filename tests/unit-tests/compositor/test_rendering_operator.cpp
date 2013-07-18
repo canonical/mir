@@ -18,7 +18,6 @@
 
 #include "mir/compositor/rendering_operator.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
-#include "mir_test_doubles/mock_graphic_region.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_compositing_criteria.h"
 
