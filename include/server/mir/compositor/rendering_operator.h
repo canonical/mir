@@ -19,7 +19,7 @@
 #define MIR_COMPOSITOR_RENDERING_OPERATOR_H_
 
 #include "mir/graphics/renderer.h"
-#include "mir/compositor/renderables.h"
+#include "mir/compositor/scene.h"
 
 #include <functional>
 #include <memory>
@@ -29,7 +29,7 @@ namespace mir
 namespace compositor
 {
 
-class RenderingOperator : public OperatorForRenderables
+class RenderingOperator : public OperatorForScene
 {
 public:
     explicit RenderingOperator(graphics::Renderer& renderer, std::function<void(std::shared_ptr<void> const&)> save_resource);
