@@ -31,26 +31,22 @@ namespace mir
 namespace compositor
 {
 
-class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 struct BufferProperties;
 
 class BufferStreamFactory : public surfaces::BufferStreamFactory
 {
 public:
-
     explicit BufferStreamFactory(
-        const std::shared_ptr<BufferAllocationStrategy>& strategy);
+        std::shared_ptr<GraphicBufferAllocator> gralloc);
 
     virtual ~BufferStreamFactory() {}
 
-    // From BufferStreamFactory
     virtual std::shared_ptr<surfaces::BufferStream> create_buffer_stream(
         BufferProperties const& buffer_properties);
 
 private:
-    std::shared_ptr<BufferAllocationStrategy> swapper_factory;
-
+    std::shared_ptr<GraphicBufferAllocator> gralloc;
 };
 
 }

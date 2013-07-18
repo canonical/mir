@@ -18,7 +18,6 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
@@ -36,16 +35,16 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
 mc::BufferStreamFactory::BufferStreamFactory(
-    const std::shared_ptr<BufferAllocationStrategy>& strategy)
-        : swapper_factory(strategy)
+    std::shared_ptr<mc::GraphicBufferAllocator> gralloc)
+        : gralloc(gralloc)
 {
-    assert(strategy);
+    assert(gralloc);
 }
 
 
 std::shared_ptr<ms::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     mc::BufferProperties const& buffer_properties)
 {
-    auto switching_bundle = std::make_shared<mc::SwitchingBundle>(swapper_factory, buffer_properties);
+    auto switching_bundle = std::make_shared<mc::SwitchingBundle>(gralloc, buffer_properties);
     return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
 }

@@ -37,7 +37,7 @@ class BufferAllocationStrategy;
 class SwitchingBundle : public BufferBundle 
 {
 public:
-    SwitchingBundle(std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const&);
+    SwitchingBundle(std::shared_ptr<GraphicBufferAllocator> &gralloc, BufferProperties const&);
 
     BufferProperties properties() const;
 
@@ -50,10 +50,7 @@ public:
 
 private:
     BufferProperties bundle_properties; //must be before swapper
-    std::shared_ptr<BufferAllocationStrategy> const swapper_factory;
-    std::shared_ptr<BufferSwapper> swapper;
-    RWLockWriterBias rw_lock;
-    std::condition_variable_any cv;
+    std::shared_ptr<GraphicBufferAllocator> gralloc;
 };
 
 }

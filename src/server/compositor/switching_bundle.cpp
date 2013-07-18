@@ -17,86 +17,51 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_swapper_exceptions.h"
-#include "mir/compositor/buffer_allocation_strategy.h"
+#include "mir/compositor/graphic_buffer_allocator.h"
 #include "switching_bundle.h"
-
-#include <boost/throw_exception.hpp>
 
 namespace mc=mir::compositor;
 
 mc::SwitchingBundle::SwitchingBundle(
-    std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const& property_request)
-    : swapper_factory(swapper_factory),
-      swapper(swapper_factory->create_swapper_new_buffers(
-                  bundle_properties, property_request, mc::SwapperType::synchronous))
+    std::shared_ptr<GraphicBufferAllocator> &gralloc, BufferProperties const& property_request)
+    : bundle_properties{property_request},
+      gralloc{gralloc}
 {
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
 {
-    /* lock is for use of 'swapper' below' */
-    std::unique_lock<mc::ReadLock> lk(rw_lock);
-
-    std::shared_ptr<mc::Buffer> buffer = nullptr;
-    while (!buffer) 
-    {
-        try
-        {
-            buffer = swapper->client_acquire();
-        }
-        catch (BufferSwapperRequestAbortedException const& e)
-        {
-            /* wait for the swapper to change before retrying */
-            cv.wait(lk);
-        }
-    }
-    return buffer;
+    std::shared_ptr<mc::Buffer> ret; // TODO
+    return ret;
 }
 
 void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    std::unique_lock<mc::ReadLock> lk(rw_lock);
-    return swapper->client_release(released_buffer);
+    // TODO
+    (void)released_buffer;
 }
 
 std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
-    std::unique_lock<mc::ReadLock> lk(rw_lock);
-    return swapper->compositor_acquire();
+    std::shared_ptr<mc::Buffer> ret; // TODO
+    return ret;
 }
 
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
 {
-    std::unique_lock<mc::ReadLock> lk(rw_lock);
-    return swapper->compositor_release(released_buffer);
+    // TODO
+    (void)released_buffer;
 }
 
 void mc::SwitchingBundle::force_requests_to_complete()
 {
-    std::unique_lock<mc::ReadLock> lk(rw_lock);
-    swapper->force_requests_to_complete();
+    // TODO, if anything?
 }
 
 void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
 {
-    {
-        std::unique_lock<mc::ReadLock> lk(rw_lock);
-        swapper->force_client_abort();
-    }
-
-    std::unique_lock<mc::WriteLock> lk(rw_lock);
-    std::vector<std::shared_ptr<mc::Buffer>> list{};
-    size_t size = 0;
-    swapper->end_responsibility(list, size);
-
-    if (allow_dropping)
-        swapper = swapper_factory->create_swapper_reuse_buffers(bundle_properties, list, size, mc::SwapperType::framedropping);
-    else
-        swapper = swapper_factory->create_swapper_reuse_buffers(bundle_properties, list, size, mc::SwapperType::synchronous);
-
-    cv.notify_all();
+    // TODO
+    (void)allow_dropping;
 }
 
 mc::BufferProperties mc::SwitchingBundle::properties() const

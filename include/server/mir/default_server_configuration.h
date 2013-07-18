@@ -134,7 +134,6 @@ public:
      *  @{ */
     virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
     virtual std::shared_ptr<compositor::OverlayRenderer>          the_overlay_renderer();
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     /** @} */
 
     /** @name compositor configuration - dependencies
