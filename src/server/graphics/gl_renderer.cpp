@@ -1,7 +1,7 @@
 #include "mir/graphics/gl_renderer.h"
 #include "mir/graphics/compositing_criteria.h"
 #include "mir/surfaces/buffer_stream.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

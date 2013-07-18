@@ -289,7 +289,7 @@ public:
             {
             }
 
-            void operator()(mc::Buffer& buffer)
+            void operator()(mg::Buffer& buffer)
             {
                 mt::BufferRenderTarget brt{buffer};
                 brt.make_current();

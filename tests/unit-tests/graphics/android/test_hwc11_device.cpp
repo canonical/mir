@@ -28,6 +28,7 @@
 #include <stdexcept>
 
 namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 
@@ -258,7 +259,7 @@ TEST_F(HWC11Device, test_hwc_device_display_width_height)
 
 TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_adds_to_layerlist)
 {
-    std::shared_ptr<mc::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
+    std::shared_ptr<mg::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*this->mock_organizer, set_fb_target(mock_buffer))
         .Times(1);
  
@@ -268,7 +269,7 @@ TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_adds_to_layerlist)
 
 TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_posts_vsync)
 {
-    std::shared_ptr<mc::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
+    std::shared_ptr<mg::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*this->mock_display_support_provider, set_next_frontbuffer(mock_buffer))
         .Times(1);
 
@@ -278,7 +279,7 @@ TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_posts_vsync)
 
 TEST_F(HWC11Device, hwc_device_set_next_frontbuffer_posts_no_sync)
 {
-    std::shared_ptr<mc::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
+    std::shared_ptr<mg::Buffer> mock_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*this->mock_display_support_provider, set_next_frontbuffer(mock_buffer))
         .Times(0);
 

@@ -17,17 +17,17 @@
  */
 
 #include "../../src/server/frontend/client_buffer_tracker.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 TEST(ClientBufferTracker, just_added_buffer_is_known_by_client)
 {
     mf::ClientBufferTracker tracker(3);
-    mc::BufferID const id{5};
+    mg::BufferID const id{5};
 
     tracker.add(id);
     EXPECT_TRUE(tracker.client_has(id));
@@ -37,17 +37,17 @@ TEST(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 {
     mf::ClientBufferTracker tracker(3);
 
-    tracker.add(mc::BufferID{5});
-    EXPECT_FALSE(tracker.client_has(mc::BufferID{6}));
+    tracker.add(mg::BufferID{5});
+    EXPECT_FALSE(tracker.client_has(mg::BufferID{6}));
 }
 
 TEST(ClientBufferTracker, tracks_sequence_of_buffers)
 {
     mf::ClientBufferTracker tracker(3);
-    mc::BufferID const one{1};
-    mc::BufferID const two{2};
-    mc::BufferID const three{3};
-    mc::BufferID const four{4};
+    mg::BufferID const one{1};
+    mg::BufferID const two{2};
+    mg::BufferID const three{3};
+    mg::BufferID const four{4};
 
     tracker.add(one);
     tracker.add(two);
@@ -63,10 +63,10 @@ TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
 {
     mf::ClientBufferTracker tracker(3);
 
-    mc::BufferID const one{1};
-    mc::BufferID const two{2};
-    mc::BufferID const three{3};
-    mc::BufferID const four{4};
+    mg::BufferID const one{1};
+    mg::BufferID const two{2};
+    mg::BufferID const three{3};
+    mg::BufferID const four{4};
 
     tracker.add(one);
     tracker.add(two);
@@ -88,9 +88,9 @@ TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
 
 TEST(ClientBufferTracker, tracks_correct_number_of_buffers)
 {
-    mc::BufferID ids[10];
+    mg::BufferID ids[10];
     for (unsigned int i = 0; i < 10; ++i)
-        ids[i] = mc::BufferID{i};
+        ids[i] = mg::BufferID{i};
 
     for (unsigned int tracker_size = 2; tracker_size < 10; ++tracker_size)
     {

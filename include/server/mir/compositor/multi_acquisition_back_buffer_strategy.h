@@ -29,8 +29,6 @@ namespace mir
 {
 namespace compositor
 {
-
-class Buffer;
 class BufferBundle;
 
 namespace detail
@@ -38,7 +36,7 @@ namespace detail
 
 struct AcquiredBufferInfo
 {
-    std::weak_ptr<Buffer> buffer;
+    std::weak_ptr<graphics::Buffer> buffer;
     bool partly_released;
     int use_count;
 };
@@ -50,12 +48,12 @@ class MultiAcquisitionBackBufferStrategy : public BackBufferStrategy
 public:
     MultiAcquisitionBackBufferStrategy(std::shared_ptr<BufferBundle> const& buffer_bundle);
 
-    std::shared_ptr<Buffer> acquire();
-    void release(std::shared_ptr<Buffer> const& buffer);
+    std::shared_ptr<graphics::Buffer> acquire();
+    void release(std::shared_ptr<graphics::Buffer> const& buffer);
 
 private:
     std::vector<detail::AcquiredBufferInfo>::iterator find_info(
-        std::shared_ptr<Buffer> const& buffer);
+        std::shared_ptr<graphics::Buffer> const& buffer);
 
     std::shared_ptr<BufferBundle> const buffer_bundle;
     std::vector<detail::AcquiredBufferInfo> acquired_buffers;

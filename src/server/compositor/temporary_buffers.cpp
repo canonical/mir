@@ -22,9 +22,10 @@
 #include "temporary_buffers.h"
 
 namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-mc::TemporaryBuffer::TemporaryBuffer(std::shared_ptr<Buffer> const& real_buffer)
+mc::TemporaryBuffer::TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buffer)
     : buffer(real_buffer)
 {
 }
@@ -69,7 +70,7 @@ geom::PixelFormat mc::TemporaryBuffer::pixel_format() const
     return buffer->pixel_format();
 }
 
-mc::BufferID mc::TemporaryBuffer::id() const
+mg::BufferID mc::TemporaryBuffer::id() const
 {
     return buffer->id();
 }

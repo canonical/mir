@@ -47,21 +47,21 @@ class Buffer;
 class BufferSwapperSpin : public BufferSwapper
 {
 public:
-    BufferSwapperSpin(std::vector<std::shared_ptr<compositor::Buffer>>& buffer_list, size_t swapper_size);
+    BufferSwapperSpin(std::vector<std::shared_ptr<graphics::Buffer>>& buffer_list, size_t swapper_size);
 
-    std::shared_ptr<Buffer> client_acquire();
-    void client_release(std::shared_ptr<Buffer> const& queued_buffer);
-    std::shared_ptr<Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
+    std::shared_ptr<graphics::Buffer> client_acquire();
+    void client_release(std::shared_ptr<graphics::Buffer> const& queued_buffer);
+    std::shared_ptr<graphics::Buffer> compositor_acquire();
+    void compositor_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
 
     void force_client_abort();
     void force_requests_to_complete();
-    void end_responsibility(std::vector<std::shared_ptr<Buffer>>&, size_t&);
+    void end_responsibility(std::vector<std::shared_ptr<graphics::Buffer>>&, size_t&);
 
 private:
     std::mutex swapper_mutex;
 
-    std::deque<std::shared_ptr<Buffer>> buffer_queue;
+    std::deque<std::shared_ptr<graphics::Buffer>> buffer_queue;
     unsigned int in_use_by_client;
     bool client_submitted_new_buffer;
     size_t const swapper_size;

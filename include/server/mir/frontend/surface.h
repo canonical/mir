@@ -29,7 +29,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 class Buffer;
 }
@@ -53,7 +53,7 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
 
-    virtual std::shared_ptr<compositor::Buffer> advance_client_buffer() = 0;
+    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
 
     virtual bool supports_input() const = 0;
     virtual int client_input_fd() const = 0;

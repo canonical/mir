@@ -29,6 +29,7 @@
 
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
+namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
@@ -44,8 +45,8 @@ struct StubFence : public mga::SyncObject
 struct MockFBSwapper : public mga::FBSwapper
 {
     ~MockFBSwapper() noexcept {}
-    MOCK_METHOD0(compositor_acquire, std::shared_ptr<mc::Buffer>());
-    MOCK_METHOD1(compositor_release, void(std::shared_ptr<mc::Buffer> const& released_buffer));
+    MOCK_METHOD0(compositor_acquire, std::shared_ptr<mg::Buffer>());
+    MOCK_METHOD1(compositor_release, void(std::shared_ptr<mg::Buffer> const& released_buffer));
 };
 
 struct ServerRenderWindowTest : public ::testing::Test
@@ -88,7 +89,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
         .Times(1)
         .WillOnce(Return(stub_anw));
 
-    std::shared_ptr<mc::Buffer> tmp = mock_buffer1;
+    std::shared_ptr<mg::Buffer> tmp = mock_buffer1;
     EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_anw.get()))
         .Times(1);
 
@@ -115,7 +116,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     render_window.driver_requests_buffer();
     testing::Mock::VerifyAndClearExpectations(mock_swapper.get());
 
-    std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
+    std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
     EXPECT_CALL(*mock_swapper, compositor_release(buf1))
         .Times(1);
     EXPECT_CALL(*stub_sync, wait())
@@ -134,13 +135,13 @@ TEST_F(ServerRenderWindowTest, driver_returns_buffer_posts_to_fb)
         .WillOnce(Return(mock_buffer1));
     mga::ServerRenderWindow render_window(mock_swapper, mock_display_poster, mock_cache);
 
-    mc::BufferID id{442}, returned_id;
+    mg::BufferID id{442}, returned_id;
     EXPECT_CALL(*mock_swapper, compositor_acquire())
         .Times(1)
         .WillOnce(Return(mock_buffer1));
     EXPECT_CALL(*mock_swapper, compositor_release(_))
         .Times(1);
-    std::shared_ptr<mc::Buffer> buf1 = mock_buffer1;
+    std::shared_ptr<mg::Buffer> buf1 = mock_buffer1;
     EXPECT_CALL(*mock_buffer1, native_buffer_handle())
         .Times(1)
         .WillOnce(Return(stub_anw));

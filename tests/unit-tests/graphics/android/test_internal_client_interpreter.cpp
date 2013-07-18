@@ -25,7 +25,7 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
@@ -40,7 +40,7 @@ struct MockSurface : public mf::Surface
     MOCK_CONST_METHOD0(size, geom::Size());
     MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
 
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mc::Buffer>());
+    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mg::Buffer>());
 
     MOCK_CONST_METHOD0(supports_input, bool());
     MOCK_CONST_METHOD0(client_input_fd, int());
@@ -83,7 +83,7 @@ TEST_F(InternalClientWindow, driver_requests_buffer)
         .Times(1);
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .Times(1);
-    std::shared_ptr<mc::Buffer> tmp = mock_buffer;
+    std::shared_ptr<mg::Buffer> tmp = mock_buffer;
     EXPECT_CALL(*mock_cache, store_buffer(tmp, stub_anw.get()))
         .Times(1);
 

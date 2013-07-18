@@ -116,7 +116,7 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
     assert(buffer_initializer.get() != 0);
 }
 
-std::shared_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
+std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
@@ -141,7 +141,7 @@ std::shared_ptr<mc::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
         new EGLImageBufferTextureBinder{bo, egl_extensions}};
 
     /* Create the GBMBuffer */
-    std::shared_ptr<mc::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder)}};
+    std::shared_ptr<mg::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder)}};
 
     (*buffer_initializer)(*buffer);
 
