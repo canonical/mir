@@ -20,7 +20,7 @@
 #define MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
 
 #include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer_id.h"
 
 #include <memory>
 
@@ -41,7 +41,7 @@ public:
     GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform,
                        const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
-    virtual std::shared_ptr<compositor::Buffer> alloc_buffer(
+    virtual std::shared_ptr<Buffer> alloc_buffer(
         compositor::BufferProperties const& buffer_properties);
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();

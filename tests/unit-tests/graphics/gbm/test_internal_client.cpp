@@ -25,7 +25,6 @@
 #include <gtest/gtest.h>
 
 namespace geom=mir::geometry;
-namespace mc=mir::compositor;
 namespace mgg=mir::graphics::gbm;
 namespace mtd=mir::test::doubles;
 

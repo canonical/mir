@@ -16,33 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SURFACES_SURFACE_DATA_STORAGE_H_
-#define MIR_SURFACES_SURFACE_DATA_STORAGE_H_
+#ifndef MIR_SURFACES_SURFACE_STATE_H_
+#define MIR_SURFACES_SURFACE_STATE_H_
 
-#include "mir/surfaces/surface_info.h"
-#include <memory>
-#include <mutex>
+#include "mir/graphics/compositing_criteria.h"
+#include "mir/input/surface.h"
+#include "mir/surfaces/mutable_surface_state.h"
 
 namespace mir
 {
 namespace surfaces
 {
 
-class SurfaceDataStorage : public SurfaceInfoController 
+class SurfaceState : public graphics::CompositingCriteria, public input::Surface, 
+                     public MutableSurfaceState 
 {
-public:
-    SurfaceDataStorage(std::string const& name, geometry::Point top_left, geometry::Size size);
-
-    geometry::Rectangle size_and_position() const;
-    std::string const& name() const;
-    void move_to(geometry::Point);
-private:
-    std::mutex mutable guard;
-    std::string surface_name;
-    geometry::Point surface_top_left;
-    geometry::Size surface_size;
+protected:
+    SurfaceState() = default; 
+    virtual ~SurfaceState() = default;
+    SurfaceState(const SurfaceState&) = delete;
+    SurfaceState& operator=(const SurfaceState& ) = delete;
 };
 
 }
 }
-#endif /* MIR_SURFACES_SURFACE_DATA_STORAGE_H_ */
+#endif /* MIR_SURFACES_SURFACE_STATE_H_ */

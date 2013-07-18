@@ -19,10 +19,10 @@
 #include "mir/graphics/display_report.h"
 #include "android_display_factory.h"
 #include "hwc_factory.h"
+#include "hwc_device.h"
 #include "framebuffer_factory.h"
 #include "display_allocator.h"
 #include "android_display.h"
-#include "hwc_display.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

@@ -17,7 +17,7 @@
  */
 
 #include "mir/frontend/surface.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 #include "internal_client_window.h"
 #include "interpreter_resource_cache.h"
 #include "android_format_conversion-inl.h"

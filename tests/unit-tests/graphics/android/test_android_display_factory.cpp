@@ -63,12 +63,12 @@ struct MockDisplayAllocator: public mga::DisplayAllocator
         ON_CALL(*this, create_gpu_display(_,_))
             .WillByDefault(Return(std::shared_ptr<mga::AndroidDisplay>()));
         ON_CALL(*this, create_hwc_display(_,_,_))
-            .WillByDefault(Return(std::shared_ptr<mga::HWCDisplay>()));
+            .WillByDefault(Return(std::shared_ptr<mga::AndroidDisplay>()));
 
     }
     MOCK_CONST_METHOD2(create_gpu_display, std::shared_ptr<mga::AndroidDisplay>(std::shared_ptr<ANativeWindow> const&,
                                                                                 std::shared_ptr<mg::DisplayReport> const&));
-    MOCK_CONST_METHOD3(create_hwc_display, std::shared_ptr<mga::HWCDisplay>(std::shared_ptr<mga::HWCDevice> const&,
+    MOCK_CONST_METHOD3(create_hwc_display, std::shared_ptr<mga::AndroidDisplay>(std::shared_ptr<mga::HWCDevice> const&,
                                                                             std::shared_ptr<ANativeWindow> const&,
                                                                             std::shared_ptr<mg::DisplayReport> const&));
 };

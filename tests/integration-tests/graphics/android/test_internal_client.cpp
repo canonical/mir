@@ -29,6 +29,7 @@
 #include "mir/graphics/internal_client.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
+#include "mir/surfaces/surface_allocator.h"
 #include "mir/shell/surface_source.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -91,7 +92,8 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto strategy = std::make_shared<mc::SwapperFactory>(allocator);
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(strategy);
-    auto ss = std::make_shared<ms::SurfaceStack>(buffer_stream_factory, stub_input_factory, stub_input_registrar);
+    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory);
+    auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller);
     auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());

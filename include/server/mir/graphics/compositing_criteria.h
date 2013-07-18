@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -15,30 +15,33 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
-#define MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_
 
-#include "mir/surfaces/graphic_region.h"
-#include <gmock/gmock.h>
+#ifndef MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
+#define MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
+
+#include <glm/glm.hpp>
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace graphics
 {
 
-class MockGraphicRegion : public surfaces::GraphicRegion
+class CompositingCriteria 
 {
 public:
-    MOCK_CONST_METHOD0(size, geometry::Size());
-    MOCK_CONST_METHOD0(stride, geometry::Stride());
-    MOCK_CONST_METHOD0(pixel_format, geometry::PixelFormat());
-    MOCK_METHOD0(bind_to_texture, void());
+    virtual float alpha() const = 0;
+    virtual glm::mat4 const& transformation() const = 0;
+    virtual bool should_be_rendered() const = 0;
+
+    virtual ~CompositingCriteria() = default;
+
+protected:
+    CompositingCriteria() = default;
+    CompositingCriteria(CompositingCriteria const&) = delete;
+    CompositingCriteria& operator=(CompositingCriteria const&) = delete;
 };
 
 }
 }
-}
 
-#endif /* MIR_TEST_DOUBLES_MOCK_GRAPHIC_REGION_H_ */
+#endif /* MIR_GRAPHICS_COMPOSITING_CRITERIA_H_ */

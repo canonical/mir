@@ -32,6 +32,7 @@
 #include <chrono>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -49,7 +50,7 @@ struct MockBufferAllocator : public mc::GraphicBufferAllocator
     }
     ~MockBufferAllocator() noexcept{}
 
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mc::Buffer>(mc::BufferProperties const&));
+    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mc::BufferProperties const&));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 };
 

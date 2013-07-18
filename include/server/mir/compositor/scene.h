@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_RENDERABLES_H_
-#define MIR_COMPOSITOR_RENDERABLES_H_
+#ifndef MIR_COMPOSITOR_SCENE_H_
+#define MIR_COMPOSITOR_SCENE_H_
 
 #include "mir/geometry/forward.h"
 
@@ -28,64 +28,67 @@ namespace mir
 {
 namespace graphics
 {
-class Renderable;
+class CompositingCriteria;
 }
-
+namespace surfaces
+{
+class BufferStream;
+}
 namespace compositor
 {
-class FilterForRenderables
+class FilterForScene
 {
 public:
-    virtual ~FilterForRenderables() {}
+    virtual ~FilterForScene() {}
 
-    virtual bool operator()(graphics::Renderable& renderable) = 0;
+    virtual bool operator()(graphics::CompositingCriteria const&) = 0;
 
 protected:
-    FilterForRenderables() = default;
-    FilterForRenderables(const FilterForRenderables&) = delete;
-    FilterForRenderables& operator=(const FilterForRenderables&) = delete;
+    FilterForScene() = default;
+    FilterForScene(const FilterForScene&) = delete;
+    FilterForScene& operator=(const FilterForScene&) = delete;
 };
 
-class OperatorForRenderables
+class OperatorForScene
 {
 public:
-    virtual ~OperatorForRenderables() {}
+    virtual ~OperatorForScene() {}
 
-    virtual void operator()(graphics::Renderable& renderable) = 0;
+    virtual void operator()(graphics::CompositingCriteria const&, surfaces::BufferStream&) = 0;
 
 protected:
-    OperatorForRenderables() = default;
-    OperatorForRenderables(const OperatorForRenderables&) = delete;
-    OperatorForRenderables& operator=(const OperatorForRenderables&) = delete;
+    OperatorForScene() = default;
+    OperatorForScene(const OperatorForScene&) = delete;
+    OperatorForScene& operator=(const OperatorForScene&) = delete;
 
 };
 
-class Renderables
+class Scene
 {
 public:
-    virtual ~Renderables() {}
+    virtual ~Scene() {}
 
-    virtual void for_each_if(FilterForRenderables& filter, OperatorForRenderables& renderable_operator) = 0;
+    virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
 
     /**
      * Sets a callback to be called whenever the state of the
-     * Renderables changes.
+     * Scene changes.
      *
      * The supplied callback should not directly or indirectly (e.g.,
      * by changing a property of a Renderable) change the state of
-     * the Renderables, otherwise a deadlock may occur.
+     * the Scene, otherwise a deadlock may occur.
      */
     virtual void set_change_callback(std::function<void()> const& f) = 0;
 
 protected:
-    Renderables() = default;
+    Scene() = default;
 
 private:
-    Renderables(Renderables const&) = delete;
-    Renderables& operator=(Renderables const&) = delete;
+    Scene(Scene const&) = delete;
+    Scene& operator=(Scene const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_RENDERABLES_H_ */
+#endif /* MIR_COMPOSITOR_SCENE_H_ */

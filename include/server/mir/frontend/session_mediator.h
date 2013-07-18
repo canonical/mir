@@ -34,13 +34,13 @@ class EventSink;
 }
 namespace graphics
 {
+class Buffer;
 class Platform;
 class ViewableArea;
 }
 
 namespace compositor
 {
-class Buffer;
 class GraphicBufferAllocator;
 }
 
@@ -123,7 +123,7 @@ private:
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 
-    std::shared_ptr<compositor::Buffer> client_buffer_resource;
+    std::shared_ptr<graphics::Buffer> client_buffer_resource;
 
     std::mutex session_mutex;
     std::shared_ptr<Session> session;

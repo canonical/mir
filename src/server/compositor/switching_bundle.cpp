@@ -25,6 +25,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mc=mir::compositor;
+namespace mg = mir::graphics;
 
 mc::SwitchingBundle::SwitchingBundle(
     std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const& property_request)
@@ -34,12 +35,12 @@ mc::SwitchingBundle::SwitchingBundle(
 {
 }
 
-std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
+std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
 {
     /* lock is for use of 'swapper' below' */
     std::unique_lock<mc::ReadLock> lk(rw_lock);
 
-    std::shared_ptr<mc::Buffer> buffer = nullptr;
+    std::shared_ptr<mg::Buffer> buffer = nullptr;
     while (!buffer) 
     {
         try
@@ -55,19 +56,19 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
     return buffer;
 }
 
-void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
+void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->client_release(released_buffer);
 }
 
-std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
+std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->compositor_acquire();
 }
 
-void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
+void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<mc::ReadLock> lk(rw_lock);
     return swapper->compositor_release(released_buffer);
@@ -87,7 +88,7 @@ void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
     }
 
     std::unique_lock<mc::WriteLock> lk(rw_lock);
-    std::vector<std::shared_ptr<mc::Buffer>> list{};
+    std::vector<std::shared_ptr<mg::Buffer>> list{};
     size_t size = 0;
     swapper->end_responsibility(list, size);
 

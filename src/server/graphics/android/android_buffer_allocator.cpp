@@ -70,7 +70,7 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
     alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr));
 }
 
-std::shared_ptr<mc::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
+std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
     mc::BufferProperties const& buffer_properties)
 {
     auto usage = convert_from_compositor_usage(buffer_properties.usage);

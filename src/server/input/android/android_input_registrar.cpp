@@ -42,7 +42,7 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 
 // Be careful on the locking in these two functions.
 void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChannel> const& channel,
-                                               std::shared_ptr<mi::SurfaceInfo> const& info)
+                                               std::shared_ptr<mi::Surface> const& surface)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {
@@ -55,8 +55,8 @@ void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChann
         if (window_handles.find(channel) != window_handles.end())
             BOOST_THROW_EXCEPTION(std::logic_error("A channel was opened twice"));
 
-        auto application_handle = new mia::InputApplicationHandle(info);
-        window_handle = new mia::InputWindowHandle(application_handle, channel, info);
+        auto application_handle = new mia::InputApplicationHandle(surface);
+        window_handle = new mia::InputWindowHandle(application_handle, channel, surface);
     
         window_handles[channel] = window_handle;
     }

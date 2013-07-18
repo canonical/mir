@@ -30,9 +30,10 @@ namespace mir
 {
 namespace graphics
 {
+namespace detail { struct GraphicsConfCardIdTag; struct GraphicsConfOutputIdTag; }
 
-typedef IntWrapper<IntWrapperTypeTag::GraphicsConfCardId> DisplayConfigurationCardId;
-typedef IntWrapper<IntWrapperTypeTag::GraphicsConfOutputId> DisplayConfigurationOutputId;
+typedef IntWrapper<detail::GraphicsConfCardIdTag> DisplayConfigurationCardId;
+typedef IntWrapper<detail::GraphicsConfOutputIdTag> DisplayConfigurationOutputId;
 
 /**
  * Configuration information for a display card.
