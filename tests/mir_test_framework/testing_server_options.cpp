@@ -19,7 +19,7 @@
 #include "mir_test_framework/testing_server_configuration.h"
 
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/compositor/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -89,11 +89,11 @@ class StubGraphicPlatform : public mtd::NullPlatform
     }
 };
 
-class StubRenderer : public mg::Renderer
+class StubRenderer : public mc::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mg::CompositingCriteria const&, ms::BufferStream& stream)
+                                   mc::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
         stream.lock_back_buffer();
@@ -159,7 +159,7 @@ std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_plat
     return graphics_platform;
 }
 
-std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
+std::shared_ptr<mc::Renderer> mtf::TestingServerConfiguration::the_renderer()
 {
     auto options = the_options();
 

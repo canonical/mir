@@ -29,6 +29,7 @@ namespace mir
 {
 namespace compositor
 {
+class Renderer;
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 class BufferStreamFactory;
@@ -77,7 +78,6 @@ class InputRegistrar;
 }
 namespace graphics
 {
-class Renderer;
 class Platform;
 class Display;
 class ViewableArea;
@@ -119,7 +119,7 @@ public:
      * configurable interfaces for modifying graphics
      *  @{ */
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<graphics::Renderer>          the_renderer();
+    virtual std::shared_ptr<compositor::Renderer>        the_renderer();
     virtual std::shared_ptr<graphics::ViewableArea>      the_viewable_area();
     /** @} */
 
@@ -239,7 +239,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
-    CachedPtr<graphics::Renderer> renderer;
+    CachedPtr<compositor::Renderer> renderer;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;

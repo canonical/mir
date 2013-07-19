@@ -59,7 +59,7 @@ std::shared_ptr<ms::BufferStream> ms::Surface::buffer_stream() const
     return surface_buffer_stream;
 }
 
-std::shared_ptr<mg::CompositingCriteria> ms::Surface::compositing_criteria()
+std::shared_ptr<mc::CompositingCriteria> ms::Surface::compositing_criteria()
 {
     return surface_state;
 }

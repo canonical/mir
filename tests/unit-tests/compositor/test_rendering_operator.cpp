@@ -34,7 +34,7 @@ namespace mg = mir::graphics;
 
 namespace
 {
-class StubRenderer : public mg::Renderer
+class StubRenderer : public mc::Renderer
 {
 public:
     StubRenderer()
@@ -48,7 +48,7 @@ public:
     void clear() {}
 
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                mg::CompositingCriteria const&, ms::BufferStream&)
+                mc::CompositingCriteria const&, ms::BufferStream&)
     {
         std::shared_ptr<void> tmp;
         switch(counter++)

@@ -11,6 +11,7 @@ set(
   buffer_swapper_spin.cpp
   swapper_factory.cpp
   rendering_operator.cpp
+  gl_renderer.cpp
   multi_threaded_compositor.cpp
   switching_bundle.cpp
   rw_lock.cpp

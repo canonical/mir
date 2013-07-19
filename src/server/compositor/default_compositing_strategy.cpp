@@ -21,8 +21,8 @@
 #include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/renderer.h"
-#include "mir/graphics/compositing_criteria.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/compositing_criteria.h"
 
 #include <cassert>
 
@@ -31,8 +31,8 @@ namespace mg = mir::graphics;
 
 mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
     std::shared_ptr<Scene> const& scene,
-    std::shared_ptr<mg::Renderer> const& renderer,
-    std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer)
+    std::shared_ptr<Renderer> const& renderer,
+    std::shared_ptr<OverlayRenderer> const& overlay_renderer)
     : scene(scene),
       renderer(renderer),
       overlay_renderer(overlay_renderer)
@@ -51,7 +51,7 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
         : enclosing_region(enclosing_region)
     {
     }
-    bool operator()(mg::CompositingCriteria const& info)
+    bool operator()(mc::CompositingCriteria const& info)
     {
         return info.should_be_rendered();
     }
