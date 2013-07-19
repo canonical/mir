@@ -67,7 +67,7 @@ mc::SwitchingBundle::SwitchingBundle(
       first_compositor{0}, ncompositors{0},
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
-      framedropping{true}
+      framedropping{false}
 {
     assert(nbuffers > 0 && nbuffers <= MAX_BUFFERS);
     for (int i = 0; i < MAX_BUFFERS; i++)
