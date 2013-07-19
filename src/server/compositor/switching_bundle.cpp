@@ -102,7 +102,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     std::unique_lock<std::mutex> lock(guard);
     int client;
 
-    if (framedropping)
+    if (framedropping && nbuffers > 1)
     {
         if (ncompositors + nready + nclients >= nbuffers)
         {
