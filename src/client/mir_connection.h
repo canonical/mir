@@ -155,8 +155,6 @@ private:
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
     void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
-
-    mir::client::DisplayConfiguration display_configuration;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

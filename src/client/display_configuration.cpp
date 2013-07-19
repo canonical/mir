@@ -23,11 +23,6 @@
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 
-mcl::DisplayConfiguration::DisplayConfiguration()
-    : config{0, nullptr}
-{
-}
-
 void mcl::delete_config_storage(MirDisplayConfiguration& config)
 {
     for(auto i=0u; i< config.num_displays; i++)
@@ -45,6 +40,7 @@ void mcl::delete_config_storage(MirDisplayConfiguration& config)
 
 namespace
 {
+
 void fill_display_state(MirDisplayState& state, mp::DisplayState const& msg)
 {
     state.card_id = msg.card_id();
@@ -90,23 +86,12 @@ void alloc_storage_from_msg(MirDisplayConfiguration& config, mp::Connection& msg
             ::operator new(sizeof(MirDisplayMode)*config.displays[i].num_modes));
     }
 }
+
 }
 
-mcl::DisplayConfiguration::~DisplayConfiguration()
+void mcl::set_from_message(MirDisplayConfiguration& config, mp::Connection& connection_msg)
 {
-    mcl::delete_config_storage(config);
-}
-
-mcl::DisplayConfiguration::operator MirDisplayConfiguration&()
-{
-    return config;
-}
-
-void mcl::DisplayConfiguration::set_from_message(protobuf::Connection& connection_msg)
-{
-    mcl::delete_config_storage(config);
     alloc_storage_from_msg(config, connection_msg);
-
     for(auto i=0u; i < config.num_displays; i++)
     {
         fill_display_state(config.displays[i], connection_msg.display_state(i));

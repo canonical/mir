@@ -27,20 +27,10 @@ namespace mir
 namespace client
 {
 
-//convenient helper
+//convenient helpers
 void delete_config_storage(MirDisplayConfiguration& config);
+void set_from_message(MirDisplayConfiguration& config, mir::protobuf::Connection& connection_msg);
 
-class DisplayConfiguration
-{
-public:
-    DisplayConfiguration();
-    ~DisplayConfiguration();
-
-    operator MirDisplayConfiguration&();
-    void set_from_message(protobuf::Connection& connection_msg);
-private:
-    MirDisplayConfiguration config;
-};
 }
 }
 

@@ -33,6 +33,7 @@
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace gp = google::protobuf;
+namespace mp = mir::protobuf;
 
 MirConnection::MirConnection() :
     channel(),
@@ -156,7 +157,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          */
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
-        display_configuration.set_from_message(connect_result);
     }
 
     callback(this, context);
@@ -273,35 +273,12 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
     }
 }
 
-namespace
-{
-
-void copy_mir_configuration(MirDisplayConfiguration& out, MirDisplayConfiguration const& in)
-{
-    out.num_displays = in.num_displays;
-    out.displays = (MirDisplayState*) ::operator new(sizeof(MirDisplayState)* out.num_displays);
-
-    for(auto i=0u; i < out.num_displays; i++)
-    {
-        MirDisplayState* in_info = &in.displays[i];
-        MirDisplayState* out_info = &out.displays[i];
-
-        std::memcpy(out_info, in_info, sizeof(MirDisplayState));
-
-        out_info->modes = (MirDisplayMode*) ::operator new(sizeof(MirDisplayMode) * out_info->num_modes); 
-        std::memcpy(out_info->modes, in_info->modes, sizeof(MirDisplayMode) * out_info->num_modes);
-
-        out_info->pixel_formats = (MirPixelFormat*) ::operator new(sizeof(MirPixelFormat) * out_info->num_pixel_formats);
-        std::memcpy(out_info->pixel_formats, in_info->pixel_formats, sizeof(MirPixelFormat) * out_info->num_pixel_formats);
-    }
-}
-
-}
-
 void MirConnection::create_copy_of_display_config(MirDisplayConfiguration& out_configuration)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    copy_mir_configuration(out_configuration, display_configuration);
+    //if (
+    //check connect_result
+    mcl::set_from_message(out_configuration, connect_result);
 }
 
 
