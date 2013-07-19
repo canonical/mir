@@ -32,7 +32,6 @@
 
 #include "client_platform.h"
 #include "client_context.h"
-#include "display_configuration.h"
 
 #include "mir_wait_handle.h"
 #include "mir/events/event_sink.h"
@@ -42,9 +41,6 @@ namespace mir
 /// The client-side library implementation namespace
 namespace client
 {
-
-void delete_config_storage(MirDisplayConfiguration& config);
-
 class ConnectionConfiguration;
 class ClientPlatformFactory;
 

@@ -24,8 +24,8 @@
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
 #include "connection_configuration.h"
+#include "display_configuration.h"
 
-#include <cstring>
 #include <cstddef>
 #include <sstream>
 #include <unistd.h>
@@ -33,7 +33,6 @@
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace gp = google::protobuf;
-namespace mp = mir::protobuf;
 
 MirConnection::MirConnection() :
     channel(),
@@ -276,9 +275,10 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
 void MirConnection::create_copy_of_display_config(MirDisplayConfiguration& out_configuration)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    //if (
-    //check connect_result
-    mcl::set_display_config_from_message(out_configuration, connect_result);
+    if (!connect_result.has_error() && (connect_result.display_state_size() > 0))
+    {
+        mcl::set_display_config_from_message(out_configuration, connect_result);
+    }
 }
 
 
