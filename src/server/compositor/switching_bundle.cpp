@@ -70,13 +70,18 @@ mc::SwitchingBundle::SwitchingBundle(
       first_client{0}, nclients{0},
       framedropping{false}
 {
-    if (nbuffers < 1 || nbuffers > MAX_BUFFERS)
-        BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle does not "
-                                               "support nbuffers=" +
-                                               std::to_string(nbuffers)));
+    if (nbuffers < 1)
+        BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle requires a "
+                                               "positive number of buffers"));
 
-    for (int i = 0; i < MAX_BUFFERS; i++)
+    ring = new std::shared_ptr<graphics::Buffer>[nbuffers];
+    for (int i = 0; i < nbuffers; i++)
         ring[i] = gralloc->alloc_buffer(bundle_properties);
+}
+
+mc::SwitchingBundle::~SwitchingBundle()
+{
+    delete[] ring;
 }
 
 int mc::SwitchingBundle::drop_frames(int max)

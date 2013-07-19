@@ -40,6 +40,8 @@ public:
     SwitchingBundle(const std::shared_ptr<GraphicBufferAllocator> &,
                     const BufferProperties &);
 
+    ~SwitchingBundle() noexcept;
+
     BufferProperties properties() const;
 
     std::shared_ptr<graphics::Buffer> client_acquire();
@@ -55,9 +57,8 @@ private:
 
     int drop_frames(int max);
 
-    enum {MAX_BUFFERS = 3};
     int nbuffers;
-    std::shared_ptr<graphics::Buffer> ring[MAX_BUFFERS];
+    std::shared_ptr<graphics::Buffer> *ring;
     int first_compositor;
     int ncompositors;
     int first_ready;
