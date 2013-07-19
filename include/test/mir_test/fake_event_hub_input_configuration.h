@@ -54,7 +54,7 @@ class FakeEventHubInputConfiguration : public input::android::DefaultInputConfig
 {
 public:
     FakeEventHubInputConfiguration(std::initializer_list<std::shared_ptr<input::EventFilter> const> const& filters,
-                                   std::shared_ptr<input::InputBoundaries> const& input_boundaries,
+                                   std::shared_ptr<input::InputRegion> const& input_region,
                                    std::shared_ptr<input::CursorListener> const& cursor_listener,
                                    std::shared_ptr<input::InputReport> const& input_report);
     virtual ~FakeEventHubInputConfiguration();

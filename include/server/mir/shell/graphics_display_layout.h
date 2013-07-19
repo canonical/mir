@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_DISPLAY_SURFACE_BOUNDARIES_H_
-#define MIR_SHELL_DISPLAY_SURFACE_BOUNDARIES_H_
+#ifndef MIR_SHELL_GRAPHICS_DISPLAY_LAYOUT_H_
+#define MIR_SHELL_GRAPHICS_DISPLAY_LAYOUT_H_
 
-#include "mir/shell/surface_boundaries.h"
+#include "mir/shell/display_layout.h"
 
 #include <memory>
 
@@ -32,10 +32,10 @@ class Display;
 namespace shell
 {
 
-class DisplaySurfaceBoundaries : public SurfaceBoundaries
+class GraphicsDisplayLayout : public DisplayLayout
 {
 public:
-    DisplaySurfaceBoundaries(std::shared_ptr<graphics::Display> const& display);
+    GraphicsDisplayLayout(std::shared_ptr<graphics::Display> const& display);
 
     void clip_to_screen(geometry::Rectangle& rect);
     void make_fullscreen(geometry::Rectangle& rect);
@@ -49,4 +49,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_DISPLAY_SURFACE_BOUNDARIES_H_ */
+#endif /* MIR_SHELL_GRAPHICS_DISPLAY_LAYOUT_H_ */

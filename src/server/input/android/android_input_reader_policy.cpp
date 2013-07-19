@@ -19,16 +19,16 @@
 #include "android_input_reader_policy.h"
 #include "android_pointer_controller.h"
 
-#include "mir/input/input_boundaries.h"
+#include "mir/input/input_region.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 
-mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mi::InputBoundaries> const& input_boundaries,
+mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mi::InputRegion> const& input_region,
                                           std::shared_ptr<CursorListener> const& cursor_listener)
-    : input_boundaries(input_boundaries),
-      pointer_controller(new mia::PointerController(input_boundaries, cursor_listener))
+    : input_region(input_region),
+      pointer_controller(new mia::PointerController(input_region, cursor_listener))
 {
 }
 
@@ -38,7 +38,7 @@ void mia::InputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfi
     static bool const is_external = false;
     static int32_t const default_display_orientation = droidinput::DISPLAY_ORIENTATION_0;
 
-    auto bounds = input_boundaries->bounding_rectangle();
+    auto bounds = input_region->bounding_rectangle();
     auto width = bounds.size.width.as_float();
     auto height = bounds.size.height.as_float();
 

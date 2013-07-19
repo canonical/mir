@@ -25,10 +25,10 @@ namespace mtd = mir::test::doubles;
 
 mtd::FakeEventHubInputConfiguration::FakeEventHubInputConfiguration(
     std::initializer_list<std::shared_ptr<mir::input::EventFilter> const> const& filters,
-    std::shared_ptr<mi::InputBoundaries> const& input_boundaries,
+    std::shared_ptr<mi::InputRegion> const& input_region,
     std::shared_ptr<mi::CursorListener> const& cursor_listener,
     std::shared_ptr<mi::InputReport> const& input_report)
-      : DefaultInputConfiguration(filters, input_boundaries, cursor_listener, input_report)
+      : DefaultInputConfiguration(filters, input_region, cursor_listener, input_report)
 {
     event_hub = new mia::FakeEventHub();
 }

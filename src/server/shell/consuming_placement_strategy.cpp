@@ -18,7 +18,7 @@
 
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/surface_boundaries.h"
+#include "mir/shell/display_layout.h"
 #include "mir/geometry/rectangle.h"
 
 #include <algorithm>
@@ -27,8 +27,8 @@ namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
 msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(
-    std::shared_ptr<msh::SurfaceBoundaries> const& surface_boundaries)
-    : surface_boundaries(surface_boundaries)
+    std::shared_ptr<msh::DisplayLayout> const& display_layout)
+    : display_layout(display_layout)
 {
 }
 
@@ -41,11 +41,11 @@ msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::Surfa
     if (request_parameters.size.width != geom::Width{0} &&
         request_parameters.size.height != geom::Height{0})
     {
-        surface_boundaries->clip_to_screen(rect);
+        display_layout->clip_to_screen(rect);
     }
     else
     {
-        surface_boundaries->make_fullscreen(rect);
+        display_layout->make_fullscreen(rect);
     }
 
     placed_parameters.top_left = rect.top_left;

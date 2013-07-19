@@ -23,7 +23,7 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_targets.h"
 #include "mir/input/null_input_report.h"
-#include "mir/input/input_boundaries.h"
+#include "mir/input/input_region.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test/fake_shared.h"
@@ -58,7 +58,7 @@ struct StubInputTargets : public mi::InputTargets
     }
 };
 
-struct StubInputBoundaries : public mi::InputBoundaries
+struct StubInputRegion : public mi::InputRegion
 {
     geom::Rectangle bounding_rectangle()
     {
@@ -84,7 +84,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter},
-            mt::fake_shared(input_boundaries),
+            mt::fake_shared(input_region),
             mt::fake_shared(cursor_listener),
             std::make_shared<mi::NullInputReport>());
 
@@ -109,7 +109,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     std::shared_ptr<mi::InputManager> input_manager;
     MockCursorListener cursor_listener;
     std::shared_ptr<StubInputTargets> stub_targets;
-    StubInputBoundaries input_boundaries;
+    StubInputRegion input_region;
 };
 
 }

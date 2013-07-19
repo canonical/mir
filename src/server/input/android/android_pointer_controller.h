@@ -30,14 +30,14 @@ namespace mir
 {
 namespace input
 {
-class InputBoundaries;
+class InputRegion;
 namespace android
 {
 class PointerController : public DummyPointerController
 {
   public:
-    explicit PointerController(std::shared_ptr<InputBoundaries> const& input_boundaries);
-    explicit PointerController(std::shared_ptr<InputBoundaries> const& input_boundaries,
+    explicit PointerController(std::shared_ptr<InputRegion> const& input_region);
+    explicit PointerController(std::shared_ptr<InputRegion> const& input_region,
                                std::shared_ptr<CursorListener> const& cursor_listener);
 
     virtual bool getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
@@ -55,7 +55,7 @@ class PointerController : public DummyPointerController
     int32_t state;
     float x, y;
 
-    std::shared_ptr<InputBoundaries> const input_boundaries;
+    std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<CursorListener> cursor_listener;
 };
 }

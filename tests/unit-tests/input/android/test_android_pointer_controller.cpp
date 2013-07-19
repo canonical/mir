@@ -18,7 +18,7 @@
 
 #include "src/server/input/android/android_pointer_controller.h"
 
-#include "mir_test_doubles/mock_input_boundaries.h"
+#include "mir_test_doubles/mock_input_region.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/fake_shared.h"
 
@@ -45,10 +45,10 @@ class AndroidPointerControllerSetup : public testing::Test
 public:
     void SetUp()
     {
-        controller = std::make_shared<mia::PointerController>(mt::fake_shared(input_boundaries));
+        controller = std::make_shared<mia::PointerController>(mt::fake_shared(input_region));
     }
 protected:
-    mtd::MockInputBoundaries input_boundaries;
+    mtd::MockInputRegion input_region;
     std::shared_ptr<mia::PointerController> controller;
 };
 
@@ -70,7 +70,7 @@ TEST_F(AndroidPointerControllerSetup, position_is_saved)
     static const float stored_y = 200;
     geom::Point stored{stored_x, stored_y};
 
-    EXPECT_CALL(input_boundaries, confine_point(stored));
+    EXPECT_CALL(input_region, confine_point(stored));
 
     controller->setPosition(stored_x, stored_y);
 
@@ -92,8 +92,8 @@ TEST_F(AndroidPointerControllerSetup, move_updates_position)
     geom::Point start{start_x, start_y};
     geom::Point moved{start_x + dx, start_y + dy};
 
-    EXPECT_CALL(input_boundaries, confine_point(start));
-    EXPECT_CALL(input_boundaries, confine_point(moved));
+    EXPECT_CALL(input_region, confine_point(start));
+    EXPECT_CALL(input_region, confine_point(moved));
 
     controller->setPosition(start_x, start_y);
     controller->move(dx, dy);
@@ -108,7 +108,7 @@ TEST_F(AndroidPointerControllerSetup, move_updates_position)
 TEST_F(AndroidPointerControllerSetup, returns_bounds_of_view_area)
 {
     using namespace ::testing;
-    EXPECT_CALL(input_boundaries, bounding_rectangle())
+    EXPECT_CALL(input_region, bounding_rectangle())
         .WillOnce(Return(default_view_area));
 
     float controller_min_x, controller_min_y, controller_max_x, controller_max_y;

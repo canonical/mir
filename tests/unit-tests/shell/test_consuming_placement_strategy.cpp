@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_test_doubles/mock_surface_boundaries.h"
+#include "mir_test_doubles/mock_display_layout.h"
 
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -38,10 +38,10 @@ struct ConsumingPlacementStrategySetup : public testing::Test
     void SetUp()
     {
         using namespace ::testing;
-        surface_boundaries = std::make_shared<mtd::MockSurfaceBoundaries>();
+        display_layout = std::make_shared<mtd::MockDisplayLayout>();
     }
 
-    std::shared_ptr<mtd::MockSurfaceBoundaries> surface_boundaries;
+    std::shared_ptr<mtd::MockDisplayLayout> display_layout;
 };
 }
 
@@ -53,9 +53,9 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_no_geometry_are_made_ful
     msh::SurfaceCreationParameters input_params;
     geom::Rectangle rect{input_params.top_left, input_params.size};
 
-    EXPECT_CALL(*surface_boundaries, make_fullscreen(rect)).Times(1);
+    EXPECT_CALL(*display_layout, make_fullscreen(rect)).Times(1);
 
-    msh::ConsumingPlacementStrategy placement_strategy(surface_boundaries);
+    msh::ConsumingPlacementStrategy placement_strategy(display_layout);
 
     placement_strategy.place(input_params);
 }
@@ -68,9 +68,9 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_clipped)
     input_params.size = geom::Size{100, 200};
     geom::Rectangle rect{input_params.top_left, input_params.size};
 
-    EXPECT_CALL(*surface_boundaries, clip_to_screen(rect)).Times(1);
+    EXPECT_CALL(*display_layout, clip_to_screen(rect)).Times(1);
 
-    msh::ConsumingPlacementStrategy placement_strategy(surface_boundaries);
+    msh::ConsumingPlacementStrategy placement_strategy(display_layout);
 
     placement_strategy.place(input_params);
 }

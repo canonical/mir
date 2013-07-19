@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/display_surface_boundaries.h"
+#include "mir/shell/graphics_display_layout.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 
@@ -29,13 +29,13 @@ namespace geom = mir::geometry;
 
 #include <memory>
 
-msh::DisplaySurfaceBoundaries::DisplaySurfaceBoundaries(
+msh::GraphicsDisplayLayout::GraphicsDisplayLayout(
     std::shared_ptr<mg::Display> const& display)
     : display{display}
 {
 }
 
-void msh::DisplaySurfaceBoundaries::clip_to_screen(geometry::Rectangle& rect)
+void msh::GraphicsDisplayLayout::clip_to_screen(geometry::Rectangle& rect)
 {
     auto screen = get_screen_for(rect);
 
@@ -60,13 +60,13 @@ void msh::DisplaySurfaceBoundaries::clip_to_screen(geometry::Rectangle& rect)
     }
 }
 
-void msh::DisplaySurfaceBoundaries::make_fullscreen(geometry::Rectangle& rect)
+void msh::GraphicsDisplayLayout::make_fullscreen(geometry::Rectangle& rect)
 {
     auto screen = get_screen_for(rect);
     rect = screen;
 }
 
-geom::Rectangle msh::DisplaySurfaceBoundaries::get_screen_for(geometry::Rectangle& rect)
+geom::Rectangle msh::GraphicsDisplayLayout::get_screen_for(geometry::Rectangle& rect)
 {
     geom::Rectangle screen;
 

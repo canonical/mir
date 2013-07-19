@@ -39,7 +39,6 @@ class BufferID;
 namespace input
 {
 class InputChannel;
-class InputRegion;
 class Surface;
 }
 namespace graphics

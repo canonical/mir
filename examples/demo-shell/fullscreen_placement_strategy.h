@@ -27,7 +27,7 @@ namespace mir
 {
 namespace shell
 {
-class SurfaceBoundaries;
+class DisplayLayout;
 }
 namespace examples
 {
@@ -35,7 +35,7 @@ namespace examples
 class FullscreenPlacementStrategy : public shell::PlacementStrategy
 {
 public:
-    FullscreenPlacementStrategy(std::shared_ptr<shell::SurfaceBoundaries> const& surface_boundaries);
+    FullscreenPlacementStrategy(std::shared_ptr<shell::DisplayLayout> const& display_layout);
     ~FullscreenPlacementStrategy() = default;
     
     shell::SurfaceCreationParameters place(shell::SurfaceCreationParameters const& request_parameters);
@@ -45,7 +45,7 @@ protected:
     FullscreenPlacementStrategy& operator=(FullscreenPlacementStrategy const&) = delete;
 
 private:
-    std::shared_ptr<shell::SurfaceBoundaries> const surface_boundaries;
+    std::shared_ptr<shell::DisplayLayout> const display_layout;
 };
 
 }

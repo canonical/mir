@@ -19,7 +19,7 @@
 
 #include "mir/input/event_filter.h"
 #include "mir/input/input_targets.h"
-#include "mir/input/input_boundaries.h"
+#include "mir/input/input_region.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/input/null_input_report.h"
 #include "mir/geometry/point.h"
@@ -75,7 +75,7 @@ struct StubInputTargets : public mi::InputTargets
     }
 };
 
-struct StubInputBoundaries : public mi::InputBoundaries
+struct StubInputRegion : public mi::InputRegion
 {
     geom::Rectangle bounding_rectangle()
     {
@@ -95,7 +95,7 @@ public:
         event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
                 std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter},
-                mt::fake_shared(input_boundaries),
+                mt::fake_shared(input_region),
                 null_cursor_listener,
                 std::make_shared<mi::NullInputReport>());
 
@@ -119,7 +119,7 @@ public:
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<MockEventFilter> event_filter;
-    StubInputBoundaries input_boundaries;
+    StubInputRegion input_region;
     std::shared_ptr<StubInputTargets> stub_targets;
 };
 
@@ -243,10 +243,10 @@ struct MockDispatcherPolicy : public mia::EventFilterDispatcherPolicy
 struct TestingInputConfiguration : public mtd::FakeEventHubInputConfiguration
 {
     TestingInputConfiguration(std::shared_ptr<mi::EventFilter> const& filter,
-                              std::shared_ptr<mi::InputBoundaries> const& input_boundaries,
+                              std::shared_ptr<mi::InputRegion> const& input_region,
                               std::shared_ptr<mi::CursorListener> const& cursor_listener,
                               std::shared_ptr<mi::InputReport> const& input_report)
-        : FakeEventHubInputConfiguration({}, input_boundaries, cursor_listener, input_report),
+        : FakeEventHubInputConfiguration({}, input_region, cursor_listener, input_report),
           dispatcher_policy(new MockDispatcherPolicy(filter))
     {
     }
@@ -269,7 +269,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<TestingInputConfiguration>(
             event_filter,
-            mt::fake_shared(input_boundaries), null_cursor_listener, std::make_shared<mi::NullInputReport>());
+            mt::fake_shared(input_region), null_cursor_listener, std::make_shared<mi::NullInputReport>());
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();
@@ -305,7 +305,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     }
 
     std::shared_ptr<MockEventFilter> event_filter;
-    StubInputBoundaries input_boundaries;
+    StubInputRegion input_region;
     std::shared_ptr<TestingInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;

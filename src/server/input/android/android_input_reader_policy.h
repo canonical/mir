@@ -27,14 +27,14 @@ namespace mir
 namespace input
 {
 class CursorListener;
-class InputBoundaries;
+class InputRegion;
 namespace android
 {
 
 class InputReaderPolicy : public RudimentaryInputReaderPolicy
 {
 public:
-    explicit InputReaderPolicy(std::shared_ptr<InputBoundaries> const& input_boundaries,
+    explicit InputReaderPolicy(std::shared_ptr<InputRegion> const& input_region,
                                std::shared_ptr<CursorListener> const& cursor_listener);
 
     virtual ~InputReaderPolicy() {}
@@ -42,7 +42,7 @@ public:
     virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id);
     virtual void getReaderConfiguration(droidinput::InputReaderConfiguration* out_config);
 private:
-    std::shared_ptr<InputBoundaries> const input_boundaries;
+    std::shared_ptr<InputRegion> const input_region;
     droidinput::sp<droidinput::PointerControllerInterface> pointer_controller;
 };
 

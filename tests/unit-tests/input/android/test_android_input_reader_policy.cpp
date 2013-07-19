@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_test_doubles/mock_input_boundaries.h"
+#include "mir_test_doubles/mock_input_region.h"
 #include "mir_test/fake_shared.h"
 
 #include "src/server/input/android/android_input_reader_policy.h"
@@ -44,12 +44,12 @@ public:
     void SetUp()
     {
         reader_policy = std::make_shared<mia::InputReaderPolicy>(
-            mt::fake_shared(input_boundaries),
+            mt::fake_shared(input_region),
             std::shared_ptr<mi::CursorListener>());
 
-        ON_CALL(input_boundaries, bounding_rectangle()).WillByDefault(Return(default_view_area));
+        ON_CALL(input_region, bounding_rectangle()).WillByDefault(Return(default_view_area));
     }
-    mtd::MockInputBoundaries input_boundaries;
+    mtd::MockInputRegion input_region;
     std::shared_ptr<mia::InputReaderPolicy> reader_policy;
 };
 }
@@ -59,7 +59,7 @@ TEST_F(AndroidInputReaderPolicySetup, configuration_has_display_info_filled_from
     static int32_t const testing_display_id = 0;
     static bool const testing_display_is_external = false;
 
-    EXPECT_CALL(input_boundaries, bounding_rectangle()).Times(1);
+    EXPECT_CALL(input_region, bounding_rectangle()).Times(1);
 
     droidinput::InputReaderConfiguration configuration;
     reader_policy->getReaderConfiguration(&configuration);

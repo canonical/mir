@@ -19,15 +19,15 @@
 #include "fullscreen_placement_strategy.h"
 
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/surface_boundaries.h"
+#include "mir/shell/display_layout.h"
 #include "mir/geometry/rectangle.h"
 
 namespace me = mir::examples;
 namespace msh = mir::shell;
 
 me::FullscreenPlacementStrategy::FullscreenPlacementStrategy(
-    std::shared_ptr<msh::SurfaceBoundaries> const& surface_boundaries)
-  : surface_boundaries(surface_boundaries)
+    std::shared_ptr<msh::DisplayLayout> const& display_layout)
+  : display_layout(display_layout)
 {
 }
 
@@ -37,7 +37,7 @@ msh::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(
     auto placed_parameters = request_parameters;
 
     geometry::Rectangle rect{request_parameters.top_left, request_parameters.size};
-    surface_boundaries->make_fullscreen(rect);
+    display_layout->make_fullscreen(rect);
     placed_parameters.size = rect.size;
 
     return placed_parameters;

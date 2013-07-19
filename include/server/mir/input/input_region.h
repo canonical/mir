@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_BOUNDARIES_H_
-#define MIR_INPUT_INPUT_BOUNDARIES_H_
+#ifndef MIR_INPUT_INPUT_REGION_H_
+#define MIR_INPUT_INPUT_REGION_H_
 
 namespace mir
 {
@@ -30,21 +30,21 @@ namespace input
 {
 
 /**
- * Interface to the boundaries of valid input coordinates.
+ * Interface to the region of valid input coordinates.
  */
-class InputBoundaries
+class InputRegion
 {
 public:
-    virtual ~InputBoundaries() = default;
+    virtual ~InputRegion() = default;
 
-    /** The bounding rectangle of the input boundaries */
+    /** The bounding rectangle of the input region */
     virtual geometry::Rectangle bounding_rectangle() = 0;
 
     /**
-     * Confines a point to input boundaries.
+     * Confines a point to the input region.
      *
-     * If the point is within input boundaries it remains unchanged,
-     * otherwise it is replaced by the boundary point that is closest to
+     * If the point is within input region it remains unchanged,
+     * otherwise it is replaced by the region point that is closest to
      * it.
      *
      * @param [in,out] point the point to confine
@@ -52,12 +52,12 @@ public:
     virtual void confine_point(geometry::Point& point) = 0;
 
 protected:
-    InputBoundaries() = default;
-    InputBoundaries(InputBoundaries const&) = delete;
-    InputBoundaries& operator=(InputBoundaries const&) = delete;
+    InputRegion() = default;
+    InputRegion(InputRegion const&) = delete;
+    InputRegion& operator=(InputRegion const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_INPUT_INPUT_BOUNDARIES_H_ */
+#endif /* MIR_INPUT_INPUT_REGION_H_ */

@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/input/display_input_boundaries.h"
+#include "mir/input/display_input_region.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 
@@ -27,13 +27,13 @@ namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-mi::DisplayInputBoundaries::DisplayInputBoundaries(
+mi::DisplayInputRegion::DisplayInputRegion(
     std::shared_ptr<mg::Display> const& display)
     : display{display}
 {
 }
 
-geom::Rectangle mi::DisplayInputBoundaries::bounding_rectangle()
+geom::Rectangle mi::DisplayInputRegion::bounding_rectangle()
 {
     geom::Rectangles rectangles;
 
@@ -46,7 +46,7 @@ geom::Rectangle mi::DisplayInputBoundaries::bounding_rectangle()
     return rectangles.bounding_rectangle();
 }
 
-void mi::DisplayInputBoundaries::confine_point(geom::Point& point)
+void mi::DisplayInputRegion::confine_point(geom::Point& point)
 {
     geom::Rectangles rectangles;
 

@@ -35,10 +35,6 @@ namespace events
 {
 class EventSink;
 }
-namespace input
-{
-class InputRegion;
-}
 
 namespace shell
 {

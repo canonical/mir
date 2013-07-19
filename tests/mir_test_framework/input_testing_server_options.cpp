@@ -110,7 +110,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
         std::shared_ptr<mi::CursorListener> null_cursor_listener{nullptr};
 
         input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(the_event_filters(),
-            the_input_boundaries(),
+            the_input_region(),
             null_cursor_listener,
             the_input_report());
         fake_event_hub = input_configuration->the_fake_event_hub();

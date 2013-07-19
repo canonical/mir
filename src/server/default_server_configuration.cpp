@@ -42,7 +42,7 @@
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/threaded_snapshot_strategy.h"
-#include "mir/shell/display_surface_boundaries.h"
+#include "mir/shell/graphics_display_layout.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
@@ -58,7 +58,7 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_configuration.h"
 #include "mir/input/null_input_report.h"
-#include "mir/input/display_input_boundaries.h"
+#include "mir/input/display_input_region.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_input_targeter.h"
@@ -387,7 +387,7 @@ mir::DefaultServerConfiguration::the_shell_placement_strategy()
         [this]
         {
             return std::make_shared<msh::ConsumingPlacementStrategy>(
-                the_shell_surface_boundaries());
+                the_shell_display_layout());
         });
 }
 
@@ -516,7 +516,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         {
             input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
                 the_event_filters(),
-                the_input_boundaries(),
+                the_input_region(),
                 the_cursor_listener(),
                 the_input_report());
         }
@@ -561,21 +561,21 @@ mir::DefaultServerConfiguration::the_display()
         });
 }
 
-std::shared_ptr<mi::InputBoundaries> mir::DefaultServerConfiguration::the_input_boundaries()
+std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
-    return input_boundaries(
+    return input_region(
         [this]()
         {
-            return std::make_shared<mi::DisplayInputBoundaries>(the_display());
+            return std::make_shared<mi::DisplayInputRegion>(the_display());
         });
 }
 
-std::shared_ptr<msh::SurfaceBoundaries> mir::DefaultServerConfiguration::the_shell_surface_boundaries()
+std::shared_ptr<msh::DisplayLayout> mir::DefaultServerConfiguration::the_shell_display_layout()
 {
-    return shell_surface_boundaries(
+    return shell_display_layout(
         [this]()
         {
-            return std::make_shared<msh::DisplaySurfaceBoundaries>(the_display());
+            return std::make_shared<msh::GraphicsDisplayLayout>(the_display());
         });
 }
 

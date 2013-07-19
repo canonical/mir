@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/input/display_input_boundaries.h"
+#include "mir/input/display_input_region.h"
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -58,22 +58,22 @@ private:
 
 }
 
-TEST(DisplayInputBoundariesTest, returns_correct_bounding_rectangle)
+TEST(DisplayInputRegionTest, returns_correct_bounding_rectangle)
 {
     geom::Rectangle const expected_bounding_rect{geom::Point{0,0}, geom::Size{900,700}};
     auto stub_display = std::make_shared<StubDisplay>();
 
-    mi::DisplayInputBoundaries input_boundaries{stub_display};
+    mi::DisplayInputRegion input_region{stub_display};
 
-    auto rect = input_boundaries.bounding_rectangle();
+    auto rect = input_region.bounding_rectangle();
     EXPECT_EQ(expected_bounding_rect, rect);
 }
 
-TEST(DisplayInputBoundariesTest, confines_point_to_closest_valid_position)
+TEST(DisplayInputRegionTest, confines_point_to_closest_valid_position)
 {
     auto stub_display = std::make_shared<StubDisplay>();
 
-    mi::DisplayInputBoundaries input_boundaries{stub_display};
+    mi::DisplayInputRegion input_region{stub_display};
 
     std::vector<std::tuple<geom::Point,geom::Point>> point_tuples{
         std::make_tuple(geom::Point{0,0}, geom::Point{0,0}),
@@ -93,7 +93,7 @@ TEST(DisplayInputBoundariesTest, confines_point_to_closest_valid_position)
     {
         geom::Point confined_point{std::get<0>(t)};
         geom::Point const expected_point{std::get<1>(t)};
-        input_boundaries.confine_point(confined_point);
+        input_region.confine_point(confined_point);
         EXPECT_EQ(expected_point, confined_point);
     }
 

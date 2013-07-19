@@ -5,7 +5,7 @@ set(
 
   null_input_configuration.cpp
   null_input_report.cpp
-  display_input_boundaries.cpp
+  display_input_region.cpp
 )
 
 add_subdirectory(android)

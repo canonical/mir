@@ -27,13 +27,13 @@ namespace mir
 {
 namespace shell
 {
-class SurfaceBoundaries;
+class DisplayLayout;
 
 class ConsumingPlacementStrategy : public PlacementStrategy
 {
 public:
     explicit ConsumingPlacementStrategy(
-            std::shared_ptr<SurfaceBoundaries> const& surface_boundaries);
+            std::shared_ptr<DisplayLayout> const& display_layout);
     virtual ~ConsumingPlacementStrategy() {}
 
     virtual shell::SurfaceCreationParameters place(shell::SurfaceCreationParameters const& request_parameters);
@@ -43,7 +43,7 @@ protected:
     ConsumingPlacementStrategy& operator=(ConsumingPlacementStrategy const&) = delete;
 
 private:
-    std::shared_ptr<SurfaceBoundaries> const surface_boundaries;
+    std::shared_ptr<DisplayLayout> const display_layout;
 };
 
 }

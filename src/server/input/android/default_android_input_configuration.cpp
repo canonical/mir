@@ -77,11 +77,11 @@ private:
 }
 
 mia::DefaultInputConfiguration::DefaultInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
-                                                          std::shared_ptr<mi::InputBoundaries> const& input_boundaries,
+                                                          std::shared_ptr<mi::InputRegion> const& input_region,
                                                           std::shared_ptr<mi::CursorListener> const& cursor_listener,
                                                           std::shared_ptr<mi::InputReport> const& input_report)
   : filter_chain(std::make_shared<mi::EventFilterChain>(filters)),
-    input_boundaries(input_boundaries),
+    input_region(input_region),
     cursor_listener(cursor_listener),
     input_report(input_report)
 {
@@ -123,7 +123,7 @@ droidinput::sp<droidinput::InputReaderPolicyInterface> mia::DefaultInputConfigur
     return reader_policy(
         [this]()
         {
-            return new mia::InputReaderPolicy(input_boundaries, cursor_listener);
+            return new mia::InputReaderPolicy(input_region, cursor_listener);
         });
 }
 

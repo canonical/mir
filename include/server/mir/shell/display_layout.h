@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_SURFACE_BOUNDARIES_H_
-#define MIR_SHELL_SURFACE_BOUNDARIES_H_
+#ifndef MIR_SHELL_DISPLAY_LAYOUT_H_
+#define MIR_SHELL_DISPLAY_LAYOUT_H_
 
 namespace mir
 {
@@ -29,12 +29,12 @@ namespace shell
 {
 
 /**
- * Interface to the boundaries of valid surface placements.
+ * Interface to the layout of the display outputs.
  */
-class SurfaceBoundaries
+class DisplayLayout
 {
 public:
-    virtual ~SurfaceBoundaries() = default;
+    virtual ~DisplayLayout() = default;
 
     /**
      * Clips a rectangle to the screen it is in.
@@ -51,12 +51,12 @@ public:
     virtual void make_fullscreen(geometry::Rectangle& rect) = 0;
 
 protected:
-    SurfaceBoundaries() = default;
-    SurfaceBoundaries(SurfaceBoundaries const&) = delete;
-    SurfaceBoundaries& operator=(SurfaceBoundaries const&) = delete;
+    DisplayLayout() = default;
+    DisplayLayout(DisplayLayout const&) = delete;
+    DisplayLayout& operator=(DisplayLayout const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_SHELL_SURFACE_BOUNDARIES_H_ */
+#endif /* MIR_SHELL_DISPLAY_LAYOUT_H_ */

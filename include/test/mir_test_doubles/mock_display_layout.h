@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_BOUNDARIES_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_BOUNDARIES_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_
+#define MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_
 
-#include "mir/shell/surface_boundaries.h"
+#include "mir/shell/display_layout.h"
 
 #include <gmock/gmock.h>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-class MockSurfaceBoundaries : public shell::SurfaceBoundaries
+class MockDisplayLayout : public shell::DisplayLayout
 {
 public:
     MOCK_METHOD1(clip_to_screen, void(geometry::Rectangle& rect));
@@ -41,5 +41,5 @@ public:
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_BOUNDARIES_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_ */
 

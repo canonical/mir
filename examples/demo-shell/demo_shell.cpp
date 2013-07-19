@@ -58,7 +58,7 @@ struct DemoServerConfiguration : mir::DefaultServerConfiguration
         return shell_placement_strategy(
             [this]
             {
-                return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_surface_boundaries());
+                return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_display_layout());
             });
     }
 

@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/input/input_boundaries.h"
+#include "mir/input/input_region.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
 
@@ -29,22 +29,22 @@ namespace mia = mi::android;
 namespace geom = mir::geometry;
 
 mia::PointerController::PointerController(
-    std::shared_ptr<mi::InputBoundaries> const& input_boundaries)
+    std::shared_ptr<mi::InputRegion> const& input_region)
         : state(0),
           x(0.0),
           y(0.0),
-          input_boundaries(input_boundaries),
+          input_region(input_region),
           cursor_listener(std::shared_ptr<mi::CursorListener>())
 {
 }
 
 mia::PointerController::PointerController(
-    std::shared_ptr<mi::InputBoundaries> const& input_boundaries,
+    std::shared_ptr<mi::InputRegion> const& input_region,
     std::shared_ptr<mi::CursorListener> const& cursor_listener)
         : state(0),
           x(0.0),
           y(0.0),
-          input_boundaries(input_boundaries),
+          input_region(input_region),
           cursor_listener(cursor_listener)
 
 {
@@ -73,7 +73,7 @@ bool mia::PointerController::get_bounds_locked(
     float* out_max_x,
     float* out_max_y) const
 {
-    auto bounds = input_boundaries->bounding_rectangle();
+    auto bounds = input_region->bounding_rectangle();
     *out_min_x = bounds.top_left.x.as_float();
     *out_min_y = bounds.top_left.y.as_float();
     *out_max_x = bounds.top_left.x.as_float() + bounds.size.width.as_float();
@@ -102,7 +102,7 @@ void mia::PointerController::setPosition(float new_x, float new_y)
     std::lock_guard<std::mutex> lg(guard);
 
     geom::Point p{new_x, new_y};
-    input_boundaries->confine_point(p);
+    input_region->confine_point(p);
 
     x = p.x.as_float();
     y = p.y.as_float();

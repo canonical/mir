@@ -16,36 +16,33 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_INPUT_DISPLAY_INPUT_BOUNDARIES_H_
-#define MIR_INPUT_DISPLAY_INPUT_BOUNDARIES_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_
 
-#include "mir/input/input_boundaries.h"
+#include "mir/input/input_region.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
 
-#include <memory>
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace graphics
+namespace test
 {
-class Display;
-}
-namespace input
+namespace doubles
 {
 
-class DisplayInputBoundaries : public InputBoundaries
+class MockInputRegion : public input::InputRegion
 {
 public:
-    DisplayInputBoundaries(std::shared_ptr<graphics::Display> const& display);
-
-    geometry::Rectangle bounding_rectangle();
-    void confine_point(geometry::Point& point);
-
-private:
-    std::shared_ptr<graphics::Display> const display;
+    MOCK_METHOD0(bounding_rectangle, geometry::Rectangle());
+    MOCK_METHOD1(confine_point, void(geometry::Point&));
 };
 
 }
 }
+}
 
-#endif /* MIR_INPUT_DISPLAY_INPUT_BOUNDARIES_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_ */
+
 

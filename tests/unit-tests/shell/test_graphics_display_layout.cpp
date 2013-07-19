@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/shell/display_surface_boundaries.h"
+#include "mir/shell/graphics_display_layout.h"
 
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -58,11 +58,11 @@ private:
 
 }
 
-TEST(DisplaySurfaceBoundariesTest, clips_correctly)
+TEST(GraphicsDisplayLayoutTest, clips_correctly)
 {
     auto stub_display = std::make_shared<StubDisplay>();
 
-    msh::DisplaySurfaceBoundaries surface_boundaries{stub_display};
+    msh::GraphicsDisplayLayout display_layout{stub_display};
 
     std::vector<std::tuple<geom::Rectangle,geom::Rectangle>> rect_tuples{
         std::make_tuple(
@@ -83,16 +83,16 @@ TEST(DisplaySurfaceBoundariesTest, clips_correctly)
     {
         auto clipped_rect = std::get<0>(t);
         auto const expected_rect = std::get<1>(t);
-        surface_boundaries.clip_to_screen(clipped_rect);
+        display_layout.clip_to_screen(clipped_rect);
         EXPECT_EQ(expected_rect, clipped_rect);
     }
 }
 
-TEST(DisplaySurfaceBoundariesTest, makes_fullscreen_in_correct_screen)
+TEST(GraphicsDisplayLayoutTest, makes_fullscreen_in_correct_screen)
 {
     auto stub_display = std::make_shared<StubDisplay>();
 
-    msh::DisplaySurfaceBoundaries surface_boundaries{stub_display};
+    msh::GraphicsDisplayLayout display_layout{stub_display};
 
     std::vector<std::tuple<geom::Rectangle,geom::Rectangle>> rect_tuples{
         std::make_tuple(
@@ -113,7 +113,7 @@ TEST(DisplaySurfaceBoundariesTest, makes_fullscreen_in_correct_screen)
     {
         auto fullscreen_rect = std::get<0>(t);
         auto const expected_rect = std::get<1>(t);
-        surface_boundaries.make_fullscreen(fullscreen_rect);
+        display_layout.make_fullscreen(fullscreen_rect);
         EXPECT_EQ(expected_rect, fullscreen_rect);
     }
 }
