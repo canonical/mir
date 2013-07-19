@@ -37,8 +37,8 @@ void msh::GraphicsDisplayLayout::clip_to_output(geometry::Rectangle& rect)
 {
     auto output = get_output_for(rect);
 
-    if (output.size.width != geom::Width{0} && output.size.height != geom::Height{0} &&
-        rect.size.width != geom::Width{0} && rect.size.height != geom::Height{0})
+    if (output.size.width > geom::Width{0} && output.size.height > geom::Height{0} &&
+        rect.size.width > geom::Width{0} && rect.size.height > geom::Height{0})
     {
         auto tl = rect.top_left;
         auto br = rect.bottom_right();

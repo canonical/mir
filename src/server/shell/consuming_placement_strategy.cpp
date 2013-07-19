@@ -38,8 +38,8 @@ msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::Surfa
 
     geom::Rectangle rect{request_parameters.top_left, request_parameters.size};
 
-    if (request_parameters.size.width != geom::Width{0} &&
-        request_parameters.size.height != geom::Height{0})
+    if (request_parameters.size.width > geom::Width{0} &&
+        request_parameters.size.height > geom::Height{0})
     {
         display_layout->clip_to_output(rect);
     }
