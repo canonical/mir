@@ -37,11 +37,11 @@ class GraphicsDisplayLayout : public DisplayLayout
 public:
     GraphicsDisplayLayout(std::shared_ptr<graphics::Display> const& display);
 
-    void clip_to_screen(geometry::Rectangle& rect);
-    void make_fullscreen(geometry::Rectangle& rect);
+    void clip_to_output(geometry::Rectangle& rect);
+    void size_to_output(geometry::Rectangle& rect);
 
 private:
-    geometry::Rectangle get_screen_for(geometry::Rectangle& rect);
+    geometry::Rectangle get_output_for(geometry::Rectangle& rect);
 
     std::shared_ptr<graphics::Display> const display;
 };

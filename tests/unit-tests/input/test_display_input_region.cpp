@@ -93,7 +93,7 @@ TEST(DisplayInputRegionTest, confines_point_to_closest_valid_position)
     {
         geom::Point confined_point{std::get<0>(t)};
         geom::Point const expected_point{std::get<1>(t)};
-        input_region.confine_point(confined_point);
+        input_region.confine(confined_point);
         EXPECT_EQ(expected_point, confined_point);
     }
 

@@ -37,18 +37,18 @@ public:
     virtual ~DisplayLayout() = default;
 
     /**
-     * Clips a rectangle to the screen it is in.
+     * Clips a rectangle to the output it is in.
      *
      * @param [in,out] rect the rectangle to clip
      */
-    virtual void clip_to_screen(geometry::Rectangle& rect) = 0;
+    virtual void clip_to_output(geometry::Rectangle& rect) = 0;
 
     /**
-     * Makes a rectangle fullscreen in the screen it is in.
+     * Makes a rectangle take up the whole area of the output it is in.
      *
      * @param [in,out] rect the rectangle to make fullscreen
      */
-    virtual void make_fullscreen(geometry::Rectangle& rect) = 0;
+    virtual void size_to_output(geometry::Rectangle& rect) = 0;
 
 protected:
     DisplayLayout() = default;

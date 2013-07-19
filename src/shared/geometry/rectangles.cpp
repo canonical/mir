@@ -55,7 +55,7 @@ void geom::Rectangles::clear()
     rectangles.clear();
 }
 
-void geom::Rectangles::confine_point(geom::Point& point) const
+void geom::Rectangles::confine(geom::Point& point) const
 {
     geom::Point ret_point{point};
     geom::Displacement min_dp{geom::DeltaX{std::numeric_limits<int>::max()},

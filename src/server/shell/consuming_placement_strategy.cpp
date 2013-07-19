@@ -41,11 +41,11 @@ msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::Surfa
     if (request_parameters.size.width != geom::Width{0} &&
         request_parameters.size.height != geom::Height{0})
     {
-        display_layout->clip_to_screen(rect);
+        display_layout->clip_to_output(rect);
     }
     else
     {
-        display_layout->make_fullscreen(rect);
+        display_layout->size_to_output(rect);
     }
 
     placed_parameters.top_left = rect.top_left;

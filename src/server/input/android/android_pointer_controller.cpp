@@ -102,7 +102,7 @@ void mia::PointerController::setPosition(float new_x, float new_y)
     std::lock_guard<std::mutex> lg(guard);
 
     geom::Point p{new_x, new_y};
-    input_region->confine_point(p);
+    input_region->confine(p);
 
     x = p.x.as_float();
     y = p.y.as_float();

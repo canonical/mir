@@ -27,28 +27,26 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-#include <memory>
-
 msh::GraphicsDisplayLayout::GraphicsDisplayLayout(
     std::shared_ptr<mg::Display> const& display)
     : display{display}
 {
 }
 
-void msh::GraphicsDisplayLayout::clip_to_screen(geometry::Rectangle& rect)
+void msh::GraphicsDisplayLayout::clip_to_output(geometry::Rectangle& rect)
 {
-    auto screen = get_screen_for(rect);
+    auto output = get_output_for(rect);
 
-    if (screen.size.width != geom::Width{0} && screen.size.height != geom::Height{0} &&
+    if (output.size.width != geom::Width{0} && output.size.height != geom::Height{0} &&
         rect.size.width != geom::Width{0} && rect.size.height != geom::Height{0})
     {
         auto tl = rect.top_left;
         auto br = rect.bottom_right();
 
         geom::Rectangles rectangles;
-        rectangles.add(screen);
+        rectangles.add(output);
 
-        rectangles.confine_point(br);
+        rectangles.confine(br);
 
         rect.size =
             geom::Size{br.x.as_int() - tl.x.as_int() + 1,
@@ -60,27 +58,27 @@ void msh::GraphicsDisplayLayout::clip_to_screen(geometry::Rectangle& rect)
     }
 }
 
-void msh::GraphicsDisplayLayout::make_fullscreen(geometry::Rectangle& rect)
+void msh::GraphicsDisplayLayout::size_to_output(geometry::Rectangle& rect)
 {
-    auto screen = get_screen_for(rect);
-    rect = screen;
+    auto output = get_output_for(rect);
+    rect = output;
 }
 
-geom::Rectangle msh::GraphicsDisplayLayout::get_screen_for(geometry::Rectangle& rect)
+geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& rect)
 {
-    geom::Rectangle screen;
+    geom::Rectangle output;
 
     /*
-     * TODO: We need a better heuristic to decide on which screen a
-     * rectangle/surface belongs too
+     * TODO: We need a better heuristic to decide in which output a
+     * rectangle/surface belongs.
      */
     display->for_each_display_buffer(
-        [&screen,&rect](mg::DisplayBuffer const& db)
+        [&output,&rect](mg::DisplayBuffer const& db)
         {
             auto view_area = db.view_area();
             if (view_area.contains(rect.top_left))
-                screen = view_area;
+                output = view_area;
         });
 
-    return screen;
+    return output;
 }

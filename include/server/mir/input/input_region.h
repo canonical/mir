@@ -49,7 +49,7 @@ public:
      *
      * @param [in,out] point the point to confine
      */
-    virtual void confine_point(geometry::Point& point) = 0;
+    virtual void confine(geometry::Point& point) = 0;
 
 protected:
     InputRegion() = default;

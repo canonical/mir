@@ -200,7 +200,7 @@ TEST(geometry, rectangles_copy_assign)
     EXPECT_EQ(rectangles2.bounding_rectangle(), rectangles3.bounding_rectangle());
 }
 
-TEST(geometry, rectangles_confine_point)
+TEST(geometry, rectangles_confine)
 {
     using namespace geom;
 
@@ -233,7 +233,7 @@ TEST(geometry, rectangles_confine_point)
     {
         geom::Point confined_point{std::get<0>(t)};
         geom::Point const expected_point{std::get<1>(t)};
-        rectangles.confine_point(confined_point);
+        rectangles.confine(confined_point);
         EXPECT_EQ(expected_point, confined_point);
     }
 }

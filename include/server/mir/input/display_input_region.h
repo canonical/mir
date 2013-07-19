@@ -38,7 +38,7 @@ public:
     DisplayInputRegion(std::shared_ptr<graphics::Display> const& display);
 
     geometry::Rectangle bounding_rectangle();
-    void confine_point(geometry::Point& point);
+    void confine(geometry::Point& point);
 
 private:
     std::shared_ptr<graphics::Display> const display;

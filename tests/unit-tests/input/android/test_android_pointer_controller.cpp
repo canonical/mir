@@ -70,7 +70,7 @@ TEST_F(AndroidPointerControllerSetup, position_is_saved)
     static const float stored_y = 200;
     geom::Point stored{stored_x, stored_y};
 
-    EXPECT_CALL(input_region, confine_point(stored));
+    EXPECT_CALL(input_region, confine(stored));
 
     controller->setPosition(stored_x, stored_y);
 
@@ -92,8 +92,8 @@ TEST_F(AndroidPointerControllerSetup, move_updates_position)
     geom::Point start{start_x, start_y};
     geom::Point moved{start_x + dx, start_y + dy};
 
-    EXPECT_CALL(input_region, confine_point(start));
-    EXPECT_CALL(input_region, confine_point(moved));
+    EXPECT_CALL(input_region, confine(start));
+    EXPECT_CALL(input_region, confine(moved));
 
     controller->setPosition(start_x, start_y);
     controller->move(dx, dy);

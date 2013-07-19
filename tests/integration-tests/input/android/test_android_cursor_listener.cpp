@@ -65,7 +65,7 @@ struct StubInputRegion : public mi::InputRegion
         return {geom::Point{}, geom::Size{1024, 1024}};
     }
 
-    void confine_point(geom::Point&)
+    void confine(geom::Point&)
     {
     }
 };

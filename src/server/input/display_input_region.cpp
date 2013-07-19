@@ -46,7 +46,7 @@ geom::Rectangle mi::DisplayInputRegion::bounding_rectangle()
     return rectangles.bounding_rectangle();
 }
 
-void mi::DisplayInputRegion::confine_point(geom::Point& point)
+void mi::DisplayInputRegion::confine(geom::Point& point)
 {
     geom::Rectangles rectangles;
 
@@ -56,5 +56,5 @@ void mi::DisplayInputRegion::confine_point(geom::Point& point)
             rectangles.add(buffer.view_area());
         });
 
-    rectangles.confine_point(point);
+    rectangles.confine(point);
 }

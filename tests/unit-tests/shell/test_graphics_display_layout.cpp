@@ -83,7 +83,7 @@ TEST(GraphicsDisplayLayoutTest, clips_correctly)
     {
         auto clipped_rect = std::get<0>(t);
         auto const expected_rect = std::get<1>(t);
-        display_layout.clip_to_screen(clipped_rect);
+        display_layout.clip_to_output(clipped_rect);
         EXPECT_EQ(expected_rect, clipped_rect);
     }
 }
@@ -113,7 +113,7 @@ TEST(GraphicsDisplayLayoutTest, makes_fullscreen_in_correct_screen)
     {
         auto fullscreen_rect = std::get<0>(t);
         auto const expected_rect = std::get<1>(t);
-        display_layout.make_fullscreen(fullscreen_rect);
+        display_layout.size_to_output(fullscreen_rect);
         EXPECT_EQ(expected_rect, fullscreen_rect);
     }
 }

@@ -37,7 +37,7 @@ msh::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(
     auto placed_parameters = request_parameters;
 
     geometry::Rectangle rect{request_parameters.top_left, request_parameters.size};
-    display_layout->make_fullscreen(rect);
+    display_layout->size_to_output(rect);
     placed_parameters.size = rect.size;
 
     return placed_parameters;

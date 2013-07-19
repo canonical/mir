@@ -53,7 +53,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_no_geometry_are_made_ful
     msh::SurfaceCreationParameters input_params;
     geom::Rectangle rect{input_params.top_left, input_params.size};
 
-    EXPECT_CALL(*display_layout, make_fullscreen(rect)).Times(1);
+    EXPECT_CALL(*display_layout, size_to_output(rect)).Times(1);
 
     msh::ConsumingPlacementStrategy placement_strategy(display_layout);
 
@@ -68,7 +68,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_clipped)
     input_params.size = geom::Size{100, 200};
     geom::Rectangle rect{input_params.top_left, input_params.size};
 
-    EXPECT_CALL(*display_layout, clip_to_screen(rect)).Times(1);
+    EXPECT_CALL(*display_layout, clip_to_output(rect)).Times(1);
 
     msh::ConsumingPlacementStrategy placement_strategy(display_layout);
 

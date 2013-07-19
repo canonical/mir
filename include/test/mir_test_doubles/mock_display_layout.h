@@ -33,8 +33,8 @@ namespace doubles
 class MockDisplayLayout : public shell::DisplayLayout
 {
 public:
-    MOCK_METHOD1(clip_to_screen, void(geometry::Rectangle& rect));
-    MOCK_METHOD1(make_fullscreen, void(geometry::Rectangle& rect));
+    MOCK_METHOD1(clip_to_output, void(geometry::Rectangle& rect));
+    MOCK_METHOD1(size_to_output, void(geometry::Rectangle& rect));
 };
 
 }

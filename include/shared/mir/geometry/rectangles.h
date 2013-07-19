@@ -38,7 +38,7 @@ public:
     void add(Rectangle const& rect);
     void clear();
     Rectangle bounding_rectangle() const;
-    void confine_point(Point& point) const;
+    void confine(Point& point) const;
 
     typedef std::vector<Rectangle>::const_iterator const_iterator;
     typedef std::vector<Rectangle>::size_type size_type;
