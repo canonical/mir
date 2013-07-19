@@ -20,10 +20,9 @@
 
 namespace ms=mir::surfaces;
 namespace mc=mir::compositor;
-namespace mg=mir::graphics;
 
 mc::RenderingOperator::RenderingOperator(
-    graphics::Renderer& renderer,
+    Renderer& renderer,
     std::function<void(std::shared_ptr<void> const&)> save_resource) :
     renderer(renderer),
     save_resource(save_resource)
@@ -34,7 +33,7 @@ mc::RenderingOperator::~RenderingOperator()
 {
 }
 
-void mc::RenderingOperator::operator()(mg::CompositingCriteria const& info, ms::BufferStream& stream)
+void mc::RenderingOperator::operator()(CompositingCriteria const& info, ms::BufferStream& stream)
 {
     renderer.render(save_resource, info, stream);
 }

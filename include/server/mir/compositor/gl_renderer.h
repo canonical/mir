@@ -16,19 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GL_RENDERER_H_
-#define MIR_GRAPHICS_GL_RENDERER_H_
+#ifndef MIR_COMPOSITOR_GL_RENDERER_H_
+#define MIR_COMPOSITOR_GL_RENDERER_H_
 
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/geometry/size.h"
 #include <GLES2/gl2.h>
 
 namespace mir
 {
-namespace graphics
+namespace compositor
 {
-
-class Renderable;
 
 class GLRenderer : public Renderer
 {
@@ -67,4 +65,4 @@ private:
 }
 }
 
-#endif // MIR_GRAPHICS_GL_RENDERER_H_
+#endif // MIR_COMPOSITOR_GL_RENDERER_H_

@@ -26,22 +26,20 @@
 
 namespace mir
 {
-namespace graphics
-{
-class CompositingCriteria;
-}
 namespace surfaces
 {
 class BufferStream;
 }
 namespace compositor
 {
+class CompositingCriteria;
+
 class FilterForScene
 {
 public:
     virtual ~FilterForScene() {}
 
-    virtual bool operator()(graphics::CompositingCriteria const&) = 0;
+    virtual bool operator()(CompositingCriteria const&) = 0;
 
 protected:
     FilterForScene() = default;
@@ -54,7 +52,7 @@ class OperatorForScene
 public:
     virtual ~OperatorForScene() {}
 
-    virtual void operator()(graphics::CompositingCriteria const&, surfaces::BufferStream&) = 0;
+    virtual void operator()(CompositingCriteria const&, surfaces::BufferStream&) = 0;
 
 protected:
     OperatorForScene() = default;

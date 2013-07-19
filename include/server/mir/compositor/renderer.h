@@ -16,8 +16,8 @@
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_RENDERER_H_
-#define MIR_GRAPHICS_RENDERER_H_
+#ifndef MIR_COMPOSITOR_RENDERER_H_
+#define MIR_COMPOSITOR_RENDERER_H_
 
 #include <memory>
 #include <functional>
@@ -28,7 +28,7 @@ namespace surfaces
 {
 class BufferStream;
 }
-namespace graphics
+namespace compositor
 {
 class CompositingCriteria;
 
@@ -50,4 +50,4 @@ protected:
 }
 }
 
-#endif // MIR_GRAPHICS_RENDERER_H_
+#endif // MIR_COMPOSITOR_RENDERER_H_

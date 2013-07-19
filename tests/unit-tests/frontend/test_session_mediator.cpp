@@ -25,7 +25,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/gl_context.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_shell.h"

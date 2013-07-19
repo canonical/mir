@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/size.h>
-#include <mir/graphics/gl_renderer.h>
+#include <mir/compositor/gl_renderer.h>
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
 #include <mir_test_doubles/mock_compositing_criteria.h>
@@ -204,8 +204,8 @@ TEST_F(GLRendererSetupProcess, vertex_shader_compiler_failure_recovers_and_throw
                 stub_info_log.size()));
 
     EXPECT_THROW({
-    std::unique_ptr<mg::GLRenderer> r;
-    r.reset(new mg::GLRenderer(display_size));
+    std::unique_ptr<mc::GLRenderer> r;
+    r.reset(new mc::GLRenderer(display_size));
     }, std::runtime_error);
 }
 
@@ -226,8 +226,8 @@ TEST_F(GLRendererSetupProcess, fragment_shader_compiler_failure_recovers_and_thr
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        std::unique_ptr<mg::GLRenderer> r;
-        r.reset(new mg::GLRenderer(display_size));
+        std::unique_ptr<mc::GLRenderer> r;
+        r.reset(new mc::GLRenderer(display_size));
     }, std::runtime_error);
 }
 
@@ -249,8 +249,8 @@ TEST_F(GLRendererSetupProcess, graphics_program_linker_failure_recovers_and_thro
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        std::unique_ptr<mg::GLRenderer> r;
-        r.reset(new mg::GLRenderer(display_size));
+        std::unique_ptr<mc::GLRenderer> r;
+        r.reset(new mc::GLRenderer(display_size));
     }, std::runtime_error);
 }
 
@@ -273,12 +273,12 @@ public:
         EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_location, 0));
         FillMockVertexBuffer(mock_gl);
 
-        renderer.reset(new mg::GLRenderer(display_size));
+        renderer.reset(new mc::GLRenderer(display_size));
     }
 
     mtd::MockGL         mock_gl;
     mir::geometry::Size display_size;
-    std::unique_ptr<mg::GLRenderer> renderer;
+    std::unique_ptr<mc::GLRenderer> renderer;
     glm::mat4           trans;
 };
 
