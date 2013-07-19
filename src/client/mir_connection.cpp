@@ -278,7 +278,7 @@ void MirConnection::create_copy_of_display_config(MirDisplayConfiguration& out_c
     std::lock_guard<std::recursive_mutex> lock(mutex);
     //if (
     //check connect_result
-    mcl::set_from_message(out_configuration, connect_result);
+    mcl::set_display_config_from_message(out_configuration, connect_result);
 }
 
 

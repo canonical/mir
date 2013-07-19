@@ -40,7 +40,6 @@ void mcl::delete_config_storage(MirDisplayConfiguration& config)
 
 namespace
 {
-
 void fill_display_state(MirDisplayState& state, mp::DisplayState const& msg)
 {
     state.card_id = msg.card_id();
@@ -68,15 +67,16 @@ void fill_display_state(MirDisplayState& state, mp::DisplayState const& msg)
     state.physical_width_mm = msg.physical_width_mm();
     state.physical_height_mm = msg.physical_height_mm();
 }
+}
 
-void alloc_storage_from_msg(MirDisplayConfiguration& config, mp::Connection& msg)
+void mcl::set_display_config_from_message(MirDisplayConfiguration& config, mp::Connection const& connection_msg)
 {
-    config.num_displays = msg.display_state_size();
+    config.num_displays = connection_msg.display_state_size();
     config.displays = static_cast<MirDisplayState*>(::operator new(sizeof(MirDisplayState) * config.num_displays));
 
     for(auto i=0u; i < config.num_displays; i++)
     {
-        auto state = msg.display_state(i);
+        auto state = connection_msg.display_state(i);
         config.displays[i].num_pixel_formats = state.pixel_format_size();
         config.displays[i].pixel_formats = static_cast<MirPixelFormat*>(
             ::operator new(sizeof(MirPixelFormat)*config.displays[i].num_pixel_formats));
@@ -84,16 +84,7 @@ void alloc_storage_from_msg(MirDisplayConfiguration& config, mp::Connection& msg
         config.displays[i].num_modes = state.mode_size();
         config.displays[i].modes = static_cast<MirDisplayMode*>(
             ::operator new(sizeof(MirDisplayMode)*config.displays[i].num_modes));
-    }
-}
 
-}
-
-void mcl::set_from_message(MirDisplayConfiguration& config, mp::Connection& connection_msg)
-{
-    alloc_storage_from_msg(config, connection_msg);
-    for(auto i=0u; i < config.num_displays; i++)
-    {
-        fill_display_state(config.displays[i], connection_msg.display_state(i));
+        fill_display_state(config.displays[i], state);
     }
 }
