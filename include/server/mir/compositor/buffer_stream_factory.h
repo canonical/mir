@@ -37,6 +37,7 @@ struct BufferProperties;
 class BufferStreamFactory : public surfaces::BufferStreamFactory
 {
 public:
+
     explicit BufferStreamFactory(
         std::shared_ptr<GraphicBufferAllocator> gralloc);
 
@@ -47,6 +48,7 @@ public:
 
 private:
     std::shared_ptr<GraphicBufferAllocator> gralloc;
+
 };
 
 }

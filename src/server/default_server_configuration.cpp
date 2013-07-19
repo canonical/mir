@@ -22,6 +22,7 @@
 #include "mir/shared_library.h"
 
 #include "mir/options/program_option.h"
+#include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_stream_factory.h"
 #include "mir/compositor/default_compositing_strategy.h"
@@ -317,6 +318,16 @@ mir::DefaultServerConfiguration::the_buffer_initializer()
         []()
         {
              return std::make_shared<mg::NullBufferInitializer>();
+        });
+}
+
+std::shared_ptr<mc::BufferAllocationStrategy>
+mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
+{
+    return buffer_allocation_strategy(
+        [this]()
+        {
+            return std::make_shared<mc::SwapperFactory>(the_buffer_allocator());
         });
 }
 

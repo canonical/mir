@@ -34,9 +34,6 @@ class Buffer;
 }
 namespace compositor
 {
-class BufferSwapper;
-class BufferAllocationStrategy;
-
 class SwitchingBundle : public BufferBundle 
 {
 public:
