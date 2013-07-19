@@ -53,7 +53,7 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "switching_bundle.h"
-#include <cassert>
+#include <boost/throw_exception.hpp>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
@@ -69,7 +69,11 @@ mc::SwitchingBundle::SwitchingBundle(
       first_client{0}, nclients{0},
       framedropping{false}
 {
-    assert(nbuffers > 0 && nbuffers <= MAX_BUFFERS);
+    if (nbuffers < 1 || nbuffers > MAX_BUFFERS)
+        BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle does not "
+                                               "support nbuffers=" +
+                                               std::to_string(nbuffers)));
+
     for (int i = 0; i < MAX_BUFFERS; i++)
         ring[i] = gralloc->alloc_buffer(bundle_properties);
 }
@@ -127,7 +131,11 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
 void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
-    assert(ring[first_client] == released_buffer);
+
+    if (ring[first_client] != released_buffer)
+        BOOST_THROW_EXCEPTION(std::logic_error(
+            "Client release out of order"));
+        
     first_client = (first_client + 1) % nbuffers;
     nclients--;
     nready++;
@@ -153,7 +161,11 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
-    assert(ring[first_compositor] == released_buffer);
+
+    if (ring[first_compositor] != released_buffer)
+        BOOST_THROW_EXCEPTION(std::logic_error(
+            "Compositor release out of order"));
+
     first_compositor = (first_compositor + 1) % nbuffers;
     ncompositors--;
     cond.notify_all();
