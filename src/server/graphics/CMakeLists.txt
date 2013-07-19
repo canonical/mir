@@ -20,6 +20,7 @@ set(
   null_display_report.cpp
   gl_pixel_buffer.cpp
   default_display_configuration_policy.cpp
+  buffer_basic.cpp
 )
 
 add_library(
