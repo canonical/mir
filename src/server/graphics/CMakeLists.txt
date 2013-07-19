@@ -14,7 +14,6 @@ endif()
 set(
   GRAPHICS_SOURCES
 
-  gl_renderer.cpp
   egl_extensions.cpp
   egl_resources.cpp
   display_configuration.cpp

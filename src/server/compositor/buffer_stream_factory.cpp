@@ -23,8 +23,8 @@
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/buffer_properties.h"
 #include "switching_bundle.h"
-#include "mir/compositor/buffer.h"
-#include "mir/compositor/buffer_id.h"
+#include "mir/graphics/buffer.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
 

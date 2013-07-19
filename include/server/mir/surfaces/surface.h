@@ -32,18 +32,17 @@ namespace mir
 {
 namespace compositor
 {
-class Buffer;
+class CompositingCriteria;
 struct BufferIPCPackage;
-class BufferID;
+}
+namespace graphics
+{
+class Buffer;
 }
 namespace input
 {
 class InputChannel;
 class Surface;
-}
-namespace graphics
-{
-class CompositingCriteria;
 }
 namespace surfaces
 {
@@ -73,8 +72,8 @@ public:
 
     geometry::PixelFormat pixel_format() const;
 
-    std::shared_ptr<compositor::Buffer> compositor_buffer() const;
-    std::shared_ptr<compositor::Buffer> advance_client_buffer();
+    std::shared_ptr<graphics::Buffer> compositor_buffer() const;
+    std::shared_ptr<graphics::Buffer> advance_client_buffer();
     void force_requests_to_complete();
     void flag_for_render();
 
@@ -85,7 +84,7 @@ public:
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
 
-    std::shared_ptr<graphics::CompositingCriteria> compositing_criteria();
+    std::shared_ptr<compositor::CompositingCriteria> compositing_criteria();
 
     std::shared_ptr<BufferStream> buffer_stream() const;
 

@@ -16,9 +16,9 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_pixel_buffer.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/gl_context.h"
+#include "mir/graphics/buffer.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -79,7 +79,7 @@ void mg::GLPixelBuffer::prepare()
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
-void mg::GLPixelBuffer::fill_from(compositor::Buffer& buffer)
+void mg::GLPixelBuffer::fill_from(Buffer& buffer)
 {
     auto width = buffer.size().width.as_uint32_t();
     auto height = buffer.size().height.as_uint32_t();

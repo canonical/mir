@@ -27,6 +27,7 @@
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
+namespace mg = mir::graphics;
 
 struct SwitchingBundleTest : public ::testing::Test
 {
@@ -47,7 +48,7 @@ struct SwitchingBundleTest : public ::testing::Test
     std::shared_ptr<mtd::MockSwapperFactory> mock_swapper_factory;
     std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
     std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
-    std::shared_ptr<mc::Buffer> stub_buffer;
+    std::shared_ptr<mg::Buffer> stub_buffer;
     mc::BufferProperties properties;
 };
 

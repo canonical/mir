@@ -48,8 +48,8 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/graphics/gl_renderer.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/gl_renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
@@ -335,10 +335,10 @@ mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
         });
 }
 
-std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
+std::shared_ptr<mc::Renderer> mir::DefaultServerConfiguration::the_renderer()
 {
     return renderer(
-        [&]() -> std::shared_ptr<mg::GLRenderer>
+        [&]() -> std::shared_ptr<mc::GLRenderer>
         {
             /* TODO: We need a different design to support multiple outputs */
             geom::Rectangles view_area;
@@ -347,7 +347,7 @@ std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
                 view_area.add(db.view_area());
             });
             geom::Rectangle const view_rect = view_area.bounding_rectangle();
-            return std::make_shared<mg::GLRenderer>(view_rect.size);
+            return std::make_shared<mc::GLRenderer>(view_rect.size);
         });
 }
 
@@ -593,8 +593,8 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
         });
 }
 
-std::shared_ptr<mc::Renderables>
-mir::DefaultServerConfiguration::the_renderables()
+std::shared_ptr<mc::Scene>
+mir::DefaultServerConfiguration::the_scene()
 {
     return surface_stack(
         [this]() -> std::shared_ptr<ms::SurfaceStack>
@@ -654,7 +654,7 @@ mir::DefaultServerConfiguration::the_compositing_strategy()
     return compositing_strategy(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_renderables(), the_renderer(), the_overlay_renderer());
+            return std::make_shared<mc::DefaultCompositingStrategy>(the_scene(), the_renderer(), the_overlay_renderer());
         });
 }
 
@@ -675,7 +675,7 @@ mir::DefaultServerConfiguration::the_compositor()
         [this]()
         {
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
-                                                                 the_renderables(),
+                                                                 the_scene(),
                                                                  the_compositing_strategy());
         });
 }

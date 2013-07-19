@@ -40,6 +40,7 @@ namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -484,10 +485,10 @@ TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
         mt::fake_shared(surface_builder),
         msh::a_surface());
 
-    mc::Buffer* buf_ptr{nullptr};
+    mg::Buffer* buf_ptr{nullptr};
 
     test.with_most_recent_buffer_do(
-        [&](mc::Buffer& buffer)
+        [&](mg::Buffer& buffer)
         {
             buf_ptr = &buffer;
         });

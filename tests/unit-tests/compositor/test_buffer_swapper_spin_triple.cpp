@@ -26,6 +26,7 @@
 #include <algorithm>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -38,13 +39,13 @@ struct BufferSwapperSpinTriple : testing::Test
           buffer_b{std::make_shared<mtd::StubBuffer>()},
           buffer_c{std::make_shared<mtd::StubBuffer>()}
     {
-          auto list = std::vector<std::shared_ptr<mc::Buffer>>{buffer_a, buffer_b, buffer_c};
+          auto list = std::vector<std::shared_ptr<mg::Buffer>>{buffer_a, buffer_b, buffer_c};
           swapper = std::make_shared<mc::BufferSwapperSpin>(list, list.size());
     }
 
-    std::shared_ptr<mc::Buffer> const buffer_a;
-    std::shared_ptr<mc::Buffer> const buffer_b;
-    std::shared_ptr<mc::Buffer> const buffer_c;
+    std::shared_ptr<mg::Buffer> const buffer_a;
+    std::shared_ptr<mg::Buffer> const buffer_b;
+    std::shared_ptr<mg::Buffer> const buffer_c;
 
     std::shared_ptr<mc::BufferSwapper> swapper;
 };
@@ -53,7 +54,7 @@ struct BufferSwapperSpinTriple : testing::Test
 
 TEST_F(BufferSwapperSpinTriple, client_can_always_get_new_buffer)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> expected_buffers;
+    std::vector<std::shared_ptr<mg::Buffer>> expected_buffers;
 
     for (unsigned int i = 0; i < 10; i++)
     {
@@ -81,7 +82,7 @@ TEST_F(BufferSwapperSpinTriple, client_can_always_get_new_buffer)
 
 TEST_F(BufferSwapperSpinTriple, client_can_always_get_new_buffer_while_compositor_has_one)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> expected_buffers;
+    std::vector<std::shared_ptr<mg::Buffer>> expected_buffers;
 
     auto comp_buf = swapper->compositor_acquire();
 
@@ -165,7 +166,7 @@ TEST_F(BufferSwapperSpinTriple, compositor_release_makes_buffer_available_to_cli
     swapper->compositor_release(comp_buf);
 
     /* After the release, the compositor's buffer should be available to the client */
-    std::vector<std::shared_ptr<mc::Buffer>> client_buffers;
+    std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
 
     for (auto i = 0; i < 3; i++)
     {
@@ -182,7 +183,7 @@ TEST_F(BufferSwapperSpinTriple, compositor_release_makes_buffer_available_to_cli
 TEST_F(BufferSwapperSpinTriple, buffer_transfer_triple_all_owned)
 {
     size_t test_size;
-    std::vector<std::shared_ptr<mc::Buffer>> list;
+    std::vector<std::shared_ptr<mg::Buffer>> list;
     swapper->end_responsibility(list, test_size);
 
     auto res1 = std::find(list.begin(), list.end(), buffer_a);
@@ -201,7 +202,7 @@ TEST_F(BufferSwapperSpinTriple, buffer_transfer_triple_some_not_owned)
     auto acquired_buffer = swapper->client_acquire();
 
     size_t test_size;
-    std::vector<std::shared_ptr<mc::Buffer>> list;
+    std::vector<std::shared_ptr<mg::Buffer>> list;
     swapper->end_responsibility(list, test_size);
 
     auto res1 = std::find(list.begin(), list.end(), acquired_buffer);

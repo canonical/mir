@@ -19,7 +19,7 @@
  */
 
 #include "mir/compositor/buffer_properties.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
 #include "mir/surfaces/surface_state.h"
@@ -51,7 +51,7 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_fa
 {
 }
 
-void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::OperatorForRenderables& renderable_operator)
+void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)
 {
     std::lock_guard<std::mutex> lock(guard);
     for (auto &layer : layers_by_depth)
@@ -59,9 +59,9 @@ void ms::SurfaceStack::for_each_if(mc::FilterForRenderables& filter, mc::Operato
         auto surfaces = layer.second;
         for (auto it = surfaces.begin(); it != surfaces.end(); ++it)
         {
-            mg::CompositingCriteria& info = *((*it)->compositing_criteria());
+            mc::CompositingCriteria& info = *((*it)->compositing_criteria());
             ms::BufferStream& stream = *((*it)->buffer_stream());
-            if (filter(info)) renderable_operator(info, stream);
+            if (filter(info)) op(info, stream);
         }
     }
 }
@@ -73,13 +73,13 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params, ms::DepthId depth)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
 {
     auto change_cb = [this]() { emit_change_notification(); };
     auto surface = surface_factory->create_surface(params, change_cb); 
     {
         std::lock_guard<std::mutex> lg(guard);
-        layers_by_depth[depth].push_back(surface);
+        layers_by_depth[params.depth].push_back(surface);
     }
 
     input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface());

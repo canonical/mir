@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 class Buffer;
 }
@@ -32,7 +32,7 @@ namespace shell
 {
 
 /**
- * Interface for extracting the pixels from a compositor::Buffer.
+ * Interface for extracting the pixels from a graphics::Buffer.
  */
 class PixelBuffer
 {
@@ -40,11 +40,11 @@ public:
     virtual ~PixelBuffer() = default;
 
     /**
-     * Fills the PixelBuffer with the contents of a compositor::Buffer.
+     * Fills the PixelBuffer with the contents of a graphics::Buffer.
      *
      * \param [in] buffer the buffer to get the pixels of
      */
-    virtual void fill_from(compositor::Buffer& buffer) = 0;
+    virtual void fill_from(graphics::Buffer& buffer) = 0;
 
     /**
      * The pixels in 0xAARRGGBB format.

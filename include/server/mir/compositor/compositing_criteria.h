@@ -16,14 +16,14 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
-#define MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
+#ifndef MIR_COMPOSITOR_COMPOSITING_CRITERIA_H_
+#define MIR_COMPOSITOR_COMPOSITING_CRITERIA_H_
 
 #include <glm/glm.hpp>
 
 namespace mir
 {
-namespace graphics
+namespace compositor
 {
 
 class CompositingCriteria 
@@ -44,4 +44,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_COMPOSITING_CRITERIA_H_ */
+#endif /* MIR_COMPOSITOR_COMPOSITING_CRITERIA_H_ */
