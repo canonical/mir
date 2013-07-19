@@ -715,7 +715,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
 
             for(auto i=0u; i < configuration.num_displays; i++)
             {
-                MirDisplayState* disp = &configuration.displays[i];
+                MirDisplayOutput* disp = &configuration.displays[i];
                 ASSERT_NE(nullptr, disp); 
                 EXPECT_GE(disp->num_modes, disp->current_mode);
                 EXPECT_GE(disp->num_pixel_formats, disp->current_format);

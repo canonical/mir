@@ -40,7 +40,7 @@ void mcl::delete_config_storage(MirDisplayConfiguration& config)
 
 namespace
 {
-void fill_display_state(MirDisplayState& state, mp::DisplayState const& msg)
+void fill_display_state(MirDisplayOutput& state, mp::DisplayState const& msg)
 {
     state.card_id = msg.card_id();
     state.output_id = msg.output_id();
@@ -72,7 +72,7 @@ void fill_display_state(MirDisplayState& state, mp::DisplayState const& msg)
 void mcl::set_display_config_from_message(MirDisplayConfiguration& config, mp::Connection const& connection_msg)
 {
     config.num_displays = connection_msg.display_state_size();
-    config.displays = static_cast<MirDisplayState*>(::operator new(sizeof(MirDisplayState) * config.num_displays));
+    config.displays = static_cast<MirDisplayOutput*>(::operator new(sizeof(MirDisplayOutput) * config.num_displays));
 
     for(auto i=0u; i < config.num_displays; i++)
     {

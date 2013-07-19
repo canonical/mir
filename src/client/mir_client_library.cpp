@@ -248,7 +248,7 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     mir_connection_display_config_init(connection, &config);
     if (config.num_displays < 1)
         return;
-    MirDisplayState* state = &config.displays[0];
+    MirDisplayOutput* state = &config.displays[0];
     MirDisplayMode mode = state->modes[state->current_mode];
    
     display_info->width = mode.horizontal_resolution;

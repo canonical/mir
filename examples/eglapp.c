@@ -182,7 +182,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     MirDisplayConfiguration display_config;
     mir_connection_display_config_init(connection, &display_config);
-    MirDisplayState* display_state = &display_config.displays[0];
+    MirDisplayOutput* display_state = &display_config.displays[0];
     MirDisplayMode mode = display_state->modes[display_state->current_mode];
 
     printf("Connected to display: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",

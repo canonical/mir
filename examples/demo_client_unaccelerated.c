@@ -48,7 +48,7 @@ static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
     }
 }
 
-static MirPixelFormat find_8888_format(MirDisplayState *info)
+static MirPixelFormat find_8888_format(MirDisplayOutput *info)
 {
     MirPixelFormat pf = mir_pixel_format_invalid;
 

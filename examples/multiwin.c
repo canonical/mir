@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 
     MirDisplayConfiguration display_config;
     mir_connection_display_config_init(conn, &display_config);
-    MirDisplayState* dinfo = &display_config.displays[0];
+    MirDisplayOutput* dinfo = &display_config.displays[0];
 
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;
