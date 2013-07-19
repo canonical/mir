@@ -255,7 +255,7 @@ void mc ::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> s
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
-    auto region_resource = stream.lock_back_buffer();
+    auto region_resource = stream.lock_compositor_buffer();
     region_resource->bind_to_texture();
     save_resource(region_resource);
 
