@@ -46,15 +46,15 @@ int mc::SwitchingBundle::drop_frames(int max)
     if (drop > nready)
         drop = nready;
 
-    if (drop > 0)
+    for (int d = 0; d < drop; d++)
     {
         first_client = (first_client + nbuffers - 1) % nbuffers;
         nready--;
         auto tmp = ring[first_client];
-        int end = (first_client + nclients + 1 - drop) % nbuffers;
+        int end = (first_client + nclients) % nbuffers;
 
         for (int i = first_client; i != end; i = (i + 1) % nbuffers)
-            ring[i] = ring[(i + drop) % nbuffers];
+            ring[i] = ring[(i + 1) % nbuffers];
 
         ring[end] = tmp;
     }
