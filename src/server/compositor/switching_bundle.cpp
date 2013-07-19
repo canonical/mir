@@ -105,7 +105,6 @@ int mc::SwitchingBundle::drop_frames(int max)
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
-    int client;
 
     if (framedropping && nbuffers > 1)
     {
@@ -123,7 +122,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
             cond.wait(lock);
     }
 
-    client = (first_client + nclients) % nbuffers;
+    int client = (first_client + nclients) % nbuffers;
     nclients++;
 
     return ring[client];
@@ -146,12 +145,11 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
-    int compositor;
 
     while (nready <= 0)
         cond.wait(lock);
 
-    compositor = first_ready;
+    int compositor = first_ready;
     first_ready = (first_ready + 1) % nbuffers;
     nready--;
     ncompositors++;
