@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GL_PIXEL_BUFFER_H_
-#define MIR_GRAPHICS_GL_PIXEL_BUFFER_H_
+#ifndef MIR_SHELL_GL_PIXEL_BUFFER_H_
+#define MIR_SHELL_GL_PIXEL_BUFFER_H_
 
 #include "mir/shell/pixel_buffer.h"
 
@@ -32,15 +32,18 @@ namespace graphics
 {
 class Buffer;
 class GLContext;
+}
 
+namespace shell
+{
 /** Extracts the pixels from a graphics::Buffer using GL facilities. */
-class GLPixelBuffer : public shell::PixelBuffer
+class GLPixelBuffer : public PixelBuffer
 {
 public:
-    GLPixelBuffer(std::unique_ptr<GLContext> gl_context);
+    GLPixelBuffer(std::unique_ptr<graphics::GLContext> gl_context);
     ~GLPixelBuffer() noexcept;
 
-    void fill_from(Buffer& buffer);
+    void fill_from(graphics::Buffer& buffer);
     void const* as_argb_8888();
     geometry::Size size() const;
     geometry::Stride stride() const;
@@ -48,7 +51,7 @@ public:
 private:
     void prepare();
 
-    std::unique_ptr<GLContext> const gl_context;
+    std::unique_ptr<graphics::GLContext> const gl_context;
     GLuint tex;
     GLuint fbo;
     std::vector<char> pixels;
@@ -60,4 +63,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GL_PIXEL_BUFFER_H_ */
+#endif /* MIR_SHELL_GL_PIXEL_BUFFER_H_ */

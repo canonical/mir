@@ -45,7 +45,7 @@
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/gl_pixel_buffer.h"
+#include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/renderer.h"
@@ -411,7 +411,7 @@ mir::DefaultServerConfiguration::the_shell_pixel_buffer()
     return shell_pixel_buffer(
         [this]()
         {
-            return std::make_shared<mg::GLPixelBuffer>(
+            return std::make_shared<msh::GLPixelBuffer>(
                 the_display()->create_gl_context());
         });
 }
