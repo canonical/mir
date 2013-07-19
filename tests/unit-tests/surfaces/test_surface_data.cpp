@@ -27,7 +27,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mg = mir::graphics;
+namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace mi = mir::input;

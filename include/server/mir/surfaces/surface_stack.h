@@ -73,7 +73,7 @@ public:
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel 
-    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params, DepthId depth);
+    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
     

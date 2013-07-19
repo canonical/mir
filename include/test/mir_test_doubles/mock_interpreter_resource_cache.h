@@ -28,8 +28,8 @@ namespace doubles
 {
 struct MockInterpreterResourceCache : public graphics::android::InterpreterResourceCache
 {
-    MOCK_METHOD2(store_buffer, void(std::shared_ptr<compositor::Buffer>const&, ANativeWindowBuffer*));
-    MOCK_METHOD1(retrieve_buffer, std::shared_ptr<compositor::Buffer>(ANativeWindowBuffer*));
+    MOCK_METHOD2(store_buffer, void(std::shared_ptr<graphics::Buffer>const&, ANativeWindowBuffer*));
+    MOCK_METHOD1(retrieve_buffer, std::shared_ptr<graphics::Buffer>(ANativeWindowBuffer*));
 };
 }
 }

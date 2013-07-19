@@ -22,6 +22,7 @@
 #include <cassert>
 
 namespace mc=mir::compositor;
+namespace mg = mir::graphics;
 
 mc::SwitchingBundle::SwitchingBundle(
     std::shared_ptr<GraphicBufferAllocator> &gralloc, BufferProperties const& property_request)
@@ -62,7 +63,7 @@ int mc::SwitchingBundle::steal(int n)
     return stolen;
 }
 
-std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
+std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
     int client;
@@ -94,7 +95,7 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::client_acquire()
     return ring[client];
 }
 
-void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& released_buffer)
+void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
     assert(ring[first_client] == released_buffer);
@@ -104,7 +105,7 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mc::Buffer> const& rele
     cond.notify_all();
 }
 
-std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
+std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
@@ -120,7 +121,7 @@ std::shared_ptr<mc::Buffer> mc::SwitchingBundle::compositor_acquire()
     return ring[compositor];
 }
 
-void mc::SwitchingBundle::compositor_release(std::shared_ptr<mc::Buffer> const& released_buffer)
+void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
     assert(ring[first_compositor] == released_buffer);

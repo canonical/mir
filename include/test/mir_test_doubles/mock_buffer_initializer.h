@@ -33,9 +33,9 @@ namespace doubles
 class MockBufferInitializer : public graphics::BufferInitializer
 {
 public:
-    MOCK_METHOD1(operator_call, void(compositor::Buffer& buffer));
+    MOCK_METHOD1(operator_call, void(graphics::Buffer& buffer));
 
-    void operator()(compositor::Buffer& buffer)
+    void operator()(graphics::Buffer& buffer)
     {
         operator_call(buffer);
     }

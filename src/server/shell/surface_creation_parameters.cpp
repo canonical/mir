@@ -24,7 +24,8 @@ namespace geom = mir::geometry;
 
 msh::SurfaceCreationParameters::SurfaceCreationParameters()
     : name(), size(), top_left(), buffer_usage(mc::BufferUsage::undefined),
-      pixel_format(geom::PixelFormat::invalid)
+      pixel_format(geom::PixelFormat::invalid),
+      depth{0}
 {
 }
 
@@ -73,13 +74,24 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
     return *this;
 }
 
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_depth(
+    surfaces::DepthId const& new_depth)
+{
+    depth = new_depth;
+    
+    return *this;
+}
+
 bool msh::operator==(
     const SurfaceCreationParameters& lhs,
     const msh::SurfaceCreationParameters& rhs)
 {
-    return lhs.size == rhs.size &&
-           lhs.buffer_usage == rhs.buffer_usage &&
-           lhs.pixel_format == rhs.pixel_format;
+    return lhs.name == rhs.name && 
+        lhs.size == rhs.size &&
+        lhs.top_left == rhs.top_left &&
+        lhs.buffer_usage == rhs.buffer_usage &&
+        lhs.pixel_format == rhs.pixel_format &&
+        lhs.depth == rhs.depth;
 }
 
 bool msh::operator!=(

@@ -51,9 +51,9 @@ namespace
 class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
-        return std::shared_ptr<mc::Buffer>();
+        return std::shared_ptr<mg::Buffer>();
     }
 
     virtual std::vector<geom::PixelFormat> supported_pixel_formats()

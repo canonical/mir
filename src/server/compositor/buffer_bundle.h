@@ -25,18 +25,19 @@
 
 namespace mir
 {
+namespace graphics { class Buffer; }
+
 namespace compositor
 {
-class Buffer;
 
 class BufferBundle
 {
 public:
     virtual ~BufferBundle() noexcept {}
-    virtual std::shared_ptr<Buffer> client_acquire() = 0;
-    virtual void client_release(std::shared_ptr<Buffer> const&) = 0;
-    virtual std::shared_ptr<Buffer> compositor_acquire() = 0;
-    virtual void compositor_release(std::shared_ptr<Buffer> const&) = 0;
+    virtual std::shared_ptr<graphics::Buffer> client_acquire() = 0;
+    virtual void client_release(std::shared_ptr<graphics::Buffer> const&) = 0;
+    virtual std::shared_ptr<graphics::Buffer> compositor_acquire() = 0;
+    virtual void compositor_release(std::shared_ptr<graphics::Buffer> const&) = 0;
 
     virtual BufferProperties properties() const = 0;
     virtual void allow_framedropping(bool dropping_allowed) = 0;

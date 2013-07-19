@@ -19,7 +19,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
 #include "mir/compositor/scene.h"
@@ -56,8 +56,8 @@ public:
     {
     }
 
-    std::shared_ptr<mc::Buffer> secure_client_buffer() { return std::make_shared<mtd::StubBuffer>(); }
-    std::shared_ptr<mc::Buffer> lock_back_buffer() { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mg::Buffer> secure_client_buffer() { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mg::Buffer> lock_back_buffer() { return std::make_shared<mtd::StubBuffer>(); }
     geom::PixelFormat get_stream_pixel_format() { return geom::PixelFormat::abgr_8888; }
     geom::Size stream_size() { return geom::Size{}; }
     void force_requests_to_complete() {}

@@ -480,16 +480,16 @@ struct TestClientIPCRender : public testing::Test
 
     geom::Size size;
     geom::PixelFormat pf;
-    mc::BufferID id1;
-    mc::BufferID id2;
+    mg::BufferID id1;
+    mg::BufferID id2;
     std::shared_ptr<mtd::TestGrallocMapper> buffer_converter;
     std::shared_ptr<mtf::Process> client_process;
 
     std::shared_ptr<MirNativeBuffer> handle;
     std::shared_ptr<MirNativeBuffer> second_handle;
 
-    std::shared_ptr<mc::Buffer> android_buffer;
-    std::shared_ptr<mc::Buffer> second_android_buffer;
+    std::shared_ptr<mg::Buffer> android_buffer;
+    std::shared_ptr<mg::Buffer> second_android_buffer;
     std::shared_ptr<mga::AndroidGraphicBufferAllocator>  allocator;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;

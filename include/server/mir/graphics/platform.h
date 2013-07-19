@@ -31,7 +31,6 @@ class Surface;
 namespace compositor
 {
 class GraphicBufferAllocator;
-class Buffer;
 class BufferIPCPacker;
 }
 namespace options
@@ -44,6 +43,7 @@ class Option;
 namespace graphics
 {
 
+class Buffer;
 class Display;
 struct PlatformIPCPackage;
 class BufferInitializer;
@@ -102,7 +102,7 @@ public:
      * \param [in] buffer the buffer to fill the IPC package for
      */
     virtual void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
-                                  std::shared_ptr<compositor::Buffer> const& buffer) const = 0;
+                                  std::shared_ptr<graphics::Buffer> const& buffer) const = 0;
 
     /**
      * Creates the in-process client support object.

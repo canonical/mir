@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 class Buffer;
 }
@@ -36,7 +36,7 @@ public:
     virtual ~SurfaceBufferAccess() = default;
 
     virtual void with_most_recent_buffer_do(
-        std::function<void(compositor::Buffer&)> const& exec) = 0;
+        std::function<void(graphics::Buffer&)> const& exec) = 0;
 
 protected:
     SurfaceBufferAccess() = default;

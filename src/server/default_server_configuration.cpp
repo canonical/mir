@@ -46,8 +46,8 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/graphics/gl_renderer.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/gl_renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
@@ -320,12 +320,12 @@ mir::DefaultServerConfiguration::the_buffer_initializer()
         });
 }
 
-std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
+std::shared_ptr<mc::Renderer> mir::DefaultServerConfiguration::the_renderer()
 {
     return renderer(
         [&]()
         {
-             return std::make_shared<mg::GLRenderer>(the_display()->view_area().size);
+             return std::make_shared<mc::GLRenderer>(the_display()->view_area().size);
         });
 }
 
