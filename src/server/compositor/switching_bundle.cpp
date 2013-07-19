@@ -39,23 +39,24 @@ mc::SwitchingBundle::SwitchingBundle(
         ring[i] = gralloc->alloc_buffer(bundle_properties);
 }
 
-int mc::SwitchingBundle::steal(int n)
+int mc::SwitchingBundle::drop_frames(int max)
 {
     int stolen = -1;
+    int drop = max;
 
-    if (n > nready)
-        n = nready;
+    if (drop > nready)
+        drop = nready;
 
-    if (n > 0)
+    if (drop > 0)
     {
-        first_client = (first_ready + nready - n) % nbuffers;
+        first_client = (first_ready + nready - drop) % nbuffers;
         nready--;
         nclients++;
         auto tmp = ring[first_client];
-        stolen = (first_client + nclients - n) % nbuffers;
+        stolen = (first_client + nclients - drop) % nbuffers;
 
         for (int i = first_client; i != stolen; i = (i + 1) % nbuffers)
-            ring[i] = ring[(i + n) % nbuffers];
+            ring[i] = ring[(i + drop) % nbuffers];
 
         ring[stolen] = tmp;
     }
@@ -75,7 +76,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
             while (nready == 0)
                 cond.wait(lock);
 
-            client = steal(1);
+            client = drop_frames(1);
         }
         else
         {
@@ -133,7 +134,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
-    steal(nready);
+    drop_frames(nready);
     cond.notify_all();
 }
 

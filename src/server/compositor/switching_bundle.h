@@ -55,7 +55,7 @@ private:
     BufferProperties bundle_properties; //must be before swapper
     std::shared_ptr<GraphicBufferAllocator> gralloc;
 
-    int steal(int n);
+    int drop_frames(int max);
 
     enum {MAX_BUFFERS = 3};
     int nbuffers;
