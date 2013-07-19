@@ -255,15 +255,15 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     display_info->height = mode.vertical_resolution;
 
     unsigned int format_items;
-    if (state->num_pixel_formats > mir_supported_pixel_format_max) 
+    if (state->num_output_formats > mir_supported_pixel_format_max) 
          format_items = mir_supported_pixel_format_max;
     else
-         format_items = state->num_pixel_formats;
+         format_items = state->num_output_formats;
 
     display_info->supported_pixel_format_items = format_items; 
     for(auto i=0u; i < format_items; i++)
     {
-        display_info->supported_pixel_format[i] = state->pixel_formats[i];
+        display_info->supported_pixel_format[i] = state->output_formats[i];
     }
 
     mir_destroy_display_config(&config);

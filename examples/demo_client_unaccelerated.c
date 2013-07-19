@@ -52,9 +52,9 @@ static MirPixelFormat find_8888_format(MirDisplayOutput *info)
 {
     MirPixelFormat pf = mir_pixel_format_invalid;
 
-    for (unsigned int i = 0; i < info->num_pixel_formats; ++i)
+    for (unsigned int i = 0; i < info->num_output_formats; ++i)
     {
-        MirPixelFormat cur_pf = info->pixel_formats[i];
+        MirPixelFormat cur_pf = info->output_formats[i];
         if (cur_pf == mir_pixel_format_abgr_8888 ||
             cur_pf == mir_pixel_format_xbgr_8888 ||
             cur_pf == mir_pixel_format_argb_8888 ||

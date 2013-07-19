@@ -273,11 +273,11 @@ int main(int argc, char *argv[])
 
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < dinfo->num_pixel_formats; f++)
+    for (f = 0; f < dinfo->num_output_formats; f++)
     {
-        if (BYTES_PER_PIXEL(dinfo->pixel_formats[f]) == 4)
+        if (BYTES_PER_PIXEL(dinfo->output_formats[f]) == 4)
         {
-            parm.pixel_format = dinfo->pixel_formats[f];
+            parm.pixel_format = dinfo->output_formats[f];
             break;
         }
     }

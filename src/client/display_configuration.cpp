@@ -29,8 +29,8 @@ void mcl::delete_config_storage(MirDisplayConfiguration& config)
     {
         if (config.displays[i].modes)
             ::operator delete (config.displays[i].modes);
-        if (config.displays[i].pixel_formats)
-            ::operator delete (config.displays[i].pixel_formats);
+        if (config.displays[i].output_formats)
+            ::operator delete (config.displays[i].output_formats);
     }
     if (config.displays)
         ::operator delete (config.displays);
@@ -54,11 +54,11 @@ void fill_display_state(MirDisplayOutput& state, mp::DisplayState const& msg)
     }
     state.current_mode = msg.current_mode();
 
-    for(auto i=0u; i < state.num_pixel_formats; i++)
+    for(auto i=0u; i < state.num_output_formats; i++)
     {
-        state.pixel_formats[i] = (MirPixelFormat) msg.pixel_format(i);
+        state.output_formats[i] = (MirPixelFormat) msg.pixel_format(i);
     }
-    state.current_format = msg.current_format();
+    state.current_output_format = msg.current_format();
 
     state.position_x = msg.position_x();
     state.position_y = msg.position_y();
@@ -77,9 +77,9 @@ void mcl::set_display_config_from_message(MirDisplayConfiguration& config, mp::C
     for(auto i=0u; i < config.num_displays; i++)
     {
         auto state = connection_msg.display_state(i);
-        config.displays[i].num_pixel_formats = state.pixel_format_size();
-        config.displays[i].pixel_formats = static_cast<MirPixelFormat*>(
-            ::operator new(sizeof(MirPixelFormat)*config.displays[i].num_pixel_formats));
+        config.displays[i].num_output_formats = state.pixel_format_size();
+        config.displays[i].output_formats = static_cast<MirPixelFormat*>(
+            ::operator new(sizeof(MirPixelFormat)*config.displays[i].num_output_formats));
  
         config.displays[i].num_modes = state.mode_size();
         config.displays[i].modes = static_cast<MirDisplayMode*>(

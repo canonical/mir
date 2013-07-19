@@ -68,9 +68,9 @@ int main(int argc, char* argv[])
     assert(display_config.num_displays > 0);
     MirDisplayOutput display_info = display_config.displays[0];
     
-    assert(display_info.num_pixel_formats > 0);
+    assert(display_info.num_output_formats > 0);
 
-    MirPixelFormat pixel_format = display_info.pixel_formats[0];
+    MirPixelFormat pixel_format = display_info.output_formats[0];
     mir_destroy_display_config(&display_config);
 
     MirSurfaceParameters const request_params =

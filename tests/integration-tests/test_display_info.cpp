@@ -166,13 +166,13 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
 
             //pixel formats
             ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
-                      static_cast<uint32_t>(info.num_pixel_formats));
-            for (auto i=0u; i < info.num_pixel_formats; ++i)
+                      static_cast<uint32_t>(info.num_output_formats));
+            for (auto i=0u; i < info.num_output_formats; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(info.pixel_formats[i]));
+                          static_cast<geom::PixelFormat>(info.output_formats[i]));
             }
-            EXPECT_EQ(0u, info.current_format);
+            EXPECT_EQ(0u, info.current_output_format);
 
             mir_destroy_display_config(&configuration);
             mir_connection_release(connection);

@@ -212,7 +212,7 @@ TEST_F(MirConnectionTest, client_drm_auth_magic_calls_server_drm_auth_magic)
 namespace
 {
 
-std::vector<MirPixelFormat> const supported_pixel_formats{
+std::vector<MirPixelFormat> const supported_output_formats{
     mir_pixel_format_abgr_8888,
     mir_pixel_format_xbgr_8888
 };
@@ -236,7 +236,7 @@ void fill_display_state(mp::ConnectParameters const*, mp::Connection* response)
         auto mode = state->add_mode();
         mode->set_horizontal_resolution(rect.size.width.as_uint32_t());
         mode->set_vertical_resolution(rect.size.height.as_uint32_t());
-        for (auto pf : supported_pixel_formats)
+        for (auto pf : supported_output_formats)
             state->add_pixel_format(static_cast<uint32_t>(pf));
     }
 }
@@ -272,12 +272,12 @@ TEST_F(MirConnectionTest, populates_display_state_correctly_on_startup)
         EXPECT_EQ(state.position_x, static_cast<int>(rect.top_left.x.as_uint32_t()));
         EXPECT_EQ(state.position_y, static_cast<int>(rect.top_left.y.as_uint32_t()));
  
-        ASSERT_EQ(supported_pixel_formats.size(),
-                  static_cast<uint32_t>(state.num_pixel_formats));
+        ASSERT_EQ(supported_output_formats.size(),
+                  static_cast<uint32_t>(state.num_output_formats));
 
-        for (size_t i = 0; i < supported_pixel_formats.size(); ++i)
+        for (size_t i = 0; i < supported_output_formats.size(); ++i)
         {
-            EXPECT_EQ(supported_pixel_formats[i], state.pixel_formats[i]);
+            EXPECT_EQ(supported_output_formats[i], state.output_formats[i]);
         }
     }
 

@@ -125,9 +125,9 @@ void demo_client(const char* server, int buffer_swap_count)
     mir_connection_display_config_init(mcd.connection, &display_config);
     assert(display_config.num_displays > 0);
     MirDisplayOutput display_info = display_config.displays[0];
-    assert(display_info.num_pixel_formats > 0);
+    assert(display_info.num_output_formats > 0);
 
-    MirPixelFormat const pixel_format = display_info.pixel_formats[0];
+    MirPixelFormat const pixel_format = display_info.output_formats[0];
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
     mir_destroy_display_config(&display_config);

@@ -66,11 +66,11 @@ bool UnacceleratedClient::create_surface()
         return false;
 
     MirDisplayOutput display_state = display_configuration.displays[0]; 
-    if (display_state.num_pixel_formats < 1)
+    if (display_state.num_output_formats < 1)
         return false;
 
     // TODO: instead of picking the first pixel format, pick a random one!
-    MirPixelFormat const pixel_format = display_state.pixel_formats[0];
+    MirPixelFormat const pixel_format = display_state.output_formats[0];
     MirSurfaceParameters const request_params =
         {
             __PRETTY_FUNCTION__,

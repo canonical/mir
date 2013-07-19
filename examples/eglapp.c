@@ -188,11 +188,11 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     printf("Connected to display: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
            mode.horizontal_resolution, mode.vertical_resolution,
            display_state->position_x, display_state->position_y,
-           display_state->num_pixel_formats);
+           display_state->num_output_formats);
 
     surfaceparm.width = *width > 0 ? *width : mode.horizontal_resolution;
     surfaceparm.height = *height > 0 ? *height : mode.vertical_resolution;
-    surfaceparm.pixel_format = display_state->pixel_formats[0];
+    surfaceparm.pixel_format = display_state->output_formats[0];
 
     mir_destroy_display_config(&display_config);
 
