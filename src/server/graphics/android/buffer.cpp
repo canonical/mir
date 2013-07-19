@@ -27,7 +27,6 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;

@@ -23,7 +23,6 @@
 #include "mir/input/input_channel.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_viewable_area.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test_doubles/stub_input_channel.h"
 
@@ -39,8 +38,6 @@ namespace droidinput = android;
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
-namespace mg = mir::graphics;
-namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
@@ -99,19 +96,11 @@ struct AndroidInputManagerSetup : public testing::Test
     {
         using namespace ::testing;
 
-        const geom::Rectangle default_view_area =
-            geom::Rectangle{geom::Point(), geom::Size{1600, 1400}};
-
-
-        ON_CALL(view_area, view_area())
-            .WillByDefault(Return(default_view_area));
-
         event_hub = new MockEventHub();
         dispatcher = new mtd::MockInputDispatcher();
         dispatcher_thread = std::make_shared<MockInputThread>();
         reader_thread = std::make_shared<MockInputThread>();
     }
-    mtd::MockViewableArea view_area;
 
     droidinput::sp<MockEventHub> event_hub;
     droidinput::sp<mtd::MockInputDispatcher> dispatcher;

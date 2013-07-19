@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/viewable_area.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"
@@ -495,11 +494,6 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             return std::make_shared<StaticPlacementStrategy>(positions);
         }
         
-        geom::Rectangle the_screen_geometry() override
-        {
-            return geom::Rectangle{geom::Point{0, 0}, geom::Size{screen_width, screen_height}};
-        }
-
         void inject_input() override
         {
             wait_until_client_appears(test_client_1);
@@ -605,10 +599,6 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         {
             return std::make_shared<RegionApplyingSurfaceFactory>(InputTestingServerConfiguration::the_shell_surface_factory(),
                 client_input_regions);
-        }
-        geom::Rectangle the_screen_geometry() override
-        {
-            return screen_geometry;
         }
         
         void inject_input() override

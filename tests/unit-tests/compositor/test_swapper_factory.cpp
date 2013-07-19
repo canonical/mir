@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/swapper_factory.h"
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/graphic_buffer_allocator.h"

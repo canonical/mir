@@ -23,6 +23,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -42,17 +43,25 @@ namespace
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const
+    StubDisplay()
+        : display_buffer{rectangle}
     {
-        return rectangle;
     }
 
-    static geom::Rectangle const rectangle;
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+
+    static geom::Rectangle rectangle;
     static geom::Size const expected_dimensions_mm;
+
+private:
+    mtd::StubDisplayBuffer display_buffer;
 };
 
-geom::Rectangle const StubDisplay::rectangle {geom::Point{3,6}, geom::Size{1,7}};
 geom::Size const StubDisplay::expected_dimensions_mm{0,0};
+geom::Rectangle StubDisplay::rectangle{geom::Point{25,36}, geom::Size{49,64}};
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
