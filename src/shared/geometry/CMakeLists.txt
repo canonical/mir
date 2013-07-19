@@ -17,6 +17,7 @@
 add_library(
   mirsharedgeometry STATIC
 
+  rectangle.cpp
   rectangles.cpp
 )
 

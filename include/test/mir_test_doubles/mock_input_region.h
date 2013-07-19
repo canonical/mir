@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,34 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_VIEWABLE_AREA_H_
-#define MIR_GRAPHICS_VIEWABLE_AREA_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_
 
+#include "mir/input/input_region.h"
+#include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-
-namespace graphics
+namespace test
+{
+namespace doubles
 {
 
-class ViewableArea
+class MockInputRegion : public input::InputRegion
 {
 public:
-    virtual geometry::Rectangle view_area() const = 0;
-
-protected:
-    ViewableArea() = default;
-    virtual ~ViewableArea() { /* TODO: make nothrow */ }
-private:
-    ViewableArea(ViewableArea const&) = delete;
-    ViewableArea& operator=(ViewableArea const&) = delete;
+    MOCK_METHOD0(bounding_rectangle, geometry::Rectangle());
+    MOCK_METHOD1(confine, void(geometry::Point&));
 };
 
 }
 }
+}
 
-#endif /* MIR_GRAPHICS_VIEWABLE_AREA_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_ */
+
+

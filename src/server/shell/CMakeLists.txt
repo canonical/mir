@@ -12,6 +12,7 @@ set(
   surface.cpp
   surface_creation_parameters.cpp
   threaded_snapshot_strategy.cpp
+  graphics_display_layout.cpp
 )
 
 add_library(

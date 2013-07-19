@@ -32,6 +32,7 @@
 #include "mir_test_doubles/mock_swapper_factory.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include <thread>
 #include <atomic>
@@ -94,11 +95,18 @@ namespace
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const override
+    StubDisplay()
+        : display_buffer{geom::Rectangle{geom::Point{0,0}, geom::Size{1600,1600}}}
     {
-        return geom::Rectangle{geom::Point(),
-                               geom::Size{1600, 1600}};
     }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+
+private:
+    mtd::StubDisplayBuffer display_buffer;
 };
 
 struct SurfaceSync

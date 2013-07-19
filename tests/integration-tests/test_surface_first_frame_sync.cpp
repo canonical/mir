@@ -25,6 +25,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -99,26 +100,12 @@ private:
     int render_operations_fd;
 };
 
-class StubDisplayBuffer : public mg::DisplayBuffer
-{
-public:
-    geom::Rectangle view_area() const
-    {
-        return geom::Rectangle{geom::Point(),
-                               geom::Size{1600, 1600}};
-    }
-    void make_current() {}
-    void release_current() {}
-    void clear() {}
-    void post_update() {}
-};
-
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const override
+    StubDisplay()
+        : display_buffer{geom::Rectangle{geom::Point{}, geom::Size{1600,1600}}}
     {
-        return display_buffer.view_area();
     }
 
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
@@ -127,7 +114,7 @@ public:
     }
 
 private:
-    StubDisplayBuffer display_buffer;
+    mtd::StubDisplayBuffer display_buffer;
 };
 
 }
