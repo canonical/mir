@@ -707,7 +707,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
             ASSERT_TRUE(connection != NULL);
 
-            auto configuration = mir_connection_display_config_init(connection);
+            auto configuration = mir_connection_create_display_config(connection);
 
             ASSERT_GT(configuration->num_displays, 0u);
             ASSERT_NE(nullptr, configuration->displays);

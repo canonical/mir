@@ -95,7 +95,7 @@ void mir_connection_release(MirConnection *connection);
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
 /** 
- * DEPRECATED. use mir_connection_display_config_init
+ * DEPRECATED. use mir_connection_create_display_config
  */
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
 
@@ -106,10 +106,10 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
  *   \param [in]  connection        The connection
  *   \return                        structure that describes the display configuration
  */
-MirDisplayConfiguration* mir_connection_display_config_init(MirConnection *connection);
+MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
 
 /**
- * Destroy the DisplayConfiguration resource acquired from mir_connection_display_config_init
+ * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
  *   \param [in] display_configuration  The display_configuration information resource to be destroyed 
  */
 void mir_destroy_display_config(MirDisplayConfiguration* display_configuration);

@@ -130,7 +130,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
                                      connection_callback, &connection));
 
 
-            auto configuration = mir_connection_display_config_init(connection);
+            auto configuration = mir_connection_create_display_config(connection);
 
             /* TODO: expand test to test multimonitor situations */
             ASSERT_EQ(1u, configuration->num_displays);

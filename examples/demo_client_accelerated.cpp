@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
     puts("Connected");
 
-    auto display_config = mir_connection_display_config_init(connection);
+    auto display_config = mir_connection_create_display_config(connection);
     assert(display_config->num_displays > 0);
     MirDisplayOutput display_info = display_config->displays[0];
     

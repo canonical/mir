@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirDisplayConfiguration *display_config = mir_connection_display_config_init(conn);
+    MirDisplayConfiguration *display_config = mir_connection_create_display_config(conn);
     MirDisplayOutput* dinfo = &display_config->displays[0];
 
     parm.buffer_usage = mir_buffer_usage_software;

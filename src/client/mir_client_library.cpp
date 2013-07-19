@@ -229,7 +229,7 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
     connection->populate(*platform_package);
 }
 
-MirDisplayConfiguration* mir_connection_display_config_init(MirConnection *connection)
+MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
 {
     if (connection) 
         return connection->create_copy_of_display_config();
@@ -244,7 +244,7 @@ void mir_destroy_display_config(MirDisplayConfiguration* configuration)
 //TODO: DEPRECATED: remove this function
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
-    auto config = mir_connection_display_config_init(connection);
+    auto config = mir_connection_create_display_config(connection);
     if (config->num_displays < 1)
         return;
     MirDisplayOutput* state = &config->displays[0];

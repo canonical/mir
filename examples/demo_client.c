@@ -121,7 +121,7 @@ void demo_client(const char* server, int buffer_swap_count)
     }
 
     // We should identify a supported pixel format before...
-    MirDisplayConfiguration *display_config = mir_connection_display_config_init(mcd.connection);
+    MirDisplayConfiguration *display_config = mir_connection_create_display_config(mcd.connection);
     assert(display_config->num_displays > 0);
     MirDisplayOutput display_info = display_config->displays[0];
     assert(display_info.num_output_formats > 0);
