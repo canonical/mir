@@ -41,7 +41,6 @@ mc::SwitchingBundle::SwitchingBundle(
 
 int mc::SwitchingBundle::drop_frames(int max)
 {
-    int stolen = -1;
     int drop = max;
 
     if (drop > nready)
@@ -49,19 +48,18 @@ int mc::SwitchingBundle::drop_frames(int max)
 
     if (drop > 0)
     {
-        first_client = (first_ready + nready - drop) % nbuffers;
+        first_client = (first_client + nbuffers - 1) % nbuffers;
         nready--;
-        nclients++;
         auto tmp = ring[first_client];
-        stolen = (first_client + nclients - drop) % nbuffers;
+        int end = (first_client + nclients + 1 - drop) % nbuffers;
 
-        for (int i = first_client; i != stolen; i = (i + 1) % nbuffers)
+        for (int i = first_client; i != end; i = (i + 1) % nbuffers)
             ring[i] = ring[(i + drop) % nbuffers];
 
-        ring[stolen] = tmp;
+        ring[end] = tmp;
     }
 
-    return stolen;
+    return drop;
 }
 
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
@@ -76,22 +74,17 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
             while (nready == 0)
                 cond.wait(lock);
 
-            client = drop_frames(1);
-        }
-        else
-        {
-            client = (first_client + nclients) % nbuffers;
-            nclients++;
+            drop_frames(1);
         }
     }
     else
     {
         while (ncompositors + nready + nclients >= nbuffers)
             cond.wait(lock);
-
-        client = (first_client + nclients) % nbuffers;
-        nclients++;
     }
+
+    client = (first_client + nclients) % nbuffers;
+    nclients++;
 
     return ring[client];
 }
