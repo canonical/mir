@@ -38,7 +38,7 @@ struct EGLExtensions;
 namespace android
 {
 
-class Buffer: public compositor::BufferBasic 
+class Buffer: public BufferBasic
 {
 public:
     Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,

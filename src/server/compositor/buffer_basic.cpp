@@ -21,10 +21,6 @@
 
 namespace mg = mir::graphics;
 
-namespace mir
-{
-namespace compositor
-{
 namespace
 {
 mg::BufferID generate_next_buffer_id()
@@ -39,10 +35,8 @@ mg::BufferID generate_next_buffer_id()
     return id;
 }
 }
-}
-}
 
-mir::compositor::BufferBasic::BufferBasic() :
+mg::BufferBasic::BufferBasic() :
     buffer_id(generate_next_buffer_id())
 {
 }

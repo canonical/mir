@@ -25,7 +25,6 @@
 #include <stdexcept>
 #include <gtest/gtest.h>
 
-namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;

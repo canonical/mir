@@ -31,7 +31,7 @@ namespace test
 namespace doubles
 {
 
-class StubBuffer : public compositor::BufferBasic
+class StubBuffer : public graphics::BufferBasic
 {
 public:
     StubBuffer()

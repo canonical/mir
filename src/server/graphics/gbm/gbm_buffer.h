@@ -38,7 +38,7 @@ uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
 
 class BufferTextureBinder;
 
-class GBMBuffer: public compositor::BufferBasic
+class GBMBuffer: public BufferBasic
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,

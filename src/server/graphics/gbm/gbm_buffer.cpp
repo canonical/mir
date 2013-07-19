@@ -30,7 +30,6 @@
 #include <limits>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 
