@@ -53,6 +53,7 @@
 
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "switching_bundle.h"
+
 #include <boost/throw_exception.hpp>
 
 namespace mc=mir::compositor;
