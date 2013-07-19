@@ -35,7 +35,7 @@ namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 
 mc::BufferStreamFactory::BufferStreamFactory(
-    std::shared_ptr<mc::GraphicBufferAllocator> gralloc)
+    const std::shared_ptr<mc::GraphicBufferAllocator> &gralloc)
         : gralloc(gralloc)
 {
     assert(gralloc);

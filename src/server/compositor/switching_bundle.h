@@ -37,7 +37,8 @@ namespace compositor
 class SwitchingBundle : public BufferBundle 
 {
 public:
-    SwitchingBundle(std::shared_ptr<GraphicBufferAllocator> &gralloc, BufferProperties const&);
+    SwitchingBundle(const std::shared_ptr<GraphicBufferAllocator> &,
+                    const BufferProperties &);
 
     BufferProperties properties() const;
 

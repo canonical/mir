@@ -59,8 +59,8 @@ namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
 mc::SwitchingBundle::SwitchingBundle(
-    std::shared_ptr<GraphicBufferAllocator> &gralloc,
-    BufferProperties const& property_request)
+    const std::shared_ptr<GraphicBufferAllocator> &gralloc,
+    const BufferProperties &property_request)
     : bundle_properties{property_request},
       gralloc{gralloc},
       nbuffers{2},
