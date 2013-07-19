@@ -83,8 +83,10 @@ endif()
 
 set(MIRSERVER_ABI 0)
 
-set_target_properties(mirserver PROPERTIES
-  VERSION ${MIRSERVER_ABI}.${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
+set_target_properties(
+  mirserver
+
+  PROPERTIES
   SOVERSION ${MIRSERVER_ABI}
 )
 
