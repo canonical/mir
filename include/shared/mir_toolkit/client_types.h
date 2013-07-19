@@ -193,11 +193,11 @@ typedef struct MirDisplayState
 
     int32_t position_x;
     int32_t position_y;
-    int32_t connected;
-    int32_t used;
+    uint32_t connected;
+    uint32_t used;
 
-    int32_t physical_width_mm;
-    int32_t physical_height_mm;
+    uint32_t physical_width_mm;
+    uint32_t physical_height_mm;
 } MirDisplayState;
 
 typedef struct MirDisplayConfiguration

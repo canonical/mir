@@ -139,24 +139,24 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             geom::Rectangle const& expected_rect = StubDisplay::rectangle;
 
             //state
-            EXPECT_EQ(1, info.connected);
-            EXPECT_EQ(1, info.used);
+            EXPECT_EQ(1u, info.connected);
+            EXPECT_EQ(1u, info.used);
 
             //id's
-            EXPECT_EQ(0, info.output_id);
-            EXPECT_EQ(0, info.card_id);
+            EXPECT_EQ(0u, info.output_id);
+            EXPECT_EQ(0u, info.card_id);
 
             //sizing
             EXPECT_EQ(StubDisplay::expected_dimensions_mm.width.as_uint32_t(), info.physical_width_mm);
             EXPECT_EQ(StubDisplay::expected_dimensions_mm.height.as_uint32_t(), info.physical_height_mm);
 
             //position
-            EXPECT_EQ(expected_rect.top_left.x.as_uint32_t(), info.position_x); 
-            EXPECT_EQ(expected_rect.top_left.y.as_uint32_t(), info.position_y); 
+            EXPECT_EQ(static_cast<int>(expected_rect.top_left.x.as_uint32_t()), info.position_x); 
+            EXPECT_EQ(static_cast<int>(expected_rect.top_left.y.as_uint32_t()), info.position_y); 
 
             //mode selection
-            EXPECT_EQ(1, info.num_modes);
-            ASSERT_EQ(0, info.current_mode);
+            EXPECT_EQ(1u, info.num_modes);
+            ASSERT_EQ(0u, info.current_mode);
             auto const& mode = info.modes[info.current_mode];
 
             //current mode 
@@ -172,7 +172,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
                           static_cast<geom::PixelFormat>(info.pixel_formats[i]));
             }
-            EXPECT_EQ(0, info.current_format);
+            EXPECT_EQ(0u, info.current_format);
 
             mir_destroy_display_config(&configuration);
             mir_connection_release(connection);

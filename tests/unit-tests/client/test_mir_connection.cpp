@@ -264,13 +264,13 @@ TEST_F(MirConnectionTest, populates_display_state_correctly_on_startup)
         auto state = configuration.displays[i];
         auto rect = rects[i];
 
-        ASSERT_EQ(1, state.num_modes);
+        ASSERT_EQ(1u, state.num_modes);
         ASSERT_NE(nullptr, state.modes);
         EXPECT_EQ(rect.size.width.as_uint32_t(), state.modes[0].horizontal_resolution);
         EXPECT_EQ(rect.size.height.as_uint32_t(), state.modes[0].vertical_resolution);
 
-        EXPECT_EQ(state.position_x, rect.top_left.x.as_uint32_t());
-        EXPECT_EQ(state.position_y, rect.top_left.y.as_uint32_t());
+        EXPECT_EQ(state.position_x, static_cast<int>(rect.top_left.x.as_uint32_t()));
+        EXPECT_EQ(state.position_y, static_cast<int>(rect.top_left.y.as_uint32_t()));
  
         ASSERT_EQ(supported_pixel_formats.size(),
                   static_cast<uint32_t>(state.num_pixel_formats));

@@ -710,7 +710,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             MirDisplayConfiguration configuration;
             mir_connection_display_config_init(connection, &configuration);
 
-            ASSERT_GT(configuration.num_displays, 0);
+            ASSERT_GT(configuration.num_displays, 0u);
             ASSERT_NE(nullptr, configuration.displays);
 
             for(auto i=0u; i < configuration.num_displays; i++)
