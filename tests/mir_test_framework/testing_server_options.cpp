@@ -20,7 +20,7 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/renderer.h"
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"

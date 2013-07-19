@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/display.h"
 
 #include "mir_toolkit/mir_client_library.h"
