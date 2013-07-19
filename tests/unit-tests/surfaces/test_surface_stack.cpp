@@ -26,8 +26,8 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
-#include "mir/graphics/renderer.h"
-#include "mir/graphics/compositing_criteria.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/input/input_channel.h"
@@ -79,8 +79,8 @@ public:
 struct MockFilterForScene : public mc::FilterForScene
 {
     // Can not mock operator overload so need to forward
-    MOCK_METHOD1(filter, bool(mg::CompositingCriteria const&));
-    bool operator()(mg::CompositingCriteria const& r)
+    MOCK_METHOD1(filter, bool(mc::CompositingCriteria const&));
+    bool operator()(mc::CompositingCriteria const& r)
     {
         return filter(r);
     }
@@ -88,8 +88,8 @@ struct MockFilterForScene : public mc::FilterForScene
 
 struct StubFilterForScene : public mc::FilterForScene
 {
-    MOCK_METHOD1(filter, bool(mg::CompositingCriteria const&));
-    bool operator()(mg::CompositingCriteria const&)
+    MOCK_METHOD1(filter, bool(mc::CompositingCriteria const&));
+    bool operator()(mc::CompositingCriteria const&)
     {
         return true;
     }
@@ -97,8 +97,8 @@ struct StubFilterForScene : public mc::FilterForScene
 
 struct MockOperatorForScene : public mc::OperatorForScene
 {
-    MOCK_METHOD2(renderable_operator, void(mg::CompositingCriteria const&, ms::BufferStream&));
-    void operator()(mg::CompositingCriteria const& state, ms::BufferStream& stream)
+    MOCK_METHOD2(renderable_operator, void(mc::CompositingCriteria const&, ms::BufferStream&));
+    void operator()(mc::CompositingCriteria const& state, ms::BufferStream& stream)
     {
         renderable_operator(state, stream);
     }
@@ -106,7 +106,7 @@ struct MockOperatorForScene : public mc::OperatorForScene
 
 struct StubOperatorForScene : public mc::OperatorForScene
 {
-    void operator()(mg::CompositingCriteria const&, ms::BufferStream&)
+    void operator()(mc::CompositingCriteria const&, ms::BufferStream&)
     {
     }
 };

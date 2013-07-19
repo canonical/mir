@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <fcntl.h>
 
+namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mir::input::android;
@@ -40,11 +41,11 @@ namespace
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class NullRenderer : public mg::Renderer
+class NullRenderer : public mc::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mg::CompositingCriteria const&, ms::BufferStream&)
+                                   mc::CompositingCriteria const&, ms::BufferStream&)
     {
         /* 
          * Do nothing, so that the Renderable's buffers are not consumed
@@ -107,7 +108,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Renderer> the_renderer() override
+        std::shared_ptr<mc::Renderer> the_renderer() override
         {
             return renderer([] { return std::make_shared<NullRenderer>(); });
         }

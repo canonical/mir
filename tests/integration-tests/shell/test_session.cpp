@@ -26,7 +26,7 @@
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/buffer_stream.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/frontend/communicator.h"
 
 #include "mir_test_doubles/stub_buffer.h"
@@ -88,13 +88,13 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             });
     }
 
-    std::shared_ptr<mg::Renderer> the_renderer() override
+    std::shared_ptr<mc::Renderer> the_renderer() override
     {
-        struct NullRenderer : public mg::Renderer
+        struct NullRenderer : public mc::Renderer
         {
             void clear() {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
-                        mg::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
+                        mc::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
             {
                 stream.lock_back_buffer();
             }

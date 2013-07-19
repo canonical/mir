@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
 #define MIR_TEST_DOUBLES_MOCK_COMPOSITING_CRITERIA_H_
 
-#include "mir/graphics/compositing_criteria.h"
+#include "mir/compositor/compositing_criteria.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class MockCompositingCriteria : public graphics::CompositingCriteria 
+class MockCompositingCriteria : public compositor::CompositingCriteria
 {
 public:
     ~MockCompositingCriteria() noexcept {}
