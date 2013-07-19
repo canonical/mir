@@ -125,7 +125,12 @@ void ms::Surface::allow_framedropping(bool allow)
 
 std::shared_ptr<mg::Buffer> ms::Surface::compositor_buffer() const
 {
-    return surface_buffer_stream->lock_back_buffer();
+    return surface_buffer_stream->lock_compositor_buffer();
+}
+
+std::shared_ptr<mg::Buffer> ms::Surface::snapshot_buffer() const
+{
+    return surface_buffer_stream->lock_snapshot_buffer();
 }
 
 //TODO: this is just used in example code, could be private

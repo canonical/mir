@@ -97,14 +97,14 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_one_is_released)
     buffer_stream.secure_client_buffer().reset();
     buffer_stream.secure_client_buffer().reset();
 
-    auto comp1 = buffer_stream.lock_back_buffer();
-    auto comp2 = buffer_stream.lock_back_buffer();
+    auto comp1 = buffer_stream.lock_compositor_buffer();
+    auto comp2 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
     comp1.reset();
 
-    auto comp3 = buffer_stream.lock_back_buffer();
+    auto comp3 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_NE(comp2->id(), comp3->id());
 }
@@ -114,8 +114,8 @@ TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
     buffer_stream.secure_client_buffer().reset();
     buffer_stream.secure_client_buffer().reset();
 
-    auto comp1 = buffer_stream.lock_back_buffer();
-    auto comp2 = buffer_stream.lock_back_buffer();
+    auto comp1 = buffer_stream.lock_compositor_buffer();
+    auto comp2 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
@@ -134,14 +134,14 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
     buffer_stream.secure_client_buffer().reset();
     auto client1 = buffer_stream.secure_client_buffer();
 
-    auto comp1 = buffer_stream.lock_back_buffer();
-    auto comp2 = buffer_stream.lock_back_buffer();
+    auto comp1 = buffer_stream.lock_compositor_buffer();
+    auto comp2 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
     comp1.reset();
 
-    auto comp3 = buffer_stream.lock_back_buffer();
+    auto comp3 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp2->id(), comp3->id());
 }
@@ -170,7 +170,7 @@ void back_buffer_loop(std::shared_ptr<mg::Buffer>& out_region,
 {
     for(;;)
     {
-        out_region = stream.lock_back_buffer();
+        out_region = stream.lock_compositor_buffer();
         ASSERT_NE(nullptr, out_region);
 
         if (synchronizer.child_enter_wait()) return;
