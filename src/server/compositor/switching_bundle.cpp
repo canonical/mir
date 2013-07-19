@@ -13,8 +13,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- * Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *
+ *
+ * The "bundle" of buffers is actually a ring (circular array) from which
+ * buffers are allocated and progress through stages.
+ *
+ * The stages of a buffer are:
+ *   free -> client -> ready -> compositor -> free
+ *                     ready (dropped)-> free
+ *
+ * Dropping only happens when it's enabled, and only if the ring is
+ * completely full.
+ *
+ * The successive stages are contiguous elements in the ring (starting at
+ * element "first_compositor"):
+ *    first_compositor * ncompositors(zero or more)
+ *    first_ready      * nready(zero or more)
+ *    first_client     * nclients(zero or more)
+ *
+ * Therefore you will find:
+ *    first_compositor + ncompositors == first_ready
+ *    first_ready + nready == first_client
+ * although the ring wraps around, so all addition is modulo (%) nbuffers.
+ *
+ * "free" is an implicit state for any buffer that is not in any of the
+ * above three groups. So the next free buffer is always:
+ *    first_client + nclients
+ * and free buffers extend up to but not including first_compositor.
+ *
+ *  |<--------------------- nbuffers ----------------------->|
+ *             | ncompos |    nready    | nclients|
+ *  +----------+---------+--------------+---------+----------+
+ *  | ... free |    |    |    |    |    |    |    | free ... |
+ *  +----------+---------+--------------+---------+----------+
+ *               ^         ^ first_ready  ^ first_client
+ *               first_compositor
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -25,7 +59,8 @@ namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
 mc::SwitchingBundle::SwitchingBundle(
-    std::shared_ptr<GraphicBufferAllocator> &gralloc, BufferProperties const& property_request)
+    std::shared_ptr<GraphicBufferAllocator> &gralloc,
+    BufferProperties const& property_request)
     : bundle_properties{property_request},
       gralloc{gralloc},
       nbuffers{3},
