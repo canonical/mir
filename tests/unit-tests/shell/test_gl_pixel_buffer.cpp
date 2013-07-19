@@ -32,6 +32,9 @@ namespace geom = mir::geometry;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+
 struct MockGLContext : public mg::GLContext
 {
     ~MockGLContext() noexcept {}
@@ -61,7 +64,7 @@ public:
         using namespace testing;
 
         ON_CALL(mock_buffer, size())
-            .WillByDefault(Return(geom::Size{100, 100}));
+            .WillByDefault(Return(geom::Size{51, 71}));
     }
 
     testing::NiceMock<mtd::MockGL> mock_gl;
@@ -76,10 +79,27 @@ ACTION(FillPixels)
     size_t const width = arg2;
     size_t const height = arg3;
 
-    for (size_t i = 0; i < width * height; ++i)
+    for (uint32_t i = 0; i < width * height; ++i)
     {
         pixels[i] = i;
     }
+}
+
+ACTION(FillPixelsRGBA)
+{
+    auto const pixels = static_cast<uint32_t*>(arg6);
+    size_t const width = arg2;
+    size_t const height = arg3;
+
+    for (uint32_t i = 0; i < width * height; ++i)
+    {
+        pixels[i] = ((i << 16) & 0x00ff0000) | /* Move R to new position */
+                    ((i) & 0x0000ff00) |       /* G remains at same position */
+                    ((i >> 16) & 0x000000ff) | /* Move B to new position */
+                    ((i) & 0xff000000);        /* A remains at same position */
+    }
+}
+
 }
 
 TEST_F(GLPixelBufferTest, returns_empty_if_not_initialized)
@@ -90,7 +110,7 @@ TEST_F(GLPixelBufferTest, returns_empty_if_not_initialized)
     EXPECT_EQ(geom::Stride(), pixels.stride());
 }
 
-TEST_F(GLPixelBufferTest, returns_data_from_buffer_texture)
+TEST_F(GLPixelBufferTest, returns_data_from_bgra_buffer_texture)
 {
     using namespace testing;
     GLuint const tex{10};
@@ -128,14 +148,18 @@ TEST_F(GLPixelBufferTest, returns_data_from_buffer_texture)
     EXPECT_EQ(mock_buffer.size(), pixels.size());
     EXPECT_EQ(geom::Stride{width * 4}, pixels.stride());
 
-    /* Check data data has been properly y-flipped */
+    /* Check that data has been properly y-flipped */
+    EXPECT_EQ(1,
+              static_cast<uint32_t const*>(data)[width * (height - 1) + 1]);
+    EXPECT_EQ(width * (height / 2),
+              static_cast<uint32_t const*>(data)[width * (height / 2)]);
     EXPECT_EQ(width * (height - 1),
               static_cast<uint32_t const*>(data)[0]);
     EXPECT_EQ(width - 1,
               static_cast<uint32_t const*>(data)[width * height - 1]);
 }
 
-TEST_F(GLPixelBufferTest, throws_if_bgra_not_supported)
+TEST_F(GLPixelBufferTest, returns_data_from_rgba_buffer_texture)
 {
     using namespace testing;
     GLuint const tex{10};
@@ -163,15 +187,30 @@ TEST_F(GLPixelBufferTest, throws_if_bgra_not_supported)
         EXPECT_CALL(mock_gl, glGetError())
             .WillOnce(Return(GL_NO_ERROR));
         EXPECT_CALL(mock_gl, glReadPixels(0, 0, width, height,
-                                          GL_BGRA_EXT, GL_UNSIGNED_BYTE, _))
-            .WillOnce(FillPixels());
+                                          GL_BGRA_EXT, GL_UNSIGNED_BYTE, _));
         EXPECT_CALL(mock_gl, glGetError())
             .WillOnce(Return(GL_INVALID_ENUM));
+        /* Read as RGBA */
+        EXPECT_CALL(mock_gl, glReadPixels(0, 0, width, height,
+                                          GL_RGBA, GL_UNSIGNED_BYTE, _))
+            .WillOnce(FillPixelsRGBA());
     }
 
     msh::GLPixelBuffer pixels{std::move(context)};
 
-    EXPECT_THROW({
-        pixels.fill_from(mock_buffer);
-    }, std::runtime_error);
+    pixels.fill_from(mock_buffer);
+    auto data = pixels.as_argb_8888();
+
+    EXPECT_EQ(mock_buffer.size(), pixels.size());
+    EXPECT_EQ(geom::Stride{width * 4}, pixels.stride());
+
+    /* Check that data has been properly y-flipped and converted to argb_8888 */
+    EXPECT_EQ(1,
+              static_cast<uint32_t const*>(data)[width * (height - 1) + 1]);
+    EXPECT_EQ(width * (height / 2),
+              static_cast<uint32_t const*>(data)[width * (height / 2)]);
+    EXPECT_EQ(width * (height - 1),
+              static_cast<uint32_t const*>(data)[0]);
+    EXPECT_EQ(width - 1,
+              static_cast<uint32_t const*>(data)[width * height - 1]);
 }
