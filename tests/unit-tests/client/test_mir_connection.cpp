@@ -254,14 +254,12 @@ TEST_F(MirConnectionTest, populates_display_state_correctly_on_startup)
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    MirDisplayConfiguration configuration{0, nullptr};
-    std::cout << configuration.displays << std::endl;
-    connection->create_copy_of_display_config(configuration);
+    auto configuration = connection->create_copy_of_display_config();
 
-    ASSERT_EQ(number_of_displays, configuration.num_displays);
+    ASSERT_EQ(number_of_displays, configuration->num_displays);
     for(auto i=0u; i < number_of_displays; i++)
     {
-        auto state = configuration.displays[i];
+        auto state = configuration->displays[i];
         auto rect = rects[i];
 
         ASSERT_EQ(1u, state.num_modes);

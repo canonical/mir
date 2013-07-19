@@ -180,9 +180,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    MirDisplayConfiguration display_config;
-    mir_connection_display_config_init(connection, &display_config);
-    MirDisplayOutput* display_state = &display_config.displays[0];
+    MirDisplayConfiguration* display_config = mir_connection_display_config_init(connection);
+    MirDisplayOutput* display_state = &display_config->displays[0];
     MirDisplayMode mode = display_state->modes[display_state->current_mode];
 
     printf("Connected to display: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
@@ -194,7 +193,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     surfaceparm.height = *height > 0 ? *height : mode.vertical_resolution;
     surfaceparm.pixel_format = display_state->output_formats[0];
 
-    mir_destroy_display_config(&display_config);
+    mir_destroy_display_config(display_config);
 
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
     unsigned int bpp = get_bpp(surfaceparm.pixel_format);

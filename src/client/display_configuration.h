@@ -28,8 +28,8 @@ namespace client
 {
 
 //convenient helpers
-void delete_config_storage(MirDisplayConfiguration& config);
-void set_display_config_from_message(MirDisplayConfiguration& config, mir::protobuf::Connection const& connection_msg);
+void delete_config_storage(MirDisplayConfiguration* config);
+MirDisplayConfiguration* set_display_config_from_message(mir::protobuf::Connection const& connection_msg);
 
 }
 }

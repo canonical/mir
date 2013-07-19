@@ -130,12 +130,11 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
                                      connection_callback, &connection));
 
 
-            MirDisplayConfiguration configuration;
-            mir_connection_display_config_init(connection, &configuration);
+            auto configuration = mir_connection_display_config_init(connection);
 
             /* TODO: expand test to test multimonitor situations */
-            ASSERT_EQ(1u, configuration.num_displays);
-            auto const& info = configuration.displays[0];
+            ASSERT_EQ(1u, configuration->num_displays);
+            auto const& info = configuration->displays[0];
             geom::Rectangle const& expected_rect = StubDisplay::rectangle;
 
             //state
@@ -174,7 +173,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             }
             EXPECT_EQ(0u, info.current_output_format);
 
-            mir_destroy_display_config(&configuration);
+            mir_destroy_display_config(configuration);
             mir_connection_release(connection);
         }
     } client_config;

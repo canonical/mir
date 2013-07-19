@@ -23,19 +23,22 @@
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 
-void mcl::delete_config_storage(MirDisplayConfiguration& config)
+void mcl::delete_config_storage(MirDisplayConfiguration* config)
 {
-    for(auto i=0u; i< config.num_displays; i++)
-    {
-        if (config.displays[i].modes)
-            ::operator delete (config.displays[i].modes);
-        if (config.displays[i].output_formats)
-            ::operator delete (config.displays[i].output_formats);
-    }
-    if (config.displays)
-        ::operator delete (config.displays);
+    if (!config)
+        return;
 
-    config.num_displays = 0;
+    for(auto i=0u; i< config->num_displays; i++)
+    {
+        if (config->displays[i].modes)
+            ::operator delete(config->displays[i].modes);
+        if (config->displays[i].output_formats)
+            ::operator delete(config->displays[i].output_formats);
+    }
+    if (config->displays)
+        ::operator delete(config->displays);
+
+    ::operator delete(config);
 }
 
 namespace
@@ -69,22 +72,24 @@ void fill_display_state(MirDisplayOutput& state, mp::DisplayState const& msg)
 }
 }
 
-void mcl::set_display_config_from_message(MirDisplayConfiguration& config, mp::Connection const& connection_msg)
+MirDisplayConfiguration* mcl::set_display_config_from_message(mp::Connection const& connection_msg)
 {
-    config.num_displays = connection_msg.display_state_size();
-    config.displays = static_cast<MirDisplayOutput*>(::operator new(sizeof(MirDisplayOutput) * config.num_displays));
+    auto config = static_cast<MirDisplayConfiguration*>(::operator new(sizeof(MirDisplayConfiguration)));
+    config->num_displays = connection_msg.display_state_size();
+    config->displays = static_cast<MirDisplayOutput*>(::operator new(sizeof(MirDisplayOutput) * config->num_displays));
 
-    for(auto i=0u; i < config.num_displays; i++)
+    for(auto i=0u; i < config->num_displays; i++)
     {
         auto state = connection_msg.display_state(i);
-        config.displays[i].num_output_formats = state.pixel_format_size();
-        config.displays[i].output_formats = static_cast<MirPixelFormat*>(
-            ::operator new(sizeof(MirPixelFormat)*config.displays[i].num_output_formats));
+        config->displays[i].num_output_formats = state.pixel_format_size();
+        config->displays[i].output_formats = static_cast<MirPixelFormat*>(
+            ::operator new(sizeof(MirPixelFormat)*config->displays[i].num_output_formats));
  
-        config.displays[i].num_modes = state.mode_size();
-        config.displays[i].modes = static_cast<MirDisplayMode*>(
-            ::operator new(sizeof(MirDisplayMode)*config.displays[i].num_modes));
+        config->displays[i].num_modes = state.mode_size();
+        config->displays[i].modes = static_cast<MirDisplayMode*>(
+            ::operator new(sizeof(MirDisplayMode)*config->displays[i].num_modes));
 
-        fill_display_state(config.displays[i], state);
+        fill_display_state(config->displays[i], state);
     }
+    return config;
 }

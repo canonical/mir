@@ -101,12 +101,12 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
 
 /**
  * Query the display
- *   \warning this function can overwrite the contents of display_configuration. 
- *   \warning display_configuration must be destroyed via mir_destroy_display_config() 
+ *   \warning return value must be destroyed via mir_destroy_display_config() 
+ *   \warning may return null if connection is invalid 
  *   \param [in]  connection        The connection
- *   \param [out] display_configuration  Structure to be populated that describes the display configuration
+ *   \return                        structure that describes the display configuration
  */
-void mir_connection_display_config_init(MirConnection *connection, MirDisplayConfiguration* display_configuration);
+MirDisplayConfiguration* mir_connection_display_config_init(MirConnection *connection);
 
 /**
  * Destroy the DisplayConfiguration resource acquired from mir_connection_display_config_init

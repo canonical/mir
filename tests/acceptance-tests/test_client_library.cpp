@@ -707,21 +707,20 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
             ASSERT_TRUE(connection != NULL);
 
-            MirDisplayConfiguration configuration;
-            mir_connection_display_config_init(connection, &configuration);
+            auto configuration = mir_connection_display_config_init(connection);
 
-            ASSERT_GT(configuration.num_displays, 0u);
-            ASSERT_NE(nullptr, configuration.displays);
+            ASSERT_GT(configuration->num_displays, 0u);
+            ASSERT_NE(nullptr, configuration->displays);
 
-            for(auto i=0u; i < configuration.num_displays; i++)
+            for(auto i=0u; i < configuration->num_displays; i++)
             {
-                MirDisplayOutput* disp = &configuration.displays[i];
+                MirDisplayOutput* disp = &configuration->displays[i];
                 ASSERT_NE(nullptr, disp); 
                 EXPECT_GE(disp->num_modes, disp->current_mode);
                 EXPECT_GE(disp->num_output_formats, disp->current_output_format);
             }
 
-            mir_destroy_display_config(&configuration);
+            mir_destroy_display_config(configuration);
             mir_connection_release(connection);
         }
     } client_config;

@@ -133,9 +133,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirDisplayConfiguration display_config;
-    mir_connection_display_config_init(conn, &display_config);
-    MirDisplayOutput* dinfo = &display_config.displays[0];
+    MirDisplayConfiguration *display_config = mir_connection_display_config_init(conn);
+    MirDisplayOutput* dinfo = &display_config->displays[0];
 
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;
@@ -155,7 +154,7 @@ int main(int argc, char *argv[])
         parm.pixel_format = dinfo->output_formats[0];
     }
 
-    mir_destroy_display_config(&display_config);
+    mir_destroy_display_config(display_config);
 
     parm.name = "red";
     parm.width = 225;

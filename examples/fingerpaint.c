@@ -267,9 +267,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirDisplayConfiguration display_config;
-    mir_connection_display_config_init(conn, &display_config);
-    MirDisplayOutput* dinfo = &display_config.displays[0];
+    MirDisplayConfiguration* display_config = mir_connection_display_config_init(conn);
+    MirDisplayOutput* dinfo = &display_config->displays[0];
 
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;
@@ -292,7 +291,7 @@ int main(int argc, char *argv[])
     parm.width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
     parm.height = dinfo->modes[dinfo->current_mode].vertical_resolution;
 
-    mir_destroy_display_config(&display_config);
+    mir_destroy_display_config(display_config);
 
     surf = mir_connection_create_surface_sync(conn, &parm);
     if (surf != NULL)

@@ -229,26 +229,25 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
     connection->populate(*platform_package);
 }
 
-void mir_connection_display_config_init(MirConnection *connection, MirDisplayConfiguration* configuration)
+MirDisplayConfiguration* mir_connection_display_config_init(MirConnection *connection)
 {
-    if (connection && configuration) 
-        connection->create_copy_of_display_config(*configuration);
+    if (connection) 
+        return connection->create_copy_of_display_config();
+    return nullptr;
 }
 
 void mir_destroy_display_config(MirDisplayConfiguration* configuration)
 {
-    if(configuration)
-        mcl::delete_config_storage(*configuration);
+    mcl::delete_config_storage(configuration);
 }
 
 //TODO: DEPRECATED: remove this function
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
-    MirDisplayConfiguration config;
-    mir_connection_display_config_init(connection, &config);
-    if (config.num_displays < 1)
+    auto config = mir_connection_display_config_init(connection);
+    if (config->num_displays < 1)
         return;
-    MirDisplayOutput* state = &config.displays[0];
+    MirDisplayOutput* state = &config->displays[0];
     MirDisplayMode mode = state->modes[state->current_mode];
    
     display_info->width = mode.horizontal_resolution;
@@ -266,7 +265,7 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
         display_info->supported_pixel_format[i] = state->output_formats[i];
     }
 
-    mir_destroy_display_config(&config);
+    mir_destroy_display_config(config);
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)
