@@ -73,13 +73,13 @@ void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
     notify_change = f;
 }
 
-std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params, ms::DepthId depth)
+std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreationParameters const& params)
 {
     auto change_cb = [this]() { emit_change_notification(); };
     auto surface = surface_factory->create_surface(params, change_cb); 
     {
         std::lock_guard<std::mutex> lg(guard);
-        layers_by_depth[depth].push_back(surface);
+        layers_by_depth[params.depth].push_back(surface);
     }
 
     input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface());

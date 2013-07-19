@@ -92,12 +92,12 @@ TEST(SurfaceCreationParametersTest, equality)
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
     geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 
-    auto params0 = msh::a_surface().of_name("surface0")
+    auto params0 = msh::a_surface().of_name("surface")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
 
-    auto params1 = msh::a_surface().of_name("surface1")
+    auto params1 = msh::a_surface().of_name("surface")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
