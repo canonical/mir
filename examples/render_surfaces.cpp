@@ -289,7 +289,7 @@ public:
             {
             }
 
-            void operator()(mc::Buffer& buffer)
+            void operator()(mg::Buffer& buffer)
             {
                 mt::BufferRenderTarget brt{buffer};
                 brt.make_current();
@@ -312,7 +312,7 @@ public:
         {
         public:
             RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Scene> const& scene,
-                                              std::shared_ptr<mg::Renderer> const& renderer,
+                                              std::shared_ptr<mc::Renderer> const& renderer,
                                               std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
                                               std::vector<Moveable>& moveables)
                 : default_compositing_strategy{scene, renderer, overlay_renderer},

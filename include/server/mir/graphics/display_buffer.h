@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
 #include <mir/geometry/rectangle.h>
-#include <mir/compositor/buffer.h>
+#include <mir/graphics/buffer.h>
 
 namespace mir
 {
@@ -43,7 +43,7 @@ public:
     virtual void release_current() = 0;
     /** Posts the DisplayBuffer to the screen. */
     virtual void post_update() = 0;
-    virtual void post_update(std::shared_ptr<compositor::Buffer>) {} // Optional
+    virtual void post_update(std::shared_ptr<graphics::Buffer>) {} // Optional
 
 protected:
     DisplayBuffer() = default;

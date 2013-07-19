@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 #include "server_render_window.h"
 #include "display_support_provider.h"
 #include "fb_swapper.h"

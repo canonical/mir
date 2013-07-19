@@ -167,7 +167,7 @@ void mgg::GBMDisplayBuffer::post_update()
 }
 
 void mgg::GBMDisplayBuffer::post_update(
-    std::shared_ptr<compositor::Buffer> client_buf)
+    std::shared_ptr<graphics::Buffer> client_buf)
 {
     /*
      * Bring the back buffer to the front and get the buffer object

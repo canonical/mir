@@ -24,6 +24,7 @@
 #include "temporary_buffers.h"
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle)
@@ -35,12 +36,12 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
 }
 
-std::shared_ptr<mc::Buffer> mc::BufferStreamSurfaces::lock_back_buffer()
+std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_back_buffer()
 {
     return std::make_shared<mc::TemporaryCompositorBuffer>(buffer_bundle);
 }
 
-std::shared_ptr<mc::Buffer> mc::BufferStreamSurfaces::secure_client_buffer()
+std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::secure_client_buffer()
 {
     return std::make_shared<mc::TemporaryClientBuffer>(buffer_bundle);
 }

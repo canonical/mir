@@ -65,7 +65,7 @@ public:
                           std::shared_ptr<InputRegistrar> const& input_registrar);
     virtual ~SurfaceStack() noexcept(true) {}
 
-    virtual std::shared_ptr<compositor::Buffer> bypass_buffer();
+    virtual std::shared_ptr<graphics::Buffer> bypass_buffer();
 
     // From Scene
     virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
@@ -76,7 +76,7 @@ public:
     void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
 
     // From SurfaceStackModel 
-    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params, DepthId depth);
+    virtual std::weak_ptr<Surface> create_surface(const shell::SurfaceCreationParameters& params);
 
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
     

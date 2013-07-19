@@ -30,6 +30,7 @@
 #include <chrono>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace mt = mir::testing;
 namespace mtd = mir::test::doubles;
@@ -42,7 +43,7 @@ struct StubBufferAllocator : public mc::GraphicBufferAllocator
 {
     StubBufferAllocator() : id{1} {}
 
-    std::shared_ptr<mc::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
     {
         mc::BufferProperties properties{geom::Size{id, id},
                                         geom::PixelFormat::abgr_8888,
@@ -148,7 +149,7 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 namespace
 {
 
-void client_request_loop(std::shared_ptr<mc::Buffer>& out_buffer,
+void client_request_loop(std::shared_ptr<mg::Buffer>& out_buffer,
                          mt::SynchronizerSpawned& synchronizer,
                          ms::BufferStream& stream)
 {
@@ -163,7 +164,7 @@ void client_request_loop(std::shared_ptr<mc::Buffer>& out_buffer,
     }
 }
 
-void back_buffer_loop(std::shared_ptr<mc::Buffer>& out_region,
+void back_buffer_loop(std::shared_ptr<mg::Buffer>& out_region,
                       mt::SynchronizerSpawned& synchronizer,
                       ms::BufferStream& stream)
 {
@@ -195,14 +196,14 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
         }
 
         mt::Synchronizer sync;
-        std::shared_ptr<mc::Buffer> back_buffer;
+        std::shared_ptr<mg::Buffer> back_buffer;
         std::thread thread;
     };
 
     std::vector<std::unique_ptr<CompositorInfo>> compositors;
 
     mt::Synchronizer client_sync;
-    std::shared_ptr<mc::Buffer> client_buffer;
+    std::shared_ptr<mg::Buffer> client_buffer;
     auto client_thread = std::thread(client_request_loop,  std::ref(client_buffer),
                                      std::ref(client_sync), std::ref(buffer_stream));
 

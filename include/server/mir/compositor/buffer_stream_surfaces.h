@@ -40,9 +40,9 @@ public:
     BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
     ~BufferStreamSurfaces();
 
-    std::shared_ptr<Buffer> secure_client_buffer();
+    std::shared_ptr<graphics::Buffer> secure_client_buffer();
 
-    std::shared_ptr<Buffer> lock_back_buffer();
+    std::shared_ptr<graphics::Buffer> lock_back_buffer();
 
     geometry::PixelFormat get_stream_pixel_format();
     geometry::Size stream_size();

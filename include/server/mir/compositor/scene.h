@@ -20,29 +20,27 @@
 #define MIR_COMPOSITOR_SCENE_H_
 
 #include "mir/geometry/forward.h"
-#include "mir/compositor/buffer.h"
+#include "mir/graphics/buffer.h"
 
 #include <memory>
 #include <functional>
 
 namespace mir
 {
-namespace graphics
-{
-class CompositingCriteria;
-}
 namespace surfaces
 {
 class BufferStream;
 }
 namespace compositor
 {
+class CompositingCriteria;
+
 class FilterForScene
 {
 public:
     virtual ~FilterForScene() {}
 
-    virtual bool operator()(graphics::CompositingCriteria const&) = 0;
+    virtual bool operator()(CompositingCriteria const&) = 0;
 
 protected:
     FilterForScene() = default;
@@ -55,7 +53,7 @@ class OperatorForScene
 public:
     virtual ~OperatorForScene() {}
 
-    virtual void operator()(graphics::CompositingCriteria const&, surfaces::BufferStream&) = 0;
+    virtual void operator()(CompositingCriteria const&, surfaces::BufferStream&) = 0;
 
 protected:
     OperatorForScene() = default;
@@ -69,8 +67,8 @@ class Scene
 public:
     virtual ~Scene() {}
 
-    virtual std::shared_ptr<compositor::Buffer> bypass_buffer()
-        { return std::shared_ptr<compositor::Buffer>(); }
+    virtual std::shared_ptr<graphics::Buffer> bypass_buffer()
+        { return std::shared_ptr<graphics::Buffer>(); }
     virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
 
     /**

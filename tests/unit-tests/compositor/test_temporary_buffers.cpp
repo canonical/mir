@@ -24,6 +24,7 @@
 #include <stdexcept>
 
 namespace mtd=mir::test::doubles;
+namespace mg = mir::graphics;
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
@@ -32,7 +33,7 @@ namespace
 class TemporaryTestBuffer : public mc::TemporaryBuffer
 {
 public:
-    TemporaryTestBuffer(const std::shared_ptr<mc::Buffer>& buf)
+    TemporaryTestBuffer(const std::shared_ptr<mg::Buffer>& buf)
         : TemporaryBuffer(buf)
     {
     }

@@ -25,23 +25,19 @@
 
 namespace mir
 {
-namespace graphics
-{
-class Renderer;
-}
-
 ///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
 class OverlayRenderer;
 class Scene;
+class Renderer;
 
 class DefaultCompositingStrategy : public BasicCompositingStrategy
 {
 public:
     DefaultCompositingStrategy(
         std::shared_ptr<Scene> const& scene,
-        std::shared_ptr<graphics::Renderer> const& renderer,
+        std::shared_ptr<Renderer> const& renderer,
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
     void render(graphics::DisplayBuffer& display_buffer);
@@ -51,7 +47,7 @@ public:
 
 private:
     std::shared_ptr<Scene> const scene;
-    std::shared_ptr<graphics::Renderer> const renderer;
+    std::shared_ptr<Renderer> const renderer;
     std::shared_ptr<OverlayRenderer> const overlay_renderer;
 };
 
