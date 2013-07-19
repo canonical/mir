@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_BUFFER_H_
 
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include "buffer_usage.h"
 
 #include <map>

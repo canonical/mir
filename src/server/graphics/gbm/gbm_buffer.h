@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_GBM_GBM_BUFFER_H_
 #define MIR_GRAPHICS_GBM_GBM_BUFFER_H_
 
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 
 #include <gbm.h>
 
