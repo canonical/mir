@@ -1,3 +1,253 @@
+mir (0.0.7+13.10.20130721ubuntu.unity.next-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Update debian/copyright for 3rd_party files. (LP: #1194073)
+  * update to xmir instructions.
+  * Put demos back into bin, not libexec. It's confusing, conflicts with
+    the documentation and makes it harder to run them.
+  * Add some XMir diagnostic and recovery documentation.
+  * Update docs to refer to saucy, not raring.
+  * Display command line options error when failed.
+  * Remove dead tag code in SessionManager.
+  * Remove dead code in ProtobufSocketCommunicator.
+  * Releasing 0.0.6
+  * Close the platform file descriptors on destruction of MirConnection.
+    (LP: #1198022)
+  * Remove libancilliary and implement required functionality directly.
+  * add xmir guide to debug.
+  * Only use a DRM device if it has connections. (LP: #1197708)
+  * Add instructions on how to compile Mesa and X.Org with Mir support.
+    (LP: #1193261)
+
+  [ Jussi Pakkanen ]
+  * Explicitly create output directory before running custom command.
+
+  [ Alexandros Frantzis ]
+  * graphics: Implement GLBufferPixels to extract buffer pixels using
+    GL.
+  * lttng: Install tracepoint provider libraries in private lib
+    subdirectory.
+  * surfaces: Fix Surface::flag_for_render() Fixes lp:1195105. (LP:
+    #1195105)
+  * compositor: Manage the rendering target properly in the compositing
+    threads.
+  * shell: Implement Session::take_snapshot() method.
+  * graphics: Add Display::configure() method.
+  * server: Support handlers for file descriptors in MainLoop.
+  * graphics: Reconfigure the Display when the display configuration
+    changes.
+  * tests: Fix race condition in MockDRM leading to memory errors
+    Previously, because we allocated and returned memory in two step,
+    using a unique storage point to hold the allocated memory, there was
+    the potential for memory errors (e.g. double frees) in multithreaded
+    tests (like
+    drm_close_not_called_concurrently_on_ipc_package_destruction). (LP:
+    #1197408)
+  * server: Make symbols of loaded SharedLibraries available globally.
+  * gbm: Provide different functions for validating server and client
+    Mesa EGL native displays. (LP: #1177902)
+  * gbm: Update mesa egl native display validation function names Update
+    mesa egl native display validation function names to match the ones
+    used by Mesa.
+  * graphics: Introduce a DisplayConfigurationPolicy to set up
+    DisplayConfigurations.
+  * geometry: Add Rectangles class to hold a collection of rectangles.
+  * android: Separate Display and DisplayBuffer implementations.
+  * graphics: Fall back to reading RGBA pixel data in GLPixelBuffer if
+    BGRA is not supported.
+  * Replace ViewableArea with more fitting interfaces.
+
+  [ Eleni Maria Stea ]
+  * minor fix of typo in the example: mir_client_accelerated.
+  * fixed invalid C++ code, which was using a non-standard gcc language
+    extension, for named initialization of structure elements.
+
+  [ Stephen M. Webb ]
+  * disable running the integration test suite on arm architecture
+    during the packaging builds (lp: #1195265). (LP: #1195265, #1195260)
+
+  [ Didier Roche ]
+  * lttng: Install tracepoint provider libraries in private lib
+    subdirectory.
+  * build-dep on valgrind as it's used in integration tests. (LP:
+    #1195265)
+  * only build on archs we support.
+  * Don't build on powerpc.
+  * Disable unity armhf tests, they are failing the armhf build on
+    buildds.
+
+  [ Kevin DuBois ]
+  * unify advance_client_buffer and client_buffer() interfaces on
+    ms::Surface. change the ms::Surface class so that it does not hold
+    the client resource on behalf of the clients, the frontend or native
+    windows do.
+  * android drivers have an interface for the drivers to obtain a strong
+    reference to the native window type. Allow the drivers to acquire
+    this strong reference to the buffer backing their texture/fbo.
+  * Activate sending a "swapinterval" signal over IPC. Add client api
+    for software clients to request different swapintervals.
+    (eglSwapInterval is not glued together just yet) Currently only
+    swapinterval of 0 or 1 is supported. (LP: #1130553)
+  * link eglSwapInterval hook in gbm driver to the ipc message to enable
+    swapinterval0. This makes eglSwapInterval (1) or (0) work for gbm
+    ipc clients only.
+  * fix: lp:1196647 (test bug results in crash in android unit tests)
+    bug was just in test code on android. (LP: #1196647)
+  * fix: lp1192742 by cleaning up FD's when an android client
+    unregisters its native_handle_t. (LP: #1192742)
+  * saucy's default boost version is 1.53, yet the cross compile script
+    was still on 1.49. switch script to 1.53.
+  * begin cleanup of ms::Surface by breaking "ms::Surface : public
+    mi::SurfaceTarget" inheritance the input system was using the
+    surface object (specifically the std::weak_ptr<mi::SurfaceTarget> to
+    the ms::Surface) as its 'key' for coordinating the surfaces. This
+    bound the input system tightly to the surface stack, which prevented
+    any proxying of ms::Surface and made the lifetime of ms::Surface
+    tangled. This change breaks this dependency by making ms::Surface
+    own an InputChannel, instead of it being a SurfaceTarget.
+  * remove google mock from the internal source tree. Rather, use the
+    google-mock package and build the source externally. (LP: #1185265,
+    #1194017)
+  * disable running the integration test suite on arm architecture
+    during the packaging builds (lp: #1195265). (LP: #1195265, #1195260)
+  * break ms::Surface : public mg::Renderable dependency, paving the way
+    for a more sensible interface surrounding our ms::Surface object.
+    Also ensure that graphics data is maintained synchronously. Remove
+    most state from ms::Surface.
+  * fixes: lp:1200782 by freeing fd's associated with buffer package.
+    (LP: #1200782)
+
+  [ Kevin Gunn ]
+  * this is to change the doc's fpr preinstalled binaries to reference
+    using the system-compositor-testing ppa.
+  * update to xmir instructions.
+  * add xmir guide to debug.
+
+  [ Alan Griffiths ]
+  * graphics, config: Dynamically load the graphics platform.
+  * config: allow graphics platform library to be selected by command-
+    line/config. (LP: #1118909)
+  * docs: A move towards house style for the webpages.
+  * Make gmock and umockdev dependencies of the tests, clean up, and
+    make not building tests an option. (LP: #1196987)
+  * client: remove some unnecessary memory allocation, copying and
+    threading.
+  * frontend: Guard SessionMediator::session against race conditions.
+  * frontend: remove redundant and misleading comment.
+  * frontend: cut down memory allocations by pre-allocating and reusing
+    buffers.
+  * geometry: more tractable construction of objects. (LP: #1199756)
+  * tests: rework test to prevent test input events being missed before
+    handler is registered. (LP: #1200236)
+  * geometry: make geometry compound types easier to construct. (LP:
+    #1199756)
+  * doc: use house font and colors for coding guidelines.
+  * mir: Simpler IntWrapper that doesn't need type tags upfront.
+  * graphics, conpositor: Move dependencies of graphics platform into
+    graphics.
+  * graphics: Delete unused file -
+    include/server/mir/graphics/framebuffer_backend.h.
+  * graphics, compositor: Move the rendering interfaces and code to
+    compositor.
+  * graphics, compositor: move BufferBasic to graphics.
+  * graphics::gbm: delete unused headers.
+
+  [ Christopher James Halse Rogers ]
+  * Improve GBM platform's device probing, by actually making it probe
+    devices.
+  * Fix clearly-broken code, for which clang produced deliberately
+    broken output.
+  * Fix two issues caught by Clang's static analyser.
+  * I like clang's error messages. Let's keep Mir building on clang.
+  * Make libmirclient not aggressively signal-unsafe by blocking signals
+    on our IO thread. Fixes infinite loop in XMir (LP: #1199319). (LP:
+    #1199319)
+  * Document XMir drivers too.
+
+  [ Sebastien Bacher ]
+  * Small copyright fixes (lp: #1195647). (LP: #1195647)
+
+  [ Daniel van Vugt ]
+  * Cache the transformation matrix; only recalculate it when some part
+    of the transformation changes. (LP: #1193020) . (LP: #1193020)
+  * Don't pass a clang-only option to gcc. It will not understand and
+    cause build failure (LP: #1194385). (LP: #1194385)
+  * Fix build failure due to differing exception specifiers. noexcept
+    destructors should be enforced in derived classes if the base uses
+    them. (LP: #1194703). (LP: #1194703)
+  * Document thread safety pitfalls about client-side callbacks. .
+  * Fix mismatched destructor exception specifiers causing build failure
+    in gcc 4.7. Also fix struct/class mismatches that some compilers
+    will treat as an error. (LP: #1196415). (LP: #1196415)
+  * mir_demo_client_unaccelerated: Add an FPS count, and a "-n" option
+    to disable vsync (set swap interval to 0).
+  * mir_demo_client_egl*: Add a "-n" option to disable syncing to vblank
+    (hence to use swap interval == 0).
+  * Initial attempts at making the Mir client API thread safe.
+    Ordinarily you would not build locking into an API, however the fact
+    that Mir clients implicitly get multiple threads created for them
+    makes it important for the API itself to be automatically thread
+    safe. I've tried to avoid API changes, but adding a new function:
+    mir_wait_for_one was necessary. This is because mir_wait_for doesn't
+    work if multiple threads are waiting on the same thing
+    simultaneously. And the fact that waiting at all is optional means
+    we can't change the behaviour of mir_wait_for -- it must always wait
+    for all outstanding results (which is only safe in clients where the
+    waiting happens in a single thread). .
+  * Work around GCC issue 50043 which is causing build failures on
+    raring. (LP: #1199210) The gcc bug is only fixed in 4.8/saucy. (LP:
+    #1199210)
+  * MockDisplayConfigurationPolicy: Work around gcc-4.7 bugs causing
+    build failure on raring. (LP: #1200064). (LP: #1200064)
+  * Another workaround for gcc-4.7 bugs causing build failure. (LP:
+    #1200107). (LP: #1200107)
+  * buffer_swapper_spin.h: Remove dead code: initialize_queues.
+  * Remove unused interface surfaces::GraphicRegion It became unused
+    when Kevin's work landed in r856 yesterday. .
+  * Rename compositor::Renderables --> compositor::Scene What is a
+    "Renderables"? It's the interface by which we know the scene graph,
+    or the model of how all the surfaces relate to each other. Right,
+    then call it a scene graph... but the word "graph" might imply a
+    particular structure. And we don't want to imply such things in an
+    interface. So just call it "scene". That makes slightly more sense
+    than imagining what a "Renderables" (singular) is.
+  * Fix comments which mention incorrect namespaces for Buffer following
+    yesterday's landings.
+
+  [ Ricardo Mendoza ]
+  * Fix broken tests/unit-
+    tests/client/android/test_client_android_registrar.cpp due to unused
+    return value.
+
+  [ Thomas Voß ]
+  * Wait for vt to become active if we need to activate it.
+  * Remove disabling asio's epoll reactor implementation from the
+    package build flags.
+  * Introduce cmake options to be able to selectively switch acceptance,
+    integration and unit tests on/off. (LP: #1195265)
+
+  [ Thomi Richards ]
+  * Remove workaround for bug #1198022. (LP: #1198022)
+
+  [ Robert Carr ]
+  * Add raise method to surface stack.
+  * Remove cucumber and all references. (LP: #1194075)
+  * Add support for shaped input regions.
+  * Store MirMotionAction as integer due to usage of extra bits by
+    android input stack. (LP: #1197108)
+  * Fix obscurance of touch events according to stacking.
+  * Extract DefaultServerConfiguration::the_cursor_listener from
+    DefaultServerConfiguration::the_input_configuration. (LP: #1192916)
+  * Implement a connection authorization mechanism.
+  * Correct test_surface_stack.cpp ordering tests.
+  * Move the DepthId in surface creation to
+    msh::SurfaceCreationParameters.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 874 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 21 Jul 2013 00:03:59 +0000
+
 mir (0.0.7-0ubuntu1) saucy; urgency=low
 
   * New release
