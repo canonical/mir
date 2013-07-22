@@ -36,7 +36,6 @@ namespace droidinput = android;
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace mg = mir::graphics;
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
 
@@ -78,11 +77,11 @@ private:
 }
 
 mia::DefaultInputConfiguration::DefaultInputConfiguration(std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filters,
-                                                          std::shared_ptr<mg::ViewableArea> const& view_area,
+                                                          std::shared_ptr<mi::InputRegion> const& input_region,
                                                           std::shared_ptr<mi::CursorListener> const& cursor_listener,
                                                           std::shared_ptr<mi::InputReport> const& input_report)
   : filter_chain(std::make_shared<mi::EventFilterChain>(filters)),
-    view_area(view_area),
+    input_region(input_region),
     cursor_listener(cursor_listener),
     input_report(input_report)
 {
@@ -124,7 +123,7 @@ droidinput::sp<droidinput::InputReaderPolicyInterface> mia::DefaultInputConfigur
     return reader_policy(
         [this]()
         {
-            return new mia::InputReaderPolicy(view_area, cursor_listener);
+            return new mia::InputReaderPolicy(input_region, cursor_listener);
         });
 }
 

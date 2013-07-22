@@ -204,7 +204,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
                 input_configuration =
                     std::make_shared<mtd::FakeEventHubInputConfiguration>(
                         std::initializer_list<std::shared_ptr<mi::EventFilter> const>{},
-                        the_viewable_area(),
+                        the_input_region(),
                         std::shared_ptr<mi::CursorListener>(),
                         the_input_report());
             }

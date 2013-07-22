@@ -24,20 +24,17 @@
 
 namespace mir
 {
-namespace graphics
-{
-class ViewableArea;
-}
 namespace input
 {
 class CursorListener;
+class InputRegion;
 namespace android
 {
 
 class InputReaderPolicy : public RudimentaryInputReaderPolicy
 {
 public:
-    explicit InputReaderPolicy(std::shared_ptr<graphics::ViewableArea> const& viewable_area,
+    explicit InputReaderPolicy(std::shared_ptr<InputRegion> const& input_region,
                                std::shared_ptr<CursorListener> const& cursor_listener);
 
     virtual ~InputReaderPolicy() {}
@@ -45,7 +42,7 @@ public:
     virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id);
     virtual void getReaderConfiguration(droidinput::InputReaderConfiguration* out_config);
 private:
-    std::shared_ptr<graphics::ViewableArea> viewable_area;
+    std::shared_ptr<InputRegion> const input_region;
     droidinput::sp<droidinput::PointerControllerInterface> pointer_controller;
 };
 
