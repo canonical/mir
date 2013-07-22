@@ -204,7 +204,13 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
     if (!nsnapshots)
+    {
+        /*
+         * Always snapshot the newest complete frame, which is always the
+         * one before the first client.
+         */
         snapshot = (first_client + nbuffers - 1) % nbuffers;
+    }
     nsnapshots++;
     return ring[snapshot];
 }
