@@ -15,14 +15,14 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_COMPOSITOR_BUFFER_ID_H_
-#define MIR_COMPOSITOR_BUFFER_ID_H_
+#ifndef MIR_GRAPHICS_BUFFER_ID_H_
+#define MIR_GRAPHICS_BUFFER_ID_H_
 
 #include <cstdint>
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 class BufferID
 {
@@ -53,4 +53,4 @@ inline bool operator != (BufferID const& lhs, BufferID const& rhs)
 
 }
 }
-#endif /* MIR_COMPOSITOR_BUFFER_ID_H_ */
+#endif /* MIR_GRAPHICS_BUFFER_ID_H_ */

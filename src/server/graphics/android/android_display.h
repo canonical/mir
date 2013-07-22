@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/egl_resources.h"
 #include "android_framebuffer_window.h"
 
 #include <EGL/egl.h>
@@ -28,25 +28,26 @@
 
 namespace mir
 {
-namespace geometry
-{
-class Rectangle;
-}
 namespace graphics
 {
+
 class DisplayReport;
+class DisplayBuffer;
+
 namespace android
 {
 
-class AndroidDisplay : public virtual Display, public virtual DisplayBuffer
+class AndroidDisplayBufferFactory;
+
+class AndroidDisplay : public Display
 {
 public:
     explicit AndroidDisplay(std::shared_ptr<AndroidFramebufferWindowQuery> const&,
+                            std::shared_ptr<AndroidDisplayBufferFactory> const&,
                             std::shared_ptr<DisplayReport> const&);
     ~AndroidDisplay();
 
     geometry::Rectangle view_area() const;
-    void post_update();
     void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
 
     std::shared_ptr<DisplayConfiguration> configuration();
@@ -64,21 +65,16 @@ public:
     void pause();
     void resume();
 
-    void make_current();
-    void release_current();
-
     std::weak_ptr<Cursor> the_cursor();
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
-protected:
-    EGLDisplay egl_display;
-    EGLSurface egl_surface;
 private:
-    std::shared_ptr<AndroidFramebufferWindowQuery> native_window;
+    std::shared_ptr<AndroidFramebufferWindowQuery> const native_window;
+    EGLDisplay egl_display;
     EGLConfig egl_config;
-    EGLContext egl_context;
-    EGLContext egl_context_shared;
-    EGLSurface egl_surface_dummy;
+    EGLContextStore const egl_context_shared;
+    EGLSurfaceStore const egl_surface_dummy;
+    std::unique_ptr<DisplayBuffer> display_buffer;
 };
 
 }

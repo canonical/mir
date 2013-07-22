@@ -31,6 +31,7 @@
 
 namespace msh = mir::shell;
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
@@ -86,18 +87,6 @@ void msh::Surface::show()
     if (auto const& s = surface.lock())
     {
         s->set_hidden(false);
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
-    }
-}
-
-bool msh::Surface::visible()
-{
-    if (auto const& s = surface.lock())
-    {
-        return s->should_be_rendered();
     }
     else
     {
@@ -178,7 +167,7 @@ mir::geometry::PixelFormat msh::Surface::pixel_format() const
     }
 }
 
-std::shared_ptr<mc::Buffer> msh::Surface::advance_client_buffer()
+std::shared_ptr<mg::Buffer> msh::Surface::advance_client_buffer()
 {
     if (auto const& s = surface.lock())
     {
@@ -199,7 +188,7 @@ void msh::Surface::allow_framedropping(bool allow)
 }
  
 void msh::Surface::with_most_recent_buffer_do(
-    std::function<void(mc::Buffer&)> const& exec)
+    std::function<void(mg::Buffer&)> const& exec)
 {
     if (auto const& s = surface.lock())
     {

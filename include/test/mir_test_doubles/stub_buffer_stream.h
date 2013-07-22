@@ -37,12 +37,12 @@ public:
         stub_client_buffer = std::make_shared<StubBuffer>();
         stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
-    std::shared_ptr<compositor::Buffer> secure_client_buffer()
+    std::shared_ptr<graphics::Buffer> secure_client_buffer()
     {
         return stub_client_buffer;
     }
 
-    std::shared_ptr<compositor::Buffer> lock_back_buffer()
+    std::shared_ptr<graphics::Buffer> lock_back_buffer()
     {
         return stub_compositor_buffer;
     }
@@ -65,8 +65,8 @@ public:
     {
     }
 
-    std::shared_ptr<compositor::Buffer> stub_client_buffer;
-    std::shared_ptr<compositor::Buffer> stub_compositor_buffer;
+    std::shared_ptr<graphics::Buffer> stub_client_buffer;
+    std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
 };
 
 }

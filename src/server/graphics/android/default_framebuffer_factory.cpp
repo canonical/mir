@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <vector>
 
+namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
 
@@ -39,13 +40,13 @@ mga::DefaultFramebufferFactory::DefaultFramebufferFactory(
 {
 }
 
-std::vector<std::shared_ptr<mc::Buffer>> mga::DefaultFramebufferFactory::create_buffers(
+std::vector<std::shared_ptr<mg::Buffer>> mga::DefaultFramebufferFactory::create_buffers(
     std::shared_ptr<DisplaySupportProvider> const& info_provider) const
 {
     auto size = info_provider->display_size();
     auto pf = info_provider->display_format();
     auto num_framebuffers = info_provider->number_of_framebuffers_available();
-    std::vector<std::shared_ptr<mc::Buffer>> buffers;
+    std::vector<std::shared_ptr<mg::Buffer>> buffers;
     for (auto i = 0u; i < num_framebuffers; ++i)
     {
         buffers.push_back(buffer_allocator->alloc_buffer_platform(size, pf, mga::BufferUsage::use_framebuffer_gles));
@@ -54,7 +55,7 @@ std::vector<std::shared_ptr<mc::Buffer>> mga::DefaultFramebufferFactory::create_
 }
 
 std::shared_ptr<mga::FBSwapper> mga::DefaultFramebufferFactory::create_swapper(
-    std::vector<std::shared_ptr<mc::Buffer>> const& buffers) const
+    std::vector<std::shared_ptr<mg::Buffer>> const& buffers) const
 {
     return std::make_shared<mga::FBSimpleSwapper>(buffers);
 }

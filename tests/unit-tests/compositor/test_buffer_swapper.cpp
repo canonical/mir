@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 
@@ -34,14 +35,14 @@ struct BufferSwapperConstruction : testing::Test
         buffer_c = std::make_shared<mtd::StubBuffer>();
     }
 
-    std::shared_ptr<mc::Buffer> buffer_a;
-    std::shared_ptr<mc::Buffer> buffer_b;
-    std::shared_ptr<mc::Buffer> buffer_c;
+    std::shared_ptr<mg::Buffer> buffer_a;
+    std::shared_ptr<mg::Buffer> buffer_b;
+    std::shared_ptr<mg::Buffer> buffer_c;
 };
 
 TEST_F(BufferSwapperConstruction, basic_double_construction_vector)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
+    std::vector<std::shared_ptr<mg::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
 
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
@@ -56,7 +57,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction_vector)
 
 TEST_F(BufferSwapperConstruction, basic_double_construction_initializer)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b};
+    std::vector<std::shared_ptr<mg::Buffer>> buffers{buffer_a, buffer_b};
 
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
@@ -72,7 +73,7 @@ TEST_F(BufferSwapperConstruction, basic_double_construction_initializer)
 
 TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
+    std::vector<std::shared_ptr<mg::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
     auto use_count_before_a  = buffer_a.use_count();
     auto use_count_before_b  = buffer_b.use_count();
     auto use_count_before_c  = buffer_c.use_count();
@@ -88,7 +89,7 @@ TEST_F(BufferSwapperConstruction, basic_triple_construction_initializer)
 
 TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_double)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b};
+    std::vector<std::shared_ptr<mg::Buffer>> buffers{buffer_a, buffer_b};
     mc::BufferSwapperMulti swapper(buffers, buffers.size());
 
     auto buffer_1 = swapper.compositor_acquire();
@@ -101,7 +102,7 @@ TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_double)
 
 TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
+    std::vector<std::shared_ptr<mg::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
     mc::BufferSwapperMulti swapper(buffers, buffers.size());
 
     auto buffer_1 = swapper.compositor_acquire();
@@ -118,11 +119,11 @@ TEST_F(BufferSwapperConstruction, buffers_out_come_from_init_triple)
 
 TEST_F(BufferSwapperConstruction, buffer_transfer_triple_all_owned)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
+    std::vector<std::shared_ptr<mg::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
     mc::BufferSwapperMulti swapper(buffers, buffers.size());
 
     size_t test_size;
-    std::vector<std::shared_ptr<mc::Buffer>> list;
+    std::vector<std::shared_ptr<mg::Buffer>> list;
     swapper.end_responsibility(list, test_size);
 
     auto res1 = std::find(list.begin(), list.end(), buffer_a);
@@ -138,13 +139,13 @@ TEST_F(BufferSwapperConstruction, buffer_transfer_triple_all_owned)
 
 TEST_F(BufferSwapperConstruction, buffer_transfer_triple_some_not_owned)
 {
-    std::vector<std::shared_ptr<mc::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
+    std::vector<std::shared_ptr<mg::Buffer>> buffers{buffer_a, buffer_b, buffer_c};
     mc::BufferSwapperMulti swapper(buffers, buffers.size());
 
     auto acquired_buffer = swapper.client_acquire();
 
     size_t test_size;
-    std::vector<std::shared_ptr<mc::Buffer>> list;
+    std::vector<std::shared_ptr<mg::Buffer>> list;
     swapper.end_responsibility(list, test_size);
 
     auto res1 = std::find(list.begin(), list.end(), acquired_buffer);

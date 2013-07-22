@@ -26,15 +26,12 @@
 #include <initializer_list>
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
 namespace graphics
 {
+class Buffer;
+
 namespace android
 {
-
 class HWCDefaultLayer;
 typedef struct std::vector<std::shared_ptr<HWCDefaultLayer>> LayerList;
  
@@ -75,7 +72,7 @@ class HWCLayerOrganizer
 public:
     virtual ~HWCLayerOrganizer() = default;
     virtual const LayerList& native_list() const = 0;
-    virtual void set_fb_target(std::shared_ptr<compositor::Buffer> const&) = 0;
+    virtual void set_fb_target(std::shared_ptr<Buffer> const&) = 0;
 
 protected:
     HWCLayerOrganizer() = default;
@@ -90,7 +87,7 @@ public:
     HWCLayerList();
     const LayerList& native_list() const;
 
-    void set_fb_target(std::shared_ptr<compositor::Buffer> const&);
+    void set_fb_target(std::shared_ptr<Buffer> const&);
 
 private:
     LayerList layer_list;

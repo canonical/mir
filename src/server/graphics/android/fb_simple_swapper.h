@@ -46,14 +46,14 @@ public:
         }
     }
 
-    std::shared_ptr<compositor::Buffer> compositor_acquire();
-    void compositor_release(std::shared_ptr<compositor::Buffer> const& released_buffer);
+    std::shared_ptr<Buffer> compositor_acquire();
+    void compositor_release(std::shared_ptr<Buffer> const& released_buffer);
 
 private:
     std::mutex queue_lock;
     std::condition_variable cv;
 
-    std::queue<std::shared_ptr<compositor::Buffer>> queue;
+    std::queue<std::shared_ptr<graphics::Buffer>> queue;
 };
 
 }

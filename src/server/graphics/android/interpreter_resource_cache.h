@@ -23,12 +23,10 @@
 
 namespace mir
 {
-namespace compositor
-{
-class Buffer;
-}
 namespace graphics
 {
+class Buffer;
+
 namespace android
 {
 class InterpreterResourceCache
@@ -36,8 +34,8 @@ class InterpreterResourceCache
 public:
     InterpreterResourceCache() {}
 
-    virtual void store_buffer(std::shared_ptr<compositor::Buffer>const& buffer, ANativeWindowBuffer* key) = 0;
-    virtual std::shared_ptr<compositor::Buffer> retrieve_buffer(ANativeWindowBuffer* key) = 0;
+    virtual void store_buffer(std::shared_ptr<graphics::Buffer>const& buffer, ANativeWindowBuffer* key) = 0;
+    virtual std::shared_ptr<graphics::Buffer> retrieve_buffer(ANativeWindowBuffer* key) = 0;
 
 protected:
     virtual ~InterpreterResourceCache() {}

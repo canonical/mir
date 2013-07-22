@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,34 +16,29 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SURFACES_GRAPHIC_REGION_H_
-#define MIR_SURFACES_GRAPHIC_REGION_H_
+#ifndef MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_
+#define MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_
 
-#include "mir/geometry/size.h"
-#include "mir/geometry/pixel_format.h"
-#include <memory>
+#include "android_display_buffer_factory.h"
 
 namespace mir
 {
-namespace surfaces
+namespace graphics
+{
+namespace android
 {
 
-class GraphicRegion
+class GPUAndroidDisplayBufferFactory : public AndroidDisplayBufferFactory
 {
 public:
-    virtual ~GraphicRegion() {}
-    virtual geometry::Size size() const = 0;
-    virtual geometry::Stride stride() const = 0;
-    virtual geometry::PixelFormat pixel_format() const = 0;
-    virtual void bind_to_texture() = 0;
-
-protected:
-    GraphicRegion() = default;
-    GraphicRegion(GraphicRegion const&) = delete;
-    GraphicRegion& operator=(GraphicRegion const&) = delete;
+    std::unique_ptr<DisplayBuffer> create_display_buffer(
+        std::shared_ptr<AndroidFramebufferWindowQuery> const& native_win,
+        EGLDisplay egl_display,
+        EGLContext egl_context_shared);
 };
 
 }
 }
+}
 
-#endif /* MIR_SURFACES_GRAPHIC_REGION_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_GPU_ANDROID_DISPLAY_BUFFER_FACTORY_H_ */
