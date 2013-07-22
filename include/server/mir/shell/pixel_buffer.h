@@ -32,7 +32,7 @@ namespace shell
 {
 
 /**
- * Interface for extracting the pixels from a compositor::Buffer.
+ * Interface for extracting the pixels from a graphics::Buffer.
  */
 class PixelBuffer
 {
@@ -40,7 +40,7 @@ public:
     virtual ~PixelBuffer() = default;
 
     /**
-     * Fills the PixelBuffer with the contents of a compositor::Buffer.
+     * Fills the PixelBuffer with the contents of a graphics::Buffer.
      *
      * \param [in] buffer the buffer to get the pixels of
      */

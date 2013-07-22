@@ -19,8 +19,8 @@
 #include "mir_test_framework/testing_server_configuration.h"
 
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/renderer.h"
-#include "mir/compositor/buffer_basic.h"
+#include "mir/compositor/renderer.h"
+#include "mir/graphics/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
@@ -31,6 +31,7 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include <gtest/gtest.h>
 #include <thread>
@@ -68,10 +69,18 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const override
+    StubDisplay()
+        : display_buffer{geom::Rectangle{geom::Point{0,0}, geom::Size{1600,1600}}}
     {
-        return geom::Rectangle{geom::Point(), geom::Size{1600, 1600}};
     }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+
+private:
+    mtd::StubDisplayBuffer display_buffer;
 };
 
 class StubGraphicPlatform : public mtd::NullPlatform
@@ -89,11 +98,11 @@ class StubGraphicPlatform : public mtd::NullPlatform
     }
 };
 
-class StubRenderer : public mg::Renderer
+class StubRenderer : public mc::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mg::CompositingCriteria const&, ms::BufferStream& stream)
+                                   mc::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
         stream.lock_back_buffer();
@@ -159,7 +168,7 @@ std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_plat
     return graphics_platform;
 }
 
-std::shared_ptr<mg::Renderer> mtf::TestingServerConfiguration::the_renderer()
+std::shared_ptr<mc::Renderer> mtf::TestingServerConfiguration::the_renderer()
 {
     auto options = the_options();
 

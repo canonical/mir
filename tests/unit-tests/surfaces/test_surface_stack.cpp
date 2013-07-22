@@ -26,8 +26,8 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack.h"
-#include "mir/graphics/renderer.h"
-#include "mir/graphics/compositing_criteria.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/surfaces/surface.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/input/input_channel.h"
@@ -79,8 +79,8 @@ public:
 struct MockFilterForScene : public mc::FilterForScene
 {
     // Can not mock operator overload so need to forward
-    MOCK_METHOD1(filter, bool(mg::CompositingCriteria const&));
-    bool operator()(mg::CompositingCriteria const& r)
+    MOCK_METHOD1(filter, bool(mc::CompositingCriteria const&));
+    bool operator()(mc::CompositingCriteria const& r)
     {
         return filter(r);
     }
@@ -88,8 +88,8 @@ struct MockFilterForScene : public mc::FilterForScene
 
 struct StubFilterForScene : public mc::FilterForScene
 {
-    MOCK_METHOD1(filter, bool(mg::CompositingCriteria const&));
-    bool operator()(mg::CompositingCriteria const&)
+    MOCK_METHOD1(filter, bool(mc::CompositingCriteria const&));
+    bool operator()(mc::CompositingCriteria const&)
     {
         return true;
     }
@@ -97,8 +97,8 @@ struct StubFilterForScene : public mc::FilterForScene
 
 struct MockOperatorForScene : public mc::OperatorForScene
 {
-    MOCK_METHOD2(renderable_operator, void(mg::CompositingCriteria const&, ms::BufferStream&));
-    void operator()(mg::CompositingCriteria const& state, ms::BufferStream& stream)
+    MOCK_METHOD2(renderable_operator, void(mc::CompositingCriteria const&, ms::BufferStream&));
+    void operator()(mc::CompositingCriteria const& state, ms::BufferStream& stream)
     {
         renderable_operator(state, stream);
     }
@@ -106,7 +106,7 @@ struct MockOperatorForScene : public mc::OperatorForScene
 
 struct StubOperatorForScene : public mc::OperatorForScene
 {
-    void operator()(mg::CompositingCriteria const&, ms::BufferStream&)
+    void operator()(mc::CompositingCriteria const&, ms::BufferStream&)
     {
     }
 };
@@ -145,8 +145,6 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
     MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(msh::SurfaceCreationParameters const&,
                                                               std::function<void()> const&)); 
 };
-
-static ms::DepthId const default_depth{0};
 
 struct StubBufferStreamFactory : public ms::BufferStreamFactory
 {
@@ -201,7 +199,7 @@ TEST_F(SurfaceStack, surface_creation_creates_surface_and_owns)
 
     auto use_count = stub_surface1.use_count();
 
-    auto surface = stack.create_surface(default_params, default_depth);
+    auto surface = stack.create_surface(default_params);
         {
             EXPECT_EQ(stub_surface1, surface.lock());
         }
@@ -222,13 +220,13 @@ TEST_F(SurfaceStack, surface_skips_surface_that_is_filtered_out)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, default_depth);
+    auto s2 = stack.create_surface(default_params);
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, default_depth);
+    auto s3 = stack.create_surface(default_params);
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -264,13 +262,13 @@ TEST_F(SurfaceStack, stacking_order)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
 
-    auto s1 = stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, default_depth);
+    auto s2 = stack.create_surface(default_params);
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, default_depth);
+    auto s3 = stack.create_surface(default_params);
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -296,7 +294,7 @@ TEST_F(SurfaceStack, notify_on_create_and_destroy_surface)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
     stack.set_change_callback(std::bind(&MockCallback::call, &mock_cb));
-    auto surface = stack.create_surface(default_params, default_depth);
+    auto surface = stack.create_surface(default_params);
     stack.destroy_surface(surface);
 }
 
@@ -310,13 +308,13 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, ms::DepthId{0});
+    auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, ms::DepthId{1});
+    auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, ms::DepthId{0});
+    auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -347,7 +345,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(registrar));
     
-    auto s = stack.create_surface(msh::a_surface(), default_depth);
+    auto s = stack.create_surface(msh::a_surface());
     stack.destroy_surface(s);
 }
 
@@ -361,13 +359,13 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, default_depth);
+    auto s1 = stack.create_surface(default_params);
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, default_depth);
+    auto s2 = stack.create_surface(default_params);
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, default_depth);
+    auto s3 = stack.create_surface(default_params);
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 
@@ -404,13 +402,13 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
         .WillOnce(Return(stub_surface3));
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(input_registrar));
-    auto s1 = stack.create_surface(default_params, ms::DepthId{0});
+    auto s1 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria1 = s1.lock()->compositing_criteria();
     auto stream1 = s1.lock()->buffer_stream();
-    auto s2 = stack.create_surface(default_params, ms::DepthId{0});
+    auto s2 = stack.create_surface(default_params.of_depth(ms::DepthId{0}));
     auto criteria2 = s2.lock()->compositing_criteria();
     auto stream2 = s2.lock()->buffer_stream();
-    auto s3 = stack.create_surface(default_params, ms::DepthId{1});
+    auto s3 = stack.create_surface(default_params.of_depth(ms::DepthId{1}));
     auto criteria3 = s3.lock()->compositing_criteria();
     auto stream3 = s3.lock()->buffer_stream();
 

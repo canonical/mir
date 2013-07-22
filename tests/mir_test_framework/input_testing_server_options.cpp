@@ -21,8 +21,6 @@
 #include "mir/input/input_channel.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/surface.h"
-#include "mir/graphics/display.h"
-#include "mir/graphics/viewable_area.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
 
@@ -96,18 +94,6 @@ private:
     std::shared_ptr<SurfaceReadinessListener> const listener;
 };
 
-struct SizedViewArea : public mg::ViewableArea
-{
-    SizedViewArea(geom::Rectangle const& area)
-        : area(area)
-    {
-    }
-    geom::Rectangle view_area() const override
-    {
-        return area;
-    }
-    geom::Rectangle area;
-};
 }
 
 mtf::InputTestingServerConfiguration::InputTestingServerConfiguration()
@@ -131,7 +117,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
         std::shared_ptr<mi::CursorListener> null_cursor_listener{nullptr};
 
         input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(the_event_filters(),
-            the_display(),
+            the_input_region(),
             null_cursor_listener,
             the_input_report());
         fake_event_hub = input_configuration->the_fake_event_hub();
@@ -177,19 +163,6 @@ std::shared_ptr<mf::Shell> mtf::InputTestingServerConfiguration::the_frontend_sh
     }
 
     return frontend_shell;
-}
-
-geom::Rectangle mtf::InputTestingServerConfiguration::the_screen_geometry()
-{
-    static geom::Rectangle const default_geometry{geom::Point{0, 0}, geom::Size{1600, 1600}};
-    return default_geometry;
-}
-
-std::shared_ptr<mg::ViewableArea> mtf::InputTestingServerConfiguration::the_viewable_area()
-{
-    if (!view_area)
-        view_area = std::make_shared<SizedViewArea>(the_screen_geometry());
-    return view_area;
 }
 
 void mtf::InputTestingServerConfiguration::wait_until_client_appears(std::string const& channel_name)

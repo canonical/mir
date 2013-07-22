@@ -13,35 +13,40 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
-#define MIR_GRAPHICS_COMPOSITING_CRITERIA_H_
+#ifndef MIR_SHELL_GRAPHICS_DISPLAY_LAYOUT_H_
+#define MIR_SHELL_GRAPHICS_DISPLAY_LAYOUT_H_
 
-#include <glm/glm.hpp>
+#include "mir/shell/display_layout.h"
+
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+class Display;
+}
+namespace shell
+{
 
-class CompositingCriteria 
+class GraphicsDisplayLayout : public DisplayLayout
 {
 public:
-    virtual float alpha() const = 0;
-    virtual glm::mat4 const& transformation() const = 0;
-    virtual bool should_be_rendered() const = 0;
+    GraphicsDisplayLayout(std::shared_ptr<graphics::Display> const& display);
 
-    virtual ~CompositingCriteria() = default;
+    void clip_to_output(geometry::Rectangle& rect);
+    void size_to_output(geometry::Rectangle& rect);
 
-protected:
-    CompositingCriteria() = default;
-    CompositingCriteria(CompositingCriteria const&) = delete;
-    CompositingCriteria& operator=(CompositingCriteria const&) = delete;
+private:
+    geometry::Rectangle get_output_for(geometry::Rectangle& rect);
+
+    std::shared_ptr<graphics::Display> const display;
 };
 
 }
 }
 
-#endif /* MIR_GRAPHICS_COMPOSITING_CRITERIA_H_ */
+#endif /* MIR_SHELL_GRAPHICS_DISPLAY_LAYOUT_H_ */

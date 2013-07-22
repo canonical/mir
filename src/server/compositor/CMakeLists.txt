@@ -3,7 +3,6 @@ set(
 
   basic_compositing_strategy.cpp
   default_compositing_strategy.cpp
-  buffer_basic.cpp
   temporary_buffers.cpp
   buffer_stream_factory.cpp
   buffer_stream_surfaces.cpp
@@ -11,6 +10,7 @@ set(
   buffer_swapper_spin.cpp
   swapper_factory.cpp
   rendering_operator.cpp
+  gl_renderer.cpp
   multi_threaded_compositor.cpp
   switching_bundle.cpp
   rw_lock.cpp

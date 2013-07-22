@@ -19,7 +19,7 @@
 #ifndef MIR_SURFACES_SURFACE_STATE_H_
 #define MIR_SURFACES_SURFACE_STATE_H_
 
-#include "mir/graphics/compositing_criteria.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/input/surface.h"
 #include "mir/surfaces/mutable_surface_state.h"
 
@@ -28,7 +28,7 @@ namespace mir
 namespace surfaces
 {
 
-class SurfaceState : public graphics::CompositingCriteria, public input::Surface, 
+class SurfaceState : public compositor::CompositingCriteria, public input::Surface,
                      public MutableSurfaceState 
 {
 protected:

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -15,32 +15,33 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_COMPOSITOR_BUFFER_BASIC_H_
-#define MIR_COMPOSITOR_BUFFER_BASIC_H_
 
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/buffer_id.h"
+#ifndef MIR_COMPOSITOR_COMPOSITING_CRITERIA_H_
+#define MIR_COMPOSITOR_COMPOSITING_CRITERIA_H_
+
+#include <glm/glm.hpp>
 
 namespace mir
 {
 namespace compositor
 {
 
-class BufferBasic : public graphics::Buffer
+class CompositingCriteria 
 {
 public:
-    BufferBasic();
+    virtual float alpha() const = 0;
+    virtual glm::mat4 const& transformation() const = 0;
+    virtual bool should_be_rendered() const = 0;
 
-    graphics::BufferID id() const
-    {
-        return buffer_id;
-    }
+    virtual ~CompositingCriteria() = default;
 
-private:
-    graphics::BufferID const buffer_id;
+protected:
+    CompositingCriteria() = default;
+    CompositingCriteria(CompositingCriteria const&) = delete;
+    CompositingCriteria& operator=(CompositingCriteria const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_BASIC_H_ */
+#endif /* MIR_COMPOSITOR_COMPOSITING_CRITERIA_H_ */

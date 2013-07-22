@@ -21,9 +21,11 @@
 #include "mir/frontend/communicator.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
 #include "mir/default_server_configuration.h"
@@ -312,7 +314,7 @@ public:
         {
         public:
             RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Scene> const& scene,
-                                              std::shared_ptr<mg::Renderer> const& renderer,
+                                              std::shared_ptr<mc::Renderer> const& renderer,
                                               std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
                                               std::vector<Moveable>& moveables)
                 : default_compositing_strategy{scene, renderer, overlay_renderer},
@@ -363,7 +365,13 @@ public:
 
         auto const display = the_display();
         auto const surface_builder = the_surface_builder();
-        geom::Size const display_size{display->view_area().size};
+        /* TODO: Get proper configuration */
+        geom::Rectangles view_area;
+        display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
+        {
+            view_area.add(db.view_area());
+        });
+        geom::Size const display_size{view_area.bounding_rectangle().size};
         uint32_t const surface_side{300};
         geom::Size const surface_size{surface_side, surface_side};
 

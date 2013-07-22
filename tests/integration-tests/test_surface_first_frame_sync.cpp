@@ -18,13 +18,14 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/compositing_strategy.h"
 #include "mir/compositor/scene.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -80,7 +81,7 @@ private:
     std::shared_ptr<mc::CompositingStrategy> const compositing_strategy;
 };
 
-class StubRenderer : public mg::Renderer
+class StubRenderer : public mc::Renderer
 {
 public:
     StubRenderer(int render_operations_fd)
@@ -90,7 +91,7 @@ public:
 
     void clear() {}
 
-    void render(std::function<void(std::shared_ptr<void> const&)>, mg::CompositingCriteria const&, ms::BufferStream&)
+    void render(std::function<void(std::shared_ptr<void> const&)>, mc::CompositingCriteria const&, ms::BufferStream&)
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
@@ -99,26 +100,12 @@ private:
     int render_operations_fd;
 };
 
-class StubDisplayBuffer : public mg::DisplayBuffer
-{
-public:
-    geom::Rectangle view_area() const
-    {
-        return geom::Rectangle{geom::Point(),
-                               geom::Size{1600, 1600}};
-    }
-    void make_current() {}
-    void release_current() {}
-    void clear() {}
-    void post_update() {}
-};
-
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const override
+    StubDisplay()
+        : display_buffer{geom::Rectangle{geom::Point{}, geom::Size{1600,1600}}}
     {
-        return display_buffer.view_area();
     }
 
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
@@ -127,7 +114,7 @@ public:
     }
 
 private:
-    StubDisplayBuffer display_buffer;
+    mtd::StubDisplayBuffer display_buffer;
 };
 
 }
@@ -181,7 +168,7 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
             return stub_display;
         }
 
-        std::shared_ptr<mg::Renderer> the_renderer() override
+        std::shared_ptr<mc::Renderer> the_renderer() override
         {
             using namespace testing;
 

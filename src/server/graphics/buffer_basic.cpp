@@ -16,15 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include <atomic>
 
 namespace mg = mir::graphics;
 
-namespace mir
-{
-namespace compositor
-{
 namespace
 {
 mg::BufferID generate_next_buffer_id()
@@ -39,10 +35,8 @@ mg::BufferID generate_next_buffer_id()
     return id;
 }
 }
-}
-}
 
-mir::compositor::BufferBasic::BufferBasic() :
+mg::BufferBasic::BufferBasic() :
     buffer_id(generate_next_buffer_id())
 {
 }

@@ -34,10 +34,6 @@ class EventHubInterface;
 
 namespace mir
 {
-namespace graphics
-{
-class ViewableArea;
-}
 namespace input
 {
 class CursorListener;
@@ -58,7 +54,7 @@ class FakeEventHubInputConfiguration : public input::android::DefaultInputConfig
 {
 public:
     FakeEventHubInputConfiguration(std::initializer_list<std::shared_ptr<input::EventFilter> const> const& filters,
-                                   std::shared_ptr<graphics::ViewableArea> const& view_area,
+                                   std::shared_ptr<input::InputRegion> const& input_region,
                                    std::shared_ptr<input::CursorListener> const& cursor_listener,
                                    std::shared_ptr<input::InputReport> const& input_report);
     virtual ~FakeEventHubInputConfiguration();

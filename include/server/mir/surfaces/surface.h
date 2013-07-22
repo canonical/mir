@@ -32,6 +32,7 @@ namespace mir
 {
 namespace compositor
 {
+class CompositingCriteria;
 struct BufferIPCPackage;
 }
 namespace graphics
@@ -41,12 +42,7 @@ class Buffer;
 namespace input
 {
 class InputChannel;
-class InputRegion;
 class Surface;
-}
-namespace graphics
-{
-class CompositingCriteria;
 }
 namespace surfaces
 {
@@ -88,7 +84,7 @@ public:
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles);
 
-    std::shared_ptr<graphics::CompositingCriteria> compositing_criteria();
+    std::shared_ptr<compositor::CompositingCriteria> compositing_criteria();
 
     std::shared_ptr<BufferStream> buffer_stream() const;
 

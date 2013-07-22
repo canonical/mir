@@ -24,7 +24,6 @@
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
-namespace mc=mir::compositor;
 
 class HWCLayerListTest : public ::testing::Test
 {
