@@ -193,7 +193,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     surfaceparm.height = *height > 0 ? *height : mode.vertical_resolution;
     surfaceparm.pixel_format = display_state->output_formats[0];
 
-    mir_destroy_display_config(display_config);
+    mir_display_config_destroy(display_config);
 
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
     unsigned int bpp = get_bpp(surfaceparm.pixel_format);

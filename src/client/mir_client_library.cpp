@@ -236,7 +236,7 @@ MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *con
     return nullptr;
 }
 
-void mir_destroy_display_config(MirDisplayConfiguration* configuration)
+void mir_display_config_destroy(MirDisplayConfiguration* configuration)
 {
     mcl::delete_config_storage(configuration);
 }
@@ -265,7 +265,7 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
         display_info->supported_pixel_format[i] = state->output_formats[i];
     }
 
-    mir_destroy_display_config(config);
+    mir_display_config_destroy(config);
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)

@@ -182,7 +182,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             }
             EXPECT_EQ(0u, info.current_output_format);
 
-            mir_destroy_display_config(configuration);
+            mir_display_config_destroy(configuration);
             mir_connection_release(connection);
         }
     } client_config;

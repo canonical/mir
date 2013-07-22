@@ -720,7 +720,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
                 EXPECT_GE(disp->num_output_formats, disp->current_output_format);
             }
 
-            mir_destroy_display_config(configuration);
+            mir_display_config_destroy(configuration);
             mir_connection_release(connection);
         }
     } client_config;

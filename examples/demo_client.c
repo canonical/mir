@@ -129,7 +129,7 @@ void demo_client(const char* server, int buffer_swap_count)
     MirPixelFormat const pixel_format = display_info.output_formats[0];
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
-    mir_destroy_display_config(display_config);
+    mir_display_config_destroy(display_config);
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.

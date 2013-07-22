@@ -101,7 +101,7 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
 
 /**
  * Query the display
- *   \warning return value must be destroyed via mir_destroy_display_config() 
+ *   \warning return value must be destroyed via mir_display_config_destroy() 
  *   \warning may return null if connection is invalid 
  *   \param [in]  connection        The connection
  *   \return                        structure that describes the display configuration
@@ -112,7 +112,7 @@ MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *con
  * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
  *   \param [in] display_configuration  The display_configuration information resource to be destroyed 
  */
-void mir_destroy_display_config(MirDisplayConfiguration* display_configuration);
+void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.

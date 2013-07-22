@@ -70,7 +70,7 @@ bool UnacceleratedClient::create_surface()
 
     // TODO: instead of picking the first pixel format, pick a random one!
     MirPixelFormat const pixel_format = display_state.output_formats[0];
-    mir_destroy_display_config(display_configuration);
+    mir_display_config_destroy(display_configuration);
     MirSurfaceParameters const request_params =
         {
             __PRETTY_FUNCTION__,

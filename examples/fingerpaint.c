@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
     parm.width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
     parm.height = dinfo->modes[dinfo->current_mode].vertical_resolution;
 
-    mir_destroy_display_config(display_config);
+    mir_display_config_destroy(display_config);
 
     surf = mir_connection_create_surface_sync(conn, &parm);
     if (surf != NULL)

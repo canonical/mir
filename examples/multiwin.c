@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
         parm.pixel_format = dinfo->output_formats[0];
     }
 
-    mir_destroy_display_config(display_config);
+    mir_display_config_destroy(display_config);
 
     parm.name = "red";
     parm.width = 225;

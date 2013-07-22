@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
     assert(display_info.num_output_formats > 0);
 
     MirPixelFormat pixel_format = display_info.output_formats[0];
-    mir_destroy_display_config(display_config);
+    mir_display_config_destroy(display_config);
 
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
