@@ -204,14 +204,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
     if (!nsnapshots)
-    {
-        if (nready)
-            snapshot = first_ready;
-        else if (ncompositors)
-            snapshot = (first_compositor + ncompositors - 1) % nbuffers;
-        else
-            snapshot = (first_compositor + nbuffers - 1) % nbuffers;
-    }
+        snapshot = (first_client + nbuffers - 1) % nbuffers;
     nsnapshots++;
     return ring[snapshot];
 }
