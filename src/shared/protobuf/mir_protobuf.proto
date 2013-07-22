@@ -50,7 +50,7 @@ message DisplayMode {
     optional double refresh_rate = 3;
 }
 
-message DisplayState {
+message DisplayOutput {
   repeated uint32 pixel_format = 1;
   optional uint32 current_format = 2;
   repeated DisplayMode mode = 3;
@@ -83,7 +83,7 @@ message DisplayInfo {
 message Connection {
   optional Platform platform = 1;
   optional DisplayInfo display_info = 2;
-  repeated DisplayState display_state = 3;
+  repeated DisplayOutput display_output = 3;
 
   optional string error = 127;
 }

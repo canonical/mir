@@ -296,7 +296,7 @@ TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, connect_packs_display_state)
+TEST_F(SessionMediatorTest, connect_packs_display_output)
 {
     using namespace testing;
 
@@ -314,14 +314,14 @@ TEST_F(SessionMediatorTest, connect_packs_display_state)
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    ASSERT_EQ(1, connection.display_state().size());
-    auto state = connection.display_state(0);
+    ASSERT_EQ(1, connection.display_output().size());
+    auto output = connection.display_output(0);
 
-    ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(state.pixel_format_size()));
+    ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(output.pixel_format_size()));
 
     for (size_t i = 0; i < pixel_formats.size(); ++i)
     {
-        EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(state.pixel_format(i)))
+        EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(output.pixel_format(i)))
             << "i = " << i;
     }
 }

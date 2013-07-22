@@ -89,7 +89,7 @@ void mf::SessionMediator::connect(
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
-    auto display_state = response->add_display_state();
+    auto display_output = response->add_display_output();
 
     for (auto& data : ipc_package->ipc_data)
         platform->add_data(data);
@@ -104,22 +104,22 @@ void mf::SessionMediator::connect(
         view_area.add(db.view_area());
     });
     geom::Rectangle const view_rect = view_area.bounding_rectangle();
-    display_state->set_connected(1);
-    display_state->set_used(1);
-    display_state->set_physical_width_mm(0);
-    display_state->set_physical_height_mm(0);
-    display_state->set_position_x(view_rect.top_left.x.as_uint32_t());
-    display_state->set_position_y(view_rect.top_left.y.as_uint32_t());
-    auto mode = display_state->add_mode();
+    display_output->set_connected(1);
+    display_output->set_used(1);
+    display_output->set_physical_width_mm(0);
+    display_output->set_physical_height_mm(0);
+    display_output->set_position_x(view_rect.top_left.x.as_uint32_t());
+    display_output->set_position_y(view_rect.top_left.y.as_uint32_t());
+    auto mode = display_output->add_mode();
     mode->set_horizontal_resolution(view_rect.size.width.as_uint32_t());
     mode->set_vertical_resolution(view_rect.size.height.as_uint32_t());
     mode->set_refresh_rate(60.0f);
-    display_state->set_current_mode(0);
+    display_output->set_current_mode(0);
 
     auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
     for (auto pf : supported_pixel_formats)
-        display_state->add_pixel_format(static_cast<uint32_t>(pf));
-    display_state->set_current_format(0);
+        display_output->add_pixel_format(static_cast<uint32_t>(pf));
+    display_output->set_current_format(0);
 
     resource_cache->save_resource(response, ipc_package);
 

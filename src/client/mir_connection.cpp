@@ -275,7 +275,7 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
 MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    if (!connect_result.has_error() && (connect_result.display_state_size() > 0))
+    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
     {
         return mcl::set_display_config_from_message(connect_result);
     }

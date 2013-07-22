@@ -225,30 +225,30 @@ geom::Rectangle rects[number_of_displays] = {
     geom::Rectangle{geom::Point(7,8), geom::Size(9,10)},
 };
 
-void fill_display_state(mp::ConnectParameters const*, mp::Connection* response)
+void fill_display_output(mp::ConnectParameters const*, mp::Connection* response)
 {
     for (auto i=0u; i < number_of_displays; i++)
     {
-        auto state = response->add_display_state();
+        auto output = response->add_display_output();
         auto const& rect = rects[i];
-        state->set_position_x(rect.top_left.x.as_uint32_t());
-        state->set_position_y(rect.top_left.y.as_uint32_t());
-        auto mode = state->add_mode();
+        output->set_position_x(rect.top_left.x.as_uint32_t());
+        output->set_position_y(rect.top_left.y.as_uint32_t());
+        auto mode = output->add_mode();
         mode->set_horizontal_resolution(rect.size.width.as_uint32_t());
         mode->set_vertical_resolution(rect.size.height.as_uint32_t());
         for (auto pf : supported_output_formats)
-            state->add_pixel_format(static_cast<uint32_t>(pf));
+            output->add_pixel_format(static_cast<uint32_t>(pf));
     }
 }
 
 }
 
-TEST_F(MirConnectionTest, populates_display_state_correctly_on_startup)
+TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
 {
     using namespace testing;
 
     EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_state));
+        .WillOnce(Invoke(fill_display_output));
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
@@ -259,23 +259,23 @@ TEST_F(MirConnectionTest, populates_display_state_correctly_on_startup)
     ASSERT_EQ(number_of_displays, configuration->num_displays);
     for(auto i=0u; i < number_of_displays; i++)
     {
-        auto state = configuration->displays[i];
+        auto output = configuration->displays[i];
         auto rect = rects[i];
 
-        ASSERT_EQ(1u, state.num_modes);
-        ASSERT_NE(nullptr, state.modes);
-        EXPECT_EQ(rect.size.width.as_uint32_t(), state.modes[0].horizontal_resolution);
-        EXPECT_EQ(rect.size.height.as_uint32_t(), state.modes[0].vertical_resolution);
+        ASSERT_EQ(1u, output.num_modes);
+        ASSERT_NE(nullptr, output.modes);
+        EXPECT_EQ(rect.size.width.as_uint32_t(), output.modes[0].horizontal_resolution);
+        EXPECT_EQ(rect.size.height.as_uint32_t(), output.modes[0].vertical_resolution);
 
-        EXPECT_EQ(state.position_x, static_cast<int>(rect.top_left.x.as_uint32_t()));
-        EXPECT_EQ(state.position_y, static_cast<int>(rect.top_left.y.as_uint32_t()));
+        EXPECT_EQ(output.position_x, static_cast<int>(rect.top_left.x.as_uint32_t()));
+        EXPECT_EQ(output.position_y, static_cast<int>(rect.top_left.y.as_uint32_t()));
  
         ASSERT_EQ(supported_output_formats.size(),
-                  static_cast<uint32_t>(state.num_output_formats));
+                  static_cast<uint32_t>(output.num_output_formats));
 
         for (size_t i = 0; i < supported_output_formats.size(); ++i)
         {
-            EXPECT_EQ(supported_output_formats[i], state.output_formats[i]);
+            EXPECT_EQ(supported_output_formats[i], output.output_formats[i]);
         }
     }
 
