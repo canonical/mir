@@ -155,22 +155,13 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
-    int compositor;
 
-    if (!nready && nfree())  // Avoid blocking. Return the old buffer...
-    {
-        first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
-        compositor = first_compositor;
-    }
-    else
-    {
-        while (nready <= 0)
-            cond.wait(lock);
-    
-        compositor = first_ready;
-        first_ready = (first_ready + 1) % nbuffers;
-        nready--;
-    }
+    while (nready <= 0)
+        cond.wait(lock);
+
+    int compositor = first_ready;
+    first_ready = (first_ready + 1) % nbuffers;
+    nready--;
     ncompositors++;
 
     return ring[compositor];
