@@ -157,7 +157,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
-    if (nbuffers > 2 && !nready && nfree())
+    if (!ncompositors && nbuffers > 2 && !nready && nfree())
     {
         /*
          * If there's nothing else available then show an old frame.
