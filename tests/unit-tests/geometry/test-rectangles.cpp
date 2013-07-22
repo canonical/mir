@@ -199,3 +199,41 @@ TEST(geometry, rectangles_copy_assign)
     EXPECT_EQ(rectangles1.bounding_rectangle(), rectangles3.bounding_rectangle());
     EXPECT_EQ(rectangles2.bounding_rectangle(), rectangles3.bounding_rectangle());
 }
+
+TEST(geometry, rectangles_confine)
+{
+    using namespace geom;
+
+    std::vector<Rectangle> const rectangles_vec = {
+        {geom::Point{0,0}, geom::Size{800,600}},
+        {geom::Point{0,600}, geom::Size{100,100}},
+        {geom::Point{800,0}, geom::Size{100,100}}
+    };
+
+    std::vector<std::tuple<geom::Point,geom::Point>> const point_tuples{
+        std::make_tuple(geom::Point{0,0}, geom::Point{0,0}),
+        std::make_tuple(geom::Point{900,50}, geom::Point{899,50}),
+        std::make_tuple(geom::Point{850,100}, geom::Point{850,99}),
+        std::make_tuple(geom::Point{801,100}, geom::Point{801,99}),
+        std::make_tuple(geom::Point{800,101}, geom::Point{799,101}),
+        std::make_tuple(geom::Point{800,600}, geom::Point{799,599}),
+        std::make_tuple(geom::Point{-1,700}, geom::Point{0,699}),
+        std::make_tuple(geom::Point{-1,-1}, geom::Point{0,0}),
+        std::make_tuple(geom::Point{-1,50}, geom::Point{0,50}),
+        std::make_tuple(geom::Point{799,-1}, geom::Point{799,0}),
+        std::make_tuple(geom::Point{800,-1}, geom::Point{800,0})
+    };
+
+    Rectangles rectangles;
+
+    for (auto const& rect : rectangles_vec)
+        rectangles.add(rect);
+
+    for (auto const& t : point_tuples)
+    {
+        geom::Point confined_point{std::get<0>(t)};
+        geom::Point const expected_point{std::get<1>(t)};
+        rectangles.confine(confined_point);
+        EXPECT_EQ(expected_point, confined_point);
+    }
+}

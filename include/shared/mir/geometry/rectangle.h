@@ -34,6 +34,9 @@ struct Rectangle
 {
     Point top_left;
     Size size;
+
+    Point bottom_right() const;
+    bool contains(Point const& p) const;
 };
 
 inline bool operator == (Rectangle const& lhs, Rectangle const& rhs)

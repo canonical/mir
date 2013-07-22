@@ -3,7 +3,6 @@ set(
 
   basic_compositing_strategy.cpp
   default_compositing_strategy.cpp
-  buffer_basic.cpp
   temporary_buffers.cpp
   buffer_stream_factory.cpp
   buffer_stream_surfaces.cpp
