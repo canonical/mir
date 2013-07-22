@@ -49,6 +49,13 @@
  *  +----------+---------+--------------+---------+----------+
  *               ^         ^ first_ready  ^ first_client
  *               first_compositor
+ *
+ * Finally, there is a floating pointer called "snapshot" which can point to
+ * any buffer. If nsnappshotters>0 then "snapshot" is currently pointing to
+ * a buffer that is being snapshotted by one or more threads. A snapshot may
+ * occur concurrently on a buffer than is being composited, but will never
+ * occur on a buffer while it is acquired by a client. This ensures that the
+ * snapshot is always consistent and won't change while it is being read.
  */
 
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -68,7 +75,7 @@ mc::SwitchingBundle::SwitchingBundle(
       first_compositor{0}, ncompositors{0},
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
-      snapshot{0}, nsnapshots{0},
+      snapshot{0}, nsnapshotters{0},
       framedropping{false}
 {
     if (nbuffers < 1)
@@ -121,7 +128,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     {
         if (nfree() <= 0)
         {
-            while (nready == 0 || nsnapshots)
+            while (nready == 0 || nsnapshotters)
                 cond.wait(lock);
 
             drop_frames(1);
@@ -137,7 +144,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     nclients++;
 
     // Make sure the client gets exclusive use (ie. it's not being snapshotted)
-    while (nsnapshots && client == snapshot)
+    while (nsnapshotters && client == snapshot)
         cond.wait(lock);
 
     return ring[client];
@@ -203,7 +210,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
-    if (!nsnapshots)
+    if (!nsnapshotters)
     {
         /*
          * Always snapshot the newest complete frame, which is always the
@@ -211,7 +218,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
          */
         snapshot = (first_client + nbuffers - 1) % nbuffers;
     }
-    nsnapshots++;
+    nsnapshotters++;
     return ring[snapshot];
 }
 
@@ -219,11 +226,11 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (nsnapshots <= 0 || ring[snapshot] != released_buffer)
+    if (nsnapshotters <= 0 || ring[snapshot] != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "snapshot_release passed a non-snapshot buffer"));
 
-    nsnapshots--;
+    nsnapshotters--;
     cond.notify_all();
 }
 

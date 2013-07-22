@@ -69,7 +69,7 @@ private:
     int first_client;
     int nclients;
     int snapshot;
-    int nsnapshots;
+    int nsnapshotters;
 
     std::mutex guard;
     std::condition_variable cond;
