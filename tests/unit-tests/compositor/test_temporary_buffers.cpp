@@ -44,8 +44,8 @@ class MockBackBufferStrategy : public mc::BackBufferStrategy
 {
 public:
     ~MockBackBufferStrategy() noexcept {}
-    MOCK_METHOD0(acquire, std::shared_ptr<mc::Buffer>());
-    MOCK_METHOD1(release, void(std::shared_ptr<mc::Buffer> const&));
+    MOCK_METHOD0(acquire, std::shared_ptr<mg::Buffer>());
+    MOCK_METHOD1(release, void(std::shared_ptr<mg::Buffer> const&));
 };
 
 class TemporaryBuffersTest : public ::testing::Test
