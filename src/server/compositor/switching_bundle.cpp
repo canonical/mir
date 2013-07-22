@@ -20,7 +20,7 @@
  * buffers are allocated and progress through stages.
  *
  * The stages of a buffer are:
- *   free -> client -> ready -> compositor -> free
+ *   free -> client -> ready -> compositor <-> free
  *                     ready (dropped)-> free
  *
  * Dropping only happens when it's enabled, and only if the ring is
