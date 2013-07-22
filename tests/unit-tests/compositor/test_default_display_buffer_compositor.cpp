@@ -16,10 +16,12 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/default_compositing_strategy.h"
+#include "mir/compositor/default_display_buffer_compositor_factory.h"
+#include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_test_doubles/mock_surface_renderer.h"
@@ -34,7 +36,6 @@
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-namespace mg = mir::graphics;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -77,6 +78,34 @@ struct FakeScene : mc::Scene
     std::vector<mc::CompositingCriteria*> surfaces;
 };
 
+struct WrappingRenderer : mc::Renderer
+{
+    WrappingRenderer(mc::Renderer* renderer)
+        : renderer{renderer}
+    {
+    }
+
+    void clear() { renderer->clear(); }
+    void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
+                mc::CompositingCriteria const& info, mir::surfaces::BufferStream& stream)
+    {
+        renderer->render(save_resource, info, stream);
+    }
+
+    mc::Renderer* const renderer;
+};
+
+struct StubRendererFactory : mc::RendererFactory
+{
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    {
+        return std::unique_ptr<WrappingRenderer>(
+            new WrappingRenderer{&mock_renderer});
+    }
+
+    testing::NiceMock<mtd::MockSurfaceRenderer> mock_renderer;
+};
+
 ACTION_P(InvokeArgWithParam, param)
 {
     arg0(param);
@@ -84,24 +113,20 @@ ACTION_P(InvokeArgWithParam, param)
 
 }
 
-TEST(DefaultCompositingStrategy, render)
+TEST(DefaultDisplayBufferCompositor, render)
 {
     using namespace testing;
 
-    mtd::MockSurfaceRenderer mock_renderer;
+    StubRendererFactory renderer_factory;
     MockScene scene;
     NiceMock<MockOverlayRenderer> overlay_renderer;
     mtd::MockDisplayBuffer display_buffer;
 
-    mc::DefaultCompositingStrategy comp(mt::fake_shared(scene),
-                                        mt::fake_shared(mock_renderer),
-                                        mt::fake_shared(overlay_renderer));
-
-    EXPECT_CALL(mock_renderer, render(_,_,_)).Times(0);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,_,_)).Times(0);
 
     EXPECT_CALL(display_buffer, view_area())
-        .Times(1)
-        .WillOnce(Return(geom::Rectangle()));
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(geom::Rectangle()));
 
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
@@ -112,34 +137,45 @@ TEST(DefaultCompositingStrategy, render)
     EXPECT_CALL(scene, for_each_if(_,_))
                 .Times(1);
 
-    comp.render(display_buffer);
+    mc::DefaultDisplayBufferCompositorFactory factory(
+        mt::fake_shared(scene),
+        mt::fake_shared(renderer_factory),
+        mt::fake_shared(overlay_renderer));
+
+    auto comp = factory.create_compositor_for(display_buffer);
+
+    comp->composite();
 }
 
-TEST(DefaultCompositingStrategy, render_overlay)
+TEST(DefaultDisplayBufferCompositor, render_overlay)
 {
     using namespace testing;
 
-    NiceMock<mtd::MockSurfaceRenderer> mock_renderer;
+    StubRendererFactory renderer_factory;
     NiceMock<MockScene> scene;
     NiceMock<mtd::MockDisplayBuffer> display_buffer;
     MockOverlayRenderer overlay_renderer;
 
-    mc::DefaultCompositingStrategy comp(mt::fake_shared(scene),
-                                        mt::fake_shared(mock_renderer),
-                                        mt::fake_shared(overlay_renderer));
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(geom::Rectangle()));
-    
+
     EXPECT_CALL(overlay_renderer, render(_, _)).Times(1);
 
-    comp.render(display_buffer);
+    mc::DefaultDisplayBufferCompositorFactory factory(
+        mt::fake_shared(scene),
+        mt::fake_shared(renderer_factory),
+        mt::fake_shared(overlay_renderer));
+
+    auto comp = factory.create_compositor_for(display_buffer);
+
+    comp->composite();
 }
 
-TEST(DefaultCompositingStrategy, skips_scene_that_should_not_be_rendered)
+TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 {
     using namespace testing;
 
-    mtd::MockSurfaceRenderer mock_renderer;
+    StubRendererFactory renderer_factory;
     mtd::NullDisplayBuffer display_buffer;
     NiceMock<MockOverlayRenderer> overlay_renderer;
 
@@ -154,15 +190,18 @@ TEST(DefaultCompositingStrategy, skips_scene_that_should_not_be_rendered)
     renderable_vec.push_back(&mock_criteria2);
     renderable_vec.push_back(&mock_criteria3);
 
-    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria1),_)).Times(1);
-    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria2),_)).Times(0);
-    EXPECT_CALL(mock_renderer, render(_,Ref(mock_criteria3),_)).Times(1);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(mock_criteria1),_)).Times(1);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(mock_criteria2),_)).Times(0);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(mock_criteria3),_)).Times(1);
 
     FakeScene scene(renderable_vec);
 
-    mc::DefaultCompositingStrategy comp(mt::fake_shared(scene),
-                                        mt::fake_shared(mock_renderer),
-                                        mt::fake_shared(overlay_renderer));
+    mc::DefaultDisplayBufferCompositorFactory factory(
+        mt::fake_shared(scene),
+        mt::fake_shared(renderer_factory),
+        mt::fake_shared(overlay_renderer));
 
-    comp.render(display_buffer);
+    auto comp = factory.create_compositor_for(display_buffer);
+
+    comp->composite();
 }

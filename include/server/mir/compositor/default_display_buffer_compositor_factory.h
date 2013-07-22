@@ -16,41 +16,37 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
-#define MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
+#ifndef MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
+#define MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
 
-#include "mir/compositor/basic_compositing_strategy.h"
-
-#include <memory>
+#include "mir/compositor/display_buffer_compositor_factory.h"
 
 namespace mir
 {
 ///  Compositing. Combining renderables into a display image.
 namespace compositor
 {
+class RendererFactory;
 class OverlayRenderer;
 class Scene;
-class Renderer;
 
-class DefaultCompositingStrategy : public BasicCompositingStrategy
+class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFactory
 {
 public:
-    DefaultCompositingStrategy(
+    DefaultDisplayBufferCompositorFactory(
         std::shared_ptr<Scene> const& scene,
-        std::shared_ptr<Renderer> const& renderer,
+        std::shared_ptr<RendererFactory> const& renderer_factory,
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
 
-    void compose(
-        mir::geometry::Rectangle const& view_area,
-        std::function<void(std::shared_ptr<void> const&)> save_resource);
+    std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer);
 
 private:
     std::shared_ptr<Scene> const scene;
-    std::shared_ptr<Renderer> const renderer;
+    std::shared_ptr<RendererFactory> const renderer_factory;
     std::shared_ptr<OverlayRenderer> const overlay_renderer;
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_ */
+#endif /* MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_ */
