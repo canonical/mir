@@ -14,6 +14,7 @@ set(
   multi_threaded_compositor.cpp
   switching_bundle.cpp
   rw_lock.cpp
+  multi_acquisition_back_buffer_strategy.cpp
 )
 
 ADD_LIBRARY(
