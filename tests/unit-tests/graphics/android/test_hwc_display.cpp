@@ -84,7 +84,16 @@ TEST_F(AndroidTestHWCFramebuffer, test_hwc_reports_size_correctly)
         .WillOnce(Return(fake_display_size)); 
     auto display = create_display();
     
-    auto view_area = display->view_area();
+    std::vector<geom::Rectangle> areas;
+
+    display->for_each_display_buffer([&areas](mg::DisplayBuffer& buffer)
+    {
+        areas.push_back(buffer.view_area());
+    });
+
+    ASSERT_EQ(1u, areas.size());
+
+    auto view_area = areas[0];
 
     geom::Point origin_pt{geom::X{0}, geom::Y{0}};
     EXPECT_EQ(view_area.size, fake_display_size);

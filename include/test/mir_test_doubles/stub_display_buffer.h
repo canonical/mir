@@ -16,10 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_
-#define MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_
+#define MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_
 
-#include "mir/graphics/display_buffer.h"
+#include "mir_test_doubles/null_display_buffer.h"
+#include "mir/geometry/rectangle.h"
 
 namespace mir
 {
@@ -28,17 +29,19 @@ namespace test
 namespace doubles
 {
 
-class NullDisplayBuffer : public graphics::DisplayBuffer
+class StubDisplayBuffer : public NullDisplayBuffer
 {
 public:
-    geometry::Rectangle view_area() const { return geometry::Rectangle(); }
-    void make_current() {}
-    void release_current() {}
-    void post_update() {}
+    StubDisplayBuffer(geometry::Rectangle const& view_area_) : view_area_(view_area_) {}
+    StubDisplayBuffer(StubDisplayBuffer const& s) : view_area_(s.view_area_) {}
+    geometry::Rectangle view_area() const override { return view_area_; }
+
+private:
+    geometry::Rectangle view_area_;
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_DISPLAY_BUFFER_H_ */

@@ -29,6 +29,7 @@
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
 
 class GPUFramebuffer : public ::testing::Test
 {
@@ -100,8 +101,16 @@ TEST_F(GPUFramebuffer, framebuffer_correct_view_area)
         .WillOnce(DoAll(SetArgPointee<3>(height),
                         Return(EGL_TRUE)));
 
-    auto area = display->view_area();
+    std::vector<geom::Rectangle> areas;
 
+    display->for_each_display_buffer([&areas](mg::DisplayBuffer& buffer)
+    {
+        areas.push_back(buffer.view_area());
+    });
+
+    ASSERT_EQ(1u, areas.size());
+
+    auto area = areas[0];
     EXPECT_EQ(0u, area.top_left.x.as_uint32_t());
     EXPECT_EQ(0u, area.top_left.y.as_uint32_t());
     EXPECT_EQ(width, area.size.width.as_uint32_t());

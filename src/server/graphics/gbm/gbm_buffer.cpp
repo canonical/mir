@@ -31,7 +31,6 @@
 #include <stdexcept>
 #include <cassert>
 
-namespace mc=mir::compositor;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
 

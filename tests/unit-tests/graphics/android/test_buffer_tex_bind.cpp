@@ -27,7 +27,6 @@
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
-namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 
 class AndroidBufferBinding : public ::testing::Test
