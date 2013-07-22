@@ -147,7 +147,7 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (ring[first_client] != released_buffer)
+    if (nclients <= 0 || ring[first_client] != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Client release out of order"));
         
@@ -191,7 +191,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (ring[first_compositor] != released_buffer)
+    if (ncompositors <= 0 || ring[first_compositor] != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Compositor release out of order"));
 
@@ -219,7 +219,7 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (ring[snapshot] != released_buffer)
+    if (nsnapshots <= 0 || ring[snapshot] != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "snapshot_release passed a non-snapshot buffer"));
 
