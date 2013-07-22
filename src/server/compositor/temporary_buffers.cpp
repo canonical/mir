@@ -43,16 +43,15 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 }
 
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
-    std::shared_ptr<BackBufferStrategy> const& back_buffer_strategy)
-    : TemporaryBuffer(back_buffer_strategy->acquire()),
-      back_buffer_strategy(back_buffer_strategy)
+    std::shared_ptr<BufferBundle> const& bun)
+    : TemporaryBuffer(bun->compositor_acquire()),
+      bundle(bun)
 {
 }
 
 mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
 {
-    if (auto strategy = back_buffer_strategy.lock())
-        strategy->release(buffer);
+    bundle->compositor_release(buffer);
 }
 
 geom::Size mc::TemporaryBuffer::size() const

@@ -41,13 +41,13 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer()
 {
-    return std::make_shared<mc::TemporaryCompositorBuffer>(back_buffer_strategy);
+    return std::make_shared<mc::TemporaryCompositorBuffer>(buffer_bundle);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
 {
     // TODO (duflu): Implement differently for bypass
-    return std::make_shared<mc::TemporaryCompositorBuffer>(back_buffer_strategy);
+    return std::make_shared<mc::TemporaryCompositorBuffer>(buffer_bundle);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::secure_client_buffer()
