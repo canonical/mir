@@ -68,6 +68,7 @@ mc::SwitchingBundle::SwitchingBundle(
       first_compositor{0}, ncompositors{0},
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
+      snapshot{0}, nsnapshots{0},
       framedropping{false}
 {
     if (nbuffers < 1)
@@ -135,6 +136,10 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     int client = (first_client + nclients) % nbuffers;
     nclients++;
 
+    // Make sure the client gets exclusive use (ie. it's not being snapshotted)
+    while (nsnapshots && client == snapshot)
+        cond.wait(lock);
+
     return ring[client];
 }
 
@@ -198,14 +203,29 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
-    int snapshot = 0; // TODO
+    if (!nsnapshots)
+    {
+        if (ncompositors)
+            snapshot = (first_compositor + ncompositors - 1) % nbuffers;
+        else if (nready)
+            snapshot = first_ready;
+        else
+            snapshot = (first_compositor + nbuffers - 1) % nbuffers;
+    }
+    nsnapshots++;
     return ring[snapshot];
 }
 
 void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
-    (void)released_buffer; // TODO
+
+    if (ring[snapshot] != released_buffer)
+        BOOST_THROW_EXCEPTION(std::logic_error(
+            "snapshot_release passed a non-snapshot buffer"));
+
+    nsnapshots--;
+    cond.notify_all();
 }
 
 void mc::SwitchingBundle::force_requests_to_complete()

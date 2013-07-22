@@ -68,6 +68,8 @@ private:
     int nready;
     int first_client;
     int nclients;
+    int snapshot;
+    int nsnapshots;
 
     std::mutex guard;
     std::condition_variable cond;
