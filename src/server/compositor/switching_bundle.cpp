@@ -214,8 +214,12 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
     {
         /*
          * Always snapshot the newest complete frame, which is always the
-         * one before the first client.
+         * one before the first client. But make sure there is at least one
+         * non-client buffer first...
          */
+        while (nclients >= nbuffers)
+            cond.wait(lock);
+
         snapshot = (first_client + nbuffers - 1) % nbuffers;
     }
     nsnapshotters++;
