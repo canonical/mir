@@ -155,13 +155,28 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
+    int compositor;
 
-    while (nready <= 0)
-        cond.wait(lock);
-
-    int compositor = first_ready;
-    first_ready = (first_ready + 1) % nbuffers;
-    nready--;
+    if (nbuffers > 2 && !nready && nfree())
+    {
+        /*
+         * If there's nothing else available then show an old frame.
+         * This only works with 3 or more buffers. If you've only got 2 and
+         * are frame dropping then the compositor would be starved of new
+         * frames, forced to race for them.
+         */
+        first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
+        compositor = first_compositor;
+    }
+    else
+    {
+        while (nready <= 0)
+            cond.wait(lock);
+    
+        compositor = first_ready;
+        first_ready = (first_ready + 1) % nbuffers;
+        nready--;
+    }
     ncompositors++;
 
     return ring[compositor];
