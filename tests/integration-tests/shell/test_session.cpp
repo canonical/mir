@@ -48,7 +48,11 @@ namespace
 
 struct TestServerConfiguration : public mir::DefaultServerConfiguration
 {
-    TestServerConfiguration() : DefaultServerConfiguration(0, nullptr) {}
+    TestServerConfiguration(int max_frames) :
+        DefaultServerConfiguration(0, nullptr),
+        max_frames{max_frames}
+    {
+    }
 
     std::shared_ptr<mi::InputConfiguration> the_input_configuration() override
     {
@@ -92,17 +96,27 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct NullRenderer : public mc::Renderer
         {
+            NullRenderer(int frames) : frames_left{frames}
+            {
+            }
+
             void clear() {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
                         mc::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
             {
-                stream.lock_compositor_buffer();
+                if (frames_left)
+                {
+                    stream.lock_compositor_buffer();
+                    frames_left--;
+                }
             }
 
             void ensure_no_live_buffers_bound() {}
+
+            int frames_left;
         };
 
-        return std::make_shared<NullRenderer>();
+        return std::make_shared<NullRenderer>(max_frames);
     }
 
 
@@ -146,13 +160,15 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     }
 
     std::shared_ptr<mi::NullInputConfiguration> input_configuration;
+    int max_frames;
 };
 
 }
 
 TEST(ShellSessionTest, stress_test_take_snapshot)
 {
-    TestServerConfiguration conf;
+    const int nframes = 500;
+    TestServerConfiguration conf(nframes);
 
     msh::ApplicationSession session{
         conf.the_shell_surface_factory(),
@@ -165,9 +181,9 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
     compositor->start();
 
     std::thread client_thread{
-        [&session]
+        [&session, &nframes]
         {
-            for (int i = 0; i < 500; ++i)
+            for (int i = 0; i < nframes; ++i)
             {
                 auto surface = session.default_surface();
                 surface->advance_client_buffer();
@@ -176,9 +192,9 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
         }};
 
     std::thread snapshot_thread{
-        [&session]
+        [&session, &nframes]
         {
-            for (int i = 0; i < 500; ++i)
+            for (int i = 0; i < nframes; ++i)
             {
                 bool snapshot_taken1 = false;
                 bool snapshot_taken2 = false;
@@ -195,5 +211,6 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
 
     client_thread.join();
     snapshot_thread.join();
+    session.force_requests_to_complete();
     compositor->stop();
 }

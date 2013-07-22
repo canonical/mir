@@ -68,6 +68,17 @@ private:
     std::shared_ptr<BufferBundle> const bundle;
 };
 
+class TemporarySnapshotBuffer : public TemporaryBuffer
+{
+public:
+    explicit TemporarySnapshotBuffer(
+        std::shared_ptr<BufferBundle> const& bun);
+    ~TemporarySnapshotBuffer();
+
+private:
+    std::shared_ptr<BufferBundle> const bundle;
+};
+
 }
 }
 

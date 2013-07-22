@@ -54,6 +54,18 @@ mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
     bundle->compositor_release(buffer);
 }
 
+mc::TemporarySnapshotBuffer::TemporarySnapshotBuffer(
+    std::shared_ptr<BufferBundle> const& bun)
+    : TemporaryBuffer(bun->snapshot_acquire()),
+      bundle(bun)
+{
+}
+
+mc::TemporarySnapshotBuffer::~TemporarySnapshotBuffer()
+{
+    bundle->snapshot_release(buffer);
+}
+
 geom::Size mc::TemporaryBuffer::size() const
 {
     return buffer->size();
