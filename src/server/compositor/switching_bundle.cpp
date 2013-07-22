@@ -195,6 +195,19 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
     cond.notify_all();
 }
 
+std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
+{
+    std::unique_lock<std::mutex> lock(guard);
+    int snapshot = 0; // TODO
+    return ring[snapshot];
+}
+
+void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& released_buffer)
+{
+    std::unique_lock<std::mutex> lock(guard);
+    (void)released_buffer; // TODO
+}
+
 void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
