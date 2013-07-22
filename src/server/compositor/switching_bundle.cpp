@@ -121,7 +121,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     {
         if (nfree() <= 0)
         {
-            while (nready == 0)
+            while (nready == 0 || nsnapshots)
                 cond.wait(lock);
 
             drop_frames(1);
@@ -205,10 +205,10 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
     std::unique_lock<std::mutex> lock(guard);
     if (!nsnapshots)
     {
-        if (ncompositors)
-            snapshot = (first_compositor + ncompositors - 1) % nbuffers;
-        else if (nready)
+        if (nready)
             snapshot = first_ready;
+        else if (ncompositors)
+            snapshot = (first_compositor + ncompositors - 1) % nbuffers;
         else
             snapshot = (first_compositor + nbuffers - 1) % nbuffers;
     }
