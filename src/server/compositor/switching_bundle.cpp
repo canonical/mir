@@ -84,6 +84,11 @@ mc::SwitchingBundle::~SwitchingBundle()
     delete[] ring;
 }
 
+int mc::SwitchingBundle::nfree() const
+{
+    return nbuffers - ncompositors - nready - nclients;
+}
+
 int mc::SwitchingBundle::drop_frames(int max)
 {
     int drop = max;
@@ -113,7 +118,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
 
     if (framedropping && nbuffers > 1)
     {
-        if (ncompositors + nready + nclients >= nbuffers)
+        if (nfree() <= 0)
         {
             while (nready == 0)
                 cond.wait(lock);
@@ -123,7 +128,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     }
     else
     {
-        while (ncompositors + nready + nclients >= nbuffers)
+        while (nfree() <= 0)
             cond.wait(lock);
     }
 

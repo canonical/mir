@@ -56,6 +56,7 @@ private:
     std::shared_ptr<GraphicBufferAllocator> gralloc;
 
     int drop_frames(int max);
+    int nfree() const;
 
     int nbuffers;
     std::shared_ptr<graphics::Buffer> *ring;
