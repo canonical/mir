@@ -21,11 +21,7 @@
 #include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/scene.h"
-#include "mir/geometry/rectangle.h"
 #include "mir/compositor/compositing_criteria.h"
-#include "mir/graphics/display_buffer.h"
-
-#include <cassert>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -59,9 +55,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       renderer{renderer},
       overlay_renderer{overlay_renderer}
 {
-    assert(scene);
-    assert(renderer);
-    assert(overlay_renderer);
 }
 
 void mc::DefaultDisplayBufferCompositor::compose(

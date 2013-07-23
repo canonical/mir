@@ -208,7 +208,6 @@ void mc ::GLRenderer::Resources::setup(const geometry::Size& display_size)
             1.0f});
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
 
-    /* Create the texture (temporary workaround until we can use the Renderable's texture) */
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
