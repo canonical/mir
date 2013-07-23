@@ -700,8 +700,6 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_platform_package
 
 TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
 {
-    static const unsigned int default_display_width = 1600, default_display_height = 1600;
-
     struct ClientConfig : ClientConfigCommon
     {
         void exec()
@@ -709,14 +707,20 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
             ASSERT_TRUE(connection != NULL);
 
-            MirDisplayInfo display_info;
-            display_info.width = -1;
-            display_info.height = -1;
+            auto configuration = mir_connection_create_display_config(connection);
 
-            mir_connection_get_display_info(connection, &display_info);
-            EXPECT_GE(default_display_width, display_info.width);
-            EXPECT_GE(default_display_height, display_info.height);
+            ASSERT_GT(configuration->num_displays, 0u);
+            ASSERT_NE(nullptr, configuration->displays);
 
+            for(auto i=0u; i < configuration->num_displays; i++)
+            {
+                MirDisplayOutput* disp = &configuration->displays[i];
+                ASSERT_NE(nullptr, disp); 
+                EXPECT_GE(disp->num_modes, disp->current_mode);
+                EXPECT_GE(disp->num_output_formats, disp->current_output_format);
+            }
+
+            mir_display_config_destroy(configuration);
             mir_connection_release(connection);
         }
     } client_config;
