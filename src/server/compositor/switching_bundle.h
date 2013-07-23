@@ -39,7 +39,8 @@ class GraphicBufferAllocator;
 class SwitchingBundle : public BufferBundle 
 {
 public:
-    SwitchingBundle(const std::shared_ptr<GraphicBufferAllocator> &,
+    SwitchingBundle(int nbuffers,
+                    const std::shared_ptr<GraphicBufferAllocator> &,
                     const BufferProperties &);
 
     ~SwitchingBundle() noexcept;

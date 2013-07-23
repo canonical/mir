@@ -75,7 +75,7 @@ struct BufferStreamTest : public ::testing::Test
                                         geom::PixelFormat::abgr_8888,
                                         mc::BufferUsage::hardware};
 
-        return std::make_shared<mc::SwitchingBundle>(allocator, properties);
+        return std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
     }
 
     void terminate_child_thread(mt::Synchronizer& controller)

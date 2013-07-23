@@ -60,7 +60,7 @@ struct SwapperSwappingStress : public ::testing::Test
         auto allocator = std::make_shared<MockBufferAllocator>();
         auto properties = mc::BufferProperties{geom::Size{380, 210},
                                           geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
-        switching_bundle = std::make_shared<mc::SwitchingBundle>(allocator, properties);
+        switching_bundle = std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
     }
 
     std::shared_ptr<mc::SwitchingBundle> switching_bundle;
