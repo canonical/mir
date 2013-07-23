@@ -53,7 +53,7 @@
  * Finally, there is a floating pointer called "snapshot" which can point to
  * any buffer. If nsnappshotters>0 then "snapshot" is currently pointing to
  * a buffer that is being snapshotted by one or more threads. A snapshot may
- * occur concurrently on a buffer than is being composited, but will never
+ * occur concurrently on a buffer that is being composited, but will never
  * occur on a buffer while it is acquired by a client. This ensures that the
  * snapshot is always consistent and won't change while it is being read.
  */
