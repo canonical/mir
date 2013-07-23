@@ -16,12 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#if 0   // XXX This is now testing dead code. Delete the lot.
 #include "src/server/compositor/switching_bundle.h"
-#include "mir/compositor/swapper_factory.h"
+#include "mir_test_doubles/mock_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_swapper.h"
-#include "mir_test_doubles/mock_swapper_factory.h"
 
 #include <gtest/gtest.h>
 
@@ -35,38 +32,26 @@ struct SwitchingBundleTest : public ::testing::Test
     void SetUp()
     {
         using namespace testing;
-        mock_swapper_factory = std::make_shared<testing::NiceMock<mtd::MockSwapperFactory>>();
-        mock_default_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
-        mock_secondary_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
-        stub_buffer = std::make_shared<mtd::StubBuffer>();
-        properties = mc::BufferProperties{geom::Size{4, 2},
-                                          geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
-
-        ON_CALL(*mock_swapper_factory, create_swapper_new_buffers(_,_,_))
-            .WillByDefault(Return(mock_default_swapper));
+        mock_buffer_allocator = std::make_shared<mtd::MockBufferAllocator>();
     }
 
-    std::shared_ptr<mtd::MockSwapperFactory> mock_swapper_factory;
-    std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
-    std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
-    std::shared_ptr<mg::Buffer> stub_buffer;
-    mc::BufferProperties properties;
+    std::shared_ptr<mtd::MockBufferAllocator> mock_buffer_allocator;
 };
 
-TEST_F(SwitchingBundleTest, sync_swapper_by_default)
+TEST_F(SwitchingBundleTest, TODO_sync_swapper_by_default)
 {
     using namespace testing;
-    auto actual_properties = mc::BufferProperties{geom::Size{7, 8},
-                                                  geom::PixelFormat::argb_8888, mc::BufferUsage::software};
-    EXPECT_CALL(*mock_swapper_factory, create_swapper_new_buffers(_,_,mc::SwapperType::synchronous))
-        .Times(1)
-        .WillOnce(DoAll(SetArgReferee<0>(actual_properties),
-                        Return(mock_default_swapper)));
+    mc::BufferProperties properties{geom::Size{7, 8},
+                                    geom::PixelFormat::argb_8888,
+                                    mc::BufferUsage::software};
+    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_))
+        .Times(2);
 
-    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
-    EXPECT_EQ(actual_properties, switcher.properties());
+    mc::SwitchingBundle switcher(2, mock_buffer_allocator, properties);
+    EXPECT_EQ(properties, switcher.properties());
 }
 
+#if 0 // TODO
 TEST_F(SwitchingBundleTest, client_acquire_basic)
 {
     using namespace testing;
@@ -155,5 +140,4 @@ TEST_F(SwitchingBundleTest, switch_sequence)
 
     switcher.allow_framedropping(true);
 }
-
 #endif
