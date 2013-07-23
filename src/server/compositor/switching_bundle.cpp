@@ -108,8 +108,16 @@ int mc::SwitchingBundle::drop_frames(int max)
         auto tmp = ring[first_client];
         int end = (first_client + nclients) % nbuffers;
 
-        for (int i = first_client; i != end; i = (i + 1) % nbuffers)
-            ring[i] = ring[(i + 1) % nbuffers];
+        for (int i = first_client, j = 0; i != end; i = j)
+        {
+            j = (i + 1) % nbuffers;
+            ring[i] = ring[j];
+            if (j == snapshot)
+                snapshot = i;
+        }
+
+        if (snapshot == first_client)
+            snapshot = end;
 
         ring[end] = tmp;
     }
@@ -125,7 +133,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     {
         if (nfree() <= 0)
         {
-            while (nready == 0 || nsnapshotters)
+            while (nready == 0)
                 cond.wait(lock);
 
             drop_frames(1);
