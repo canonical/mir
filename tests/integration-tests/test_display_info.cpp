@@ -217,9 +217,9 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
         {
             MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
-            int const format_storage_size = 4;
-            MirPixelFormat formats[formate_storage_size]; 
-            int returned_format_size = 0;
+            unsigned int const format_storage_size = 4;
+            MirPixelFormat formats[format_storage_size]; 
+            unsigned int returned_format_size = 0;
             mir_connection_get_possible_surface_formats(
                 formats, format_storage_size, &returned_format_size);
 
@@ -227,7 +227,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
             for (auto i=0u; i < returned_format_size; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(info.output_formats[i]));
+                          static_cast<geom::PixelFormat>(formats[i]));
             }
 
             mir_connection_release(connection);
