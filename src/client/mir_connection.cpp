@@ -26,6 +26,7 @@
 #include "connection_configuration.h"
 #include "display_configuration.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <sstream>
 #include <unistd.h>
@@ -282,6 +283,23 @@ MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
     return nullptr;
 }
 
+void MirConnection::possible_pixel_formats(MirPixelFormat* formats,
+                                unsigned int formats_size, unsigned int& valid_formats)
+{
+    //TODO we're just using the display buffer's pixel formats as the list of supported
+    //     formats for the time being. should have a separate message
+    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
+    {
+        auto display_output = connect_result.display_output(0);
+        valid_formats = std::min(
+            static_cast<unsigned int>(display_output.pixel_format_size()), formats_size);
+
+        for(auto i=0u; i < valid_formats; i++)
+        {
+            formats[i] = static_cast<MirPixelFormat>(display_output.pixel_format(i));
+        }      
+    }
+}
 
 std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
 {
