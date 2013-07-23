@@ -281,3 +281,26 @@ TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
 
     mcl::delete_config_storage(configuration);
 }
+
+TEST_F(MirConnectionTest, populates_pfs_correctly)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_output));
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_all();
+
+    unsigned int const formats_size = 5;
+    unsigned int valid_formats = 0;
+    MirPixelFormat formats[formats_size]; 
+
+    connection->possible_pixel_formats(&formats[0], formats_size, valid_formats);
+
+    ASSERT_EQ(2, valid_formats);
+    for (auto i=0u; i < valid_formats; i++)
+    {
+        EXPECT_EQ(supported_output_formats[i], formats[i]);
+    }
+}
