@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/compositor/back_buffer_strategy.h"
+
 #include "buffer_bundle.h"
 #include "temporary_buffers.h"
 

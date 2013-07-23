@@ -30,6 +30,7 @@ namespace mir
 namespace compositor
 {
 class Renderer;
+class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 class BufferStreamFactory;
 class Scene;
@@ -133,6 +134,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
     virtual std::shared_ptr<compositor::OverlayRenderer>          the_overlay_renderer();
+    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     /** @} */
 
     /** @name compositor configuration - dependencies
@@ -239,6 +241,7 @@ protected:
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
+    CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<compositor::Renderer> renderer;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;

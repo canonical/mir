@@ -21,6 +21,7 @@
 #define MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
 
 #include "buffer_bundle.h"
+#include "rw_lock.h"
 #include <condition_variable>
 #include <mutex>
 #include <memory>
