@@ -94,12 +94,25 @@ void mir_connection_release(MirConnection *connection);
  */
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
-/**
- * Query the display
- *   \param [in]  connection    The connection
- *   \param [out] display_info  Structure to be populated
+/** 
+ * DEPRECATED. use mir_connection_create_display_config
  */
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
+
+/**
+ * Query the display
+ *   \warning return value must be destroyed via mir_display_config_destroy() 
+ *   \warning may return null if connection is invalid 
+ *   \param [in]  connection        The connection
+ *   \return                        structure that describes the display configuration
+ */
+MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
+
+/**
+ * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
+ *   \param [in] display_configuration  The display_configuration information resource to be destroyed 
+ */
+void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
