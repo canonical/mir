@@ -474,8 +474,8 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
     {
         void on_exit() override
         {
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
+            EXPECT_EQ(3*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
+            EXPECT_EQ(3*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
         }
 
     } server_config;
@@ -523,8 +523,8 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_witho
     {
         void on_exit() override
         {
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
+            EXPECT_EQ(3*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
+            EXPECT_EQ(3*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
         }
 
     } server_config;
