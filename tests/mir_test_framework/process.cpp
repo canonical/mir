@@ -22,8 +22,11 @@
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include <boost/exception/errinfo_errno.hpp>
 
 #include <cassert>
 #include <ostream>
@@ -67,6 +70,22 @@ mtf::Process::Process(pid_t pid)
     , detached(false)
 {
     assert(pid > 0);
+
+    if (ptrace(PTRACE_ATTACH, pid, nullptr, nullptr) == -1)
+        BOOST_THROW_EXCEPTION(
+            ::boost::enable_error_info(std::runtime_error("Error attaching to child process"))
+                << (boost::errinfo_errno(errno)));
+
+    if (waitpid (pid, NULL, 0) < 0)
+        BOOST_THROW_EXCEPTION(
+            ::boost::enable_error_info(std::runtime_error("Error waiting on child process"))
+                << (boost::errinfo_errno(errno)));
+
+    
+    if (ptrace(PTRACE_CONT, pid, nullptr, nullptr) == -1)
+        BOOST_THROW_EXCEPTION(
+            ::boost::enable_error_info(std::runtime_error("Error continuing child process"))
+                << (boost::errinfo_errno(errno)));
 }
 
 mtf::Process::~Process()
@@ -92,20 +111,44 @@ mtf::Result mtf::Process::wait_for_termination()
 
     if (!detached)
     {
-        terminated = ::waitpid(pid, &status, WUNTRACED | WCONTINUED) != -1;
-
-        if (terminated)
+        while (true)
         {
-            if (WIFEXITED(status))
+            if (::waitpid(pid, &status, WCONTINUED) == pid)
             {
-                result.reason = TerminationReason::child_terminated_normally;
-                result.exit_code = WEXITSTATUS(status);
-            }
-            else if (WIFSIGNALED(status))
+                terminated = WIFEXITED(status) ||  WIFSIGNALED(status);
+
+                if (WIFEXITED(status))
+                {                    
+                    result.reason = TerminationReason::child_terminated_normally;
+                    result.exit_code = WEXITSTATUS(status);
+                    break;
+                }
+                else if (WIFSIGNALED(status))
+                {
+                    result.reason = TerminationReason::child_terminated_by_signal;
+                    result.signal = WTERMSIG(status);
+                    break;
+                }
+                else if (WIFSTOPPED(status))
+                {    
+                    int stop_signal = WSTOPSIG(status);
+                    if (ptrace(PTRACE_CONT, pid, nullptr, stop_signal) == -1)
+                    {
+                        BOOST_THROW_EXCEPTION(
+                            ::boost::enable_error_info(std::runtime_error("Error continuing child process"))
+                            << (boost::errinfo_errno(errno)));
+                    }
+                }
+                else if (WIFCONTINUED(status))
+                {
+                    continue;
+                }
+            } 
+            else
             {
-                result.reason = TerminationReason::child_terminated_by_signal;
-                result.signal = WTERMSIG(status);
+                break;
             }
+            
         }
     }
     return result;
