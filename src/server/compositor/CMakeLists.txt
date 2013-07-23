@@ -10,6 +10,7 @@ set(
   buffer_swapper_spin.cpp
   swapper_factory.cpp
   rendering_operator.cpp
+  gl_renderer.cpp
   gl_renderer_factory.cpp
   multi_threaded_compositor.cpp
   switching_bundle.cpp
