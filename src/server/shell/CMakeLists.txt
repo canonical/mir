@@ -13,6 +13,7 @@ set(
   surface_creation_parameters.cpp
   threaded_snapshot_strategy.cpp
   gl_pixel_buffer.cpp
+  graphics_display_layout.cpp
 )
 
 add_library(

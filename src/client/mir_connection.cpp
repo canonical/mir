@@ -24,6 +24,7 @@
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
 #include "connection_configuration.h"
+#include "display_configuration.h"
 
 #include <cstddef>
 #include <sstream>
@@ -271,36 +272,14 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
     }
 }
 
-void MirConnection::populate(MirDisplayInfo& display_info)
+MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-
-    if (!connect_result.has_error() && connect_result.has_display_info())
+    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
     {
-        auto const& connection_display_info = connect_result.display_info();
-
-        display_info.width = connection_display_info.width();
-        display_info.height = connection_display_info.height();
-
-        auto const pf_size = connection_display_info.supported_pixel_format_size();
-
-        /* Ensure we don't overflow the supported_pixel_format array */
-        display_info.supported_pixel_format_items = pf_size > mir_supported_pixel_format_max ?
-                                                    mir_supported_pixel_format_max :
-                                                    pf_size;
-
-        for (int i = 0; i < display_info.supported_pixel_format_items; ++i)
-        {
-            display_info.supported_pixel_format[i] =
-                static_cast<MirPixelFormat>(connection_display_info.supported_pixel_format(i));
-        }
+        return mcl::set_display_config_from_message(connect_result);
     }
-    else
-    {
-        display_info.width = 0;
-        display_info.height = 0;
-        display_info.supported_pixel_format_items = 0;
-    }
+    return nullptr;
 }
 
 

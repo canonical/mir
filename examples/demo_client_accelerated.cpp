@@ -63,11 +63,14 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
     puts("Connected");
 
-    MirDisplayInfo display_info;
-    mir_connection_get_display_info(connection, &display_info);
-    assert(display_info.supported_pixel_format_items > 0);
+    auto display_config = mir_connection_create_display_config(connection);
+    assert(display_config->num_displays > 0);
+    MirDisplayOutput display_info = display_config->displays[0];
+    
+    assert(display_info.num_output_formats > 0);
 
-    MirPixelFormat pixel_format = display_info.supported_pixel_format[0];
+    MirPixelFormat pixel_format = display_info.output_formats[0];
+    mir_display_config_destroy(display_config);
 
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};

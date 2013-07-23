@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,13 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_VIEWABLE_AREA_H_
-#define MIR_TEST_DOUBLES_MOCK_VIEWABLE_AREA_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_
+#define MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_
 
-#include "mir/graphics/viewable_area.h"
+#include "mir/shell/display_layout.h"
 
 #include <gmock/gmock.h>
 
@@ -30,14 +30,16 @@ namespace test
 namespace doubles
 {
 
-struct MockViewableArea : public graphics::ViewableArea
+class MockDisplayLayout : public shell::DisplayLayout
 {
 public:
-    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
+    MOCK_METHOD1(clip_to_output, void(geometry::Rectangle& rect));
+    MOCK_METHOD1(size_to_output, void(geometry::Rectangle& rect));
 };
 
 }
 }
-} // namespace mir
+}
 
-#endif /* MIR_TEST_DOUBLES_MOCK_VIEWABLE_AREA_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_ */
+

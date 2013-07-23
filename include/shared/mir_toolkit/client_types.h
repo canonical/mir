@@ -153,11 +153,10 @@ typedef struct MirGraphicsRegion
 
 } MirGraphicsRegion;
 
-enum { mir_supported_pixel_format_max = 32 };
-
-/**
- * MirDisplayInfo provides details of the graphics environment.
+/** 
+ * DEPRECATED. use MirDisplayConfiguration
  */
+enum { mir_supported_pixel_format_max = 32 };
 typedef struct MirDisplayInfo
 {
     uint32_t width;
@@ -166,6 +165,45 @@ typedef struct MirDisplayInfo
     int supported_pixel_format_items;
     MirPixelFormat supported_pixel_format[mir_supported_pixel_format_max];
 } MirDisplayInfo;
+
+/**
+ * MirDisplayOutput provides details of the graphics environment.
+ */
+
+typedef struct MirDisplayMode
+{
+    uint32_t vertical_resolution;
+    uint32_t horizontal_resolution;
+    double refresh_rate;
+}MirDisplayMode;
+
+typedef struct MirDisplayOutput
+{
+    uint32_t num_modes;
+    MirDisplayMode* modes;
+    uint32_t current_mode; 
+
+    uint32_t num_output_formats;
+    MirPixelFormat* output_formats;
+    uint32_t current_output_format;
+
+    uint32_t card_id;
+    uint32_t output_id;
+
+    int32_t position_x;
+    int32_t position_y;
+    uint32_t connected;
+    uint32_t used;
+
+    uint32_t physical_width_mm;
+    uint32_t physical_height_mm;
+} MirDisplayOutput;
+
+typedef struct MirDisplayConfiguration
+{
+    uint32_t num_displays;
+    MirDisplayOutput* displays;
+} MirDisplayConfiguration;
 
 /**
  * MirEventDelegate may be used to specify (at surface creation time)

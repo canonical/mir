@@ -20,7 +20,7 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/renderer.h"
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
@@ -31,6 +31,7 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include <gtest/gtest.h>
 #include <thread>
@@ -68,10 +69,18 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const override
+    StubDisplay()
+        : display_buffer{geom::Rectangle{geom::Point{0,0}, geom::Size{1600,1600}}}
     {
-        return geom::Rectangle{geom::Point(), geom::Size{1600, 1600}};
     }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+
+private:
+    mtd::StubDisplayBuffer display_buffer;
 };
 
 class StubGraphicPlatform : public mtd::NullPlatform

@@ -42,7 +42,6 @@ class Buffer;
 namespace input
 {
 class InputChannel;
-class InputRegion;
 class Surface;
 }
 namespace surfaces

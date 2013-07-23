@@ -20,7 +20,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_BUFFER_H_
 #define MIR_GRAPHICS_ANDROID_BUFFER_H_
 
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include "buffer_usage.h"
 
 #include <map>
@@ -38,7 +38,7 @@ struct EGLExtensions;
 namespace android
 {
 
-class Buffer: public compositor::BufferBasic 
+class Buffer: public BufferBasic
 {
 public:
     Buffer(std::shared_ptr<ANativeWindowBuffer> const& buffer_handle,

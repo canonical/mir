@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_
 
-#include <mir/graphics/display_buffer.h>
+#include "mir/graphics/display_buffer.h"
 
 namespace mir
 {
