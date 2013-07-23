@@ -189,3 +189,50 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
 
     launch_client_process(client_config);
 }
+
+/* TODO: this test currently checks the same format list against both the surface formats
+         and display formats. Improve test to return different format lists for both concepts */ 
+TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mg::Platform> the_graphics_platform()
+        {
+            using namespace testing;
+
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+
+            return platform;
+        }
+
+        std::shared_ptr<StubPlatform> platform;
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct Client : TestingClientConfiguration
+    {
+        void exec()
+        {
+            MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+
+            int const format_storage_size = 4;
+            MirPixelFormat formats[formate_storage_size]; 
+            int returned_format_size = 0;
+            mir_connection_get_possible_surface_formats(
+                formats, format_storage_size, &returned_format_size);
+
+            ASSERT_EQ(returned_format_size, StubGraphicBufferAllocator::pixel_formats.size());
+            for (auto i=0u; i < returned_format_size; ++i)
+            {
+                EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
+                          static_cast<geom::PixelFormat>(info.output_formats[i]));
+            }
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
