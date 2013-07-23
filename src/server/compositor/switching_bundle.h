@@ -34,6 +34,8 @@ class Buffer;
 }
 namespace compositor
 {
+class GraphicBufferAllocator;
+
 class SwitchingBundle : public BufferBundle 
 {
 public:
