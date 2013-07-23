@@ -71,7 +71,7 @@ mc::SwitchingBundle::SwitchingBundle(
     const BufferProperties &property_request)
     : bundle_properties{property_request},
       gralloc{gralloc},
-      nbuffers{2},
+      nbuffers{3},
       first_compositor{0}, ncompositors{0},
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
