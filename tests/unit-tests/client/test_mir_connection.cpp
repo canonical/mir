@@ -298,7 +298,7 @@ TEST_F(MirConnectionTest, populates_pfs_correctly)
 
     connection->possible_pixel_formats(&formats[0], formats_size, valid_formats);
 
-    ASSERT_EQ(2, valid_formats);
+    ASSERT_EQ(2u, valid_formats);
     for (auto i=0u; i < valid_formats; i++)
     {
         EXPECT_EQ(supported_output_formats[i], formats[i]);
