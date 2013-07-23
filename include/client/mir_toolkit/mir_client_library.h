@@ -123,13 +123,14 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
 
 /**
  * Get the list of possible formats that a surface can be created with.
+ *   \param [in] connection         The connection
  *   \param [out] formats           List of valid formats to create surfaces with 
  *   \param [in]  formats_size      size of formats list
  *   \param [out] num_valid_formats number of valid formats returned in formats
  */ 
 void mir_connection_get_possible_surface_formats(
-    MirPixelFormat* formats, unsigned const int format_size,
-    unsigned int *num_valid_formats);
+    MirConnection* connection, MirPixelFormat* formats,
+    unsigned const int format_size, unsigned int *num_valid_formats);
 
 /**
  * Request a new Mir surface on the supplied connection with the supplied

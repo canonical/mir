@@ -220,7 +220,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
             unsigned int const format_storage_size = 4;
             MirPixelFormat formats[format_storage_size]; 
             unsigned int returned_format_size = 0;
-            mir_connection_get_possible_surface_formats(
+            mir_connection_get_possible_surface_formats(connection,
                 formats, format_storage_size, &returned_format_size);
 
             ASSERT_EQ(returned_format_size, StubGraphicBufferAllocator::pixel_formats.size());
