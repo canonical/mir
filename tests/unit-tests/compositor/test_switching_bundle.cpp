@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#if 0   // FIXME: Rewrite all this
+#if 0   // XXX This is now testing dead code. Delete the lot.
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir_test_doubles/stub_buffer.h"
