@@ -16,9 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#if 0 // FIXME
 #include "mir/compositor/buffer_stream_surfaces.h"
-#include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
 
@@ -29,6 +27,7 @@
 
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -72,12 +71,11 @@ struct BufferStreamTest : public ::testing::Test
     std::shared_ptr<mc::BufferBundle> create_bundle()
     {
         auto allocator = std::make_shared<StubBufferAllocator>();
-        auto factory = std::make_shared<mc::SwapperFactory>(allocator);
         mc::BufferProperties properties{geom::Size{380, 210},
                                         geom::PixelFormat::abgr_8888,
                                         mc::BufferUsage::hardware};
 
-        return std::make_shared<mc::SwitchingBundle>(factory, properties);
+        return std::make_shared<mc::SwitchingBundle>(allocator, properties);
     }
 
     void terminate_child_thread(mt::Synchronizer& controller)
@@ -98,14 +96,14 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_one_is_released)
     buffer_stream.secure_client_buffer().reset();
     buffer_stream.secure_client_buffer().reset();
 
-    auto comp1 = buffer_stream.lock_back_buffer();
-    auto comp2 = buffer_stream.lock_back_buffer();
+    auto comp1 = buffer_stream.lock_compositor_buffer();
+    auto comp2 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
     comp1.reset();
 
-    auto comp3 = buffer_stream.lock_back_buffer();
+    auto comp3 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_NE(comp2->id(), comp3->id());
 }
@@ -115,8 +113,8 @@ TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
     buffer_stream.secure_client_buffer().reset();
     buffer_stream.secure_client_buffer().reset();
 
-    auto comp1 = buffer_stream.lock_back_buffer();
-    auto comp2 = buffer_stream.lock_back_buffer();
+    auto comp1 = buffer_stream.lock_compositor_buffer();
+    auto comp2 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
@@ -135,14 +133,14 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
     buffer_stream.secure_client_buffer().reset();
     auto client1 = buffer_stream.secure_client_buffer();
 
-    auto comp1 = buffer_stream.lock_back_buffer();
-    auto comp2 = buffer_stream.lock_back_buffer();
+    auto comp1 = buffer_stream.lock_compositor_buffer();
+    auto comp2 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
     comp1.reset();
 
-    auto comp3 = buffer_stream.lock_back_buffer();
+    auto comp3 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp2->id(), comp3->id());
 }
@@ -171,7 +169,7 @@ void back_buffer_loop(std::shared_ptr<mg::Buffer>& out_region,
 {
     for(;;)
     {
-        out_region = stream.lock_back_buffer();
+        out_region = stream.lock_compositor_buffer();
         ASSERT_NE(nullptr, out_region);
 
         if (synchronizer.child_enter_wait()) return;
@@ -253,4 +251,3 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
         info->thread.join();
     }
 }
-#endif
