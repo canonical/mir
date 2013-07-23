@@ -28,7 +28,6 @@
 #include "surface_map.h"
 
 #include <cstddef>
-#include <sstream>
 #include <unistd.h>
 
 namespace mcl = mir::client;

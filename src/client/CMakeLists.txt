@@ -23,7 +23,6 @@ set(
 
   aging_buffer.cpp
   client_buffer_depository.cpp
-  connection_list.cpp
   display_configuration.cpp
   mir_client_library.cpp
   mir_connection.cpp

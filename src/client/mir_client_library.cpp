@@ -21,7 +21,6 @@
 #include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir_connection.h"
-#include "connection_list.h"
 #include "display_configuration.h"
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
@@ -39,6 +38,34 @@ std::unordered_set<MirConnection*> MirConnection::valid_connections;
 
 namespace
 {
+class ConnectionList
+{
+public:
+    void insert(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.insert(connection);
+    }
+
+    void remove(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        connections.erase(connection);
+    }
+
+    bool contains(MirConnection* connection)
+    {
+        std::lock_guard<std::mutex> lock(connection_guard);
+        return connections.count(connection);
+    }
+
+private:
+    std::mutex connection_guard;
+    std::unordered_set<MirConnection*> connections;
+};
+
+ConnectionList error_connections;
+
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void *result, void **context)
 {
@@ -46,7 +73,6 @@ void assign_result(void *result, void **context)
         *context = result;
 }
 
-mcl::ActiveConnectionList error_connections;
 }
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)

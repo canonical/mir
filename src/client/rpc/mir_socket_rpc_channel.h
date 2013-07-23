@@ -51,7 +51,7 @@ class MirSocketRpcChannel : public MirBasicRpcChannel
 {
 public:
     MirSocketRpcChannel(std::string const& endpoint,
-                        std::shared_ptr<SurfaceMap> const& sink,
+                        std::shared_ptr<SurfaceMap> const& surface_map,
                         std::shared_ptr<RpcReport> const& rpc_report);
     ~MirSocketRpcChannel();
 

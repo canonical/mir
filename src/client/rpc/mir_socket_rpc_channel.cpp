@@ -306,8 +306,6 @@ void mclr::MirSocketRpcChannel::read_message()
 
         if (result.has_id())
         {
-            //if(result.is_connect_result)
-            //  add_to_connections(connection)
             pending_calls.complete_response(result);
         }
     }

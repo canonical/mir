@@ -19,8 +19,6 @@
 #ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
 #define MIR_CLIENT_CLIENT_CONTEXT_H_
 
-#include <functional>
-
 namespace mir
 {
 namespace client
@@ -32,7 +30,6 @@ public:
     virtual ~ClientContext() {}
 
     virtual MirConnection* mir_connection() = 0;
-    void for_surface(int const& id, std::function<void(MirSurface*)> exec);
     virtual void populate(MirPlatformPackage& platform_package) = 0;
 
 protected:

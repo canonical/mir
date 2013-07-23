@@ -17,6 +17,8 @@
  */
 
 #include "connection_surface_map.h"
+#include <sstream>
+#include <boost/throw_exception.hpp>
 
 namespace mcl=mir::client;
 
@@ -33,6 +35,15 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     {
         MirSurface *surface = it->second;
         exec(surface);
+    }
+    else
+    {
+        std::stringstream ss;
+        ss << __PRETTY_FUNCTION__
+           << "executed with non-existent surface ID "
+           << surface_id << ".\n";
+    
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
 
