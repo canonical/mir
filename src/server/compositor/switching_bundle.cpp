@@ -140,9 +140,26 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     int client = (first_client + nclients) % nbuffers;
     nclients++;
 
-    // Make sure the client gets exclusive use (ie. it's not being snapshotted)
-    while (nsnapshotters && client == snapshot)
-        cond.wait(lock);
+    if (nsnapshotters && client == snapshot)
+    {
+        /*
+         * In the rare case where a snapshot is still being taken of what is
+         * the new client buffer, try to move it out the way, or if you can't
+         * then wait for the snapshot to finish.
+         */
+        if (nfree() > 0)
+        {
+            snapshot = (client + 1) % nbuffers;
+            auto tmp = ring[snapshot];
+            ring[snapshot] = ring[client];
+            ring[client] = tmp;
+        }
+        else
+        {
+            while (nsnapshotters && client == snapshot)
+                cond.wait(lock);
+        }
+    }
 
     return ring[client];
 }
