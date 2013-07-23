@@ -16,12 +16,12 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #include "mir_socket_rpc_channel.h"
 #include "rpc_report.h"
 
 #include "mir/protobuf/google_protobuf_guard.h"
-#include "mir/events/event_sink.h"
+#include "../surface_map.h"
+#include "../mir_surface.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -39,17 +39,20 @@
 #include <pthread.h>
 #include <signal.h>
 
+namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
+namespace me = mir::events;
 
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
+    std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<RpcReport> const& rpc_report) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
     endpoint(endpoint),
     socket(io_service),
-    event_handler(nullptr)
+    surface_map(surface_map)
 {
     socket.connect(endpoint);
 
@@ -303,6 +306,8 @@ void mclr::MirSocketRpcChannel::read_message()
 
         if (result.has_id())
         {
+            //if(result.is_connect_result)
+            //  add_to_connections(connection)
             pending_calls.complete_response(result);
         }
     }
@@ -314,9 +319,6 @@ void mclr::MirSocketRpcChannel::read_message()
 
 void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
 {
-    if (!event_handler)
-        return;
-
     mir::protobuf::EventSequence seq;
 
     seq.ParseFromString(event);
@@ -341,7 +343,11 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
 
                 rpc_report->event_parsing_succeeded(e);
 
-                event_handler->handle_event(e);
+                surface_map->with_surface_do(e.surface.id,
+                    [&e](MirSurface* surface)
+                    {
+                        surface->handle_event(e);
+                    });
             }
             else
             {
@@ -371,14 +377,4 @@ mir::protobuf::wire::Result mclr::MirSocketRpcChannel::read_message_body(const s
     mir::protobuf::wire::Result result;
     result.ParseFromIstream(&in);
     return result;
-}
-
-void mclr::MirSocketRpcChannel::set_event_handler(events::EventSink *sink)
-{
-    /*
-     * Yes, these have to be regular pointers. Because ownership of the object
-     * (which is actually a MirConnection) is the responsibility of the calling
-     * client. So out of our control.
-     */
-    event_handler = sink;
 }

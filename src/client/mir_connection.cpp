@@ -25,6 +25,7 @@
 #include "rpc/mir_basic_rpc_channel.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
+#include "surface_map.h"
 
 #include <cstddef>
 #include <sstream>
@@ -47,9 +48,9 @@ MirConnection::MirConnection(
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
         client_platform_factory(conf.the_client_platform_factory()),
-        input_platform(conf.the_input_platform())
+        input_platform(conf.the_input_platform()),
+        surface_map(conf.the_surface_map())
 {
-    channel->set_event_handler(this);
     {
         std::lock_guard<std::mutex> lock(connection_guard);
         valid_connections.insert(this);
@@ -131,8 +132,7 @@ MirWaitHandle* MirConnection::release_surface(
     auto new_wait_handle = new MirWaitHandle;
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
-
-    valid_surfaces.erase(surface->id());
+    surface_map->erase(surface->id());
 
     mir::protobuf::SurfaceId message;
     message.set_value(surface->id());
@@ -304,50 +304,5 @@ EGLNativeDisplayType MirConnection::egl_native_display()
 
 void MirConnection::on_surface_created(int id, MirSurface* surface)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
-    valid_surfaces[id] = surface;
-}
-
-void MirConnection::handle_event(MirEvent const& e)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
-    switch (e.type)
-    {
-    case mir_event_type_surface:
-        {
-            int id = e.surface.id;
-            SurfaceMap::iterator it = valid_surfaces.find(id);
-            if (it != valid_surfaces.end())
-            {
-                MirSurface *surface = it->second;
-                surface->handle_event(e);
-            }
-            else
-            {
-                std::stringstream ss;
-                ss << __PRETTY_FUNCTION__
-                   << ": mir_event_type_surface "
-                   << "received for non-existent surface ID "
-                   << id
-                   << ".\n";
-                logger->log<mir::logging::Logger::error>(ss.str(), "mir_connection");
-            }
-        }
-        break;
-    default:
-        // Don't worry. This function only gets called for events from the
-        // RPC channel (not input). So you will never see this error unless
-        // you make a mistake.
-        {
-            std::stringstream ss;
-            ss << __PRETTY_FUNCTION__
-               << ": Unsupported event type "
-               << e.type
-               << " received from server.\n";
-            logger->log<mir::logging::Logger::error>(ss.str(), "mir_connection");
-        }
-        break;
-    }
+    surface_map->insert(id, surface);
 }

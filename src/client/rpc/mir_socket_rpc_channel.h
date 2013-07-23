@@ -41,6 +41,7 @@ class Result;
 
 namespace client
 {
+class SurfaceMap;
 namespace rpc
 {
 
@@ -50,10 +51,9 @@ class MirSocketRpcChannel : public MirBasicRpcChannel
 {
 public:
     MirSocketRpcChannel(std::string const& endpoint,
+                        std::shared_ptr<SurfaceMap> const& sink,
                         std::shared_ptr<RpcReport> const& rpc_report);
     ~MirSocketRpcChannel();
-
-    void set_event_handler(events::EventSink *sink);
 
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
@@ -83,7 +83,7 @@ private:
 
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
 
-    events::EventSink *event_handler;
+    std::shared_ptr<SurfaceMap> surface_map;
 };
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,35 +13,36 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
-#define MIR_CLIENT_CLIENT_CONTEXT_H_
-
+#ifndef MIR_CLIENT_SURFACE_MAP_H_
+#define MIR_CLIENT_SURFACE_MAP_H_
+#include "mir_toolkit/client_types.h"
 #include <functional>
+#include <unordered_map>
+#include <mutex>
 
 namespace mir
 {
 namespace client
 {
 
-class ClientContext
+class SurfaceMap
 {
 public:
-    virtual ~ClientContext() {}
-
-    virtual MirConnection* mir_connection() = 0;
-    void for_surface(int const& id, std::function<void(MirSurface*)> exec);
-    virtual void populate(MirPlatformPackage& platform_package) = 0;
+    virtual void with_surface_do(
+        int const& surface_id, std::function<void(MirSurface*)> exec) = 0;
+    virtual void insert(int const& surface_id, MirSurface* surface) = 0;
+    virtual void erase(int surface_id) = 0;
 
 protected:
-    ClientContext() = default;
-    ClientContext(const ClientContext&) = delete;
-    ClientContext& operator=(const ClientContext&) = delete;
+    virtual ~SurfaceMap() = default;
+    SurfaceMap() = default;
+    SurfaceMap(const SurfaceMap&) = delete;
+    SurfaceMap& operator=(const SurfaceMap&) = delete;
 };
 
 }
 }
-
-#endif /* MIR_CLIENT_CLIENT_CONTEXT_H_ */
+#endif /* MIR_CLIENT_SURFACE_MAP_H_ */
