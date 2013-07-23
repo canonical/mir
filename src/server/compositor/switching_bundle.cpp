@@ -99,12 +99,9 @@ int mc::SwitchingBundle::nfree() const
 
 int mc::SwitchingBundle::drop_frames(int max)
 {
-    int drop = max;
+    int dropped = (max > nready) ? nready : max;
 
-    if (drop > nready)
-        drop = nready;
-
-    for (int d = 0; d < drop; d++)
+    for (int d = 0; d < dropped; d++)
     {
         first_client = (first_client + nbuffers - 1) % nbuffers;
         nready--;
@@ -117,7 +114,7 @@ int mc::SwitchingBundle::drop_frames(int max)
         ring[end] = tmp;
     }
 
-    return drop;
+    return dropped;
 }
 
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
