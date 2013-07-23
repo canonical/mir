@@ -180,6 +180,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
+    /* eglapps are interested in the screen size, so use mir_connection_create_display_config */
     MirDisplayConfiguration* display_config = mir_connection_create_display_config(connection);
     MirDisplayOutput* display_state = &display_config->displays[0];
     MirDisplayMode mode = display_state->modes[display_state->current_mode];
