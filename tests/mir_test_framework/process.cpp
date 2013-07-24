@@ -32,6 +32,7 @@
 #include <chrono>
 #include <ostream>
 #include <string>
+#include <thread>
 
 namespace mtf = mir_test_framework;
 
@@ -39,6 +40,7 @@ namespace
 {
 void signal_process(pid_t pid, int signum)
 {
+    std::cout << __PRETTY_FUNCTION__ << ": " << pid << ", " << signum << std::endl;
     if (::kill(pid, signum) != 0)
     {
         throw std::runtime_error(std::string("Failed to kill process: ")
@@ -77,12 +79,12 @@ mtf::Process::Process(pid_t pid)
             ::boost::enable_error_info(std::runtime_error("Error attaching to child process"))
                 << (boost::errinfo_errno(errno)));
 
-    if (waitpid (pid, NULL, 0) < 0)
+    if (waitpid (pid, NULL, 0) < 0 )
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("Error waiting on child process"))
                 << (boost::errinfo_errno(errno)));
 
-    
+
     if (ptrace(PTRACE_CONT, pid, nullptr, nullptr) == -1)
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("Error continuing child process"))
@@ -91,6 +93,7 @@ mtf::Process::Process(pid_t pid)
 
 mtf::Process::~Process()
 {
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
     if (!detached && !terminated)
     {
         try
@@ -116,25 +119,30 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
         int rc = -1;
         while (true)
         {
-            if ((rc = ::waitpid(pid, &status, WNOHANG | WCONTINUED)) == pid)
-            {
-                terminated = WIFEXITED(status) ||  WIFSIGNALED(status);
-
+            if ((rc = ::waitpid(pid, &status, WNOHANG)) == pid)
+            {                
                 if (WIFEXITED(status))
-                {                    
+                {
+                    std::cout << "\t (WIFSIGNALED(status)): " << pid << std::endl;
+
+                    terminated = true;
                     result.reason = TerminationReason::child_terminated_normally;
                     result.exit_code = WEXITSTATUS(status);
                     break;
                 }
                 else if (WIFSIGNALED(status))
                 {
+                    std::cout << "\t (WIFSIGNALED(status)): " << pid << std::endl;
+                    terminated = true;
                     result.reason = TerminationReason::child_terminated_by_signal;
                     result.signal = WTERMSIG(status);
                     break;
                 }
                 else if (WIFSTOPPED(status))
-                {    
+                {
                     int stop_signal = WSTOPSIG(status);
+                    std::cout << "\t WIFSTOPPED(status): " << pid << ", " << stop_signal << std::endl;
+
                     if (ptrace(PTRACE_CONT, pid, nullptr, stop_signal) == -1)
                     {
                         BOOST_THROW_EXCEPTION(
@@ -144,18 +152,22 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
                 }
                 else if (WIFCONTINUED(status))
                 {
+                    std::cout << "\t (WIFSIGNALED(status)): " << std::endl;
                     continue;
                 }
-            } 
+            }
             else if (rc == 0)
             {
-                if (std::chrono::system_clock::now() <= tp)
+                if (std::chrono::system_clock::now() < tp)
+                {
+                    std::this_thread::yield();
                     continue;
+                }
                 else
                     throw std::runtime_error("Timeout while waiting for child to change state");
             }
             else
-                break;                
+                break;
         }
     }
     return result;
