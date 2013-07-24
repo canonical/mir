@@ -140,7 +140,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
     return connection->egl_native_display();
 }
 
-void mir_connection_get_possible_surface_formats(
+void mir_connection_get_available_surface_formats(
     MirConnection * connection, MirPixelFormat* formats,
     unsigned const int format_size, unsigned int *num_valid_formats)
 {

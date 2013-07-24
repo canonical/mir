@@ -128,7 +128,7 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
  *   \param [in]  formats_size      size of formats list
  *   \param [out] num_valid_formats number of valid formats returned in formats
  */ 
-void mir_connection_get_possible_surface_formats(
+void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
     unsigned const int format_size, unsigned int *num_valid_formats);
 
