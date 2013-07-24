@@ -44,10 +44,16 @@ struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
+        using namespace ::testing;
+
         auto allocator = std::make_shared<mtd::MockBufferAllocator>();
         auto factory = std::make_shared<mc::SwapperFactory>(allocator, 3);
         auto properties = mc::BufferProperties{geom::Size{380, 210},
                                           geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
+
+        EXPECT_CALL(*allocator, alloc_buffer(_))
+            .Times(3);
+
         switching_bundle = std::make_shared<mc::SwitchingBundle>(factory, properties);
     }
 
