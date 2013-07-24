@@ -23,6 +23,7 @@ set(
 
   aging_buffer.cpp
   client_buffer_depository.cpp
+  display_configuration.cpp
   mir_client_library.cpp
   mir_connection.cpp
   mir_wait_handle.cpp
@@ -65,12 +66,13 @@ add_library(
   ${CLIENT_SOURCES}
 )
 
+set(MIRCLIENT_ABI 1)
+
 set_target_properties(
   mirclient
 
   PROPERTIES
-  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
-  SOVERSION 1
+  SOVERSION ${MIRCLIENT_ABI}
 )
 
 #

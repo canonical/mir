@@ -37,8 +37,6 @@ namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
-namespace mir /* So that std::this_thread::yield() can be found on android... */
-{
 namespace
 {
 
@@ -56,20 +54,14 @@ public:
     }
 
     static geom::Rectangle rectangle;
+    static geom::Size const expected_dimensions_mm;
 
 private:
     mtd::StubDisplayBuffer display_buffer;
 };
 
+geom::Size const StubDisplay::expected_dimensions_mm{0,0};
 geom::Rectangle StubDisplay::rectangle{geom::Point{25,36}, geom::Size{49,64}};
-
-}
-}
-
-using mir::StubDisplay;
-
-namespace
-{
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
@@ -146,24 +138,51 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
                                      connection_callback, &connection));
 
-            MirDisplayInfo info;
 
-            mir_connection_get_display_info(connection, &info);
+            auto configuration = mir_connection_create_display_config(connection);
 
-            EXPECT_EQ(StubDisplay::rectangle.size.width.as_uint32_t(),
-                      static_cast<uint32_t>(info.width));
-            EXPECT_EQ(StubDisplay::rectangle.size.height.as_uint32_t(),
-                      static_cast<uint32_t>(info.height));
+            /* TODO: expand test to test multimonitor situations */
+            ASSERT_EQ(1u, configuration->num_displays);
+            auto const& info = configuration->displays[0];
+            geom::Rectangle const& expected_rect = StubDisplay::rectangle;
 
+            //state
+            EXPECT_EQ(1u, info.connected);
+            EXPECT_EQ(1u, info.used);
+
+            //id's
+            EXPECT_EQ(0u, info.output_id);
+            EXPECT_EQ(0u, info.card_id);
+
+            //sizing
+            EXPECT_EQ(StubDisplay::expected_dimensions_mm.width.as_uint32_t(), info.physical_width_mm);
+            EXPECT_EQ(StubDisplay::expected_dimensions_mm.height.as_uint32_t(), info.physical_height_mm);
+
+            //position
+            EXPECT_EQ(static_cast<int>(expected_rect.top_left.x.as_uint32_t()), info.position_x); 
+            EXPECT_EQ(static_cast<int>(expected_rect.top_left.y.as_uint32_t()), info.position_y); 
+
+            //mode selection
+            EXPECT_EQ(1u, info.num_modes);
+            ASSERT_EQ(0u, info.current_mode);
+            auto const& mode = info.modes[info.current_mode];
+
+            //current mode 
+            EXPECT_EQ(expected_rect.size.width.as_uint32_t(), mode.horizontal_resolution);
+            EXPECT_EQ(expected_rect.size.height.as_uint32_t(), mode.vertical_resolution);
+            EXPECT_FLOAT_EQ(60.0f, mode.refresh_rate);
+
+            //pixel formats
             ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
-                      static_cast<uint32_t>(info.supported_pixel_format_items));
-
-            for (int i = 0; i < info.supported_pixel_format_items; ++i)
+                      static_cast<uint32_t>(info.num_output_formats));
+            for (auto i=0u; i < info.num_output_formats; ++i)
             {
                 EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(info.supported_pixel_format[i]));
+                          static_cast<geom::PixelFormat>(info.output_formats[i]));
             }
+            EXPECT_EQ(0u, info.current_output_format);
 
+            mir_display_config_destroy(configuration);
             mir_connection_release(connection);
         }
     } client_config;

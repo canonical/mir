@@ -16,7 +16,7 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gl_pixel_buffer.h"
+#include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/buffer.h"
 
@@ -48,7 +48,7 @@ inline uint32_t abgr_to_argb(uint32_t p)
 
 }
 
-mg::GLPixelBuffer::GLPixelBuffer(std::unique_ptr<GLContext> gl_context)
+msh::GLPixelBuffer::GLPixelBuffer(std::unique_ptr<graphics::GLContext> gl_context)
     : gl_context{std::move(gl_context)},
       tex{0}, fbo{0}, gl_pixel_format{0}, pixels_need_y_flip{false}
 {
@@ -63,7 +63,7 @@ mg::GLPixelBuffer::GLPixelBuffer(std::unique_ptr<GLContext> gl_context)
     }
 }
 
-mg::GLPixelBuffer::~GLPixelBuffer() noexcept
+msh::GLPixelBuffer::~GLPixelBuffer() noexcept
 {
     if (tex != 0)
         glDeleteTextures(1, &tex);
@@ -71,7 +71,7 @@ mg::GLPixelBuffer::~GLPixelBuffer() noexcept
         glDeleteFramebuffers(1, &fbo);
 }
 
-void mg::GLPixelBuffer::prepare()
+void msh::GLPixelBuffer::prepare()
 {
     gl_context->make_current();
 
@@ -87,7 +87,7 @@ void mg::GLPixelBuffer::prepare()
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
-void mg::GLPixelBuffer::fill_from(Buffer& buffer)
+void msh::GLPixelBuffer::fill_from(graphics::Buffer& buffer)
 {
     auto width = buffer.size().width.as_uint32_t();
     auto height = buffer.size().height.as_uint32_t();
@@ -116,7 +116,7 @@ void mg::GLPixelBuffer::fill_from(Buffer& buffer)
     pixels_need_y_flip = true;
 }
 
-void const* mg::GLPixelBuffer::as_argb_8888()
+void const* msh::GLPixelBuffer::as_argb_8888()
 {
     if (pixels_need_y_flip)
     {
@@ -152,17 +152,17 @@ void const* mg::GLPixelBuffer::as_argb_8888()
     return pixels.data();
 }
 
-geom::Size mg::GLPixelBuffer::size() const
+geom::Size msh::GLPixelBuffer::size() const
 {
     return size_;
 }
 
-geom::Stride mg::GLPixelBuffer::stride() const
+geom::Stride msh::GLPixelBuffer::stride() const
 {
     return geom::Stride{size_.width.as_uint32_t() * sizeof(uint32_t)};
 }
 
-void mg::GLPixelBuffer::copy_and_convert_pixel_line(char* src, char* dst)
+void msh::GLPixelBuffer::copy_and_convert_pixel_line(char* src, char* dst)
 {
     if (gl_pixel_format == GL_RGBA)
     {
