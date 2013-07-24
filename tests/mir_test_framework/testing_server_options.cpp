@@ -20,6 +20,7 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
@@ -102,13 +103,22 @@ class StubRenderer : public mc::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mc::CompositingCriteria const&, ms::BufferStream& stream)
+                        mc::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
         stream.lock_back_buffer();
     }
 
     void clear() {}
+};
+
+class StubRendererFactory : public mc::RendererFactory
+{
+public:
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    {
+        return std::unique_ptr<StubRenderer>(new StubRenderer());
+    }
 };
 
 struct StubInputChannel : public mi::InputChannel
@@ -168,17 +178,17 @@ std::shared_ptr<mg::Platform> mtf::TestingServerConfiguration::the_graphics_plat
     return graphics_platform;
 }
 
-std::shared_ptr<mc::Renderer> mtf::TestingServerConfiguration::the_renderer()
+std::shared_ptr<mc::RendererFactory> mtf::TestingServerConfiguration::the_renderer_factory()
 {
     auto options = the_options();
 
     if (options->get("tests-use-real-graphics", false))
-        return DefaultServerConfiguration::the_renderer();
+        return DefaultServerConfiguration::the_renderer_factory();
     else
-        return renderer(
+        return renderer_factory(
             [&]()
             {
-                return std::make_shared<StubRenderer>();
+                return std::make_shared<StubRendererFactory>();
             });
 }
 
