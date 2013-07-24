@@ -244,12 +244,4 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
 
     for (auto &s : snapshotters)
         s->join();
-
-    // The compositor is never blocked. So should get at least as many
-    // frames as the client generated...
-    EXPECT_GE(composited, num_frames);
-
-    // Snapshots are never blocked either. There should be time for lots more
-    // snapshots than client frames...
-    EXPECT_GE(snapshotted.load(), num_frames);
 }
