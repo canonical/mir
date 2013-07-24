@@ -171,7 +171,7 @@ void compositor_loop(ms::BufferStream &stream,
         composited++;
         std::this_thread::yield();
 
-#if 0 // TODO?
+#if 0 // FIXME: Needs a better force_requests_to_complete, or something
         if (done.load())
             break;
 
