@@ -189,7 +189,7 @@ void compositor_loop(ms::BufferStream &stream,
 
 void snapshot_loop(ms::BufferStream &stream,
                    std::atomic<bool> &done,
-                   int &snapshotted)
+                   std::atomic<int> &snapshotted)
 {
     while (!done.load())
     {
@@ -211,7 +211,9 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
     done = false;
 
     int composited = 0;
-    int snapshotted = 0;
+
+    std::atomic<int> snapshotted;
+    snapshotted = 0;
 
     std::thread client(client_loop,
                        num_frames,
@@ -249,5 +251,5 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
 
     // Snapshots are never blocked either. There should be time for lots more
     // snapshots than client frames...
-    EXPECT_GE(snapshotted, num_frames);
+    EXPECT_GE(snapshotted.load(), num_frames);
 }
