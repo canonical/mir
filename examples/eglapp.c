@@ -183,7 +183,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     /* eglapps are interested in the screen size, so use mir_connection_create_display_config */
     MirDisplayConfiguration* display_config = mir_connection_create_display_config(connection);
     MirDisplayOutput* display_state = &display_config->displays[0];
-    MirDisplayMode mode = display_state->modes[display_state->current_mode];
+    MirDisplayMode mode = display_state->modes[display_state->current_mode]; 
+    unsigned int valid_formats;
+    mir_connection_get_available_surface_formats(connection, &surfaceparm.pixel_format, 1, &valid_formats);
 
     printf("Connected to display: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
            mode.horizontal_resolution, mode.vertical_resolution,
@@ -192,7 +194,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     surfaceparm.width = *width > 0 ? *width : mode.horizontal_resolution;
     surfaceparm.height = *height > 0 ? *height : mode.vertical_resolution;
-    surfaceparm.pixel_format = display_state->output_formats[0];
 
     mir_display_config_destroy(display_config);
 
