@@ -50,6 +50,8 @@ struct SurfaceCreationParameters
     SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
     
     SurfaceCreationParameters& of_depth(surfaces::DepthId const& new_depth);
+    
+    SurfaceCreationParameters& which_monitors_input();
 
     std::string name;
     geometry::Size size;
@@ -57,6 +59,7 @@ struct SurfaceCreationParameters
     compositor::BufferUsage buffer_usage;
     geometry::PixelFormat pixel_format;
     surfaces::DepthId depth;
+    bool monitors_input;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

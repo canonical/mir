@@ -42,9 +42,11 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 
 // Be careful on the locking in these two functions.
 void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChannel> const& channel,
-                                               std::shared_ptr<mi::Surface> const& surface)
+                                               std::shared_ptr<mi::Surface> const& surface,
+                                               bool monitors_input)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
+    (void) monitors_input;
     {
         std::unique_lock<std::mutex> lock(handles_mutex);
 

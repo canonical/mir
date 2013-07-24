@@ -25,7 +25,7 @@ namespace geom = mir::geometry;
 msh::SurfaceCreationParameters::SurfaceCreationParameters()
     : name(), size(), top_left(), buffer_usage(mc::BufferUsage::undefined),
       pixel_format(geom::PixelFormat::invalid),
-      depth{0}
+      depth{0}, monitors_input(false)
 {
 }
 
@@ -78,6 +78,13 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_depth(
     surfaces::DepthId const& new_depth)
 {
     depth = new_depth;
+    
+    return *this;
+}
+
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::which_monitors_input()
+{
+    monitors_input = true;
     
     return *this;
 }
