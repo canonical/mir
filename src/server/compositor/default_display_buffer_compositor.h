@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,26 +16,29 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
-#define MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_
+#ifndef MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_
+#define MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_
 
-#include "mir/compositor/basic_compositing_strategy.h"
-
-#include <memory>
+#include "mir/compositor/basic_display_buffer_compositor.h"
 
 namespace mir
 {
-///  Compositing. Combining renderables into a display image.
+namespace graphics
+{
+class DisplayBuffer;
+}
 namespace compositor
 {
-class OverlayRenderer;
+
 class Scene;
 class Renderer;
+class OverlayRenderer;
 
-class DefaultCompositingStrategy : public BasicCompositingStrategy
+class DefaultDisplayBufferCompositor : public BasicDisplayBufferCompositor
 {
 public:
-    DefaultCompositingStrategy(
+    DefaultDisplayBufferCompositor(
+        graphics::DisplayBuffer& display_buffer,
         std::shared_ptr<Scene> const& scene,
         std::shared_ptr<Renderer> const& renderer,
         std::shared_ptr<OverlayRenderer> const& overlay_renderer);
@@ -53,4 +56,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_DEFAULT_COMPOSITING_STRATEGY_H_ */
+#endif /* MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_ */

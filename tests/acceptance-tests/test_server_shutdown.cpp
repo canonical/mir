@@ -18,6 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
@@ -35,6 +36,7 @@ namespace mia = mir::input::android;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace ms = mir::surfaces;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -56,6 +58,16 @@ public:
     }
 
     void clear() {}
+};
+
+
+class NullRendererFactory : public mc::RendererFactory
+{
+public:
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    {
+        return std::unique_ptr<mc::Renderer>(new NullRenderer());
+    }
 };
 
 void null_surface_callback(MirSurface*, void*)
@@ -108,9 +120,9 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mc::Renderer> the_renderer() override
+        std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
         {
-            return renderer([] { return std::make_shared<NullRenderer>(); });
+            return renderer_factory([] { return std::make_shared<NullRendererFactory>(); });
         }
     } server_config;
 
