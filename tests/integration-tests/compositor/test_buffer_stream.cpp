@@ -155,26 +155,6 @@ TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
     EXPECT_EQ(comp_id, client1->id());
 }
 
-// FIXME: Is this valid at all any more? Fix or delete?
-#if 0
-TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
-{
-    buffer_stream.secure_client_buffer().reset();
-    auto client1 = buffer_stream.secure_client_buffer();
-
-    auto comp1 = buffer_stream.lock_compositor_buffer();
-    auto comp2 = buffer_stream.lock_compositor_buffer();
-
-    EXPECT_EQ(comp1->id(), comp2->id());
-
-    comp1.reset();
-
-    auto comp3 = buffer_stream.lock_compositor_buffer();
-
-    EXPECT_EQ(comp2->id(), comp3->id());
-}
-#endif
-
 namespace
 {
 
