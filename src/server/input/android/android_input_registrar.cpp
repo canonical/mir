@@ -62,7 +62,7 @@ void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChann
     
         window_handles[channel] = window_handle;
     }
-    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
+    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, monitors_input);
 }
 
 void mia::InputRegistrar::input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel)

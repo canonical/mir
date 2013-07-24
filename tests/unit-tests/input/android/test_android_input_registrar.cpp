@@ -134,3 +134,17 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_closed_behavior)
     }, std::logic_error);
 }
 
+TEST_F(AndroidInputRegistrarFdSetup, monitor_flag_is_passed_to_dispatcher)
+{
+    using namespace ::testing;
+
+    auto channel = std::make_shared<mtd::StubInputChannel>(test_input_fd);
+    auto surface = std::make_shared<StubInputSurface>();
+
+    EXPECT_CALL(*dispatcher, registerInputChannel(_, _, true)).Times(1)
+        .WillOnce(Return(droidinput::OK));
+
+    mia::InputRegistrar registrar(dispatcher);
+    
+    registrar.input_channel_opened(channel, surface, true);
+}
