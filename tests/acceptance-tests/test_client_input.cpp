@@ -46,6 +46,8 @@
 #include <functional>
 #include <map>
 
+#include <poll.h>
+
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mis = mi::synthesis;
@@ -66,6 +68,75 @@ namespace
 
 namespace
 {
+
+struct CrossProcessSync
+{
+    static const int read_fd = 0;
+    static const int write_fd = 1;
+
+    unsigned int counter;
+
+    CrossProcessSync() : counter(0)
+    {
+        if (pipe(fds) < 0)
+            throw std::runtime_error(strerror(errno));
+    }
+
+    ~CrossProcessSync() noexcept
+    {
+        ::close(fds[0]);
+        ::close(fds[1]);
+    }
+
+    void try_signal_ready_for(const std::chrono::milliseconds& duration = std::chrono::milliseconds(500))
+    {
+        static const short empty_revents = 0;
+        pollfd poll_fd[1] = { fds[write_fd], POLLOUT, empty_revents };
+
+        auto rc = poll(poll_fd, 1, duration.count());
+        if (rc < 0)
+        {         
+            throw std::runtime_error(strerror(errno));
+        }
+        else if (rc == 0)
+        {
+            throw std::runtime_error("Poll on writefd for pipe timed out");
+        }
+
+        int value = 1;
+        if (sizeof(value) != write(fds[write_fd], std::addressof(value), sizeof(value)))
+            throw std::runtime_error(::strerror(errno));
+    }
+
+    unsigned int wait_for_signal_ready(const std::chrono::milliseconds& duration = std::chrono::milliseconds(500))
+    {
+        static const short empty_revents = 0;
+        pollfd poll_fd[1] = { fds[read_fd], POLLIN, empty_revents };
+
+        auto rc = poll(poll_fd, 1, duration.count());
+        if (rc < 0)
+        {         
+            throw std::runtime_error(strerror(errno));
+        }
+        else if (rc == 0)
+        {
+            throw std::runtime_error("Poll on readfd for pipe timed out");
+        }
+
+        int value;
+        if (sizeof(value) != read(fds[read_fd], std::addressof(value), sizeof(value)))
+            throw std::runtime_error(::strerror(errno));
+
+        if (value != 1)
+            throw std::runtime_error("received an unexpected value on the pipe's readfd");
+
+        counter += value;
+
+        return counter;
+    }
+
+    int fds[2];
+};
 
 struct ClientConfig : mtf::TestingClientConfiguration
 {
@@ -119,8 +190,9 @@ struct MockInputHandler
 
 struct InputClient : ClientConfig
 {
-    InputClient(std::string const& surface_name)
-      : surface_name(surface_name)
+    InputClient(const CrossProcessSync& input_cb_setup_fence, std::string const& surface_name)
+            : input_cb_setup_fence(input_cb_setup_fence),
+              surface_name(surface_name)
     {
     }
 
@@ -136,6 +208,15 @@ struct InputClient : ClientConfig
 
         // Set this in the callback, not main thread to avoid missing test events
         mir_surface_set_event_handler(surface, &event_delegate);
+
+        try
+        {
+            input_cb_setup_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
+        } catch (const std::runtime_error& e)
+        {
+            std::cout << e.what() << std::endl;
+        }
+
     }
 
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
@@ -175,7 +256,7 @@ struct InputClient : ClientConfig
          auto request_params = parameters();
          mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 
-         events_received.wait_for_at_most_seconds(60);
+         events_received.wait_for_at_most_seconds(2);
 
          mir_surface_release_sync(surface);
 
@@ -189,6 +270,7 @@ struct InputClient : ClientConfig
     std::shared_ptr<MockInputHandler> handler;
     mt::WaitCondition events_received;
 
+    CrossProcessSync input_cb_setup_fence;
     std::string const surface_name;
 
     static int const surface_width = 100;
@@ -294,21 +376,32 @@ TEST_F(TestClientInput, clients_receive_key_input)
     int const num_events_produced = 3;
     static std::string const test_client_name = "1";
 
+    CrossProcessSync fence;
+
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
+        CrossProcessSync input_cb_setup_fence;
+
+        ServerConfiguration(const CrossProcessSync& input_cb_setup_fence) 
+                : input_cb_setup_fence(input_cb_setup_fence)
+        {
+        }
+        
         void inject_input()
         {
             wait_until_client_appears(test_client_name);
+            input_cb_setup_fence.wait_for_signal_ready();
+
             for (int i = 0; i < num_events_produced; i++)
                 fake_event_hub->synthesize_event(mis::a_key_down_event()
                                                  .of_scancode(KEY_ENTER));
         }
-    } server_config;
+    } server_config(fence);
     launch_server_process(server_config);
     
     struct KeyReceivingClient : InputClient
     {
-        KeyReceivingClient() : InputClient(test_client_name) {}
+        KeyReceivingClient(const CrossProcessSync& fence) : InputClient(fence, test_client_name) {}
         void expect_input(mt::WaitCondition& events_received) override
         {
             using namespace ::testing;
@@ -318,7 +411,7 @@ TEST_F(TestClientInput, clients_receive_key_input)
             EXPECT_CALL(*handler, handle_input(KeyDownEvent())).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
-    } client_config;
+    } client_config(fence);
     launch_client_process(client_config);
 }
 
@@ -326,12 +419,21 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 {
     using namespace ::testing;
     static std::string const test_client_name = "1";
-    
+    CrossProcessSync fence;
+
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
+        CrossProcessSync input_cb_setup_fence;
+
+        ServerConfiguration(const CrossProcessSync& input_cb_setup_fence) 
+                : input_cb_setup_fence(input_cb_setup_fence)
+        {
+        }
+
         void inject_input()
         {
             wait_until_client_appears(test_client_name);
+            input_cb_setup_fence.wait_for_signal_ready();
 
             fake_event_hub->synthesize_event(mis::a_key_down_event()
                                              .of_scancode(KEY_LEFTSHIFT));
@@ -339,12 +441,12 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
                                              .of_scancode(KEY_4));
 
         }
-    } server_config;
+    } server_config{fence};
     launch_server_process(server_config);
     
     struct KeyReceivingClient : InputClient
     {
-        KeyReceivingClient() : InputClient(test_client_name) {}
+        KeyReceivingClient(const CrossProcessSync& fence) : InputClient(fence, test_client_name) {}
 
         void expect_input(mt::WaitCondition& events_received) override
         {
@@ -355,7 +457,7 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             EXPECT_CALL(*handler, handle_input(AllOf(KeyDownEvent(), KeyOfSymbol(XKB_KEY_dollar)))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
-    } client_config;
+    } client_config{fence};
     launch_client_process(client_config);
 }
 
@@ -363,23 +465,32 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
 {
     using namespace ::testing;
     static std::string const test_client_name = "1";
-    
+    CrossProcessSync fence;
+
     struct ServerConfiguration : public mtf::InputTestingServerConfiguration
     {
+        CrossProcessSync input_cb_setup_fence;
+
+        ServerConfiguration(const CrossProcessSync& input_cb_setup_fence) 
+                : input_cb_setup_fence(input_cb_setup_fence)
+        {
+        }
+
         void inject_input()
         {
             wait_until_client_appears(test_client_name);
-            
+            input_cb_setup_fence.wait_for_signal_ready();
+
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputClient::surface_width,
                                                                                  InputClient::surface_height));
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,2));
         }
-    } server_config;
+    } server_config{fence};
     launch_server_process(server_config);
     
     struct MotionReceivingClient : InputClient
     {
-        MotionReceivingClient() : InputClient(test_client_name) {}
+        MotionReceivingClient(const CrossProcessSync& fence) : InputClient(fence, test_client_name) {}
 
         void expect_input(mt::WaitCondition& events_received) override
         {
@@ -395,7 +506,7 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
                 .WillOnce(mt::WakeUp(&events_received));
             // But we should not receive an event for the second movement outside of our surface!
         }
-    } client_config;
+    } client_config{fence};
     launch_client_process(client_config);
 }
 
@@ -404,20 +515,30 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     using namespace ::testing;
     
     static std::string const test_client_name = "1";
-    
+    CrossProcessSync fence;
+
     struct ServerConfiguration : public mtf::InputTestingServerConfiguration
     {
+        CrossProcessSync input_cb_setup_fence;
+
+        ServerConfiguration(const CrossProcessSync& input_cb_setup_fence) 
+                : input_cb_setup_fence(input_cb_setup_fence)
+        {
+        }
+
         void inject_input()
         {
             wait_until_client_appears(test_client_name);
+            input_cb_setup_fence.wait_for_signal_ready();
+
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
         }
-    } server_config;
+    } server_config{fence};
     launch_server_process(server_config);
     
     struct ButtonReceivingClient : InputClient
     {
-        ButtonReceivingClient() : InputClient(test_client_name) {}
+        ButtonReceivingClient(const CrossProcessSync& fence) : InputClient(fence, test_client_name) {}
 
         void expect_input(mt::WaitCondition& events_received) override
         {
@@ -429,7 +550,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
             EXPECT_CALL(*handler, handle_input(ButtonDownEvent(0, 0))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
-    } client_config;
+    } client_config{fence};
     launch_client_process(client_config);
 }
 
@@ -480,9 +601,17 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     static int const client_width = screen_width/2;
     static std::string const test_client_1 = "1";
     static std::string const test_client_2 = "2";
-    
+    CrossProcessSync fence;
+
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
+        CrossProcessSync input_cb_setup_fence;
+
+        ServerConfiguration(const CrossProcessSync& input_cb_setup_fence) 
+                : input_cb_setup_fence(input_cb_setup_fence)
+        {
+        }
+
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
             static GeometryMap positions;
@@ -497,20 +626,23 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
         void inject_input() override
         {
             wait_until_client_appears(test_client_1);
+            EXPECT_EQ(1, input_cb_setup_fence.wait_for_signal_ready());
             wait_until_client_appears(test_client_2);
+            EXPECT_EQ(2, input_cb_setup_fence.wait_for_signal_ready());
+
             // In the bounds of the first surface
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, screen_height/2-1));
             // In the bounds of the second surface
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, screen_height/2));
         }
-    } server_config;
+    } server_config{fence};
     
     launch_server_process(server_config);
     
     struct InputClientOne : InputClient
     {
-        InputClientOne()
-           : InputClient(test_client_1)
+        InputClientOne(const CrossProcessSync& fence)
+                : InputClient(fence, test_client_1)
         {
         }
         
@@ -522,12 +654,12 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
-    } client_1;
+    } client_1{fence};
 
     struct InputClientTwo : InputClient
     {
-        InputClientTwo()
-            : InputClient(test_client_2)
+        InputClientTwo(const CrossProcessSync& fence)
+                : InputClient(fence, test_client_2)
         {
         }
         
@@ -538,7 +670,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         }
-    } client_2;
+    } client_2{fence};
 
     launch_client_process(client_1);
     launch_client_process(client_2);
@@ -574,7 +706,8 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 {
     using namespace ::testing;
     static std::string const test_client_name = "1";
-    
+    CrossProcessSync fence;
+
     static int const screen_width = 100;
     static int const screen_height = 100;
     
@@ -588,6 +721,13 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 
     struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
+        CrossProcessSync input_cb_setup_fence;
+
+        ServerConfiguration(const CrossProcessSync& input_cb_setup_fence) 
+                : input_cb_setup_fence(input_cb_setup_fence)
+        {
+        }
+
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
             static GeometryMap positions;
@@ -604,6 +744,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         void inject_input() override
         {
             wait_until_client_appears(test_client_name);
+            input_cb_setup_fence.wait_for_signal_ready();
             
             // First we will move the cursor in to the input region on the left side of the window. We should see a click here
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
@@ -618,14 +759,14 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
             fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
         }
-    } server_config;
+    } server_config{fence};
     
     launch_server_process(server_config);
 
     struct ClientConfig : InputClient
     {
-        ClientConfig()
-            : InputClient(test_client_name)
+        ClientConfig(const CrossProcessSync& fence)
+                : InputClient(fence, test_client_name)
         {
         }
 
@@ -646,7 +787,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
                     .WillOnce(mt::WakeUp(&events_received));
             }
         }
-    } client_config;
+    } client_config{fence};
     launch_client_process(client_config);
 }
 
@@ -656,6 +797,7 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
     
     static std::string const test_client_name_1 = "1";
     static std::string const test_client_name_2 = "2";
+    CrossProcessSync fence;
 
     static int const screen_width = 100;
     static int const screen_height = 100;
@@ -663,8 +805,15 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
     static geom::Rectangle const screen_geometry{geom::Point{0, 0},
         geom::Size{screen_width, screen_height}};
 
-    struct ServerConiguration : mtf::InputTestingServerConfiguration
+    struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
+        CrossProcessSync input_cb_setup_fence;
+
+        ServerConfiguration(const CrossProcessSync& input_cb_setup_fence) 
+                : input_cb_setup_fence(input_cb_setup_fence)
+        {
+        }
+
         std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
         {
             static GeometryMap positions;
@@ -684,8 +833,10 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
         void inject_input() override
         {
             wait_until_client_appears(test_client_name_1);
+            input_cb_setup_fence.wait_for_signal_ready();
             wait_until_client_appears(test_client_name_2);
-            
+            input_cb_setup_fence.wait_for_signal_ready();
+
             // First we will move the cursor in to the region where client 2 obscures client 1
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
@@ -695,14 +846,14 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
             fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
             fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
         }
-    } server_config;
+    } server_config{fence};
     
     launch_server_process(server_config);
 
     struct ClientConfigOne : InputClient
     {
-        ClientConfigOne()
-            : InputClient(test_client_name_1)
+        ClientConfigOne(const CrossProcessSync& fence)
+                : InputClient(fence, test_client_name_1)
         {
         }
 
@@ -720,13 +871,13 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
                     .WillOnce(mt::WakeUp(&events_received));
             }
         }
-    } client_config_1;
+    } client_config_1{fence};
     launch_client_process(client_config_1);
 
     struct ClientConfigTwo : InputClient
     {
-        ClientConfigTwo()
-            : InputClient(test_client_name_2)
+        ClientConfigTwo(const CrossProcessSync& fence)
+                : InputClient(fence, test_client_name_2)
         {
         }
 
@@ -744,6 +895,6 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
                   .WillOnce(mt::WakeUp(&events_received));
             }
         }
-    } client_config_2;
+    } client_config_2{fence};
     launch_client_process(client_config_2);
 }

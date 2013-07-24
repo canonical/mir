@@ -29,6 +29,7 @@
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <cassert>
+#include <chrono>
 #include <ostream>
 #include <string>
 
@@ -104,16 +105,18 @@ mtf::Process::~Process()
     }
 }
 
-mtf::Result mtf::Process::wait_for_termination()
+mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& timeout)
 {
     Result result;
     int status;
 
     if (!detached)
     {
+        auto tp = std::chrono::system_clock::now() + timeout;
+        int rc = -1;
         while (true)
         {
-            if (::waitpid(pid, &status, WCONTINUED) == pid)
+            if ((rc = ::waitpid(pid, &status, WNOHANG | WCONTINUED)) == pid)
             {
                 terminated = WIFEXITED(status) ||  WIFSIGNALED(status);
 
@@ -144,11 +147,15 @@ mtf::Result mtf::Process::wait_for_termination()
                     continue;
                 }
             } 
-            else
+            else if (rc == 0)
             {
-                break;
+                if (std::chrono::system_clock::now() <= tp)
+                    continue;
+                else
+                    throw std::runtime_error("Timeout while waiting for child to change state");
             }
-            
+            else
+                break;                
         }
     }
     return result;
