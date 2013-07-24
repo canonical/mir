@@ -121,9 +121,8 @@ int main(int argc, char *argv[])
 {
     MirConnection *conn;
     MirSurfaceParameters parm;
-    MirDisplayInfo dinfo;
     Window win[3];
-    int f;
+    unsigned int f;
 
     (void)argc;
 
@@ -134,16 +133,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    mir_connection_get_display_info(conn, &dinfo);
+    MirDisplayConfiguration *display_config = mir_connection_create_display_config(conn);
+    MirDisplayOutput* dinfo = &display_config->displays[0];
 
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < dinfo.supported_pixel_format_items; f++)
+    for (f = 0; f < dinfo->num_output_formats; f++)
     {
-        if (dinfo.supported_pixel_format[f] == mir_pixel_format_abgr_8888 ||
-            dinfo.supported_pixel_format[f] == mir_pixel_format_argb_8888)
+        if (dinfo->output_formats[f] == mir_pixel_format_abgr_8888 ||
+            dinfo->output_formats[f] == mir_pixel_format_argb_8888)
         {
-            parm.pixel_format = dinfo.supported_pixel_format[f];
+            parm.pixel_format = dinfo->output_formats[f];
             break;
         }
     }
@@ -151,8 +151,10 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format with "
                         "alpha support. Blending won't work!.\n");
-        parm.pixel_format = dinfo.supported_pixel_format[0];
+        parm.pixel_format = dinfo->output_formats[0];
     }
+
+    mir_display_config_destroy(display_config);
 
     parm.name = "red";
     parm.width = 225;

@@ -25,8 +25,10 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
 #include "mir/frontend/communicator.h"
 
 #include "mir_test_doubles/stub_buffer.h"
@@ -88,9 +90,9 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             });
     }
 
-    std::shared_ptr<mc::Renderer> the_renderer() override
+    std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
     {
-        struct NullRenderer : public mc::Renderer
+        struct StubRenderer : public mc::Renderer
         {
             void clear() {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
@@ -102,7 +104,16 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             void ensure_no_live_buffers_bound() {}
         };
 
-        return std::make_shared<NullRenderer>();
+        struct StubRendererFactory : public mc::RendererFactory
+        {
+            std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+            {
+                auto raw = new StubRenderer{};
+                return std::unique_ptr<StubRenderer>(raw);
+            }
+        };
+
+        return std::make_shared<StubRendererFactory>();
     }
 
 
@@ -157,7 +168,8 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
     msh::ApplicationSession session{
         conf.the_shell_surface_factory(),
         "stress",
-        conf.the_shell_snapshot_strategy()};
+        conf.the_shell_snapshot_strategy(),
+        std::make_shared<msh::NullSessionListener>()};
     session.create_surface(msh::a_surface());
 
     auto compositor = conf.the_compositor();

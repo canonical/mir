@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/gl_pixel_buffer.h"
+#include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
 
 #include "mir_test_doubles/mock_buffer.h"
@@ -29,6 +29,7 @@
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -103,7 +104,7 @@ ACTION(FillPixelsRGBA)
 
 TEST_F(GLPixelBufferTest, returns_empty_if_not_initialized)
 {
-    mg::GLPixelBuffer pixels{std::move(context)};
+    msh::GLPixelBuffer pixels{std::move(context)};
 
     EXPECT_EQ(geom::Size(), pixels.size());
     EXPECT_EQ(geom::Stride(), pixels.stride());
@@ -139,7 +140,7 @@ TEST_F(GLPixelBufferTest, returns_data_from_bgra_buffer_texture)
             .WillOnce(FillPixels());
     }
 
-    mg::GLPixelBuffer pixels{std::move(context)};
+    msh::GLPixelBuffer pixels{std::move(context)};
 
     pixels.fill_from(mock_buffer);
     auto data = pixels.as_argb_8888();
@@ -195,7 +196,7 @@ TEST_F(GLPixelBufferTest, returns_data_from_rgba_buffer_texture)
             .WillOnce(FillPixelsRGBA());
     }
 
-    mg::GLPixelBuffer pixels{std::move(context)};
+    msh::GLPixelBuffer pixels{std::move(context)};
 
     pixels.fill_from(mock_buffer);
     auto data = pixels.as_argb_8888();
