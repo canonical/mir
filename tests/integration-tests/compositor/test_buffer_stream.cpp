@@ -78,15 +78,7 @@ struct BufferStreamTest : public ::testing::Test
         return std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
     }
 
-    void terminate_child_thread(mt::Synchronizer& controller)
-    {
-        controller.ensure_child_is_waiting();
-        controller.kill_thread();
-        controller.activate_waiting_child();
-    }
-
     mc::BufferStreamSurfaces buffer_stream;
-    std::atomic<bool> client_thread_done;
 };
 
 }
@@ -158,108 +150,104 @@ TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
 namespace
 {
 
-void client_request_loop(std::shared_ptr<mg::Buffer>& out_buffer,
-                         mt::SynchronizerSpawned& synchronizer,
-                         ms::BufferStream& stream)
+void client_loop(int nframes, ms::BufferStream& stream)
 {
-    for(;;)
+    for (int f = 0; f < nframes; f++)
     {
-        out_buffer = stream.secure_client_buffer();
+        auto out_buffer = stream.secure_client_buffer();
         ASSERT_NE(nullptr, out_buffer);
-
-        if (synchronizer.child_enter_wait()) return;
-
         std::this_thread::yield();
     }
 }
 
-void back_buffer_loop(std::shared_ptr<mg::Buffer>& out_region,
-                      mt::SynchronizerSpawned& synchronizer,
-                      ms::BufferStream& stream)
+void compositor_loop(ms::BufferStream &stream,
+                     std::atomic<bool> &done,
+                     int &composited)
 {
-    for(;;)
+    while (!done.load())
     {
-        out_region = stream.lock_compositor_buffer();
+        auto comp1 = stream.lock_compositor_buffer();
+        ASSERT_NE(nullptr, comp1);
+        composited++;
+        std::this_thread::yield();
+
+#if 0 // TODO?
+        if (done.load())
+            break;
+
+        auto comp2 = stream.lock_compositor_buffer();
+        ASSERT_NE(nullptr, comp2);
+        composited++;
+        std::this_thread::yield();
+
+        ASSERT_NE(comp1->id(), comp2->id());
+        comp1.reset();
+        comp2.reset();
+#endif
+    }
+}
+
+void snapshot_loop(ms::BufferStream &stream,
+                   std::atomic<bool> &done,
+                   int &snapshotted)
+{
+    while (!done.load())
+    {
+        auto out_region = stream.lock_snapshot_buffer();
         ASSERT_NE(nullptr, out_region);
-
-        if (synchronizer.child_enter_wait()) return;
-
+        snapshotted++;
         std::this_thread::yield();
     }
 }
 
 }
 
-#if 0  // FIXME: Not yet sure if the test needs fixing, or more features needed
 TEST_F(BufferStreamTest, stress_test_distinct_buffers)
 {
-    unsigned int const num_compositors{3};
-    unsigned int const num_iterations{500};
-    std::chrono::microseconds const sleep_duration{50};
+    const int num_snapshotters{3};
+    const int num_frames{500};
 
-    struct CompositorInfo
+    std::atomic<bool> done;
+    done = false;
+
+    int composited = 0;
+    int snapshotted = 0;
+
+    std::thread client(client_loop,
+                       num_frames,
+                       std::ref(buffer_stream));
+
+    std::thread compositor(compositor_loop,
+                           std::ref(buffer_stream),
+                           std::ref(done),
+                           std::ref(composited));
+
+    std::vector<std::shared_ptr<std::thread>> snapshotters;
+    for (unsigned int i = 0; i < num_snapshotters; i++)
     {
-        CompositorInfo(ms::BufferStream& stream)
-            : thread{back_buffer_loop, std::ref(back_buffer),
-                     std::ref(sync), std::ref(stream)}
-        {
-        }
-
-        mt::Synchronizer sync;
-        std::shared_ptr<mg::Buffer> back_buffer;
-        std::thread thread;
-    };
-
-    std::vector<std::unique_ptr<CompositorInfo>> compositors;
-
-    mt::Synchronizer client_sync;
-    std::shared_ptr<mg::Buffer> client_buffer;
-    auto client_thread = std::thread(client_request_loop,  std::ref(client_buffer),
-                                     std::ref(client_sync), std::ref(buffer_stream));
-
-    for (unsigned int i = 0; i < num_compositors; i++)
-    {
-        auto raw = new CompositorInfo{buffer_stream};
-        compositors.push_back(std::unique_ptr<CompositorInfo>(raw));
+        snapshotters.push_back(
+            std::make_shared<std::thread>(snapshot_loop,
+                                          std::ref(buffer_stream),
+                                          std::ref(done),
+                                          std::ref(snapshotted)));
     }
 
-    for(unsigned int i = 0; i < num_iterations; i++)
-    {
-        /* Pause the threads */
-        for (auto& info : compositors)
-        {
-            info->sync.ensure_child_is_waiting();
-        }
-        client_sync.ensure_child_is_waiting();
+    client.join();
 
-        /*
-         * Check that no compositor has the client's buffer, and release
-         * all the buffers.
-         */
-        for (auto& info : compositors)
-        {
-            EXPECT_NE(info->back_buffer->id(), client_buffer->id());
-            info->back_buffer.reset();
-        }
-        client_buffer.reset();
+    done = true;
 
-        /* Restart threads */
-        for (auto& info : compositors)
-        {
-            info->sync.activate_waiting_child();
-        }
-        client_sync.activate_waiting_child();
+    buffer_stream.force_requests_to_complete();
 
-        std::this_thread::sleep_for(sleep_duration);
-    }
+    compositor.join();
 
-    terminate_child_thread(client_sync);
-    client_thread.join();
+    for (auto &s : snapshotters)
+        s->join();
 
-    for (auto& info : compositors)
-    {
-        terminate_child_thread(info->sync);
-        info->thread.join();
-    }
+    // The compositor is never blocked. So should get at least as many
+    // frames as the client generated...
+    EXPECT_GE(composited, num_frames);
+
+    // Snapshots are never blocked either. There should be time for lots more
+    // snapshots than client frames...
+    EXPECT_GE(snapshotted, num_frames);
 }
-#endif
