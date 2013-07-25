@@ -102,12 +102,12 @@ int mc::SwitchingBundle::drop_frames(int max)
 
     for (int d = 0; d < dropped; d++)
     {
-        first_client = (first_client + nbuffers - 1) % nbuffers;
+        auto tmp = ring[first_ready];
         nready--;
-        auto tmp = ring[first_client];
+        first_client = (first_ready + nready) % nbuffers;
         int end = (first_client + nclients) % nbuffers;
 
-        for (int i = first_client, j = 0; i != end; i = j)
+        for (int i = first_ready, j = 0; i != end; i = j)
         {
             j = (i + 1) % nbuffers;
             ring[i] = ring[j];
@@ -115,7 +115,7 @@ int mc::SwitchingBundle::drop_frames(int max)
                 snapshot = i;
         }
 
-        if (snapshot == first_client)
+        if (snapshot == first_ready)
             snapshot = end;
 
         ring[end] = tmp;
