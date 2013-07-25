@@ -60,7 +60,6 @@
 #include "switching_bundle.h"
 
 #include <boost/throw_exception.hpp>
-#include <cassert>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
@@ -72,7 +71,7 @@ mc::SwitchingBundle::SwitchingBundle(
     : bundle_properties{property_request},
       gralloc{gralloc},
       nbuffers{nbuffers},
-      first_compositor{0}, ncompositors{0}, ycompositors{0},
+      first_compositor{0}, ncompositors{0}, recompositors{0},
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
@@ -195,16 +194,17 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
-    if (ycompositors > 0 || ncompositors >= 2)
+    // XXX limit ncompositors to 2 for bypass. Does it need to be enforced?
+    if (recompositors > 0 || ncompositors >= 2)
     {
         compositor = (first_compositor + ncompositors - 1) % nbuffers;
-        ycompositors++;
+        recompositors++;
     }
     else if (!nready)
     {
         if (ncompositors == 1)
         {
-            ycompositors++;
+            recompositors++;
             compositor = first_compositor;
         }
         else if (!ncompositors && nbuffers > 2 && nfree())
@@ -222,7 +222,8 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         else
         {
             BOOST_THROW_EXCEPTION(std::logic_error(
-                "compositor_acquire would block"));
+                "compositor_acquire would block. Either there are not enough "
+                "buffers or too many clients acquired."));
         }
     }
     else
@@ -230,13 +231,14 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         // Make sure the compositor gets the latest frame (LP: #1199450)
         drop_frames(nready - 1);
 
+        // XXX ^ If !framedropping then the wait in client_release also
+        //       enforces this.
+
         compositor = first_ready;
         first_ready = (first_ready + 1) % nbuffers;
         nready--;
         ncompositors++;
     }
-
-    assert(compositor == (first_compositor + ncompositors - 1) % nbuffers);
 
     return ring[compositor];
 }
@@ -249,8 +251,10 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Compositor release out of order"));
 
-    if (ncompositors == 1 && ycompositors > 0)
-        ycompositors--;
+    if (ncompositors == 1 && recompositors > 0)
+    {
+        recompositors--;
+    }
     else
     {
         first_compositor = (first_compositor + 1) % nbuffers;
