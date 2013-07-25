@@ -16,6 +16,9 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#include "mir/shell/surface_configurator.h"
+
+#include "mir_test/fake_shared.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -24,6 +27,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace msh = mir::shell;
+
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -59,12 +65,30 @@ struct SurfaceCreatingClient : public mtf::TestingClientConfiguration
     MirSurface* surface;
 };
 
+struct MockSurfaceConfigurator : public msh::SurfaceConfigurator
+{
+    MOCK_METHOD3(configure_surface, void(std::shared_ptr<msh::Surface> const&, MirSurfaceAttrib, int&));
+};
+
 }
 
 TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notified_of_attribute_changes)
 {
     struct ServerConfiguration : TestingServerConfiguration
     {
+        std::shared_ptr<msh::SurfaceConfigurator> the_shell_surface_configurator() override
+        {
+            return mt::fake_shared(mock_configurator);
+        }
+
+        void exec() override
+        {
+            using namespace ::testing;
+
+            EXPECT_CALL(mock_configurator, configure_surface(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1);
+        }
+
+        MockSurfaceConfigurator mock_configurator;
     } server_config;
     launch_server_process(server_config);
 
@@ -73,6 +97,45 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
         void exec() override
         {
             SurfaceCreatingClient::exec();
+            mir_wait_for(mir_surface_set_type(surface,
+                                               mir_surface_type_freestyle));
+            EXPECT_EQ(mir_surface_type_freestyle,
+                      mir_surface_get_type(surface));
+        }
+    } client_config;
+    launch_client_process(client_config);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_interfere_with_attribute_changes)
+{
+    struct ServerConfiguration : TestingServerConfiguration
+    {
+        std::shared_ptr<msh::SurfaceConfigurator> the_shell_surface_configurator() override
+        {
+            return mt::fake_shared(stub_configurator);
+        }
+        
+        struct StubSurfaceConfigurator : public msh::SurfaceConfigurator
+        {
+            void configure_surface(std::shared_ptr<msh::Surface> const&, MirSurfaceAttrib attrib, int &value)
+            {
+                // Force type to normal irregardless of client request
+                if (attrib == mir_surface_attrib_type)
+                    value = mir_surface_type_normal;
+            }
+        } stub_configurator;
+    } server_config;
+    launch_server_process(server_config);
+
+    struct ClientConfiguration : SurfaceCreatingClient
+    {
+        void exec() override
+        {
+            SurfaceCreatingClient::exec();
+            mir_wait_for(mir_surface_set_type(surface,
+                                               mir_surface_type_freestyle));
+            EXPECT_EQ(mir_surface_type_normal,
+                      mir_surface_get_type(surface));
         }
     } client_config;
     launch_client_process(client_config);
