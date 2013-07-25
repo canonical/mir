@@ -74,7 +74,7 @@ mc::SwitchingBundle::SwitchingBundle(
       first_compositor{0}, ncompositors{0},
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
-      snapshot{0}, nsnapshotters{0},
+      snapshot{-1}, nsnapshotters{0},
       framedropping{false}
 {
     if (nbuffers < 1)
@@ -147,7 +147,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     int client = (first_client + nclients) % nbuffers;
     nclients++;
 
-    if (nsnapshotters && client == snapshot)
+    if (client == snapshot)
     {
         /*
          * In the rare case where a snapshot is still being taken of what is
@@ -163,7 +163,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         }
         else
         {
-            while (nsnapshotters && client == snapshot)
+            while (client == snapshot)
                 cond.wait(lock);
         }
     }
@@ -263,6 +263,10 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
             "snapshot_release passed a non-snapshot buffer"));
 
     nsnapshotters--;
+
+    if (!nsnapshotters)
+        snapshot = -1;
+
     cond.notify_all();
 }
 
