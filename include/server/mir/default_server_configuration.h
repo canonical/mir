@@ -35,9 +35,10 @@ class GraphicBufferAllocator;
 class BufferStreamFactory;
 class Scene;
 class Drawer;
-class CompositingStrategy;
+class DisplayBufferCompositorFactory;
 class Compositor;
 class OverlayRenderer;
+class RendererFactory;
 }
 namespace frontend
 {
@@ -120,7 +121,7 @@ public:
      * configurable interfaces for modifying graphics
      *  @{ */
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<compositor::Renderer>        the_renderer();
+    virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -132,7 +133,7 @@ public:
     /** @name compositor configuration - customization
      * configurable interfaces for modifying compositor
      *  @{ */
-    virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
+    virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
     virtual std::shared_ptr<compositor::OverlayRenderer>          the_overlay_renderer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     /** @} */
@@ -242,7 +243,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
-    CachedPtr<compositor::Renderer> renderer;
+    CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
@@ -254,7 +255,7 @@ protected:
     CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;
     CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
-    CachedPtr<compositor::CompositingStrategy> compositing_strategy;
+    CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;

@@ -34,7 +34,7 @@ class Display;
 namespace compositor
 {
 
-class CompositingStrategy;
+class DisplayBufferCompositorFactory;
 class CompositingFunctor;
 class Scene;
 
@@ -43,7 +43,7 @@ class MultiThreadedCompositor : public Compositor
 public:
     MultiThreadedCompositor(std::shared_ptr<graphics::Display> const& display,
                             std::shared_ptr<Scene> const& scene,
-                            std::shared_ptr<CompositingStrategy> const& strategy);
+                            std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory);
     ~MultiThreadedCompositor();
 
     void start();
@@ -52,7 +52,7 @@ public:
 private:
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<Scene> const scene;
-    std::shared_ptr<CompositingStrategy> const compositing_strategy;
+    std::shared_ptr<DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
     std::vector<std::thread> threads;

@@ -22,6 +22,7 @@
 #include "src/server/compositor/switching_bundle.h"
 
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "multithread_harness.h"
 
 #include <gmock/gmock.h>
@@ -39,28 +40,6 @@ namespace geom = mir::geometry;
 namespace
 {
 
-struct StubBufferAllocator : public mc::GraphicBufferAllocator
-{
-    StubBufferAllocator() : id{1} {}
-
-    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
-    {
-        mc::BufferProperties properties{geom::Size{id, id},
-                                        geom::PixelFormat::abgr_8888,
-                                        mc::BufferUsage::hardware};
-        ++id;
-        return std::make_shared<mtd::StubBuffer>(properties);
-    }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return {};
-    }
-
-    unsigned int id;
-};
-
-
 struct BufferStreamTest : public ::testing::Test
 {
     BufferStreamTest()
@@ -70,7 +49,7 @@ struct BufferStreamTest : public ::testing::Test
 
     std::shared_ptr<mc::BufferBundle> create_bundle()
     {
-        auto allocator = std::make_shared<StubBufferAllocator>();
+        auto allocator = std::make_shared<mtd::StubBufferAllocator>();
         auto factory = std::make_shared<mc::SwapperFactory>(allocator);
         mc::BufferProperties properties{geom::Size{380, 210},
                                         geom::PixelFormat::abgr_8888,

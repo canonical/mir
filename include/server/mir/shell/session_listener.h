@@ -26,6 +26,7 @@ namespace mir
 namespace shell
 {
 class Session;
+class Surface;
 
 class SessionListener
 {
@@ -34,6 +35,9 @@ public:
     virtual void stopping(std::shared_ptr<Session> const& session) = 0;
     virtual void focused(std::shared_ptr<Session> const& session) = 0;
     virtual void unfocused() = 0;
+    
+    virtual void surface_created(Session& session, std::shared_ptr<Surface> const& surface) = 0;
+    virtual void destroying_surface(Session& session, std::shared_ptr<Surface> const& surface) = 0;
 
 protected:
     SessionListener() = default;

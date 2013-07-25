@@ -31,13 +31,20 @@ namespace geometry
 
 struct Displacement
 {
-    DeltaX dx;
-    DeltaY dy;
+    Displacement() {}
+    Displacement(Displacement const&) = default;
+    Displacement& operator=(Displacement const&) = default;
+
+    template<typename DeltaXType, typename DeltaYType>
+    Displacement(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy} {}
 
     float length_squared() const
     {
         return dx.as_float() * dx.as_float() + dy.as_float() * dy.as_float();
     }
+
+    DeltaX dx;
+    DeltaY dy;
 };
 
 inline bool operator==(Displacement const& lhs, Displacement const& rhs)
