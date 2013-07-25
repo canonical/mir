@@ -205,7 +205,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     {
         while (nready <= 0)
             cond.wait(lock);
-    
+
         compositor = first_ready;
         first_ready = (first_ready + 1) % nbuffers;
         nready--;
