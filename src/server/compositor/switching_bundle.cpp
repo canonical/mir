@@ -140,7 +140,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     }
     else
     {
-        while (nfree() <= 0)
+        while (!nfree() || nready)
             cond.wait(lock);
     }
 
@@ -203,8 +203,11 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     }
     else
     {
-        while (nready <= 0)
+        while (!nready)
             cond.wait(lock);
+
+        // Make sure the compositor gets the latest frame (LP: #1199450)
+        drop_frames(nready - 1);
 
         compositor = first_ready;
         first_ready = (first_ready + 1) % nbuffers;
