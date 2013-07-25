@@ -35,8 +35,8 @@ T clamp(T x, T min, T max)
 geom::Rectangle rect_from_points(geom::Point const& tl, geom::Point const& br)
 {
     return {tl,
-            geom::Size{geom::Width{br.x.as_int() - tl.x.as_int() + 1},
-                       geom::Height{br.y.as_int() - tl.y.as_int() + 1}}};
+            geom::Size{geom::Width{br.x.as_int() - tl.x.as_int()},
+                       geom::Height{br.y.as_int() - tl.y.as_int()}}};
 }
 
 }
@@ -78,9 +78,9 @@ void geom::Rectangles::confine(geom::Point& point) const
         {
             auto br = rect.bottom_right();
             auto min_x = rect.top_left.x;
-            auto max_x = br.x;
+            auto max_x = geom::X{br.x.as_int() - 1};
             auto min_y = rect.top_left.y;
-            auto max_y = br.y;
+            auto max_y = geom::Y{br.y.as_int() - 1};
 
             geom::Point confined_point{clamp(point.x, min_x, max_x),
                                        clamp(point.y, min_y, max_y)};
@@ -113,25 +113,21 @@ geom::Rectangle geom::Rectangles::bounding_rectangle() const
 
     for (auto const& rect : rectangles)
     {
-        if (rect.size.width.as_int() > 0 &&
-            rect.size.height.as_int() > 0)
-        {
-            geom::Point rtl = rect.top_left;
-            geom::Point rbr = rect.bottom_right();
+        geom::Point rtl = rect.top_left;
+        geom::Point rbr = rect.bottom_right();
 
-            if (!points_initialized)
-            {
-                tl = rtl;
-                br = rbr;
-                points_initialized = true;
-            }
-            else
-            {
-                tl.x = std::min(rtl.x, tl.x);
-                tl.y = std::min(rtl.y, tl.y);
-                br.x = std::max(rbr.x, br.x);
-                br.y = std::max(rbr.y, br.y);
-            }
+        if (!points_initialized)
+        {
+            tl = rtl;
+            br = rbr;
+            points_initialized = true;
+        }
+        else
+        {
+            tl.x = std::min(rtl.x, tl.x);
+            tl.y = std::min(rtl.y, tl.y);
+            br.x = std::max(rbr.x, br.x);
+            br.y = std::max(rbr.y, br.y);
         }
     }
 

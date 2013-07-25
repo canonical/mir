@@ -17,37 +17,28 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_
-#define MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_
+#ifndef MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
+#define MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 
 namespace mir
 {
-namespace graphics
-{
-class DisplayBuffer;
-}
-namespace geometry
-{
-struct Rectangle;
-}
-
 namespace compositor
 {
 
-class CompositingStrategy
+class DisplayBufferCompositor
 {
 public:
-    virtual ~CompositingStrategy() = default;
+    virtual ~DisplayBufferCompositor() = default;
 
-    virtual void render(graphics::DisplayBuffer& display_buffer) = 0;
+    virtual void composite() = 0;
 
 protected:
-    CompositingStrategy() = default;
-    CompositingStrategy& operator=(CompositingStrategy const&) = delete;
-    CompositingStrategy(CompositingStrategy const&) = delete;
+    DisplayBufferCompositor() = default;
+    DisplayBufferCompositor& operator=(DisplayBufferCompositor const&) = delete;
+    DisplayBufferCompositor(DisplayBufferCompositor const&) = delete;
 };
+
 }
 }
 
-
-#endif /* MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_ */
+#endif /* MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_ */

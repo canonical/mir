@@ -17,10 +17,10 @@
  */
 
 
-#ifndef MIR_COMPOSITOR_BASIC_COMPOSITING_STRATEGY_H_
-#define MIR_COMPOSITOR_BASIC_COMPOSITING_STRATEGY_H_
+#ifndef MIR_COMPOSITOR_BASIC_DISPLAY_BUFFER_COMPOSITOR_H_
+#define MIR_COMPOSITOR_BASIC_DISPLAY_BUFFER_COMPOSITOR_H_
 
-#include "mir/compositor/compositing_strategy.h"
+#include "mir/compositor/display_buffer_compositor.h"
 
 #include <functional>
 #include <memory>
@@ -39,16 +39,20 @@ struct Rectangle;
 
 namespace compositor
 {
-class BasicCompositingStrategy : public CompositingStrategy
+class BasicDisplayBufferCompositor : public DisplayBufferCompositor
 {
 public:
+    BasicDisplayBufferCompositor(graphics::DisplayBuffer& display_buffer);
 
-    virtual void render(graphics::DisplayBuffer& display_buffer);
+    virtual void composite();
     virtual void compose(
         mir::geometry::Rectangle const& view_area,
         std::function<void(std::shared_ptr<void> const&)> save_resource) = 0;
+
+protected:
+    graphics::DisplayBuffer& display_buffer;
 };
 }
 }
 
-#endif /* MIR_COMPOSITOR_BASIC_COMPOSITING_STRATEGY_H_ */
+#endif /* MIR_COMPOSITOR_BASIC_DISPLAY_BUFFER_COMPOSITOR_H_ */
