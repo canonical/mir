@@ -21,6 +21,7 @@
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/snapshot_strategy.h"
 #include "mir/shell/surface_configurator.h"
+#include "mir/shell/session_listener.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -38,11 +39,13 @@ msh::ApplicationSession::ApplicationSession(
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SurfaceConfigurator> const& surface_configurator,
+    std::shared_ptr<msh::SessionListener> const& session_listener,
     std::shared_ptr<me::EventSink> const& sink) :
     surface_factory(surface_factory),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
     surface_configurator(surface_configurator),
+    session_listener(session_listener),
     event_sink(sink),
     next_surface_id(0)
 {
@@ -53,8 +56,10 @@ msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-    std::shared_ptr<SurfaceConfigurator> const& surface_configurator) :
-    ApplicationSession(surface_factory, session_name, snapshot_strategy, surface_configurator, std::shared_ptr<me::EventSink>())
+    std::shared_ptr<SurfaceConfigurator> const& surface_configurator,
+    std::shared_ptr<msh::SessionListener> const& session_listener) :
+    ApplicationSession(surface_factory, session_name, snapshot_strategy, surface_configurator, session_listener, 
+                       std::shared_ptr<me::EventSink>())
 {
 }
 
@@ -79,6 +84,9 @@ mf::SurfaceId msh::ApplicationSession::create_surface(const msh::SurfaceCreation
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
+    
+    session_listener->surface_created(*this, surf);
+    
     return id;
 }
 
@@ -118,6 +126,8 @@ void msh::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     auto p = checked_find(id);
+    
+    session_listener->destroying_surface(*this, p->second);
 
     p->second->destroy();
     surfaces.erase(p);

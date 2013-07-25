@@ -48,13 +48,13 @@ static void render_pattern(MirGraphicsRegion *region, uint32_t pf)
     }
 }
 
-static MirPixelFormat find_8888_format(MirDisplayInfo *info)
+static MirPixelFormat find_8888_format(MirPixelFormat *formats, unsigned int num_formats)
 {
     MirPixelFormat pf = mir_pixel_format_invalid;
 
-    for (int i = 0; i < info->supported_pixel_format_items; ++i)
+    for (unsigned int i = 0; i < num_formats; ++i)
     {
-        MirPixelFormat cur_pf = info->supported_pixel_format[i];
+        MirPixelFormat cur_pf = formats[i];
         if (cur_pf == mir_pixel_format_abgr_8888 ||
             cur_pf == mir_pixel_format_xbgr_8888 ||
             cur_pf == mir_pixel_format_argb_8888 ||
@@ -128,11 +128,11 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
     puts("Connected");
 
-    MirDisplayInfo display_info;
-    mir_connection_get_display_info(connection, &display_info);
-    assert(display_info.supported_pixel_format_items > 0);
-
-    MirPixelFormat pixel_format = find_8888_format(&display_info);
+    unsigned int const num_formats = 32;
+    MirPixelFormat pixel_formats[num_formats];
+    unsigned int valid_formats;
+    mir_connection_get_available_surface_formats(connection, pixel_formats, num_formats, &valid_formats);
+    MirPixelFormat pixel_format = find_8888_format(pixel_formats, valid_formats);
 
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_software};

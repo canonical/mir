@@ -230,8 +230,8 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server
                 using testing::_;
                 buffer_allocation_strategy = std::make_shared<mtd::MockSwapperFactory>();
 
-                ON_CALL(*buffer_allocation_strategy, create_swapper_new_buffers(_,_,_))
-                    .WillByDefault(testing::Invoke(this, &ServerConfig::on_create_swapper));
+                EXPECT_CALL(*buffer_allocation_strategy, create_swapper_new_buffers(_,_,_))
+                    .WillOnce(testing::Invoke(this, &ServerConfig::on_create_swapper));
             }
                 return buffer_allocation_strategy;
         }

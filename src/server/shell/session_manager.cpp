@@ -81,7 +81,7 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(
 {
     std::shared_ptr<msh::Session> new_session =
         std::make_shared<msh::ApplicationSession>(
-            surface_factory, name, snapshot_strategy, surface_configurator, sink);
+            surface_factory, name, snapshot_strategy, surface_configurator, session_listener, sink);
 
     app_container->insert_session(new_session);
     

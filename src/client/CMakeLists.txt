@@ -23,12 +23,14 @@ set(
 
   aging_buffer.cpp
   client_buffer_depository.cpp
+  display_configuration.cpp
   mir_client_library.cpp
   mir_connection.cpp
   mir_wait_handle.cpp
   mir_surface.cpp
   logging/rpc_report.cpp
   default_connection_configuration.cpp
+  surface_map.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")

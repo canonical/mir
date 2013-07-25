@@ -253,11 +253,10 @@ int main(int argc, char *argv[])
     static const Color background = {0x40, 0x40, 0x40, 0xff};
     MirConnection *conn;
     MirSurfaceParameters parm;
-    MirDisplayInfo dinfo;
     MirSurface *surf;
     MirGraphicsRegion canvas;
     MirEventDelegate delegate = {&on_event, &canvas};
-    int f;
+    unsigned int f;
 
     (void)argc;
 
@@ -268,18 +267,26 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    mir_connection_get_display_info(conn, &dinfo);
+    MirDisplayConfiguration* display_config = mir_connection_create_display_config(conn);
+    MirDisplayOutput* dinfo = &display_config->displays[0];
 
     parm.buffer_usage = mir_buffer_usage_software;
+
+    unsigned int const pf_size = 32;
+    MirPixelFormat formats[pf_size];
+    unsigned int valid_formats;
+    mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
+
     parm.pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < dinfo.supported_pixel_format_items; f++)
+    for (f = 0; f < valid_formats; f++)
     {
-        if (BYTES_PER_PIXEL(dinfo.supported_pixel_format[f]) == 4)
+        if (BYTES_PER_PIXEL(formats[f]) == 4)
         {
-            parm.pixel_format = dinfo.supported_pixel_format[f];
+            parm.pixel_format = formats[f];
             break;
         }
     }
+
     if (parm.pixel_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format\n");
@@ -288,8 +295,11 @@ int main(int argc, char *argv[])
     }
 
     parm.name = "Paint Canvas";
-    parm.width = dinfo.width;
-    parm.height = dinfo.height;
+    parm.width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
+    parm.height = dinfo->modes[dinfo->current_mode].vertical_resolution;
+
+    mir_display_config_destroy(display_config);
+
     surf = mir_connection_create_surface_sync(conn, &parm);
     if (surf != NULL)
     {

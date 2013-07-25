@@ -19,6 +19,7 @@
 #include "mir/shell/application_session.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/null_session_listener.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
@@ -44,7 +45,8 @@ std::shared_ptr<msh::ApplicationSession> make_session(
     return std::make_shared<msh::ApplicationSession>(
         factory, session_name,
         std::make_shared<mtd::NullSnapshotStrategy>(),
-        std::make_shared<mtd::NullSurfaceConfigurator>());
+        std::make_shared<mtd::NullSurfaceConfigurator>(),
+        std::make_shared<msh::NullSessionListener>());
 }
 
 }

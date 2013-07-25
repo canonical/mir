@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,30 +13,25 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_
-#define MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_
 
-#include <memory>
+#ifndef MIR_CLIENT_DISPLAY_CONFIGURATION_H_
+#define MIR_CLIENT_DISPLAY_CONFIGURATION_H_
+
+#include "mir_toolkit/client_types.h"
+#include "mir_protobuf.pb.h"
 
 namespace mir
 {
 namespace client
 {
-class SurfaceMap;
 
-namespace rpc
-{
-class MirBasicRpcChannel;
-class RpcReport;
+//convenient helpers
+void delete_config_storage(MirDisplayConfiguration* config);
+MirDisplayConfiguration* set_display_config_from_message(mir::protobuf::Connection const& connection_msg);
 
-std::shared_ptr<MirBasicRpcChannel>
-make_rpc_channel(std::string const& name,
-                 std::shared_ptr<SurfaceMap> const& map,
-                 std::shared_ptr<RpcReport> const& rpc_report);
-}
 }
 }
 
-#endif /* MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_ */
+#endif /* MIR_CLIENT_DISPLAY_CONFIGURATION_H_ */

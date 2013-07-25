@@ -24,9 +24,11 @@
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
 #include "connection_configuration.h"
+#include "display_configuration.h"
+#include "surface_map.h"
 
+#include <algorithm>
 #include <cstddef>
-#include <sstream>
 #include <unistd.h>
 
 namespace mcl = mir::client;
@@ -46,9 +48,9 @@ MirConnection::MirConnection(
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
         client_platform_factory(conf.the_client_platform_factory()),
-        input_platform(conf.the_input_platform())
+        input_platform(conf.the_input_platform()),
+        surface_map(conf.the_surface_map())
 {
-    channel->set_event_handler(this);
     {
         std::lock_guard<std::mutex> lock(connection_guard);
         valid_connections.insert(this);
@@ -130,8 +132,7 @@ MirWaitHandle* MirConnection::release_surface(
     auto new_wait_handle = new MirWaitHandle;
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
-
-    valid_surfaces.erase(surface->id());
+    surface_map->erase(surface->id());
 
     mir::protobuf::SurfaceId message;
     message.set_value(surface->id());
@@ -271,38 +272,33 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
     }
 }
 
-void MirConnection::populate(MirDisplayInfo& display_info)
+MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-
-    if (!connect_result.has_error() && connect_result.has_display_info())
+    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
     {
-        auto const& connection_display_info = connect_result.display_info();
-
-        display_info.width = connection_display_info.width();
-        display_info.height = connection_display_info.height();
-
-        auto const pf_size = connection_display_info.supported_pixel_format_size();
-
-        /* Ensure we don't overflow the supported_pixel_format array */
-        display_info.supported_pixel_format_items = pf_size > mir_supported_pixel_format_max ?
-                                                    mir_supported_pixel_format_max :
-                                                    pf_size;
-
-        for (int i = 0; i < display_info.supported_pixel_format_items; ++i)
-        {
-            display_info.supported_pixel_format[i] =
-                static_cast<MirPixelFormat>(connection_display_info.supported_pixel_format(i));
-        }
+        return mcl::set_display_config_from_message(connect_result);
     }
-    else
-    {
-        display_info.width = 0;
-        display_info.height = 0;
-        display_info.supported_pixel_format_items = 0;
-    }
+    return nullptr;
 }
 
+void MirConnection::possible_pixel_formats(MirPixelFormat* formats,
+                                unsigned int formats_size, unsigned int& valid_formats)
+{
+    //TODO we're just using the display buffer's pixel formats as the list of supported
+    //     formats for the time being. should have a separate message
+    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
+    {
+        auto display_output = connect_result.display_output(0);
+        valid_formats = std::min(
+            static_cast<unsigned int>(display_output.pixel_format_size()), formats_size);
+
+        for(auto i=0u; i < valid_formats; i++)
+        {
+            formats[i] = static_cast<MirPixelFormat>(display_output.pixel_format(i));
+        }      
+    }
+}
 
 std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
 {
@@ -325,50 +321,5 @@ EGLNativeDisplayType MirConnection::egl_native_display()
 
 void MirConnection::on_surface_created(int id, MirSurface* surface)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
-    valid_surfaces[id] = surface;
-}
-
-void MirConnection::handle_event(MirEvent const& e)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex);
-
-    switch (e.type)
-    {
-    case mir_event_type_surface:
-        {
-            int id = e.surface.id;
-            SurfaceMap::iterator it = valid_surfaces.find(id);
-            if (it != valid_surfaces.end())
-            {
-                MirSurface *surface = it->second;
-                surface->handle_event(e);
-            }
-            else
-            {
-                std::stringstream ss;
-                ss << __PRETTY_FUNCTION__
-                   << ": mir_event_type_surface "
-                   << "received for non-existent surface ID "
-                   << id
-                   << ".\n";
-                logger->log<mir::logging::Logger::error>(ss.str(), "mir_connection");
-            }
-        }
-        break;
-    default:
-        // Don't worry. This function only gets called for events from the
-        // RPC channel (not input). So you will never see this error unless
-        // you make a mistake.
-        {
-            std::stringstream ss;
-            ss << __PRETTY_FUNCTION__
-               << ": Unsupported event type "
-               << e.type
-               << " received from server.\n";
-            logger->log<mir::logging::Logger::error>(ss.str(), "mir_connection");
-        }
-        break;
-    }
+    surface_map->insert(id, surface);
 }

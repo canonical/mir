@@ -16,11 +16,13 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir/geometry/rectangle.h"
 #include "src/client/client_platform.h"
 #include "src/client/client_platform_factory.h"
 #include "src/client/mir_connection.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "src/client/display_configuration.h"
 
 #include "mir/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
@@ -35,6 +37,7 @@
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -209,73 +212,95 @@ TEST_F(MirConnectionTest, client_drm_auth_magic_calls_server_drm_auth_magic)
 namespace
 {
 
-std::vector<MirPixelFormat> const supported_pixel_formats{
+std::vector<MirPixelFormat> const supported_output_formats{
     mir_pixel_format_abgr_8888,
     mir_pixel_format_xbgr_8888
 };
 
-void fill_display_info(mp::ConnectParameters const*, mp::Connection* response)
+unsigned int const number_of_displays = 4;
+geom::Rectangle rects[number_of_displays] = {
+    geom::Rectangle{geom::Point(1,2), geom::Size(14,15)},
+    geom::Rectangle{geom::Point(3,4), geom::Size(12,13)},
+    geom::Rectangle{geom::Point(5,6), geom::Size(10,11)},
+    geom::Rectangle{geom::Point(7,8), geom::Size(9,10)},
+};
+
+void fill_display_output(mp::ConnectParameters const*, mp::Connection* response)
 {
-    auto info = response->mutable_display_info();
-    for (auto pf : supported_pixel_formats)
-        info->add_supported_pixel_format(static_cast<uint32_t>(pf));
+    for (auto i=0u; i < number_of_displays; i++)
+    {
+        auto output = response->add_display_output();
+        auto const& rect = rects[i];
+        output->set_position_x(rect.top_left.x.as_uint32_t());
+        output->set_position_y(rect.top_left.y.as_uint32_t());
+        auto mode = output->add_mode();
+        mode->set_horizontal_resolution(rect.size.width.as_uint32_t());
+        mode->set_vertical_resolution(rect.size.height.as_uint32_t());
+        for (auto pf : supported_output_formats)
+            output->add_pixel_format(static_cast<uint32_t>(pf));
+    }
 }
 
-void fill_display_info_100(mp::ConnectParameters const*, mp::Connection* response)
-{
-    auto info = response->mutable_display_info();
-    for (int i = 0; i < 100; i++)
-        info->add_supported_pixel_format(static_cast<uint32_t>(mir_pixel_format_xbgr_8888));
 }
 
-}
-
-TEST_F(MirConnectionTest, populates_display_info_correctly)
+TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
 {
     using namespace testing;
 
     EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_info));
+        .WillOnce(Invoke(fill_display_output));
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    MirDisplayInfo info;
+    auto configuration = connection->create_copy_of_display_config();
 
-    connection->populate(info);
-
-    ASSERT_EQ(supported_pixel_formats.size(),
-              static_cast<uint32_t>(info.supported_pixel_format_items));
-
-    for (size_t i = 0; i < supported_pixel_formats.size(); ++i)
+    ASSERT_EQ(number_of_displays, configuration->num_displays);
+    for(auto i=0u; i < number_of_displays; i++)
     {
-        EXPECT_EQ(supported_pixel_formats[i],
-                  info.supported_pixel_format[i]);
+        auto output = configuration->displays[i];
+        auto rect = rects[i];
+
+        ASSERT_EQ(1u, output.num_modes);
+        ASSERT_NE(nullptr, output.modes);
+        EXPECT_EQ(rect.size.width.as_uint32_t(), output.modes[0].horizontal_resolution);
+        EXPECT_EQ(rect.size.height.as_uint32_t(), output.modes[0].vertical_resolution);
+
+        EXPECT_EQ(output.position_x, static_cast<int>(rect.top_left.x.as_uint32_t()));
+        EXPECT_EQ(output.position_y, static_cast<int>(rect.top_left.y.as_uint32_t()));
+ 
+        ASSERT_EQ(supported_output_formats.size(),
+                  static_cast<uint32_t>(output.num_output_formats));
+
+        for (size_t i = 0; i < supported_output_formats.size(); ++i)
+        {
+            EXPECT_EQ(supported_output_formats[i], output.output_formats[i]);
+        }
     }
+
+    mcl::delete_config_storage(configuration);
 }
 
-TEST_F(MirConnectionTest, populates_display_info_without_overflowing)
+TEST_F(MirConnectionTest, populates_pfs_correctly)
 {
     using namespace testing;
 
     EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_info_100));
-
-    MirWaitHandle* wait_handle = connection->connect("MirConnectionTest",
+        .WillOnce(Invoke(fill_display_output));
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    MirDisplayInfo info;
+    unsigned int const formats_size = 5;
+    unsigned int valid_formats = 0;
+    MirPixelFormat formats[formats_size]; 
 
-    connection->populate(info);
+    connection->possible_pixel_formats(&formats[0], formats_size, valid_formats);
 
-    ASSERT_EQ(mir_supported_pixel_format_max,
-              info.supported_pixel_format_items);
-
-    for (size_t i = 0; i < mir_supported_pixel_format_max; ++i)
+    ASSERT_EQ(2u, valid_formats);
+    for (auto i=0u; i < valid_formats; i++)
     {
-        EXPECT_EQ(mir_pixel_format_xbgr_8888,
-                  info.supported_pixel_format[i]);
+        EXPECT_EQ(supported_output_formats[i], formats[i]);
     }
 }
