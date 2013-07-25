@@ -71,7 +71,7 @@ mtf::CrossProcessSync& mtf::CrossProcessSync::operator=(const mtf::CrossProcessS
 void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds& duration)
 {
     static const short empty_revents = 0;
-    pollfd poll_fd[1] = { fds[write_fd], POLLOUT, empty_revents };
+    pollfd poll_fd[1] = { { fds[write_fd], POLLOUT, empty_revents } };
     int rc = -1;
 
     if ((rc = ::poll(poll_fd, 1, duration.count())) < 0)
@@ -97,7 +97,7 @@ void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds
 unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono::milliseconds& duration)
 {
     static const short empty_revents = 0;
-    pollfd poll_fd[1] = { fds[read_fd], POLLIN, empty_revents };
+    pollfd poll_fd[1] = { { fds[read_fd], POLLIN, empty_revents } };
     int rc = -1;
         
     if ((rc = ::poll(poll_fd, 1, duration.count())) < 0)
