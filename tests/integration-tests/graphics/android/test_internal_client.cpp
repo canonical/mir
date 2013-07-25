@@ -96,7 +96,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller);
-    auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mir::events::EventSink>());
+    auto mir_surface = surface_source->create_surface(params, id, std::shared_ptr<mf::EventSink>());
 
     auto options = std::shared_ptr<mo::ProgramOption>(); 
     auto report = std::shared_ptr<mg::NullDisplayReport>(); 

@@ -27,8 +27,9 @@ namespace frontend
 {
 namespace detail
 {
-struct MessageSender
+class MessageSender
 {
+public:
     virtual void send(std::string const& body) = 0;
     virtual void send_fds(std::vector<int32_t> const& fd) = 0;
     virtual boost::asio::local::stream_protocol::socket& get_socket() = 0;

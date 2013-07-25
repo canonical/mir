@@ -28,8 +28,9 @@ namespace frontend
 namespace detail
 {
 
-struct MessageProcessor
+class MessageProcessor
 {
+public:
     virtual bool process_message(std::istream& msg) = 0;
 protected:
     MessageProcessor() = default;
@@ -38,8 +39,9 @@ protected:
     MessageProcessor& operator=(MessageProcessor const&) = delete;
 };
 
-struct NullMessageProcessor : MessageProcessor
+class NullMessageProcessor : MessageProcessor
 {
+public:
     bool process_message(std::istream&);
 };
 

@@ -44,8 +44,9 @@ class MessageProcessorReport;
 namespace detail
 {
 
-struct ProtobufMessageProcessor : MessageProcessor
+class ProtobufMessageProcessor : public MessageProcessor
 {
+public:
     ProtobufMessageProcessor(
         std::shared_ptr<MessageSender> const& sender,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,

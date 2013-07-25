@@ -50,7 +50,7 @@ class SessionAuthorizer;
 namespace detail
 {
 struct SocketSession;
-struct MessageSender;
+class MessageSender;
 }
 
 class CommunicatorReport;
