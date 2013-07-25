@@ -50,6 +50,7 @@ class SessionAuthorizer;
 namespace detail
 {
 struct SocketSession;
+struct MessageSender;
 }
 
 class CommunicatorReport;
@@ -72,7 +73,9 @@ public:
 
 private:
     void start_accept();
-    void on_new_connection(std::shared_ptr<detail::SocketSession> const& session, const boost::system::error_code& ec);
+    void on_new_connection(std::shared_ptr<detail::SocketSession> const& session,
+                           std::shared_ptr<detail::MessageSender> const& sender,
+                           boost::system::error_code const& ec);
     int next_id();
 
     const std::string socket_file;

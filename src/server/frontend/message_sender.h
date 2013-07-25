@@ -15,11 +15,11 @@
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
+#ifndef MIR_FRONTEND_MESSAGE_SENDER_H_
+#define MIR_FRONTEND_MESSAGE_SENDER_H_
 
-#ifndef MIR_FRONTEND_MESSAGE_PROCESSOR_H_
-#define MIR_FRONTEND_MESSAGE_PROCESSOR_H_
-
-#include <iosfwd>
+#include <vector>
+#include <boost/asio.hpp>
 
 namespace mir
 {
@@ -27,23 +27,21 @@ namespace frontend
 {
 namespace detail
 {
-
-struct MessageProcessor
+struct MessageSender
 {
-    virtual bool process_message(std::istream& msg) = 0;
+    virtual void send(std::string const& body) = 0;
+    virtual void send_fds(std::vector<int32_t> const& fd) = 0;
+    virtual boost::asio::local::stream_protocol::socket& get_socket() = 0;
+    virtual pid_t client_pid() = 0;
+
 protected:
-    MessageProcessor() = default;
-    virtual ~MessageProcessor() = default;
-    MessageProcessor(MessageProcessor const&) = delete;
-    MessageProcessor& operator=(MessageProcessor const&) = delete;
-};
-
-struct NullMessageProcessor : MessageProcessor
-{
-    bool process_message(std::istream&);
+    MessageSender() = default;
+    virtual ~MessageSender() { /* TODO: make nothrow */ }
+    MessageSender(MessageSender const&) = delete;
+    MessageSender& operator=(MessageSender const&) = delete;
 };
 
 }
 }
 }
-#endif /* PROTOBUF_MESSAGE_PROCESSOR_H_ */
+#endif /* MIR_FRONTEND_MESSAGE_SENDER_H_ */

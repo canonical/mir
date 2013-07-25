@@ -13,30 +13,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_EVENT_PIPE_H_
-#define MIR_FRONTEND_EVENT_PIPE_H_
-
-#include "mir_toolkit/event.h"
-#include "mir/events/event_sink.h"
-#include <memory>
+#ifndef MIR_FRONTEND_SOCKET_SENDER_H_ 
+#define MIR_FRONTEND_SOCKET_SENDER_H_ 
+#include "message_sender.h"
 
 namespace mir
 {
 namespace frontend
 {
-class EventPipe : public events::EventSink
+namespace detail
+{
+class SocketSender : public MessageSender
 {
 public:
-    void set_target(std::weak_ptr<events::EventSink> const& s);
-    void handle_event(MirEvent const& e) override;
+    SocketSender(boost::asio::io_service& io_service);
+
+    void send(std::string const& body);
+    void send_fds(std::vector<int32_t> const& fds);
+
+    boost::asio::local::stream_protocol::socket& get_socket();
+
+    pid_t client_pid();
 
 private:
-    std::weak_ptr<events::EventSink> target;
+    boost::asio::local::stream_protocol::socket socket;
+    std::vector<char> whole_message;
 };
 }
 }
+}
 
-#endif // MIR_FRONTEND_EVENT_PIPE_H_
+#endif /* MIR_FRONTEND_SOCKET_SENDER_H_ */ 

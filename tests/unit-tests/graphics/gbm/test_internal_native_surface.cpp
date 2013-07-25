@@ -25,7 +25,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_surface_builder.h"
-#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 
 #include <gtest/gtest.h>
@@ -41,30 +41,15 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-
-
-class MockFrontendSurface : public mir::frontend::Surface
-{
-public:
-    MOCK_METHOD0(destroy, void());
-    MOCK_METHOD0(force_requests_to_complete, void());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
-    MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mg::Buffer>());
-    MOCK_CONST_METHOD0(supports_input, bool());
-    MOCK_CONST_METHOD0(client_input_fd, int());
-    MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
-};
-
 struct InternalNativeSurface : public testing::Test
 {
     void SetUp()
     {
         using namespace ::testing;
-        mock_surface = std::make_shared<MockFrontendSurface>();
+        mock_surface = std::make_shared<mtd::MockFrontendSurface>();
     }
 
-    std::shared_ptr<MockFrontendSurface> mock_surface;
+    std::shared_ptr<mtd::MockFrontendSurface> mock_surface;
 };
 
 MATCHER_P(ParametersHaveSize, size, "")

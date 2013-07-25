@@ -20,7 +20,7 @@
 #include "mir/shell/surface_builder.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 
 #include "mir_toolkit/event.h"
 
@@ -35,28 +35,17 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
+namespace mf = mir::frontend;
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
-    std::shared_ptr<events::EventSink> const& sink)
+    std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
     surface(builder->create_surface(params)),
     id(id),
-    event_sink(sink),
-    type_value(mir_surface_type_normal),
-    state_value(mir_surface_state_restored)
-{
-}
-
-msh::Surface::Surface(
-    std::shared_ptr<SurfaceBuilder> const& builder,
-    shell::SurfaceCreationParameters const& params)
-  : builder(builder),
-    surface(builder->create_surface(params)),
-    id(),
-    event_sink(),
+    event_sink(event_sink),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored)
 {
@@ -302,22 +291,19 @@ bool msh::Surface::set_state(MirSurfaceState s)
 
 void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 {
-    if (event_sink)
-    {
-        MirEvent e;
+    MirEvent e;
 
-        // This memset is not really required. However it does avoid some
-        // harmless uninitialized memory reads that valgrind will complain
-        // about, due to gaps in MirEvent.
-        memset(&e, 0, sizeof e);
+    // This memset is not really required. However it does avoid some
+    // harmless uninitialized memory reads that valgrind will complain
+    // about, due to gaps in MirEvent.
+    memset(&e, 0, sizeof e);
 
-        e.type = mir_event_type_surface;
-        e.surface.id = id.as_value();
-        e.surface.attrib = attrib;
-        e.surface.value = value;
+    e.type = mir_event_type_surface;
+    e.surface.id = id.as_value();
+    e.surface.attrib = attrib;
+    e.surface.value = value;
 
-        event_sink->handle_event(e);
-    }
+    event_sink->handle_event(e);
 }
 
 void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)

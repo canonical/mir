@@ -23,8 +23,9 @@
 #include "mir/frontend/communicator_report.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_authorizer.h"
+#include "socket_sender.h"
+#include "event_sender.h"
 #include "mir/protobuf/google_protobuf_guard.h"
-#include "event_pipe.h"
 
 #include <boost/signals2.hpp>
 
@@ -54,28 +55,27 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
-    auto const& event_pipe = std::make_shared<EventPipe>();
-
-    auto const& socket_session = std::make_shared<mfd::SocketSession>(
-        io_service,
-        next_id(),
-        connected_sessions);
-
+    auto socket_sender = std::make_shared<detail::SocketSender>(io_service); 
+    auto event_sink = std::make_shared<detail::EventSender>(socket_sender);
     auto session = std::make_shared<detail::ProtobufMessageProcessor>(
-        socket_session.get(),
-        ipc_factory->make_ipc_server(event_pipe),
+        socket_sender,
+        ipc_factory->make_ipc_server(event_sink),
         ipc_factory->resource_cache(),
         ipc_factory->report());
 
-    event_pipe->set_target(session);
-    socket_session->set_processor(session);
+    auto const& socket_session = std::make_shared<mfd::SocketSession>(
+        socket_sender,
+        next_id(),
+        connected_sessions,
+        session);
 
     acceptor.async_accept(
-        socket_session->get_socket(),
+        socket_sender->get_socket(),
         boost::bind(
             &ProtobufSocketCommunicator::on_new_connection,
             this,
             socket_session,
+            socket_sender,
             ba::placeholders::error));
 }
 
@@ -144,11 +144,12 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 
 void mf::ProtobufSocketCommunicator::on_new_connection(
     std::shared_ptr<mfd::SocketSession> const& session,
-    const boost::system::error_code& ec)
+    std::shared_ptr<mfd::MessageSender> const& sender,
+    boost::system::error_code const& ec)
 {
     if (!ec)
     {
-        if (session_authorizer->connection_is_allowed(session->client_pid()))
+        if (session_authorizer->connection_is_allowed(sender->client_pid()))
         {
             connected_sessions->add(session);
             session->read_next_message();

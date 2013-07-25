@@ -32,7 +32,7 @@
 #include "mir_test_doubles/stub_shell.h"
 #include "mir_test_doubles/null_platform.h"
 
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 
 #include <gtest/gtest.h>
 

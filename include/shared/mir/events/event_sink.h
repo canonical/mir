@@ -23,9 +23,8 @@
 
 namespace mir
 {
-namespace events
+namespace frontend
 {
-
 class EventSink
 {
 public:
