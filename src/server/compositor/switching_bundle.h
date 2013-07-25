@@ -63,14 +63,7 @@ private:
     int nfree() const;
 
     int nbuffers;
-
-    struct SharedBuffer
-    {
-        SharedBuffer() : users{0} {}
-        std::shared_ptr<graphics::Buffer> buf;
-        int users;
-    };
-    SharedBuffer *ring;
+    std::shared_ptr<graphics::Buffer> *ring;
     int first_compositor;
     int ncompositors;
     int first_ready;
@@ -78,6 +71,7 @@ private:
     int first_client;
     int nclients;
     int snapshot;
+    int nsnapshotters;
 
     std::mutex guard;
     std::condition_variable cond;

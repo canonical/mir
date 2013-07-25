@@ -74,16 +74,16 @@ mc::SwitchingBundle::SwitchingBundle(
       first_compositor{0}, ncompositors{0},
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
-      snapshot{-1},
+      snapshot{-1}, nsnapshotters{0},
       framedropping{false}
 {
     if (nbuffers < 1)
         BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle requires a "
                                                "positive number of buffers"));
 
-    ring = new SharedBuffer[nbuffers];
+    ring = new std::shared_ptr<graphics::Buffer>[nbuffers];
     for (int i = 0; i < nbuffers; i++)
-        ring[i].buf = gralloc->alloc_buffer(bundle_properties);
+        ring[i] = gralloc->alloc_buffer(bundle_properties);
 }
 
 mc::SwitchingBundle::~SwitchingBundle()
@@ -168,15 +168,14 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         }
     }
 
-    ring[client].users++;
-    return ring[client].buf;
+    return ring[client];
 }
 
 void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (nclients <= 0 || ring[first_client].buf != released_buffer)
+    if (nclients <= 0 || ring[first_client] != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Client release out of order"));
 
@@ -184,7 +183,6 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
     while (!framedropping && nready > 0)
         cond.wait(lock);
 
-    ring[first_client].users--;
     first_client = (first_client + 1) % nbuffers;
     nclients--;
     nready++;
@@ -196,52 +194,42 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
-    if (!nready)
+    if (!ncompositors && nbuffers > 2 && !nready && nfree())
     {
-        if (ncompositors)
-        {
-            // Reuse the latest compositing buffer
-            compositor = (first_compositor + ncompositors - 1) % nbuffers;
-        }
-        else if (nbuffers > 2 && nfree())
-        {
-            // Steal an old compositor buffer back from the free list
-            first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
-            ncompositors++;
-            compositor = first_compositor;
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(std::logic_error(
-                "compositor_acquire would block (not enough buffers or too "
-                "many clients)"));
-        }
+        /*
+         * If there's nothing else available then show an old frame.
+         * This only works with 3 or more buffers. If you've only got 2 and
+         * are frame dropping then the compositor would be starved of new
+         * frames, forced to race for them.
+         */
+        first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
+        compositor = first_compositor;
     }
     else
     {
+        while (!nready)
+            cond.wait(lock);
+
         // Make sure the compositor gets the latest frame (LP: #1199450)
-        if (nready > 1)
-            drop_frames(nready - 1);
+        drop_frames(nready - 1);
 
         compositor = first_ready;
         first_ready = (first_ready + 1) % nbuffers;
         nready--;
-        ncompositors++;
     }
+    ncompositors++;
 
-    ring[compositor].users++;
-    return ring[compositor].buf;
+    return ring[compositor];
 }
 
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (ncompositors <= 0 || ring[first_compositor].buf != released_buffer)
+    if (ncompositors <= 0 || ring[first_compositor] != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Compositor release out of order"));
 
-    ring[first_compositor].users--;
     first_compositor = (first_compositor + 1) % nbuffers;
     ncompositors--;
     cond.notify_all();
@@ -250,7 +238,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
-    if (snapshot < 0)
+    if (!nsnapshotters)
     {
         /*
          * Always snapshot the newest complete frame, which is always the
@@ -262,19 +250,21 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
 
         snapshot = (first_client + nbuffers - 1) % nbuffers;
     }
-    ring[snapshot].users++;
-    return ring[snapshot].buf;
+    nsnapshotters++;
+    return ring[snapshot];
 }
 
 void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (snapshot < 0 || ring[snapshot].buf != released_buffer)
+    if (nsnapshotters <= 0 || ring[snapshot] != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "snapshot_release passed a non-snapshot buffer"));
 
-    if (! --ring[snapshot].users)
+    nsnapshotters--;
+
+    if (!nsnapshotters)
         snapshot = -1;
 
     cond.notify_all();
