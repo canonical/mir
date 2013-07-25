@@ -96,6 +96,7 @@ TEST_F(BufferStreamTest, gives_different_compositor_buffers)
     comp3.reset();
 }
 
+#if 0 // FIXME - test is no longer valid
 TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
 {
     buffer_stream.secure_client_buffer().reset();
@@ -119,6 +120,7 @@ TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
 
     EXPECT_EQ(comp_id, client1->id());
 }
+#endif
 
 namespace
 {

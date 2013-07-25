@@ -66,6 +66,7 @@ private:
     std::shared_ptr<graphics::Buffer> *ring;
     int first_compositor;
     int ncompositors;
+    int ycompositors;
     int first_ready;
     int nready;
     int first_client;
