@@ -143,7 +143,7 @@ mc::GLRenderer::Resources::~Resources()
         glDeleteTextures(1, &texture);
 }
 
-void mc ::GLRenderer::Resources::setup(const geometry::Size& display_size)
+void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
 {
     GLint param = 0;
 
@@ -203,9 +203,14 @@ void mc ::GLRenderer::Resources::setup(const geometry::Size& display_size)
      */
     glm::mat4 screen_to_gl_coords = glm::translate(glm::mat4{1.0f}, glm::vec3{-1.0f, 1.0f, 0.0f});
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
-            glm::vec3{2.0f / display_size.width.as_uint32_t(),
-            -2.0f / display_size.height.as_uint32_t(),
-            1.0f});
+            glm::vec3{2.0f / display_area.size.width.as_float(),
+                      -2.0f / display_area.size.height.as_float(),
+                      1.0f});
+    screen_to_gl_coords = glm::translate(screen_to_gl_coords,
+            glm::vec3{-display_area.top_left.x.as_float(),
+                      -display_area.top_left.y.as_float(),
+                      0.0f});
+
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
 
     glGenTextures(1, &texture);
@@ -229,9 +234,9 @@ void mc ::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glUseProgram(0);
 }
 
-mc::GLRenderer::GLRenderer(const geom::Size& display_size)
+mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
 {
-    resources.setup(display_size);
+    resources.setup(display_area);
 }
 
 void mc::GLRenderer::render(

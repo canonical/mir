@@ -155,7 +155,8 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 
     /* Create a single DisplayBuffer that displays the surface on all the outputs */
     std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener, enabled_outputs,
-                                                              std::move(surface), max_size,
+                                                              std::move(surface),
+                                                              {geom::Point{}, max_size},
                                                               shared_egl.context()}};
 
     /*
