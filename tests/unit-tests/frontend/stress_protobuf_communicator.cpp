@@ -25,6 +25,7 @@
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 
+#include "src/client/connection_surface_map.h"
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
@@ -170,7 +171,8 @@ StubProtobufClient::StubProtobufClient(
     std::string socket_file,
     int timeout_ms) :
     rpc_report(std::make_shared<mir::client::rpc::NullRpcReport>()),
-    channel(mir::client::rpc::make_rpc_channel(socket_file, rpc_report)),
+    channel(mir::client::rpc::make_rpc_channel(
+        socket_file, std::make_shared<mir::client::ConnectionSurfaceMap>(), rpc_report)),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),

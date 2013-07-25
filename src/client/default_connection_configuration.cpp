@@ -25,6 +25,7 @@
 #include "mir/input/input_platform.h"
 #include "logging/rpc_report.h"
 #include "lttng/rpc_report.h"
+#include "connection_surface_map.h"
 
 namespace mcl = mir::client;
 
@@ -41,13 +42,23 @@ mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
 {
 }
 
+std::shared_ptr<mcl::SurfaceMap>
+mcl::DefaultConnectionConfiguration::the_surface_map()
+{
+    return surface_map([]
+        {
+            return std::make_shared<mcl::ConnectionSurfaceMap>();
+        });
+}
+
 std::shared_ptr<mcl::rpc::MirBasicRpcChannel>
 mcl::DefaultConnectionConfiguration::the_rpc_channel()
 {
     return rpc_channel(
         [this]
         {
-            return mcl::rpc::make_rpc_channel(the_socket_file(), the_rpc_report());
+            return mcl::rpc::make_rpc_channel(
+                the_socket_file(), the_surface_map(), the_rpc_report());
         });
 }
 

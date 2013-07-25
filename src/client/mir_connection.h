@@ -43,6 +43,7 @@ namespace client
 {
 class ConnectionConfiguration;
 class ClientPlatformFactory;
+class SurfaceMap;
 
 namespace rpc
 {
@@ -64,7 +65,7 @@ class Logger;
 }
 }
 
-struct MirConnection : mir::client::ClientContext, private mir::events::EventSink
+struct MirConnection : mir::client::ClientContext
 {
 public:
     MirConnection();
@@ -112,7 +113,6 @@ public:
     EGLNativeDisplayType egl_native_display();
 
     void on_surface_created(int id, MirSurface* surface);
-    void handle_event(MirEvent const&);
 
 private:
     std::recursive_mutex mutex; // Protects all members of *this
@@ -141,11 +141,10 @@ private:
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
 
+    std::shared_ptr<mir::client::SurfaceMap> surface_map;
     static std::mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 
-    typedef std::unordered_map<int, MirSurface*> SurfaceMap;
-    SurfaceMap valid_surfaces;
 
     struct SurfaceRelease;
 
