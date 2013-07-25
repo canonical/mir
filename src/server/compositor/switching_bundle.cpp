@@ -196,30 +196,38 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
-    if (!ncompositors && nbuffers > 2 && !nready && nfree())
+    if (!nready)
     {
-        /*
-         * If there's nothing else available then show an old frame.
-         * This only works with 3 or more buffers. If you've only got 2 and
-         * are frame dropping then the compositor would be starved of new
-         * frames, forced to race for them.
-         */
-        first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
-        compositor = first_compositor;
+        if (ncompositors)
+        {
+            // Reuse the latest compositing buffer
+            compositor = (first_compositor + ncompositors - 1) % nbuffers;
+        }
+        else if (nbuffers > 2 && nfree())
+        {
+            // Steal an old compositor buffer back from the free list
+            first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
+            ncompositors++;
+            compositor = first_compositor;
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error(
+                "compositor_acquire would block (not enough buffers or too "
+                "many clients)"));
+        }
     }
     else
     {
-        while (!nready)
-            cond.wait(lock);
-
         // Make sure the compositor gets the latest frame (LP: #1199450)
-        drop_frames(nready - 1);
+        if (nready > 1)
+            drop_frames(nready - 1);
 
         compositor = first_ready;
         first_ready = (first_ready + 1) % nbuffers;
         nready--;
+        ncompositors++;
     }
-    ncompositors++;
 
     ring[compositor].users++;
     return ring[compositor].buf;
