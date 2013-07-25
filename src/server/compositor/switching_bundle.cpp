@@ -140,7 +140,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     }
     else
     {
-        while (!nfree() || nready)
+        while (!nfree())
             cond.wait(lock);
     }
 
@@ -178,7 +178,11 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
     if (nclients <= 0 || ring[first_client] != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Client release out of order"));
-        
+
+    // If in synchronous mode, throttle the client to the refresh rate...
+    while (!framedropping && nready > 0)
+        cond.wait(lock);
+
     first_client = (first_client + 1) % nbuffers;
     nclients--;
     nready++;
