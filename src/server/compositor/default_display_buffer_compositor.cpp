@@ -16,31 +16,15 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/default_compositing_strategy.h"
+#include "default_display_buffer_compositor.h"
 
 #include "mir/compositor/rendering_operator.h"
 #include "mir/compositor/overlay_renderer.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/compositor/renderer.h"
+#include "mir/compositor/scene.h"
 #include "mir/compositor/compositing_criteria.h"
-
-#include <cassert>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-
-mc::DefaultCompositingStrategy::DefaultCompositingStrategy(
-    std::shared_ptr<Scene> const& scene,
-    std::shared_ptr<Renderer> const& renderer,
-    std::shared_ptr<OverlayRenderer> const& overlay_renderer)
-    : scene(scene),
-      renderer(renderer),
-      overlay_renderer(overlay_renderer)
-{
-    assert(scene);
-    assert(renderer);
-    assert(overlay_renderer);
-}
 
 namespace
 {
@@ -61,13 +45,25 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
 
 }
 
-void mc::DefaultCompositingStrategy::compose(
+mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
+    mg::DisplayBuffer& display_buffer,
+    std::shared_ptr<mc::Scene> const& scene,
+    std::shared_ptr<mc::Renderer> const& renderer,
+    std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer)
+    : mc::BasicDisplayBufferCompositor{display_buffer},
+      scene{scene},
+      renderer{renderer},
+      overlay_renderer{overlay_renderer}
+{
+}
+
+void mc::DefaultDisplayBufferCompositor::compose(
     mir::geometry::Rectangle const& view_area,
     std::function<void(std::shared_ptr<void> const&)> save_resource)
 {
     renderer->clear();
 
-    RenderingOperator applicator(*renderer, save_resource);
+    mc::RenderingOperator applicator(*renderer, save_resource);
     FilterForVisibleSceneInRegion selector(view_area);
     scene->for_each_if(selector, applicator);
 

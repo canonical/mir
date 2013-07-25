@@ -17,7 +17,7 @@
  */
 
 #include "src/server/compositor/switching_bundle.h"
-#include "mir_test_doubles/mock_buffer_allocator.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
 
 #include <gtest/gtest.h>
@@ -27,6 +27,7 @@ namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
+#if 0 // FIXME: Needs converting to new interfaces
 struct SwitchingBundleTest : public ::testing::Test
 {
     void SetUp()
@@ -38,7 +39,6 @@ struct SwitchingBundleTest : public ::testing::Test
     std::shared_ptr<mtd::MockBufferAllocator> mock_buffer_allocator;
 };
 
-#if 0 // FIXME: Needs converting to new interfaces
 TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
     using namespace testing;

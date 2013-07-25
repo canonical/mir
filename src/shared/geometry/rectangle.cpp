@@ -24,9 +24,8 @@ namespace geom = mir::geometry;
 
 geom::Point geom::Rectangle::bottom_right() const
 {
-    assert(size.width > geom::Width{0} && size.height > geom::Height{0});
-    return {top_left.x.as_int() + size.width.as_int() - 1,
-            top_left.y.as_int() + size.height.as_int() - 1};
+    return {top_left.x.as_int() + size.width.as_int(),
+            top_left.y.as_int() + size.height.as_int()};
 }
 
 bool geom::Rectangle::contains(Point const& p) const
@@ -35,6 +34,6 @@ bool geom::Rectangle::contains(Point const& p) const
         return false;
 
     auto br = bottom_right();
-    return p.x >= top_left.x && p.x <= br.x &&
-           p.y >= top_left.y && p.y <= br.y;
+    return p.x >= top_left.x && p.x < br.x &&
+           p.y >= top_left.y && p.y < br.y;
 }

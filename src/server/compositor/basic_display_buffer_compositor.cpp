@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/basic_compositing_strategy.h"
+#include "mir/compositor/basic_display_buffer_compositor.h"
 
 #include "mir/graphics/display_buffer.h"
 
@@ -25,11 +25,17 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-// TODO I'm not clear why this code is in the CompositingStrategy hierarchy.
+mc::BasicDisplayBufferCompositor::BasicDisplayBufferCompositor(
+    mg::DisplayBuffer& display_buffer)
+    : display_buffer(display_buffer)
+{
+}
+
+// TODO I'm not clear why this code is in the DisplayBufferCompositor hierarchy.
 //      (As opposed to the call site calling compose directly.)
-//      But changing that breaks RecordingCompositingStrategy - which is too
+//      But changing that breaks RecordingDisplayBufferCompositor - which is too
 //      much churn for this refactoring.
-void mc::BasicCompositingStrategy::render(graphics::DisplayBuffer& display_buffer)
+void mc::BasicDisplayBufferCompositor::composite()
 {
     // preserves buffers used in rendering until after post_update()
     std::vector<std::shared_ptr<void>> saved_resources;

@@ -15,7 +15,7 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/gl_renderer.h"
+#include "gl_renderer.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/graphics/buffer.h"
@@ -27,7 +27,7 @@
 #include <stdexcept>
 
 namespace mc = mir::compositor;
-namespace geom=mir::geometry;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -105,7 +105,8 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
     std::string  object_info_log;
 
     object_info_log.resize(object_log_buffer_length);
-    (*getObjectInfoLog)(object, object_log_length, NULL, const_cast<GLchar *>(object_info_log.data()));
+    (*getObjectInfoLog)(object, object_log_length, NULL,
+                        const_cast<GLchar *>(object_info_log.data()));
 
     std::string object_info_err(msg + "\n");
     object_info_err += object_info_log;
@@ -115,7 +116,7 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
 
 }
 
-mc ::GLRenderer::Resources::Resources() :
+mc::GLRenderer::Resources::Resources() :
     vertex_shader(0),
     fragment_shader(0),
     program(0),
@@ -128,7 +129,7 @@ mc ::GLRenderer::Resources::Resources() :
 {
 }
 
-mc ::GLRenderer::Resources::~Resources()
+mc::GLRenderer::Resources::~Resources()
 {
     if (vertex_shader)
         glDeleteShader(vertex_shader);
@@ -207,7 +208,6 @@ void mc ::GLRenderer::Resources::setup(const geometry::Size& display_size)
             1.0f});
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
 
-    /* Create the texture (temporary workaround until we can use the Renderable's texture) */
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -229,13 +229,15 @@ void mc ::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glUseProgram(0);
 }
 
-mc ::GLRenderer::GLRenderer(const geom::Size& display_size)
+mc::GLRenderer::GLRenderer(const geom::Size& display_size)
 {
     resources.setup(display_size);
 }
 
-void mc ::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                            CompositingCriteria const& criteria, mir::surfaces::BufferStream& stream)
+void mc::GLRenderer::render(
+    std::function<void(std::shared_ptr<void> const&)> save_resource,
+    CompositingCriteria const& criteria,
+    mir::surfaces::BufferStream& stream)
 {
     glUseProgram(resources.program);
 
@@ -243,13 +245,16 @@ void mc ::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> s
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
 
-    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(criteria.transformation()));
+    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE,
+                       glm::value_ptr(criteria.transformation()));
     glUniform1f(resources.alpha_uniform_loc, criteria.alpha());
 
     /* Set up vertex attribute data */
     glBindBuffer(GL_ARRAY_BUFFER, resources.vertex_attribs_vbo);
-    glVertexAttribPointer(resources.position_attr_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexAttributes), 0);
-    glVertexAttribPointer(resources.texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexAttributes),
+    glVertexAttribPointer(resources.position_attr_loc, 3, GL_FLOAT,
+                          GL_FALSE, sizeof(VertexAttributes), 0);
+    glVertexAttribPointer(resources.texcoord_attr_loc, 2, GL_FLOAT,
+                          GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
     /* Use the renderable's texture */
@@ -267,7 +272,7 @@ void mc ::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> s
     glDisableVertexAttribArray(resources.position_attr_loc);
 }
 
-void mc ::GLRenderer::clear()
+void mc::GLRenderer::clear()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 }

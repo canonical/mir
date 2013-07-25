@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_buffer_allocator.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "multithread_harness.h"
 
 #include "src/server/compositor/switching_bundle.h"
@@ -41,7 +41,7 @@ struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        auto allocator = std::make_shared<mtd::MockBufferAllocator>();
+        auto allocator = std::make_shared<mtd::StubBufferAllocator>();
         auto properties = mc::BufferProperties{geom::Size{380, 210},
                                           geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
         switching_bundle = std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
