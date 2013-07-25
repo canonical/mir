@@ -33,6 +33,7 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -62,6 +63,7 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
             std::make_shared<mtd::NullSnapshotStrategy>(),
+            std::make_shared<mtd::NullSurfaceConfigurator>(),
             mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
@@ -106,6 +108,7 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
             mt::fake_shared(sequence),
             mt::fake_shared(focus_setter),
             std::make_shared<mtd::NullSnapshotStrategy>(),
+            std::make_shared<mtd::NullSurfaceConfigurator>(),
             mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);

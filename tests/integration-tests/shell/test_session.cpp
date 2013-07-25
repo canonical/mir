@@ -157,7 +157,8 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
     msh::ApplicationSession session{
         conf.the_shell_surface_factory(),
         "stress",
-        conf.the_shell_snapshot_strategy()};
+        conf.the_shell_snapshot_strategy(),
+        conf.the_shell_surface_configurator()};
     session.create_surface(msh::a_surface());
 
     auto compositor = conf.the_compositor();
