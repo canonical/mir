@@ -38,13 +38,20 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
+struct SignalNumberErrorInfoTag {};
+typedef boost::error_info<SignalNumberErrorInfoTag, int> errinfo_signum;
+struct ProcessIdErrorInfoTag {};
+typedef boost::error_info<ProcessIdErrorInfoTag, pid_t> errinfo_pid;
+
 void signal_process(pid_t pid, int signum)
 {
-    std::cout << __PRETTY_FUNCTION__ << ": " << pid << ", " << signum << std::endl;
     if (::kill(pid, signum) != 0)
     {
-        throw std::runtime_error(std::string("Failed to kill process: ")
-                                 + ::strerror(errno));
+        BOOST_THROW_EXCEPTION(
+            ::boost::enable_error_info(std::runtime_error("Failed to kill process."))
+            << errinfo_pid(pid)
+            << errinfo_signum(signum)
+            << boost::errinfo_errno(errno));
     }
 }
 }
@@ -73,27 +80,10 @@ mtf::Process::Process(pid_t pid)
     , detached(false)
 {
     assert(pid > 0);
-
-    if (ptrace(PTRACE_ATTACH, pid, nullptr, nullptr) == -1)
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Error attaching to child process"))
-                << (boost::errinfo_errno(errno)));
-
-    if (waitpid (pid, NULL, 0) < 0 )
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Error waiting on child process"))
-                << (boost::errinfo_errno(errno)));
-
-
-    if (ptrace(PTRACE_CONT, pid, nullptr, nullptr) == -1)
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Error continuing child process"))
-                << (boost::errinfo_errno(errno)));
 }
 
 mtf::Process::~Process()
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     if (!detached && !terminated)
     {
         try
@@ -119,12 +109,10 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
         int rc = -1;
         while (true)
         {
-            if ((rc = ::waitpid(pid, &status, WNOHANG)) == pid)
-            {                
+            if ((rc = ::waitpid(pid, &status, WNOHANG | WUNTRACED)) == pid)
+            {
                 if (WIFEXITED(status))
                 {
-                    std::cout << "\t (WIFSIGNALED(status)): " << pid << std::endl;
-
                     terminated = true;
                     result.reason = TerminationReason::child_terminated_normally;
                     result.exit_code = WEXITSTATUS(status);
@@ -132,7 +120,6 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
                 }
                 else if (WIFSIGNALED(status))
                 {
-                    std::cout << "\t (WIFSIGNALED(status)): " << pid << std::endl;
                     terminated = true;
                     result.reason = TerminationReason::child_terminated_by_signal;
                     result.signal = WTERMSIG(status);
@@ -140,8 +127,11 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
                 }
                 else if (WIFSTOPPED(status))
                 {
+                    assert(!("We are not attached to the child process and thus, we shouldn't reach WIFSTOPPED(status)."));
+                    // As we are not attached to the child process we
+                    // should never hit this branch. However, keeping
+                    // the original code in place and asserting.
                     int stop_signal = WSTOPSIG(status);
-                    std::cout << "\t WIFSTOPPED(status): " << pid << ", " << stop_signal << std::endl;
 
                     if (ptrace(PTRACE_CONT, pid, nullptr, stop_signal) == -1)
                     {
@@ -152,7 +142,6 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
                 }
                 else if (WIFCONTINUED(status))
                 {
-                    std::cout << "\t (WIFSIGNALED(status)): " << std::endl;
                     continue;
                 }
             }
@@ -164,7 +153,11 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
                     continue;
                 }
                 else
-                    throw std::runtime_error("Timeout while waiting for child to change state");
+                {
+                    BOOST_THROW_EXCEPTION(
+                        ::boost::enable_error_info(std::runtime_error("Timeout while waiting for child to change state"))
+                        << errinfo_pid(pid));
+                }
             }
             else
                 break;
