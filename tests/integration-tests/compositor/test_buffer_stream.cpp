@@ -64,10 +64,6 @@ struct BufferStreamTest : public ::testing::Test
 
 TEST_F(BufferStreamTest, gives_only_one_snapshot_buffer)
 {
-    buffer_stream.secure_client_buffer().reset();
-    buffer_stream.secure_client_buffer().reset();
-    buffer_stream.secure_client_buffer().reset();
-
     auto comp1 = buffer_stream.lock_snapshot_buffer();
     auto comp2 = buffer_stream.lock_snapshot_buffer();
 
@@ -83,16 +79,15 @@ TEST_F(BufferStreamTest, gives_only_one_snapshot_buffer)
 TEST_F(BufferStreamTest, gives_different_compositor_buffers)
 {
     buffer_stream.secure_client_buffer().reset();
-    buffer_stream.secure_client_buffer().reset();
-    buffer_stream.secure_client_buffer().reset();
-
     auto comp1 = buffer_stream.lock_compositor_buffer();
+    buffer_stream.secure_client_buffer().reset();
     auto comp2 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_NE(comp1->id(), comp2->id());
 
     comp1.reset();
 
+    buffer_stream.secure_client_buffer().reset();
     auto comp3 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_NE(comp2->id(), comp3->id());
@@ -104,11 +99,10 @@ TEST_F(BufferStreamTest, gives_different_compositor_buffers)
 TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
 {
     buffer_stream.secure_client_buffer().reset();
-    buffer_stream.secure_client_buffer().reset();
-    buffer_stream.secure_client_buffer().reset();
-
     auto comp1 = buffer_stream.lock_compositor_buffer();
+    buffer_stream.secure_client_buffer().reset();
     auto comp2 = buffer_stream.lock_compositor_buffer();
+    buffer_stream.secure_client_buffer().reset();
     auto comp3 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_NE(comp1->id(), comp2->id());
