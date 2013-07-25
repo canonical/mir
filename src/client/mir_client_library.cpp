@@ -224,6 +224,11 @@ void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buf
     *buffer_package_out = package.get();
 }
 
+uint32_t mir_surface_get_current_buffer_id(MirSurface * surface)
+{
+    return surface->get_current_buffer_id();
+}
+
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
 {
     connection->populate(*platform_package);

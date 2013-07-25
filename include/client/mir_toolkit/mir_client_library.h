@@ -218,6 +218,14 @@ MirPlatformType mir_surface_get_platform_type(MirSurface *surface);
 void mir_surface_get_current_buffer(MirSurface *surface, MirNativeBuffer **buffer_package);
 
 /**
+ * Get the ID of the surface's current buffer (only useful for debug purposes)
+ *   \pre                         The surface is valid
+ *   \param   [in] surface        The surface
+ *   \return                      The internal buffer ID of the surface's current buffer
+ */
+ uint32_t mir_surface_get_current_buffer_id(MirSurface *surface); 
+
+/**
  * Get a surface's graphics_region, i.e., map the graphics buffer to main
  * memory.
  *   \pre                          The surface is valid
