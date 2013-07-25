@@ -21,6 +21,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/displacement.h"
 #include "drm_mode_resources.h"
 
 #include <gbm.h>
@@ -43,6 +44,7 @@ public:
     ~KMSOutput();
 
     void reset();
+    void configure(geometry::Displacement fb_offset, size_t kms_mode_index);
 
     geometry::Size size() const;
     bool set_crtc(uint32_t fb_id);
@@ -65,6 +67,7 @@ private:
 
     DRMModeConnectorUPtr connector;
     size_t mode_index;
+    geometry::Displacement fb_offset;
     DRMModeCrtcUPtr current_crtc;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;

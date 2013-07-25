@@ -41,7 +41,6 @@ std::shared_ptr<mgg::KMSOutput> mgg::KMSOutputContainer::get_kms_output_for(uint
     else
     {
         output = output_iter->second;
-        output->reset();
     }
 
     return output;
