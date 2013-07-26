@@ -23,10 +23,12 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -296,9 +298,98 @@ TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
+namespace
+{
+struct StubConfig : public mg::DisplayConfiguration
+{
+    StubConfig(std::shared_ptr<mg::DisplayConfigurationOutput> const& conf)
+       : outputs{conf, conf}
+    {
+    }
+    virtual void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
+    {
+    }
+    virtual void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    {
+        for(auto const& disp : outputs)
+        {
+            f(*disp);
+        }
+    }
+    virtual void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
+    {
+    }
+
+    std::vector<std::shared_ptr<mg::DisplayConfigurationOutput>> outputs;
+};
+
+MATCHER_P2(ConfigMatches, config, formats, "")
+{
+    //ASSERT_ doesn't work in MATCHER_P apparently.
+    EXPECT_EQ(config.size(), arg.display_output_size());
+    if(config.size() == arg.display_output_size())
+    {
+        auto i = 0u;
+        for( auto &info : config) 
+        {
+            auto& arg_display = arg.display_output(i++);
+            EXPECT_EQ(info->connected, arg_display.connected());
+            EXPECT_EQ(info->used, arg_display.used());
+            EXPECT_EQ(info->id.as_value(), arg_display.output_id());
+            EXPECT_EQ(info->card_id.as_value(), arg_display.card_id());
+            EXPECT_EQ(info->physical_size_mm.width.as_uint32_t(), arg_display.physical_width_mm()); 
+            EXPECT_EQ(info->physical_size_mm.height.as_uint32_t(), arg_display.physical_height_mm()); 
+            EXPECT_EQ(static_cast<int>(info->top_left.x.as_uint32_t()), arg_display.position_x()); 
+            EXPECT_EQ(static_cast<int>(info->top_left.y.as_uint32_t()), arg_display.position_y());
+            EXPECT_EQ(info->current_mode_index, arg_display.current_mode());
+            EXPECT_EQ(info->modes.size(), arg_display.mode_size());
+            if (info->modes.size() != arg_display.mode_size()) return false;
+            auto j=0u;
+            for(auto& mode : info->modes)
+            {
+                auto& arg_mode = arg_display.mode(j++);
+                EXPECT_EQ(mode.size.width.as_uint32_t(), arg_mode.horizontal_resolution());
+                EXPECT_EQ(mode.size.height.as_uint32_t(), arg_mode.vertical_resolution());
+                EXPECT_FLOAT_EQ(mode.vrefresh_hz, arg_mode.refresh_rate());
+            }
+
+            EXPECT_EQ(0u, arg_display.current_format());
+            EXPECT_EQ(formats.size(), arg_display.pixel_format_size()); 
+            if (formats.size() != arg_display.pixel_format_size()) return false;
+            for(j=0u; j<formats.size(); j++)
+            {
+                EXPECT_EQ(formats[j], static_cast<geom::PixelFormat>(arg_display.pixel_format(j)));
+            }
+        }
+        return true;;
+    }
+    return false;
+}
+}
+
 TEST_F(SessionMediatorTest, connect_packs_display_output)
 {
     using namespace testing;
+    geom::Size sz{1022, 2411};
+   
+    std::vector<mg::DisplayConfigurationMode> modes{{sz, 344.0f},{sz, 234.0f}};
+    mg::DisplayConfigurationOutput output{
+        mg::DisplayConfigurationOutputId{static_cast<int>(3)},
+        mg::DisplayConfigurationCardId{static_cast<int>(2)},
+        modes, sz, true, false,
+        geom::Point{4,12}, 0u};
+
+    StubConfig config(mt::fake_shared(output));
+
+    auto mock_display = std::make_shared<mtd::MockDisplay>();
+    EXPECT_CALL(*mock_display, configuration())
+        .Times(1)
+        .WillOnce(Return(mt::fake_shared(config)));
+    mf::SessionMediator mediator{
+                   shell, graphics_platform, mock_display,
+                   buffer_allocator, report, 
+                   std::make_shared<NullEventSink>(),
+                   resource_cache};
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -314,16 +405,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    ASSERT_EQ(1, connection.display_output().size());
-    auto output = connection.display_output(0);
-
-    ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(output.pixel_format_size()));
-
-    for (size_t i = 0; i < pixel_formats.size(); ++i)
-    {
-        EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(output.pixel_format(i)))
-            << "i = " << i;
-    }
+    EXPECT_THAT(connection, ConfigMatches(config.outputs, pixel_formats));
 }
 
 TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)

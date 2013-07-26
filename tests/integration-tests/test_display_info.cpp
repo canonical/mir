@@ -79,7 +79,7 @@ MATCHER_P2(ConfigMatches, config, formats, "")
             if (formats.size() != arg_display.num_output_formats) return false;
             for(j=0u; j<formats.size(); j++)
             {
-                EXPECT_EQ(formats[i], static_cast<geom::PixelFormat>(arg_display.output_formats[i]));
+                EXPECT_EQ(formats[j], static_cast<geom::PixelFormat>(arg_display.output_formats[j]));
             }
         }
         return true;
