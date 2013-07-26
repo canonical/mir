@@ -183,3 +183,33 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
     }
 }
 
+TEST_F(SwitchingBundleTest, two_compositors_always_get_different_frames)
+{
+    // This test simulates bypass behaviour
+    mc::SwitchingBundle bundle(3, allocator, basic_properties);
+    const int N = 100;
+
+    std::shared_ptr<mg::Buffer> compositor[2];
+
+    bundle.client_release(bundle.client_acquire());
+    compositor[0] = bundle.compositor_acquire();
+
+    bundle.client_release(bundle.client_acquire());
+    compositor[1] = bundle.compositor_acquire();
+
+    for (int i = 0; i < N; i++)
+    {
+        // Two compositors acquired, and they're always different...
+        ASSERT_NE(compositor[0]->id(), compositor[1]->id());
+
+        // One of the compositors (the oldest one) gets a new buffer...
+        int c = i & 1;
+        bundle.compositor_release(compositor[c]);
+        bundle.client_release(bundle.client_acquire());
+        compositor[c] = bundle.compositor_acquire();
+    }
+
+    bundle.compositor_release(compositor[0]);
+    bundle.compositor_release(compositor[1]);
+}
+
