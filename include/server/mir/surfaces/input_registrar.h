@@ -42,7 +42,7 @@ public:
     
     virtual void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
                                       std::shared_ptr<input::Surface> const& info,
-                                      bool monitors_input) = 0;
+                                      bool receives_all_input) = 0;
     virtual void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel) = 0;
 
 protected:

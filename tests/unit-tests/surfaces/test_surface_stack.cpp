@@ -363,7 +363,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_monitor_surfaces)
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(registrar));
     
-    auto s = stack.create_surface(msh::a_surface().which_monitors_input());
+    auto s = stack.create_surface(msh::a_surface().which_receives_all_input());
     stack.destroy_surface(s);
 }
 

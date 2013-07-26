@@ -36,7 +36,7 @@ struct NullInputRegistrar : public ms::InputRegistrar
     
     void input_channel_opened(std::shared_ptr<mi::InputChannel> const&,
                               std::shared_ptr<mi::Surface> const&,
-                              bool /* monitors_input */)
+                              bool /* receives_all_input */)
     {
     }
 

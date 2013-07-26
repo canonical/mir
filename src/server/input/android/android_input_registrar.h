@@ -54,7 +54,7 @@ public:
 
     void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
                               std::shared_ptr<input::Surface> const& surface,
-                              bool monitors_input);
+                              bool receives_all_input);
     void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel);
 
 
