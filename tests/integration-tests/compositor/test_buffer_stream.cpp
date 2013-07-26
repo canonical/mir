@@ -43,7 +43,8 @@ namespace
 struct BufferStreamTest : public ::testing::Test
 {
     BufferStreamTest()
-        : buffer_stream{create_bundle()}
+        : nbuffers{3},
+          buffer_stream{create_bundle()}
     {
     }
 
@@ -54,91 +55,77 @@ struct BufferStreamTest : public ::testing::Test
                                         geom::PixelFormat::abgr_8888,
                                         mc::BufferUsage::hardware};
 
-        return std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
+        return std::make_shared<mc::SwitchingBundle>(nbuffers,
+                                                     allocator,
+                                                     properties);
     }
 
+    const int nbuffers;
     mc::BufferStreamSurfaces buffer_stream;
 };
 
 }
 
-TEST_F(BufferStreamTest, gives_only_one_snapshot_buffer)
+TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 {
-    auto comp1 = buffer_stream.lock_snapshot_buffer();
-    auto comp2 = buffer_stream.lock_snapshot_buffer();
+    auto client1 = buffer_stream.secure_client_buffer();
+    auto client1_id = client1->id();
+    client1.reset();
 
-    EXPECT_EQ(comp1->id(), comp2->id());
-
-    comp1.reset();
-
-    auto comp3 = buffer_stream.lock_snapshot_buffer();
-
-    EXPECT_EQ(comp2->id(), comp3->id());
-}
-
-TEST_F(BufferStreamTest, gives_same_compositor_buffer_when_necessary)
-{
-    buffer_stream.secure_client_buffer().reset();
     auto comp1 = buffer_stream.lock_compositor_buffer();
     auto comp2 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_EQ(comp1->id(), comp2->id());
+    EXPECT_EQ(comp1->id(), client1_id);
 
     comp1.reset();
 
+    buffer_stream.secure_client_buffer().reset();
     auto comp3 = buffer_stream.lock_compositor_buffer();
 
-    EXPECT_EQ(comp2->id(), comp3->id());
+    EXPECT_NE(client1_id, comp3->id());
 
     comp2.reset();
+    auto comp3_id = comp3->id();
     comp3.reset();
+
+    auto comp4 = buffer_stream.lock_compositor_buffer();
+    EXPECT_EQ(comp3_id, comp4->id());
 }
 
-TEST_F(BufferStreamTest, gives_different_compositor_buffers_when_available)
+TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
-    buffer_stream.secure_client_buffer().reset();
-    auto comp1 = buffer_stream.lock_compositor_buffer();
-    buffer_stream.secure_client_buffer().reset();
-    auto comp2 = buffer_stream.lock_compositor_buffer();
-
-    EXPECT_NE(comp1->id(), comp2->id());
-
-    comp1.reset();
-
-    buffer_stream.secure_client_buffer().reset();
-    auto comp3 = buffer_stream.lock_compositor_buffer();
-
-    EXPECT_NE(comp2->id(), comp3->id());
-
-    comp2.reset();
-    comp3.reset();
+    if (nbuffers > 1)
+    {
+        buffer_stream.secure_client_buffer().reset();
+        auto comp1 = buffer_stream.lock_compositor_buffer();
+    
+        buffer_stream.secure_client_buffer().reset();
+        auto comp2 = buffer_stream.lock_compositor_buffer();
+    
+        EXPECT_NE(comp1->id(), comp2->id());
+    
+        comp1.reset();
+        comp2.reset();
+    }
 }
 
-#if 0 // FIXME - test is no longer valid
-TEST_F(BufferStreamTest, multiply_acquired_back_buffer_is_returned_to_client)
+TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 {
     buffer_stream.secure_client_buffer().reset();
-    auto comp1 = buffer_stream.lock_compositor_buffer();
-    buffer_stream.secure_client_buffer().reset();
-    auto comp2 = buffer_stream.lock_compositor_buffer();
-    buffer_stream.secure_client_buffer().reset();
-    auto comp3 = buffer_stream.lock_compositor_buffer();
-
-    EXPECT_NE(comp1->id(), comp2->id());
-    EXPECT_NE(comp2->id(), comp3->id());
-    EXPECT_NE(comp3->id(), comp1->id());
-
-    auto comp_id = comp1->id();
-
-    comp1.reset();
-    comp2.reset();
-    comp3.reset();
-
     auto client1 = buffer_stream.secure_client_buffer();
 
-    EXPECT_EQ(comp_id, client1->id());
+    auto comp1 = buffer_stream.lock_compositor_buffer();
+    auto comp2 = buffer_stream.lock_compositor_buffer();
+
+    EXPECT_EQ(comp1->id(), comp2->id());
+
+    comp1.reset();
+
+    auto comp3 = buffer_stream.lock_compositor_buffer();
+
+    EXPECT_EQ(comp2->id(), comp3->id());
 }
-#endif
 
 namespace
 {
