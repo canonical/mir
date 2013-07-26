@@ -267,6 +267,25 @@ TEST_F(SwitchingBundleTest, out_of_order_compositor_release)
     }
 }
 
+TEST_F(SwitchingBundleTest, clients_steal_all_the_buffers)
+{
+    for (int nbuffers = 1; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+        for (int i = 1; i < nbuffers; i++)
+            bundle.client_acquire();
+
+        bundle.compositor_release(bundle.compositor_acquire());
+        bundle.client_acquire();
+
+        EXPECT_THROW(
+            bundle.compositor_acquire(),
+            std::logic_error
+        );
+    }
+}
+
 TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
