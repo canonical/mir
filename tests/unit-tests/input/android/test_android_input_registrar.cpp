@@ -16,9 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#include "mir/input/surface.h"
+
 #include "src/server/input/android/android_input_registrar.h"
 
-#include "mir_test_doubles/mock_input_configuration.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test_doubles/stub_input_channel.h"
 
@@ -36,6 +37,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -57,12 +59,32 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     }
     int test_input_fd;
     droidinput::sp<mtd::MockInputDispatcher> dispatcher;
-    mtd::MockInputConfiguration config;
 };
 
-MATCHER_P(WindowHandleFor, surface, "")
+struct StubInputSurface : public mi::Surface
 {
-    if (arg->getInputChannel()->getFd() != surface->server_input_fd())
+    geom::Point position() const
+    {
+        return geom::Point();
+    }
+    geom::Size size() const
+    {
+        return geom::Size();
+    }
+    std::string const& name() const
+    {
+        static std::string const name;
+        return name;
+    }
+    bool contains(geom::Point const&) const
+    {
+        return true;
+    }
+};
+
+MATCHER_P(WindowHandleFor, channel, "")
+{
+    if (arg->getInputChannel()->getFd() != channel->server_fd())
         return false;
     return true;
 }
@@ -73,19 +95,18 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_opened_behavior)
 {    
     using namespace ::testing;
 
-    auto surface = std::make_shared<mtd::StubInputChannel>(test_input_fd);
+    auto channel = std::make_shared<mtd::StubInputChannel>(test_input_fd);
+    auto surface = std::make_shared<StubInputSurface>();
 
-    EXPECT_CALL(config, the_dispatcher()).Times(1)
-        .WillOnce(Return(dispatcher));
-    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(surface), false)).Times(1)
+    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(channel), false)).Times(1)
         .WillOnce(Return(droidinput::OK));
 
-    mia::InputRegistrar registrar(mt::fake_shared(config));
+    mia::InputRegistrar registrar(dispatcher);
     
-     registrar.input_channel_opened(surface);
+     registrar.input_channel_opened(channel, surface);
      EXPECT_THROW({
              // We can't open a surface twice
-             registrar.input_channel_opened(surface);
+             registrar.input_channel_opened(channel, surface);
      }, std::logic_error);
 }
 
@@ -93,24 +114,23 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_closed_behavior)
 {
     using namespace ::testing;
 
-    auto surface = std::make_shared<mtd::StubInputChannel>(test_input_fd);
+    auto channel = std::make_shared<mtd::StubInputChannel>(test_input_fd);
+    auto surface = std::make_shared<StubInputSurface>();
 
-    EXPECT_CALL(config, the_dispatcher()).Times(1)
-        .WillOnce(Return(dispatcher));
-    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(surface), false)).Times(1)
+    EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(channel), false)).Times(1)
         .WillOnce(Return(droidinput::OK));
     EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
-    mia::InputRegistrar registrar(mt::fake_shared(config));
+    mia::InputRegistrar registrar(dispatcher);
     
     EXPECT_THROW({
             // We can't close a surface which hasn't been opened
-            registrar.input_channel_closed(surface);
+            registrar.input_channel_closed(channel);
     }, std::logic_error);
-    registrar.input_channel_opened(surface);
-    registrar.input_channel_closed(surface);
+    registrar.input_channel_opened(channel, surface);
+    registrar.input_channel_closed(channel);
     EXPECT_THROW({
             // Nor can we close a surface twice
-            registrar.input_channel_closed(surface);
+            registrar.input_channel_closed(channel);
     }, std::logic_error);
 }
 

@@ -59,7 +59,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 
     for(auto i=0u; i < output.num_output_formats; i++)
     {
-        output.output_formats[i] = (MirPixelFormat) msg.pixel_format(i);
+        output.output_formats[i] = static_cast<MirPixelFormat>(msg.pixel_format(i));
     }
     output.current_output_format = msg.current_format();
 
