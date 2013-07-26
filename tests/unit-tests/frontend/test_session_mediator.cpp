@@ -139,7 +139,7 @@ struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
-          graphics_platform{std::make_shared<MockPlatform>()},
+          graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
