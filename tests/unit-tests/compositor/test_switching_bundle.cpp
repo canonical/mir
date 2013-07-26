@@ -203,10 +203,10 @@ TEST_F(SwitchingBundleTest, two_compositors_always_get_different_frames)
         ASSERT_NE(compositor[0]->id(), compositor[1]->id());
 
         // One of the compositors (the oldest one) gets a new buffer...
-        int c = i & 1;
-        bundle.compositor_release(compositor[c]);
+        int oldest = i & 1;
+        bundle.compositor_release(compositor[oldest]);
         bundle.client_release(bundle.client_acquire());
-        compositor[c] = bundle.compositor_acquire();
+        compositor[oldest] = bundle.compositor_acquire();
     }
 
     bundle.compositor_release(compositor[0]);
