@@ -235,3 +235,35 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
     }
 }
 
+TEST_F(SwitchingBundleTest, no_lag_from_client_to_compositor)
+{   // Regression test for input lag bug LP: #1199450
+    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+        bundle.allow_framedropping(false);
+        for (int i = 0; i < nbuffers * 3; i++)
+        {
+            auto client = bundle.client_acquire();
+            auto client_id = client->id();
+            bundle.client_release(client);
+
+            auto compositor = bundle.compositor_acquire();
+            ASSERT_EQ(client_id, compositor->id());
+            bundle.compositor_release(compositor);
+        }
+
+        mg::BufferID client_id;
+        bundle.allow_framedropping(true);
+        for (int i = 0; i < nbuffers * 3; i++)
+        {
+            auto client = bundle.client_acquire();
+            client_id = client->id();
+            bundle.client_release(client);
+        }
+        auto compositor = bundle.compositor_acquire();
+        ASSERT_EQ(client_id, compositor->id());
+        bundle.compositor_release(compositor);
+    }
+}
+
