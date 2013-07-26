@@ -314,6 +314,11 @@ void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
     framedropping = allow_dropping;
 }
 
+bool mc::SwitchingBundle::framedropping_allowed() const
+{
+    return framedropping;
+}
+
 mc::BufferProperties mc::SwitchingBundle::properties() const
 {
     return bundle_properties;

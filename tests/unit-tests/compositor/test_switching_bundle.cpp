@@ -25,119 +25,80 @@
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
-namespace mg = mir::graphics;
 
-#if 0 // FIXME: Needs converting to new interfaces
+using namespace testing;
+
 struct SwitchingBundleTest : public ::testing::Test
 {
     void SetUp()
     {
-        using namespace testing;
-        mock_buffer_allocator = std::make_shared<mtd::MockBufferAllocator>();
+        allocator = std::make_shared<mtd::StubBufferAllocator>();
+        basic_properties =
+        {
+            geom::Size{3, 4},
+            geom::PixelFormat::abgr_8888,
+            mc::BufferUsage::hardware
+        };
     }
 
-    std::shared_ptr<mtd::MockBufferAllocator> mock_buffer_allocator;
+    std::shared_ptr<mtd::StubBufferAllocator> allocator;
+
+    mc::BufferProperties basic_properties;
 };
 
 TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
-    using namespace testing;
     mc::BufferProperties properties{geom::Size{7, 8},
                                     geom::PixelFormat::argb_8888,
                                     mc::BufferUsage::software};
-    EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(_))
-        .Times(2);
 
-    mc::SwitchingBundle switcher(2, mock_buffer_allocator, properties);
-    EXPECT_EQ(properties, switcher.properties());
+    mc::SwitchingBundle bundle(2, allocator, properties);
+
+    EXPECT_FALSE(bundle.framedropping_allowed());
+    EXPECT_EQ(properties, bundle.properties());
 }
 
 TEST_F(SwitchingBundleTest, client_acquire_basic)
 {
-    using namespace testing;
-    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle bundle(2, allocator, basic_properties);
 
-    EXPECT_CALL(*mock_default_swapper, client_acquire())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_default_swapper, client_release(stub_buffer))
-        .Times(1);
-
-    auto buffer = switcher.client_acquire();
-    switcher.client_release(buffer); 
+    auto buffer = bundle.client_acquire();
+    bundle.client_release(buffer); 
 }
 
 TEST_F(SwitchingBundleTest, client_acquire_with_switch)
 {
-    using namespace testing;
-    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle bundle(2, allocator, basic_properties);
 
-    EXPECT_CALL(*mock_default_swapper, client_acquire())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_secondary_swapper, client_release(stub_buffer))
-        .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_,_))
-        .Times(1)
-        .WillOnce(Return(mock_secondary_swapper));
-
-    auto buffer = switcher.client_acquire();
-    switcher.allow_framedropping(true);
- 
-    switcher.client_release(buffer); 
+    auto buffer = bundle.client_acquire();
+    bundle.allow_framedropping(true);
+    bundle.client_release(buffer); 
 }
 
 TEST_F(SwitchingBundleTest, compositor_acquire_basic)
 {
-    using namespace testing;
-    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
+    mc::SwitchingBundle bundle(2, allocator, basic_properties);
 
-    EXPECT_CALL(*mock_default_swapper, compositor_acquire())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_default_swapper, compositor_release(stub_buffer))
-        .Times(1);
+    auto client = bundle.client_acquire();
+    auto client_id = client->id();
+    bundle.client_release(client);
 
-    auto buffer = switcher.compositor_acquire();
-    switcher.compositor_release(buffer); 
+    auto compositor = bundle.compositor_acquire();
+    EXPECT_EQ(client_id, compositor->id());
+    bundle.compositor_release(compositor); 
 }
 
 TEST_F(SwitchingBundleTest, compositor_acquire_with_switch)
 {
-    using namespace testing;
+    mc::SwitchingBundle bundle(2, allocator, basic_properties);
 
-    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
+    auto client = bundle.client_acquire();
+    auto client_id = client->id();
+    bundle.client_release(client);
 
-    EXPECT_CALL(*mock_default_swapper, compositor_acquire())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_secondary_swapper, compositor_release(stub_buffer))
-        .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_,_))
-        .Times(1)
-        .WillOnce(Return(mock_secondary_swapper));
-
-    auto buffer = switcher.compositor_acquire();
-
-    switcher.allow_framedropping(true);
- 
-    switcher.compositor_release(buffer); 
+    auto compositor = bundle.compositor_acquire();
+    EXPECT_EQ(client_id, compositor->id());
+    bundle.allow_framedropping(true);
+    bundle.compositor_release(compositor); 
 }
 
-TEST_F(SwitchingBundleTest, switch_sequence)
-{
-    using namespace testing;
-    mc::SwitchingBundle switcher(mock_swapper_factory, properties);
-
-    InSequence seq;
-    EXPECT_CALL(*mock_default_swapper, force_client_abort())
-        .Times(1);
-    EXPECT_CALL(*mock_default_swapper, end_responsibility(_,_))
-        .Times(1);
-    EXPECT_CALL(*mock_swapper_factory, create_swapper_reuse_buffers(_,_,_,mc::SwapperType::framedropping))
-        .Times(1)
-        .WillOnce(Return(mock_secondary_swapper));
-
-    switcher.allow_framedropping(true);
-}
-#endif
