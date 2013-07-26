@@ -76,7 +76,25 @@ TEST_F(BufferStreamTest, gives_only_one_snapshot_buffer)
     EXPECT_EQ(comp2->id(), comp3->id());
 }
 
-TEST_F(BufferStreamTest, gives_different_compositor_buffers)
+TEST_F(BufferStreamTest, gives_same_compositor_buffer_when_necessary)
+{
+    buffer_stream.secure_client_buffer().reset();
+    auto comp1 = buffer_stream.lock_compositor_buffer();
+    auto comp2 = buffer_stream.lock_compositor_buffer();
+
+    EXPECT_EQ(comp1->id(), comp2->id());
+
+    comp1.reset();
+
+    auto comp3 = buffer_stream.lock_compositor_buffer();
+
+    EXPECT_EQ(comp2->id(), comp3->id());
+
+    comp2.reset();
+    comp3.reset();
+}
+
+TEST_F(BufferStreamTest, gives_different_compositor_buffers_when_available)
 {
     buffer_stream.secure_client_buffer().reset();
     auto comp1 = buffer_stream.lock_compositor_buffer();
