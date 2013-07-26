@@ -101,6 +101,8 @@ void mf::SessionMediator::connect(
     display_config->for_each_output([&response, &supported_pfs](mg::DisplayConfigurationOutput const& config)
     {
         auto output = response->add_display_output();
+        output->set_output_id(config.id.as_value());
+        output->set_card_id(config.card_id.as_value());
         output->set_connected(config.connected);
         output->set_used(config.used);
         output->set_physical_width_mm(config.physical_size_mm.width.as_uint32_t());

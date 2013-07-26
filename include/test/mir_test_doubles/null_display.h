@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "null_gl_context.h"
 #include <thread>
 
@@ -29,6 +30,18 @@ namespace test
 {
 namespace doubles
 {
+class NullDisplayConfiguration : public graphics::DisplayConfiguration
+{
+    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
+    {
+    }
+    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const
+    {
+    }
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
+    {
+    }
+};
 
 class NullDisplay : public graphics::Display
 {
@@ -40,7 +53,7 @@ class NullDisplay : public graphics::Display
     }
     std::shared_ptr<graphics::DisplayConfiguration> configuration()
     {
-        return std::shared_ptr<graphics::DisplayConfiguration>();
+        return std::make_shared<NullDisplayConfiguration>();
     }
     void configure(graphics::DisplayConfiguration const&) {}
     void register_configuration_change_handler(
