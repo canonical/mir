@@ -64,6 +64,24 @@ TEST_F(SwitchingBundleTest, sync_swapper_by_default)
     }
 }
 
+TEST_F(SwitchingBundleTest, invalid_nbuffers)
+{
+    EXPECT_THROW(
+        mc::SwitchingBundle a(0, allocator, basic_properties),
+        std::logic_error
+    );
+
+    EXPECT_THROW(
+        mc::SwitchingBundle b(-1, allocator, basic_properties),
+        std::logic_error
+    );
+
+    EXPECT_THROW(
+        mc::SwitchingBundle c(-123, allocator, basic_properties),
+        std::logic_error
+    );
+}
+
 TEST_F(SwitchingBundleTest, client_acquire_basic)
 {
     for (int nbuffers = 1; nbuffers < 10; nbuffers++)
@@ -146,6 +164,27 @@ TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
     }
 }
 
+TEST_F(SwitchingBundleTest, out_of_order_client_release)
+{
+    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+    
+        auto client1 = bundle.client_acquire();
+        auto client2 = bundle.client_acquire();
+        EXPECT_THROW(
+            bundle.client_release(client2),
+            std::logic_error
+        );
+
+        bundle.client_release(client1);
+        EXPECT_THROW(
+            bundle.client_release(client1),
+            std::logic_error
+        );
+    }
+}
+
 TEST_F(SwitchingBundleTest, compositor_acquire_basic)
 {
     for (int nbuffers = 1; nbuffers < 10; nbuffers++)
@@ -200,6 +239,31 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
             ASSERT_EQ(client_id, compositor->id());
             bundle.compositor_release(compositor);
         }
+    }
+}
+
+TEST_F(SwitchingBundleTest, out_of_order_compositor_release)
+{
+    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+    
+        bundle.client_release(bundle.client_acquire());
+        auto compositor1 = bundle.compositor_acquire();
+
+        bundle.client_release(bundle.client_acquire());
+        auto compositor2 = bundle.compositor_acquire();
+
+        EXPECT_THROW(
+            bundle.compositor_release(compositor2),
+            std::logic_error
+        );
+
+        bundle.compositor_release(compositor1);
+        EXPECT_THROW(
+            bundle.compositor_release(compositor1),
+            std::logic_error
+        );
     }
 }
 
