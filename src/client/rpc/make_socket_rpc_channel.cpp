@@ -19,11 +19,13 @@
 #include "make_rpc_channel.h"
 #include "mir_socket_rpc_channel.h"
 
+namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 
 std::shared_ptr<mclr::MirBasicRpcChannel>
 mclr::make_rpc_channel(std::string const& name,
+                       std::shared_ptr<mcl::SurfaceMap> const& map,
                        std::shared_ptr<RpcReport> const& rpc_report)
-{
-    return std::make_shared<MirSocketRpcChannel>(name, rpc_report);
+{ 
+    return std::make_shared<MirSocketRpcChannel>(name, map, rpc_report);
 }

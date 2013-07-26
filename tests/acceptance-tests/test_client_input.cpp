@@ -370,8 +370,8 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
         {
             wait_until_client_appears(test_client_name);
             
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputClient::surface_width,
-                                                                                 InputClient::surface_height));
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(InputClient::surface_width - 1,
+                                                                                 InputClient::surface_height - 1));
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,2));
         }
     } server_config;
@@ -390,8 +390,8 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
             // We should see the cursor enter
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(1);
             EXPECT_CALL(*handler, handle_input(
-                MotionEventWithPosition(InputClient::surface_width,
-                                        InputClient::surface_height))).Times(1)
+                MotionEventWithPosition(InputClient::surface_width - 1,
+                                        InputClient::surface_height - 1))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
             // But we should not receive an event for the second movement outside of our surface!
         }

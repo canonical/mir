@@ -271,15 +271,22 @@ int main(int argc, char *argv[])
     MirDisplayOutput* dinfo = &display_config->displays[0];
 
     parm.buffer_usage = mir_buffer_usage_software;
+
+    unsigned int const pf_size = 32;
+    MirPixelFormat formats[pf_size];
+    unsigned int valid_formats;
+    mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
+
     parm.pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < dinfo->num_output_formats; f++)
+    for (f = 0; f < valid_formats; f++)
     {
-        if (BYTES_PER_PIXEL(dinfo->output_formats[f]) == 4)
+        if (BYTES_PER_PIXEL(formats[f]) == 4)
         {
-            parm.pixel_format = dinfo->output_formats[f];
+            parm.pixel_format = formats[f];
             break;
         }
     }
+
     if (parm.pixel_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format\n");
