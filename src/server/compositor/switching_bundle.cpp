@@ -194,20 +194,14 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
-    // XXX limit ncompositors to 2 for bypass. Does it need to be enforced?
-    if (recompositors > 0 || ncompositors >= 2)
+    if (!nready)
     {
-        compositor = (first_compositor + ncompositors - 1) % nbuffers;
-        recompositors++;
-    }
-    else if (!nready)
-    {
-        if (ncompositors == 1)
+        if (ncompositors)
         {
             recompositors++;
-            compositor = first_compositor;
+            compositor = (first_compositor + ncompositors - 1) % nbuffers;
         }
-        else if (!ncompositors && nbuffers > 2 && nfree())
+        else if (nbuffers > 2 && nfree())
         {
             /*
              * If there's nothing else available then show an old frame.
