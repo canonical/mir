@@ -122,6 +122,7 @@ void mf::SessionMediator::connect(
         {
             output->add_pixel_format(static_cast<uint32_t>(pf));
         }
+        //TODO: should set the actual display format from the display, once display lets us at that info
         output->set_current_format(0);
     });
 
