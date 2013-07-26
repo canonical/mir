@@ -60,6 +60,7 @@
 #include "switching_bundle.h"
 
 #include <boost/throw_exception.hpp>
+#include <cassert>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
@@ -71,7 +72,7 @@ mc::SwitchingBundle::SwitchingBundle(
     : bundle_properties{property_request},
       gralloc{gralloc},
       nbuffers{nbuffers},
-      first_compositor{0}, ncompositors{0}, recompositors{0},
+      first_compositor{0}, ncompositors{0},
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
@@ -81,9 +82,12 @@ mc::SwitchingBundle::SwitchingBundle(
         BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle requires a "
                                                "positive number of buffers"));
 
-    ring = new std::shared_ptr<graphics::Buffer>[nbuffers];
+    ring = new SharedBuffer[nbuffers];
     for (int i = 0; i < nbuffers; i++)
-        ring[i] = gralloc->alloc_buffer(bundle_properties);
+    {
+        ring[i].buf = gralloc->alloc_buffer(bundle_properties);
+        ring[i].users = 0;
+    }
 }
 
 mc::SwitchingBundle::~SwitchingBundle()
@@ -168,14 +172,15 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         }
     }
 
-    return ring[client];
+    ring[client].users++;
+    return ring[client].buf;
 }
 
 void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (nclients <= 0 || ring[first_client] != released_buffer)
+    if (nclients <= 0 || ring[first_client].buf != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Client release out of order"));
 
@@ -183,6 +188,8 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
     while (!framedropping && nready > 0)
         cond.wait(lock);
 
+    ring[first_client].users--;
+    assert(!ring[first_client].users);
     first_client = (first_client + 1) % nbuffers;
     nclients--;
     nready++;
@@ -198,7 +205,6 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     {
         if (ncompositors)
         {
-            recompositors++;
             compositor = (first_compositor + ncompositors - 1) % nbuffers;
         }
         else if (nbuffers > 2 && nfree())
@@ -234,22 +240,19 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         ncompositors++;
     }
 
-    return ring[compositor];
+    ring[compositor].users++;
+    return ring[compositor].buf;
 }
 
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (ncompositors <= 0 || ring[first_compositor] != released_buffer)
+    if (ncompositors <= 0 || ring[first_compositor].buf != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Compositor release out of order"));
 
-    if (ncompositors == 1 && recompositors > 0)
-    {
-        recompositors--;
-    }
-    else
+    if ((--ring[first_compositor].users) == 0)
     {
         first_compositor = (first_compositor + 1) % nbuffers;
         ncompositors--;
@@ -260,6 +263,13 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
+
+    /*
+     * Note that "nsnapshotters" is a separate counter to ring[x].users.
+     * This is because snapshotters should be completely passive and should
+     * not affect the compositing logic.
+     */
+
     if (!nsnapshotters)
     {
         /*
@@ -273,14 +283,14 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
         snapshot = (first_client + nbuffers - 1) % nbuffers;
     }
     nsnapshotters++;
-    return ring[snapshot];
+    return ring[snapshot].buf;
 }
 
 void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (nsnapshotters <= 0 || ring[snapshot] != released_buffer)
+    if (nsnapshotters <= 0 || ring[snapshot].buf != released_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error(
             "snapshot_release passed a non-snapshot buffer"));
 

@@ -62,11 +62,16 @@ private:
     int drop_frames(int max);
     int nfree() const;
 
+    struct SharedBuffer
+    {
+        std::shared_ptr<graphics::Buffer> buf;
+        int users;
+    };
+    SharedBuffer *ring;
+
     int nbuffers;
-    std::shared_ptr<graphics::Buffer> *ring;
     int first_compositor;
     int ncompositors;
-    int recompositors;
     int first_ready;
     int nready;
     int first_client;
