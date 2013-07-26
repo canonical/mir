@@ -203,7 +203,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
     }
 }
 
-TEST_F(SwitchingBundleTest, two_compositors_always_get_different_frames)
+TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
     for (int nbuffers = 2; nbuffers < 10; nbuffers++)
