@@ -133,17 +133,19 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirDisplayConfiguration *display_config = mir_connection_create_display_config(conn);
-    MirDisplayOutput* dinfo = &display_config->displays[0];
+    unsigned int const pf_size = 32;
+    MirPixelFormat formats[pf_size];
+    unsigned int valid_formats;
+    mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
 
     parm.buffer_usage = mir_buffer_usage_software;
     parm.pixel_format = mir_pixel_format_invalid;
-    for (f = 0; f < dinfo->num_output_formats; f++)
+    for (f = 0; f < valid_formats; f++)
     {
-        if (dinfo->output_formats[f] == mir_pixel_format_abgr_8888 ||
-            dinfo->output_formats[f] == mir_pixel_format_argb_8888)
+        if (formats[f] == mir_pixel_format_abgr_8888 ||
+            formats[f] == mir_pixel_format_argb_8888)
         {
-            parm.pixel_format = dinfo->output_formats[f];
+            parm.pixel_format = formats[f];
             break;
         }
     }
@@ -151,10 +153,8 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format with "
                         "alpha support. Blending won't work!.\n");
-        parm.pixel_format = dinfo->output_formats[0];
+        parm.pixel_format = formats[0];
     }
-
-    mir_display_config_destroy(display_config);
 
     parm.name = "red";
     parm.width = 225;

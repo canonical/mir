@@ -45,6 +45,7 @@ namespace rpc
 class MirBasicRpcChannel;
 }
 
+class SurfaceMap;
 class Logger;
 class ClientPlatformFactory;
 
@@ -53,6 +54,7 @@ class ConnectionConfiguration
 public:
     virtual ~ConnectionConfiguration() = default;
 
+    virtual std::shared_ptr<SurfaceMap> the_surface_map() = 0;
     virtual std::shared_ptr<rpc::MirBasicRpcChannel> the_rpc_channel() = 0;
     virtual std::shared_ptr<mir::logging::Logger> the_logger() = 0;
     virtual std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() = 0;
