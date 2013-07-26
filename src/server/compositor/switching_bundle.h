@@ -70,7 +70,7 @@ private:
     };
     SharedBuffer *ring;
 
-    int nbuffers;
+    const int nbuffers;
     int first_compositor;
     int ncompositors;
     int first_ready;
