@@ -185,11 +185,10 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
     for (int nbuffers = 1; nbuffers < 10; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
-        const int N = 100;
     
         mg::BufferID client_id;
     
-        for (int i = 0; i < N; i++)
+        for (int i = 0; i < 100; i++)
         {
             if (i % 10 == 0)
             {
@@ -210,7 +209,6 @@ TEST_F(SwitchingBundleTest, two_compositors_always_get_different_frames)
     for (int nbuffers = 2; nbuffers < 10; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
-        const int N = 100;
     
         std::shared_ptr<mg::Buffer> compositor[2];
     
@@ -220,7 +218,7 @@ TEST_F(SwitchingBundleTest, two_compositors_always_get_different_frames)
         bundle.client_release(bundle.client_acquire());
         compositor[1] = bundle.compositor_acquire();
     
-        for (int i = 0; i < N; i++)
+        for (int i = 0; i < 100; i++)
         {
             // Two compositors acquired, and they're always different...
             ASSERT_NE(compositor[0]->id(), compositor[1]->id());
