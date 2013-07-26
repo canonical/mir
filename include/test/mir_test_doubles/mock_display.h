@@ -20,10 +20,9 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir_test/gmock_fixes.h"
 #include "mir/main_loop.h"
+#include "mir_test/gmock_fixes.h"
 #include <gmock/gmock.h>
-#include <memory>
 
 namespace mir
 {
@@ -40,9 +39,9 @@ public:
     MOCK_METHOD0(configuration, std::shared_ptr<graphics::DisplayConfiguration>());
     MOCK_METHOD1(configure, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD2(register_configuration_change_handler,
-                 void(mir::MainLoop&, graphics::DisplayConfigurationChangeHandler const&));
+                 void(MainLoop&, graphics::DisplayConfigurationChangeHandler const&));
 
-    MOCK_METHOD3(register_pause_resume_handlers, void(mir::MainLoop&,
+    MOCK_METHOD3(register_pause_resume_handlers, void(MainLoop&,
                                                       graphics::DisplayPauseHandler const&,
                                                       graphics::DisplayResumeHandler const&));
     MOCK_METHOD0(pause, void());

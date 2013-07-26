@@ -26,6 +26,7 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
+#include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -41,55 +42,8 @@ namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 
-MATCHER_P2(ConfigMatches, config, formats, "")
-{
-    //ASSERT_ doesn't work in MATCHER_P apparently.
-    EXPECT_EQ(config.size(), arg->num_displays);
-    if (arg->num_displays == config.size())
-    {
-        auto i = 0u;
-        for( auto &info : config) 
-        {
-            auto& arg_display = arg->displays[i++];
-            EXPECT_EQ(info.connected, arg_display.connected);
-            EXPECT_EQ(info.used, arg_display.used);
-            EXPECT_EQ(info.id.as_value(), arg_display.output_id);
-            EXPECT_EQ(info.card_id.as_value(), arg_display.card_id);
-            EXPECT_EQ(info.physical_size_mm.width.as_uint32_t(), arg_display.physical_width_mm); 
-            EXPECT_EQ(info.physical_size_mm.height.as_uint32_t(), arg_display.physical_height_mm); 
-            EXPECT_EQ(static_cast<int>(info.top_left.x.as_uint32_t()), arg_display.position_x); 
-            EXPECT_EQ(static_cast<int>(info.top_left.y.as_uint32_t()), arg_display.position_y);
-            //modes
-            EXPECT_EQ(info.current_mode_index, arg_display.current_mode);
-            EXPECT_EQ(info.modes.size(), arg_display.num_modes);
-            if (info.modes.size() != arg_display.num_modes) return false;
-            auto j=0u;
-            for(auto& mode : info.modes)
-            {
-                auto& arg_mode = arg_display.modes[j++];
-                EXPECT_EQ(mode.size.width.as_uint32_t(), arg_mode.horizontal_resolution);
-                EXPECT_EQ(mode.size.height.as_uint32_t(), arg_mode.vertical_resolution);
-                EXPECT_FLOAT_EQ(mode.vrefresh_hz, arg_mode.refresh_rate);
-            }
-    
-            //TODO: display formats currently is just the formats supported by the allocator. should be
-            //      the formats the display can handle, once we have interfaces from mg::Display for that
-            EXPECT_EQ(0u, arg_display.current_output_format);
-            EXPECT_EQ(formats.size(), arg_display.num_output_formats); 
-            if (formats.size() != arg_display.num_output_formats) return false;
-            for(j=0u; j<formats.size(); j++)
-            {
-                EXPECT_EQ(formats[j], static_cast<geom::PixelFormat>(arg_display.output_formats[j]));
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 namespace
 {
-
 class StubDisplayConfig : public mg::DisplayConfiguration
 {
 public:
@@ -242,8 +196,8 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             auto configuration = mir_connection_create_display_config(connection);
 
-            EXPECT_THAT(configuration, ConfigMatches(StubDisplay::stub_display_config.outputs,
-                                                     StubGraphicBufferAllocator::pixel_formats));
+            EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(StubDisplay::stub_display_config.outputs,
+                                                                   StubGraphicBufferAllocator::pixel_formats));
 
             mir_display_config_destroy(configuration);
             mir_connection_release(connection);
