@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "src/server/compositor/switching_bundle.h"
@@ -22,9 +22,12 @@
 
 #include <gtest/gtest.h>
 
+#include <thread>
+
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
+namespace mg=mir::graphics;
 
 using namespace testing;
 
@@ -66,13 +69,69 @@ TEST_F(SwitchingBundleTest, client_acquire_basic)
     bundle.client_release(buffer); 
 }
 
-TEST_F(SwitchingBundleTest, client_acquire_with_switch)
+namespace
+{
+    void composite_thread(mc::SwitchingBundle &bundle,
+                          mg::BufferID &composited)
+    {
+        auto buffer = bundle.compositor_acquire();
+        composited = buffer->id();
+        bundle.compositor_release(buffer);
+    }
+}
+
+TEST_F(SwitchingBundleTest, is_really_synchronous)
 {
     mc::SwitchingBundle bundle(2, allocator, basic_properties);
+    mg::BufferID prev_id, prev_prev_id;
 
-    auto buffer = bundle.client_acquire();
+    ASSERT_FALSE(bundle.framedropping_allowed());
+
+    for (int i = 0; i < 100; i++)
+    {
+        auto client1 = bundle.client_acquire();
+        bundle.client_release(client1);
+
+        mg::BufferID expect_id = client1->id(), composited_id;
+
+        std::thread compositor(composite_thread,
+                               std::ref(bundle),
+                               std::ref(composited_id));
+
+        compositor.join();
+        ASSERT_EQ(expect_id, composited_id);
+        
+        if (i >= 2)
+            ASSERT_EQ(composited_id, prev_prev_id);
+
+        if (i >= 1)
+            ASSERT_NE(composited_id, prev_id);
+
+        prev_prev_id = prev_id;
+        prev_id = composited_id;
+    }
+}
+
+TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
+{
+    mc::SwitchingBundle bundle(3, allocator, basic_properties);
+
     bundle.allow_framedropping(true);
-    bundle.client_release(buffer); 
+    mg::BufferID last_client_id;
+
+    for (int i = 0; i < 100; i++)
+    {
+        for (int j = 0; j < 100; j++)
+        {
+            auto client = bundle.client_acquire();
+            last_client_id = client->id();
+            bundle.client_release(client);
+        }
+
+        auto compositor = bundle.compositor_acquire();
+        ASSERT_EQ(last_client_id, compositor->id());
+        bundle.compositor_release(compositor);
+    }
 }
 
 TEST_F(SwitchingBundleTest, compositor_acquire_basic)
@@ -88,17 +147,39 @@ TEST_F(SwitchingBundleTest, compositor_acquire_basic)
     bundle.compositor_release(compositor); 
 }
 
-TEST_F(SwitchingBundleTest, compositor_acquire_with_switch)
+TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
 {
     mc::SwitchingBundle bundle(2, allocator, basic_properties);
+    const int N = 100;
 
-    auto client = bundle.client_acquire();
-    auto client_id = client->id();
-    bundle.client_release(client);
+    bundle.force_requests_to_complete();
 
-    auto compositor = bundle.compositor_acquire();
-    EXPECT_EQ(client_id, compositor->id());
-    bundle.allow_framedropping(true);
-    bundle.compositor_release(compositor); 
+    std::shared_ptr<mg::Buffer> buf[N];
+    for (int i = 0; i < N; i++)
+        buf[i] = bundle.compositor_acquire();
+
+    for (int i = 0; i < N; i++)
+        bundle.compositor_release(buf[i]);
+}
+
+TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
+{
+    mc::SwitchingBundle bundle(2, allocator, basic_properties);
+    const int N = 100;
+
+    mg::BufferID client_id;
+
+    for (int i = 0; i < N; i++)
+    {
+        if (i % 10 == 0)
+        {
+            auto client = bundle.client_acquire();
+            client_id = client->id();
+            bundle.client_release(client);
+        }
+        auto compositor = bundle.compositor_acquire();
+        ASSERT_EQ(client_id, compositor->id());
+        bundle.compositor_release(compositor);
+    }
 }
 

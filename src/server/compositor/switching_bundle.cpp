@@ -207,14 +207,8 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         {
             compositor = (first_compositor + ncompositors - 1) % nbuffers;
         }
-        else if (nbuffers > 2 && nfree())
+        else if (nfree())
         {
-            /*
-             * If there's nothing else available then show an old frame.
-             * This only works with 3 or more buffers. If you've only got 2 and
-             * are frame dropping then the compositor would be starved of new
-             * frames, forced to race for them.
-             */
             first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
             compositor = first_compositor;
             ncompositors++;
@@ -222,8 +216,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         else
         {
             BOOST_THROW_EXCEPTION(std::logic_error(
-                "compositor_acquire would block. Either there are not enough "
-                "buffers or too many clients acquired."));
+                "compositor_acquire would block; probably too many clients."));
         }
     }
     else
