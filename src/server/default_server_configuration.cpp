@@ -25,7 +25,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_stream_factory.h"
-#include "mir/compositor/default_compositing_strategy.h"
+#include "mir/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/overlay_renderer.h"
@@ -48,7 +48,7 @@
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/compositor/gl_renderer.h"
+#include "mir/compositor/gl_renderer_factory.h"
 #include "mir/compositor/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
@@ -335,19 +335,12 @@ mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
         });
 }
 
-std::shared_ptr<mc::Renderer> mir::DefaultServerConfiguration::the_renderer()
+std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_renderer_factory()
 {
-    return renderer(
-        [&]() -> std::shared_ptr<mc::GLRenderer>
+    return renderer_factory(
+        []()
         {
-            /* TODO: We need a different design to support multiple outputs */
-            geom::Rectangles view_area;
-            the_display()->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
-            {
-                view_area.add(db.view_area());
-            });
-            geom::Rectangle const view_rect = view_area.bounding_rectangle();
-            return std::make_shared<mc::GLRenderer>(view_rect.size);
+            return std::make_shared<mc::GLRendererFactory>();
         });
 }
 
@@ -648,13 +641,14 @@ mir::DefaultServerConfiguration::the_overlay_renderer()
         });
 }
 
-std::shared_ptr<mc::CompositingStrategy>
-mir::DefaultServerConfiguration::the_compositing_strategy()
+std::shared_ptr<mc::DisplayBufferCompositorFactory>
+mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
 {
-    return compositing_strategy(
+    return display_buffer_compositor_factory(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_scene(), the_renderer(), the_overlay_renderer());
+            return std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
+                the_scene(), the_renderer_factory(), the_overlay_renderer());
         });
 }
 
@@ -676,7 +670,7 @@ mir::DefaultServerConfiguration::the_compositor()
         {
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
                                                                  the_scene(),
-                                                                 the_compositing_strategy());
+                                                                 the_display_buffer_compositor_factory());
         });
 }
 

@@ -48,9 +48,6 @@ private:
     static TestingProcessManager process_manager;
 
     virtual void TearDown();
-    static std::shared_ptr<mir::frontend::Communicator> make_communicator();
-    static std::shared_ptr<mir::compositor::Renderer> the_renderer();
-    static std::shared_ptr<mir::compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
 };
 
 // The test fixture sets up and tears down a display server for use
