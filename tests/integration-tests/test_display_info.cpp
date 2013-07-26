@@ -162,12 +162,6 @@ public:
     }
 };
 
-void connection_callback(MirConnection* connection, void* context)
-{
-    auto connection_ptr = static_cast<MirConnection**>(context);
-    *connection_ptr = connection;
-}
-
 }
 
 TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)

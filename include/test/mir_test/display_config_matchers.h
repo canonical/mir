@@ -37,8 +37,8 @@ MATCHER_P2(ClientTypeConfigMatches, config, formats, "")
             auto& arg_display = arg->displays[i++];
             EXPECT_EQ(info.connected, arg_display.connected);
             EXPECT_EQ(info.used, arg_display.used);
-            EXPECT_EQ(info.id.as_value(), arg_display.output_id);
-            EXPECT_EQ(info.card_id.as_value(), arg_display.card_id);
+            EXPECT_EQ(info.id.as_value(), static_cast<int>(arg_display.output_id));
+            EXPECT_EQ(info.card_id.as_value(), static_cast<int>(arg_display.card_id));
             EXPECT_EQ(info.physical_size_mm.width.as_uint32_t(), arg_display.physical_width_mm); 
             EXPECT_EQ(info.physical_size_mm.height.as_uint32_t(), arg_display.physical_height_mm); 
             EXPECT_EQ(static_cast<int>(info.top_left.x.as_uint32_t()), arg_display.position_x); 
@@ -75,7 +75,7 @@ MATCHER_P2(ProtobufConfigMatches, config, formats, "")
 {
     //ASSERT_ doesn't work in MATCHER_P apparently.
     EXPECT_EQ(config.size(), arg.display_output_size());
-    if(config.size() == arg.display_output_size())
+    if(config.size() == static_cast<unsigned int>(arg.display_output_size()))
     {
         auto i = 0u;
         for( auto &info : config) 
@@ -91,7 +91,7 @@ MATCHER_P2(ProtobufConfigMatches, config, formats, "")
             EXPECT_EQ(static_cast<int>(info->top_left.y.as_uint32_t()), arg_display.position_y());
             EXPECT_EQ(info->current_mode_index, arg_display.current_mode());
             EXPECT_EQ(info->modes.size(), arg_display.mode_size());
-            if (info->modes.size() != arg_display.mode_size()) return false;
+            if (info->modes.size() != static_cast<unsigned int>(arg_display.mode_size())) return false;
             auto j=0u;
             for(auto& mode : info->modes)
             {
@@ -103,7 +103,7 @@ MATCHER_P2(ProtobufConfigMatches, config, formats, "")
 
             EXPECT_EQ(0u, arg_display.current_format());
             EXPECT_EQ(formats.size(), arg_display.pixel_format_size()); 
-            if (formats.size() != arg_display.pixel_format_size()) return false;
+            if (formats.size() != static_cast<unsigned int>(arg_display.pixel_format_size())) return false;
             for(j=0u; j<formats.size(); j++)
             {
                 EXPECT_EQ(formats[j], static_cast<mir::geometry::PixelFormat>(arg_display.pixel_format(j)));
