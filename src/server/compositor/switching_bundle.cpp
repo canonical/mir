@@ -273,7 +273,8 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
         while (nclients >= nbuffers)
             cond.wait(lock);
 
-        snapshot = (first_client + nbuffers - 1) % nbuffers;
+        if (!nsnapshotters)
+            snapshot = (first_client + nbuffers - 1) % nbuffers;
     }
     nsnapshotters++;
     return ring[snapshot].buf;

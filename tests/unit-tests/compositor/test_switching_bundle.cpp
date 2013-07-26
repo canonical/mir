@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <thread>
 
 namespace geom=mir::geometry;
@@ -411,6 +412,66 @@ TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
             bundle.snapshot_release(snapshot),
             std::logic_error
         );
+    }
+}
+
+namespace
+{
+    void compositor_thread(mc::SwitchingBundle &bundle,
+                           std::atomic<bool> &done)
+    {
+        while (!done)
+            bundle.compositor_release(bundle.compositor_acquire());
+    }
+
+    void snapshot_thread(mc::SwitchingBundle &bundle,
+                           std::atomic<bool> &done)
+    {
+        while (!done)
+            bundle.snapshot_release(bundle.snapshot_acquire());
+    }
+
+    void client_thread(mc::SwitchingBundle &bundle, int nframes)
+    {
+        for (int i = 0; i < nframes; i++)
+            bundle.client_release(bundle.client_acquire());
+    }
+}
+
+TEST_F(SwitchingBundleTest, stress)
+{
+    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+        std::atomic<bool> done;
+        done = false;
+
+        std::thread compositor(compositor_thread,
+                               std::ref(bundle),
+                               std::ref(done));
+        std::thread snapshotter1(snapshot_thread,
+                                std::ref(bundle),
+                                std::ref(done));
+        std::thread snapshotter2(snapshot_thread,
+                                std::ref(bundle),
+                                std::ref(done));
+
+        bundle.allow_framedropping(false);
+        std::thread client1(client_thread, std::ref(bundle), 1000);
+        client1.join();
+
+#if 0 // FIXME
+        bundle.allow_framedropping(true);
+        std::thread client2(client_thread, std::ref(bundle), 1000);
+        client2.join();
+#endif
+
+        done = true;
+
+        compositor.join();
+        snapshotter1.join();
+        snapshotter2.join();
     }
 }
 
