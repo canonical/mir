@@ -350,3 +350,67 @@ TEST_F(SwitchingBundleTest, no_lag_from_client_to_compositor)
     }
 }
 
+TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
+{
+    for (int nbuffers = 1; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+    
+        auto compositor = bundle.compositor_acquire();
+        auto snapshot = bundle.snapshot_acquire();
+        EXPECT_EQ(snapshot->id(), compositor->id());
+        bundle.compositor_release(compositor); 
+        bundle.snapshot_release(snapshot);
+    }
+}
+
+TEST_F(SwitchingBundleTest, snapshot_acquire_never_blocks)
+{
+    for (int nbuffers = 1; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        const int N = 100;
+    
+        std::shared_ptr<mg::Buffer> buf[N];
+        for (int i = 0; i < N; i++)
+            buf[i] = bundle.snapshot_acquire();
+    
+        for (int i = 0; i < N; i++)
+            bundle.snapshot_release(buf[i]);
+    }
+}
+
+TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
+{
+    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+        auto compositor = bundle.compositor_acquire();
+
+        EXPECT_THROW(
+            bundle.snapshot_release(compositor),
+            std::logic_error
+        );
+
+        auto client = bundle.client_acquire();
+        auto snapshot = bundle.snapshot_acquire();
+
+        EXPECT_EQ(compositor->id(), snapshot->id());
+
+        EXPECT_NE(client->id(), snapshot->id());
+
+        EXPECT_THROW(
+            bundle.snapshot_release(client),
+            std::logic_error
+        );
+
+        bundle.snapshot_release(snapshot);
+
+        EXPECT_THROW(
+            bundle.snapshot_release(snapshot),
+            std::logic_error
+        );
+    }
+}
+
