@@ -149,21 +149,16 @@ void compositor_loop(ms::BufferStream &stream,
         auto comp1 = stream.lock_compositor_buffer();
         ASSERT_NE(nullptr, comp1);
         composited++;
-        std::this_thread::yield();
 
-#if 0 // FIXME: Needs a better force_requests_to_complete, or something
-        if (done.load())
-            break;
-
+        // Also stress test getting a second compositor buffer before yielding
         auto comp2 = stream.lock_compositor_buffer();
         ASSERT_NE(nullptr, comp2);
         composited++;
+
         std::this_thread::yield();
 
-        ASSERT_NE(comp1->id(), comp2->id());
         comp1.reset();
         comp2.reset();
-#endif
     }
 }
 
