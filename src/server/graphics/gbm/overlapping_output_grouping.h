@@ -32,7 +32,7 @@ namespace graphics
 {
 
 class DisplayConfiguration;
-class DisplayConfigurationOutput;
+struct DisplayConfigurationOutput;
 
 namespace gbm
 {
