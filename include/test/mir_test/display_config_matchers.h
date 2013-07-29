@@ -23,6 +23,16 @@
 
 namespace mir
 {
+namespace protobuf
+{
+
+//avoid a valgrind complaint by defining printer for this type
+class Connection;
+void PrintTo(mir::protobuf::Connection const&, ::std::ostream*)
+{
+}
+
+}
 namespace test
 {
 MATCHER_P2(ClientTypeConfigMatches, config, formats, "")
@@ -71,6 +81,7 @@ MATCHER_P2(ClientTypeConfigMatches, config, formats, "")
     return false;
 }
 
+ 
 MATCHER_P2(ProtobufConfigMatches, config, formats, "")
 {
     //ASSERT_ doesn't work in MATCHER_P apparently.

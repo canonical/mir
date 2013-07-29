@@ -352,6 +352,12 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
+    connection.clear_platform();
+    connection.clear_display_info();
+    connection.clear_display_output();
+//  optional Platform platform = 1;
+//  optional DisplayInfo display_info = 2;
+//  repeated DisplayOutput display_output = 3;
 
     std::vector<geom::PixelFormat> const pixel_formats{
         geom::PixelFormat::bgr_888,
@@ -362,6 +368,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     EXPECT_CALL(*buffer_allocator, supported_pixel_formats())
         .WillOnce(Return(pixel_formats));
 
+    
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     EXPECT_THAT(connection, mt::ProtobufConfigMatches(config.outputs, pixel_formats));
