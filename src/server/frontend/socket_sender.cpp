@@ -101,3 +101,13 @@ boost::asio::local::stream_protocol::socket& mfd::SocketSender::get_socket()
 {
     return *socket;
 }
+    
+void mfd::SocketSender::async_receive_msg(std::function<void(boost::system::error_code const&, size_t)> const& handler,
+                           boost::asio::streambuf& buffer, size_t size)
+{
+    boost::asio::async_read(
+         *socket,
+         buffer,
+         boost::asio::transfer_exactly(size),
+         handler);
+} 

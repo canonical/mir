@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_SOCKET_SENDER_H_ 
 #define MIR_FRONTEND_SOCKET_SENDER_H_ 
 #include "message_sender.h"
+#include "message_receiver.h"
 
 namespace mir
 {
@@ -26,7 +27,8 @@ namespace frontend
 {
 namespace detail
 {
-class SocketSender : public MessageSender
+class SocketSender : public MessageSender,
+                     public MessageReceiver
 {
 public:
     SocketSender(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
@@ -34,9 +36,13 @@ public:
     void send(std::string const& body);
     void send_fds(std::vector<int32_t> const& fds);
 
+    void async_receive_msg(std::function<void(boost::system::error_code const&, size_t)> const& handler,
+                           boost::asio::streambuf& buffer, size_t size); 
+    pid_t client_pid();
+
+    //REMOVE
     boost::asio::local::stream_protocol::socket& get_socket();
 
-    pid_t client_pid();
 
 private:
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;

@@ -19,6 +19,7 @@
 #include "socket_session.h"
 #include "message_processor.h"
 #include "message_sender.h"
+#include "message_receiver.h"
 
 #include <boost/signals2.hpp>
 #include <boost/throw_exception.hpp>
@@ -34,11 +35,11 @@ namespace bs = boost::system;
 namespace mfd = mir::frontend::detail;
 
 mfd::SocketSession::SocketSession(
-    std::shared_ptr<mfd::MessageSender> const& sender,
+    std::shared_ptr<mfd::MessageReceiver> const& sender,
     int id_,
     std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions,
     std::shared_ptr<MessageProcessor> const& processor)
-     : socket_sender(sender),
+     : socket_receiver(sender),
        id_(id_),
        connected_sessions(connected_sessions),
        processor(processor)
@@ -56,10 +57,8 @@ void mfd::SocketSession::read_next_message()
                     this, std::placeholders::_1);
 
     header.prepare(size_of_header);
-    ba::async_read(socket_sender->get_socket(),
-        header,
-        ba::transfer_exactly(size_of_header),
-        fn);
+
+    socket_receiver->async_receive_msg(fn, header, size_of_header);
 }
 
 void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
@@ -75,12 +74,18 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
     is >> message_header_bytes; 
     size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
 
+
+    auto fn = std::bind(&mfd::SocketSession::on_new_message,
+                    this, std::placeholders::_1);
+    socket_receiver->async_receive_msg(fn, message, body_size);
+#if 0
     ba::async_read(
-         socket_sender->get_socket(),
+         socket_receiver->get_socket(),
          message,
          ba::transfer_exactly(body_size),
          boost::bind(&mfd::SocketSession::on_new_message,
                      this, ba::placeholders::error));
+#endif
 }
 
 void mfd::SocketSession::on_new_message(const boost::system::error_code& error)

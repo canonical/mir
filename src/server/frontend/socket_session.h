@@ -34,12 +34,12 @@ namespace frontend
 namespace detail
 {
 
-class MessageSender;
+class MessageReceiver;
 
 struct SocketSession
 {
     SocketSession(
-        std::shared_ptr<MessageSender> const& socket_sender,
+        std::shared_ptr<MessageReceiver> const& socket_receiver,
         int id_,
         std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions,
         std::shared_ptr<MessageProcessor> const& processor);
@@ -55,7 +55,7 @@ private:
     void on_new_message(const boost::system::error_code& ec);
     void on_read_size(const boost::system::error_code& ec);
 
-    std::shared_ptr<MessageSender> const socket_sender;
+    std::shared_ptr<MessageReceiver> const socket_receiver;
     int const id_;
     std::shared_ptr<ConnectedSessions<SocketSession>> const connected_sessions;
     std::shared_ptr<MessageProcessor> processor;
