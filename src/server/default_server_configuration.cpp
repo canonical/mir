@@ -221,6 +221,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     namespace po = boost::program_options;
 
     add_options()
+        ("enable-nested-mode,n", po::value<bool>()->default_value(false),
+           "Enable nested mir mode. [bool:default=false]")
         ("file,f", po::value<std::string>(),
             "Socket filename")
         (platform_graphics_lib, po::value<std::string>(),
@@ -281,6 +283,10 @@ std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_optio
 
         parse_arguments(*program_options, options, argc, argv);
         parse_environment(*program_options, options);
+
+        if(options->get("enable-nested-mode", false)) {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Mir nested mode is not yet supported.\n"));
+        }
 
         this->options = options;
     }
