@@ -100,6 +100,17 @@ TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
     mc::TemporaryCompositorBuffer proxy_buffer(mock_bundle);
 }
 
+TEST_F(TemporaryBuffersTest, snapshot_buffer_acquires_and_releases)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_bundle, snapshot_acquire())
+        .WillOnce(Return(mock_buffer));
+    EXPECT_CALL(*mock_bundle, snapshot_release(_))
+        .Times(1);
+
+    mc::TemporarySnapshotBuffer proxy_buffer(mock_bundle);
+}
+
 TEST_F(TemporaryBuffersTest, base_test_size)
 {
     TemporaryTestBuffer proxy_buffer(mock_buffer);
