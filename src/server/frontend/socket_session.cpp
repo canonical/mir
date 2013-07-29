@@ -54,8 +54,12 @@ void mfd::SocketSession::read_next_message()
 {
     auto fn = std::bind(&mfd::SocketSession::on_read_size,
                     this, std::placeholders::_1);
+
+    header.prepare(size_of_header);
     ba::async_read(socket_sender->get_socket(),
-        ba::buffer(message_header_bytes), fn);
+        header,
+        ba::transfer_exactly(size_of_header),
+        fn);
 }
 
 void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
@@ -65,7 +69,10 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
         connected_sessions->remove(id());
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
-
+  
+    std::istream is(&header);  
+    unsigned char message_header_bytes[size_of_header];
+    is >> message_header_bytes; 
     size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
 
     ba::async_read(

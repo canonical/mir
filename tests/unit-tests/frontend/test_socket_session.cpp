@@ -20,6 +20,14 @@
 
 namespace mfd = mir::frontend::detail;
 
+namespace
+{
+struct MockReceiver : public mfd::MessageReceiver
+{
+    MOCK_METHOD1(async_read_msg void(std::function<boost::system::error_code&>, ba::streambuf, size_t)
+};
+
+}
 struct SocketSessionTest : public ::testing::Test
 {
 
