@@ -33,7 +33,7 @@ class DefaultFocusMechanism : public FocusSetter
 {
 public:
     explicit DefaultFocusMechanism(std::shared_ptr<InputTargeter> const& input_targeter);
-    virtual ~DefaultFocusMechanism() {}
+    virtual ~DefaultFocusMechanism() = default;
 
     void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
 

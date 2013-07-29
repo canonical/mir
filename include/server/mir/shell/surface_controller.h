@@ -39,7 +39,7 @@ public:
 
 protected:
     SurfaceController() = default;
-    virtual ~SurfaceController() {} // should be "= default;" but that causes "noexcept" spread
+    virtual ~SurfaceController() = default;
     SurfaceController(SurfaceController const&) = delete;
     SurfaceController& operator=(SurfaceController const&) = delete;
 };
