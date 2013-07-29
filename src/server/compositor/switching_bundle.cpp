@@ -60,7 +60,6 @@
 #include "switching_bundle.h"
 
 #include <boost/throw_exception.hpp>
-#include <cassert>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
@@ -154,6 +153,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     int client = (first_client + nclients) % nbuffers;
     nclients++;
 
+    auto ret = ring[client].buf;
     if (client == snapshot)
     {
         /*
@@ -167,6 +167,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
             auto tmp = ring[snapshot];
             ring[snapshot] = ring[client];
             ring[client] = tmp;
+            ret = ring[client].buf;
         }
         else
         {
@@ -175,8 +176,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         }
     }
 
-    ring[client].users++;
-    return ring[client].buf;
+    return ret;
 }
 
 void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& released_buffer)
@@ -191,8 +191,6 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
     while (!framedropping && nready > 0)
         cond.wait(lock);
 
-    ring[first_client].users--;
-    assert(!ring[first_client].users);
     first_client = (first_client + 1) % nbuffers;
     nclients--;
     nready++;
