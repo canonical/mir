@@ -30,9 +30,10 @@ namespace doubles
 
 struct NullSurfaceConfigurator : public shell::SurfaceConfigurator
 {
-    void configure_surface(std::shared_ptr<shell::Surface> const&,
-                           MirSurfaceAttrib, int&)
+    int select_attribute_value(shell::Surface const&,
+                               MirSurfaceAttrib, int requested_value)
     {
+        return requested_value;
     }
 };
 

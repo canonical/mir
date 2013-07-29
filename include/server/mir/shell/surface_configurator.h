@@ -35,8 +35,9 @@ class SurfaceConfigurator
 public:
     virtual ~SurfaceConfigurator() {}
     
-    virtual void configure_surface(std::shared_ptr<Surface> const& surface, MirSurfaceAttrib attrib,
-                                   int &requested_value) = 0;
+    // Returns the selected value.
+    virtual int select_attribute_value(Surface const& surface, MirSurfaceAttrib attrib,
+                                       int requested_value) = 0;
 
 protected:
     SurfaceConfigurator() = default;

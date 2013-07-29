@@ -578,8 +578,9 @@ std::shared_ptr<msh::SurfaceConfigurator> mir::DefaultServerConfiguration::the_s
 {
     struct DefaultSurfaceConfigurator : public msh::SurfaceConfigurator
     {
-        void configure_surface(std::shared_ptr<msh::Surface> const&, MirSurfaceAttrib, int&)
+        int select_attribute_value(msh::Surface const&, MirSurfaceAttrib, int requested_value)
         {
+            return requested_value;
         }
     };
     return shell_surface_configurator(

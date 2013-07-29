@@ -90,7 +90,7 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 
-    buffer_stream.lock_back_buffer();
+    buffer_stream.lock_compositor_buffer();
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
@@ -105,7 +105,7 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 
-    buffer_stream.lock_back_buffer();
+    buffer_stream.lock_compositor_buffer();
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
