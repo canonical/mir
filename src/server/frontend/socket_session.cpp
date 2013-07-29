@@ -52,10 +52,10 @@ mfd::SocketSession::~SocketSession() noexcept
 
 void mfd::SocketSession::read_next_message()
 {
+    auto fn = std::bind(&mfd::SocketSession::on_read_size,
+                    this, std::placeholders::_1);
     ba::async_read(socket_sender->get_socket(),
-        ba::buffer(message_header_bytes),
-        boost::bind(&mfd::SocketSession::on_read_size,
-                    this, ba::placeholders::error));
+        ba::buffer(message_header_bytes), fn);
 }
 
 void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
