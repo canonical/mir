@@ -24,6 +24,7 @@
 namespace mir
 {
 const char default_server_socket[] = "/tmp/mir_socket";
+const char default_host_server_socket[] = "/tmp/mir_socket";
 }
 
 #endif
