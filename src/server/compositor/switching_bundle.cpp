@@ -167,7 +167,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
             auto tmp = ring[snapshot];
             ring[snapshot] = ring[client];
             ring[client] = tmp;
-            ret = ring[client].buf;
+            ret = tmp.buf;
         }
         else
         {
@@ -187,7 +187,12 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Client release out of order"));
 
-    // If in synchronous mode, throttle the client to the refresh rate...
+    /*
+     * If in synchronous mode, throttle the client to the refresh rate.
+     * It's a little weird to do this in the release function, but doing it
+     * here allows for maximum concurrency, so we always have a new client
+     * buffer ready to give the compositor, even for slow clients.
+     */
     while (!framedropping && nready > 0)
         cond.wait(lock);
 
