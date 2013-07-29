@@ -42,7 +42,8 @@ public:
 
     std::shared_ptr<graphics::Buffer> secure_client_buffer();
 
-    std::shared_ptr<graphics::Buffer> lock_back_buffer();
+    std::shared_ptr<graphics::Buffer> lock_compositor_buffer() override;
+    std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() override;
 
     geometry::PixelFormat get_stream_pixel_format();
     geometry::Size stream_size();
