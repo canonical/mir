@@ -110,17 +110,20 @@ int mc::SwitchingBundle::drop_frames(int max)
         nready--;
         first_client = (first_ready + nready) % nbuffers;
         int end = (first_client + nclients) % nbuffers;
+        int new_snapshot = snapshot;
 
         for (int i = first_ready, j = 0; i != end; i = j)
         {
             j = (i + 1) % nbuffers;
             ring[i] = ring[j];
             if (j == snapshot)
-                snapshot = i;
+                new_snapshot = i;
         }
 
         if (snapshot == first_ready)
-            snapshot = end;
+            new_snapshot = end;
+
+        snapshot = new_snapshot;
 
         ring[end] = tmp;
     }

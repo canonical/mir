@@ -453,6 +453,7 @@ TEST_F(SwitchingBundleTest, stress)
         std::thread snapshotter1(snapshot_thread,
                                 std::ref(bundle),
                                 std::ref(done));
+#if 0
         std::thread snapshotter2(snapshot_thread,
                                 std::ref(bundle),
                                 std::ref(done));
@@ -460,18 +461,17 @@ TEST_F(SwitchingBundleTest, stress)
         bundle.allow_framedropping(false);
         std::thread client1(client_thread, std::ref(bundle), 1000);
         client1.join();
+#endif
 
-#if 0 // FIXME
         bundle.allow_framedropping(true);
         std::thread client2(client_thread, std::ref(bundle), 1000);
         client2.join();
-#endif
 
         done = true;
 
         compositor.join();
         snapshotter1.join();
-        snapshotter2.join();
+//        snapshotter2.join();
     }
 }
 
