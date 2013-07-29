@@ -20,6 +20,7 @@
 #include "mir/shell/surface.h"
 
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -31,6 +32,7 @@
 namespace msh = mir::shell;
 
 namespace mt = mir::test;
+namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -69,6 +71,7 @@ struct SurfaceCreatingClient : public mtf::TestingClientConfiguration
 struct MockSurfaceConfigurator : public msh::SurfaceConfigurator
 {
     MOCK_METHOD3(select_attribute_value, int(msh::Surface const&, MirSurfaceAttrib, int));
+    MOCK_METHOD3(attribute_set, void(msh::Surface const&, MirSurfaceAttrib, int));
 };
 
 }
@@ -88,6 +91,7 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
 
             ON_CALL(mock_configurator, select_attribute_value(_, _, _)).WillByDefault(Return(mir_surface_type_freestyle));
             EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1);
+            EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1);
         }
 
         MockSurfaceConfigurator mock_configurator;
@@ -114,19 +118,16 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_inter
     {
         std::shared_ptr<msh::SurfaceConfigurator> the_shell_surface_configurator() override
         {
-            return mt::fake_shared(stub_configurator);
+            return mt::fake_shared(mock_configurator);
         }
-        
-        struct StubSurfaceConfigurator : public msh::SurfaceConfigurator
+        void exec() override
         {
-            int select_attribute_value(msh::Surface const&, MirSurfaceAttrib attrib, int value)
-            {
-                // Force type to normal irregardless of client request
-                if (attrib == mir_surface_attrib_type)
-                    return mir_surface_type_normal;
-                return value;
-            }
-        } stub_configurator;
+            using namespace ::testing;
+            EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1)
+                .WillOnce(Return(mir_surface_type_normal));
+            EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_type, Eq(mir_surface_type_normal))).Times(1);
+        }
+        MockSurfaceConfigurator mock_configurator;
     } server_config;
     launch_server_process(server_config);
 

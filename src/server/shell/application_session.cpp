@@ -172,6 +172,8 @@ int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 
-    auto configured_value = surface_configurator->select_attribute_value(*surf.get(), attrib, requested_value);
-    return surf->configure(attrib, configured_value);
+    auto applied_value = surf->configure(attrib, 
+        surface_configurator->select_attribute_value(*surf.get(), attrib, requested_value));
+    surface_configurator->attribute_set(*surf.get(), attrib, applied_value);
+    return applied_value;
 }

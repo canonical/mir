@@ -582,6 +582,9 @@ std::shared_ptr<msh::SurfaceConfigurator> mir::DefaultServerConfiguration::the_s
         {
             return requested_value;
         }
+        void attribute_set(msh::Surface const&, MirSurfaceAttrib, int)
+        {
+        }
     };
     return shell_surface_configurator(
         [this]()

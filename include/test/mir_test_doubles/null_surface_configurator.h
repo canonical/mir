@@ -35,6 +35,10 @@ struct NullSurfaceConfigurator : public shell::SurfaceConfigurator
     {
         return requested_value;
     }
+    void attribute_set(shell::Surface const&,
+                       MirSurfaceAttrib, int)
+    {
+    }
 };
 
 }

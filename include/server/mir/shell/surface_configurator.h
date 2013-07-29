@@ -33,11 +33,14 @@ class Surface;
 class SurfaceConfigurator
 {
 public:
-    virtual ~SurfaceConfigurator() {}
+    virtual ~SurfaceConfigurator() = default;
     
-    // Returns the selected value.
+    /// Returns the selected value.
     virtual int select_attribute_value(Surface const& surface, MirSurfaceAttrib attrib,
                                        int requested_value) = 0;
+
+    virtual void attribute_set(Surface const& surface, MirSurfaceAttrib attrib,
+                               int new_value) = 0;
 
 protected:
     SurfaceConfigurator() = default;
