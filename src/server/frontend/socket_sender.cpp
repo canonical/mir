@@ -97,11 +97,6 @@ void mfd::SocketSender::send_fds(std::vector<int32_t> const& fds)
     }
 }
 
-boost::asio::local::stream_protocol::socket& mfd::SocketSender::get_socket()
-{
-    return *socket;
-}
-    
 void mfd::SocketSender::async_receive_msg(std::function<void(boost::system::error_code const&, size_t)> const& handler,
                            boost::asio::streambuf& buffer, size_t size)
 {

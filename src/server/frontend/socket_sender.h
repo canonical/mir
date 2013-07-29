@@ -40,10 +40,6 @@ public:
                            boost::asio::streambuf& buffer, size_t size); 
     pid_t client_pid();
 
-    //REMOVE
-    boost::asio::local::stream_protocol::socket& get_socket();
-
-
 private:
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;
     std::vector<char> whole_message;

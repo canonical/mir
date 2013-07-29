@@ -57,7 +57,6 @@ void mfd::SocketSession::read_next_message()
                     this, std::placeholders::_1);
 
     header.prepare(size_of_header);
-
     socket_receiver->async_receive_msg(fn, header, size_of_header);
 }
 
@@ -74,18 +73,9 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
     is >> message_header_bytes; 
     size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
 
-
     auto fn = std::bind(&mfd::SocketSession::on_new_message,
                     this, std::placeholders::_1);
     socket_receiver->async_receive_msg(fn, message, body_size);
-#if 0
-    ba::async_read(
-         socket_receiver->get_socket(),
-         message,
-         ba::transfer_exactly(body_size),
-         boost::bind(&mfd::SocketSession::on_new_message,
-                     this, ba::placeholders::error));
-#endif
 }
 
 void mfd::SocketSession::on_new_message(const boost::system::error_code& error)
