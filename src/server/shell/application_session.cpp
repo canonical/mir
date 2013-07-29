@@ -169,3 +169,10 @@ int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
 
     return surf->configure(attrib, value);
 }
+
+void msh::ApplicationSession::raise()
+{
+    auto surface = default_surface();
+    if (surface)
+        surface->raise();
+}

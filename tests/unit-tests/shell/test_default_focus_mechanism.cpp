@@ -70,8 +70,11 @@ TEST(DefaultFocusMechanism, mechanism_raises_session)
 
     MockShellSession app1;
     msh::DefaultSessionContainer model;
+    std::shared_ptr<msh::Surface>  no_surface{0};
 
     EXPECT_CALL(app1, raise()).Times(1);
+    EXPECT_CALL(app1, default_surface()).Times(1)
+        .WillOnce(Return(no_surface));
 
     // TODO: ~Racarr can factor out the model
     msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(model),

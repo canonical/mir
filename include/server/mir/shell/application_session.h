@@ -67,6 +67,7 @@ public:
 
     void hide();
     void show();
+    void raise();
 
     int configure_surface(frontend::SurfaceId id, MirSurfaceAttrib attrib, int value);
 

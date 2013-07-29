@@ -35,25 +35,21 @@ msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::SessionCo
 
 void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& focus_session)
 {
-    bool set_input_focus = false;
-    app_container->for_each(
-        [&](std::shared_ptr<mf::Session> const& session) {
-        if (session == focus_session)
-        {
-            auto surface = focus_session->default_surface();
-            if (surface)
-            {
-                surface->take_input_focus(input_targeter);
-                set_input_focus = true;
-            }
-            session->show();
-        }
-        else
-        {
-            session->hide();
-        }
-    });
-
-    if (set_input_focus == false)
+    // TODO: This path should be encapsulated in a seperate clear_focus message
+    if (!focus_session)
+    {
         input_targeter->focus_cleared();
+        return;
+    }
+    
+    focus_session->raise();
+    auto surface = focus_session->default_surface();
+    if (surface)
+    {
+        surface->take_input_focus(input_targeter);
+    }
+    else
+    {
+        input_targeter->focus_cleared();
+    }
 }

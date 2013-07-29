@@ -180,7 +180,6 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
-    mtd::StubSurfaceBuilder surface_builder;
     auto const mock_surface = make_mock_surface();
 
     mtd::MockSurfaceFactory surface_factory;
@@ -206,4 +205,37 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     app_session.show();
 
     app_session.destroy_surface(surf);
+}
+
+TEST(ApplicationSession, raise_acts_on_default_surface)
+{
+    using namespace ::testing;
+
+    auto const mock_surface_1 = make_mock_surface();
+    auto const mock_surface_2 = make_mock_surface();
+
+    mtd::MockSurfaceFactory surface_factory;
+    
+    {
+        InSequence seq;
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
+            .WillOnce(Return(mock_surface_1));
+        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
+            .WillOnce(Return(mock_surface_2));
+    }
+
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
+                                        std::make_shared<mtd::NullSnapshotStrategy>(),
+                                        std::make_shared<msh::NullSessionListener>());
+
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_surface_1, raise()).Times(2);
+    }
+
+    msh::SurfaceCreationParameters params;
+    app_session.create_surface(params);
+    app_session.raise();
+    app_session.create_surface(params);
+    app_session.raise();
 }
