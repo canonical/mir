@@ -18,6 +18,7 @@
 
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_builder.h"
+#include "mir/shell/surface_controller.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/events/event_sink.h"
@@ -38,10 +39,12 @@ namespace geom = mir::geometry;
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
+    std::shared_ptr<SurfaceController> const& controller,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<events::EventSink> const& sink)
   : builder(builder),
+    controller(controller),
     surface(builder->create_surface(params)),
     id(id),
     event_sink(sink),
@@ -52,8 +55,10 @@ msh::Surface::Surface(
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
+    std::shared_ptr<SurfaceController> const& controller,
     shell::SurfaceCreationParameters const& params)
   : builder(builder),
+    controller(controller),
     surface(builder->create_surface(params)),
     id(),
     event_sink(),
@@ -339,4 +344,9 @@ void msh::Surface::set_input_region(std::vector<geom::Rectangle> const& region)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     }
+}
+
+void msh::Surface::raise()
+{
+    controller->raise(surface);
 }

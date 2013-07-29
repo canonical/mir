@@ -19,7 +19,7 @@
 #include "mir/shell/application_session.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
@@ -30,6 +30,7 @@
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/mock_input_targeter.h"
 
@@ -58,45 +59,35 @@ struct MockShellSession : public msh::Session
 
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
-
+    MOCK_METHOD0(raise, void());
+    
     MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
 };
 
-TEST(SingleVisibilityFocusMechanism, mechanism_sets_visibility)
+TEST(DefaultFocusMechanism, mechanism_raises_session)
 {
     using namespace ::testing;
 
-    NiceMock<MockShellSession> app1, app2, app3;
+    MockShellSession app1;
     msh::DefaultSessionContainer model;
 
-    ON_CALL(app1, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
-    ON_CALL(app2, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
-    ON_CALL(app3, default_surface()).WillByDefault(Return(std::shared_ptr<msh::Surface>()));
+    EXPECT_CALL(app1, raise()).Times(1);
 
-    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model),
-                                                        std::make_shared<mtd::StubInputTargeter>());
-
-    EXPECT_CALL(app1, show()).Times(1);
-    EXPECT_CALL(app2, hide()).Times(1);
-    EXPECT_CALL(app3, hide()).Times(1);
-
-    EXPECT_CALL(app1, name()).Times(AnyNumber());
-    EXPECT_CALL(app2, name()).Times(AnyNumber());
-    EXPECT_CALL(app3, name()).Times(AnyNumber());
-
+    // TODO: ~Racarr can factor out the model
+    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(model),
+                                               std::make_shared<mtd::StubInputTargeter>());
     model.insert_session(mt::fake_shared(app1));
-    model.insert_session(mt::fake_shared(app2));
-    model.insert_session(mt::fake_shared(app3));
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
 }
 
-TEST(SingleVisibilityFocusMechanism, sets_input_focus)
+TEST(DefaultFocusMechanism, sets_input_focus)
 {
     using namespace ::testing;
     
     NiceMock<MockShellSession> app1;
-    mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
+    mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>(),
+                                  std::make_shared<mtd::StubSurfaceController>());
     {
         InSequence seq;
         EXPECT_CALL(app1, default_surface()).Times(1)
@@ -109,7 +100,7 @@ TEST(SingleVisibilityFocusMechanism, sets_input_focus)
     model.insert_session(mt::fake_shared(app1));
     mtd::MockInputTargeter targeter;
     
-    msh::SingleVisibilityFocusMechanism focus_mechanism(mt::fake_shared(model),
+    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(model),
         mt::fake_shared(targeter));
     
     {

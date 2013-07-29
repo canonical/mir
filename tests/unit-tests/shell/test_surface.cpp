@@ -22,6 +22,8 @@
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_builder.h"
 
+#include "mir_test_doubles/stub_surface_controller.h"
+#include "mir_test_doubles/mock_surface_controller.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -112,6 +114,7 @@ struct ShellSurface : testing::Test
 {
     std::shared_ptr<StubBufferStream> const buffer_stream;
     StubSurfaceBuilder surface_builder;
+    mtd::StubSurfaceController surface_controller;
 
     ShellSurface() :
         buffer_stream(std::make_shared<StubBufferStream>())
@@ -138,6 +141,7 @@ TEST_F(ShellSurface, creation_and_destruction)
 
     msh::Surface test(
         mt::fake_shared(surface_builder),
+        mt::fake_shared(surface_controller),
         params);
 }
 
@@ -156,6 +160,7 @@ TEST_F(ShellSurface, creation_throws_means_no_destroy)
     EXPECT_THROW({
         msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             params);
     }, std::runtime_error);
 }
@@ -171,6 +176,7 @@ TEST_F(ShellSurface, destroy)
 
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     Mock::VerifyAndClearExpectations(&test);
@@ -187,6 +193,7 @@ TEST_F(ShellSurface, size_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -204,6 +211,7 @@ TEST_F(ShellSurface, top_left_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -221,6 +229,7 @@ TEST_F(ShellSurface, name_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -238,6 +247,7 @@ TEST_F(ShellSurface, pixel_format_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -255,6 +265,7 @@ TEST_F(ShellSurface, hide_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -272,6 +283,7 @@ TEST_F(ShellSurface, show_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -289,6 +301,7 @@ TEST_F(ShellSurface, destroy_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -306,6 +319,7 @@ TEST_F(ShellSurface, force_request_to_complete_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -323,6 +337,7 @@ TEST_F(ShellSurface, advance_client_buffer_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_NO_THROW({
@@ -340,6 +355,7 @@ TEST_F(ShellSurface, input_fds_throw_behavior)
 {
     msh::Surface test(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     surface_builder.reset_surface();
@@ -355,6 +371,7 @@ TEST_F(ShellSurface, attributes)
 
     msh::Surface surf(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_THROW({
@@ -368,6 +385,7 @@ TEST_F(ShellSurface, types)
 
     msh::Surface surf(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_EQ(mir_surface_type_normal, surf.type());
@@ -402,6 +420,7 @@ TEST_F(ShellSurface, states)
 
     msh::Surface surf(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface());
 
     EXPECT_EQ(mir_surface_state_restored, surf.state());
@@ -436,6 +455,7 @@ TEST_F(ShellSurface, take_input_focus)
 
     msh::Surface test(
         mt::fake_shared(surface_builder),
+        mt::fake_shared(surface_controller),
         msh::a_surface());
     
     mtd::MockInputTargeter targeter;
@@ -450,7 +470,9 @@ TEST_F(ShellSurface, take_input_focus_throw_behavior)
 
     msh::Surface test(
         mt::fake_shared(surface_builder),
+        mt::fake_shared(surface_controller),
         msh::a_surface());
+
     surface_builder.reset_surface();
 
     mtd::StubInputTargeter targeter;
@@ -466,6 +488,7 @@ TEST_F(ShellSurface, set_input_region_throw_behavior)
     
     msh::Surface test(
         mt::fake_shared(surface_builder),
+        mt::fake_shared(surface_controller),
         msh::a_surface());
     
     EXPECT_NO_THROW({
@@ -483,6 +506,7 @@ TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
 {
     msh::Surface test(
         mt::fake_shared(surface_builder),
+        mt::fake_shared(surface_controller),
         msh::a_surface());
 
     mg::Buffer* buf_ptr{nullptr};
@@ -495,4 +519,19 @@ TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
 
     EXPECT_EQ(surface_builder.stub_buffer_stream()->stub_compositor_buffer.get(),
               buf_ptr);
+}
+
+TEST_F(ShellSurface, raise)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceController surface_controller;
+    msh::Surface test(
+        mt::fake_shared(surface_builder),
+        mt::fake_shared(surface_controller),
+        msh::a_surface());
+    
+    EXPECT_CALL(surface_controller, raise(_)).Times(1);
+
+    test.raise();
 }

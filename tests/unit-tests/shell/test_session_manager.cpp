@@ -33,6 +33,7 @@
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 
 #include <gmock/gmock.h>
@@ -78,6 +79,7 @@ struct SessionManagerSetup : public testing::Test
     }
 
     mtd::StubSurfaceBuilder surface_builder;
+    mtd::StubSurfaceController surface_controller;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     MockFocusSequence focus_sequence;
@@ -113,6 +115,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
        Return(std::make_shared<msh::Surface>(
            mt::fake_shared(surface_builder),
+           mt::fake_shared(surface_controller),
            msh::a_surface())));
 
 
@@ -148,6 +151,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
         Return(std::make_shared<msh::Surface>(
             mt::fake_shared(surface_builder),
+            mt::fake_shared(surface_controller),
             msh::a_surface())));
 
     // Once for session creation and once for surface creation
@@ -178,7 +182,6 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     {
     }
 
-    mtd::StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<MockFocusSequence> focus_sequence;

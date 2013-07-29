@@ -37,7 +37,7 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
@@ -357,7 +357,7 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
     return shell_focus_setter(
         [this]
         {
-            return std::make_shared<msh::SingleVisibilityFocusMechanism>(
+            return std::make_shared<msh::DefaultFocusMechanism>(
                 the_shell_session_container(), the_input_targeter());
         });
 }
@@ -607,7 +607,7 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
         [this]()
         {
             auto surface_source = std::make_shared<msh::SurfaceSource>(
-                the_surface_builder());
+                the_surface_builder(), the_surface_controller());
 
             return std::make_shared<msh::OrganisingSurfaceFactory>(
                 surface_source,
@@ -617,6 +617,12 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
 
 std::shared_ptr<msh::SurfaceBuilder>
 mir::DefaultServerConfiguration::the_surface_builder()
+{
+    return the_surface_controller();
+}
+
+std::shared_ptr<ms::SurfaceController>
+mir::DefaultServerConfiguration::the_surface_controller()
 {
     return surface_controller(
         [this]()

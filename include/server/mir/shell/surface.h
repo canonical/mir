@@ -40,6 +40,8 @@ namespace shell
 {
 class InputTargeter;
 class SurfaceBuilder;
+class SurfaceController;
+
 struct SurfaceCreationParameters;
 
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
@@ -47,10 +49,12 @@ class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
+        std::shared_ptr<SurfaceController> const& controller,
         SurfaceCreationParameters const& params);
 
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
+        std::shared_ptr<SurfaceController> const& controller,
         SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
         std::shared_ptr<events::EventSink> const& sink);
@@ -59,6 +63,7 @@ public:
 
     virtual void hide();
     virtual void show();
+    virtual void raise();
 
     virtual void destroy();
 
@@ -94,6 +99,7 @@ private:
     void notify_change(MirSurfaceAttrib attrib, int value);
 
     std::shared_ptr<SurfaceBuilder> const builder;
+    std::shared_ptr<SurfaceController> const controller;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
     frontend::SurfaceId const id;

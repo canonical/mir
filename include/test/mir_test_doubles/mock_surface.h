@@ -36,8 +36,9 @@ namespace doubles
 
 struct MockSurface : public shell::Surface
 {
-    MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder) :
-        shell::Surface(builder, shell::a_surface())
+    MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder,
+                std::shared_ptr<shell::SurfaceController> const& controller) :
+        shell::Surface(builder, controller, shell::a_surface())
     {
     }
 
@@ -45,6 +46,7 @@ struct MockSurface : public shell::Surface
 
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
+    MOCK_METHOD0(raise, void());
     MOCK_METHOD0(visible, bool());
 
     MOCK_METHOD0(destroy, void());
