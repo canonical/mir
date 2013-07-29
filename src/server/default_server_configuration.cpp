@@ -357,8 +357,7 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
     return shell_focus_setter(
         [this]
         {
-            return std::make_shared<msh::DefaultFocusMechanism>(
-                the_shell_session_container(), the_input_targeter());
+            return std::make_shared<msh::DefaultFocusMechanism>(the_input_targeter());
         });
 }
 

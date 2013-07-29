@@ -27,14 +27,12 @@ namespace mir
 
 namespace shell
 {
-class SessionContainer;
 class InputTargeter;
 
 class DefaultFocusMechanism : public FocusSetter
 {
 public:
-    explicit DefaultFocusMechanism(std::shared_ptr<SessionContainer> const& app_container,
-                                            std::shared_ptr<InputTargeter> const& input_targeter);
+    explicit DefaultFocusMechanism(std::shared_ptr<InputTargeter> const& input_targeter);
     virtual ~DefaultFocusMechanism() {}
 
     void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
@@ -44,7 +42,6 @@ protected:
     DefaultFocusMechanism& operator=(const DefaultFocusMechanism&) = delete;
 
 private:
-    std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<InputTargeter> const input_targeter;
 };
 

@@ -17,7 +17,6 @@
  */
 
 #include "mir/shell/application_session.h"
-#include "mir/shell/default_session_container.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/session.h"
@@ -69,17 +68,13 @@ TEST(DefaultFocusMechanism, mechanism_raises_session)
     using namespace ::testing;
 
     MockShellSession app1;
-    msh::DefaultSessionContainer model;
     std::shared_ptr<msh::Surface>  no_surface{0};
 
     EXPECT_CALL(app1, raise()).Times(1);
     EXPECT_CALL(app1, default_surface()).Times(1)
         .WillOnce(Return(no_surface));
 
-    // TODO: ~Racarr can factor out the model
-    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(model),
-                                               std::make_shared<mtd::StubInputTargeter>());
-    model.insert_session(mt::fake_shared(app1));
+    msh::DefaultFocusMechanism focus_mechanism(std::make_shared<mtd::StubInputTargeter>());
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
 }
@@ -99,12 +94,9 @@ TEST(DefaultFocusMechanism, sets_input_focus)
             .WillOnce(Return(std::shared_ptr<msh::Surface>()));
     }
 
-    msh::DefaultSessionContainer model;
-    model.insert_session(mt::fake_shared(app1));
     mtd::MockInputTargeter targeter;
     
-    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(model),
-        mt::fake_shared(targeter));
+    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter));
     
     {
         InSequence seq;

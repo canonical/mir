@@ -17,7 +17,6 @@
  */
 
 #include "mir/frontend/session.h"
-#include "mir/shell/session_container.h"
 #include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/session.h"
@@ -26,10 +25,8 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::SessionContainer> const& app_container,
-                                                                    std::shared_ptr<msh::InputTargeter> const& input_targeter)
-  : app_container(app_container),
-    input_targeter(input_targeter)
+msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::InputTargeter> const& input_targeter)
+  : input_targeter(input_targeter)
 {
 }
 
