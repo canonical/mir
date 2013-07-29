@@ -45,7 +45,7 @@ geom::Rectangles::Rectangles()
 {
 }
 
-geom::Rectangles::Rectangles(std::initializer_list<Rectangle> rects)
+geom::Rectangles::Rectangles(std::initializer_list<Rectangle> const& rects)
     : rectangles{rects}
 {
 }

@@ -34,7 +34,7 @@ class Rectangles
 {
 public:
     Rectangles();
-    Rectangles(std::initializer_list<Rectangle> rects);
+    Rectangles(std::initializer_list<Rectangle> const& rects);
     /* We want to keep implicit copy and move methods */
 
     void add(Rectangle const& rect);
