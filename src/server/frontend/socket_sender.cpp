@@ -42,6 +42,7 @@ pid_t mfd::SocketSender::client_pid()
 
 void mfd::SocketSender::send(std::string const& body)
 {
+printf("SEND.\n");
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
     {

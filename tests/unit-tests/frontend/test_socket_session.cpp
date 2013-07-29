@@ -16,43 +16,70 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/frontend/socket_session.h"
+#include "src/server/frontend/message_receiver.h"
+#include "src/server/frontend/message_processor.h"
+
+#include "mir_test/fake_shared.h"
+
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mfd = mir::frontend::detail;
+namespace ba = boost::asio;
+namespace mt = mir::test;
 
 namespace
 {
 struct MockReceiver : public mfd::MessageReceiver
 {
-    MOCK_METHOD1(async_read_msg void(std::function<boost::system::error_code&>, ba::streambuf, size_t)
+    MOCK_METHOD3(async_receive_msg, void(std::function<void(boost::system::error_code const&, size_t)> const&,
+                                         boost::asio::streambuf&, size_t)); 
+    MOCK_METHOD0(client_pid, pid_t());
 };
 
+struct MockProcessor : public mfd::MessageProcessor
+{
+    MOCK_METHOD1(process_message, bool(std::istream&));
+};
 }
 struct SocketSessionTest : public ::testing::Test
 {
-
+    MockProcessor mock_processor;
+    MockReceiver mock_receiver;
 };
 
 TEST_F(SocketSessionTest, basic_msg)
 {
-    mfd::SocketSession session(mock_receiver, 0, null_sessions, mock_procesrsor);
+    using namespace testing;
 
-    EXPECT_CALL(mock_receiver, async_read_msg(_));
+    std::shared_ptr<mfd::ConnectedSessions<mfd::SocketSession>> null_sessions;
+    std::function<void(boost::system::error_code const&, size_t)> header_read, body_read;
+
+    size_t header_size = 2;
+    EXPECT_CALL(mock_receiver, async_receive_msg(_,_, header_size))
         .Times(1)
-        .WillOnce(SaveArg<0>(&fn));
+        .WillOnce(SaveArg<0>(&header_read));
+
+    mfd::SocketSession session(mt::fake_shared(mock_receiver), 0, null_sessions, mt::fake_shared(mock_processor));
+
+    //trigger wait for header
     session.read_next_message();
+    testing::Mock::VerifyAndClearExpectations(&mock_receiver);
 
-    testing::Mock::VerifyAndClearExpectations(mock_receiver);
-
-    EXPECT_CALL(mock_receiver, async_read_msg(_))
+    //trigger body read
+    EXPECT_CALL(mock_receiver, async_receive_msg(_,_,_))
         .Times(1)
-        .WillOnce(SaveArg<0>(&fn2));
+        .WillOnce(SaveArg<0>(&body_read));
 
-    fn(); 
-    
-    testing::Mock::VerifyAndClearExpectations(mock_receiver);
+    boost::system::error_code code;
+    header_read(code, 2);
+ 
+    testing::Mock::VerifyAndClearExpectations(&mock_receiver);
 
+    //trigger message process
     EXPECT_CALL(mock_processor, process_message(_))
-        .Times(1);
-    fn2();
+        .Times(1)
+        .WillOnce(Return(true));
+    body_read(code, 2);
 }

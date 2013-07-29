@@ -59,10 +59,10 @@ private:
     int const id_;
     std::shared_ptr<ConnectedSessions<SocketSession>> const connected_sessions;
     std::shared_ptr<MessageProcessor> processor;
-    boost::asio::streambuf header;
+
     static size_t const size_of_header = 2;
+    boost::asio::streambuf header;
     boost::asio::streambuf message;
-    //unsigned char message_header_bytes[size_of_header];
 };
 
 }

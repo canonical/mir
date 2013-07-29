@@ -50,6 +50,8 @@ void mfd::EventSender::handle_event(MirEvent const& e)
 
         result.SerializeToString(&buffer);
 
+printf("event PONG\n");
         sender->send(buffer);
+printf("done event PONG\n");
     }
 }

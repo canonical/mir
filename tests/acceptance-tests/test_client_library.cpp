@@ -304,30 +304,39 @@ TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
             EXPECT_TRUE(mir_surface_is_valid(surface));
             EXPECT_STREQ(mir_surface_get_error_message(surface), "");
 
+printf("A1\n");
             EXPECT_EQ(mir_surface_state_restored,
                       mir_surface_get_state(surface));
+printf("A2\n");
 
             mir_wait_for(mir_surface_set_state(surface,
                                                mir_surface_state_fullscreen));
+printf("A3\n");
+            EXPECT_EQ(mir_surface_state_fullscreen,
+                      mir_surface_get_state(surface));
+printf("A4\n");
+
+         //   mir_wait_for(mir_surface_set_state(surface,
+          //                                 static_cast<MirSurfaceState>(999)));
+printf("A6\n");
             EXPECT_EQ(mir_surface_state_fullscreen,
                       mir_surface_get_state(surface));
 
-            mir_wait_for(mir_surface_set_state(surface,
-                                           static_cast<MirSurfaceState>(999)));
-            EXPECT_EQ(mir_surface_state_fullscreen,
-                      mir_surface_get_state(surface));
-
+printf("A5\n");
             mir_wait_for(mir_surface_set_state(surface,
                                                mir_surface_state_minimized));
             EXPECT_EQ(mir_surface_state_minimized,
                       mir_surface_get_state(surface));
+printf("A6\n");
 
-            mir_wait_for(mir_surface_set_state(surface,
-                                           static_cast<MirSurfaceState>(888)));
-            EXPECT_EQ(mir_surface_state_minimized,
-                      mir_surface_get_state(surface));
+           // mir_wait_for(mir_surface_set_state(surface,
+           //                                static_cast<MirSurfaceState>(888)));
+           // EXPECT_EQ(mir_surface_state_minimized,
+            //          mir_surface_get_state(surface));
 
+printf("A7\n");
             // Stress-test synchronization logic with some flooding
+#if 1
             for (int i = 0; i < 100; i++)
             {
                 mir_surface_set_state(surface, mir_surface_state_maximized);
@@ -336,8 +345,9 @@ TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
                                                 mir_surface_state_fullscreen));
                 ASSERT_EQ(mir_surface_state_fullscreen,
                           mir_surface_get_state(surface));
+printf("oo %i\n", i);
             }
-
+#endif
             mir_surface_release_sync(surface);
             mir_connection_release(connection);
         }

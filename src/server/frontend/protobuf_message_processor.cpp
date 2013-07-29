@@ -117,6 +117,7 @@ void mfd::ProtobufMessageProcessor::invoke(
     }
     catch (std::exception const& x)
     {
+printf("BOOM\n");
         result_message.set_error(boost::diagnostic_information(x));
         send_response(invocation.id(), &result_message);
     }
@@ -144,6 +145,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
 
     try
     {
+printf("CO\n");
         // TODO comparing strings in an if-else chain isn't efficient.
         // It is probably possible to generate a Trie at compile time.
         if ("connect" == invocation.method_name())
@@ -172,6 +174,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         }
         else if ("configure_surface" == invocation.method_name())
         {
+printf("CONFIG\n");
             invoke(&protobuf::DisplayServer::configure_surface, invocation);
         }
         else if ("disconnect" == invocation.method_name())
