@@ -82,7 +82,13 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreati
         layers_by_depth[params.depth].push_back(surface);
     }
 
-    input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface(), params.receives_all_input);
+    ms::InputRegistrar::InputReceptionMode input_mode;
+    if (params.receives_all_input)
+        input_mode = ms::InputRegistrar::InputReceptionMode::receives_all_input;
+    else
+        input_mode = ms::InputRegistrar::InputReceptionMode::normal;
+
+    input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface(), input_mode);
 
     emit_change_notification();
 

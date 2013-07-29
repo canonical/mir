@@ -338,7 +338,7 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
     mtd::MockInputRegistrar registrar;
 
     Sequence seq;
-    EXPECT_CALL(registrar, input_channel_opened(_,_,false))
+    EXPECT_CALL(registrar, input_channel_opened(_,_,_))
         .InSequence(seq);
     EXPECT_CALL(registrar, input_channel_closed(_))
         .InSequence(seq);
@@ -349,14 +349,14 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
     stack.destroy_surface(s);
 }
 
-TEST_F(SurfaceStack, input_registrar_is_notified_of_monitor_surfaces)
+TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_surfaces)
 {
     using namespace ::testing;
 
     mtd::MockInputRegistrar registrar;
 
     Sequence seq;
-    EXPECT_CALL(registrar, input_channel_opened(_,_,true))
+    EXPECT_CALL(registrar, input_channel_opened(_,_,ms::InputRegistrar::InputReceptionMode::receives_all_input))
         .InSequence(seq);
     EXPECT_CALL(registrar, input_channel_closed(_))
         .InSequence(seq);

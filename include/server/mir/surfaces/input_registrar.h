@@ -40,9 +40,15 @@ class InputRegistrar
 public:
     virtual ~InputRegistrar() = default;
     
+    enum class InputReceptionMode
+    {
+        normal,
+        receives_all_input
+    };
+    
     virtual void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
                                       std::shared_ptr<input::Surface> const& info,
-                                      bool receives_all_input) = 0;
+                                      InputReceptionMode input_mode) = 0;
     virtual void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel) = 0;
 
 protected:
