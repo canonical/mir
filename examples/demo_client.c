@@ -120,12 +120,10 @@ void demo_client(const char* server, int buffer_swap_count)
         assert(0 <= platform_package.fd_items);
     }
 
-    // We should identify a supported pixel format before...
-    MirDisplayInfo display_info;
-    mir_connection_get_display_info(mcd.connection, &display_info);
-    assert(display_info.supported_pixel_format_items > 0);
-
-    MirPixelFormat const pixel_format = display_info.supported_pixel_format[0];
+    // Identify a supported pixel format
+    MirPixelFormat pixel_format;
+    unsigned int valid_formats;
+    mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
 

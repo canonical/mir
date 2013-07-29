@@ -25,7 +25,7 @@
 #include "mir/compositor/buffer_allocation_strategy.h"
 #include "mir/compositor/buffer_swapper.h"
 #include "mir/compositor/buffer_stream_factory.h"
-#include "mir/compositor/default_compositing_strategy.h"
+#include "mir/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/multi_threaded_compositor.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/overlay_renderer.h"
@@ -42,20 +42,23 @@
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/threaded_snapshot_strategy.h"
+#include "mir/shell/graphics_display_layout.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/gl_pixel_buffer.h"
+#include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/graphics/gl_renderer.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/gl_renderer_factory.h"
+#include "mir/compositor/renderer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/null_display_report.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/null_input_configuration.h"
 #include "mir/input/null_input_report.h"
+#include "mir/input/display_input_region.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_input_targeter.h"
@@ -73,6 +76,7 @@
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/time/high_resolution_clock.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 
 #include <map>
@@ -104,7 +108,7 @@ public:
         std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mg::ViewableArea> const& graphics_display,
+        std::shared_ptr<mg::Display> const& graphics_display,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
@@ -122,7 +126,7 @@ private:
     std::shared_ptr<mf::MessageProcessorReport> const mp_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mg::ViewableArea> const graphics_display;
+    std::shared_ptr<mg::Display> const graphics_display;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
@@ -331,12 +335,12 @@ mir::DefaultServerConfiguration::the_buffer_allocation_strategy()
         });
 }
 
-std::shared_ptr<mg::Renderer> mir::DefaultServerConfiguration::the_renderer()
+std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_renderer_factory()
 {
-    return renderer(
-        [&]()
+    return renderer_factory(
+        []()
         {
-             return std::make_shared<mg::GLRenderer>(the_display()->view_area().size);
+            return std::make_shared<mc::GLRendererFactory>();
         });
 }
 
@@ -375,7 +379,8 @@ mir::DefaultServerConfiguration::the_shell_placement_strategy()
     return shell_placement_strategy(
         [this]
         {
-            return std::make_shared<msh::ConsumingPlacementStrategy>(the_display());
+            return std::make_shared<msh::ConsumingPlacementStrategy>(
+                the_shell_display_layout());
         });
 }
 
@@ -411,7 +416,7 @@ mir::DefaultServerConfiguration::the_shell_pixel_buffer()
     return shell_pixel_buffer(
         [this]()
         {
-            return std::make_shared<mg::GLPixelBuffer>(
+            return std::make_shared<msh::GLPixelBuffer>(
                 the_display()->create_gl_context());
         });
 }
@@ -504,7 +509,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         {
             input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
                 the_event_filters(),
-                the_display(),
+                the_input_region(),
                 the_cursor_listener(),
                 the_input_report());
         }
@@ -549,9 +554,22 @@ mir::DefaultServerConfiguration::the_display()
         });
 }
 
-std::shared_ptr<mg::ViewableArea> mir::DefaultServerConfiguration::the_viewable_area()
+std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
-    return the_display();
+    return input_region(
+        [this]()
+        {
+            return std::make_shared<mi::DisplayInputRegion>(the_display());
+        });
+}
+
+std::shared_ptr<msh::DisplayLayout> mir::DefaultServerConfiguration::the_shell_display_layout()
+{
+    return shell_display_layout(
+        [this]()
+        {
+            return std::make_shared<msh::GraphicsDisplayLayout>(the_display());
+        });
 }
 
 std::shared_ptr<ms::SurfaceStackModel>
@@ -623,13 +641,14 @@ mir::DefaultServerConfiguration::the_overlay_renderer()
         });
 }
 
-std::shared_ptr<mc::CompositingStrategy>
-mir::DefaultServerConfiguration::the_compositing_strategy()
+std::shared_ptr<mc::DisplayBufferCompositorFactory>
+mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
 {
-    return compositing_strategy(
+    return display_buffer_compositor_factory(
         [this]()
         {
-            return std::make_shared<mc::DefaultCompositingStrategy>(the_scene(), the_renderer(), the_overlay_renderer());
+            return std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
+                the_scene(), the_renderer_factory(), the_overlay_renderer());
         });
 }
 
@@ -651,14 +670,14 @@ mir::DefaultServerConfiguration::the_compositor()
         {
             return std::make_shared<mc::MultiThreadedCompositor>(the_display(),
                                                                  the_scene(),
-                                                                 the_compositing_strategy());
+                                                                 the_display_buffer_compositor_factory());
         });
 }
 
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::ViewableArea> const& display,
+    std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return ipc_factory(

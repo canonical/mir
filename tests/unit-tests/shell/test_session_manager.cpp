@@ -31,6 +31,7 @@
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
+#include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 
@@ -167,15 +168,6 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
 namespace 
 {
 
-struct MockSessionListener : public msh::SessionListener
-{
-    virtual ~MockSessionListener() noexcept(true) {}
-    MOCK_METHOD1(starting, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD1(stopping, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD1(focused, void(std::shared_ptr<msh::Session> const&));
-    MOCK_METHOD0(unfocused, void());
-};
-
 struct SessionManagerSessionListenerSetup : public testing::Test
 {
     SessionManagerSessionListenerSetup()
@@ -193,7 +185,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<MockFocusSequence> focus_sequence;
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
-    MockSessionListener session_listener;
+    mtd::MockSessionListener session_listener;
 
     msh::SessionManager session_manager;
 };

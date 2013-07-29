@@ -1,5 +1,22 @@
-#include "mir/graphics/gl_renderer.h"
-#include "mir/graphics/compositing_criteria.h"
+/* Copyright © 2013 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ */
+
+#include "gl_renderer.h"
+#include "mir/compositor/compositing_criteria.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "mir/graphics/buffer.h"
 
@@ -9,8 +26,8 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mg=mir::graphics;
-namespace geom=mir::geometry;
+namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -88,7 +105,8 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
     std::string  object_info_log;
 
     object_info_log.resize(object_log_buffer_length);
-    (*getObjectInfoLog)(object, object_log_length, NULL, const_cast<GLchar *>(object_info_log.data()));
+    (*getObjectInfoLog)(object, object_log_length, NULL,
+                        const_cast<GLchar *>(object_info_log.data()));
 
     std::string object_info_err(msg + "\n");
     object_info_err += object_info_log;
@@ -98,7 +116,7 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
 
 }
 
-mg::GLRenderer::Resources::Resources() :
+mc::GLRenderer::Resources::Resources() :
     vertex_shader(0),
     fragment_shader(0),
     program(0),
@@ -111,7 +129,7 @@ mg::GLRenderer::Resources::Resources() :
 {
 }
 
-mg::GLRenderer::Resources::~Resources()
+mc::GLRenderer::Resources::~Resources()
 {
     if (vertex_shader)
         glDeleteShader(vertex_shader);
@@ -125,7 +143,7 @@ mg::GLRenderer::Resources::~Resources()
         glDeleteTextures(1, &texture);
 }
 
-void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
+void mc ::GLRenderer::Resources::setup(const geometry::Size& display_size)
 {
     GLint param = 0;
 
@@ -190,7 +208,6 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
             1.0f});
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
 
-    /* Create the texture (temporary workaround until we can use the Renderable's texture) */
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -212,13 +229,15 @@ void mg::GLRenderer::Resources::setup(const geometry::Size& display_size)
     glUseProgram(0);
 }
 
-mg::GLRenderer::GLRenderer(const geom::Size& display_size)
+mc::GLRenderer::GLRenderer(const geom::Size& display_size)
 {
     resources.setup(display_size);
 }
 
-void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> save_resource,
-                            mg::CompositingCriteria const& criteria, mir::surfaces::BufferStream& stream)
+void mc::GLRenderer::render(
+    std::function<void(std::shared_ptr<void> const&)> save_resource,
+    CompositingCriteria const& criteria,
+    mir::surfaces::BufferStream& stream)
 {
     glUseProgram(resources.program);
 
@@ -226,19 +245,22 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
 
-    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE, glm::value_ptr(criteria.transformation()));
+    glUniformMatrix4fv(resources.transform_uniform_loc, 1, GL_FALSE,
+                       glm::value_ptr(criteria.transformation()));
     glUniform1f(resources.alpha_uniform_loc, criteria.alpha());
 
     /* Set up vertex attribute data */
     glBindBuffer(GL_ARRAY_BUFFER, resources.vertex_attribs_vbo);
-    glVertexAttribPointer(resources.position_attr_loc, 3, GL_FLOAT, GL_FALSE, sizeof(VertexAttributes), 0);
-    glVertexAttribPointer(resources.texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, sizeof(VertexAttributes),
+    glVertexAttribPointer(resources.position_attr_loc, 3, GL_FLOAT,
+                          GL_FALSE, sizeof(VertexAttributes), 0);
+    glVertexAttribPointer(resources.texcoord_attr_loc, 2, GL_FLOAT,
+                          GL_FALSE, sizeof(VertexAttributes),
                           reinterpret_cast<void*>(sizeof(glm::vec3)));
 
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
-    auto region_resource = stream.lock_back_buffer();
+    auto region_resource = stream.lock_compositor_buffer();
     region_resource->bind_to_texture();
     save_resource(region_resource);
 
@@ -250,7 +272,7 @@ void mg::GLRenderer::render(std::function<void(std::shared_ptr<void> const&)> sa
     glDisableVertexAttribArray(resources.position_attr_loc);
 }
 
-void mg::GLRenderer::clear()
+void mc::GLRenderer::clear()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 }

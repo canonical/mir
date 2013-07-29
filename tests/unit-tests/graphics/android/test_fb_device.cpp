@@ -26,7 +26,6 @@
 
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace mt=mir::test;
 

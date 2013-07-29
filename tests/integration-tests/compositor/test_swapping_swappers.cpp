@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "multithread_harness.h"
 
 #include "src/server/compositor/switching_bundle.h"
@@ -40,25 +40,11 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct MockBufferAllocator : public mc::GraphicBufferAllocator
-{
-    MockBufferAllocator()
-    {
-        using namespace testing;
-        ON_CALL(*this, alloc_buffer(_))
-            .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
-    }
-    ~MockBufferAllocator() noexcept{}
-
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mc::BufferProperties const&));
-    MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
-};
-
 struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        auto allocator = std::make_shared<MockBufferAllocator>();
+        auto allocator = std::make_shared<mtd::StubBufferAllocator>();
         auto factory = std::make_shared<mc::SwapperFactory>(allocator, 3);
         auto properties = mc::BufferProperties{geom::Size{380, 210},
                                           geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};

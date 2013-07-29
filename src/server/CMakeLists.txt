@@ -81,9 +81,13 @@ else()
   )
 endif()
 
-set_target_properties(mirserver PROPERTIES
-  VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}
-  SOVERSION ${MIR_VERSION_MAJOR}
+set(MIRSERVER_ABI 0)
+
+set_target_properties(
+  mirserver
+
+  PROPERTIES
+  SOVERSION ${MIRSERVER_ABI}
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc

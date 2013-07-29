@@ -19,7 +19,7 @@
 #define MIR_TEST_DOUBLES_MOCK_SURFACE_RENDERER_H_
 
 #include "mir/surfaces/buffer_stream.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,10 +29,10 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceRenderer : public graphics::Renderer
+struct MockSurfaceRenderer : public compositor::Renderer
 {
     MOCK_METHOD3(render, void(
-        std::function<void(std::shared_ptr<void> const&)>, graphics::CompositingCriteria const&, surfaces::BufferStream&));
+        std::function<void(std::shared_ptr<void> const&)>, compositor::CompositingCriteria const&, surfaces::BufferStream&));
     MOCK_METHOD0(clear, void());
 
     ~MockSurfaceRenderer() noexcept {}

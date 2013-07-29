@@ -29,14 +29,16 @@ namespace mir
 {
 namespace compositor
 {
+class Renderer;
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
 class BufferStreamFactory;
 class Scene;
 class Drawer;
-class CompositingStrategy;
+class DisplayBufferCompositorFactory;
 class Compositor;
 class OverlayRenderer;
+class RendererFactory;
 }
 namespace frontend
 {
@@ -62,6 +64,7 @@ class FocusController;
 class SessionManager;
 class PixelBuffer;
 class SnapshotStrategy;
+class DisplayLayout;
 }
 namespace time
 {
@@ -77,10 +80,8 @@ class InputRegistrar;
 }
 namespace graphics
 {
-class Renderer;
 class Platform;
 class Display;
-class ViewableArea;
 class BufferInitializer;
 class DisplayReport;
 }
@@ -92,6 +93,7 @@ class EventFilter;
 class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
+class InputRegion;
 }
 
 namespace logging
@@ -119,8 +121,7 @@ public:
      * configurable interfaces for modifying graphics
      *  @{ */
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
-    virtual std::shared_ptr<graphics::Renderer>          the_renderer();
-    virtual std::shared_ptr<graphics::ViewableArea>      the_viewable_area();
+    virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -132,7 +133,7 @@ public:
     /** @name compositor configuration - customization
      * configurable interfaces for modifying compositor
      *  @{ */
-    virtual std::shared_ptr<compositor::CompositingStrategy>      the_compositing_strategy();
+    virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
     virtual std::shared_ptr<compositor::OverlayRenderer>          the_overlay_renderer();
     virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     /** @} */
@@ -166,6 +167,7 @@ public:
     virtual std::shared_ptr<shell::SessionListener>   the_shell_session_listener();
     virtual std::shared_ptr<shell::PixelBuffer>       the_shell_pixel_buffer();
     virtual std::shared_ptr<shell::SnapshotStrategy>  the_shell_snapshot_strategy();
+    virtual std::shared_ptr<shell::DisplayLayout>     the_shell_display_layout();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -196,6 +198,7 @@ public:
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
+    virtual std::shared_ptr<input::InputRegion>    the_input_region();
     /** @} */
 
     /** @name logging configuration - customization
@@ -226,6 +229,7 @@ protected:
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::InputRegion>     input_region;
     CachedPtr<surfaces::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
@@ -239,7 +243,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
-    CachedPtr<graphics::Renderer> renderer;
+    CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
     CachedPtr<shell::SurfaceFactory> shell_surface_factory;
@@ -250,7 +254,8 @@ protected:
     CachedPtr<shell::SessionListener> shell_session_listener;
     CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;
     CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
-    CachedPtr<compositor::CompositingStrategy> compositing_strategy;
+    CachedPtr<shell::DisplayLayout>     shell_display_layout;
+    CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<logging::Logger> logger;
@@ -269,7 +274,7 @@ private:
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::ViewableArea> const& display,
+        std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;

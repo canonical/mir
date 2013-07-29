@@ -92,12 +92,12 @@ TEST(SurfaceCreationParametersTest, equality)
     mc::BufferUsage const usage{mc::BufferUsage::hardware};
     geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 
-    auto params0 = msh::a_surface().of_name("surface0")
+    auto params0 = msh::a_surface().of_name("surface")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
 
-    auto params1 = msh::a_surface().of_name("surface1")
+    auto params1 = msh::a_surface().of_name("surface")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
@@ -308,7 +308,7 @@ TEST_F(SurfaceCreation, test_surface_compositor_buffer_locks_back_buffer_from_st
     ms::Surface surf(mock_basic_state, mock_buffer_stream, std::shared_ptr<mi::InputChannel>());
     auto buffer_resource = std::make_shared<mtd::StubBuffer>();
 
-    EXPECT_CALL(*mock_buffer_stream, lock_back_buffer())
+    EXPECT_CALL(*mock_buffer_stream, lock_compositor_buffer())
         .Times(AtLeast(1))
         .WillOnce(Return(buffer_resource));
 

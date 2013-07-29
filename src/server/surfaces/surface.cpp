@@ -59,7 +59,7 @@ std::shared_ptr<ms::BufferStream> ms::Surface::buffer_stream() const
     return surface_buffer_stream;
 }
 
-std::shared_ptr<mg::CompositingCriteria> ms::Surface::compositing_criteria()
+std::shared_ptr<mc::CompositingCriteria> ms::Surface::compositing_criteria()
 {
     return surface_state;
 }
@@ -125,7 +125,12 @@ void ms::Surface::allow_framedropping(bool allow)
 
 std::shared_ptr<mg::Buffer> ms::Surface::compositor_buffer() const
 {
-    return surface_buffer_stream->lock_back_buffer();
+    return surface_buffer_stream->lock_compositor_buffer();
+}
+
+std::shared_ptr<mg::Buffer> ms::Surface::snapshot_buffer() const
+{
+    return surface_buffer_stream->lock_snapshot_buffer();
 }
 
 //TODO: this is just used in example code, could be private

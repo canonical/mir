@@ -75,11 +75,6 @@ public:
     {
     }
 
-    mir::geometry::Rectangle view_area() const override
-    {
-        return display->view_area();
-    }
-
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         display->for_each_display_buffer(f);

@@ -60,13 +60,17 @@ bool UnacceleratedClient::connect(std::string unique_name, const char* socket_fi
 
 bool UnacceleratedClient::create_surface()
 {
-    MirDisplayInfo display_info;
-    mir_connection_get_display_info(connection_, &display_info);
-    if (display_info.supported_pixel_format_items < 1)
+    auto display_configuration = mir_connection_create_display_config(connection_);
+    if (display_configuration->num_displays < 1)
+        return false;
+
+    MirDisplayOutput display_state = display_configuration->displays[0]; 
+    if (display_state.num_output_formats < 1)
         return false;
 
     // TODO: instead of picking the first pixel format, pick a random one!
-    MirPixelFormat const pixel_format = display_info.supported_pixel_format[0];
+    MirPixelFormat const pixel_format = display_state.output_formats[0];
+    mir_display_config_destroy(display_configuration);
     MirSurfaceParameters const request_params =
         {
             __PRETTY_FUNCTION__,
@@ -75,6 +79,7 @@ bool UnacceleratedClient::create_surface()
             pixel_format,
             mir_buffer_usage_software
         };
+
     surface_ = mir_connection_create_surface_sync(connection_, &request_params);
     return true;
 }

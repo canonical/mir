@@ -22,8 +22,9 @@
 #include <stdexcept>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <mir/geometry/size.h>
-#include <mir/graphics/gl_renderer.h>
+#include <mir/geometry/rectangle.h>
+#include <mir/compositor/renderer.h>
+#include <mir/compositor/gl_renderer_factory.h>
 #include <mir_test/fake_shared.h>
 #include <mir_test_doubles/mock_buffer.h>
 #include <mir_test_doubles/mock_compositing_criteria.h>
@@ -169,7 +170,8 @@ class GLRendererSetupProcess :
 public:
 
     mtd::MockGL mock_gl;
-    mir::geometry::Size display_size;
+    mc::GLRendererFactory gl_renderer_factory;
+    mir::geometry::Rectangle display_area;
 };
 
 ACTION_P2(CopyString, str, len)
@@ -204,8 +206,7 @@ TEST_F(GLRendererSetupProcess, vertex_shader_compiler_failure_recovers_and_throw
                 stub_info_log.size()));
 
     EXPECT_THROW({
-    std::unique_ptr<mg::GLRenderer> r;
-    r.reset(new mg::GLRenderer(display_size));
+        auto r = gl_renderer_factory.create_renderer_for(display_area);
     }, std::runtime_error);
 }
 
@@ -226,8 +227,7 @@ TEST_F(GLRendererSetupProcess, fragment_shader_compiler_failure_recovers_and_thr
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        std::unique_ptr<mg::GLRenderer> r;
-        r.reset(new mg::GLRenderer(display_size));
+        auto r = gl_renderer_factory.create_renderer_for(display_area);
     }, std::runtime_error);
 }
 
@@ -249,8 +249,7 @@ TEST_F(GLRendererSetupProcess, graphics_program_linker_failure_recovers_and_thro
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        std::unique_ptr<mg::GLRenderer> r;
-        r.reset(new mg::GLRenderer(display_size));
+        auto r = gl_renderer_factory.create_renderer_for(display_area);
     }, std::runtime_error);
 }
 
@@ -273,12 +272,13 @@ public:
         EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_location, 0));
         FillMockVertexBuffer(mock_gl);
 
-        renderer.reset(new mg::GLRenderer(display_size));
+        mc::GLRendererFactory gl_renderer_factory;
+        renderer = gl_renderer_factory.create_renderer_for(display_area);
     }
 
     mtd::MockGL         mock_gl;
-    mir::geometry::Size display_size;
-    std::unique_ptr<mg::GLRenderer> renderer;
+    mir::geometry::Rectangle display_area;
+    std::unique_ptr<mc::Renderer> renderer;
     glm::mat4           trans;
 };
 
@@ -319,7 +319,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(stream, lock_back_buffer())
+    EXPECT_CALL(stream, lock_compositor_buffer())
         .Times(1)
         .WillOnce(Return(mt::fake_shared(gr)));
     EXPECT_CALL(gr, bind_to_texture());

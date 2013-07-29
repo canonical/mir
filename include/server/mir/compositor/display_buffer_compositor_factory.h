@@ -17,8 +17,10 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_
-#define MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_
+#ifndef MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
+#define MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_
+
+#include <memory>
 
 namespace mir
 {
@@ -26,28 +28,25 @@ namespace graphics
 {
 class DisplayBuffer;
 }
-namespace geometry
-{
-struct Rectangle;
-}
-
 namespace compositor
 {
 
-class CompositingStrategy
+class DisplayBufferCompositor;
+
+class DisplayBufferCompositorFactory
 {
 public:
-    virtual ~CompositingStrategy() = default;
+    virtual ~DisplayBufferCompositorFactory() = default;
 
-    virtual void render(graphics::DisplayBuffer& display_buffer) = 0;
+    virtual std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplayBuffer& display_buffer) = 0;
 
 protected:
-    CompositingStrategy() = default;
-    CompositingStrategy& operator=(CompositingStrategy const&) = delete;
-    CompositingStrategy(CompositingStrategy const&) = delete;
+    DisplayBufferCompositorFactory() = default;
+    DisplayBufferCompositorFactory& operator=(DisplayBufferCompositorFactory const&) = delete;
+    DisplayBufferCompositorFactory(DisplayBufferCompositorFactory const&) = delete;
 };
+
 }
 }
 
-
-#endif /* MIR_COMPOSITOR_COMPOSITING_STRATEGY_H_ */
+#endif /* MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_ */

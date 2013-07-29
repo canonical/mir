@@ -17,7 +17,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/graphics/renderer.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
@@ -28,23 +29,25 @@
 #include <cstdio>
 #include <fcntl.h>
 
+namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace ms = mir::surfaces;
+namespace geom = mir::geometry;
 
 namespace
 {
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class NullRenderer : public mg::Renderer
+class NullRenderer : public mc::Renderer
 {
 public:
     virtual void render(std::function<void(std::shared_ptr<void> const&)>,
-                                   mg::CompositingCriteria const&, ms::BufferStream&)
+                                   mc::CompositingCriteria const&, ms::BufferStream&)
     {
         /* 
          * Do nothing, so that the Renderable's buffers are not consumed
@@ -55,6 +58,16 @@ public:
     }
 
     void clear() {}
+};
+
+
+class NullRendererFactory : public mc::RendererFactory
+{
+public:
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    {
+        return std::unique_ptr<mc::Renderer>(new NullRenderer());
+    }
 };
 
 void null_surface_callback(MirSurface*, void*)
@@ -107,9 +120,9 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Renderer> the_renderer() override
+        std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
         {
-            return renderer([] { return std::make_shared<NullRenderer>(); });
+            return renderer_factory([] { return std::make_shared<NullRendererFactory>(); });
         }
     } server_config;
 
@@ -203,7 +216,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
                 input_configuration =
                     std::make_shared<mtd::FakeEventHubInputConfiguration>(
                         std::initializer_list<std::shared_ptr<mi::EventFilter> const>{},
-                        the_viewable_area(),
+                        the_input_region(),
                         std::shared_ptr<mi::CursorListener>(),
                         the_input_report());
             }

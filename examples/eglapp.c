@@ -134,7 +134,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         mir_eglapp_handle_input,
         NULL
     };
-    MirDisplayInfo dinfo;
     EGLConfig eglconfig;
     EGLint neglconfigs;
     EGLContext eglctx;
@@ -181,15 +180,23 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    mir_connection_get_display_info(connection, &dinfo);
+    /* eglapps are interested in the screen size, so use mir_connection_create_display_config */
+    MirDisplayConfiguration* display_config = mir_connection_create_display_config(connection);
+    MirDisplayOutput* display_state = &display_config->displays[0];
+    MirDisplayMode mode = display_state->modes[display_state->current_mode]; 
+    unsigned int valid_formats;
+    mir_connection_get_available_surface_formats(connection, &surfaceparm.pixel_format, 1, &valid_formats);
 
-    printf("Connected to display: %dx%d, supports %d pixel formats\n",
-           dinfo.width, dinfo.height,
-           dinfo.supported_pixel_format_items);
+    printf("Connected to display: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
+           mode.horizontal_resolution, mode.vertical_resolution,
+           display_state->position_x, display_state->position_y,
+           display_state->num_output_formats);
 
-    surfaceparm.width = *width > 0 ? *width : dinfo.width;
-    surfaceparm.height = *height > 0 ? *height : dinfo.height;
-    surfaceparm.pixel_format = dinfo.supported_pixel_format[0];
+    surfaceparm.width = *width > 0 ? *width : mode.horizontal_resolution;
+    surfaceparm.height = *height > 0 ? *height : mode.vertical_resolution;
+
+    mir_display_config_destroy(display_config);
+
     printf("Using pixel format #%d\n", surfaceparm.pixel_format);
     unsigned int bpp = get_bpp(surfaceparm.pixel_format);
     EGLint attribs[] =

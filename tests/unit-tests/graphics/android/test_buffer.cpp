@@ -25,7 +25,6 @@
 #include <gmock/gmock.h>
 #include <memory>
 
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;

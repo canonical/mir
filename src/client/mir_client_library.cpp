@@ -21,6 +21,7 @@
 #include "mir_toolkit/mir_client_library_drm.h"
 
 #include "mir_connection.h"
+#include "display_configuration.h"
 #include "mir_surface.h"
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
@@ -139,6 +140,14 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *con
     return connection->egl_native_display();
 }
 
+void mir_connection_get_available_surface_formats(
+    MirConnection * connection, MirPixelFormat* formats,
+    unsigned const int format_size, unsigned int *num_valid_formats)
+{
+    if ((connection) && (formats) && (num_valid_formats))
+        connection->possible_pixel_formats(formats, format_size, *num_valid_formats);
+}
+
 MirWaitHandle* mir_connection_create_surface(
     MirConnection* connection,
     MirSurfaceParameters const* params,
@@ -228,9 +237,43 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
     connection->populate(*platform_package);
 }
 
+MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
+{
+    if (connection) 
+        return connection->create_copy_of_display_config();
+    return nullptr;
+}
+
+void mir_display_config_destroy(MirDisplayConfiguration* configuration)
+{
+    mcl::delete_config_storage(configuration);
+}
+
+//TODO: DEPRECATED: remove this function
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
-    connection->populate(*display_info);
+    auto config = mir_connection_create_display_config(connection);
+    if (config->num_displays < 1)
+        return;
+    MirDisplayOutput* state = &config->displays[0];
+    MirDisplayMode mode = state->modes[state->current_mode];
+   
+    display_info->width = mode.horizontal_resolution;
+    display_info->height = mode.vertical_resolution;
+
+    unsigned int format_items;
+    if (state->num_output_formats > mir_supported_pixel_format_max) 
+         format_items = mir_supported_pixel_format_max;
+    else
+         format_items = state->num_output_formats;
+
+    display_info->supported_pixel_format_items = format_items; 
+    for(auto i=0u; i < format_items; i++)
+    {
+        display_info->supported_pixel_format[i] = state->output_formats[i];
+    }
+
+    mir_display_config_destroy(config);
 }
 
 void mir_surface_get_graphics_region(MirSurface * surface, MirGraphicsRegion * graphics_region)

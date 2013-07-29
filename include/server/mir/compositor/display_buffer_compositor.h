@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,35 +14,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/buffer_basic.h"
-#include <atomic>
-
-namespace mg = mir::graphics;
+#ifndef MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
+#define MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 
 namespace mir
 {
 namespace compositor
 {
-namespace
+
+class DisplayBufferCompositor
 {
-mg::BufferID generate_next_buffer_id()
-{
-    static std::atomic<uint32_t> next_id{0};
+public:
+    virtual ~DisplayBufferCompositor() = default;
 
-    auto id = mg::BufferID(next_id.fetch_add(1));
+    virtual void composite() = 0;
 
-    // Avoid returning an "invalid" id. (Not sure we need invalid ids)
-    while (!id.is_valid()) id = mg::BufferID(next_id.fetch_add(1));
+protected:
+    DisplayBufferCompositor() = default;
+    DisplayBufferCompositor& operator=(DisplayBufferCompositor const&) = delete;
+    DisplayBufferCompositor(DisplayBufferCompositor const&) = delete;
+};
 
-    return id;
-}
-}
 }
 }
 
-mir::compositor::BufferBasic::BufferBasic() :
-    buffer_id(generate_next_buffer_id())
-{
-}
+#endif /* MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_ */

@@ -194,7 +194,7 @@ void msh::Surface::with_most_recent_buffer_do(
 {
     if (auto const& s = surface.lock())
     {
-        auto buf = s->compositor_buffer();
+        auto buf = s->snapshot_buffer();
         exec(*buf);
     }
     else

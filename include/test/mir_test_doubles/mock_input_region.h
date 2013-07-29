@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,30 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_
-#define MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_
+
+#include "mir/input/input_region.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace graphics
+namespace test
 {
-// framebuffer_backend is the interface compositor uses onto graphics/libgl
-class FramebufferBackend
+namespace doubles
+{
+
+class MockInputRegion : public input::InputRegion
 {
 public:
-    virtual void render() = 0;
-
-protected:
-    FramebufferBackend() = default;
-    ~FramebufferBackend() = default;
-private:
-    FramebufferBackend(FramebufferBackend const&) = delete;
-    FramebufferBackend& operator=(FramebufferBackend const&) = delete;
+    MOCK_METHOD0(bounding_rectangle, geometry::Rectangle());
+    MOCK_METHOD1(confine, void(geometry::Point&));
 };
+
+}
 }
 }
 
-#endif /* MIR_GRAPHICS_FRAMEBUFFER_BACKEND_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_INPUT_REGION_H_ */
+
+

@@ -13,34 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
-#ifndef MIR_COMPOSITOR_BUFFER_BASIC_H_
-#define MIR_COMPOSITOR_BUFFER_BASIC_H_
 
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/buffer_id.h"
+#include "mir/graphics/buffer_basic.h"
+#include <atomic>
 
-namespace mir
+namespace mg = mir::graphics;
+
+namespace
 {
-namespace compositor
+mg::BufferID generate_next_buffer_id()
 {
+    static std::atomic<uint32_t> next_id{0};
 
-class BufferBasic : public graphics::Buffer
-{
-public:
-    BufferBasic();
+    auto id = mg::BufferID(next_id.fetch_add(1));
 
-    graphics::BufferID id() const
-    {
-        return buffer_id;
-    }
+    // Avoid returning an "invalid" id. (Not sure we need invalid ids)
+    while (!id.is_valid()) id = mg::BufferID(next_id.fetch_add(1));
 
-private:
-    graphics::BufferID const buffer_id;
-};
-
+    return id;
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_BASIC_H_ */
+mg::BufferBasic::BufferBasic() :
+    buffer_id(generate_next_buffer_id())
+{
+}

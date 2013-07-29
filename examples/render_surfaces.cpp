@@ -16,14 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/default_compositing_strategy.h"
+#include "mir/compositor/default_display_buffer_compositor_factory.h"
+#include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/frontend/communicator.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
 #include "mir/default_server_configuration.h"
@@ -64,8 +67,8 @@ namespace mt = mir::tools;
 /// \snippet render_surfaces.cpp RenderSurfacesServerConfiguration_stubs_tag
 /// it also provides a bespoke buffer initializer
 /// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
-/// and a bespoke compositing strategy
-/// \snippet render_surfaces.cpp RenderSurfacesCompositingStrategy_tag
+/// and a bespoke display buffer compositor
+/// \snippet render_surfaces.cpp RenderSurfacesDisplayBufferCompositor_tag
 ///\section Utilities Utility classes
 /// For smooth animation we need to track time and move surfaces accordingly
 ///\subsection StopWatch StopWatch
@@ -304,24 +307,23 @@ public:
     }
     ///\internal [RenderResourcesBufferInitializer_tag]
 
-    ///\internal [RenderSurfacesCompositingStrategy_tag]
-    // Decorate the DefaultCompositingStrategy in order to move surfaces.
-    std::shared_ptr<mc::CompositingStrategy> the_compositing_strategy() override
+    ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
+    // Decorate the DefaultDisplayBufferCompositor in order to move surfaces.
+    std::shared_ptr<mc::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory() override
     {
-        class RenderSurfacesCompositingStrategy : public mc::CompositingStrategy
+        class RenderSurfacesDisplayBufferCompositor : public mc::DisplayBufferCompositor
         {
         public:
-            RenderSurfacesCompositingStrategy(std::shared_ptr<mc::Scene> const& scene,
-                                              std::shared_ptr<mg::Renderer> const& renderer,
-                                              std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
-                                              std::vector<Moveable>& moveables)
-                : default_compositing_strategy{scene, renderer, overlay_renderer},
-                  frames{0},
-                  moveables(moveables)
+            RenderSurfacesDisplayBufferCompositor(
+                std::unique_ptr<DisplayBufferCompositor> db_compositor,
+                std::vector<Moveable>& moveables)
+                : db_compositor{std::move(db_compositor)},
+                  moveables(moveables),
+                  frames{0}
             {
             }
 
-            void render(mg::DisplayBuffer& display_buffer)
+            void composite()
             {
                 animate_cursor();
                 stop_watch.stop();
@@ -333,7 +335,7 @@ public:
                 }
 
                 glClearColor(0.0, 1.0, 0.0, 1.0);
-                default_compositing_strategy.render(display_buffer);
+                db_compositor->composite();
 
                 for (auto& m : moveables)
                     m.step();
@@ -342,18 +344,41 @@ public:
             }
 
         private:
-            mc::DefaultCompositingStrategy default_compositing_strategy;
+            std::unique_ptr<DisplayBufferCompositor> const db_compositor;
             StopWatch stop_watch;
+            std::vector<Moveable>& moveables;
             uint32_t frames;
+        };
+
+        class RenderSurfacesDisplayBufferCompositorFactory : public mc::DefaultDisplayBufferCompositorFactory
+        {
+        public:
+            RenderSurfacesDisplayBufferCompositorFactory(
+                std::shared_ptr<mc::Scene> const& scene,
+                std::shared_ptr<mc::RendererFactory> const& renderer_factory,
+                std::shared_ptr<mc::OverlayRenderer> const& overlay_renderer,
+                std::vector<Moveable>& moveables)
+                : DefaultDisplayBufferCompositorFactory{scene, renderer_factory, overlay_renderer},
+                  moveables(moveables)
+            {
+            }
+
+            std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& display_buffer)
+            {
+                auto cs = DefaultDisplayBufferCompositorFactory::create_compositor_for(display_buffer);
+                auto raw = new RenderSurfacesDisplayBufferCompositor(std::move(cs), moveables);
+                return std::unique_ptr<RenderSurfacesDisplayBufferCompositor>(raw);
+            }
             std::vector<Moveable>& moveables;
         };
 
-        return std::make_shared<RenderSurfacesCompositingStrategy>(the_scene(),
-                                                                   the_renderer(),
-                                                                   the_overlay_renderer(),
-                                                                   moveables);
+        return std::make_shared<RenderSurfacesDisplayBufferCompositorFactory>(
+            the_scene(),
+            the_renderer_factory(),
+            the_overlay_renderer(),
+            moveables);
     }
-    ///\internal [RenderSurfacesCompositingStrategy_tag]
+    ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
 
     // New function to initialize moveables with surfaces
     void create_surfaces()
@@ -363,7 +388,13 @@ public:
 
         auto const display = the_display();
         auto const surface_builder = the_surface_builder();
-        geom::Size const display_size{display->view_area().size};
+        /* TODO: Get proper configuration */
+        geom::Rectangles view_area;
+        display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
+        {
+            view_area.add(db.view_area());
+        });
+        geom::Size const display_size{view_area.bounding_rectangle().size};
         uint32_t const surface_side{300};
         geom::Size const surface_size{surface_side, surface_side};
 

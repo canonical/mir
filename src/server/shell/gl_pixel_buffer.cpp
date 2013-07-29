@@ -16,8 +16,8 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir/shell/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/graphics/gl_pixel_buffer.h"
 #include "mir/graphics/buffer.h"
 
 #include <stdexcept>
@@ -38,11 +38,19 @@ bool is_big_endian()
     return (*reinterpret_cast<char*>(&n) != 1);
 }
 
+inline uint32_t abgr_to_argb(uint32_t p)
+{
+    return ((p << 16) & 0x00ff0000) | /* Move R to new position */
+           ((p) & 0x0000ff00) |       /* G remains at same position */
+           ((p >> 16) & 0x000000ff) | /* Move B to new position */
+           ((p) & 0xff000000);        /* A remains at same position */
 }
 
-mg::GLPixelBuffer::GLPixelBuffer(std::unique_ptr<GLContext> gl_context)
+}
+
+msh::GLPixelBuffer::GLPixelBuffer(std::unique_ptr<graphics::GLContext> gl_context)
     : gl_context{std::move(gl_context)},
-      tex{0}, fbo{0}, pixels_need_y_flip{false}
+      tex{0}, fbo{0}, gl_pixel_format{0}, pixels_need_y_flip{false}
 {
     /*
      * TODO: Handle systems that are big-endian, and therefore GL_BGRA doesn't
@@ -55,7 +63,7 @@ mg::GLPixelBuffer::GLPixelBuffer(std::unique_ptr<GLContext> gl_context)
     }
 }
 
-mg::GLPixelBuffer::~GLPixelBuffer() noexcept
+msh::GLPixelBuffer::~GLPixelBuffer() noexcept
 {
     if (tex != 0)
         glDeleteTextures(1, &tex);
@@ -63,7 +71,7 @@ mg::GLPixelBuffer::~GLPixelBuffer() noexcept
         glDeleteFramebuffers(1, &fbo);
 }
 
-void mg::GLPixelBuffer::prepare()
+void msh::GLPixelBuffer::prepare()
 {
     gl_context->make_current();
 
@@ -79,7 +87,7 @@ void mg::GLPixelBuffer::prepare()
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
-void mg::GLPixelBuffer::fill_from(Buffer& buffer)
+void msh::GLPixelBuffer::fill_from(graphics::Buffer& buffer)
 {
     auto width = buffer.size().width.as_uint32_t();
     auto height = buffer.size().height.as_uint32_t();
@@ -92,20 +100,23 @@ void mg::GLPixelBuffer::fill_from(Buffer& buffer)
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
 
-    /* TODO: Handle systems that don't support GL_BGRA_EXT for glReadPixels() */
+    /* First try to get pixels as BGRA */
     glGetError();
-    glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, pixels.data());
-    if (glGetError() == GL_INVALID_ENUM)
+    gl_pixel_format = GL_BGRA_EXT;
+    glReadPixels(0, 0, width, height, gl_pixel_format, GL_UNSIGNED_BYTE, pixels.data());
+
+    /* If getting pixels as BGRA failed, fall back to RGBA */
+    if (glGetError() != GL_NO_ERROR)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "GLPixelBuffer couldn't read pixels in BGRA format"));
+        gl_pixel_format = GL_RGBA;
+        glReadPixels(0, 0, width, height, gl_pixel_format, GL_UNSIGNED_BYTE, pixels.data());
     }
 
     size_ = buffer.size();
     pixels_need_y_flip = true;
 }
 
-void const* mg::GLPixelBuffer::as_argb_8888()
+void const* msh::GLPixelBuffer::as_argb_8888()
 {
     if (pixels_need_y_flip)
     {
@@ -120,13 +131,19 @@ void const* mg::GLPixelBuffer::as_argb_8888()
             tmp.assign(&pixels[i * stride_val], &pixels[(i + 1) * stride_val]);
 
             /* Copy line height - i - 1 to line i */
-            std::copy(&pixels[(height - i - 1) * stride_val],
-                      &pixels[(height - i) * stride_val],
-                      &pixels[i * stride_val]);
+            copy_and_convert_pixel_line(&pixels[(height - i - 1) * stride_val],
+                                        &pixels[i * stride_val]);
 
             /* Copy stored line (i) to height - i - 1 */
-            std::copy(tmp.begin(), tmp.end(),
-                      &pixels[(height - i - 1) * stride_val]);
+            copy_and_convert_pixel_line(tmp.data(),
+                                        &pixels[(height - i - 1) * stride_val]);
+        }
+
+        /* Process middle line if there is one */
+        if (height % 2 == 1)
+        {
+            copy_and_convert_pixel_line(&pixels[(height / 2) * stride_val],
+                                        &pixels[(height / 2) * stride_val]);
         }
 
         pixels_need_y_flip = false;
@@ -135,12 +152,30 @@ void const* mg::GLPixelBuffer::as_argb_8888()
     return pixels.data();
 }
 
-geom::Size mg::GLPixelBuffer::size() const
+geom::Size msh::GLPixelBuffer::size() const
 {
     return size_;
 }
 
-geom::Stride mg::GLPixelBuffer::stride() const
+geom::Stride msh::GLPixelBuffer::stride() const
 {
-    return geom::Stride{size_.width.as_uint32_t() * 4};
+    return geom::Stride{size_.width.as_uint32_t() * sizeof(uint32_t)};
+}
+
+void msh::GLPixelBuffer::copy_and_convert_pixel_line(char* src, char* dst)
+{
+    if (gl_pixel_format == GL_RGBA)
+    {
+        /* Convert from abgr_8888 to argb_8888 while copying */
+        auto pixels_src = reinterpret_cast<uint32_t*>(src);
+        auto pixels_dst = reinterpret_cast<uint32_t*>(dst);
+        auto const width = size_.width.as_uint32_t();
+
+        for (uint32_t n = 0; n < width; n++)
+            pixels_dst[n] = abgr_to_argb(pixels_src[n]);
+    }
+    else if (src != dst)
+    {
+        std::copy(src, src + stride().as_uint32_t(), dst);
+    }
 }

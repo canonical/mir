@@ -17,9 +17,22 @@ if (MIR_PLATFORM STREQUAL "android")
   include_directories( ${LIBHARDWARE_INCLUDE_DIRS})
 endif()
 
-add_subdirectory(acceptance-tests/)
-add_subdirectory(unit-tests/)
-add_subdirectory(integration-tests/)
+option(MIR_ENABLE_ACCEPTANCE_TESTS "Build & run acceptance tests" ON)
+option(MIR_ENABLE_INTEGRATION_TESTS "Build & run integration tests" ON)
+option(MIR_ENABLE_UNIT_TESTS "Build & run unit tests" ON)
+
+if (MIR_ENABLE_ACCEPTANCE_TESTS)
+  add_subdirectory(acceptance-tests/)
+endif (MIR_ENABLE_ACCEPTANCE_TESTS)
+
+if (MIR_ENABLE_UNIT_TESTS)
+  add_subdirectory(unit-tests/)
+endif (MIR_ENABLE_UNIT_TESTS)
+
+if (MIR_ENABLE_INTEGRATION_TESTS)
+  add_subdirectory(integration-tests/)
+endif (MIR_ENABLE_INTEGRATION_TESTS)
+
 add_subdirectory(mir_test/)
 add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)

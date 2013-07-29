@@ -30,9 +30,11 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/viewable_area.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
+#include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
@@ -41,18 +43,20 @@
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
+namespace geom = mir::geometry;
+namespace mg = mir::graphics;
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
-    std::shared_ptr<graphics::ViewableArea> const& viewable_area,
+    std::shared_ptr<graphics::Display> const& display,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<events::EventSink> const& event_sink,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
-    viewable_area(viewable_area),
+    display(display),
     buffer_allocator(buffer_allocator),
     report(report),
     event_sink(event_sink),
@@ -85,7 +89,7 @@ void mf::SessionMediator::connect(
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
-    auto display_info = response->mutable_display_info();
+    auto display_output = response->add_display_output();
 
     for (auto& data : ipc_package->ipc_data)
         platform->add_data(data);
@@ -93,13 +97,29 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto view_area = viewable_area->view_area();
-    display_info->set_width(view_area.size.width.as_uint32_t());
-    display_info->set_height(view_area.size.height.as_uint32_t());
+    /* TODO: Get proper configuration */
+    geom::Rectangles view_area;
+    display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
+    {
+        view_area.add(db.view_area());
+    });
+    geom::Rectangle const view_rect = view_area.bounding_rectangle();
+    display_output->set_connected(1);
+    display_output->set_used(1);
+    display_output->set_physical_width_mm(0);
+    display_output->set_physical_height_mm(0);
+    display_output->set_position_x(view_rect.top_left.x.as_uint32_t());
+    display_output->set_position_y(view_rect.top_left.y.as_uint32_t());
+    auto mode = display_output->add_mode();
+    mode->set_horizontal_resolution(view_rect.size.width.as_uint32_t());
+    mode->set_vertical_resolution(view_rect.size.height.as_uint32_t());
+    mode->set_refresh_rate(60.0f);
+    display_output->set_current_mode(0);
 
     auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
     for (auto pf : supported_pixel_formats)
-        display_info->add_supported_pixel_format(static_cast<uint32_t>(pf));
+        display_output->add_pixel_format(static_cast<uint32_t>(pf));
+    display_output->set_current_format(0);
 
     resource_cache->save_resource(response, ipc_package);
 

@@ -18,16 +18,17 @@
 
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
-#include "mir/graphics/viewable_area.h"
+#include "mir/shell/display_layout.h"
+#include "mir/geometry/rectangle.h"
 
 #include <algorithm>
 
 namespace msh = mir::shell;
-namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(std::shared_ptr<mg::ViewableArea> const& display_area)
-    : display_area(display_area)
+msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(
+    std::shared_ptr<msh::DisplayLayout> const& display_layout)
+    : display_layout(display_layout)
 {
 }
 
@@ -35,19 +36,20 @@ msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::Surfa
 {
     auto placed_parameters = request_parameters;
 
-    auto input_width = request_parameters.size.width.as_uint32_t();
-    auto input_height = request_parameters.size.height.as_uint32_t();
-    auto view_area = display_area->view_area();
+    geom::Rectangle rect{request_parameters.top_left, request_parameters.size};
 
-    if (input_width != 0 || input_height != 0)
+    if (request_parameters.size.width > geom::Width{0} &&
+        request_parameters.size.height > geom::Height{0})
     {
-        placed_parameters.size.width = geom::Width{std::min(input_width, view_area.size.width.as_uint32_t())};
-        placed_parameters.size.height = geom::Height{std::min(input_height, view_area.size.height.as_uint32_t())};
+        display_layout->clip_to_output(rect);
     }
     else
     {
-        placed_parameters.size = view_area.size;
+        display_layout->size_to_output(rect);
     }
+
+    placed_parameters.top_left = rect.top_left;
+    placed_parameters.size = rect.size;
 
     return placed_parameters;
 }

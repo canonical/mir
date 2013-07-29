@@ -22,7 +22,7 @@
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/compositor/buffer_basic.h"
+#include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/display.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -32,6 +32,7 @@
 #include "mir_test_doubles/mock_swapper_factory.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include <thread>
 #include <atomic>
@@ -94,11 +95,18 @@ namespace
 class StubDisplay : public mtd::NullDisplay
 {
 public:
-    geom::Rectangle view_area() const override
+    StubDisplay()
+        : display_buffer{geom::Rectangle{geom::Point{0,0}, geom::Size{1600,1600}}}
     {
-        return geom::Rectangle{geom::Point(),
-                               geom::Size{1600, 1600}};
     }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+
+private:
+    mtd::StubDisplayBuffer display_buffer;
 };
 
 struct SurfaceSync
@@ -222,8 +230,8 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server
                 using testing::_;
                 buffer_allocation_strategy = std::make_shared<mtd::MockSwapperFactory>();
 
-                ON_CALL(*buffer_allocation_strategy, create_swapper_new_buffers(_,_,_))
-                    .WillByDefault(testing::Invoke(this, &ServerConfig::on_create_swapper));
+                EXPECT_CALL(*buffer_allocation_strategy, create_swapper_new_buffers(_,_,_))
+                    .WillOnce(testing::Invoke(this, &ServerConfig::on_create_swapper));
             }
                 return buffer_allocation_strategy;
         }

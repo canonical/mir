@@ -61,6 +61,4 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if (NOT MIR_DISABLE_INTEGRATION_TESTS)
-  mir_discover_tests(integration-tests)
-endif()
+mir_discover_tests(integration-tests)
