@@ -221,12 +221,10 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     namespace po = boost::program_options;
 
     add_options()
-        ("enable-nested-mode,n", po::value<bool>()->default_value(false),
-           "Enable nested mir mode. [bool:default=false]")
+        ("nested-mode", po::value<std::string>(),
+            "Run mir in nested mode. Host socket filename.")
         ("file,f", po::value<std::string>(),
             "Socket filename")
-        ("host_file,s", po::value<std::string>(),
-            "Host server socket filename for the nested mode.")
         (platform_graphics_lib, po::value<std::string>(),
             "Library to use for platform graphics support [default=libmirplatformgraphics.so")
         ("enable-input,i", po::value<bool>(),
@@ -277,11 +275,6 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     return the_options()->get("file", mir::default_server_socket);
 }
 
-std::string mir::DefaultServerConfiguration::the_host_socket_file() const
-{
-    return the_options()->get("host_file", mir::default_host_server_socket);
-}
-
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
 {
     if (!options)
@@ -315,8 +308,11 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
 
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
-    if(the_options()->get("enable-nested-mode", false)) {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Mir nested mode is not yet supported.\n"));
+    if(the_options()->is_set("nested-mode")) {
+        std::string host_socket = the_options()->get("nested-mode", mir::default_server_socket);
+        BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir nested mode is not yet supported. Host socket: ")
+                    + host_socket
+                    + std::string("\n")));
     }
 
     return graphics_platform(

@@ -278,7 +278,6 @@ private:
         std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
-    virtual std::string the_host_socket_file() const;
 };
 }
 
