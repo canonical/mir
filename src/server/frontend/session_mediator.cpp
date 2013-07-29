@@ -109,7 +109,7 @@ void mf::SessionMediator::connect(
         output->set_physical_height_mm(config.physical_size_mm.height.as_uint32_t());
         output->set_position_x(config.top_left.x.as_uint32_t());
         output->set_position_y(config.top_left.y.as_uint32_t());
-        for(auto& mode : config.modes)
+        for(auto const& mode : config.modes)
         {
             auto output_mode = output->add_mode();
             output_mode->set_horizontal_resolution(mode.size.width.as_uint32_t()); 
@@ -118,7 +118,7 @@ void mf::SessionMediator::connect(
         }
         output->set_current_mode(config.current_mode_index);
 
-        for (auto pf : supported_pfs)
+        for (auto const& pf : supported_pfs)
         {
             output->add_pixel_format(static_cast<uint32_t>(pf));
         }

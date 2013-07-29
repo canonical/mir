@@ -51,10 +51,10 @@ public:
     {
         /* construct a non-trivial dummy display config to send */
         int mode_index = 0;
-        for(auto i=0u; i < 3u; i++)
+        for (auto i = 0u; i < 3u; i++)
         {
             std::vector<mg::DisplayConfigurationMode> modes;
-            for(auto j=0u; j <= i; j++)
+            for (auto j = 0u; j <= i; j++)
             {
                 geom::Size sz{mode_index*4, mode_index*3};
                 mg::DisplayConfigurationMode mode{sz, 10.0f * mode_index };

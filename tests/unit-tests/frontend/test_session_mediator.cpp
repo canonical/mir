@@ -345,10 +345,10 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
         .Times(1)
         .WillOnce(Return(mt::fake_shared(config)));
     mf::SessionMediator mediator{
-                   shell, graphics_platform, mock_display,
-                   buffer_allocator, report, 
-                   std::make_shared<NullEventSink>(),
-                   resource_cache};
+        shell, graphics_platform, mock_display,
+        buffer_allocator, report, 
+        std::make_shared<NullEventSink>(),
+        resource_cache};
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
