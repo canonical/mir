@@ -22,8 +22,8 @@
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
-mfd::SocketSender::SocketSender(boost::asio::local::stream_protocol::socket&& socket)
-    : socket(std::move(socket))
+mfd::SocketSender::SocketSender(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
+    : socket(socket)
 {
     whole_message.reserve(serialization_buffer_size);
 }
@@ -33,7 +33,7 @@ pid_t mfd::SocketSender::client_pid()
     struct ucred cr;
     socklen_t cl = sizeof(cr);
     
-    auto status = getsockopt(socket.native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
+    auto status = getsockopt(socket->native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
     
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
@@ -56,7 +56,7 @@ void mfd::SocketSender::send(std::string const& body)
     // TODO: This should be asynchronous, but we are not making sure
     // that a potential call to send_fds is executed _after_ this
     // function has completed (if it would be executed asynchronously.
-    ba::write(socket, ba::buffer(whole_message));
+    ba::write(*socket, ba::buffer(whole_message));
 }
 
 void mfd::SocketSender::send_fds(std::vector<int32_t> const& fds)
@@ -93,13 +93,11 @@ void mfd::SocketSender::send_fds(std::vector<int32_t> const& fds)
         for (auto &fd: fds)
             data[i++] = fd;
 
-        sendmsg(socket.native_handle(), &header, 0);
+        sendmsg(socket->native_handle(), &header, 0);
     }
 }
 
-#if 0
 boost::asio::local::stream_protocol::socket& mfd::SocketSender::get_socket()
 {
-    return socket;
+    return *socket;
 }
-#endif

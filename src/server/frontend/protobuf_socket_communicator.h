@@ -73,8 +73,7 @@ public:
 
 private:
     void start_accept();
-
-    void on_new_connection(boost::asio::local::stream_protocol::socket& socket,
+    void on_new_connection(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
                            boost::system::error_code const& ec);
     int next_id();
 

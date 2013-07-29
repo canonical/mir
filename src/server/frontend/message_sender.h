@@ -19,7 +19,7 @@
 #define MIR_FRONTEND_MESSAGE_SENDER_H_
 
 #include <vector>
-#include <string>
+#include <boost/asio.hpp>
 
 namespace mir
 {
@@ -32,6 +32,8 @@ class MessageSender
 public:
     virtual void send(std::string const& body) = 0;
     virtual void send_fds(std::vector<int32_t> const& fd) = 0;
+    virtual boost::asio::local::stream_protocol::socket& get_socket() = 0;
+    virtual pid_t client_pid() = 0;
 
 protected:
     MessageSender() = default;

@@ -55,14 +55,15 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
-    boost::asio::local::stream_protocol::socket socket(io_service);
+    auto socket = std::make_shared<boost::asio::local::stream_protocol::socket>(io_service);
 
-    auto fn = std::bind( 
+    acceptor.async_accept(
+        *socket,
+        boost::bind(
             &ProtobufSocketCommunicator::on_new_connection,
             this,
-            std::ref(socket),
-            std::placeholders::_1);
-    acceptor.async_accept(socket, fn);
+            socket,
+            ba::placeholders::error));
 }
 
 int mf::ProtobufSocketCommunicator::next_id()
@@ -129,30 +130,27 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 }
 
 void mf::ProtobufSocketCommunicator::on_new_connection(
-    boost::asio::local::stream_protocol::socket& socket,
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
     boost::system::error_code const& ec)
 {
     if (!ec)
     {
-        auto socket_sender = std::make_shared<detail::SocketSender>(std::move(socket));
-
-        if (session_authorizer->connection_is_allowed(socket_sender->client_pid()))
+        auto sender = std::make_shared<detail::SocketSender>(socket); 
+        if (session_authorizer->connection_is_allowed(sender->client_pid()))
         {
-            auto event_sink = std::make_shared<detail::EventSender>(std::move(socket_sender));
+            auto event_sink = std::make_shared<detail::EventSender>(sender);
             auto session = std::make_shared<detail::ProtobufMessageProcessor>(
-                socket_sender,
+                sender,
                 ipc_factory->make_ipc_server(event_sink),
                 ipc_factory->resource_cache(),
                 ipc_factory->report());
-
-            auto const& socket_session = std::make_shared<mfd::SocketSession>(
-                socket_sender,
+            auto const& ssession = std::make_shared<mfd::SocketSession>(
+                sender,
                 next_id(),
                 connected_sessions,
                 session);
-
-            connected_sessions->add(socket_session);
-            socket_session->read_next_message();
+            connected_sessions->add(ssession);
+            ssession->read_next_message();
         }
     }
     start_accept();
