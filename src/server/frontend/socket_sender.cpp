@@ -22,8 +22,8 @@
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
-mfd::SocketSender::SocketSender(boost::asio::io_service& io_service)
-    : socket(io_service)
+mfd::SocketSender::SocketSender(boost::asio::local::stream_protocol::socket&& socket)
+    : socket(std::move(socket))
 {
     whole_message.reserve(serialization_buffer_size);
 }
@@ -97,7 +97,9 @@ void mfd::SocketSender::send_fds(std::vector<int32_t> const& fds)
     }
 }
 
+#if 0
 boost::asio::local::stream_protocol::socket& mfd::SocketSender::get_socket()
 {
     return socket;
 }
+#endif

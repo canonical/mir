@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_SOCKET_SENDER_H_ 
 #define MIR_FRONTEND_SOCKET_SENDER_H_ 
 #include "message_sender.h"
+#include "message_receiver.h"
 
 namespace mir
 {
@@ -26,18 +27,19 @@ namespace frontend
 {
 namespace detail
 {
-class SocketSender : public MessageSender
+class SocketSender : public MessageSender, public MessageReceiver
 {
 public:
-    SocketSender(boost::asio::io_service& io_service);
+    SocketSender(boost::asio::local::stream_protocol::socket && socket);
 
+    /* MessageSender */
     void send(std::string const& body);
     void send_fds(std::vector<int32_t> const& fds);
 
-    boost::asio::local::stream_protocol::socket& get_socket();
-
+    /* MessageReceiver */
+    void async_receive_msg(std::function<void(boost::system::error_code const&)> const& handler, boost::asio::streambuf buffer, size_t size); 
     pid_t client_pid();
-
+    
 private:
     boost::asio::local::stream_protocol::socket socket;
     std::vector<char> whole_message;

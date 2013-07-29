@@ -55,28 +55,14 @@ mf::ProtobufSocketCommunicator::ProtobufSocketCommunicator(
 
 void mf::ProtobufSocketCommunicator::start_accept()
 {
-    auto socket_sender = std::make_shared<detail::SocketSender>(io_service); 
-    auto event_sink = std::make_shared<detail::EventSender>(socket_sender);
-    auto session = std::make_shared<detail::ProtobufMessageProcessor>(
-        socket_sender,
-        ipc_factory->make_ipc_server(event_sink),
-        ipc_factory->resource_cache(),
-        ipc_factory->report());
+    boost::asio::local::stream_protocol::socket socket(io_service);
 
-    auto const& socket_session = std::make_shared<mfd::SocketSession>(
-        socket_sender,
-        next_id(),
-        connected_sessions,
-        session);
-
-    acceptor.async_accept(
-        socket_sender->get_socket(),
-        boost::bind(
+    auto fn = std::bind( 
             &ProtobufSocketCommunicator::on_new_connection,
             this,
-            socket_session,
-            socket_sender,
-            ba::placeholders::error));
+            std::ref(socket),
+            std::placeholders::_1);
+    acceptor.async_accept(socket, fn);
 }
 
 int mf::ProtobufSocketCommunicator::next_id()
@@ -143,16 +129,30 @@ mf::ProtobufSocketCommunicator::~ProtobufSocketCommunicator()
 }
 
 void mf::ProtobufSocketCommunicator::on_new_connection(
-    std::shared_ptr<mfd::SocketSession> const& session,
-    std::shared_ptr<mfd::MessageSender> const& sender,
+    boost::asio::local::stream_protocol::socket& socket,
     boost::system::error_code const& ec)
 {
     if (!ec)
     {
-        if (session_authorizer->connection_is_allowed(sender->client_pid()))
+        auto socket_sender = std::make_shared<detail::SocketSender>(std::move(socket));
+
+        if (session_authorizer->connection_is_allowed(socket_sender->client_pid()))
         {
-            connected_sessions->add(session);
-            session->read_next_message();
+            auto event_sink = std::make_shared<detail::EventSender>(std::move(socket_sender));
+            auto session = std::make_shared<detail::ProtobufMessageProcessor>(
+                socket_sender,
+                ipc_factory->make_ipc_server(event_sink),
+                ipc_factory->resource_cache(),
+                ipc_factory->report());
+
+            auto const& socket_session = std::make_shared<mfd::SocketSession>(
+                socket_sender,
+                next_id(),
+                connected_sessions,
+                session);
+
+            connected_sessions->add(socket_session);
+            socket_session->read_next_message();
         }
     }
     start_accept();
