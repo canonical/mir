@@ -60,12 +60,17 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
             connect(static_cast<mp::ConnectParameters const*>(parameters),
                     static_cast<mp::Connection*>(response));
         }
+        else if (method->name() == "configure_display")
+        {
+            configure_display_sent(static_cast<mp::DisplayConfiguration const*>(parameters));
+        }
 
         complete->Run();
     }
 
     MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
+    MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration*));
 
     void set_event_handler(mir::events::EventSink *) {}
 };
@@ -303,4 +308,34 @@ TEST_F(MirConnectionTest, populates_pfs_correctly)
     {
         EXPECT_EQ(supported_output_formats[i], formats[i]);
     }
+}
+
+TEST_F(MirConnectionTest, valid_display_configure_sent)
+{
+    using namespace testing;
+
+    size_t mode_index = 5;
+    bool used = false;
+    geom::Point pt{4,2};
+
+    mp::DisplayConfiguration* config;
+
+    EXPECT_CALL(*mock_channel, configure_display(_))
+        .WillOnce(SaveArg<0>(&config));
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest", connected_callback, 0);
+    wait_handle->wait_for_all();
+
+    auto config_wait_handle = connection->configure_display(mode, used, pt);
+    config_wait_handle->wait_for_all();
+
+    Mock::VerifyAndClearExpectations(mock_channel.get());
+
+    ASSERT_NE(nullptr, config);
+    EXPECT_EQ(1u, config->display_info_size());
+    auto const& disp1 = config->display_info(1);
+    EXPECT_EQ(used, disp1.used());
+    EXPECT_EQ(mode_index, disp1.current_mode_index());
+    EXPECT_EQ(pt.x.as_uint32_t, disp1.position_x();
+    EXPECT_EQ(pt.y.as_uint32_t, disp1.position_y();
 }
