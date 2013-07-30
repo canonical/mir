@@ -473,3 +473,17 @@ TEST_F(SwitchingBundleTest, stress)
     }
 }
 
+TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
+{
+    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+        bundle.allow_framedropping(false);
+
+        std::thread client(client_thread, std::ref(bundle), 2);
+        bundle.force_requests_to_complete();
+        client.join();
+    }
+}
+

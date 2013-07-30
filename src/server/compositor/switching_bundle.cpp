@@ -306,6 +306,7 @@ void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
     drop_frames(nready);
+    framedropping = true;
     cond.notify_all();
 }
 
