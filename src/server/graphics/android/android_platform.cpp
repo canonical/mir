@@ -110,6 +110,12 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
     return std::make_shared<mga::AndroidPlatform>(display_report);
 }
 
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("Android platform: create_native_platform is not implemented yet!"));
+    return 0;
+}
+
 extern "C" std::shared_ptr<mg::Platform> create_nested_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<mg::NativePlatform> const& /*native_platform*/)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Android platform: create_nested_platform is not implemented yet!"));
