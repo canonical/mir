@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_SOCKET_SENDER_H_ 
 #include "message_sender.h"
 #include "message_receiver.h"
+#include <mutex>
 
 namespace mir
 {

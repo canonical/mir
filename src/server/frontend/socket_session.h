@@ -60,7 +60,6 @@ private:
     std::shared_ptr<ConnectedSessions<SocketSession>> const connected_sessions;
     std::shared_ptr<MessageProcessor> processor;
 
-    static size_t const size_of_header = 2;
     boost::asio::streambuf header;
     boost::asio::streambuf message;
 };
