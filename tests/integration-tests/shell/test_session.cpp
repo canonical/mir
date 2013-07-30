@@ -33,7 +33,6 @@
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
-//#include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 

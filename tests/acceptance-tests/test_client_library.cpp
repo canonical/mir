@@ -337,6 +337,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
                 ASSERT_EQ(mir_surface_state_fullscreen,
                           mir_surface_get_state(surface));
             }
+
             mir_surface_release_sync(surface);
             mir_connection_release(connection);
         }

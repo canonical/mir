@@ -37,7 +37,7 @@ public:
 
 protected:
     MessageReceiver() = default;
-    virtual ~MessageReceiver() { /* TODO: make nothrow */ }
+    virtual ~MessageReceiver() = default;
     MessageReceiver(MessageReceiver const&) = delete;
     MessageReceiver& operator=(MessageReceiver const&) = delete;
 };

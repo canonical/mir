@@ -35,7 +35,7 @@ public:
 
 protected:
     MessageSender() = default;
-    virtual ~MessageSender() { /* TODO: make nothrow */ }
+    virtual ~MessageSender() = default;
     MessageSender(MessageSender const&) = delete;
     MessageSender& operator=(MessageSender const&) = delete;
 };
