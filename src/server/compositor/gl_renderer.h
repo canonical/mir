@@ -20,7 +20,7 @@
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
 #include "mir/compositor/renderer.h"
-#include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 #include <GLES2/gl2.h>
 
 namespace mir
@@ -31,7 +31,7 @@ namespace compositor
 class GLRenderer : public Renderer
 {
 public:
-    GLRenderer(const geometry::Size& display_size);
+    GLRenderer(geometry::Rectangle const& display_area);
 
     /* From renderer */
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
@@ -46,7 +46,7 @@ private:
     public:
         Resources();
         ~Resources();
-        void setup(const geometry::Size& display_size);
+        void setup(geometry::Rectangle const& display_area);
 
         GLuint vertex_shader;
         GLuint fragment_shader;

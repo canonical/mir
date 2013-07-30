@@ -12,6 +12,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_internal_native_display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_internal_native_surface.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_udev_video_devices.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_overlapping_output_grouping.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

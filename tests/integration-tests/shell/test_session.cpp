@@ -33,7 +33,7 @@
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/stub_display_buffer.h"
 
 #include <gtest/gtest.h>
 
@@ -138,7 +138,13 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubDisplay : public mtd::NullDisplay
         {
-            StubDisplay() : buffers(3) {}
+            StubDisplay()
+                : buffers{mtd::StubDisplayBuffer{geom::Rectangle{{0,0},{100,100}}},
+                          mtd::StubDisplayBuffer{geom::Rectangle{{100,0},{100,100}}},
+                          mtd::StubDisplayBuffer{geom::Rectangle{{0,100},{100,100}}}}
+            {
+
+            }
 
             void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
             {
@@ -146,7 +152,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
                     f(db);
             }
 
-            std::vector<mtd::NullDisplayBuffer> buffers;
+            std::vector<mtd::StubDisplayBuffer> buffers;
         };
 
         return display(
@@ -170,7 +176,7 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
         "stress",
         conf.the_shell_snapshot_strategy(),
         std::make_shared<msh::NullSessionListener>()};
-    session.create_surface(msh::a_surface());
+    session.create_surface(msh::a_surface().of_size({50,50}));
 
     auto compositor = conf.the_compositor();
 

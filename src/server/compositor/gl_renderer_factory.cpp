@@ -26,6 +26,6 @@ namespace geom = mir::geometry;
 std::unique_ptr<mc::Renderer>
 mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
 {
-    auto raw = new GLRenderer(rect.size);
+    auto raw = new GLRenderer(rect);
     return std::unique_ptr<mc::Renderer>(raw);
 }

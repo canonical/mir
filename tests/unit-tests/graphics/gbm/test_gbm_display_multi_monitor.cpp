@@ -18,6 +18,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
 #include "src/server/graphics/gbm/gbm_platform.h"
 
 #include "mir_test_doubles/mock_egl.h"
@@ -34,6 +35,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <unordered_set>
+
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
@@ -42,6 +45,56 @@ namespace mtf = mir::mir_test_framework;
 
 namespace
 {
+
+class ClonedDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
+{
+public:
+    void apply_to(mg::DisplayConfiguration& conf)
+    {
+        size_t const preferred_mode_index{0};
+
+        conf.for_each_output(
+            [&](mg::DisplayConfigurationOutput const& conf_output)
+            {
+                if (conf_output.connected && conf_output.modes.size() > 0)
+                {
+                    conf.configure_output(conf_output.id, true, geom::Point{0, 0},
+                                          preferred_mode_index);
+                }
+                else
+                {
+                    conf.configure_output(conf_output.id, false, conf_output.top_left,
+                                          conf_output.current_mode_index);
+                }
+            });
+    }
+};
+
+class SideBySideDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
+{
+public:
+    void apply_to(mg::DisplayConfiguration& conf)
+    {
+        size_t const preferred_mode_index{0};
+        int max_x = 0;
+
+        conf.for_each_output(
+            [&](mg::DisplayConfigurationOutput const& conf_output)
+            {
+                if (conf_output.connected && conf_output.modes.size() > 0)
+                {
+                    conf.configure_output(conf_output.id, true, geom::Point{max_x, 0},
+                                          preferred_mode_index);
+                    max_x += conf_output.modes[0].size.width.as_int();
+                }
+                else
+                {
+                    conf.configure_output(conf_output.id, false, conf_output.top_left,
+                                          conf_output.current_mode_index);
+                }
+            });
+    }
+};
 
 class GBMDisplayMultiMonitorTest : public ::testing::Test
 {
@@ -83,10 +136,17 @@ public:
             std::make_shared<mtd::NullVirtualTerminal>());
     }
 
-    std::shared_ptr<mg::Display> create_display(
+    std::shared_ptr<mg::Display> create_display_cloned(
         std::shared_ptr<mg::Platform> const& platform)
     {
-        auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+        auto conf_policy = std::make_shared<ClonedDisplayConfigurationPolicy>();
+        return platform->create_display(conf_policy);
+    }
+
+    std::shared_ptr<mg::Display> create_display_side_by_side(
+        std::shared_ptr<mg::Platform> const& platform)
+    {
+        auto conf_policy = std::make_shared<SideBySideDisplayConfigurationPolicy>();
         return platform->create_display(conf_policy);
     }
 
@@ -190,7 +250,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
             .After(crtc_setups);
     }
 
-    auto display = create_display(create_platform());
+    auto display = create_display_cloned(create_platform());
 }
 
 TEST_F(GBMDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
@@ -222,7 +282,7 @@ TEST_F(GBMDisplayMultiMonitorTest, create_display_creates_shared_egl_contexts)
             .Times(1);
     }
 
-    auto display = create_display(create_platform());
+    auto display = create_display_cloned(create_platform());
 }
 
 namespace
@@ -274,10 +334,92 @@ TEST_F(GBMDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)));
 
-    auto display = create_display(create_platform());
+    auto display = create_display_cloned(create_platform());
 
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
         buffer.post_update();
     });
+}
+
+namespace
+{
+
+struct FBIDContainer
+{
+    FBIDContainer(uint32_t base_fb_id) : last_fb_id{base_fb_id} {}
+
+    int add_fb(int, uint32_t, uint32_t, uint8_t,
+               uint8_t, uint32_t, uint32_t,
+               uint32_t *buf_id)
+    {
+        *buf_id = last_fb_id;
+        fb_ids.insert(last_fb_id);
+        ++last_fb_id;
+        return 0;
+    }
+
+    bool check_fb_id(uint32_t i)
+    {
+        if (fb_ids.find(i) != fb_ids.end())
+        {
+            fb_ids.erase(i);
+            return true;
+        }
+
+        return false;
+    }
+
+    std::unordered_set<uint32_t> fb_ids;
+    uint32_t last_fb_id;
+};
+
+MATCHER_P(IsValidFB, fb_id_container, "") { return fb_id_container->check_fb_id(arg); }
+
+}
+
+TEST_F(GBMDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_side_by_side)
+{
+    using namespace testing;
+
+    int const num_outputs{3};
+    uint32_t const base_fb_id{66};
+    FBIDContainer fb_id_container{base_fb_id};
+
+    setup_outputs(num_outputs);
+
+    /* Create DRM FBs */
+    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
+                                       _, _, _, _, _, _, _))
+        .Times(num_outputs)
+        .WillRepeatedly(Invoke(&fb_id_container, &FBIDContainer::add_fb));
+
+    ExpectationSet crtc_setups;
+
+    /* All crtcs are set */
+    for (int i = 0; i < num_outputs; i++)
+    {
+        crtc_setups += EXPECT_CALL(mock_drm,
+                                   drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                                  crtc_ids[i],
+                                                  IsValidFB(&fb_id_container),
+                                                  _, _,
+                                                  Pointee(connector_ids[i]),
+                                                  _, _))
+                           .Times(AtLeast(1));
+    }
+
+    /* All crtcs are restored at teardown */
+    for (int i = 0; i < num_outputs; i++)
+    {
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                             crtc_ids[i], 0,
+                                             _, _,
+                                             Pointee(connector_ids[i]),
+                                             _, _))
+            .Times(1)
+            .After(crtc_setups);
+    }
+
+    auto display = create_display_side_by_side(create_platform());
 }
