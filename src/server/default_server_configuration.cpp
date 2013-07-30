@@ -311,8 +311,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     if (the_options()->is_set("nested-mode"))
     {
         std::string host_socket = the_options()->get("nested-mode", mir::default_server_socket);
-        BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir nested mode is not yet supported. Host socket: ") + host_socket
-                + std::string("\n")));
+        BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir nested mode is not yet supported. Host socket: ") + host_socket));
     }
 
     return graphics_platform(
