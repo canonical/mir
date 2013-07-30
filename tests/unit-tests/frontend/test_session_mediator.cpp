@@ -22,8 +22,8 @@
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
+#include "mir/shell/display_changer.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -54,26 +54,35 @@ namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
-namespace
+namespace mir
 {
-
-class NullDisplayConfigDecider : public mg::DisplayChanger
+namespace test
 {
-    std::shared_ptr<DisplayConfiguration> configuration()
+namespace doubles
+{
+class NullDisplayChanger : public msh::DisplayChanger
+{
+    std::shared_ptr<mg::DisplayConfiguration> active_configuration()
     {
         return nullptr;
     }
-    void configure(std::weak_ptr<msh::Session> const&, std::shared_ptr<DisplayConfiguration> const&)
+    void configure(std::weak_ptr<msh::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
     {
     }
 };
 
-class MockDisplaySelector : public mg::DisplayChanger
+class MockDisplaySelector : public msh::DisplayChanger
 {
-    MOCK_METHOD0(configuration, std::shared_ptr<DisplayConfiguration>());
-    MOCK_METHOD1(configure, void(std::shared_ptr<DisplayConfiguration> const&));
+    MOCK_METHOD0(active_configuration, std::shared_ptr<mg::DisplayConfiguration>());
+    MOCK_METHOD2(configure, void(std::weak_ptr<msh::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&));
 };
 
+}
+}
+}
+
+namespace
+{
 class StubbedSession : public mtd::StubSession
 {
 public:
@@ -132,7 +141,7 @@ class MockPlatform : public mg::Platform
         ON_CALL(*this, create_buffer_allocator(_))
             .WillByDefault(Return(std::shared_ptr<mc::GraphicBufferAllocator>()));
         ON_CALL(*this, create_display(_))
-            .WillByDefault(Return(std::make_shared<mtd::NullDisplayConfigDecider>()));
+            .WillByDefault(Return(std::make_shared<mtd::NullDisplayChanger>()));
         ON_CALL(*this, get_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
     }
@@ -158,11 +167,11 @@ struct SessionMediatorTest : public ::testing::Test
     SessionMediatorTest()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
           graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
-          graphics_display{std::make_shared<mtd::NullDisplayConfigDecider>()},
+          graphics_changer{std::make_shared<mtd::NullDisplayChanger>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{shell, graphics_platform, graphics_display,
+          mediator{shell, graphics_platform, graphics_changer,
                    buffer_allocator, report, 
                    std::make_shared<NullEventSink>(),
                    resource_cache},
@@ -177,7 +186,7 @@ struct SessionMediatorTest : public ::testing::Test
 
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<msh::DisplayChanger> const graphics_changer;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
