@@ -94,6 +94,7 @@ public:
 
     void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
     {
+        
     }
 
     std::vector<mg::DisplayConfigurationOutput> outputs;
@@ -199,6 +200,43 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
     } client_config;
 
     launch_client_process(client_config);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, display_change_request)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mg::Platform> the_graphics_platform()
+        {
+            using namespace testing;
+
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+
+            return platform;
+        }
+
+        std::shared_ptr<StubPlatform> platform;
+    } server_config;
+    
+    struct Client : TestingClientConfiguration
+    {
+        void exec()
+        {
+            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            auto configuration = mir_connection_create_display_config(connection);
+
+            EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(StubDisplay::stub_display_config.outputs,
+                                                                   StubGraphicBufferAllocator::pixel_formats));
+            mir_display_apply_configuration(configuration);
+ 
+            mir_display_config_destroy(configuration);
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+
 }
 
 /* TODO: this test currently checks the same format list against both the surface formats
