@@ -436,6 +436,20 @@ namespace
         for (int i = 0; i < nframes; i++)
             bundle.client_release(bundle.client_acquire());
     }
+
+    void switching_client_thread(mc::SwitchingBundle &bundle, int nframes)
+    {
+        for (int i = 0; i < nframes; i += 10)
+        {
+            bundle.allow_framedropping(false);
+            for (int j = 0; j < 5; j++)
+                bundle.client_release(bundle.client_acquire());
+
+            bundle.allow_framedropping(true);
+            for (int j = 0; j < 5; j++)
+                bundle.client_release(bundle.client_acquire());
+        }
+    }
 }
 
 TEST_F(SwitchingBundleTest, stress)
@@ -464,6 +478,9 @@ TEST_F(SwitchingBundleTest, stress)
         bundle.allow_framedropping(true);
         std::thread client2(client_thread, std::ref(bundle), 1000);
         client2.join();
+
+        std::thread client3(switching_client_thread, std::ref(bundle), 1000);
+        client3.join();
 
         done = true;
 
