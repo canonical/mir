@@ -108,7 +108,7 @@ unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono:
     }
     else if (rc == 0)
     {
-        throw std::runtime_error("Poll on readfd for pipe timed out");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Poll on readfd for pipe timed out"));
     }
 
     int value;
