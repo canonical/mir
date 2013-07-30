@@ -19,6 +19,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/buffer.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -163,6 +164,19 @@ public:
     }
 };
 
+class StubAuthorizer : public mf::SessionAuthorizer
+{
+    bool connection_is_allowed(pid_t)
+    {
+        return true;
+    }
+
+    bool configure_display_is_allowed(pid_t)
+    {
+        return false;
+    }
+};
+
 }
 
 TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
@@ -202,20 +216,27 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
     launch_client_process(client_config);
 }
 
-TEST_F(BespokeDisplayServerTestFixture, display_change_request)
+TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_client)
 {
     struct ServerConfig : TestingServerConfiguration
     {
         std::shared_ptr<mg::Platform> the_graphics_platform()
         {
-            using namespace testing;
-
             if (!platform)
                 platform = std::make_shared<StubPlatform>();
-
             return platform;
         }
 
+        std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer()
+        {
+            if (!authorizer)
+            {
+                authorizer = std::make_shared<StubAuthorizer>();
+            }
+            return authorizer;
+        }
+
+        std::shared_ptr<StubAuthorizer> authorizer;
         std::shared_ptr<StubPlatform> platform;
     } server_config;
     
@@ -229,6 +250,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request)
             EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(StubDisplay::stub_display_config.outputs,
                                                                    StubGraphicBufferAllocator::pixel_formats));
             mir_display_apply_configuration(configuration);
+            EXPECT_STREQ(mir_connection_get_error_message(connection), "not authorized to apply display configurations");
  
             mir_display_config_destroy(configuration);
             mir_connection_release(connection);
