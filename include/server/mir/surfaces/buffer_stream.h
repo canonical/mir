@@ -42,7 +42,8 @@ public:
     virtual ~BufferStream() {/* TODO: make nothrow */}
 
     virtual std::shared_ptr<graphics::Buffer> secure_client_buffer() = 0;
-    virtual std::shared_ptr<graphics::Buffer> lock_back_buffer() = 0;
+    virtual std::shared_ptr<graphics::Buffer> lock_compositor_buffer() = 0;
+    virtual std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() = 0;
     virtual geometry::PixelFormat get_stream_pixel_format() = 0;
     virtual geometry::Size stream_size() = 0;
     virtual void allow_framedropping(bool) = 0;
