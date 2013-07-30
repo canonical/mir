@@ -23,11 +23,11 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
-#include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_surface.h"
@@ -56,6 +56,23 @@ namespace mtd = mt::doubles;
 
 namespace
 {
+
+class NullDisplayConfigDecider : public mg::DisplayChanger
+{
+    std::shared_ptr<DisplayConfiguration> configuration()
+    {
+        return nullptr;
+    }
+    void configure(std::weak_ptr<msh::Session> const&, std::shared_ptr<DisplayConfiguration> const&)
+    {
+    }
+};
+
+class MockDisplaySelector : public mg::DisplayChanger
+{
+    MOCK_METHOD0(configuration, std::shared_ptr<DisplayConfiguration>());
+    MOCK_METHOD1(configure, void(std::shared_ptr<DisplayConfiguration> const&));
+};
 
 class StubbedSession : public mtd::StubSession
 {
@@ -115,7 +132,7 @@ class MockPlatform : public mg::Platform
         ON_CALL(*this, create_buffer_allocator(_))
             .WillByDefault(Return(std::shared_ptr<mc::GraphicBufferAllocator>()));
         ON_CALL(*this, create_display(_))
-            .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
+            .WillByDefault(Return(std::make_shared<mtd::NullDisplayConfigDecider>()));
         ON_CALL(*this, get_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
     }
@@ -141,7 +158,7 @@ struct SessionMediatorTest : public ::testing::Test
     SessionMediatorTest()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
           graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
-          graphics_display{std::make_shared<mtd::NullDisplay>()},
+          graphics_display{std::make_shared<mtd::NullDisplayConfigDecider>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
@@ -474,6 +491,47 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
     mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
     EXPECT_EQ(refcount, stub_buffer1.use_count());
     EXPECT_EQ(refcount2+1, stub_buffer2.use_count());
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediatorTest, display_config_request)
+{
+    using namespace testing;
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    geom::Point pt0{44,22}, pt1{3,2};
+    bool used0 = false, used1 = true;
+    size_t mode_index0 = 1, mode_index1 = 3; 
+    DisplayConfigurationOutputId id0{0}, id1{1};
+
+    auto mock_display_config = std::make_shared<MockDisplayConfig>();
+    auto mock_display_selector = std::make_shared<MockDisplaySelector>();
+
+    Sequence seq;
+    EXPECT_CALL(*mock_display_selector, current_display_config())
+        .InSequence(seq);
+        .WillOnce(Return(mock_display_config)); 
+    EXPECT_CALL(*mock_display_config, configure_output(id0, used0, pt0, mode_index0))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_config, configure_output(id1, used1, pt1, mode_index1))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_selector, set_display_config(mock_display_config))
+        .InSequence(seq);
+ 
+    auto session_mediator = msh::SessionMediator{
+            shell, graphics_platform, mock_display_selector,
+            buffer_allocator, report, std::make_shared<NullEventSink>(), resource_cache};
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    mp::Void ignored;
+    mp::DisplayConfiguration configuration;
+    auto disp0 = configuration->add_display_output();
+    auto disp1 = configuration->add_display_output();
+
+    mediator.configure_display(nullptr, &configuration, &ignored, null_callback.get());
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
