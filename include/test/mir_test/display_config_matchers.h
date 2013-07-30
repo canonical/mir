@@ -42,7 +42,7 @@ MATCHER_P2(ClientTypeConfigMatches, config, formats, "")
     if (arg->num_displays == config.size())
     {
         auto i = 0u;
-        for(auto const& info : config) 
+        for (auto const& info : config) 
         {
             auto& arg_display = arg->displays[i++];
             EXPECT_EQ(info.connected, arg_display.connected);
@@ -58,9 +58,9 @@ MATCHER_P2(ClientTypeConfigMatches, config, formats, "")
             EXPECT_EQ(info.modes.size(), arg_display.num_modes);
             if (info.modes.size() != arg_display.num_modes) return false;
             auto j = 0u;
-            for(auto const& mode : info.modes)
+            for (auto const& mode : info.modes)
             {
-                auto& arg_mode = arg_display.modes[j++];
+                auto const& arg_mode = arg_display.modes[j++];
                 EXPECT_EQ(mode.size.width.as_uint32_t(), arg_mode.horizontal_resolution);
                 EXPECT_EQ(mode.size.height.as_uint32_t(), arg_mode.vertical_resolution);
                 EXPECT_FLOAT_EQ(mode.vrefresh_hz, arg_mode.refresh_rate);
@@ -89,7 +89,7 @@ MATCHER_P2(ProtobufConfigMatches, config, formats, "")
     if(config.size() == static_cast<unsigned int>(arg.display_output_size()))
     {
         auto i = 0u;
-        for( auto const& info : config) 
+        for (auto const& info : config) 
         {
             auto& arg_display = arg.display_output(i++);
             EXPECT_EQ(info->connected, arg_display.connected());
@@ -103,8 +103,8 @@ MATCHER_P2(ProtobufConfigMatches, config, formats, "")
             EXPECT_EQ(info->current_mode_index, arg_display.current_mode());
             EXPECT_EQ(info->modes.size(), arg_display.mode_size());
             if (info->modes.size() != static_cast<unsigned int>(arg_display.mode_size())) return false;
-            auto j=0u;
-            for(auto const& mode : info->modes)
+            auto j = 0u;
+            for (auto const& mode : info->modes)
             {
                 auto& arg_mode = arg_display.mode(j++);
                 EXPECT_EQ(mode.size.width.as_uint32_t(), arg_mode.horizontal_resolution());
@@ -115,7 +115,7 @@ MATCHER_P2(ProtobufConfigMatches, config, formats, "")
             EXPECT_EQ(0u, arg_display.current_format());
             EXPECT_EQ(formats.size(), arg_display.pixel_format_size()); 
             if (formats.size() != static_cast<unsigned int>(arg_display.pixel_format_size())) return false;
-            for(j=0u; j<formats.size(); j++)
+            for (j=0u; j<formats.size(); j++)
             {
                 EXPECT_EQ(formats[j], static_cast<mir::geometry::PixelFormat>(arg_display.pixel_format(j)));
             }

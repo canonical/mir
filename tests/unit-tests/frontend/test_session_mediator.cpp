@@ -355,9 +355,6 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     connection.clear_platform();
     connection.clear_display_info();
     connection.clear_display_output();
-//  optional Platform platform = 1;
-//  optional DisplayInfo display_info = 2;
-//  repeated DisplayOutput display_output = 3;
 
     std::vector<geom::PixelFormat> const pixel_formats{
         geom::PixelFormat::bgr_888,
