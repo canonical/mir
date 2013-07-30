@@ -103,7 +103,6 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     mir::protobuf::wire::Invocation invoke;
 
     invoke.set_id(next_id());
-    std::cout << "METHOD NAME " << method->name() << std::endl;
     invoke.set_method_name(method->name());
     invoke.set_parameters(buffer, size);
 
