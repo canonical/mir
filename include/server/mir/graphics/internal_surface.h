@@ -22,17 +22,21 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/client_types.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
 {
+class Buffer;
+
 class InternalSurface
 {
 public:
 
     virtual ~InternalSurface() = default;
 
-    virtual std::shared_ptr<graphics::Buffer> advance_client_buffer() = 0;
+    virtual std::shared_ptr<Buffer> advance_client_buffer() = 0;
     virtual geometry::Size size() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 
