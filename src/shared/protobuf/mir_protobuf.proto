@@ -148,6 +148,10 @@ message EventSequence {
   repeated Event event = 1;
 }
 
+message DisplayConfiguration {
+  repeated DisplayOutput display_output = 1;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -162,5 +166,6 @@ service DisplayServer {
   rpc test_file_descriptors(Void) returns (Buffer);
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
+  rpc configure_display(DisplayConfiguration) returns (Void);
 }
 

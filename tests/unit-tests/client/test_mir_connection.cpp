@@ -336,6 +336,6 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
     auto const& disp1 = config->display_info(1);
     EXPECT_EQ(used, disp1.used());
     EXPECT_EQ(mode_index, disp1.current_mode_index());
-    EXPECT_EQ(pt.x.as_uint32_t, disp1.position_x();
-    EXPECT_EQ(pt.y.as_uint32_t, disp1.position_y();
+    EXPECT_EQ(pt.x.as_uint32_t, disp1.position_x());
+    EXPECT_EQ(pt.y.as_uint32_t, disp1.position_y());
 }
