@@ -324,4 +324,8 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
     surface_map->insert(id, surface);
 }
 
-MirWaitHandle* configure_display(size_t mode_index, bool used, mir::geometry::Point new_screen_position);
+MirWaitHandle* MirConnection::configure_display(size_t mode_index, bool used, mir::geometry::Point new_screen_position)
+{
+    (void) mode_index; (void) used; (void) new_screen_position;
+    return &configure_display_wait_handle;
+}

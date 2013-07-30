@@ -140,6 +140,7 @@ private:
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
     MirWaitHandle drm_auth_magic_wait_handle;
+    MirWaitHandle configure_display_wait_handle;
 
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
