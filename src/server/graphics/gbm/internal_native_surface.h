@@ -24,23 +24,18 @@
 
 namespace mir
 {
-namespace frontend
+namespace graphics
 {
 class Surface;
-}
-namespace graphics
-{
 class Buffer;
-}
-namespace graphics
-{
+
 namespace gbm
 {
 
 class InternalNativeSurface : public MirMesaEGLNativeSurface
 {
 public:
-    InternalNativeSurface(std::shared_ptr<frontend::Surface> const& surface);
+    InternalNativeSurface(std::shared_ptr<Surface> const& surface);
 
     int advance_buffer(MirBufferPackage* package);
     int get_parameters(MirSurfaceParameters* parameters);
@@ -52,7 +47,7 @@ private:
     static int get_parameters_static(MirMesaEGLNativeSurface* surface,
                                       MirSurfaceParameters* parameters);
 
-    std::shared_ptr<frontend::Surface> surface;
+    std::shared_ptr<Surface> surface;
     std::shared_ptr<graphics::Buffer> current_buffer;
 };
 

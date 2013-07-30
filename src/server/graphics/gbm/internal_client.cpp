@@ -18,9 +18,28 @@
 
 #include "internal_client.h"
 
+#include "mir/frontend/surface.h"
+#include "mir/graphics/internal_surface.h"
+
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace mf=mir::frontend;
+
+namespace
+{
+class ForwardingInternalSurface : public mg::Surface
+{
+public:
+    ForwardingInternalSurface(std::shared_ptr<mf::Surface> const& surface) : surface(surface) {}
+
+private:
+    virtual std::shared_ptr<mg::Buffer> advance_client_buffer() { return surface->advance_client_buffer(); }
+    virtual mir::geometry::Size size() const { return surface->size(); }
+    virtual MirPixelFormat pixel_format() const { return static_cast<MirPixelFormat>(surface->pixel_format()); }
+
+    std::shared_ptr<mf::Surface> const surface;
+};
+}
 
 mgg::InternalClient::InternalClient(std::shared_ptr<MirMesaEGLNativeDisplay> const& native_display)
     : native_display(native_display)
@@ -36,7 +55,8 @@ EGLNativeWindowType mgg::InternalClient::egl_native_window(std::shared_ptr<mf::S
 {
     if (!client_window)
     {
-        client_window = std::make_shared<mgg::InternalNativeSurface>(surface);
+        auto tmp = std::make_shared<ForwardingInternalSurface>(surface);
+        client_window = std::make_shared<mgg::InternalNativeSurface>(tmp);
     }
 
     return client_window.get();
