@@ -115,7 +115,8 @@ public:
 
     void on_surface_created(int id, MirSurface* surface);
 
-    MirWaitHandle* configure_display(size_t mode_index, bool used, mir::geometry::Point new_screen_position);
+    MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
+    void done_display_configure();
 
 private:
     std::recursive_mutex mutex; // Protects all members of *this

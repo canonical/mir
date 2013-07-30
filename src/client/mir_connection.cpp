@@ -324,8 +324,28 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
     surface_map->insert(id, surface);
 }
 
-MirWaitHandle* MirConnection::configure_display(size_t mode_index, bool used, mir::geometry::Point new_screen_position)
+
+void MirConnection::done_display_configure()
 {
-    (void) mode_index; (void) used; (void) new_screen_position;
+    return configure_display_wait_handle.result_received();
+}
+
+MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
+{
+    mir::protobuf::DisplayConfiguration request;
+    for (auto i=0u; i < config->num_displays; i++)
+    {
+        auto output = config->displays[i];
+        auto display_request = request.add_display_output();
+        display_request->set_used(output.used); 
+        display_request->set_current_mode(output.current_mode); 
+        display_request->set_position_x(output.position_x); 
+        display_request->set_position_y(output.position_y); 
+    }
+
+    server.configure_display(
+        0, &request, &void_response,
+        google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
+
     return &configure_display_wait_handle;
 }

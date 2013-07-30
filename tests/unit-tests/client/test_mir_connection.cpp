@@ -62,7 +62,8 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
         }
         else if (method->name() == "configure_display")
         {
-            configure_display_sent(static_cast<mp::DisplayConfiguration const*>(parameters));
+            auto b = static_cast<mp::DisplayConfiguration const*>(parameters);
+            configure_display_sent(b);
         }
 
         complete->Run();
@@ -314,28 +315,31 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
 {
     using namespace testing;
 
-    size_t mode_index = 5;
-    bool used = false;
-    geom::Point pt{4,2};
+    MirDisplayOutput output;
+    output.current_mode = 5;
+    output.used = 0;
+    output.position_x = 4;
+    output.position_y = 6;
+    MirDisplayConfiguration user_config{1, &output};
 
-    mp::DisplayConfiguration const* config;
+    auto verify_display_change = [&](mp::DisplayConfiguration const* config)
+    {
+        ASSERT_NE(nullptr, config);
+        ASSERT_EQ(1u, config->display_output_size());
+        auto const& disp1 = config->display_output(0);
+        EXPECT_EQ(output.used, disp1.used());
+        EXPECT_EQ(output.current_mode, disp1.current_mode());
+        EXPECT_EQ(output.position_x, disp1.position_x());
+        EXPECT_EQ(output.position_y, disp1.position_y());
+    };
 
     EXPECT_CALL(*mock_channel, configure_display_sent(_))
-        .WillOnce(SaveArg<0>(&config));
+        .Times(1)
+        .WillOnce(Invoke(verify_display_change));
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest", connected_callback, 0);
     wait_handle->wait_for_all();
 
-    auto config_wait_handle = connection->configure_display(mode_index, used, pt);
+    auto config_wait_handle = connection->configure_display(&user_config);
     config_wait_handle->wait_for_all();
-
-    Mock::VerifyAndClearExpectations(mock_channel.get());
-
-    ASSERT_NE(nullptr, config);
-    ASSERT_EQ(1u, config->display_output_size());
-    auto const& disp1 = config->display_output(1);
-    EXPECT_EQ(used, disp1.used());
-    EXPECT_EQ(mode_index, disp1.current_mode());
-    EXPECT_EQ(pt.x.as_uint32_t(), disp1.position_x());
-    EXPECT_EQ(pt.y.as_uint32_t(), disp1.position_y());
 }
