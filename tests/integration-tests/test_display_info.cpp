@@ -239,6 +239,8 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_
         std::shared_ptr<StubAuthorizer> authorizer;
         std::shared_ptr<StubPlatform> platform;
     } server_config;
+
+    launch_server_process(server_config);
     
     struct Client : TestingClientConfiguration
     {
@@ -247,7 +249,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_
             auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             auto configuration = mir_connection_create_display_config(connection);
 
-            mir_connection_apply_display_config(connection, configuration);
+            mir_wait_for(mir_connection_apply_display_config(connection, configuration));
             EXPECT_STREQ(mir_connection_get_error_message(connection), "not authorized to apply display configurations");
  
             mir_display_config_destroy(configuration);

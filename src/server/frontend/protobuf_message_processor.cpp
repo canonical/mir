@@ -173,6 +173,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
 
     try
     {
+    printf("HERE!\n");
         // TODO comparing strings in an if-else chain isn't efficient.
         // It is probably possible to generate a Trie at compile time.
         if ("connect" == invocation.method_name())
@@ -210,6 +211,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         }
         else
         {
+    printf("UNKNOWN HERE!\n");
             report->unknown_method(display_server.get(), invocation.id(), invocation.method_name());
             result = false;
         }

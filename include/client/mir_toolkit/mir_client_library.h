@@ -119,7 +119,7 @@ void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
  *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
  *   \param [in] display_configuration  The display_configuration to apply 
  */
-void mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
