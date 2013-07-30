@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -99,16 +99,16 @@ unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono:
     static const short empty_revents = 0;
     pollfd poll_fd[1] = { { fds[read_fd], POLLIN, empty_revents } };
     int rc = -1;
-        
+
     if ((rc = ::poll(poll_fd, 1, duration.count())) < 0)
-    {         
+    {
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("Error while polling pipe to become readable"))
             << boost::errinfo_errno(errno));
     }
     else if (rc == 0)
     {
-        throw std::runtime_error("Poll on readfd for pipe timed out");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Poll on readfd for pipe timed out"));
     }
 
     int value;
