@@ -54,6 +54,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
+// TODO this ought to be provided by the library
 class ForwardingInternalSurface : public mg::InternalSurface
 {
 public:

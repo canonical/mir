@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "src/server/graphics/gbm/internal_client.h"
 #include "mir/graphics/internal_surface.h"
 #include "mir_toolkit/mesa/native_display.h"
-#include "src/server/graphics/gbm/internal_client.h"
 #include "src/server/graphics/gbm/internal_native_surface.h"
 
 #include <gtest/gtest.h>

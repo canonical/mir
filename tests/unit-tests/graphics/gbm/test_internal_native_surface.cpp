@@ -41,9 +41,7 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-
-
-class MockFrontendSurface : public mir::graphics::InternalSurface
+class MockInternalSurface : public mg::InternalSurface
 {
 public:
     MOCK_CONST_METHOD0(size, geom::Size());
@@ -56,10 +54,10 @@ struct InternalNativeSurface : public testing::Test
     void SetUp()
     {
         using namespace ::testing;
-        mock_surface = std::make_shared<MockFrontendSurface>();
+        mock_surface = std::make_shared<MockInternalSurface>();
     }
 
-    std::shared_ptr<MockFrontendSurface> mock_surface;
+    std::shared_ptr<MockInternalSurface> mock_surface;
 };
 
 MATCHER_P(ParametersHaveSize, size, "")
