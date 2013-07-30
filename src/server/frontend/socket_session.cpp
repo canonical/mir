@@ -53,10 +53,10 @@ mfd::SocketSession::~SocketSession() noexcept
 
 void mfd::SocketSession::read_next_message()
 {
-    auto fn = std::bind(&mfd::SocketSession::on_read_size,
-                    this, std::placeholders::_1);
-    
-    socket_receiver->async_receive_msg(fn, message, 2);
+    size_t const header_size = 2;
+    auto callback = std::bind(&mfd::SocketSession::on_read_size,
+                        this, std::placeholders::_1);
+    socket_receiver->async_receive_msg(callback, message, header_size);
 }
 
 void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
@@ -67,15 +67,13 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
   
-    std::istream is(&message);
-    static size_t const size_of_header = 2;
-    unsigned char message_header_bytes[size_of_header];
-    is.readsome((char*)message_header_bytes, sizeof(message_header_bytes)); 
-    size_t const body_size = (message_header_bytes[0] << 8) + message_header_bytes[1];
+    unsigned char high_byte = message.sbumpc();
+    unsigned char low_byte = message.sbumpc();
+    size_t const body_size = (high_byte << 8) + low_byte;
 
-    auto fn = boost::bind(&mfd::SocketSession::on_new_message,
-                    this, ba::placeholders::error);
-    socket_receiver->async_receive_msg(fn, message, body_size);
+    auto callback = std::bind(&mfd::SocketSession::on_new_message,
+                        this, std::placeholders::_1);
+    socket_receiver->async_receive_msg(callback, message, body_size);
 }
 
 void mfd::SocketSession::on_new_message(const boost::system::error_code& error)
