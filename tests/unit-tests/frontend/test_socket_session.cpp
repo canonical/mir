@@ -45,8 +45,8 @@ struct MockProcessor : public mfd::MessageProcessor
 }
 struct SocketSessionTest : public ::testing::Test
 {
-    MockProcessor mock_processor;
-    MockReceiver mock_receiver;
+    testing::NiceMock<MockProcessor> mock_processor;
+    testing::NiceMock<MockReceiver> mock_receiver;
 };
 
 TEST_F(SocketSessionTest, basic_msg)
