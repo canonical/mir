@@ -32,7 +32,8 @@ namespace doubles
 struct MockBufferStream : public surfaces::BufferStream
 {
     MOCK_METHOD0(secure_client_buffer, std::shared_ptr<graphics::Buffer>());
-    MOCK_METHOD0(lock_back_buffer, std::shared_ptr<graphics::Buffer>());
+    MOCK_METHOD0(lock_compositor_buffer, std::shared_ptr<graphics::Buffer>());
+    MOCK_METHOD0(lock_snapshot_buffer, std::shared_ptr<graphics::Buffer>());
 
     MOCK_METHOD0(get_stream_pixel_format, geometry::PixelFormat());
     MOCK_METHOD0(stream_size, geometry::Size());
