@@ -481,7 +481,7 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
 
         bundle.allow_framedropping(false);
 
-        std::thread client(client_thread, std::ref(bundle), 2);
+        std::thread client(client_thread, std::ref(bundle), 1000);
         bundle.force_requests_to_complete();
         client.join();
     }
