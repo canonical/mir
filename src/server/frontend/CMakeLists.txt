@@ -10,7 +10,7 @@ set(
   null_message_processor.cpp
 
   resource_cache.cpp
-  socket_sender.cpp
+  socket_messenger.cpp
   event_sender.cpp
   ${PROTO_HDRS}
 )

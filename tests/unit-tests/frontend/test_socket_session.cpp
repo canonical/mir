@@ -81,5 +81,5 @@ TEST_F(SocketSessionTest, basic_msg)
     EXPECT_CALL(mock_processor, process_message(_))
         .Times(1)
         .WillOnce(Return(true));
-    body_read(code, 2);
+    body_read(code, 9);
 }

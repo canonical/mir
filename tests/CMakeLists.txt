@@ -26,7 +26,7 @@ if (MIR_ENABLE_ACCEPTANCE_TESTS)
 endif (MIR_ENABLE_ACCEPTANCE_TESTS)
 
 if (MIR_ENABLE_UNIT_TESTS)
-#  add_subdirectory(unit-tests/)
+  add_subdirectory(unit-tests/)
 endif (MIR_ENABLE_UNIT_TESTS)
 
 if (MIR_ENABLE_INTEGRATION_TESTS)

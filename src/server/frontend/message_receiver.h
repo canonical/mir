@@ -30,7 +30,9 @@ namespace detail
 class MessageReceiver
 {
 public:
-    virtual void async_receive_msg(std::function<void(boost::system::error_code const&, size_t)> const& handler, boost::asio::streambuf& buffer, size_t size) = 0; 
+    //receive message from the socket. 'handler' will be called when 'buffer' has been filled with exactly 'size'
+    typedef std::function<void(boost::system::error_code const&, size_t)> MirReadHandler;
+    virtual void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size) = 0; 
     virtual pid_t client_pid() = 0;
 
 protected:

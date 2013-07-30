@@ -23,7 +23,7 @@
 #include "mir/frontend/communicator_report.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/session_authorizer.h"
-#include "socket_sender.h"
+#include "socket_messenger.h"
 #include "event_sender.h"
 #include "mir/protobuf/google_protobuf_guard.h"
 
@@ -135,7 +135,7 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        auto sender = std::make_shared<detail::SocketSender>(socket); 
+        auto sender = std::make_shared<detail::SocketMessenger>(socket); 
         if (session_authorizer->connection_is_allowed(sender->client_pid()))
         {
             auto event_sink = std::make_shared<detail::EventSender>(sender);

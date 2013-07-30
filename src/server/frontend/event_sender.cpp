@@ -18,7 +18,7 @@
 
 #include "mir/frontend/client_constants.h"
 #include "event_sender.h"
-#include "socket_sender.h"
+#include "message_sender.h"
 #include "mir_protobuf_wire.pb.h"
 #include "mir_protobuf.pb.h"
 

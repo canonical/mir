@@ -16,19 +16,20 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "socket_sender.h"
+#include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
 
 namespace mfd = mir::frontend::detail;
+namespace bs = boost::system;
 namespace ba = boost::asio;
 
-mfd::SocketSender::SocketSender(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
+mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
     : socket(socket)
 {
     whole_message.reserve(serialization_buffer_size);
 }
 
-pid_t mfd::SocketSender::client_pid()
+pid_t mfd::SocketMessenger::client_pid()
 {
     struct ucred cr;
     socklen_t cl = sizeof(cr);
@@ -40,7 +41,7 @@ pid_t mfd::SocketSender::client_pid()
     return cr.pid;
 }
 
-void mfd::SocketSender::send(std::string const& body)
+void mfd::SocketMessenger::send(std::string const& body)
 {
     const size_t size = body.size();
     const unsigned char header_bytes[2] =
@@ -59,7 +60,7 @@ void mfd::SocketSender::send(std::string const& body)
     ba::write(*socket, ba::buffer(whole_message));
 }
 
-void mfd::SocketSender::send_fds(std::vector<int32_t> const& fds)
+void mfd::SocketMessenger::send_fds(std::vector<int32_t> const& fds)
 {
     auto n_fds = fds.size();
     if (n_fds > 0)
@@ -97,8 +98,8 @@ void mfd::SocketSender::send_fds(std::vector<int32_t> const& fds)
     }
 }
 
-void mfd::SocketSender::async_receive_msg(std::function<void(boost::system::error_code const&, size_t)> const& handler,
-                           boost::asio::streambuf& buffer, size_t size)
+void mfd::SocketMessenger::async_receive_msg(
+    MirReadHandler const& handler, ba::streambuf& buffer, size_t size)
 {
     boost::asio::async_read(
          *socket,
