@@ -22,7 +22,7 @@
 #include <cstring>
 namespace mgg = mir::graphics::gbm;
 
-mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<Surface> const& surface)
+mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<InternalSurface> const& surface)
     : surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;

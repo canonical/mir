@@ -43,7 +43,7 @@ namespace
 {
 
 
-class MockFrontendSurface : public mir::graphics::Surface
+class MockFrontendSurface : public mir::graphics::InternalSurface
 {
 public:
     MOCK_CONST_METHOD0(size, geom::Size());

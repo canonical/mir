@@ -27,7 +27,7 @@ namespace mf=mir::frontend;
 
 namespace
 {
-class ForwardingInternalSurface : public mg::Surface
+class ForwardingInternalSurface : public mg::InternalSurface
 {
 public:
     ForwardingInternalSurface(std::shared_ptr<mf::Surface> const& surface) : surface(surface) {}
