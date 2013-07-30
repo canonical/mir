@@ -34,6 +34,7 @@
 #include "client_context.h"
 
 #include "mir_wait_handle.h"
+#include "mir/geometry/point.h"
 #include "mir/events/event_sink.h"
 
 namespace mir
@@ -113,6 +114,8 @@ public:
     EGLNativeDisplayType egl_native_display();
 
     void on_surface_created(int id, MirSurface* surface);
+
+    MirWaitHandle* configure_display(size_t mode_index, bool used, mir::geometry::Point new_screen_position);
 
 private:
     std::recursive_mutex mutex; // Protects all members of *this
