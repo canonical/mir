@@ -25,7 +25,7 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mo = mir::options;
 
-extern "C" std::shared_ptr<mg::Platform> create_nested_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<mg::NativePlatform> const& /*native_platform*/)
+std::shared_ptr<mg::Platform> mg::create_nested_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<mg::NativePlatform> const& /*native_platform*/)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir method create_nested_platform is not implemented yet!"));
     return 0;
