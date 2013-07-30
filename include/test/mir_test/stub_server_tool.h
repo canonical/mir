@@ -109,6 +109,14 @@ struct StubServerTool : mir::protobuf::DisplayServer
         done->Run();
     }
 
+    virtual void configure_display(::google::protobuf::RpcController*,
+                       const ::mir::protobuf::DisplayConfiguration*,
+                       ::mir::protobuf::Void*,
+                       ::google::protobuf::Closure* done)
+    {
+        done->Run();
+    }
+
     std::mutex guard;
     std::string surface_name;
     std::condition_variable wait_condition;

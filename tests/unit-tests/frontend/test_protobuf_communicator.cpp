@@ -372,7 +372,7 @@ TEST_F(ProtobufCommunicator, configure_display)
         0,
         &client->disp_config,
         &client->ignored,
-        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::on_configure_display_done));
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::display_configure_done));
 
     client->wait_for_configure_display_done();
 }
