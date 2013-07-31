@@ -46,6 +46,7 @@ public:
                           std::shared_ptr<Buffer> const& Buffer) const;
 
     std::shared_ptr<NativePlatform> native_platform;
+    std::shared_ptr<DisplayReport> const display_report;
 };
 
 }
