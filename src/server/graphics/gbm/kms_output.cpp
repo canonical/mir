@@ -135,13 +135,20 @@ geom::Size mgg::KMSOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
+void mgg::KMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
+{
+    fb_offset = offset;
+    mode_index = kms_mode_index;
+}
+
 bool mgg::KMSOutput::set_crtc(uint32_t fb_id)
 {
     if (!ensure_crtc())
         BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
 
     auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
-                              fb_id, 0, 0, &connector->connector_id, 1,
+                              fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
+                              &connector->connector_id, 1,
                               &connector->modes[mode_index]);
     if (ret)
     {

@@ -1,3 +1,51 @@
+mir (0.0.8+13.10.20130730-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Use the soname in the filename of all the public libraries.
+    Explicityly set soname for libmirserver and libmirprotobuf.
+
+  [ Daniel van Vugt ]
+  * Separate MockBufferAllocator for reuse in other test cases.
+  * Silence noisy integration tests (Uninteresting mock function calls)
+    (LP: #1192618). (LP: #1192618)
+  * Distinguish between a buffer locked for composition vs snapshotting.
+    The difference will become very important with the introduction of
+    bypass. Stay tuned.
+
+  [ Alexandros Frantzis ]
+  * graphics, shell: move GLPixelBuffer to shell.
+  * compositor: Introduce and use a different DisplayBufferCompositor
+    object per non-cloned output.
+  * geometry: Use an closed-open representation for Rectangle end
+    points.
+
+  [ Thomas Voß ]
+  * Adjust the Process class to correctly trace child processes. This
+    should help a lot in avoiding/diagnosing races on armhf.
+
+  [ Kevin DuBois ]
+  * expand client api so that multiple MirDisplayInfo can be returned
+    for multimonitor situations.
+  * add a function to the client api to query the possible formats to
+    create a surface with.
+  * client: decouple MirConnection from MirEvent a bit. stop two-step
+    initialization of the client rpc channel.
+
+  [ Robert Carr ]
+  * Add surface lifecycle notification to the session listener.
+  * Build test_android_input_registrar.cpp.
+
+  [ Alan Griffiths ]
+  * graphics, shell: move GLPixelBuffer to shell.
+
+  [ Maarten Lankhorst ]
+  * Fixes LP: #1195509. (LP: #1195509)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 890
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 30 Jul 2013 00:03:17 +0000
+
 mir (0.0.8-0ubuntu1) saucy; urgency=low
 
   * New release

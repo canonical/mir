@@ -47,11 +47,13 @@ public:
                           geometry::Point top_left, size_t mode_index);
 
     uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const;
+    size_t get_kms_mode_index(DisplayConfigurationOutputId id, size_t conf_mode_index) const;
     void update();
 
 private:
     void add_or_update_output(DRMModeResources const& resources, drmModeConnector const& connector);
     std::vector<DisplayConfigurationOutput>::iterator find_output_with_id(DisplayConfigurationOutputId id);
+    std::vector<DisplayConfigurationOutput>::const_iterator find_output_with_id(DisplayConfigurationOutputId id) const;
 
     int drm_fd;
     std::vector<DisplayConfigurationOutput> outputs;

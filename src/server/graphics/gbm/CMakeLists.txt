@@ -32,6 +32,7 @@ add_library(
   internal_client.cpp
   drm_close_threadsafe.cpp
   udev_video_devices.cpp
+  overlapping_output_grouping.cpp
 )
 
 target_link_libraries(

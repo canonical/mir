@@ -25,6 +25,7 @@
 #include "kms_page_flipper.h"
 #include "virtual_terminal.h"
 #include "video_devices.h"
+#include "overlapping_output_grouping.h"
 
 #include "mir/main_loop.h"
 #include "mir/graphics/display_report.h"
@@ -124,46 +125,41 @@ std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
 
 void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
-    std::vector<std::shared_ptr<KMSOutput>> enabled_outputs;
     auto const& kms_conf = dynamic_cast<KMSDisplayConfiguration const&>(conf);
+    std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers_new;
 
-    /* Create or reset the KMS outputs */
-    conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    OverlappingOutputGrouping grouping{conf};
+
+    grouping.for_each_group([&](OverlappingOutputGroup const& group)
     {
-        uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
+        auto bounding_rect = group.bounding_rectangle();
+        std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
 
-        auto output = output_container.get_kms_output_for(connector_id);
+        group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+        {
+            uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
+            auto kms_output = output_container.get_kms_output_for(connector_id);
 
-        if (conf_output.connected && conf_output.used)
-            enabled_outputs.push_back(output);
+            auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
+                                                                conf_output.current_mode_index);
+            kms_output->reset();
+            kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
+            kms_outputs.push_back(kms_output);
+        });
+
+        auto surface =
+            platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
+                                                 bounding_rect.size.height.as_uint32_t());
+
+        std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener,
+                                                                  kms_outputs,
+                                                                  std::move(surface),
+                                                                  bounding_rect,
+                                                                  shared_egl.context()}};
+        display_buffers_new.push_back(std::move(db));
     });
 
-    geom::Size max_size;
-
-    /* Find the size of the largest enabled output... */
-    for (auto const& output : enabled_outputs)
-    {
-        if (output->size().width > max_size.width)
-            max_size.width = output->size().width;
-        if (output->size().height > max_size.height)
-            max_size.height = output->size().height;
-    }
-
-    /* ...and create a scanout surface with that size */
-    auto surface = platform->gbm.create_scanout_surface(max_size.width.as_uint32_t(),
-                                                        max_size.height.as_uint32_t());
-
-    /* Create a single DisplayBuffer that displays the surface on all the outputs */
-    std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener, enabled_outputs,
-                                                              std::move(surface), max_size,
-                                                              shared_egl.context()}};
-
-    /*
-     * TODO: Investigate why we have to destroy the previous display buffers and
-     * their contexts after creating the new ones to avoid a crash in Mesa.
-     */
-    display_buffers.clear();
-    display_buffers.push_back(std::move(db));
+    display_buffers = std::move(display_buffers_new);
 
     /* Store applied configuration */
     current_display_configuration = kms_conf;
