@@ -16,11 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
-#define MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
+#ifndef MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_CONTAINER_H_
+#define MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_CONTAINER_H_
 
-#include <cstdint>
-#include <memory>
+#include "kms_output_container.h"
+#include <unordered_map>
 
 namespace mir
 {
@@ -29,24 +29,24 @@ namespace graphics
 namespace gbm
 {
 
-class KMSOutput;
+class PageFlipper;
 
-class KMSOutputContainer
+class RealKMSOutputContainer : public KMSOutputContainer
 {
 public:
-    virtual ~KMSOutputContainer() = default;
+    RealKMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipper> const& page_flipper);
 
-    virtual std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id) = 0;
-    virtual void for_each_output(std::function<void(KMSOutput&)> functor) const = 0;
+    std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
+    void for_each_output(std::function<void(KMSOutput&)> functor) const;
 
-protected:
-    KMSOutputContainer() = default;
-    KMSOutputContainer(KMSOutputContainer const&) = delete;
-    KMSOutputContainer& operator=(KMSOutputContainer const&) = delete;
+private:
+    int const drm_fd;
+    std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
+    std::shared_ptr<PageFlipper> const page_flipper;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_ */
+#endif /* MIR_GRAPHICS_GBM_REAL_KMS_OUTPUT_CONTAINER_H_ */
