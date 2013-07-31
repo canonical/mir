@@ -39,7 +39,6 @@
 
 #include <gtest/gtest.h>
 
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;

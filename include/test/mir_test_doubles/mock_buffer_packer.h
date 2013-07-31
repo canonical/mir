@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockPacker : public compositor::BufferIPCPacker
+struct MockPacker : public graphics::BufferIPCPacker
 {
     ~MockPacker() noexcept {}
     MOCK_METHOD1(pack_fd, void(int));

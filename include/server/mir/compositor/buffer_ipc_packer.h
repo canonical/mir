@@ -16,20 +16,20 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
-#define MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
+#ifndef MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
+#define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
 
 #include "mir/geometry/dimensions.h"
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 
 class BufferIPCPacker
 {
 public:
-    BufferIPCPacker() {};
+    BufferIPCPacker() {}
     virtual ~BufferIPCPacker() = default;
     virtual void pack_fd(int) = 0;
     virtual void pack_data(int) = 0;
@@ -39,4 +39,4 @@ public:
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_ */
+#endif /* MIR_GRAPHICS_BUFFER_IPC_PACKER_H_ */

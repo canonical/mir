@@ -31,7 +31,6 @@
 
 namespace mg  = mir::graphics;
 namespace mga = mir::graphics::android;
-namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
 namespace

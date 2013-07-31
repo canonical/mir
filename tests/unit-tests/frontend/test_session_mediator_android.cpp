@@ -40,7 +40,6 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;

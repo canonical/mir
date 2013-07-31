@@ -54,7 +54,7 @@ class NullPlatform : public graphics::Platform
         return std::shared_ptr<graphics::InternalClient>();
     }
 
-    void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const&,
+    void fill_ipc_package(std::shared_ptr<graphics::BufferIPCPacker> const&,
                           std::shared_ptr<graphics::Buffer> const&) const
     {
     }

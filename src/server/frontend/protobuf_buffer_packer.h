@@ -29,7 +29,7 @@ namespace frontend
 namespace detail
 {
 
-class ProtobufBufferPacker : public compositor::BufferIPCPacker
+class ProtobufBufferPacker : public graphics::BufferIPCPacker
 {
 public:
     ProtobufBufferPacker(protobuf::Buffer*);
