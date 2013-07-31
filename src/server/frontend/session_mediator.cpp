@@ -22,6 +22,7 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/display_changer.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
@@ -286,14 +287,26 @@ void mf::SessionMediator::configure_surface(
 
     done->Run();
 }
+
 void mf::SessionMediator::configure_display(
-    ::google::protobuf::RpcController* controller,
+    ::google::protobuf::RpcController*,
     const ::mir::protobuf::DisplayConfiguration* request,
-    ::mir::protobuf::Void* response,
+    ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
-    (void) controller;
-    (void) request;
-    (void) response;
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto config = display_changer->active_configuration();
+        for (auto i=0; i < request->display_output_size(); i++)
+        {   
+            auto& output = request->display_output(i);
+            config->configure_output(mg::DisplayConfigurationOutputId{i},
+                                     output.used(),
+                                     geom::Point{output.position_x(), output.position_y()},
+                                     output.current_mode());
+        }
+
+        display_changer->configure(session, config);
+    }
     done->Run();
 }

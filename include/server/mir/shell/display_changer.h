@@ -27,17 +27,20 @@ namespace graphics
 {
 class DisplayConfiguration;
 }
-namespace shell
+namespace frontend
 {
 class Session;
+}
 
+namespace shell
+{
 class DisplayChanger
 {
 public:
     virtual ~DisplayChanger() = default;
 
     virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration() = 0;
-    virtual void configure(std::weak_ptr<Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
+    virtual void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
 
 protected:
     DisplayChanger() = default;

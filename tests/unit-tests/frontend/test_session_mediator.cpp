@@ -105,7 +105,7 @@ public:
     {
         return std::make_shared<StubConfig>();
     }
-    void configure(std::weak_ptr<msh::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
+    void configure(std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
     {
     }
 };
@@ -114,7 +114,7 @@ class MockDisplaySelector : public msh::DisplayChanger
 {
 public:
     MOCK_METHOD0(active_configuration, std::shared_ptr<mg::DisplayConfiguration>());
-    MOCK_METHOD2(configure, void(std::weak_ptr<msh::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&));
+    MOCK_METHOD2(configure, void(std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&));
 };
 
 }
@@ -523,8 +523,8 @@ TEST_F(SessionMediatorTest, display_config_request)
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
 
-    geom::Point pt0{44,22}, pt1{3,2};
     bool used0 = false, used1 = true;
+    geom::Point pt0{44,22}, pt1{3,2};
     size_t mode_index0 = 1, mode_index1 = 3; 
     mg::DisplayConfigurationOutputId id0{0}, id1{1};
 
@@ -532,6 +532,9 @@ TEST_F(SessionMediatorTest, display_config_request)
     auto mock_display_selector = std::make_shared<mtd::MockDisplaySelector>();
 
     Sequence seq;
+    EXPECT_CALL(*mock_display_selector, active_configuration())
+        .InSequence(seq)
+        .WillOnce(Return(mt::fake_shared(mock_display_config))); 
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(mock_display_config))); 
@@ -546,16 +549,23 @@ TEST_F(SessionMediatorTest, display_config_request)
             shell, graphics_platform, mock_display_selector,
             buffer_allocator, report, std::make_shared<NullEventSink>(), resource_cache};
 
-    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     mp::Void ignored;
     mp::DisplayConfiguration configuration; 
-    configuration.add_display_output();
-    configuration.add_display_output();
-//    auto disp0 = configuration.add_display_output();
-//    auto disp1 = configuration.add_display_output();
+    auto disp0 = configuration.add_display_output();
+    disp0->set_used(used0);
+    disp0->set_position_x(pt0.x.as_uint32_t());
+    disp0->set_position_y(pt0.y.as_uint32_t());
+    disp0->set_current_mode(mode_index0);
 
-    mediator.configure_display(nullptr, &configuration, &ignored, null_callback.get());
+    auto disp1 = configuration.add_display_output();
+    disp1->set_used(used1);
+    disp1->set_position_x(pt1.x.as_uint32_t());
+    disp1->set_position_y(pt1.y.as_uint32_t());
+    disp1->set_current_mode(mode_index1);
 
-    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+    session_mediator.configure_display(nullptr, &configuration, &ignored, null_callback.get());
+
+    session_mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
