@@ -56,3 +56,8 @@ TEST_F(UnauthorizedDisplayChangerTest, access_config)
     auto returned_conf = changer.active_configuration();
     EXPECT_EQ(&conf, returned_conf.get());
 }
+
+struct MediatingDisplayChangerTest : public ::testing::Test
+{
+    MediatingDisplayChanger();
+};
