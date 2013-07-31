@@ -16,32 +16,21 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
-
-#include "mir/surfaces/input_registrar.h"
+#ifndef MIR_INPUT_RECEPTION_MODE_H_
+#define MIR_INPUT_RECEPTION_MODE_H_
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct StubInputRegistrar : public surfaces::InputRegistrar
+enum class InputReceptionMode
 {
-    void input_channel_opened(std::shared_ptr<input::InputChannel> const&,
-                              std::shared_ptr<input::Surface> const&,
-                              input::InputReceptionMode)
-    {
-    }
-    void input_channel_closed(std::shared_ptr<input::InputChannel> const&)
-    {
-    }
+    normal,
+    receives_all_input
 };
 
 }
 }
-} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
+#endif /* MIR_INPUT_RECEPTION_MODE_H_ */
