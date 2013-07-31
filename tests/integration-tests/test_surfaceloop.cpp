@@ -16,11 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/swapper_factory.h"
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/display.h"

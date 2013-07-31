@@ -18,8 +18,8 @@
 
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
-#include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/graphics/buffer_id.h"

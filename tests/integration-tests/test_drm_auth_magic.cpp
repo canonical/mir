@@ -20,7 +20,7 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_basic.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>

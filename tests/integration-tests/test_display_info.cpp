@@ -18,7 +18,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/buffer.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"

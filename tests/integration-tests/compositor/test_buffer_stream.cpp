@@ -18,7 +18,7 @@
 
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/swapper_factory.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
 
 #include "mir_test_doubles/stub_buffer.h"

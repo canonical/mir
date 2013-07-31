@@ -22,8 +22,8 @@
 
 #include <hardware/hardware.h>
 
-#include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "graphic_buffer_allocator.h"
 
 namespace mir

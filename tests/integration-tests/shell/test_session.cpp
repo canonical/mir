@@ -18,7 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/input/null_input_configuration.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/compositor.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/pixel_buffer.h"

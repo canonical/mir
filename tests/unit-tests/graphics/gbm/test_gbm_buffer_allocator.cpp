@@ -17,9 +17,9 @@
  */
 
 #include "src/server/graphics/gbm/gbm_platform.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"

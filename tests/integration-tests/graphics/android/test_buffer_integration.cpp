@@ -21,7 +21,7 @@
 #include "mir/graphics/null_display_report.h"
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include "mir_test/draw/android_graphics.h"
 #include "mir_test/draw/patterns.h"

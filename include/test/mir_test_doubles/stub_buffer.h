@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
 
 #include "mir/graphics/buffer_basic.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_id.h"
 

@@ -19,7 +19,7 @@
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_doubles/mock_buffer_initializer.h"
 #include "mir_test_doubles/mock_egl.h"

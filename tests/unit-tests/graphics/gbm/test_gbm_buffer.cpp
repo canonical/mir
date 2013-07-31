@@ -27,7 +27,7 @@
 #include "src/server/graphics/gbm/gbm_buffer.h"
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 
 #include "mir/graphics/null_display_report.h"

@@ -22,7 +22,7 @@
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/surfaces/depth_id.h"
 
 #include <memory>

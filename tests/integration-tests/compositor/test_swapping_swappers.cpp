@@ -24,7 +24,7 @@
 #include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/swapper_factory.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
 #include <future>

@@ -20,7 +20,7 @@
 #ifndef MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 #define MIR_COMPOSITOR_BUFFER_BUNDLE_H_
 
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include <memory>
 
 namespace mir

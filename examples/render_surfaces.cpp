@@ -18,7 +18,7 @@
 
 #include "mir/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/communicator.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/geometry/size.h"

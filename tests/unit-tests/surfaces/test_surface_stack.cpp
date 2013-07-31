@@ -21,7 +21,7 @@
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 #include "src/server/compositor/buffer_bundle.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/compositor/scene.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
