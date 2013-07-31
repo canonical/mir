@@ -20,11 +20,10 @@
 #include "mir/shell/surface.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/null_surface_configurator.h"
+#include "mir_test_doubles/mock_surface_configurator.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_toolkit/mir_client_library.h"
-
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -68,12 +67,6 @@ struct SurfaceCreatingClient : public mtf::TestingClientConfiguration
     MirSurface* surface;
 };
 
-struct MockSurfaceConfigurator : public msh::SurfaceConfigurator
-{
-    MOCK_METHOD3(select_attribute_value, int(msh::Surface const&, MirSurfaceAttrib, int));
-    MOCK_METHOD3(attribute_set, void(msh::Surface const&, MirSurfaceAttrib, int));
-};
-
 }
 
 TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notified_of_attribute_changes)
@@ -94,7 +87,7 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
             EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1);
         }
 
-        MockSurfaceConfigurator mock_configurator;
+        mtd::MockSurfaceConfigurator mock_configurator;
     } server_config;
     launch_server_process(server_config);
 
@@ -127,7 +120,7 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_inter
                 .WillOnce(Return(mir_surface_type_normal));
             EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_type, Eq(mir_surface_type_normal))).Times(1);
         }
-        MockSurfaceConfigurator mock_configurator;
+        mtd::MockSurfaceConfigurator mock_configurator;
     } server_config;
     launch_server_process(server_config);
 

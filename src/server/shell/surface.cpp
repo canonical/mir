@@ -18,6 +18,7 @@
 
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_builder.h"
+#include "mir/shell/surface_configurator.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"
@@ -224,6 +225,7 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
      */
+    value = configurator->select_attribute_value(*this, attrib, value);
     switch (attrib)
     {
     case mir_surface_attrib_type:
@@ -248,6 +250,8 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
                                                "attribute."));
         break;
     }
+
+    configurator->attribute_set(*this, attrib, result);
 
     return result;
 }

@@ -31,6 +31,7 @@
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/mock_surface_state.h"
 #include "mir_test_doubles/null_surface_configurator.h"
+#include "mir_test_doubles/mock_surface_configurator.h"
 #include "mir_test/fake_shared.h"
 
 #include <stdexcept>
@@ -432,6 +433,23 @@ TEST_F(ShellSurface, states)
               surf.configure(mir_surface_attrib_state,
                              mir_surface_state_fullscreen));
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
+}
+
+TEST_F(ShellSurface, configurator_selects_attribute_values)
+{
+    using namespace testing;
+    
+    mtd::MockSurfaceConfigurator configurator;
+    
+    EXPECT_CALL(configurator, select_attribute_value(_, mir_surface_attrib_state, mir_surface_state_restored)).Times(1)
+        .WillOnce(Return(mir_surface_state_minimized));
+    EXPECT_CALL(configurator, attribute_set(_, mir_surface_attrib_state, mir_surface_state_minimized)).Times(1);
+
+    msh::Surface surf(
+            mt::fake_shared(surface_builder), mt::fake_shared(configurator),
+            msh::a_surface(), stub_id, stub_sender);
+
+    EXPECT_EQ(mir_surface_state_minimized, surf.configure(mir_surface_attrib_state, mir_surface_state_restored));
 }
 
 TEST_F(ShellSurface, take_input_focus)
