@@ -176,7 +176,6 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
         conf.the_shell_surface_factory(),
         "stress",
         conf.the_shell_snapshot_strategy(),
-        conf.the_shell_surface_configurator(),
         std::make_shared<msh::NullSessionListener>(),
         std::make_shared<mtd::NullEventSink>()
     };

@@ -20,7 +20,6 @@
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/snapshot_strategy.h"
-#include "mir/shell/surface_configurator.h"
 #include "mir/shell/session_listener.h"
 
 #include <boost/throw_exception.hpp>
@@ -37,13 +36,11 @@ msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-    std::shared_ptr<SurfaceConfigurator> const& surface_configurator,
     std::shared_ptr<msh::SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink) :
     surface_factory(surface_factory),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
-    surface_configurator(surface_configurator),
     session_listener(session_listener),
     event_sink(sink),
     next_surface_id(0)
@@ -160,8 +157,5 @@ int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 
-    auto applied_value = surf->configure(attrib, 
-        surface_configurator->select_attribute_value(*surf, attrib, requested_value));
-    surface_configurator->attribute_set(*surf, attrib, applied_value);
-    return applied_value;
+    return surf->configure(attrib, requested_value);
 }

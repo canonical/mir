@@ -34,7 +34,6 @@ namespace shell
 class SurfaceFactory;
 class Surface;
 class SnapshotStrategy;
-class SurfaceConfigurator;
 class SessionListener;
 
 class ApplicationSession : public Session
@@ -44,7 +43,6 @@ public:
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-        std::shared_ptr<SurfaceConfigurator> const& surface_configurator,
         std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<frontend::EventSink> const& sink);
 
@@ -74,7 +72,6 @@ private:
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::string const session_name;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
-    std::shared_ptr<SurfaceConfigurator> const surface_configurator;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
 

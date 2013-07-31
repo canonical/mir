@@ -53,7 +53,6 @@ struct RegistrationOrderFocusSequenceSetup : public testing::Test
         return std::make_shared<msh::ApplicationSession>(
             factory, name,
             std::shared_ptr<msh::SnapshotStrategy>(),
-            std::shared_ptr<msh::SurfaceConfigurator>(), 
             std::make_shared<msh::NullSessionListener>(),
             std::make_shared<mtd::NullEventSink>());
     }

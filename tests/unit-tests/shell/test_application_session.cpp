@@ -27,7 +27,6 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
-#include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_event_sink.h"
 
 #include "mir/shell/surface.h"
@@ -63,7 +62,6 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo",
                                     std::make_shared<mtd::NullSnapshotStrategy>(),
-                                    std::make_shared<mtd::NullSurfaceConfigurator>(),
                                     mt::fake_shared(listener),
                                     mt::fake_shared(sender));
 
@@ -92,7 +90,6 @@ TEST(ApplicationSession, default_surface_is_first_surface)
 
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                                        std::make_shared<mtd::NullSurfaceConfigurator>(),
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
                                         
 
@@ -127,7 +124,6 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                                        std::make_shared<mtd::NullSurfaceConfigurator>(),
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
 
     EXPECT_CALL(surface_factory, create_surface(_, _, _));
@@ -156,7 +152,6 @@ TEST(Session, get_invalid_surface_throw_behavior)
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                                        std::make_shared<mtd::NullSurfaceConfigurator>(),
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
     mf::SurfaceId invalid_surface_id(1);
 
@@ -173,7 +168,6 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                                        std::make_shared<mtd::NullSurfaceConfigurator>(),
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
     mf::SurfaceId invalid_surface_id(1);
 
@@ -201,7 +195,7 @@ TEST(Session, uses_snapshot_strategy)
     mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
-                                        snapshot_strategy, std::make_shared<mtd::NullSurfaceConfigurator>(),
+                                        snapshot_strategy,
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
 
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_));
