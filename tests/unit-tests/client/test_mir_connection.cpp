@@ -286,6 +286,50 @@ TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
     mcl::delete_config_storage(configuration);
 }
 
+TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_output));
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_all();
+
+    //user sends no displays
+    auto configuration = connection->create_copy_of_display_config();
+    configuration->num_displays = 0;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+    mcl::delete_config_storage(configuration);
+
+    //user lies about displays
+    configuration = connection->create_copy_of_display_config();
+    auto tmp = configuration->displays;
+    configuration->displays = nullptr;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+    configuration->displays = tmp;
+    mcl::delete_config_storage(configuration);
+
+    //user sends more displays than are present
+    configuration = connection->create_copy_of_display_config();
+    configuration->num_displays++;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+    mcl::delete_config_storage(configuration);
+
+    //user makes up own id
+    configuration = connection->create_copy_of_display_config();
+    configuration->displays[0].output_id = 4944949;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+    mcl::delete_config_storage(configuration);
+
+    //current_mode out of range
+    configuration = connection->create_copy_of_display_config();
+    configuration->displays[0].current_mode++;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+    mcl::delete_config_storage(configuration);
+}
+
 TEST_F(MirConnectionTest, populates_pfs_correctly)
 {
     using namespace testing;

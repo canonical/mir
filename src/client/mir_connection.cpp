@@ -344,8 +344,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         display_request->set_position_y(output.position_y); 
     }
 
-    server.configure_display(
-        0, &request, &void_response,
+    server.configure_display(0, &request, &void_response,
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;
