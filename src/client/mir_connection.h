@@ -35,7 +35,6 @@
 
 #include "mir_wait_handle.h"
 #include "mir/geometry/point.h"
-#include "mir/events/event_sink.h"
 
 namespace mir
 {

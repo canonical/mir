@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/server/graphics/gbm/kms_output.h"
+#include "src/server/graphics/gbm/real_kms_output.h"
 #include "src/server/graphics/gbm/page_flipper.h"
 
 #include "mir_test/fake_shared.h"
@@ -51,10 +51,10 @@ public:
     MOCK_METHOD1(wait_for_flip, void(uint32_t));
 };
 
-class KMSOutputTest : public ::testing::Test
+class RealKMSOutputTest : public ::testing::Test
 {
 public:
-    KMSOutputTest()
+    RealKMSOutputTest()
         : invalid_id{0}, crtc_ids{10, 11},
           encoder_ids{20, 21}, connector_ids{30, 21},
           possible_encoder_ids1{encoder_ids[0]},
@@ -112,7 +112,7 @@ public:
 
 }
 
-TEST_F(KMSOutputTest, construction_queries_connector)
+TEST_F(RealKMSOutputTest, construction_queries_connector)
 {
     using namespace testing;
 
@@ -121,11 +121,11 @@ TEST_F(KMSOutputTest, construction_queries_connector)
     EXPECT_CALL(mock_drm, drmModeGetConnector(_,connector_ids[0]))
         .Times(1);
 
-    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                          mt::fake_shared(null_page_flipper)};
+    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(null_page_flipper)};
 }
 
-TEST_F(KMSOutputTest, operations_use_existing_crtc)
+TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
 {
     using namespace testing;
 
@@ -152,15 +152,15 @@ TEST_F(KMSOutputTest, operations_use_existing_crtc)
             .Times(1);
     }
 
-    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                          mt::fake_shared(mock_page_flipper)};
+    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
 
     EXPECT_TRUE(output.set_crtc(fb_id));
     EXPECT_TRUE(output.schedule_page_flip(fb_id));
     output.wait_for_page_flip();
 }
 
-TEST_F(KMSOutputTest, operations_use_possible_crtc)
+TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
 {
     using namespace testing;
 
@@ -187,15 +187,15 @@ TEST_F(KMSOutputTest, operations_use_possible_crtc)
             .Times(1);
     }
 
-    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                          mt::fake_shared(mock_page_flipper)};
+    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
 
     EXPECT_TRUE(output.set_crtc(fb_id));
     EXPECT_TRUE(output.schedule_page_flip(fb_id));
     output.wait_for_page_flip();
 }
 
-TEST_F(KMSOutputTest, set_crtc_failure_is_handled_gracefully)
+TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
 {
     using namespace testing;
 
@@ -220,8 +220,8 @@ TEST_F(KMSOutputTest, set_crtc_failure_is_handled_gracefully)
             .Times(0);
     }
 
-    mgg::KMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                          mt::fake_shared(mock_page_flipper)};
+    mgg::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
 
     EXPECT_FALSE(output.set_crtc(fb_id));
     EXPECT_THROW({

@@ -78,11 +78,11 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
+#include "mir/graphics/native_platform.h"
 
 #include <map>
 
 namespace mc = mir::compositor;
-namespace me = mir::events;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -130,7 +130,7 @@ private:
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<me::EventSink> const& sink)
+        std::shared_ptr<mf::EventSink> const& sink)
     {
         //graphics_display;
         //auto graphics_changer = std::make_shared
@@ -310,18 +310,21 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
 
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
-    if (the_options()->is_set("nested-mode"))
-    {
-        std::string host_socket = the_options()->get("nested-mode", mir::default_server_socket);
-        BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir nested mode is not yet supported. Host socket: ") + host_socket));
-    }
-
     return graphics_platform(
         [this]()
         {
             auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
-            auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
-            return create_platform(the_options(), the_display_report());
+
+            if (!the_options()->is_set("nested-mode"))
+            {
+                auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
+                return create_platform(the_options(), the_display_report());
+            }
+            else
+            {
+                auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
+                return create_nested_platform(the_options(), create_native_platform());
+            }
         });
 }
 

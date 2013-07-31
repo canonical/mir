@@ -30,6 +30,10 @@
 #include "mir/compositor/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 
+#include "mir/graphics/native_platform.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mc=mir::compositor;
@@ -104,4 +108,10 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<DisplayReport> const& display_report)
 {
     return std::make_shared<mga::AndroidPlatform>(display_report);
+}
+
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("Android platform: create_native_platform is not implemented yet!"));
+    return 0;
 }

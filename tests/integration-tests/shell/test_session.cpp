@@ -33,6 +33,7 @@
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 
 #include <gtest/gtest.h>
@@ -175,8 +176,10 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
         conf.the_shell_surface_factory(),
         "stress",
         conf.the_shell_snapshot_strategy(),
-        std::make_shared<msh::NullSessionListener>()};
-    session.create_surface(msh::a_surface().of_size({50,50}));
+        std::make_shared<msh::NullSessionListener>(),
+        std::make_shared<mtd::NullEventSink>()
+    };
+    session.create_surface(msh::a_surface());
 
     auto compositor = conf.the_compositor();
 

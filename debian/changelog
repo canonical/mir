@@ -1,3 +1,41 @@
+mir (0.0.8+13.10.20130731.2-0ubuntu1) saucy; urgency=low
+
+  [ Dmitrijs Ledkovs ]
+  * Use explicit boost-dev packages.
+
+  [ Alexandros Frantzis ]
+  * gbm: Support non-cloned display configurations.
+
+  [ Thomas Voß ]
+  * Adjust documentation to account for lightdm/packaging changes.
+  * Don't make Mir become a process group leader, to avoid CTRL-C
+    killing the X server.
+
+  [ Alan Griffiths ]
+  * test_framework: Provide boost exception diagnostics.
+  * graphics: Remove use of frontend::Surface from graphics interface &
+    implementation.
+
+  [ Daniel van Vugt ]
+  * Don't run Android commands which are no longer valid in flipped
+    phablet images. They will only kill your connection to the device.
+    (LP: #1206369). (LP: #1206369)
+  * Fix documentation to suit the new "flipped" phablet images. Also
+    remove extraneous comment which could cause copy/paste mistakes.
+
+  [ Eleni Maria Stea ]
+  * mir option --nested-mode <host-socket>.
+  * added a native platform interface in
+    include/server/mir/graphics/native_platform.h added a new static
+    library for the nested platform added some stub
+    create_native_platform and create_nested_platform functions to be
+    called when mir runs in nested mode.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 901
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 31 Jul 2013 12:55:57 +0000
+
 mir (0.0.8+13.10.20130730-0ubuntu1) saucy; urgency=low
 
   [ Robert Ancell ]

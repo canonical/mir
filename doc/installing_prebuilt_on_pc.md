@@ -28,4 +28,4 @@ Install Mir and dist-upgrade:
 
        sudo apt-get install mir-demos
        sudo apt-get dist-upgrade
-
+       sudo apt-get install unity-system-compositor
