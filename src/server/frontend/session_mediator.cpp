@@ -52,14 +52,14 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<graphics::Display> const& display,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
-    std::shared_ptr<events::EventSink> const& event_sink,
+    std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
     display(display),
     buffer_allocator(buffer_allocator),
     report(report),
-    event_sink(event_sink),
+    event_sink(sender),
     resource_cache(resource_cache),
     client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size))
 {

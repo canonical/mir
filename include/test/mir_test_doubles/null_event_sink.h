@@ -13,24 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "event_pipe.h"
+#ifndef MIR_TEST_DOUBLES_NULL_EVENT_SINK_H_
+#define MIR_TEST_DOUBLES_NULL_EVENT_SINK_H_
 
-namespace mf = mir::frontend;
-
-void mf::EventPipe::set_target(std::weak_ptr<EventSink> const& s)
+#include "mir/frontend/event_sink.h"
+namespace mir
 {
-    target = s;
-}
-
-void mf::EventPipe::handle_event(MirEvent const& e)
+namespace test
 {
-    // In future, we might put e on a queue and wait for some background
-    // thread to push it through to target. But that's not required right now.
-
-    std::shared_ptr<EventSink> p = target.lock();
-    if (p)
-        p->handle_event(e);
+namespace doubles
+{
+struct NullEventSink : public frontend::EventSink
+{
+    void handle_event(MirEvent const&) {}
+};
 }
+}
+}
+#endif /* MIR_TEST_DOUBLES_NULL_EVENT_SINK_H_*/

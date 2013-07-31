@@ -30,13 +30,13 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_shell.h"
-#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/shell/surface.h"
 
 #include <gtest/gtest.h>
@@ -64,7 +64,7 @@ public:
     {
         using namespace ::testing;
 
-        mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+        mock_surface = std::make_shared<mtd::MockFrontendSurface>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), geom::PixelFormat());
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
@@ -81,7 +81,7 @@ public:
     }
 
     mtd::StubSurfaceBuilder surface_builder;
-    std::shared_ptr<mtd::MockSurface> mock_surface;
+    std::shared_ptr<mtd::MockFrontendSurface> mock_surface;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     static int const testing_client_input_fd;
 };
@@ -130,7 +130,7 @@ class MockPlatform : public mg::Platform
                                               std::shared_ptr<mg::Buffer> const&));
 };
 
-class NullEventSink : public mir::events::EventSink
+class NullEventSink : public mir::frontend::EventSink
 {
 public:
     void handle_event(MirEvent const& ) override {}

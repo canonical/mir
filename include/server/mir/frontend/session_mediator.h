@@ -28,10 +28,6 @@
 
 namespace mir
 {
-namespace events
-{
-class EventSink;
-}
 namespace graphics
 {
 class Buffer;
@@ -54,19 +50,19 @@ class Session;
 class ResourceCache;
 class SessionMediatorReport;
 class ClientBufferTracker;
+class EventSink;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
-
     SessionMediator(
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& report,
-        std::shared_ptr<events::EventSink> const& event_sink,
+        std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     ~SessionMediator() noexcept;
@@ -119,7 +115,7 @@ private:
     std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
 
     std::shared_ptr<SessionMediatorReport> const report;
-    std::shared_ptr<events::EventSink> const event_sink;
+    std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 
