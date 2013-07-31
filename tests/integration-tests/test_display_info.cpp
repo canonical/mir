@@ -250,7 +250,8 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_
             auto configuration = mir_connection_create_display_config(connection);
 
             mir_wait_for(mir_connection_apply_display_config(connection, configuration));
-            EXPECT_STRNE(mir_connection_get_error_message(connection), "");
+            EXPECT_THAT(mir_connection_get_error_message(connection),
+                        testing::HasSubstr("not authorized to apply display configurations"));
  
             mir_display_config_destroy(configuration);
             mir_connection_release(connection);
@@ -258,7 +259,6 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_
     } client_config;
 
     launch_client_process(client_config);
-
 }
 
 /* TODO: this test currently checks the same format list against both the surface formats
