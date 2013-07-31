@@ -19,7 +19,7 @@
 #include "src/server/graphics/gbm/internal_native_surface.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/frontend/surface.h"
+#include "mir/graphics/internal_surface.h"
 
 #include "mir_toolkit/mesa/native_display.h"
 
@@ -41,19 +41,12 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-
-
-class MockFrontendSurface : public mir::frontend::Surface
+class MockInternalSurface : public mg::InternalSurface
 {
 public:
-    MOCK_METHOD0(destroy, void());
-    MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(pixel_format, geom::PixelFormat());
+    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_METHOD0(advance_client_buffer, std::shared_ptr<mg::Buffer>());
-    MOCK_CONST_METHOD0(supports_input, bool());
-    MOCK_CONST_METHOD0(client_input_fd, int());
-    MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
 };
 
 struct InternalNativeSurface : public testing::Test
@@ -61,10 +54,10 @@ struct InternalNativeSurface : public testing::Test
     void SetUp()
     {
         using namespace ::testing;
-        mock_surface = std::make_shared<MockFrontendSurface>();
+        mock_surface = std::make_shared<MockInternalSurface>();
     }
 
-    std::shared_ptr<MockFrontendSurface> mock_surface;
+    std::shared_ptr<MockInternalSurface> mock_surface;
 };
 
 MATCHER_P(ParametersHaveSize, size, "")
@@ -145,9 +138,9 @@ TEST_F(InternalNativeSurface, surface_advance_buffer_secures_resource)
 TEST_F(InternalNativeSurface, surface_get_parameters)
 {
     using namespace ::testing;
-    
+
     geom::Size const test_surface_size{17, 29};
-    geom::PixelFormat const test_pixel_format = geom::PixelFormat::xrgb_8888;
+    MirPixelFormat const test_pixel_format = mir_pixel_format_xrgb_8888;
     EXPECT_CALL(*mock_surface, size())
         .Times(1)
         .WillOnce(Return(test_surface_size));
@@ -156,13 +149,13 @@ TEST_F(InternalNativeSurface, surface_get_parameters)
         .WillOnce(Return(test_pixel_format));
 
     mgg::InternalNativeSurface native_surface(mock_surface); 
-    
+
     MirSurfaceParameters parameters;
     memset(&parameters, 0, sizeof(MirSurfaceParameters));
     native_surface.surface_get_parameters(&native_surface, &parameters);
 
     EXPECT_THAT(parameters, ParametersHaveSize(test_surface_size));
-    EXPECT_EQ(parameters.pixel_format, static_cast<MirPixelFormat>(geom::PixelFormat::xrgb_8888));
+    EXPECT_EQ(parameters.pixel_format, mir_pixel_format_xrgb_8888);
     // TODO: What to do about buffer usage besides hardware? ~racarr
     EXPECT_EQ(parameters.buffer_usage, mir_buffer_usage_hardware);
 }
