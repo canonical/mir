@@ -24,7 +24,7 @@
 #include "linux_virtual_terminal.h"
 #include "udev_video_devices.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 
 #include "drm_close_threadsafe.h"

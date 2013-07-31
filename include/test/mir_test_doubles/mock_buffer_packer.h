@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
 #define MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
 
-#include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 
 #include <gmock/gmock.h>
 
