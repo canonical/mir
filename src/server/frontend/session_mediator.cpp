@@ -30,7 +30,7 @@
 #include "mir/compositor/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
+#include "mir/shell/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
@@ -49,15 +49,15 @@ namespace mg = mir::graphics;
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
-    std::shared_ptr<graphics::Display> const& display,
+    std::shared_ptr<msh::DisplayChanger> const& display_changer,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<events::EventSink> const& event_sink,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
-    display(display),
     buffer_allocator(buffer_allocator),
+    display_changer(display_changer),
     report(report),
     event_sink(event_sink),
     resource_cache(resource_cache),
@@ -96,7 +96,7 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto display_config = display->configuration();
+    auto display_config = display_changer->active_configuration();
     auto supported_pfs = buffer_allocator->supported_pixel_formats();
     display_config->for_each_output([&response, &supported_pfs](mg::DisplayConfigurationOutput const& config)
     {

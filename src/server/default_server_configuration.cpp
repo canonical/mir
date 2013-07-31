@@ -132,10 +132,12 @@ private:
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         std::shared_ptr<me::EventSink> const& sink)
     {
+        //graphics_display;
+        //auto graphics_changer = std::make_shared
         return std::make_shared<mf::SessionMediator>(
             shell,
             graphics_platform,
-            graphics_display,
+            nullptr, //            graphics_changer,
             buffer_allocator,
             sm_report,
             sink,

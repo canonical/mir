@@ -29,6 +29,7 @@ class DisplayConfiguration;
 }
 namespace shell
 {
+class Session;
 
 class DisplayChanger
 {
