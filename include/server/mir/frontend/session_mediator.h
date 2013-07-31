@@ -113,6 +113,11 @@ public:
                            mir::protobuf::SurfaceSetting*,
                            google::protobuf::Closure* done);
 
+    void configure_display(::google::protobuf::RpcController* controller,
+                       const ::mir::protobuf::DisplayConfiguration* request,
+                       ::mir::protobuf::Void* response,
+                       ::google::protobuf::Closure* done);
+
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;

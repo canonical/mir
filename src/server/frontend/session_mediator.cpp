@@ -286,3 +286,14 @@ void mf::SessionMediator::configure_surface(
 
     done->Run();
 }
+void mf::SessionMediator::configure_display(
+    ::google::protobuf::RpcController* controller,
+    const ::mir::protobuf::DisplayConfiguration* request,
+    ::mir::protobuf::Void* response,
+    ::google::protobuf::Closure* done)
+{
+    (void) controller;
+    (void) request;
+    (void) response;
+    done->Run();
+}
