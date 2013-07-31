@@ -97,8 +97,6 @@ public:
     MirBasicRpcChannel();
     ~MirBasicRpcChannel();
 
-    virtual void set_event_handler(events::EventSink *sink) = 0;
-
 protected:
     mir::protobuf::wire::Invocation invocation_for(const google::protobuf::MethodDescriptor* method,
         const google::protobuf::Message* request);

@@ -42,7 +42,12 @@ public:
         return stub_client_buffer;
     }
 
-    std::shared_ptr<graphics::Buffer> lock_back_buffer()
+    std::shared_ptr<graphics::Buffer> lock_compositor_buffer()
+    {
+        return stub_compositor_buffer;
+    }
+
+    std::shared_ptr<graphics::Buffer> lock_snapshot_buffer()
     {
         return stub_compositor_buffer;
     }

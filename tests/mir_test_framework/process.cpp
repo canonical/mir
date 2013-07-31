@@ -22,23 +22,36 @@
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <boost/exception/errinfo_errno.hpp>
+
 #include <cassert>
+#include <chrono>
 #include <ostream>
 #include <string>
+#include <thread>
 
 namespace mtf = mir_test_framework;
 
 namespace
 {
+struct SignalNumberErrorInfoTag {};
+typedef boost::error_info<SignalNumberErrorInfoTag, int> errinfo_signum;
+struct ProcessIdErrorInfoTag {};
+typedef boost::error_info<ProcessIdErrorInfoTag, pid_t> errinfo_pid;
+
 void signal_process(pid_t pid, int signum)
 {
     if (::kill(pid, signum) != 0)
     {
-        throw std::runtime_error(std::string("Failed to kill process: ")
-                                 + ::strerror(errno));
+        BOOST_THROW_EXCEPTION(
+            ::boost::enable_error_info(std::runtime_error("Failed to kill process."))
+            << errinfo_pid(pid)
+            << errinfo_signum(signum)
+            << boost::errinfo_errno(errno));
     }
 }
 }
@@ -85,27 +98,69 @@ mtf::Process::~Process()
     }
 }
 
-mtf::Result mtf::Process::wait_for_termination()
+mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& timeout)
 {
     Result result;
     int status;
 
     if (!detached)
     {
-        terminated = ::waitpid(pid, &status, WUNTRACED | WCONTINUED) != -1;
-
-        if (terminated)
+        auto tp = std::chrono::system_clock::now() + timeout;
+        int rc = -1;
+        while (true)
         {
-            if (WIFEXITED(status))
+            if ((rc = ::waitpid(pid, &status, WNOHANG | WUNTRACED)) == pid)
             {
-                result.reason = TerminationReason::child_terminated_normally;
-                result.exit_code = WEXITSTATUS(status);
+                if (WIFEXITED(status))
+                {
+                    terminated = true;
+                    result.reason = TerminationReason::child_terminated_normally;
+                    result.exit_code = WEXITSTATUS(status);
+                    break;
+                }
+                else if (WIFSIGNALED(status))
+                {
+                    terminated = true;
+                    result.reason = TerminationReason::child_terminated_by_signal;
+                    result.signal = WTERMSIG(status);
+                    break;
+                }
+                else if (WIFSTOPPED(status))
+                {
+                    assert(!("We are not attached to the child process and thus, we shouldn't reach WIFSTOPPED(status)."));
+                    // As we are not attached to the child process we
+                    // should never hit this branch. However, keeping
+                    // the original code in place and asserting.
+                    int stop_signal = WSTOPSIG(status);
+
+                    if (ptrace(PTRACE_CONT, pid, nullptr, stop_signal) == -1)
+                    {
+                        BOOST_THROW_EXCEPTION(
+                            ::boost::enable_error_info(std::runtime_error("Error continuing child process"))
+                            << (boost::errinfo_errno(errno)));
+                    }
+                }
+                else if (WIFCONTINUED(status))
+                {
+                    continue;
+                }
             }
-            else if (WIFSIGNALED(status))
+            else if (rc == 0)
             {
-                result.reason = TerminationReason::child_terminated_by_signal;
-                result.signal = WTERMSIG(status);
+                if (std::chrono::system_clock::now() < tp)
+                {
+                    std::this_thread::yield();
+                    continue;
+                }
+                else
+                {
+                    BOOST_THROW_EXCEPTION(
+                        ::boost::enable_error_info(std::runtime_error("Timeout while waiting for child to change state"))
+                        << errinfo_pid(pid));
+                }
             }
+            else
+                break;
         }
     }
     return result;

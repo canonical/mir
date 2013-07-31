@@ -43,3 +43,65 @@ TEST(geometry, rectangle)
     EXPECT_EQ(Size(), default_rect.size);
     EXPECT_NE(rect, default_rect);
 }
+
+TEST(geometry, rectangle_bottom_right)
+{
+    using namespace testing;
+    using namespace geom;
+
+    Rectangle const rect{{0,0}, {1,1}};
+    Rectangle const rect_empty{{2,2}, {0,0}};
+
+    EXPECT_EQ(Point(1,1), rect.bottom_right());
+    EXPECT_EQ(Point(2,2), rect_empty.bottom_right());
+}
+
+TEST(geometry, rectangle_contains)
+{
+    using namespace testing;
+    using namespace geom;
+
+    Rectangle const rect{{0,0}, {1,1}};
+    Rectangle const rect_empty{{2,2}, {0,0}};
+
+    EXPECT_TRUE(rect.contains({0,0}));
+    EXPECT_FALSE(rect.contains({0,1}));
+    EXPECT_FALSE(rect.contains({1,0}));
+    EXPECT_FALSE(rect.contains({1,1}));
+
+    EXPECT_FALSE(rect_empty.contains({2,2}));
+}
+
+TEST(geometry, rectangle_overlaps)
+{
+    using namespace testing;
+    using namespace geom;
+
+    Rectangle const rect1{{0,0}, {1,1}};
+    Rectangle const rect2{{1,1}, {1,1}};
+    Rectangle const rect3{{0,0}, {2,2}};
+    Rectangle const rect4{{-1,-1}, {2,2}};
+    Rectangle const rect_empty{{0,0}, {0,0}};
+
+    EXPECT_FALSE(rect_empty.overlaps(rect_empty));
+    EXPECT_FALSE(rect_empty.overlaps(rect1));
+    EXPECT_FALSE(rect_empty.overlaps(rect4));
+
+    EXPECT_FALSE(rect1.overlaps(rect2));
+    EXPECT_FALSE(rect2.overlaps(rect1));
+    EXPECT_FALSE(rect4.overlaps(rect2));
+    EXPECT_FALSE(rect2.overlaps(rect4));
+
+    EXPECT_TRUE(rect1.overlaps(rect1));
+    EXPECT_TRUE(rect4.overlaps(rect4));
+
+    EXPECT_TRUE(rect3.overlaps(rect1));
+    EXPECT_TRUE(rect1.overlaps(rect3));
+    EXPECT_TRUE(rect3.overlaps(rect2));
+    EXPECT_TRUE(rect2.overlaps(rect3));
+
+    EXPECT_TRUE(rect4.overlaps(rect1));
+    EXPECT_TRUE(rect1.overlaps(rect4));
+    EXPECT_TRUE(rect4.overlaps(rect3));
+    EXPECT_TRUE(rect3.overlaps(rect3));
+}

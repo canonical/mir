@@ -35,7 +35,7 @@ public:
     ~MockCompositingCriteria() noexcept {}
     MOCK_CONST_METHOD0(alpha, float());
     MOCK_CONST_METHOD0(transformation, glm::mat4 const&());
-    MOCK_CONST_METHOD0(should_be_rendered, bool());
+    MOCK_CONST_METHOD1(should_be_rendered_in, bool(geometry::Rectangle const&));
 };
 
 typedef ::testing::NiceMock<MockCompositingCriteria> StubCompositingCriteria;

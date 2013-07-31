@@ -22,6 +22,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/geometry/displacement.h"
 
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
@@ -41,16 +42,16 @@ void msh::GraphicsDisplayLayout::clip_to_output(geometry::Rectangle& rect)
         rect.size.width > geom::Width{0} && rect.size.height > geom::Height{0})
     {
         auto tl = rect.top_left;
-        auto br = rect.bottom_right();
+        auto br_closed = rect.bottom_right() - geom::Displacement{1,1};
 
         geom::Rectangles rectangles;
         rectangles.add(output);
 
-        rectangles.confine(br);
+        rectangles.confine(br_closed);
 
         rect.size =
-            geom::Size{br.x.as_int() - tl.x.as_int() + 1,
-                       br.y.as_int() - tl.y.as_int() + 1};
+            geom::Size{br_closed.x.as_int() - tl.x.as_int() + 1,
+                       br_closed.y.as_int() - tl.y.as_int() + 1};
     }
     else
     {

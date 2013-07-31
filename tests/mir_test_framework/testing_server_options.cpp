@@ -106,7 +106,7 @@ public:
                         mc::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
-        stream.lock_back_buffer();
+        stream.lock_compositor_buffer();
     }
 
     void clear() {}

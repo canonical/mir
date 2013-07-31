@@ -35,8 +35,15 @@ struct Rectangle
     Point top_left;
     Size size;
 
+    /** 
+     * The bottom right boundary point of the rectangle.
+     *
+     * Note that the returned point is *not* included in the rectangle
+     * area, that is, the rectangle is represented as [top_left,bottom_right).
+     */
     Point bottom_right() const;
     bool contains(Point const& p) const;
+    bool overlaps(Rectangle const& r) const;
 };
 
 inline bool operator == (Rectangle const& lhs, Rectangle const& rhs)

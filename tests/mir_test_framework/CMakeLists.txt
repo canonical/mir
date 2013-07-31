@@ -9,6 +9,7 @@ include_directories(
 set(
   TEST_FRAMEWORK_SRCS
 
+  cross_process_sync.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
   testing_process_manager.cpp

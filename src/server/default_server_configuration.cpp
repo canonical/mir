@@ -78,6 +78,8 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
+#include "mir/graphics/native_platform.h"
+#include "mir/graphics/nested/nested_platform.h"
 
 #include <map>
 
@@ -221,6 +223,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     namespace po = boost::program_options;
 
     add_options()
+        ("nested-mode", po::value<std::string>(),
+            "Run mir in nested mode. Host socket filename.")
         ("file,f", po::value<std::string>(),
             "Socket filename")
         (platform_graphics_lib, po::value<std::string>(),
@@ -307,11 +311,21 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
-        [this]()
+        [this]()->std::shared_ptr<mg::Platform>
         {
             auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
-            auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
-            return create_platform(the_options(), the_display_report());
+
+            if (!the_options()->is_set("nested-mode"))
+            {
+                auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
+                return create_platform(the_options(), the_display_report());
+            }
+            else
+            {
+                auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
+                return std::make_shared<mir::graphics::nested::NestedPlatform>(/*TODO: the_options(),*/
+                    the_display_report(), create_native_platform());
+            }
         });
 }
 

@@ -148,24 +148,29 @@ TEST_F(SurfaceDataTest, test_surface_apply_rotation)
     surface_state.apply_rotation(60.0f, glm::vec3{0.0f, 0.0f, 1.0f});
 }
 
-TEST_F(SurfaceDataTest, test_surface_should_be_rendererd)
+TEST_F(SurfaceDataTest, test_surface_should_be_rendered_in)
 {
     ms::SurfaceData surface_state{name, rect, mock_change_cb};
+    geom::Rectangle output_rect{geom::Point{0,0}, geom::Size{100, 100}};
 
     //not renderable by default
-    EXPECT_FALSE(surface_state.should_be_rendered());
+    EXPECT_FALSE(surface_state.should_be_rendered_in(rect));
 
     surface_state.set_hidden(false);
     //not renderable if no first frame has been posted by client, regardless of hide state
-    EXPECT_FALSE(surface_state.should_be_rendered());
+    EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect));
     surface_state.set_hidden(true);
-    EXPECT_FALSE(surface_state.should_be_rendered());
+    EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect));
 
     surface_state.frame_posted();
-    EXPECT_FALSE(surface_state.should_be_rendered());
+    EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect));
 
     surface_state.set_hidden(false);
-    EXPECT_TRUE(surface_state.should_be_rendered());
+    EXPECT_TRUE(surface_state.should_be_rendered_in(output_rect));
+
+    // Not renderable if not overlapping with supplied rect
+    geom::Rectangle output_rect1{geom::Point{100,100}, geom::Size{100, 100}};
+    EXPECT_FALSE(surface_state.should_be_rendered_in(output_rect1));
 }
 
 TEST_F(SurfaceDataTest, test_surface_hidden_notifies_changes)
@@ -188,23 +193,23 @@ TEST_F(SurfaceDataTest, test_surface_frame_posted_notifies_changes)
     surface_state.frame_posted();
 }
 
-// a 1x1 window at (1,1) will get events at (1,1), (1,2) (2,1), (2,2)
+// a 1x1 window at (1,1) will get events at (1,1)
 TEST_F(SurfaceDataTest, default_region_is_surface_rectangle)
 {
     geom::Point pt(1,1);
     geom::Size one_by_one{geom::Width{1}, geom::Height{1}};
     ms::SurfaceData surface_state{name, geom::Rectangle{pt, one_by_one}, mock_change_cb};
 
-    std::initializer_list <geom::Point> contained_pt{geom::Point{geom::X{1}, geom::Y{1}},
-                                       geom::Point{geom::X{1}, geom::Y{2}},
-                                       geom::Point{geom::X{2}, geom::Y{1}},
-                                       geom::Point{geom::X{2}, geom::Y{2}}};
+    std::vector<geom::Point> contained_pt
+    {
+        geom::Point{geom::X{1}, geom::Y{1}}
+    };
 
     for(auto x = 0; x <= 3; x++)
     {
         for(auto y = 0; y <= 3; y++)
         {
-            auto test_pt = geom::Point{geom::X{x}, geom::Y{y}};
+            auto test_pt = geom::Point{x, y};
             auto contains = surface_state.contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
@@ -228,23 +233,19 @@ TEST_F(SurfaceDataTest, set_input_region)
     ms::SurfaceData surface_state{name, rect, mock_change_cb};
     surface_state.set_input_region(rectangles);
 
-    std::initializer_list <geom::Point> contained_pt{//region0 points
-                                                     geom::Point{geom::X{0}, geom::Y{0}},
-                                                     geom::Point{geom::X{0}, geom::Y{1}},
-                                                     geom::Point{geom::X{1}, geom::Y{0}},
-                                                     //overlapping point
-                                                     geom::Point{geom::X{1}, geom::Y{1}},
-                                                     //region1 points
-                                                     geom::Point{geom::X{1}, geom::Y{2}},
-                                                     geom::Point{geom::X{2}, geom::Y{1}},
-                                                     geom::Point{geom::X{2}, geom::Y{2}},
-                                                    };
+    std::vector<geom::Point> contained_pt
+    {
+        //region0 points
+        geom::Point{geom::X{0}, geom::Y{0}},
+        //region1 points
+        geom::Point{geom::X{1}, geom::Y{1}},
+    };
 
     for(auto x = 0; x <= 3; x++)
     {
         for(auto y = 0; y <= 3; y++)
         {
-            auto test_pt = geom::Point{geom::X{x}, geom::Y{y}};
+            auto test_pt = geom::Point{x, y};
             auto contains = surface_state.contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
