@@ -297,7 +297,7 @@ TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
     wait_handle->wait_for_all();
 
     auto configuration = connection->create_copy_of_display_config();
-    EXPECT_GT(configuration->num_displays, 0);
+    EXPECT_GT(configuration->num_displays, 0u);
     auto proper_num_displays = configuration->num_displays;
     auto proper_displays = configuration->displays;
     auto proper_output_id = configuration->displays[0].output_id;
@@ -325,14 +325,7 @@ TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
     //user tries to set nonsense mode
     configuration->displays[0].current_mode++;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
-#if 0
 
-
-    //current_mode out of range
-    configuration = connection->create_copy_of_display_config();
-    configuration->displays[0].current_mode++;
-    EXPECT_EQ(nullptr, connection->configure_display(configuration));
-#endif
     mcl::delete_config_storage(configuration);
 }
 
@@ -377,7 +370,7 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
     auto verify_display_change = [&](mp::DisplayConfiguration const* config)
     {
         ASSERT_NE(nullptr, config);
-        ASSERT_EQ(1u, config->display_output_size());
+        ASSERT_EQ(1, config->display_output_size());
         auto const& disp1 = config->display_output(0);
         EXPECT_EQ(output.output_id, disp1.output_id());
         EXPECT_EQ(output.used, disp1.used());
