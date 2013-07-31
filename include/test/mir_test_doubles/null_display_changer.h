@@ -32,11 +32,11 @@ namespace doubles
 class NullDisplayChanger : public shell::DisplayChanger
 {
 public:
-    std::shared_ptr<graphics::DisplayConfiguration> active_configuration()
+    virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration()
     {
         return std::make_shared<NullDisplayConfig>();
     }
-    void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
+    virtual void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
     {
     }
 };

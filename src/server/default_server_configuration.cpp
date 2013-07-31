@@ -111,14 +111,14 @@ public:
         std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mg::Display> const& graphics_display,
+        std::shared_ptr<msh::DisplayChanger> const& display_changer,
         std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
         mp_report(mr_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
-        graphics_display(graphics_display),
+        display_changer(display_changer),
         buffer_allocator(buffer_allocator)
     {
     }
@@ -129,7 +129,7 @@ private:
     std::shared_ptr<mf::MessageProcessorReport> const mp_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<msh::DisplayChanger> const display_changer;
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
@@ -138,12 +138,11 @@ private:
         std::shared_ptr<msh::DisplayChanger> changer;
         if(authorized_to_resize_display)
         {
-            changer = std::make_shared<msh::MediatingDisplayChanger>(graphics_display); 
+            changer = display_changer; 
         }
         else
         {
-            auto underlying_changer = std::make_shared<msh::MediatingDisplayChanger>(graphics_display); 
-            changer = std::make_shared<msh::UnauthorizedDisplayChanger>(underlying_changer); 
+            changer = std::make_shared<msh::UnauthorizedDisplayChanger>(display_changer); 
         }
 
         return std::make_shared<mf::SessionMediator>(
@@ -368,6 +367,13 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
         {
             return std::make_shared<mc::GLRendererFactory>();
         });
+}
+
+std::shared_ptr<msh::DisplayChanger>
+mir::DefaultServerConfiguration::the_shell_display_changer()
+{
+    return shell_display_changer([this]()
+        { return std::make_shared<msh::MediatingDisplayChanger>(the_display()); });
 }
 
 std::shared_ptr<msh::SessionContainer>
@@ -703,7 +709,6 @@ mir::DefaultServerConfiguration::the_compositor()
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
 {
     return ipc_factory(
@@ -714,7 +719,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                display, allocator);
+                the_shell_display_changer(), allocator);
         });
 }
 

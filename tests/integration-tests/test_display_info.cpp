@@ -113,7 +113,7 @@ private:
 class StubChanger : public mtd::NullDisplayChanger
 {
 public:
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    std::shared_ptr<mg::DisplayConfiguration> active_configuration() override
     {
         return mt::fake_shared(stub_display_config);
     }
@@ -289,6 +289,14 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
             return platform;
         }
 
+        std::shared_ptr<msh::DisplayChanger> the_shell_display_changer()
+        {
+            if (!changer)
+                changer = std::make_shared<StubChanger>();
+            return changer; 
+        }
+
+        std::shared_ptr<StubChanger> changer;
         std::shared_ptr<StubPlatform> platform;
     } server_config;
 
