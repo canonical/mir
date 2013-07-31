@@ -33,7 +33,7 @@ class MessageSender;
 class EventSender : public  mir::frontend::EventSink
 {
 public:
-    EventSender(std::shared_ptr<MessageSender> const& socket_sender);
+    explicit EventSender(std::shared_ptr<MessageSender> const& socket_sender);
     void handle_event(MirEvent const& e);
 
 private:
