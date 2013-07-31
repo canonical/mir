@@ -30,6 +30,7 @@
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_display_changer.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
@@ -58,27 +59,18 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-struct StubConfig : public mg::DisplayConfiguration
+struct StubConfig : public mtd::NullDisplayConfig
 {
-    StubConfig()
-    {
-    }
     StubConfig(std::shared_ptr<mg::DisplayConfigurationOutput> const& conf)
        : outputs{conf, conf}
     {
     }
-    virtual void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
-    {
-    }
-    virtual void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    virtual void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         for(auto const& disp : outputs)
         {
             f(*disp);
         }
-    }
-    virtual void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
-    {
     }
 
     std::vector<std::shared_ptr<mg::DisplayConfigurationOutput>> outputs;
@@ -91,27 +83,6 @@ struct MockConfig : public mg::DisplayConfiguration
     MOCK_METHOD4(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t));
 };
 
-}
-
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
-class NullDisplayChanger : public msh::DisplayChanger
-{
-public:
-    std::shared_ptr<mg::DisplayConfiguration> active_configuration()
-    {
-        return std::make_shared<StubConfig>();
-    }
-    void configure(std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
-    {
-    }
-};
-}
-}
 }
 
 namespace

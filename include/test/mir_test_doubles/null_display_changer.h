@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 
 #include "mir/shell/display_changer.h"
-#include <gmock/gmock.h>
+#include "null_display_config.h"
 
 namespace mir
 {
@@ -29,15 +29,19 @@ namespace test
 namespace doubles
 {
 
-class MockDisplayChanger : public shell::DisplayChanger
+class NullDisplayChanger : public shell::DisplayChanger
 {
 public:
-    MOCK_METHOD0(active_configuration, std::shared_ptr<graphics::DisplayConfiguration>());
-    MOCK_METHOD2(configure,
-        void(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&));
+    std::shared_ptr<graphics::DisplayConfiguration> active_configuration()
+    {
+        return std::make_shared<NullDisplayConfig>();
+    }
+    void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
+    {
+    }
 };
+}
+}
+}
 
-}
-}
-}
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_ */
+#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_ */

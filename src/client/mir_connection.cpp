@@ -324,12 +324,6 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
     surface_map->insert(id, surface);
 }
 
-void MirConnection::done_display_configure()
-{
-    set_error_message(void_response.error());
-    return configure_display_wait_handle.result_received();
-}
-
 bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
@@ -360,6 +354,12 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
     }
 
     return true;
+}
+
+void MirConnection::done_display_configure()
+{
+    set_error_message(void_response.error());
+    return configure_display_wait_handle.result_received();
 }
 
 MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
