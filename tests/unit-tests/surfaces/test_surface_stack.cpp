@@ -21,7 +21,7 @@
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 #include "src/server/compositor/buffer_bundle.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/compositor/scene.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -72,7 +72,7 @@ public:
     virtual void force_client_abort() {}
     void force_requests_to_complete() {}
     virtual void allow_framedropping(bool) {}
-    virtual mc::BufferProperties properties() const { return mc::BufferProperties{}; };
+    virtual mg::BufferProperties properties() const { return mg::BufferProperties{}; };
 };
 
 
@@ -148,7 +148,7 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
 
 struct StubBufferStreamFactory : public ms::BufferStreamFactory
 {
-    std::shared_ptr<ms::BufferStream> create_buffer_stream(mc::BufferProperties const&)
+    std::shared_ptr<ms::BufferStream> create_buffer_stream(mg::BufferProperties const&)
     {
         return std::make_shared<mc::BufferStreamSurfaces>(
             std::make_shared<NullBufferBundle>());

@@ -18,7 +18,7 @@
 
 #include "mir/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/communicator.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
@@ -409,7 +409,7 @@ public:
             std::shared_ptr<ms::Surface> s = surface_builder->create_surface(
                     msh::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
-                                   .of_buffer_usage(mc::BufferUsage::hardware)
+                                   .of_buffer_usage(mg::BufferUsage::hardware)
                     ).lock();
 
             /*

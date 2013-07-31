@@ -16,15 +16,15 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_PROPERTIES_H_
-#define MIR_COMPOSITOR_BUFFER_PROPERTIES_H_
+#ifndef MIR_GRAPHICS_BUFFER_PROPERTIES_H_
+#define MIR_GRAPHICS_BUFFER_PROPERTIES_H_
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/pixel_format.h"
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 
 /**
@@ -82,4 +82,4 @@ inline bool operator!=(BufferProperties const& lhs, BufferProperties const& rhs)
 
 }
 }
-#endif // MIR_COMPOSITOR_BUFFER_PROPERTIES_H_
+#endif // MIR_GRAPHICS_BUFFER_PROPERTIES_H_

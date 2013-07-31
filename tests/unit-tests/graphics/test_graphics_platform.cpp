@@ -18,8 +18,8 @@
  */
 
 #include "mir/graphics/platform.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #ifndef ANDROID
@@ -39,7 +39,6 @@
 
 #include <gtest/gtest.h>
 
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
@@ -128,8 +127,8 @@ TEST_F(GraphicsPlatform, buffer_creation)
 
     geom::Size size{320, 240};
     geom::PixelFormat const pf{supported_pixel_formats[0]};
-    mc::BufferUsage usage{mc::BufferUsage::hardware};
-    mc::BufferProperties buffer_properties{size, pf, usage};
+    mg::BufferUsage usage{mg::BufferUsage::hardware};
+    mg::BufferProperties buffer_properties{size, pf, usage};
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
 
