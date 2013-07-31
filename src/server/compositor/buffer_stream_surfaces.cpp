@@ -34,6 +34,7 @@ mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> con
 
 mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
+    force_requests_to_complete();
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer()
