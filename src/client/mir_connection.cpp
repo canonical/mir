@@ -366,7 +366,6 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 {
     if (!validate_user_display_config(config))
     {
-        printf("RET!\n");
         return NULL;
     }
 

@@ -35,8 +35,8 @@
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/resource_cache.h"
-#include "mir/frontend/unauthorized_display_changer.h"
 #include "mir/shell/session_manager.h"
+#include "mir/shell/unauthorized_display_changer.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
@@ -143,14 +143,13 @@ private:
         else
         {
             auto underlying_changer = std::make_shared<msh::MediatingDisplayChanger>(graphics_display); 
-            changer = std::make_shared<mf::UnauthorizedDisplayChanger>(underlying_changer); 
+            changer = std::make_shared<msh::UnauthorizedDisplayChanger>(underlying_changer); 
         }
-        //graphics_display;
-        //auto graphics_changer = std::make_shared
+
         return std::make_shared<mf::SessionMediator>(
             shell,
             graphics_platform,
-            changer, //            graphics_changer,
+            changer,
             buffer_allocator,
             sm_report,
             sink,

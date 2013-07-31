@@ -34,7 +34,6 @@
 #include "client_context.h"
 
 #include "mir_wait_handle.h"
-#include "mir/geometry/point.h"
 
 namespace mir
 {

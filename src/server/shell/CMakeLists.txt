@@ -15,6 +15,7 @@ set(
   gl_pixel_buffer.cpp
   graphics_display_layout.cpp
   mediating_display_changer.cpp
+  unauthorized_display_changer.cpp
 )
 
 add_library(

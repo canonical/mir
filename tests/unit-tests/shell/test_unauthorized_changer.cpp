@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/unauthorized_display_changer.h"
+#include "mir/shell/unauthorized_display_changer.h"
 #include "mir/shell/mediating_display_changer.h"
 
 #include "mir_test_doubles/mock_display_changer.h"
@@ -38,7 +38,7 @@ struct UnauthorizedDisplayChangerTest : public ::testing::Test
 TEST_F(UnauthorizedDisplayChangerTest, change_attempt)
 {
     mtd::NullDisplayConfiguration conf;
-    mf::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
+    msh::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
 
     EXPECT_THROW({
         changer.configure(std::weak_ptr<mf::Session>(), mt::fake_shared(conf));
@@ -54,7 +54,7 @@ TEST_F(UnauthorizedDisplayChangerTest, access_config)
         .Times(1)
         .WillOnce(Return(mt::fake_shared(conf)));
 
-    mf::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
+    msh::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
 
     auto returned_conf = changer.active_configuration();
     EXPECT_EQ(&conf, returned_conf.get());
@@ -78,21 +78,3 @@ TEST_F(MediatingDisplayChangerTest, display_info)
     auto returned_conf = changer.active_configuration();
     EXPECT_EQ(&conf, returned_conf.get());
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

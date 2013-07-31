@@ -16,17 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_
-#define MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_
+#ifndef MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_
+#define MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_
 
 #include "mir/shell/display_changer.h"
 
 namespace mir
 {
-namespace frontend
+namespace shell
 {
 
-class UnauthorizedDisplayChanger : public shell::DisplayChanger 
+class UnauthorizedDisplayChanger : public DisplayChanger 
 {
 public:
     explicit UnauthorizedDisplayChanger(std::shared_ptr<shell::DisplayChanger> const& changer);
@@ -41,4 +41,4 @@ private:
 }
 }
 
-#endif /* MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_ */
+#endif /* MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_ */
