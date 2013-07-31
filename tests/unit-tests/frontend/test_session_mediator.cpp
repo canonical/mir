@@ -22,13 +22,13 @@
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
-#include "mir/shell/display_changer.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/mock_display.h"
+#include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_surface.h"
@@ -109,14 +109,6 @@ public:
     {
     }
 };
-
-class MockDisplaySelector : public msh::DisplayChanger
-{
-public:
-    MOCK_METHOD0(active_configuration, std::shared_ptr<mg::DisplayConfiguration>());
-    MOCK_METHOD2(configure, void(std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&));
-};
-
 }
 }
 }
@@ -379,7 +371,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
 
     StubConfig config(mt::fake_shared(output));
 
-    auto mock_display = std::make_shared<mtd::MockDisplaySelector>();
+    auto mock_display = std::make_shared<mtd::MockDisplayChanger>();
     EXPECT_CALL(*mock_display, active_configuration())
         .Times(1)
         .WillOnce(Return(mt::fake_shared(config)));
@@ -529,7 +521,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     mg::DisplayConfigurationOutputId id0{0}, id1{1};
 
     MockConfig mock_display_config;
-    auto mock_display_selector = std::make_shared<mtd::MockDisplaySelector>();
+    auto mock_display_selector = std::make_shared<mtd::MockDisplayChanger>();
 
     Sequence seq;
     EXPECT_CALL(*mock_display_selector, active_configuration())
@@ -542,7 +534,7 @@ TEST_F(SessionMediatorTest, display_config_request)
         .InSequence(seq);
     EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1))
         .InSequence(seq);
-    EXPECT_CALL(*mock_display_selector, configure(_,_))//mt::fake_shared(mock_display_config)))
+    EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);
  
     mf::SessionMediator session_mediator{
