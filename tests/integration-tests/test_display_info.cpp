@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/graphic_buffer_allocator.h"
 
@@ -25,9 +26,12 @@
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
+#include "mir_test/display_config_matchers.h"
+#include "mir_test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
@@ -36,15 +40,69 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
 
 namespace
 {
+class StubDisplayConfig : public mg::DisplayConfiguration
+{
+public:
+    StubDisplayConfig()
+    {
+        /* construct a non-trivial dummy display config to send */
+        int mode_index = 0;
+        for (auto i = 0u; i < 3u; i++)
+        {
+            std::vector<mg::DisplayConfigurationMode> modes;
+            for (auto j = 0u; j <= i; j++)
+            {
+                geom::Size sz{mode_index*4, mode_index*3};
+                mg::DisplayConfigurationMode mode{sz, 10.0f * mode_index };
+                mode_index++;
+                modes.push_back(mode);
+            }
+
+            size_t mode_index = modes.size() - 1; 
+            geom::Size physical_size{};
+            geom::Point top_left{};
+            mg::DisplayConfigurationOutput output{
+                mg::DisplayConfigurationOutputId{static_cast<int>(i)},
+                mg::DisplayConfigurationCardId{static_cast<int>(i)},
+                modes,
+                physical_size,
+                ((i % 2) == 0),
+                ((i % 2) == 1),
+                top_left,
+                mode_index
+            };
+
+            outputs.push_back(output);
+        }
+    };
+
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
+    {
+    }
+
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    {
+        for (auto& disp : outputs)
+        {
+            f(disp);
+        }
+    }
+
+    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
+    {
+    }
+
+    std::vector<mg::DisplayConfigurationOutput> outputs;
+};
 
 class StubDisplay : public mtd::NullDisplay
 {
 public:
     StubDisplay()
-        : display_buffer{rectangle}
     {
     }
 
@@ -53,15 +111,16 @@ public:
         f(display_buffer);
     }
 
-    static geom::Rectangle rectangle;
-    static geom::Size const expected_dimensions_mm;
+    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    {
+        return mt::fake_shared(stub_display_config);
+    }
 
+    static StubDisplayConfig stub_display_config;
 private:
-    mtd::StubDisplayBuffer display_buffer;
+    mtd::NullDisplayBuffer display_buffer;
 };
-
-geom::Size const StubDisplay::expected_dimensions_mm{0,0};
-geom::Rectangle StubDisplay::rectangle{geom::Point{25,36}, geom::Size{49,64}};
+StubDisplayConfig StubDisplay::stub_display_config;
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
@@ -103,12 +162,6 @@ public:
     }
 };
 
-void connection_callback(MirConnection* connection, void* context)
-{
-    auto connection_ptr = static_cast<MirConnection**>(context);
-    *connection_ptr = connection;
-}
-
 }
 
 TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
@@ -134,53 +187,11 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
     {
         void exec()
         {
-            MirConnection* connection{nullptr};
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
-                                     connection_callback, &connection));
-
-
+            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             auto configuration = mir_connection_create_display_config(connection);
 
-            /* TODO: expand test to test multimonitor situations */
-            ASSERT_EQ(1u, configuration->num_displays);
-            auto const& info = configuration->displays[0];
-            geom::Rectangle const& expected_rect = StubDisplay::rectangle;
-
-            //state
-            EXPECT_EQ(1u, info.connected);
-            EXPECT_EQ(1u, info.used);
-
-            //id's
-            EXPECT_EQ(0u, info.output_id);
-            EXPECT_EQ(0u, info.card_id);
-
-            //sizing
-            EXPECT_EQ(StubDisplay::expected_dimensions_mm.width.as_uint32_t(), info.physical_width_mm);
-            EXPECT_EQ(StubDisplay::expected_dimensions_mm.height.as_uint32_t(), info.physical_height_mm);
-
-            //position
-            EXPECT_EQ(static_cast<int>(expected_rect.top_left.x.as_uint32_t()), info.position_x); 
-            EXPECT_EQ(static_cast<int>(expected_rect.top_left.y.as_uint32_t()), info.position_y); 
-
-            //mode selection
-            EXPECT_EQ(1u, info.num_modes);
-            ASSERT_EQ(0u, info.current_mode);
-            auto const& mode = info.modes[info.current_mode];
-
-            //current mode 
-            EXPECT_EQ(expected_rect.size.width.as_uint32_t(), mode.horizontal_resolution);
-            EXPECT_EQ(expected_rect.size.height.as_uint32_t(), mode.vertical_resolution);
-            EXPECT_FLOAT_EQ(60.0f, mode.refresh_rate);
-
-            //pixel formats
-            ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
-                      static_cast<uint32_t>(info.num_output_formats));
-            for (auto i=0u; i < info.num_output_formats; ++i)
-            {
-                EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
-                          static_cast<geom::PixelFormat>(info.output_formats[i]));
-            }
-            EXPECT_EQ(0u, info.current_output_format);
+            EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(StubDisplay::stub_display_config.outputs,
+                                                                   StubGraphicBufferAllocator::pixel_formats));
 
             mir_display_config_destroy(configuration);
             mir_connection_release(connection);

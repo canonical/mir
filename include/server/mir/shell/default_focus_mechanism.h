@@ -28,11 +28,13 @@ namespace mir
 namespace shell
 {
 class InputTargeter;
+class SurfaceController;
 
 class DefaultFocusMechanism : public FocusSetter
 {
 public:
-    explicit DefaultFocusMechanism(std::shared_ptr<InputTargeter> const& input_targeter);
+    explicit DefaultFocusMechanism(std::shared_ptr<InputTargeter> const& input_targeter,
+                                   std::shared_ptr<SurfaceController> const& surface_controller);
     virtual ~DefaultFocusMechanism() = default;
 
     void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
@@ -43,6 +45,7 @@ protected:
 
 private:
     std::shared_ptr<InputTargeter> const input_targeter;
+    std::shared_ptr<SurfaceController> const surface_controller;
 };
 
 }

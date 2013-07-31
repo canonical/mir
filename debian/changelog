@@ -1,3 +1,89 @@
+mir (0.0.8+13.10.20130731.2-0ubuntu1) saucy; urgency=low
+
+  [ Dmitrijs Ledkovs ]
+  * Use explicit boost-dev packages.
+
+  [ Alexandros Frantzis ]
+  * gbm: Support non-cloned display configurations.
+
+  [ Thomas Voß ]
+  * Adjust documentation to account for lightdm/packaging changes.
+  * Don't make Mir become a process group leader, to avoid CTRL-C
+    killing the X server.
+
+  [ Alan Griffiths ]
+  * test_framework: Provide boost exception diagnostics.
+  * graphics: Remove use of frontend::Surface from graphics interface &
+    implementation.
+
+  [ Daniel van Vugt ]
+  * Don't run Android commands which are no longer valid in flipped
+    phablet images. They will only kill your connection to the device.
+    (LP: #1206369). (LP: #1206369)
+  * Fix documentation to suit the new "flipped" phablet images. Also
+    remove extraneous comment which could cause copy/paste mistakes.
+
+  [ Eleni Maria Stea ]
+  * mir option --nested-mode <host-socket>.
+  * added a native platform interface in
+    include/server/mir/graphics/native_platform.h added a new static
+    library for the nested platform added some stub
+    create_native_platform and create_nested_platform functions to be
+    called when mir runs in nested mode.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 901
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 31 Jul 2013 12:55:57 +0000
+
+mir (0.0.8+13.10.20130730-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Use the soname in the filename of all the public libraries.
+    Explicityly set soname for libmirserver and libmirprotobuf.
+
+  [ Daniel van Vugt ]
+  * Separate MockBufferAllocator for reuse in other test cases.
+  * Silence noisy integration tests (Uninteresting mock function calls)
+    (LP: #1192618). (LP: #1192618)
+  * Distinguish between a buffer locked for composition vs snapshotting.
+    The difference will become very important with the introduction of
+    bypass. Stay tuned.
+
+  [ Alexandros Frantzis ]
+  * graphics, shell: move GLPixelBuffer to shell.
+  * compositor: Introduce and use a different DisplayBufferCompositor
+    object per non-cloned output.
+  * geometry: Use an closed-open representation for Rectangle end
+    points.
+
+  [ Thomas Voß ]
+  * Adjust the Process class to correctly trace child processes. This
+    should help a lot in avoiding/diagnosing races on armhf.
+
+  [ Kevin DuBois ]
+  * expand client api so that multiple MirDisplayInfo can be returned
+    for multimonitor situations.
+  * add a function to the client api to query the possible formats to
+    create a surface with.
+  * client: decouple MirConnection from MirEvent a bit. stop two-step
+    initialization of the client rpc channel.
+
+  [ Robert Carr ]
+  * Add surface lifecycle notification to the session listener.
+  * Build test_android_input_registrar.cpp.
+
+  [ Alan Griffiths ]
+  * graphics, shell: move GLPixelBuffer to shell.
+
+  [ Maarten Lankhorst ]
+  * Fixes LP: #1195509. (LP: #1195509)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 890
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 30 Jul 2013 00:03:17 +0000
+
 mir (0.0.8-0ubuntu1) saucy; urgency=low
 
   * New release

@@ -26,7 +26,6 @@ pushd ${BUILD_DIR} > /dev/null
     adb wait-for-device
     adb root
     adb wait-for-device
-    adb shell stop
     adb shell mkdir -p ${RUN_DIR}
 
     for x in bin/acceptance-tests \
@@ -39,8 +38,7 @@ pushd ${BUILD_DIR} > /dev/null
         adb push $x ${RUN_DIR}
     done
 
-    echo "ubuntu_chroot shell;
-        cd ${RUN_DIR};
+    echo "cd ${RUN_DIR};
         export GTEST_OUTPUT=xml:./;
         export LD_LIBRARY_PATH=.;
         ./unit-tests;

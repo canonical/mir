@@ -21,12 +21,15 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
+#include "mir/shell/surface_controller.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::InputTargeter> const& input_targeter)
-  : input_targeter(input_targeter)
+msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::InputTargeter> const& input_targeter,
+                                                  std::shared_ptr<msh::SurfaceController> const& surface_controller)
+  : input_targeter(input_targeter),
+    surface_controller(surface_controller)
 {
 }
 
@@ -39,10 +42,10 @@ void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& fo
         return;
     }
     
-    focus_session->raise();
     auto surface = focus_session->default_surface();
     if (surface)
     {
+        surface->raise(surface_controller);
         surface->take_input_focus(input_targeter);
     }
     else

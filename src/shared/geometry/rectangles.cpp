@@ -45,6 +45,11 @@ geom::Rectangles::Rectangles()
 {
 }
 
+geom::Rectangles::Rectangles(std::initializer_list<Rectangle> const& rects)
+    : rectangles{rects}
+{
+}
+
 void geom::Rectangles::add(geom::Rectangle const& rect)
 {
     rectangles.push_back(rect);

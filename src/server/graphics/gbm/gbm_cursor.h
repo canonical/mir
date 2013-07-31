@@ -27,19 +27,40 @@
 
 namespace mir
 {
+namespace geometry
+{
+struct Rectangle;
+}
 namespace graphics
 {
 namespace gbm
 {
 class KMSOutputContainer;
+class KMSOutput;
+class KMSDisplayConfiguration;
 class GBMPlatform;
+
+class CurrentConfiguration
+{
+public:
+    virtual ~CurrentConfiguration() = default;
+
+    virtual void with_current_configuration_do(
+        std::function<void(KMSDisplayConfiguration const&)> const& exec) = 0;
+
+protected:
+    CurrentConfiguration() = default;
+    CurrentConfiguration(CurrentConfiguration const&) = delete;
+    CurrentConfiguration& operator=(CurrentConfiguration const&) = delete;
+};
 
 class GBMCursor : public Cursor
 {
 public:
     GBMCursor(
-        std::shared_ptr<GBMPlatform> const& platform,
-        KMSOutputContainer const& output_container);
+        gbm_device* device,
+        KMSOutputContainer& output_container,
+        std::shared_ptr<CurrentConfiguration> const& current_configuration);
 
     ~GBMCursor() noexcept;
 
@@ -51,12 +72,14 @@ public:
     void hide();
 
 private:
-    KMSOutputContainer const& output_container;
+    void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&)> const& f);
+
+    KMSOutputContainer& output_container;
     geometry::Point current_position;
 
     struct GBMBOWrapper
     {
-        GBMBOWrapper(GBMPlatform& platform);
+        GBMBOWrapper(gbm_device* gbm);
         operator gbm_bo*();
         ~GBMBOWrapper();
     private:
@@ -64,6 +87,8 @@ private:
         GBMBOWrapper(GBMBOWrapper const&) = delete;
         GBMBOWrapper& operator=(GBMBOWrapper const&) = delete;
     } buffer;
+
+    std::shared_ptr<CurrentConfiguration> const current_configuration;
 };
 }
 }

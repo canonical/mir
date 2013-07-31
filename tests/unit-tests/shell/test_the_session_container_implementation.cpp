@@ -24,12 +24,12 @@
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
+#include "mir_test_doubles/null_event_sink.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
 
-namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
@@ -44,7 +44,8 @@ std::shared_ptr<msh::ApplicationSession> make_session(
     return std::make_shared<msh::ApplicationSession>(
         factory, session_name,
         std::make_shared<mtd::NullSnapshotStrategy>(),
-        std::make_shared<msh::NullSessionListener>());
+        std::make_shared<msh::NullSessionListener>(),
+        std::make_shared<mtd::NullEventSink>());
 }
 
 }

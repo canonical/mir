@@ -74,6 +74,7 @@ public:
     MOCK_METHOD3(gbm_bo_set_user_data, void(struct gbm_bo *bo, void *data,
                                             void (*destroy_user_data)(struct gbm_bo *, void *)));
     MOCK_METHOD1(gbm_bo_get_user_data, void*(struct gbm_bo *bo));
+    MOCK_METHOD3(gbm_bo_write, bool(struct gbm_bo *bo, const void *buf, size_t count));
     MOCK_METHOD1(gbm_bo_destroy, void(struct gbm_bo *bo));
 
     FakeGBMResources fake_gbm;

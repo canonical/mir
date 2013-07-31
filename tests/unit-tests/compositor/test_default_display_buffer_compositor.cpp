@@ -181,9 +181,9 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 
     NiceMock<mtd::MockCompositingCriteria> mock_criteria1, mock_criteria2, mock_criteria3;
 
-    EXPECT_CALL(mock_criteria1, should_be_rendered()).WillOnce(Return(true));
-    EXPECT_CALL(mock_criteria2, should_be_rendered()).WillOnce(Return(false));
-    EXPECT_CALL(mock_criteria3, should_be_rendered()).WillOnce(Return(true));
+    EXPECT_CALL(mock_criteria1, should_be_rendered_in(_)).WillOnce(Return(true));
+    EXPECT_CALL(mock_criteria2, should_be_rendered_in(_)).WillOnce(Return(false));
+    EXPECT_CALL(mock_criteria3, should_be_rendered_in(_)).WillOnce(Return(true));
 
     std::vector<mc::CompositingCriteria*> renderable_vec;
     renderable_vec.push_back(&mock_criteria1);

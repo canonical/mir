@@ -22,6 +22,7 @@
 #include "mir/shell/surface.h"
 
 #include "mir/shell/surface_creation_parameters.h"
+#include "null_event_sink.h"
 
 #include <gmock/gmock.h>
 
@@ -36,9 +37,8 @@ namespace doubles
 
 struct MockSurface : public shell::Surface
 {
-    MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder,
-                std::shared_ptr<shell::SurfaceController> const& controller) :
-        shell::Surface(builder, controller, shell::a_surface())
+    MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder) :
+        shell::Surface(builder, shell::a_surface(), frontend::SurfaceId{}, std::make_shared<NullEventSink>())
     {
     }
 
@@ -46,8 +46,8 @@ struct MockSurface : public shell::Surface
 
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
-    MOCK_METHOD0(raise, void());
     MOCK_METHOD0(visible, bool());
+    MOCK_METHOD1(raise, void(std::shared_ptr<shell::SurfaceController> const&));
 
     MOCK_METHOD0(destroy, void());
     MOCK_METHOD0(force_requests_to_complete, void());

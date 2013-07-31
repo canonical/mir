@@ -37,3 +37,22 @@ bool geom::Rectangle::contains(Point const& p) const
     return p.x >= top_left.x && p.x < br.x &&
            p.y >= top_left.y && p.y < br.y;
 }
+
+bool geom::Rectangle::overlaps(Rectangle const& r) const
+{
+    if (size.width > geom::Width{0} && size.height > geom::Height{0} &&
+        r.size.width > geom::Width{0} && r.size.height > geom::Height{0})
+    {
+        auto tl1 = top_left;
+        auto br1 = bottom_right();
+        auto tl2 = r.top_left;
+        auto br2 = r.bottom_right();
+
+        return !(tl2.x >= br1.x || br2.x <= tl1.x ||
+                 tl2.y >= br1.y || br2.y <= tl1.y);
+    }
+    else
+    {
+        return false;
+    }
+}
