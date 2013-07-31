@@ -324,9 +324,9 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
     surface_map->insert(id, surface);
 }
 
-
 void MirConnection::done_display_configure()
 {
+    set_error_message(void_response.error());
     return configure_display_wait_handle.result_received();
 }
 
