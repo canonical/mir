@@ -31,9 +31,7 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(std::shared_ptr<mg::Displa
 
 std::shared_ptr<mg::DisplayConfiguration> msh::MediatingDisplayChanger::active_configuration()
 {
-    return nullptr;
-//zung
-//    return display->configuration();
+    return display->configuration();
 }
 
 void msh::MediatingDisplayChanger::configure(
