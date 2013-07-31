@@ -16,7 +16,7 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "mir/graphics/nested_platform.h"
+#include "nested_platform.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

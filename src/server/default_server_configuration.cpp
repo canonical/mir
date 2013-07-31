@@ -79,7 +79,7 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 #include "mir/graphics/native_platform.h"
-#include "mir/graphics/nested_platform.h"
+#include "graphics/nested/nested_platform.h"
 
 #include <map>
 
