@@ -71,11 +71,11 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
         return std::make_shared<NullCommunicator>();
     }
 
-    std::shared_ptr<mc::GraphicBufferAllocator> the_buffer_allocator() override
+    std::shared_ptr<mg::GraphicBufferAllocator> the_buffer_allocator() override
     {
-        struct StubBufferAllocator : public mc::GraphicBufferAllocator
+        struct StubBufferAllocator : public mg::GraphicBufferAllocator
         {
-            std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const& buffer_properties)
+            std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& buffer_properties)
             {
                 return std::make_shared<mtd::StubBuffer>(buffer_properties);
             }

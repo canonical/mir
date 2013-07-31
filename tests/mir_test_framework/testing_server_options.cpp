@@ -53,10 +53,10 @@ char const* dummy[] = {0};
 int argc = 0;
 char const** argv = dummy;
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
  public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const& properties)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties)
     {
         return std::unique_ptr<mg::Buffer>(new mtd::StubBuffer(properties));
     }
@@ -86,7 +86,7 @@ private:
 
 class StubGraphicPlatform : public mtd::NullPlatform
 {
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();

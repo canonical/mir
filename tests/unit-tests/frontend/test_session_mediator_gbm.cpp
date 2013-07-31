@@ -48,10 +48,10 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
     {
         return std::shared_ptr<mg::Buffer>();
     }
@@ -65,7 +65,7 @@ public:
 class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
 {
  public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::shared_ptr<StubGraphicBufferAllocator>();
@@ -100,7 +100,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mg::Display> const graphics_display;
-    std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

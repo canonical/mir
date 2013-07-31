@@ -45,7 +45,7 @@ struct SurfaceCreationParameters
     
     SurfaceCreationParameters& of_position(geometry::Point const& top_left);
 
-    SurfaceCreationParameters& of_buffer_usage(compositor::BufferUsage new_buffer_usage);
+    SurfaceCreationParameters& of_buffer_usage(graphics::BufferUsage new_buffer_usage);
 
     SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
     
@@ -54,7 +54,7 @@ struct SurfaceCreationParameters
     std::string name;
     geometry::Size size;
     geometry::Point top_left;
-    compositor::BufferUsage buffer_usage;
+    graphics::BufferUsage buffer_usage;
     geometry::PixelFormat pixel_format;
     surfaces::DepthId depth;
 };

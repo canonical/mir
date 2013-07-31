@@ -31,7 +31,6 @@
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
-namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 
 struct AndroidGraphicBufferAllocatorTest : public ::testing::Test
@@ -93,9 +92,9 @@ TEST_F(AndroidGraphicBufferAllocatorTest, alloc_buffer_calls_initializer)
 
     auto buffer_initializer = std::make_shared<mtd::MockBufferInitializer>();
 
-    mc::BufferProperties properties{geom::Size{2, 2},
+    mg::BufferProperties properties{geom::Size{2, 2},
                                     geom::PixelFormat::abgr_8888,
-                                    mc::BufferUsage::hardware};
+                                    mg::BufferUsage::hardware};
     mga::AndroidGraphicBufferAllocator allocator{buffer_initializer};
     EXPECT_CALL(*buffer_initializer, operator_call(_))
         .Times(1);
@@ -122,7 +121,7 @@ TEST_F(AndroidGraphicBufferAllocatorTest, alloc_buffer_platform_calls_initialize
 TEST_F(AndroidGraphicBufferAllocatorTest, buffer_usage_converter)
 {
     EXPECT_EQ(mga::BufferUsage::use_hardware,
-        mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mc::BufferUsage::hardware));
+        mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mg::BufferUsage::hardware));
     EXPECT_EQ(mga::BufferUsage::use_software,
-        mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mc::BufferUsage::software));
+        mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mg::BufferUsage::software));
 }

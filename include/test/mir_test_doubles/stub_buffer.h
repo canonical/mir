@@ -40,7 +40,7 @@ public:
     {
     }
 
-    StubBuffer(compositor::BufferProperties const& properties)
+    StubBuffer(graphics::BufferProperties const& properties)
         : buf_size{properties.size},
           buf_pixel_format{properties.format}
     {

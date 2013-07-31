@@ -25,7 +25,7 @@
 
 namespace mir
 {
-namespace graphics { class Buffer; }
+namespace graphics { class Buffer; class BufferProperties; }
 
 namespace compositor
 {
@@ -39,7 +39,7 @@ public:
     virtual std::shared_ptr<graphics::Buffer> compositor_acquire() = 0;
     virtual void compositor_release(std::shared_ptr<graphics::Buffer> const&) = 0;
 
-    virtual BufferProperties properties() const = 0;
+    virtual graphics::BufferProperties properties() const = 0;
     virtual void allow_framedropping(bool dropping_allowed) = 0;
     virtual void force_requests_to_complete() = 0;
 protected:

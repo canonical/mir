@@ -65,10 +65,10 @@ geom::Rectangle StubDisplay::rectangle{geom::Point{25,36}, geom::Size{49,64}};
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
     {
         return std::shared_ptr<mg::Buffer>(new mtd::StubBuffer());
     }
@@ -90,7 +90,7 @@ std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
 class StubPlatform : public mtd::NullPlatform
 {
 public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
             std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();

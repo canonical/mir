@@ -128,8 +128,8 @@ TEST_F(GraphicsPlatform, buffer_creation)
 
     geom::Size size{320, 240};
     geom::PixelFormat const pf{supported_pixel_formats[0]};
-    mc::BufferUsage usage{mc::BufferUsage::hardware};
-    mc::BufferProperties buffer_properties{size, pf, usage};
+    mg::BufferUsage usage{mg::BufferUsage::hardware};
+    mg::BufferProperties buffer_properties{size, pf, usage};
 
     auto buffer = allocator->alloc_buffer(buffer_properties);
 

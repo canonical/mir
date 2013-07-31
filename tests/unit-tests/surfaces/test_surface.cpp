@@ -34,7 +34,7 @@
 
 namespace ms = mir::surfaces;
 namespace msh = mir::shell;
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -60,7 +60,7 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     EXPECT_EQ(Width(0), params.size.width);
     EXPECT_EQ(Height(0), params.size.height);
     EXPECT_EQ(default_point, params.top_left);
-    EXPECT_EQ(mc::BufferUsage::undefined, params.buffer_usage);
+    EXPECT_EQ(mg::BufferUsage::undefined, params.buffer_usage);
     EXPECT_EQ(geom::PixelFormat::invalid, params.pixel_format);
 
     EXPECT_EQ(msh::a_surface(), params);
@@ -70,7 +70,7 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
 {
     using namespace geom;
     Size const size{1024, 768};
-    mc::BufferUsage const usage{mc::BufferUsage::hardware};
+    mg::BufferUsage const usage{mg::BufferUsage::hardware};
     geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
     std::string name{"surface"};
 
@@ -89,7 +89,7 @@ TEST(SurfaceCreationParametersTest, equality)
 {
     using namespace geom;
     Size const size{1024, 768};
-    mc::BufferUsage const usage{mc::BufferUsage::hardware};
+    mg::BufferUsage const usage{mg::BufferUsage::hardware};
     geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
 
     auto params0 = msh::a_surface().of_name("surface")
@@ -113,8 +113,8 @@ TEST(SurfaceCreationParametersTest, inequality)
     std::vector<Size> const sizes{{1024, 768},
                                   {1025, 768}};
 
-    std::vector<mc::BufferUsage> const usages{mc::BufferUsage::hardware,
-                                              mc::BufferUsage::software};
+    std::vector<mg::BufferUsage> const usages{mg::BufferUsage::hardware,
+                                              mg::BufferUsage::software};
 
     std::vector<geom::PixelFormat> const formats{geom::PixelFormat::abgr_8888,
                                                  geom::PixelFormat::bgr_888};

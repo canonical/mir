@@ -51,9 +51,9 @@ struct BufferStreamTest : public ::testing::Test
     {
         auto allocator = std::make_shared<mtd::StubBufferAllocator>();
         auto factory = std::make_shared<mc::SwapperFactory>(allocator);
-        mc::BufferProperties properties{geom::Size{380, 210},
+        mg::BufferProperties properties{geom::Size{380, 210},
                                         geom::PixelFormat::abgr_8888,
-                                        mc::BufferUsage::hardware};
+                                        mg::BufferUsage::hardware};
 
         return std::make_shared<mc::SwitchingBundle>(factory, properties);
     }

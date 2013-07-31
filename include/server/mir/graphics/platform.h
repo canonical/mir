@@ -30,7 +30,6 @@ class Surface;
 }
 namespace compositor
 {
-class GraphicBufferAllocator;
 class BufferIPCPacker;
 }
 namespace options
@@ -50,6 +49,7 @@ class BufferInitializer;
 class InternalClient;
 class DisplayReport;
 class DisplayConfigurationPolicy;
+class GraphicBufferAllocator;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -76,7 +76,7 @@ public:
      * \param [in] buffer_initializer the object responsible for initializing the buffers
      */
 
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
+    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
 
     /**

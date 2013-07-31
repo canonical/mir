@@ -453,7 +453,7 @@ struct TestClientIPCRender : public testing::Test
 
         auto initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
-        mc::BufferProperties properties(size, pf, mc::BufferUsage::hardware);
+        mg::BufferProperties properties(size, pf, mg::BufferUsage::hardware);
         android_buffer = allocator->alloc_buffer(properties);
         second_android_buffer = allocator->alloc_buffer(properties);
 

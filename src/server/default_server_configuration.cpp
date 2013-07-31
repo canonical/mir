@@ -109,7 +109,7 @@ public:
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<mg::Display> const& graphics_display,
-        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
+        std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
         mp_report(mr_report),
@@ -127,7 +127,7 @@ private:
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
-    std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         std::shared_ptr<me::EventSink> const& sink)
@@ -541,7 +541,7 @@ mir::DefaultServerConfiguration::the_input_manager()
         });
 }
 
-std::shared_ptr<mc::GraphicBufferAllocator>
+std::shared_ptr<mg::GraphicBufferAllocator>
 mir::DefaultServerConfiguration::the_buffer_allocator()
 {
     return buffer_allocator(
@@ -686,7 +686,7 @@ std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<mf::Shell> const& shell,
     std::shared_ptr<mg::Display> const& display,
-    std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
 {
     return ipc_factory(
         [&]()

@@ -18,12 +18,12 @@
 
 #include "mir/shell/surface_creation_parameters.h"
 
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
 msh::SurfaceCreationParameters::SurfaceCreationParameters()
-    : name(), size(), top_left(), buffer_usage(mc::BufferUsage::undefined),
+    : name(), size(), top_left(), buffer_usage(mg::BufferUsage::undefined),
       pixel_format(geom::PixelFormat::invalid),
       depth{0}
 {
@@ -59,7 +59,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_position(geom
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
-        mc::BufferUsage new_buffer_usage)
+        mg::BufferUsage new_buffer_usage)
 {
     buffer_usage = new_buffer_usage;
 

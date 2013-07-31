@@ -35,14 +35,14 @@ namespace gbm
 {
 class GBMPlatform;
 
-class GBMBufferAllocator: public compositor::GraphicBufferAllocator
+class GBMBufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
     GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform,
                        const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
-        compositor::BufferProperties const& buffer_properties);
+        graphics::BufferProperties const& buffer_properties);
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();
 

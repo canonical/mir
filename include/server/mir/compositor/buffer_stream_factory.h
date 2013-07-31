@@ -21,7 +21,6 @@
 #ifndef MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 #define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
-#include "mir/graphics/buffer.h"
 #include "mir/surfaces/buffer_stream_factory.h"
 
 #include <memory>
@@ -33,7 +32,6 @@ namespace compositor
 
 class BufferAllocationStrategy;
 class GraphicBufferAllocator;
-struct BufferProperties;
 
 class BufferStreamFactory : public surfaces::BufferStreamFactory
 {
@@ -46,7 +44,7 @@ public:
 
     // From BufferStreamFactory
     virtual std::shared_ptr<surfaces::BufferStream> create_buffer_stream(
-        BufferProperties const& buffer_properties);
+        graphics::BufferProperties const& buffer_properties);
 
 private:
     std::shared_ptr<BufferAllocationStrategy> swapper_factory;
