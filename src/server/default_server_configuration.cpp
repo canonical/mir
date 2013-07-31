@@ -640,7 +640,7 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
         [this]()
         {
             auto surface_source = std::make_shared<msh::SurfaceSource>(
-                the_surface_builder());
+                the_surface_builder(), the_shell_surface_configurator());
 
             return std::make_shared<msh::OrganisingSurfaceFactory>(
                 surface_source,

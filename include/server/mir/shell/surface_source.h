@@ -29,11 +29,13 @@ namespace mir
 namespace shell
 {
 class SurfaceBuilder;
+class SurfaceConfigurator;
 
 class SurfaceSource : public SurfaceFactory
 {
 public:
-    explicit SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder);
+    explicit SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
+                           std::shared_ptr<SurfaceConfigurator> const& surface_configurator);
     virtual ~SurfaceSource() {}
 
     std::shared_ptr<Surface> create_surface(
@@ -47,6 +49,7 @@ protected:
 
 private:
     std::shared_ptr<SurfaceBuilder> const surface_builder;
+    std::shared_ptr<SurfaceConfigurator> const surface_configurator;
 };
 
 }
