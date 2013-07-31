@@ -104,10 +104,10 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_opened_behavior)
 
     mia::InputRegistrar registrar(dispatcher);
     
-    registrar.input_channel_opened(channel, surface, ms::InputRegistrar::InputReceptionMode::normal);
+    registrar.input_channel_opened(channel, surface, mi::InputReceptionMode::normal);
     EXPECT_THROW({
             // We can't open a surface twice
-            registrar.input_channel_opened(channel, surface, ms::InputRegistrar::InputReceptionMode::normal);
+            registrar.input_channel_opened(channel, surface, mi::InputReceptionMode::normal);
     }, std::logic_error);
 }
 
@@ -127,7 +127,7 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_closed_behavior)
             // We can't close a surface which hasn't been opened
             registrar.input_channel_closed(channel);
     }, std::logic_error);
-    registrar.input_channel_opened(channel, surface, ms::InputRegistrar::InputReceptionMode::normal);
+    registrar.input_channel_opened(channel, surface, mi::InputReceptionMode::normal);
     registrar.input_channel_closed(channel);
     EXPECT_THROW({
             // Nor can we close a surface twice
@@ -147,5 +147,5 @@ TEST_F(AndroidInputRegistrarFdSetup, monitor_flag_is_passed_to_dispatcher)
 
     mia::InputRegistrar registrar(dispatcher);
     
-    registrar.input_channel_opened(channel, surface, ms::InputRegistrar::InputReceptionMode::receives_all_input);
+    registrar.input_channel_opened(channel, surface, mi::InputReceptionMode::receives_all_input);
 }

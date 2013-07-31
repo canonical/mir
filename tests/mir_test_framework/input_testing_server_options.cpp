@@ -69,7 +69,7 @@ public:
     
     void input_channel_opened(std::shared_ptr<mi::InputChannel> const& opened_channel,
                               std::shared_ptr<mi::Surface> const& surface,
-                              ms::InputRegistrar::InputReceptionMode input_mode)
+                              mi::InputReceptionMode input_mode)
     {
         outstanding_channels[opened_channel] = surface->name();
         underlying_registrar->input_channel_opened(opened_channel, surface, input_mode);

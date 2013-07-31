@@ -44,7 +44,7 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 // Be careful on the locking in these two functions.
 void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChannel> const& channel,
                                                std::shared_ptr<mi::Surface> const& surface,
-                                               ms::InputRegistrar::InputReceptionMode input_mode)
+                                               mi::InputReceptionMode input_mode)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {
@@ -63,7 +63,7 @@ void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChann
         window_handles[channel] = window_handle;
     }
 
-    bool monitors_input = (input_mode == ms::InputRegistrar::InputReceptionMode::receives_all_input);
+    bool monitors_input = (input_mode == mi::InputReceptionMode::receives_all_input);
     input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, monitors_input);
 }
 

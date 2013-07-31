@@ -356,14 +356,14 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_surfaces)
     mtd::MockInputRegistrar registrar;
 
     Sequence seq;
-    EXPECT_CALL(registrar, input_channel_opened(_,_,ms::InputRegistrar::InputReceptionMode::receives_all_input))
+    EXPECT_CALL(registrar, input_channel_opened(_,_,mi::InputReceptionMode::receives_all_input))
         .InSequence(seq);
     EXPECT_CALL(registrar, input_channel_closed(_))
         .InSequence(seq);
 
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator), mt::fake_shared(registrar));
     
-    auto s = stack.create_surface(msh::a_surface().which_receives_all_input());
+    auto s = stack.create_surface(msh::a_surface().with_input_mode(mi::InputReceptionMode::receives_all_input));
     stack.destroy_surface(s);
 }
 
