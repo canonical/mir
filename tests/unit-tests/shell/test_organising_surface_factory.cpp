@@ -17,6 +17,7 @@
  */
 
 #include <mir_test_doubles/mock_surface_factory.h>
+#include <mir_test_doubles/null_event_sink.h>
 
 #include <mir/shell/organising_surface_factory.h>
 #include <mir/shell/placement_strategy.h>
@@ -25,7 +26,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -69,7 +69,7 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(msh::a_surface()));
 
-    factory.create_surface(params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
+    factory.create_surface(params, mf::SurfaceId(), std::make_shared<mtd::NullEventSink>());
 }
 
 TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_placement_strategy_to_underlying_factory)
@@ -78,14 +78,14 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
 
     msh::OrganisingSurfaceFactory factory(underlying_surface_factory, placement_strategy);
 
+    std::shared_ptr<mf::EventSink> sink = std::make_shared<mtd::NullEventSink>();
     auto params = msh::a_surface();
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 
     EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
-    EXPECT_CALL(*underlying_surface_factory, create_surface(placed_params, mf::SurfaceId(), std::shared_ptr<me::EventSink>()));
+    EXPECT_CALL(*underlying_surface_factory, create_surface(placed_params, mf::SurfaceId(), sink));
 
-    factory.create_surface(params, mf::SurfaceId(), std::shared_ptr<me::EventSink>());
+    factory.create_surface(params, mf::SurfaceId(), sink);
 }
-

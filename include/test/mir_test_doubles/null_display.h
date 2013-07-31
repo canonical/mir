@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "null_gl_context.h"
+#include "null_display_configuration.h"
 #include <thread>
 
 namespace mir
@@ -40,7 +41,7 @@ class NullDisplay : public graphics::Display
     }
     std::shared_ptr<graphics::DisplayConfiguration> configuration()
     {
-        return std::shared_ptr<graphics::DisplayConfiguration>();
+        return std::make_shared<NullDisplayConfiguration>();
     }
     void configure(graphics::DisplayConfiguration const&) {}
     void register_configuration_change_handler(

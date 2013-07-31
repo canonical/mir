@@ -34,12 +34,15 @@ namespace frontend
 namespace detail
 {
 
-struct SocketSession : public MessageSender
+class MessageReceiver;
+
+struct SocketSession
 {
     SocketSession(
-        boost::asio::io_service& io_service,
+        std::shared_ptr<MessageReceiver> const& socket_receiver,
         int id_,
-        std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions);
+        std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions,
+        std::shared_ptr<MessageProcessor> const& processor);
 
     ~SocketSession() noexcept;
 
@@ -47,34 +50,18 @@ struct SocketSession : public MessageSender
 
     void read_next_message();
 
-    void set_processor(std::shared_ptr<MessageProcessor> const& processor)
-    {
-        this->processor = processor;
-    }
-
-    boost::asio::local::stream_protocol::socket& get_socket()
-    {
-        return socket;
-    }
-
-    pid_t client_pid();
-
 private:
-    void send(std::string const& body);
-    void send_fds(std::vector<int32_t> const& fd);
-
     void on_response_sent(boost::system::error_code const& error, std::size_t);
     void on_new_message(const boost::system::error_code& ec);
     void on_read_size(const boost::system::error_code& ec);
 
-    boost::asio::local::stream_protocol::socket socket;
+    std::shared_ptr<MessageReceiver> const socket_receiver;
     int const id_;
     std::shared_ptr<ConnectedSessions<SocketSession>> const connected_sessions;
     std::shared_ptr<MessageProcessor> processor;
+
+    boost::asio::streambuf header;
     boost::asio::streambuf message;
-    static size_t const size_of_header = 2;
-    unsigned char message_header_bytes[size_of_header];
-    std::vector<char> whole_message;
 };
 
 }

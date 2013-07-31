@@ -164,6 +164,10 @@ struct mir::DisplayServer::Private
             [this] { compositor->stop(); },
             [this] { compositor->start(); }};
 
+        ApplyNowAndRevertOnScopeExit input{
+            [this] { input_manager->stop(); },
+            [this] { input_manager->start(); }};
+
         auto conf = display->configuration();
         display_configuration_policy->apply_to(*conf);
         display->configure(*conf);

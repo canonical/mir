@@ -30,7 +30,6 @@
 #include <cassert>
 #include <algorithm>
 
-namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
@@ -40,7 +39,7 @@ msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SurfaceConfigurator> const& surface_configurator,
     std::shared_ptr<msh::SessionListener> const& session_listener,
-    std::shared_ptr<me::EventSink> const& sink) :
+    std::shared_ptr<mf::EventSink> const& sink) :
     surface_factory(surface_factory),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
@@ -50,17 +49,6 @@ msh::ApplicationSession::ApplicationSession(
     next_surface_id(0)
 {
     assert(surface_factory);
-}
-
-msh::ApplicationSession::ApplicationSession(
-    std::shared_ptr<SurfaceFactory> const& surface_factory,
-    std::string const& session_name,
-    std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-    std::shared_ptr<SurfaceConfigurator> const& surface_configurator,
-    std::shared_ptr<msh::SessionListener> const& session_listener) :
-    ApplicationSession(surface_factory, session_name, snapshot_strategy, surface_configurator, session_listener, 
-                       std::shared_ptr<me::EventSink>())
-{
 }
 
 msh::ApplicationSession::~ApplicationSession()

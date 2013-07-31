@@ -25,7 +25,7 @@
 
 namespace mir
 {
-namespace events
+namespace frontend
 {
 class EventSink;
 }
@@ -45,15 +45,8 @@ public:
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SurfaceConfigurator> const& surface_configurator,
-        std::shared_ptr<SessionListener> const& session_listener);
-
-    ApplicationSession(
-        std::shared_ptr<SurfaceFactory> const& surface_factory,
-        std::string const& session_name,
-        std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-        std::shared_ptr<SurfaceConfigurator> const& surface_configurator,
         std::shared_ptr<SessionListener> const& session_listener,
-        std::shared_ptr<events::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink);
 
     ~ApplicationSession();
 
@@ -83,7 +76,7 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SurfaceConfigurator> const surface_configurator;
     std::shared_ptr<SessionListener> const session_listener;
-    std::shared_ptr<events::EventSink> const event_sink;
+    std::shared_ptr<frontend::EventSink> const event_sink;
 
     frontend::SurfaceId next_id();
 

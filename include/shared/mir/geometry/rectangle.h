@@ -43,6 +43,7 @@ struct Rectangle
      */
     Point bottom_right() const;
     bool contains(Point const& p) const;
+    bool overlaps(Rectangle const& r) const;
 };
 
 inline bool operator == (Rectangle const& lhs, Rectangle const& rhs)

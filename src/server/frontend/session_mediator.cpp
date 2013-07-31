@@ -31,7 +31,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/geometry/rectangles.h"
@@ -52,14 +52,14 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<graphics::Display> const& display,
     std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
-    std::shared_ptr<events::EventSink> const& event_sink,
+    std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
     display(display),
     buffer_allocator(buffer_allocator),
     report(report),
-    event_sink(event_sink),
+    event_sink(sender),
     resource_cache(resource_cache),
     client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size))
 {
@@ -89,7 +89,6 @@ void mf::SessionMediator::connect(
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
-    auto display_output = response->add_display_output();
 
     for (auto& data : ipc_package->ipc_data)
         platform->add_data(data);
@@ -97,29 +96,35 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    /* TODO: Get proper configuration */
-    geom::Rectangles view_area;
-    display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
+    auto display_config = display->configuration();
+    auto supported_pfs = buffer_allocator->supported_pixel_formats();
+    display_config->for_each_output([&response, &supported_pfs](mg::DisplayConfigurationOutput const& config)
     {
-        view_area.add(db.view_area());
-    });
-    geom::Rectangle const view_rect = view_area.bounding_rectangle();
-    display_output->set_connected(1);
-    display_output->set_used(1);
-    display_output->set_physical_width_mm(0);
-    display_output->set_physical_height_mm(0);
-    display_output->set_position_x(view_rect.top_left.x.as_uint32_t());
-    display_output->set_position_y(view_rect.top_left.y.as_uint32_t());
-    auto mode = display_output->add_mode();
-    mode->set_horizontal_resolution(view_rect.size.width.as_uint32_t());
-    mode->set_vertical_resolution(view_rect.size.height.as_uint32_t());
-    mode->set_refresh_rate(60.0f);
-    display_output->set_current_mode(0);
+        auto output = response->add_display_output();
+        output->set_output_id(config.id.as_value());
+        output->set_card_id(config.card_id.as_value());
+        output->set_connected(config.connected);
+        output->set_used(config.used);
+        output->set_physical_width_mm(config.physical_size_mm.width.as_uint32_t());
+        output->set_physical_height_mm(config.physical_size_mm.height.as_uint32_t());
+        output->set_position_x(config.top_left.x.as_uint32_t());
+        output->set_position_y(config.top_left.y.as_uint32_t());
+        for (auto const& mode : config.modes)
+        {
+            auto output_mode = output->add_mode();
+            output_mode->set_horizontal_resolution(mode.size.width.as_uint32_t()); 
+            output_mode->set_vertical_resolution(mode.size.height.as_uint32_t());
+            output_mode->set_refresh_rate(mode.vrefresh_hz);
+        }
+        output->set_current_mode(config.current_mode_index);
 
-    auto supported_pixel_formats = buffer_allocator->supported_pixel_formats();
-    for (auto pf : supported_pixel_formats)
-        display_output->add_pixel_format(static_cast<uint32_t>(pf));
-    display_output->set_current_format(0);
+        for (auto const& pf : supported_pfs)
+        {
+            output->add_pixel_format(static_cast<uint32_t>(pf));
+        }
+        //TODO: should set the actual display format from the display, once display lets us at that info
+        output->set_current_format(0);
+    });
 
     resource_cache->save_resource(response, ipc_package);
 

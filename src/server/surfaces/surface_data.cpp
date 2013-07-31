@@ -81,10 +81,14 @@ glm::mat4 const& ms::SurfaceData::transformation() const
     return transformation_matrix;
 }
 
-bool ms::SurfaceData::should_be_rendered() const
+bool ms::SurfaceData::should_be_rendered_in(geom::Rectangle const& rect) const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return !hidden && first_frame_posted;
+
+    if (hidden || !first_frame_posted)
+        return false;
+
+    return rect.overlaps(surface_rect);
 }
 
 void ms::SurfaceData::apply_alpha(float alpha)

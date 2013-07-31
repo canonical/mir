@@ -26,12 +26,9 @@
 
 namespace mir
 {
-namespace frontend
-{
-class Surface;
-}
 namespace graphics
 {
+class InternalSurface;
 
 /**
  * Interface to in-process client support.
@@ -47,7 +44,7 @@ public:
     /**
      * The EGL native window to be used by in-process clients for a surface.
      */
-    virtual EGLNativeWindowType egl_native_window(std::shared_ptr<frontend::Surface> const&) = 0;
+    virtual EGLNativeWindowType egl_native_window(std::shared_ptr<InternalSurface> const&) = 0;
 
 protected:
     InternalClient() = default;

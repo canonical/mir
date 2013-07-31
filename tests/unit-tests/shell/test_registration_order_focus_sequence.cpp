@@ -25,6 +25,7 @@
 
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/null_event_sink.h"
 #include "mir_test/fake_shared.h"
 
 #include <gmock/gmock.h>
@@ -32,7 +33,6 @@
 #include <string>
 
 namespace mc = mir::compositor;
-namespace me = mir::events;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mt = mir::test;
@@ -55,7 +55,7 @@ struct RegistrationOrderFocusSequenceSetup : public testing::Test
             std::shared_ptr<msh::SnapshotStrategy>(),
             std::shared_ptr<msh::SurfaceConfigurator>(), 
             std::make_shared<msh::NullSessionListener>(),
-            std::shared_ptr<me::EventSink>());
+            std::make_shared<mtd::NullEventSink>());
     }
 
     std::shared_ptr<mtd::MockSurfaceFactory> const factory;
