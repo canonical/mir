@@ -29,11 +29,16 @@ namespace graphics
 class BufferIPCPacker
 {
 public:
-    BufferIPCPacker() {}
     virtual ~BufferIPCPacker() = default;
     virtual void pack_fd(int) = 0;
     virtual void pack_data(int) = 0;
     virtual void pack_stride(geometry::Stride) = 0;
+
+protected:
+    BufferIPCPacker() {}
+    BufferIPCPacker(BufferIPCPacker const&) = delete;
+    BufferIPCPacker& operator=(BufferIPCPacker const&) = delete;
+
 };
 
 }
