@@ -79,6 +79,7 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 #include "mir/graphics/native_platform.h"
+#include "mir/graphics/nested/nested_platform.h"
 
 #include <map>
 
@@ -310,7 +311,7 @@ std::shared_ptr<mg::DisplayReport> mir::DefaultServerConfiguration::the_display_
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
     return graphics_platform(
-        [this]()
+        [this]()->std::shared_ptr<mg::Platform>
         {
             auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
 
@@ -322,7 +323,8 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             else
             {
                 auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-                return create_nested_platform(the_options(), create_native_platform());
+                return std::make_shared<mir::graphics::nested::NestedPlatform>(/*TODO: the_options(),*/
+                    the_display_report(), create_native_platform());
             }
         });
 }
