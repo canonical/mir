@@ -337,6 +337,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
     {
         auto output = config->displays[i];
         auto display_request = request.add_display_output();
+        display_request->set_output_id(output.output_id); 
         display_request->set_used(output.used); 
         display_request->set_current_mode(output.current_mode); 
         display_request->set_position_x(output.position_x); 

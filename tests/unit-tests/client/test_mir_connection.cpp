@@ -314,7 +314,7 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
     using namespace testing;
 
     MirDisplayOutput output;
-    output.card_id = 4;
+    output.output_id = 4;
     output.current_mode = 5;
     output.used = 0;
     output.position_x = 4;
@@ -326,7 +326,7 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
         ASSERT_NE(nullptr, config);
         ASSERT_EQ(1u, config->display_output_size());
         auto const& disp1 = config->display_output(0);
-        EXPECT_EQ(output.card_id, disp1.card_id());
+        EXPECT_EQ(output.output_id, disp1.output_id());
         EXPECT_EQ(output.used, disp1.used());
         EXPECT_EQ(output.current_mode, disp1.current_mode());
         EXPECT_EQ(output.position_x, disp1.position_x());

@@ -546,14 +546,14 @@ TEST_F(SessionMediatorTest, display_config_request)
     mp::Void ignored;
     mp::DisplayConfiguration configuration; 
     auto disp0 = configuration.add_display_output();
-    disp0->set_card_id(id0.as_value());
+    disp0->set_output_id(id0.as_value());
     disp0->set_used(used0);
     disp0->set_position_x(pt0.x.as_uint32_t());
     disp0->set_position_y(pt0.y.as_uint32_t());
     disp0->set_current_mode(mode_index0);
 
     auto disp1 = configuration.add_display_output();
-    disp1->set_card_id(id1.as_value());
+    disp1->set_output_id(id1.as_value());
     disp1->set_used(used1);
     disp1->set_position_x(pt1.x.as_uint32_t());
     disp1->set_position_y(pt1.y.as_uint32_t());

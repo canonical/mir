@@ -300,8 +300,8 @@ void mf::SessionMediator::configure_display(
         for (auto i=0; i < request->display_output_size(); i++)
         {   
             auto& output = request->display_output(i);
-            config->configure_output(mg::DisplayConfigurationOutputId{i},
-                                     output.used(),
+            mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
+            config->configure_output(output_id, output.used(),
                                      geom::Point{output.position_x(), output.position_y()},
                                      output.current_mode());
         }
