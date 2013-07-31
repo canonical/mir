@@ -8,6 +8,7 @@ set(
   protobuf_message_processor.cpp
   protobuf_buffer_packer.cpp
   null_message_processor.cpp
+  unauthorized_display_changer.cpp
   event_pipe.cpp
 
   resource_cache.cpp
