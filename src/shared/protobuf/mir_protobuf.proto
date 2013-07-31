@@ -150,6 +150,7 @@ message EventSequence {
 
 message DisplayConfiguration {
   repeated DisplayOutput display_output = 1;
+  optional string error = 127;
 }
 
 service DisplayServer {
