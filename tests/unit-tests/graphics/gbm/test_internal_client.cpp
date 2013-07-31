@@ -16,17 +16,38 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/surface.h"
-#include "mir_toolkit/mesa/native_display.h"
 #include "src/server/graphics/gbm/internal_client.h"
+#include "mir/graphics/internal_surface.h"
+#include "mir_toolkit/mesa/native_display.h"
 #include "src/server/graphics/gbm/internal_native_surface.h"
-#include "mir_test_doubles/stub_surface.h"
 
 #include <gtest/gtest.h>
 
 namespace geom=mir::geometry;
+namespace mg = mir::graphics;
 namespace mgg=mir::graphics::gbm;
-namespace mtd=mir::test::doubles;
+
+namespace
+{
+class StubInternalSurface : public mg::InternalSurface
+{
+public:
+    geom::Size size() const
+    {
+        return geom::Size();
+    }
+
+    MirPixelFormat pixel_format() const
+    {
+        return MirPixelFormat();
+    }
+
+    std::shared_ptr<mg::Buffer> advance_client_buffer()
+    {
+        return std::shared_ptr<mg::Buffer>();
+    }
+};
+}
 
 TEST(InternalClient, native_display_sanity)
 {
@@ -42,7 +63,7 @@ TEST(InternalClient, native_surface_sanity)
     auto stub_display = std::make_shared<MirMesaEGLNativeDisplay>();
     mgg::InternalClient client(stub_display);
 
-    auto stub_window = std::make_shared<mtd::StubSurface>();
+    auto stub_window = std::make_shared<StubInternalSurface>();
     auto native_window = static_cast<mgg::InternalNativeSurface*>(client.egl_native_window(stub_window));
 
     ASSERT_NE(nullptr, native_window->surface_advance_buffer);

@@ -13,34 +13,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_
-#define MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_
+#include "nested_platform.h"
 
-#include "mir/graphics/internal_client.h"
-#include <memory>
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
-namespace mir
-{
-namespace graphics
-{
-namespace android
-{
-class MirNativeWindow;
-class InternalClient : public mir::graphics::InternalClient
-{
-public:
-    InternalClient();
-    EGLNativeDisplayType egl_native_display();
-    EGLNativeWindowType egl_native_window(std::shared_ptr<InternalSurface> const&);
+namespace mg = mir::graphics;
+namespace mgn = mir::graphics::nested;
+namespace mo = mir::options;
 
-private:
-    std::shared_ptr<MirNativeWindow> client_window;
-};
+std::shared_ptr<mg::Platform> mg::create_nested_platform(std::shared_ptr<mo::Option> const& /*options*/, std::shared_ptr<mg::NativePlatform> const& /*native_platform*/)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir method create_nested_platform is not implemented yet!"));
+    return 0;
 }
-}
-}
-
-#endif /* MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_ */

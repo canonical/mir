@@ -13,34 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_
-#define MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_
+#ifndef MIR_GRAPHICS_NESTED_NESTED_PLATFORM_H_
+#define MIR_GRAPHICS_NESTED_NESTED_PLATFORM_H_
 
-#include "mir/graphics/internal_client.h"
-#include <memory>
+#include "mir/graphics/platform.h"
+#include "mir/graphics/native_platform.h"
 
 namespace mir
 {
 namespace graphics
 {
-namespace android
+namespace nested
 {
-class MirNativeWindow;
-class InternalClient : public mir::graphics::InternalClient
-{
-public:
-    InternalClient();
-    EGLNativeDisplayType egl_native_display();
-    EGLNativeWindowType egl_native_window(std::shared_ptr<InternalSurface> const&);
-
-private:
-    std::shared_ptr<MirNativeWindow> client_window;
-};
+class NestedPlatform; //TODO
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_ */
+#endif // MIR_GRAPHICS_NESTED_NESTED_PLATFORM_H_

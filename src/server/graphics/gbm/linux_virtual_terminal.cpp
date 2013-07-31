@@ -186,26 +186,6 @@ int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
 
     std::string const active_vt_path{vt_path_stream.str()};
 
-    if (activate)
-    {
-        if (getpid() == getpgid(0) && setpgid(0, getpgid(getppid())) < 0)
-        {
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to stop being a process group"))
-                       << boost::errinfo_errno(errno));
-        }
-
-        /* become process group leader */
-        if (setsid() < 0)
-        {
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to become session leader"))
-                       << boost::errinfo_errno(errno));
-        }
-    }
-
     auto vt_fd = fops->open(active_vt_path.c_str(), O_RDONLY | O_NDELAY);
 
     if (vt_fd < 0)
