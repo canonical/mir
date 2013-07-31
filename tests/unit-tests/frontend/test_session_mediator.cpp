@@ -30,6 +30,7 @@
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"

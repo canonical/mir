@@ -87,7 +87,7 @@ public:
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
     {
-        for(auto& disp : outputs)
+        for (auto& disp : outputs)
         {
             f(disp);
         }
@@ -95,7 +95,6 @@ public:
 
     void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
     {
-        
     }
 
     std::vector<mg::DisplayConfigurationOutput> outputs;
