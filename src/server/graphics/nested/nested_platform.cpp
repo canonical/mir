@@ -16,7 +16,7 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "nested_platform.h"
+#include "mir/graphics/nested_platform.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -31,7 +31,7 @@ mgn::NestedPlatform::NestedPlatform(std::shared_ptr<mg::DisplayReport> const& di
     native_platform{native_platform},
     display_report{display_report}
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir NestedPlatform constructor is not implemented yet!")));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir NestedPlatform constructor is not implemented yet!"));
 }
 
 mgn::NestedPlatform::~NestedPlatform() noexcept(true)
@@ -41,25 +41,25 @@ mgn::NestedPlatform::~NestedPlatform() noexcept(true)
 std::shared_ptr<mc::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir mgn::NestedPlatform::create_buffer_allocator is not implemented yet!")));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::create_buffer_allocator is not implemented yet!"));
     return 0;
 }
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(std::shared_ptr<mg::DisplayConfigurationPolicy> const& /*initial_conf_policy*/)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir mgn::NestedPlatform::create_display is not implemented yet!")));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::create_display is not implemented yet!"));
     return 0;
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir mgn::NestedPlatform::get_ipc_package is not implemented yet!")));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::get_ipc_package is not implemented yet!"));
     return 0;
 }
 
 std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir mgn::NestedPlatform::create_internal_client is not implemented yet!")));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::create_internal_client is not implemented yet!"));
     return 0;
 }
 
@@ -67,5 +67,5 @@ std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client(
 void mgn::NestedPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& /*packer*/,
                                         std::shared_ptr<Buffer> const& /*buffer*/) const
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Mir method mgn::NestedPlatform::fill_ipc_package is not implemented yet!")));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir method mgn::NestedPlatform::fill_ipc_package is not implemented yet!"));
 }
