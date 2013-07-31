@@ -33,7 +33,6 @@ class Buffer;
 class InternalSurface
 {
 public:
-
     virtual ~InternalSurface() = default;
 
     virtual std::shared_ptr<Buffer> advance_client_buffer() = 0;
