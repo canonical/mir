@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/surface.h"
-#include "mir/graphics/buffer.h"
 #include "internal_client_window.h"
+#include "mir/graphics/internal_surface.h"
+#include "mir/graphics/buffer.h"
 #include "interpreter_resource_cache.h"
 #include "android_format_conversion-inl.h"
 
@@ -27,12 +27,12 @@
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<frontend::Surface> const& surface,
+mga::InternalClientWindow::InternalClientWindow(std::shared_ptr<InternalSurface> const& surface,
                                                 std::shared_ptr<InterpreterResourceCache> const& cache)
     : surface(surface),
       resource_cache(cache)
 {
-    format = mga::to_android_format(surface->pixel_format());
+    format = mga::to_android_format(geometry::PixelFormat(surface->pixel_format()));
 }
 
 ANativeWindowBuffer* mga::InternalClientWindow::driver_requests_buffer()

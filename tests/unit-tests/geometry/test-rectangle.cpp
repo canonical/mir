@@ -71,3 +71,37 @@ TEST(geometry, rectangle_contains)
 
     EXPECT_FALSE(rect_empty.contains({2,2}));
 }
+
+TEST(geometry, rectangle_overlaps)
+{
+    using namespace testing;
+    using namespace geom;
+
+    Rectangle const rect1{{0,0}, {1,1}};
+    Rectangle const rect2{{1,1}, {1,1}};
+    Rectangle const rect3{{0,0}, {2,2}};
+    Rectangle const rect4{{-1,-1}, {2,2}};
+    Rectangle const rect_empty{{0,0}, {0,0}};
+
+    EXPECT_FALSE(rect_empty.overlaps(rect_empty));
+    EXPECT_FALSE(rect_empty.overlaps(rect1));
+    EXPECT_FALSE(rect_empty.overlaps(rect4));
+
+    EXPECT_FALSE(rect1.overlaps(rect2));
+    EXPECT_FALSE(rect2.overlaps(rect1));
+    EXPECT_FALSE(rect4.overlaps(rect2));
+    EXPECT_FALSE(rect2.overlaps(rect4));
+
+    EXPECT_TRUE(rect1.overlaps(rect1));
+    EXPECT_TRUE(rect4.overlaps(rect4));
+
+    EXPECT_TRUE(rect3.overlaps(rect1));
+    EXPECT_TRUE(rect1.overlaps(rect3));
+    EXPECT_TRUE(rect3.overlaps(rect2));
+    EXPECT_TRUE(rect2.overlaps(rect3));
+
+    EXPECT_TRUE(rect4.overlaps(rect1));
+    EXPECT_TRUE(rect1.overlaps(rect4));
+    EXPECT_TRUE(rect4.overlaps(rect3));
+    EXPECT_TRUE(rect3.overlaps(rect3));
+}
