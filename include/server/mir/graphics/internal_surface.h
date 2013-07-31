@@ -13,40 +13,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
-#define MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_
+#ifndef MIR_GRAPHICS_INTERNAL_SURFACE_H_
+#define MIR_GRAPHICS_INTERNAL_SURFACE_H_
 
-#include <cstdint>
+#include "mir/geometry/size.h"
+#include "mir_toolkit/client_types.h"
+
 #include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-namespace gbm
-{
+class Buffer;
 
-class KMSOutput;
-
-class KMSOutputContainer
+class InternalSurface
 {
 public:
-    virtual ~KMSOutputContainer() = default;
+    virtual ~InternalSurface() = default;
 
-    virtual std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id) = 0;
-    virtual void for_each_output(std::function<void(KMSOutput&)> functor) const = 0;
+    virtual std::shared_ptr<Buffer> advance_client_buffer() = 0;
+    virtual geometry::Size size() const = 0;
+    virtual MirPixelFormat pixel_format() const = 0;
 
 protected:
-    KMSOutputContainer() = default;
-    KMSOutputContainer(KMSOutputContainer const&) = delete;
-    KMSOutputContainer& operator=(KMSOutputContainer const&) = delete;
+    InternalSurface() = default;
+    InternalSurface(InternalSurface const&) = delete;
+    InternalSurface& operator=(InternalSurface const&) = delete;
 };
-
-}
 }
 }
 
-#endif /* MIR_GRAPHICS_GBM_KMS_OUTPUT_CONTAINER_H_ */
+#endif /* MIR_GRAPHICS_INTERNAL_SURFACE_H_ */

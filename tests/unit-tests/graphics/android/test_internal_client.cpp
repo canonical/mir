@@ -16,8 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/surface.h"
 #include "src/server/graphics/android/internal_client.h"
+#include "mir/graphics/internal_surface.h"
+
 #include <system/window.h>
 #include <gtest/gtest.h>
 
@@ -27,51 +28,36 @@ namespace mga=mir::graphics::android;
 
 namespace
 {
-class StubSurface : public mir::frontend::Surface
+class StubInternalSurface : public mg::InternalSurface
 {
-    void destroy()
-    {
-    }
-    void force_requests_to_complete()
-    {
-    }
+public:
     geom::Size size() const
     {
-        return {4, 2};
+        return geom::Size();
     }
-    geom::PixelFormat pixel_format() const
+
+    MirPixelFormat pixel_format() const
     {
-        return geom::PixelFormat::xbgr_8888;
+        return MirPixelFormat();
     }
+
     std::shared_ptr<mg::Buffer> advance_client_buffer()
     {
         return std::shared_ptr<mg::Buffer>();
     }
-    bool supports_input() const
-    {
-        return false;
-    }
-    int client_input_fd() const
-    {
-        return 5;
-    }
-    int configure(MirSurfaceAttrib, int)
-    {
-        return 218181;
-    }
-}; 
+};
 }
 
 TEST(InternalClient, native_display)
 {
-    auto surface = std::make_shared<StubSurface>();
+    auto surface = std::make_shared<StubInternalSurface>();
     mga::InternalClient client;
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, client.egl_native_display());
 }
 
 TEST(InternalClient, native_window)
 {
-    auto surface = std::make_shared<StubSurface>();
+    auto surface = std::make_shared<StubInternalSurface>();
     mga::InternalClient client;
     ANativeWindow* native_window = static_cast<ANativeWindow*>(client.egl_native_window(surface));
 
