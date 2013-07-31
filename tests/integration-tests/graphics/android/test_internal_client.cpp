@@ -39,6 +39,7 @@
 #include "mir/options/program_option.h"
 
 #include "mir_test_doubles/stub_input_registrar.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 
 #include <EGL/egl.h>
 #include <gtest/gtest.h>
@@ -110,7 +111,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory);
     auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
-    auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller);
+    auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller, std::make_shared<mtd::NullSurfaceConfigurator>());
     auto mir_surface = std::make_shared<ForwardingInternalSurface>(
         surface_source->create_surface(params, id, std::shared_ptr<mf::EventSink>()));
 
