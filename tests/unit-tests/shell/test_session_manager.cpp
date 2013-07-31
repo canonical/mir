@@ -34,6 +34,7 @@
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -111,7 +112,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
        Return(std::make_shared<msh::Surface>(
-           mt::fake_shared(surface_builder),
+           mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
 
 
@@ -146,7 +147,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     using namespace ::testing;
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
         Return(std::make_shared<msh::Surface>(
-           mt::fake_shared(surface_builder),
+           mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
 
     // Once for session creation and once for surface creation
