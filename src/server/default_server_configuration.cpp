@@ -35,6 +35,7 @@
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/resource_cache.h"
+#include "mir/frontend/unauthorized_display_changer.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
@@ -72,6 +73,7 @@
 #include "mir/lttng/message_processor_report.h"
 #include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
+#include "mir/shell/mediating_display_changer.h"
 #include "mir/surfaces/surface_allocator.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
@@ -130,14 +132,24 @@ private:
     std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<mf::EventSink> const& sink)
+        std::shared_ptr<mf::EventSink> const& sink, bool authorized_to_resize_display)
     {
+        std::shared_ptr<msh::DisplayChanger> changer;
+        if(authorized_to_resize_display)
+        {
+            changer = std::make_shared<msh::MediatingDisplayChanger>(graphics_display); 
+        }
+        else
+        {
+            auto underlying_changer = std::make_shared<msh::MediatingDisplayChanger>(graphics_display); 
+            changer = std::make_shared<mf::UnauthorizedDisplayChanger>(underlying_changer); 
+        }
         //graphics_display;
         //auto graphics_changer = std::make_shared
         return std::make_shared<mf::SessionMediator>(
             shell,
             graphics_platform,
-            nullptr, //            graphics_changer,
+            changer, //            graphics_changer,
             buffer_allocator,
             sm_report,
             sink,
@@ -711,6 +723,11 @@ mir::DefaultServerConfiguration::the_session_authorizer()
     struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
     {
         bool connection_is_allowed(pid_t /* pid */)
+        {
+            return true;
+        }
+
+        bool configure_display_is_allowed(pid_t /* pid */)
         {
             return true;
         }
