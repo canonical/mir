@@ -141,19 +141,16 @@ void client_loop(int nframes, ms::BufferStream& stream)
 }
 
 void compositor_loop(ms::BufferStream &stream,
-                     std::atomic<bool> &done,
-                     int &composited)
+                     std::atomic<bool> &done)
 {
     while (!done.load())
     {
         auto comp1 = stream.lock_compositor_buffer();
         ASSERT_NE(nullptr, comp1);
-        composited++;
 
         // Also stress test getting a second compositor buffer before yielding
         auto comp2 = stream.lock_compositor_buffer();
         ASSERT_NE(nullptr, comp2);
-        composited++;
 
         std::this_thread::yield();
 
@@ -163,14 +160,12 @@ void compositor_loop(ms::BufferStream &stream,
 }
 
 void snapshot_loop(ms::BufferStream &stream,
-                   std::atomic<bool> &done,
-                   std::atomic<int> &snapshotted)
+                   std::atomic<bool> &done)
 {
     while (!done.load())
     {
         auto out_region = stream.lock_snapshot_buffer();
         ASSERT_NE(nullptr, out_region);
-        snapshotted++;
         std::this_thread::yield();
     }
 }
@@ -179,16 +174,12 @@ void snapshot_loop(ms::BufferStream &stream,
 
 TEST_F(BufferStreamTest, stress_test_distinct_buffers)
 {
-    const int num_snapshotters{3};
-    const int num_frames{500};
+    // More would be good, but armhf takes too long
+    const int num_snapshotters{2};
+    const int num_frames{200};
 
     std::atomic<bool> done;
     done = false;
-
-    int composited = 0;
-
-    std::atomic<int> snapshotted;
-    snapshotted = 0;
 
     std::thread client(client_loop,
                        num_frames,
@@ -196,8 +187,7 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
 
     std::thread compositor(compositor_loop,
                            std::ref(buffer_stream),
-                           std::ref(done),
-                           std::ref(composited));
+                           std::ref(done));
 
     std::vector<std::shared_ptr<std::thread>> snapshotters;
     for (unsigned int i = 0; i < num_snapshotters; i++)
@@ -205,8 +195,7 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
         snapshotters.push_back(
             std::make_shared<std::thread>(snapshot_loop,
                                           std::ref(buffer_stream),
-                                          std::ref(done),
-                                          std::ref(snapshotted)));
+                                          std::ref(done)));
     }
 
     client.join();
