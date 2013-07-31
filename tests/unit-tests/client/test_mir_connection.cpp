@@ -62,8 +62,7 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
         }
         else if (method->name() == "configure_display")
         {
-            auto b = static_cast<mp::DisplayConfiguration const*>(parameters);
-            configure_display_sent(b);
+            configure_display_sent(static_cast<mp::DisplayConfiguration const*>(parameters));
         }
 
         complete->Run();
@@ -297,36 +296,43 @@ TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
 
-    //user sends no displays
     auto configuration = connection->create_copy_of_display_config();
+    EXPECT_GT(configuration->num_displays, 0);
+    auto proper_num_displays = configuration->num_displays;
+    auto proper_displays = configuration->displays;
+    auto proper_output_id = configuration->displays[0].output_id;
+
+    //user lies about num_displays
     configuration->num_displays = 0;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
-    mcl::delete_config_storage(configuration);
 
-    //user lies about displays
-    configuration = connection->create_copy_of_display_config();
-    auto tmp = configuration->displays;
+    configuration->num_displays = proper_num_displays + 1;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+
+    configuration->num_displays = proper_num_displays;
+   
+    //user sends nullptr for displays 
     configuration->displays = nullptr;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
-    configuration->displays = tmp;
-    mcl::delete_config_storage(configuration);
 
-    //user sends more displays than are present
-    configuration = connection->create_copy_of_display_config();
-    configuration->num_displays++;
-    EXPECT_EQ(nullptr, connection->configure_display(configuration));
-    mcl::delete_config_storage(configuration);
+    configuration->displays = proper_displays;
 
     //user makes up own id
-    configuration = connection->create_copy_of_display_config();
     configuration->displays[0].output_id = 4944949;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
-    mcl::delete_config_storage(configuration);
+    configuration->displays[0].output_id = proper_output_id; 
+
+    //user tries to set nonsense mode
+    configuration->displays[0].current_mode++;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+#if 0
+
 
     //current_mode out of range
     configuration = connection->create_copy_of_display_config();
     configuration->displays[0].current_mode++;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
+#endif
     mcl::delete_config_storage(configuration);
 }
 
@@ -357,9 +363,12 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
 {
     using namespace testing;
 
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_output));
+
     MirDisplayOutput output;
-    output.output_id = 4;
-    output.current_mode = 5;
+    output.output_id = 0;
+    output.current_mode = 0;
     output.used = 0;
     output.position_x = 4;
     output.position_y = 6;

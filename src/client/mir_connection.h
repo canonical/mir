@@ -149,13 +149,13 @@ private:
     static std::mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 
-
     struct SurfaceRelease;
 
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
     void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
+    bool validate_user_display_config(MirDisplayConfiguration* config);
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

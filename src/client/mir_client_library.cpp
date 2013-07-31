@@ -380,7 +380,7 @@ int mir_surface_get_swapinterval(MirSurface* surf)
 
 MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
 {
-    if (!connection || !display_configuration || (display_configuration->num_displays == 0))
+    if (!connection)
         return NULL;
  
     return connection->configure_display(display_configuration); 

@@ -330,8 +330,46 @@ void MirConnection::done_display_configure()
     return configure_display_wait_handle.result_received();
 }
 
+bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
+    if ((!config) || (config->num_displays == 0) || (config->displays == NULL) || 
+        (config->num_displays > static_cast<unsigned int>(connect_result.display_output_size())))
+    {
+        return false;
+    }
+
+    for(auto i = 0u; i < config->num_displays; i++)
+    {
+        if (config->displays[i].current_mode >= static_cast<unsigned int>(connect_result.display_output(i).mode_size()))
+            return false;
+
+        bool found = false;
+        for(auto j = 0; j < connect_result.display_output_size(); j++)
+        {
+            if (config->displays[i].output_id == connect_result.display_output(i).output_id())
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            return false; 
+    }
+
+    return true;
+}
+
 MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 {
+    if (!validate_user_display_config(config))
+    {
+        printf("RET!\n");
+        return NULL;
+    }
+
     mir::protobuf::DisplayConfiguration request;
     for (auto i=0u; i < config->num_displays; i++)
     {
