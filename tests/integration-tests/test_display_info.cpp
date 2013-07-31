@@ -86,7 +86,7 @@ public:
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
     {
-        for(auto& disp : outputs)
+        for (auto& disp : outputs)
         {
             f(disp);
         }

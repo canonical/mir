@@ -312,7 +312,7 @@ struct StubConfig : public mg::DisplayConfiguration
     }
     virtual void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
     {
-        for(auto const& disp : outputs)
+        for (auto const& disp : outputs)
         {
             f(*disp);
         }
