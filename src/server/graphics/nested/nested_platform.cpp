@@ -34,10 +34,6 @@ mgn::NestedPlatform::NestedPlatform(std::shared_ptr<mg::DisplayReport> const& di
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NestedPlatform constructor is not implemented yet!"));
 }
 
-mgn::NestedPlatform::~NestedPlatform() noexcept(true)
-{
-}
-
 std::shared_ptr<mc::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/)
 {
