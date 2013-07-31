@@ -53,6 +53,7 @@ list(APPEND MIRSERVER_ARCHIVES
 
 list(APPEND MIRSERVER_LINKS
   mirprotobuf
+  mirnestedgraphics
   3rd_party
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
