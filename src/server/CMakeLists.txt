@@ -49,6 +49,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsurfaces
   mirtime
   mirlttng
+  mirshell
 )
 
 list(APPEND MIRSERVER_LINKS

@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/main_loop.h"
 #include "mir_test/gmock_fixes.h"
 #include <gmock/gmock.h>

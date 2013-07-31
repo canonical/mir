@@ -16,29 +16,34 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_
-#define MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_
+#ifndef MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_
+#define MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_
 
 #include "mir/shell/display_changer.h"
 
 namespace mir
 {
-namespace frontend
+
+namespace graphics
+{
+class Display;
+}
+namespace shell
 {
 
-class UnauthorizedDisplayChanger : public shell::DisplayChanger 
+class MediatingDisplayChanger : public shell::DisplayChanger 
 {
 public:
-    explicit UnauthorizedDisplayChanger(std::shared_ptr<shell::DisplayChanger> const& changer);
+    explicit MediatingDisplayChanger(std::shared_ptr<graphics::Display> const& changer);
 
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
     void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
 
 private:
-    std::shared_ptr<shell::DisplayChanger> const changer;
+    std::shared_ptr<graphics::Display> const display;
 };
 
 }
 }
 
-#endif /* MIR_FRONTEND_UNAUTHORIZED_DISPLAY_CHANGER_H_ */
+#endif /* MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_ */
