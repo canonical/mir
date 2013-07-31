@@ -28,7 +28,7 @@
 
 namespace mir
 {
-namespace graphics { class BufferProperties; }
+namespace graphics { struct BufferProperties; }
 
 namespace compositor
 {
