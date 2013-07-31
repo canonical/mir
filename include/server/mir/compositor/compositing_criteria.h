@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace geometry
+{
+struct Rectangle;
+}
 namespace compositor
 {
 
@@ -31,7 +35,7 @@ class CompositingCriteria
 public:
     virtual float alpha() const = 0;
     virtual glm::mat4 const& transformation() const = 0;
-    virtual bool should_be_rendered() const = 0;
+    virtual bool should_be_rendered_in(geometry::Rectangle const& rect) const = 0;
 
     virtual ~CompositingCriteria() = default;
 

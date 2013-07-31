@@ -36,10 +36,10 @@ public:
     SurfaceData(std::string const& name, geometry::Rectangle rect,
                 std::function<void()> change_cb);
 
-    //mg::CompositingCriteria
+    //mc::CompositingCriteria
     glm::mat4 const& transformation() const;
     float alpha() const;
-    bool should_be_rendered() const;
+    bool should_be_rendered_in(geometry::Rectangle const& rect) const;
 
     //mi::Surface
     std::string const& name() const;

@@ -124,15 +124,31 @@ void mgg::KMSDisplayConfiguration::configure_output(
 
 uint32_t mgg::KMSDisplayConfiguration::get_kms_connector_id(DisplayConfigurationOutputId id) const
 {
-    for (auto const& output : outputs)
+    auto iter = find_output_with_id(id);
+
+    if (iter == outputs.end())
     {
-        if (output.id == id)
-            return id.as_value();
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to find DisplayConfigurationOutput with provided id"));
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find DisplayConfigurationOutput with provided id"));
+    return id.as_value();
 }
 
+size_t mgg::KMSDisplayConfiguration::get_kms_mode_index(
+    DisplayConfigurationOutputId id,
+    size_t conf_mode_index) const
+{
+    auto iter = find_output_with_id(id);
+
+    if (iter == outputs.end() || conf_mode_index >= iter->modes.size())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to find valid mode index for DisplayConfigurationOutput with provided id/mode_index"));
+    }
+
+    return conf_mode_index;
+}
 void mgg::KMSDisplayConfiguration::update()
 {
     DRMModeResources resources{drm_fd};
@@ -200,6 +216,16 @@ void mgg::KMSDisplayConfiguration::add_or_update_output(
 
 std::vector<mg::DisplayConfigurationOutput>::iterator
 mgg::KMSDisplayConfiguration::find_output_with_id(DisplayConfigurationOutputId id)
+{
+    return std::find_if(outputs.begin(), outputs.end(),
+                        [id](DisplayConfigurationOutput const& output)
+                        {
+                            return output.id == id;
+                        });
+}
+
+std::vector<mg::DisplayConfigurationOutput>::const_iterator
+mgg::KMSDisplayConfiguration::find_output_with_id(DisplayConfigurationOutputId id) const
 {
     return std::find_if(outputs.begin(), outputs.end(),
                         [id](DisplayConfigurationOutput const& output)

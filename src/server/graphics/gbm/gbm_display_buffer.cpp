@@ -97,7 +97,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
                                         std::shared_ptr<DisplayReport> const& listener,
                                         std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                                         GBMSurfaceUPtr surface_gbm_param,
-                                        geom::Size const& size,
+                                        geom::Rectangle const& area,
                                         EGLContext shared_context)
     : last_flipped_bufobj{nullptr},
       platform(platform),
@@ -105,7 +105,7 @@ mgg::GBMDisplayBuffer::GBMDisplayBuffer(std::shared_ptr<GBMPlatform> const& plat
       drm(platform->drm),
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
-      size(size),
+      area(area),
       needs_set_crtc{false}
 {
     egl.setup(platform->gbm, surface_gbm.get(), shared_context);
@@ -158,7 +158,7 @@ mgg::GBMDisplayBuffer::~GBMDisplayBuffer()
 
 geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
 {
-    return {{geom::X(0), geom::Y(0)}, size};
+    return area;
 }
 
 void mgg::GBMDisplayBuffer::post_update()
@@ -225,7 +225,7 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
     auto stride = gbm_bo_get_stride(bo);
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB(drm.fd, size.width.as_uint32_t(), size.height.as_uint32_t(),
+    auto ret = drmModeAddFB(drm.fd, area.size.width.as_uint32_t(), area.size.height.as_uint32_t(),
                             24, 32, stride, handle, &fb_id);
     if (ret)
     {
