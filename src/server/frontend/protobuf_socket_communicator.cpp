@@ -135,22 +135,22 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        auto sender = std::make_shared<detail::SocketMessenger>(socket); 
-        if (session_authorizer->connection_is_allowed(sender->client_pid()))
+        auto messenger = std::make_shared<detail::SocketMessenger>(socket); 
+        if (session_authorizer->connection_is_allowed(messenger->client_pid()))
         {
-            auto event_sink = std::make_shared<detail::EventSender>(sender);
-            auto session = std::make_shared<detail::ProtobufMessageProcessor>(
-                sender,
+            auto event_sink = std::make_shared<detail::EventSender>(messenger);
+            auto msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
+                messenger,
                 ipc_factory->make_ipc_server(event_sink),
                 ipc_factory->resource_cache(),
                 ipc_factory->report());
-            auto const& ssession = std::make_shared<mfd::SocketSession>(
-                sender,
+            auto const& session = std::make_shared<mfd::SocketSession>(
+                messenger,
                 next_id(),
                 connected_sessions,
-                session);
-            connected_sessions->add(ssession);
-            ssession->read_next_message();
+                msg_processor);
+            connected_sessions->add(session);
+            session->read_next_message();
         }
     }
     start_accept();

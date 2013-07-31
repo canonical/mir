@@ -35,11 +35,11 @@ namespace bs = boost::system;
 namespace mfd = mir::frontend::detail;
 
 mfd::SocketSession::SocketSession(
-    std::shared_ptr<mfd::MessageReceiver> const& sender,
+    std::shared_ptr<mfd::MessageReceiver> const& receiver,
     int id_,
     std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions,
     std::shared_ptr<MessageProcessor> const& processor)
-     : socket_receiver(sender),
+     : socket_receiver(receiver),
        id_(id_),
        connected_sessions(connected_sessions),
        processor(processor)
