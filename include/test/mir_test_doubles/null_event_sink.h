@@ -29,6 +29,7 @@ namespace doubles
 struct NullEventSink : public frontend::EventSink
 {
     void handle_event(MirEvent const&) {}
+    void send_display_config(graphics::DisplayConfiguration const&) {}
 };
 }
 }

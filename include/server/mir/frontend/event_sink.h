@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace graphics
+{
+class DisplayConfiguration;
+}
 namespace frontend
 {
 class EventSink
@@ -31,6 +35,7 @@ public:
     virtual ~EventSink() = default;
 
     virtual void handle_event(MirEvent const& e) = 0;
+    virtual void send_display_config(graphics::DisplayConfiguration const& config) = 0;
 
 protected:
     EventSink() = default;

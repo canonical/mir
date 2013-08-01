@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/protobuf_ipc_factory.h"
@@ -32,6 +31,7 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/display_config_matchers.h"
+#include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -51,60 +51,6 @@ namespace mt = mir::test;
 
 namespace
 {
-class StubDisplayConfig : public mg::DisplayConfiguration
-{
-public:
-    StubDisplayConfig()
-    {
-        /* construct a non-trivial dummy display config to send */
-        int mode_index = 0;
-        for (auto i = 0u; i < 3u; i++)
-        {
-            std::vector<mg::DisplayConfigurationMode> modes;
-            for (auto j = 0u; j <= i; j++)
-            {
-                geom::Size sz{mode_index*4, mode_index*3};
-                mg::DisplayConfigurationMode mode{sz, 10.0f * mode_index };
-                mode_index++;
-                modes.push_back(mode);
-            }
-
-            size_t mode_index = modes.size() - 1; 
-            geom::Size physical_size{};
-            geom::Point top_left{};
-            mg::DisplayConfigurationOutput output{
-                mg::DisplayConfigurationOutputId{static_cast<int>(i)},
-                mg::DisplayConfigurationCardId{static_cast<int>(i)},
-                modes,
-                physical_size,
-                ((i % 2) == 0),
-                ((i % 2) == 1),
-                top_left,
-                mode_index
-            };
-
-            outputs.push_back(output);
-        }
-    };
-
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
-    {
-    }
-
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
-    {
-        for (auto& disp : outputs)
-        {
-            f(disp);
-        }
-    }
-
-    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
-    {
-    }
-
-    std::vector<mg::DisplayConfigurationOutput> outputs;
-};
 
 class StubDisplay : public mtd::NullDisplay
 {
@@ -123,11 +69,11 @@ public:
         return mt::fake_shared(stub_display_config);
     }
 
-    static StubDisplayConfig stub_display_config;
+    static mtd::StubDisplayConfig stub_display_config;
 private:
     mtd::NullDisplayBuffer display_buffer;
 };
-StubDisplayConfig StubDisplay::stub_display_config;
+mtd::StubDisplayConfig StubDisplay::stub_display_config;
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
@@ -324,8 +270,6 @@ private:
 
 TEST_F(BespokeDisplayServerTestFixture, display_change_notification)
 {
-    StubDisplayConfig stub_config;
-
     mtf::CrossProcessSync client_ready_fence;
     mtf::CrossProcessSync send_event_fence;
 
@@ -363,7 +307,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification)
             change_thread = std::move(std::thread([this](){
                 auto notifier = ipc_factory->last_clients_event_sink();
                 send_event_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
-                notifier->send_display_config(mt::fake_shared(StubDisplay::stub_display_config));
+                notifier->send_display_config(StubDisplay::stub_display_config);
             })); 
         }
 

@@ -53,3 +53,8 @@ void mfd::EventSender::handle_event(MirEvent const& e)
         sender->send(buffer);
     }
 }
+
+void mfd::EventSender::send_display_config(graphics::DisplayConfiguration const& config)
+{
+    (void) config;
+}

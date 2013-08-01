@@ -16,27 +16,47 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/frontend/protobuf_buffer_packer.h"
+#include "src/server/frontend/message_sender.h"
+#include "src/server/frontend/event_sender.h"
+#include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test/fake_shared.h"
 
 #include "mir_protobuf.pb.h"
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
+namespace mt=mir::test;
+namespace mtd=mir::test::doubles;
 namespace mfd=mir::frontend::detail;
-namespace mp=mir::protobuf;
-namespace geom=mir::geometry;
+
+namespace 
+{
+struct MockMsgSender : public mfd::MessageSender
+{
+    MOCK_METHOD1(send, void(std::string const&));
+    MOCK_METHOD1(send_fds, void(std::vector<int32_t> const&));
+};
+}
 
 TEST(TestEventSender, display_send)
 {
-    StubConfiguration config;
+    using namespace testing;
 
+    mtd::StubDisplayConfig config;
+    MockMsgSender mock_msg_sender;
+
+/*
     auto msg_validator = [](std::string){
-    //cheggit
+        mp::EventSequence seq;
+        seq.grabit(str)
+
+        EXPECT_THAT(seq, MATCHES(config))
     };
-
+*/
     EXPECT_CALL(mock_msg_sender, send(_))
-        .Times(1)
-        .WillOnce(Invoke(msg_validator));
-    EventSender sender(mock_msg_sender);
+        .Times(1);
+//        .WillOnce(Invoke(msg_validator));
 
+    mfd::EventSender sender(mt::fake_shared(mock_msg_sender));
     sender.send_display_config(config);
 }

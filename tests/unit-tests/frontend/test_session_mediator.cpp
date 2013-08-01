@@ -28,6 +28,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
@@ -130,12 +131,6 @@ class MockPlatform : public mg::Platform
                                               std::shared_ptr<mg::Buffer> const&));
 };
 
-class NullEventSink : public mir::frontend::EventSink
-{
-public:
-    void handle_event(MirEvent const& ) override {}
-};
-
 struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
@@ -147,7 +142,7 @@ struct SessionMediatorTest : public ::testing::Test
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report, 
-                   std::make_shared<NullEventSink>(),
+                   std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
@@ -347,7 +342,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     mf::SessionMediator mediator{
         shell, graphics_platform, mock_display,
         buffer_allocator, report, 
-        std::make_shared<NullEventSink>(),
+        std::make_shared<mtd::NullEventSink>(),
         resource_cache};
 
     mp::ConnectParameters connect_parameters;
