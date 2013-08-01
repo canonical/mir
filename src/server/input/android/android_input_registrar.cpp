@@ -30,6 +30,7 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
+namespace ms = mir::surfaces;
 
 mia::InputRegistrar::InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher)
     : input_dispatcher(input_dispatcher)
@@ -42,7 +43,8 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 
 // Be careful on the locking in these two functions.
 void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChannel> const& channel,
-                                               std::shared_ptr<mi::Surface> const& surface)
+                                               std::shared_ptr<mi::Surface> const& surface,
+                                               mi::InputReceptionMode input_mode)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {
@@ -60,7 +62,9 @@ void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChann
     
         window_handles[channel] = window_handle;
     }
-    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, false);
+
+    bool monitors_input = (input_mode == mi::InputReceptionMode::receives_all_input);
+    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, monitors_input);
 }
 
 void mia::InputRegistrar::input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel)

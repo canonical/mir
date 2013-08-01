@@ -41,7 +41,6 @@
 
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
-namespace me = mir::events;
 
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,

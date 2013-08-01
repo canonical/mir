@@ -54,7 +54,6 @@ namespace mia = mi::android;
 namespace mis = mi::synthesis;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
-namespace me = mir::events;
 namespace ms = mir::surfaces;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -621,7 +620,7 @@ struct RegionApplyingSurfaceFactory : public msh::SurfaceFactory
     
     std::shared_ptr<msh::Surface> create_surface(msh::SurfaceCreationParameters const& params,
                                                  mf::SurfaceId id,
-                                                 std::shared_ptr<me::EventSink> const& sink)
+                                                 std::shared_ptr<mf::EventSink> const& sink)
     {
         auto surface = underlying_factory->create_surface(params, id, sink);
 
