@@ -76,7 +76,7 @@ TEST_F(BufferStreamTest, pixel_format_query)
 TEST_F(BufferStreamTest, force_requests_to_complete)
 {
     EXPECT_CALL(*mock_bundle, force_requests_to_complete())
-        .Times(2);  // Once explcit, onces on destruction
+        .Times(2);  // Once explcit, once on destruction
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     buffer_stream.force_requests_to_complete();
