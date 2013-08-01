@@ -89,7 +89,7 @@ int mggh::DRMHelper::get_authenticated_fd()
         close(auth_fd);
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(ret));
+                std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 
     if ((ret = drmAuthMagic(fd, magic)) < 0)
@@ -97,7 +97,7 @@ int mggh::DRMHelper::get_authenticated_fd()
         close(auth_fd);
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(ret));
+                std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 
     return auth_fd;
@@ -119,7 +119,7 @@ void mggh::DRMHelper::auth_magic(drm_magic_t magic) const
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(ret));
+                std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 }
 
@@ -139,7 +139,7 @@ void mggh::DRMHelper::drop_master() const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to drop DRM master"))
-                    << boost::errinfo_errno(errno));
+                    << boost::errinfo_errno(-ret));
     }
 }
 
@@ -159,7 +159,7 @@ void mggh::DRMHelper::set_master() const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to set DRM master"))
-                    << boost::errinfo_errno(errno));
+                    << boost::errinfo_errno(-ret));
     }
 }
 
@@ -223,7 +223,7 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
     if ((error = udev_enumerate_scan_devices(enumerator)))
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Failed to enumerate udev devices")) << boost::errinfo_errno(error));
+                std::runtime_error("Failed to enumerate udev devices")) << boost::errinfo_errno(-error));
 
     devices = udev_enumerate_get_list_entry(enumerator);
     udev_list_entry_foreach(device, devices)
@@ -281,7 +281,7 @@ int mggh::DRMHelper::open_drm_device(UdevHelper const& udev)
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Error opening DRM device")) << boost::errinfo_errno(error));
+                std::runtime_error("Error opening DRM device")) << boost::errinfo_errno(-error));
     }
 
     return tmp_fd;
