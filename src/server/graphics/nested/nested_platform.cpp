@@ -52,6 +52,12 @@ mgn::NestedPlatform::NestedPlatform(std::string const& host,
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::NestedPlatform constructor, established connection, host socket: " + host_socket));
 }
 
+mgn::NestedPlatform::~NestedPlatform() noexcept(true)
+{
+    if(connection)
+        mir_connection_release(connection);
+}
+
 std::shared_ptr<mc::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/)
 {
