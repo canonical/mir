@@ -1,3 +1,7 @@
+include_directories(
+    ${MIRCLIENT_INCLUDE_DIRS}
+)
+
 add_library(
   mirnestedgraphics STATIC
 

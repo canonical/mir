@@ -319,12 +319,15 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_display_report());
             }
-            else
-            {
-                auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-                return std::make_shared<mir::graphics::nested::NestedPlatform>(/*TODO: the_options(),*/
-                    the_display_report(), create_native_platform());
-            }
+
+            std::string host_socket = the_options()->get("nested-mode", default_server_socket);
+            std::string server_socket = the_options()->get("file", default_server_socket);
+
+            if (!server_socket.compare(host_socket))
+                BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
+
+            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
+            return std::make_shared<mir::graphics::nested::NestedPlatform>(host_socket, the_display_report(), create_native_platform());
         });
 }
 

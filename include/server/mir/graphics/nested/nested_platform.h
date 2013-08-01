@@ -22,6 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
 
+class MirConnection;
 namespace mir
 {
 namespace graphics
@@ -32,7 +33,8 @@ namespace nested
 class NestedPlatform : public Platform
 {
 public:
-    NestedPlatform(std::shared_ptr<DisplayReport> const& display_report,
+    NestedPlatform(std::string const& host,
+                   std::shared_ptr<DisplayReport> const& display_report,
                    std::shared_ptr<NativePlatform> const& native_platform);
 
     std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
@@ -47,6 +49,8 @@ public:
 private:
     std::shared_ptr<NativePlatform> const native_platform;
     std::shared_ptr<DisplayReport> const display_report;
+
+    MirConnection* connection;
 };
 
 }

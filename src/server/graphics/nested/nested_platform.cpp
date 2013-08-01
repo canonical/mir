@@ -17,6 +17,9 @@
  */
 
 #include "mir/graphics/nested/nested_platform.h"
+#include "mir_toolkit/mir_client_library.h"
+
+#include <string.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -26,12 +29,27 @@ namespace mgn = mir::graphics::nested;
 namespace mo = mir::options;
 namespace mc = mir::compositor;
 
-mgn::NestedPlatform::NestedPlatform(std::shared_ptr<mg::DisplayReport> const& display_report,
+static std::string host_socket;
+
+mgn::NestedPlatform::NestedPlatform(std::string const& host,
+                                    std::shared_ptr<mg::DisplayReport> const& display_report,
                                     std::shared_ptr<mg::NativePlatform> const& native_platform) :
     native_platform{native_platform},
-    display_report{display_report}
+    display_report{display_report},
+    connection{0}
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir NestedPlatform constructor is not implemented yet!"));
+    host_socket = host;
+
+    if (!(connection = mir_connect_sync(host_socket.c_str(), "nested_mir")))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform: Failed to connect!\n"));
+
+    if (!mir_connection_is_valid(connection))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform: Invalid connection!\n"));
+
+    if (!(strcmp(mir_connection_get_error_message(connection),"") == 0))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform: Errors occured!\n"));
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::NestedPlatform constructor, established connection, host socket: " + host_socket));
 }
 
 std::shared_ptr<mc::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
