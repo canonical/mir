@@ -20,10 +20,15 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/frontend/protobuf_ipc_factory.h"
+#include "mir/frontend/resource_cache.h"
+#include "mir/frontend/session_mediator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/display_config_matchers.h"
@@ -31,6 +36,8 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include <condition_variable>
+#include <thread>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -247,3 +254,421 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
 
     launch_client_process(client_config);
 }
+
+
+namespace
+{
+class EventSinkSkimmingIpcFactory : public mf::ProtobufIpcFactory
+{
+public:
+    EventSinkSkimmingIpcFactory(
+        std::shared_ptr<mf::Shell> const& shell,
+        std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
+        std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
+        std::shared_ptr<mg::Platform> const& graphics_platform,
+        std::shared_ptr<mg::Display> const& graphics_display,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator)
+        : shell(shell),
+        sm_report(sm_report),
+        mp_report(mr_report),
+        cache(std::make_shared<mf::ResourceCache>()),
+        graphics_platform(graphics_platform),
+        graphics_display(graphics_display),
+        buffer_allocator(buffer_allocator),
+        last_event_sink(std::make_shared<mtd::NullEventSink>())
+    {
+    }
+
+private:
+    std::shared_ptr<mf::Shell> shell;
+    std::shared_ptr<mf::SessionMediatorReport> const sm_report;
+    std::shared_ptr<mf::MessageProcessorReport> const mp_report;
+    std::shared_ptr<mf::ResourceCache> const cache;
+    std::shared_ptr<mg::Platform> const graphics_platform;
+    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<mf::EventSink> last_event_sink;
+
+    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
+        std::shared_ptr<mf::EventSink> const& sink)
+    {
+        last_event_sink = sink;
+        return std::make_shared<mf::SessionMediator>(
+            shell,
+            graphics_platform,
+            graphics_display,
+            buffer_allocator,
+            sm_report,
+            sink,
+            resource_cache());
+    }
+
+    virtual std::shared_ptr<mf::ResourceCache> resource_cache()
+    {
+        return cache;
+    }
+
+    virtual std::shared_ptr<mf::MessageProcessorReport> report()
+    {
+        return mp_report;
+    }
+
+    virtual std::shared_ptr<mf::EventSink> last_clients_event_sink()
+    {
+        return last_event_sink;
+    }
+};
+
+}
+
+TEST_F(BespokeDisplayServerTestFixture, display_change_notification)
+{
+    StubDisplayConfig stub_config;
+
+    mtf::CrossProcessSync client_ready_fence;
+    mtf::CrossProcessSync send_event_fence;
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        ServerConfig(mtf::CrossProcessSync const& send_event_fence,
+                     StubDisplayConfig& config)
+            : send_event_fence(send_event_fence),
+              config(config)
+        {
+        }
+
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
+        {
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+            return platform;
+        }
+
+
+        std::shared_ptr<mir::frontend::ProtobufIpcFactory> the_ipc_factory(
+            std::shared_ptr<mf::Shell> const& shell, std::shared_ptr<mg::Display> const& display,
+            std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) override
+        {
+            if (!ipc_factory)
+                ipc_factory = std::make_shared<EventSinkSkimmingIpcFactory>(
+                                shell,
+                                the_session_mediator_report(),
+                                the_message_processor_report(),
+                                the_graphics_platform(),
+                                display, allocator);
+            return ipc_factory;
+        }
+
+        void exec() override
+        {
+            change_thread = std::move(std::thread([this](){
+                auto notifier = ipc_factory->last_clients_event_sink();
+                send_event_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
+                notifier->send_display_config(mt::fake_shared(StubDisplay::stub_display_config));
+            })); 
+        }
+
+        void on_exit() override
+        {
+            change_thread.join();
+        }
+
+        mtf::CrossProcessSync send_event_fence;
+        std::shared_ptr<EventSinkSkimmingIpcFactory> ipc_factory;
+        std::shared_ptr<StubPlatform> platform;
+        std::thread change_thread;
+    } server_config(send_event_fence);
+
+    struct Client : TestingClientConfiguration
+    {
+        Client(mtf::CrossProcessSync const& client_ready_fence)
+         : client_ready_fence(client_ready_fence)
+        {
+        }
+
+        static void change_handler(MirConnection* connection, void* context)
+        {
+            auto configuration = mir_connection_create_display_config(connection);
+
+            mir_display_config_destroy(configuration);
+
+            auto client_config = (Client*) context; 
+            client_config->notify_callback();
+        }
+
+        void notify_callback()
+        {
+            callback_called = true;
+            callback_wait.notify_all();
+        }
+        void exec()
+        {
+            std::unique_lock<std::mutex> lk(mut);
+            MirConnection* connection = mir_connect_sync(mir_test_socket, "notifier");
+            callback_called = false;
+        
+            mir_connection_set_display_config_change_callback(&change_handler, this);
+
+            client_ready_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
+
+            while(!callback_called)
+            {
+                callback_wait.wait(lk);
+            } 
+
+            mir_connection_release(connection);
+        }
+
+        mtf::CrossProcessSync client_ready_fence;
+
+        std::mutex mut;
+        std::condition_variable callback_wait;
+        bool callback_called;
+    } client_config(client_ready_fence);
+
+    launch_server_process(server_config);
+    launch_client_process(client_config);
+
+    run_in_test_process([&]
+    {
+        client_ready_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
+        send_event_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
+    });
+}
+
+
+#if 0
+#endif 
+
+
+
+
+
+
+
+#if 0
+
+
+namespace
+{
+
+class StubDisplay : public mtd::NullDisplay
+{
+public:
+    StubDisplay()
+        : display_buffer{rectangle}
+    {
+    }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+    
+    void register_configuration_change_handler(mir::MainLoop&, mg::DisplayConfigurationChangeHandler const& handler) override
+    {
+        change_handler = handler;
+    }
+
+    void trigger_fake_display_change()
+    {
+        change_handler();
+    }
+    static geom::Rectangle rectangle;
+    static geom::Size const expected_dimensions_mm;
+    static mg::DisplayConfigurationChangeHandler change_handler;
+
+private:
+    mtd::StubDisplayBuffer display_buffer;
+};
+
+mg::DisplayConfigurationChangeHandler StubDisplay::change_handler;
+geom::Size const StubDisplay::expected_dimensions_mm{0,0};
+geom::Rectangle StubDisplay::rectangle{geom::Point{25,36}, geom::Size{49,64}};
+
+char const* const mir_test_socket = mtf::test_socket_file().c_str();
+
+class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+{
+public:
+    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
+    {
+        return std::shared_ptr<mg::Buffer>(new mtd::StubBuffer());
+    }
+
+    std::vector<geom::PixelFormat> supported_pixel_formats()
+    {
+        return pixel_formats;
+    }
+
+    static std::vector<geom::PixelFormat> const pixel_formats;
+};
+
+std::vector<geom::PixelFormat> const StubGraphicBufferAllocator::pixel_formats{
+    geom::PixelFormat::bgr_888,
+    geom::PixelFormat::abgr_8888,
+    geom::PixelFormat::xbgr_8888
+};
+
+class StubPlatform : public mtd::NullPlatform
+{
+public:
+    StubPlatform()
+        : stub_display(std::make_shared<StubDisplay>())
+    {
+    }
+    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+            std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+    {
+        return std::make_shared<StubGraphicBufferAllocator>();
+    }
+
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
+    {
+        return stub_display;
+    }
+
+    void trigger_fake_display_change()
+    {
+printf("Call..\tn");
+        stub_display->trigger_fake_display_change();    
+    }
+    std::shared_ptr<StubDisplay> stub_display;
+};
+
+void connection_callback(MirConnection* connection, void* context)
+{
+    auto connection_ptr = static_cast<MirConnection**>(context);
+    *connection_ptr = connection;
+}
+
+}
+
+TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mg::Platform> the_graphics_platform()
+        {
+            using namespace testing;
+
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+
+            return platform;
+        }
+
+        std::shared_ptr<StubPlatform> platform;
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct Client : TestingClientConfiguration
+    {
+        void exec()
+        {
+            MirConnection* connection{nullptr};
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__,
+                                     connection_callback, &connection));
+
+
+            auto configuration = mir_connection_create_display_config(connection);
+
+            /* TODO: expand test to test multimonitor situations */
+            ASSERT_EQ(1u, configuration->num_displays);
+            auto const& info = configuration->displays[0];
+            geom::Rectangle const& expected_rect = StubDisplay::rectangle;
+
+            //state
+            EXPECT_EQ(1u, info.connected);
+            EXPECT_EQ(1u, info.used);
+
+            //id's
+            EXPECT_EQ(0u, info.output_id);
+            EXPECT_EQ(0u, info.card_id);
+
+            //sizing
+            EXPECT_EQ(StubDisplay::expected_dimensions_mm.width.as_uint32_t(), info.physical_width_mm);
+            EXPECT_EQ(StubDisplay::expected_dimensions_mm.height.as_uint32_t(), info.physical_height_mm);
+
+            //position
+            EXPECT_EQ(static_cast<int>(expected_rect.top_left.x.as_uint32_t()), info.position_x); 
+            EXPECT_EQ(static_cast<int>(expected_rect.top_left.y.as_uint32_t()), info.position_y); 
+
+            //mode selection
+            EXPECT_EQ(1u, info.num_modes);
+            ASSERT_EQ(0u, info.current_mode);
+            auto const& mode = info.modes[info.current_mode];
+
+            //current mode 
+            EXPECT_EQ(expected_rect.size.width.as_uint32_t(), mode.horizontal_resolution);
+            EXPECT_EQ(expected_rect.size.height.as_uint32_t(), mode.vertical_resolution);
+            EXPECT_FLOAT_EQ(60.0f, mode.refresh_rate);
+
+            //pixel formats
+            ASSERT_EQ(StubGraphicBufferAllocator::pixel_formats.size(),
+                      static_cast<uint32_t>(info.num_output_formats));
+            for (auto i=0u; i < info.num_output_formats; ++i)
+            {
+                EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
+                          static_cast<geom::PixelFormat>(info.output_formats[i]));
+            }
+            EXPECT_EQ(0u, info.current_output_format);
+
+            mir_display_config_destroy(configuration);
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+/* TODO: this test currently checks the same format list against both the surface formats
+         and display formats. Improve test to return different format lists for both concepts */ 
+TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mg::Platform> the_graphics_platform()
+        {
+            using namespace testing;
+
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+
+            return platform;
+        }
+
+        std::shared_ptr<StubPlatform> platform;
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct Client : TestingClientConfiguration
+    {
+        void exec()
+        {
+            MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+
+            unsigned int const format_storage_size = 4;
+            MirPixelFormat formats[format_storage_size]; 
+            unsigned int returned_format_size = 0;
+            mir_connection_get_available_surface_formats(connection,
+                formats, format_storage_size, &returned_format_size);
+
+            ASSERT_EQ(returned_format_size, StubGraphicBufferAllocator::pixel_formats.size());
+            for (auto i=0u; i < returned_format_size; ++i)
+            {
+                EXPECT_EQ(StubGraphicBufferAllocator::pixel_formats[i],
+                          static_cast<geom::PixelFormat>(formats[i]));
+            }
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+#endif
