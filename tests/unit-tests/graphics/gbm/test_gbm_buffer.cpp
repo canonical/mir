@@ -40,7 +40,6 @@
 #include <cstdint>
 #include <stdexcept>
 
-namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;

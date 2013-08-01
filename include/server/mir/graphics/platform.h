@@ -28,10 +28,6 @@ namespace frontend
 {
 class Surface;
 }
-namespace compositor
-{
-class BufferIPCPacker;
-}
 namespace options
 {
 class Option;
@@ -41,7 +37,7 @@ class Option;
 /// the graphics environment.
 namespace graphics
 {
-
+class BufferIPCPacker;
 class Buffer;
 class Display;
 struct PlatformIPCPackage;
@@ -101,7 +97,7 @@ public:
      * \param [in] packer the object providing the packing functionality
      * \param [in] buffer the buffer to fill the IPC package for
      */
-    virtual void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+    virtual void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
                                   std::shared_ptr<graphics::Buffer> const& buffer) const = 0;
 
     /**

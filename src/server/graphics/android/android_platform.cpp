@@ -27,7 +27,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 
 #include "mir/graphics/native_platform.h"
@@ -36,7 +36,6 @@
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
-namespace mc=mir::compositor;
 namespace mf=mir::frontend;
 namespace mo = mir::options;
 
@@ -81,7 +80,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+void mga::AndroidPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
                                             std::shared_ptr<mg::Buffer> const& buffer) const
 {
     auto native_buffer = buffer->native_buffer_handle();

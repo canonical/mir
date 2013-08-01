@@ -24,7 +24,6 @@
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mo = mir::options;
-namespace mc = mir::compositor;
 
 mgn::NestedPlatform::NestedPlatform(std::shared_ptr<mg::DisplayReport> const& display_report,
                                     std::shared_ptr<mg::NativePlatform> const& native_platform) :
@@ -60,7 +59,7 @@ std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client(
 }
 
 
-void mgn::NestedPlatform::fill_ipc_package(std::shared_ptr<mc::BufferIPCPacker> const& /*packer*/,
+void mgn::NestedPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& /*packer*/,
                                         std::shared_ptr<Buffer> const& /*buffer*/) const
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir method mgn::NestedPlatform::fill_ipc_package is not implemented yet!"));
