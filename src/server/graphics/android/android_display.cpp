@@ -193,7 +193,7 @@ void mga::AndroidDisplay::register_configuration_change_handler(
 }
 
 void mga::AndroidDisplay::register_pause_resume_handlers(
-    EventHandlerRegister& /*main_loop*/,
+    EventHandlerRegister& /*handlers*/,
     DisplayPauseHandler const& /*pause_handler*/,
     DisplayResumeHandler const& /*resume_handler*/)
 {

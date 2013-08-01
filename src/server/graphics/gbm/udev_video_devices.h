@@ -36,7 +36,7 @@ public:
     UdevVideoDevices(udev* udev_ctx);
 
     void register_change_handler(
-        EventHandlerRegister& main_loop,
+        EventHandlerRegister& handlers,
         std::function<void()> const& change_handler);
 
 private:

@@ -36,7 +36,7 @@ public:
     virtual ~VideoDevices() = default;
 
     virtual void register_change_handler(
-        EventHandlerRegister& main_loop,
+        EventHandlerRegister& handlers,
         std::function<void()> const& change_handler) = 0;
 
 protected:
