@@ -39,17 +39,16 @@ mgn::NestedPlatform::NestedPlatform(std::string const& host,
     connection{0}
 {
     host_socket = host;
-
-    if (!(connection = mir_connect_sync(host_socket.c_str(), "nested_mir")))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform: Failed to connect!\n"));
+    connection = mir_connect_sync(host_socket.c_str(), "nested_mir");
 
     if (!mir_connection_is_valid(connection))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform: Invalid connection!\n"));
+    {
+        char const* conn_error = mir_connection_get_error_message(connection);
+        if (strcmp(conn_error,""))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(conn_error, strlen(conn_error))));
+    }
 
-    if (!(strcmp(mir_connection_get_error_message(connection),"") == 0))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform: Errors occured!\n"));
-
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::NestedPlatform constructor, established connection, host socket: " + host_socket));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Mir NestedPlatform is not fully implemented yet! Coming soon!"));
 }
 
 mgn::NestedPlatform::~NestedPlatform() noexcept(true)
