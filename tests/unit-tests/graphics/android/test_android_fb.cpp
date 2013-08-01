@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
 #include "src/server/graphics/android/android_display.h"
 #include "src/server/graphics/android/gpu_android_display_buffer_factory.h"
 #include "src/server/graphics/android/hwc_android_display_buffer_factory.h"
@@ -36,9 +37,48 @@ namespace ml=mir::logging;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
 
 struct DummyGPUDisplayType {};
 struct DummyHWCDisplayType {};
+
+static geom::Size const display_size{433,232};
+
+template<typename T>
+class AndroidTestFramebufferInit : public ::testing::Test
+{
+protected:
+    virtual void SetUp()
+    {
+        using namespace testing;
+
+        native_win = std::make_shared<NiceMock<mtd::MockAndroidFramebufferWindow>>();
+
+        /* silence uninteresting warning messages */
+        mock_egl.silence_uninteresting();
+
+        EXPECT_CALL(*native_win, android_native_window_type())
+        .Times(AtLeast(0));
+        EXPECT_CALL(*native_win, android_display_egl_config(_))
+        .Times(AtLeast(0));
+
+        ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
+            .WillByDefault(DoAll(
+                SetArgPointee<3>(display_size.width.as_uint32_t()),
+                Return(EGL_TRUE)));
+        ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_HEIGHT,_))
+            .WillByDefault(DoAll(
+                SetArgPointee<3>(display_size.height.as_uint32_t()),
+                Return(EGL_TRUE)));
+
+
+        mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
+    }
+
+    std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
+    std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
+    mtd::MockEGL mock_egl;
+};
 
 template<class T>
 std::shared_ptr<mg::Display> make_display(
@@ -60,39 +100,12 @@ std::shared_ptr<mg::Display> make_display<DummyHWCDisplayType>(
     std::shared_ptr<mg::DisplayReport> const& listener)
 {
     auto mock_hwc_device = std::make_shared<mtd::MockHWCInterface>();
+    ON_CALL(*mock_hwc_device, display_size())
+        .WillByDefault(testing::Return(display_size)); 
     auto db_factory = std::make_shared<mga::HWCAndroidDisplayBufferFactory>(mock_hwc_device);
     return std::make_shared<mga::AndroidDisplay>(fbwin, db_factory, listener);
 }
 
-template<typename T>
-class AndroidTestFramebufferInit : public ::testing::Test
-{
-protected:
-    virtual void SetUp()
-    {
-        using namespace testing;
-
-        native_win = std::make_shared<NiceMock<mtd::MockAndroidFramebufferWindow>>();
-
-        /* silence uninteresting warning messages */
-        mock_egl.silence_uninteresting();
-
-        EXPECT_CALL(*native_win, android_native_window_type())
-        .Times(AtLeast(0));
-        EXPECT_CALL(*native_win, android_display_egl_config(_))
-        .Times(AtLeast(0));
-
-        width = 435;
-        height = 477;
-
-        mock_display_report = std::make_shared<NiceMock<mtd::MockDisplayReport>>();
-    }
-
-    std::shared_ptr<mtd::MockDisplayReport> mock_display_report;
-    std::shared_ptr<mtd::MockAndroidFramebufferWindow> native_win;
-    mtd::MockEGL mock_egl;
-    int width, height;
-};
 
 typedef ::testing::Types<DummyGPUDisplayType, DummyHWCDisplayType> FramebufferTestTypes;
 TYPED_TEST_CASE(AndroidTestFramebufferInit, FramebufferTestTypes);
@@ -115,8 +128,7 @@ TYPED_TEST(AndroidTestFramebufferInit, eglGetDisplay_failure)
     .Times(Exactly(1))
     .WillOnce(Return((EGLDisplay)EGL_NO_DISPLAY));
 
-    EXPECT_THROW(
-    {
+    EXPECT_THROW({
         auto display = make_display<TypeParam>(this->native_win, this->mock_display_report);
     }, std::runtime_error   );
 }
@@ -588,5 +600,46 @@ TYPED_TEST(AndroidTestFramebufferInit, startup_logging_error_because_of_makecurr
 
     EXPECT_THROW({
         auto display = make_display<TypeParam>(this->native_win, this->mock_display_report);
+    }, std::runtime_error);
+}
+
+//we only have single display and single mode on android for the time being
+TYPED_TEST(AndroidTestFramebufferInit, android_display_configuration_info)
+{
+    auto display = make_display<TypeParam>(this->native_win, this->mock_display_report);
+    auto config = display->configuration();
+
+    std::vector<mg::DisplayConfigurationOutput> configurations;
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& config)
+    {
+        configurations.push_back(config);
+    });
+
+    ASSERT_EQ(1u, configurations.size());
+    auto& disp_conf = configurations[0];
+    ASSERT_EQ(1u, disp_conf.modes.size());
+    auto& disp_mode = disp_conf.modes[0];
+    EXPECT_EQ(display_size, disp_mode.size);
+    //TODO fill refresh rate accordingly
+
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{0}, disp_conf.id); 
+    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id); 
+    EXPECT_TRUE(disp_conf.connected);
+    EXPECT_TRUE(disp_conf.used);
+    auto origin = geom::Point{0,0}; 
+    EXPECT_EQ(origin, disp_conf.top_left);
+    EXPECT_EQ(0, disp_conf.current_mode_index);
+    //TODO fill physical_size_mm fields accordingly;
+}
+
+//Cannot configure android displays at this time
+TYPED_TEST(AndroidTestFramebufferInit, android_display_configure_output)
+{
+    auto display = make_display<TypeParam>(this->native_win, this->mock_display_report);
+    auto config = display->configuration();
+
+    mg::DisplayConfigurationOutputId id{0};
+    EXPECT_THROW({
+        config->configure_output(id, true, geom::Point{0,0}, 0);
     }, std::runtime_error);
 }

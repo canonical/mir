@@ -33,12 +33,12 @@
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
+#include "mir_test_doubles/null_event_sink.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
-namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
@@ -66,9 +66,9 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
-    auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
-    auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
+    auto session1 = session_manager.open_session("Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
+    auto session2 = session_manager.open_session("Microsoft Access", std::make_shared<mtd::NullEventSink>());
+    auto session3 = session_manager.open_session("WordPerfect", std::make_shared<mtd::NullEventSink>());
 
     Mock::VerifyAndClearExpectations(&focus_setter);
 
@@ -110,9 +110,9 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
-    auto session1 = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
-    auto session2 = session_manager.open_session("Microsoft Access", std::shared_ptr<me::EventSink>());
-    auto session3 = session_manager.open_session("WordPerfect", std::shared_ptr<me::EventSink>());
+    auto session1 = session_manager.open_session("Visual Basic Studio", std::make_shared<mtd::NullEventSink>());
+    auto session2 = session_manager.open_session("Microsoft Access", std::make_shared<mtd::NullEventSink>());
+    auto session3 = session_manager.open_session("WordPerfect", std::make_shared<mtd::NullEventSink>());
 
     Mock::VerifyAndClearExpectations(&focus_setter);
 

@@ -24,16 +24,13 @@
 
 namespace mir
 {
-namespace events
-{
-class EventSink;
-}
 namespace shell
 {
 struct SurfaceCreationParameters;
 }
 namespace frontend
 {
+class EventSink;
 class Session;
 
 class Shell
@@ -41,7 +38,8 @@ class Shell
 public:
     virtual ~Shell() {}
 
-    virtual std::shared_ptr<Session> open_session(std::string const& name, std::shared_ptr<events::EventSink> const& sink) = 0;
+    virtual std::shared_ptr<Session> open_session(
+        std::string const& name, std::shared_ptr<EventSink> const& sink) = 0;
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
     virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,

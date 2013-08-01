@@ -22,10 +22,8 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
-#include "drm_mode_resources.h"
 
 #include <gbm.h>
-#include <memory>
 
 namespace mir
 {
@@ -34,43 +32,28 @@ namespace graphics
 namespace gbm
 {
 
-class PageFlipper;
-
 class KMSOutput
 {
 public:
-    KMSOutput(int drm_fd, uint32_t connector_id,
-              std::shared_ptr<PageFlipper> const& page_flipper);
-    ~KMSOutput();
+    virtual ~KMSOutput() = default;
 
-    void reset();
-    void configure(geometry::Displacement fb_offset, size_t kms_mode_index);
+    virtual void reset() = 0;
+    virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
+    virtual geometry::Size size() const = 0;
 
-    geometry::Size size() const;
-    bool set_crtc(uint32_t fb_id);
-    bool schedule_page_flip(uint32_t fb_id);
-    void wait_for_page_flip();
-    void set_cursor(gbm_bo* buffer);
-    void move_cursor(geometry::Point destination);
-    void clear_cursor();
+    virtual bool set_crtc(uint32_t fb_id) = 0;
+    virtual bool schedule_page_flip(uint32_t fb_id) = 0;
+    virtual void wait_for_page_flip() = 0;
 
-private:
+    virtual void set_cursor(gbm_bo* buffer) = 0;
+    virtual void move_cursor(geometry::Point destination) = 0;
+    virtual void clear_cursor() = 0;
+    virtual bool has_cursor() const = 0;
+
+protected:
+    KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;
     KMSOutput& operator=(const KMSOutput&) = delete;
-
-    bool ensure_crtc();
-    void restore_saved_crtc();
-
-    int const drm_fd;
-    uint32_t const connector_id;
-    std::shared_ptr<PageFlipper> const page_flipper;
-
-    DRMModeConnectorUPtr connector;
-    size_t mode_index;
-    geometry::Displacement fb_offset;
-    DRMModeCrtcUPtr current_crtc;
-    drmModeCrtc saved_crtc;
-    bool using_saved_crtc;
 };
 
 }

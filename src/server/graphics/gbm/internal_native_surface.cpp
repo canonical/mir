@@ -16,13 +16,13 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/surface.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/internal_surface.h"
 #include "internal_native_surface.h"
 #include <cstring>
 namespace mgg = mir::graphics::gbm;
 
-mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<frontend::Surface> const& surface)
+mgg::InternalNativeSurface::InternalNativeSurface(std::shared_ptr<InternalSurface> const& surface)
     : surface(surface)
 {
     surface_advance_buffer = advance_buffer_static;
@@ -60,7 +60,7 @@ int mgg::InternalNativeSurface::get_parameters(MirSurfaceParameters* parameters)
     auto size = surface->size();
     parameters->width = size.width.as_uint32_t();
     parameters->height = size.height.as_uint32_t();
-    parameters->pixel_format = static_cast<MirPixelFormat>(surface->pixel_format());
+    parameters->pixel_format = surface->pixel_format();
     parameters->buffer_usage = mir_buffer_usage_hardware;
 
     return MIR_MESA_TRUE;
