@@ -330,7 +330,10 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     mg::DisplayConfigurationOutput output{
         mg::DisplayConfigurationOutputId{static_cast<int>(3)},
         mg::DisplayConfigurationCardId{static_cast<int>(2)},
-        std::vector<geom::PixelFormat>{geom::PixelFormat::abgr_8888},
+        std::vector<geom::PixelFormat>{
+            geom::PixelFormat::bgr_888,
+            geom::PixelFormat::abgr_8888,
+            geom::PixelFormat::xbgr_8888},
         modes, sz, true, false,
         geom::Point{4,12}, 0u, 0u};
 
@@ -352,19 +355,9 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     connection.clear_display_info();
     connection.clear_display_output();
 
-    std::vector<geom::PixelFormat> const pixel_formats{
-        geom::PixelFormat::bgr_888,
-        geom::PixelFormat::abgr_8888,
-        geom::PixelFormat::xbgr_8888
-    };
-
-    EXPECT_CALL(*buffer_allocator, supported_pixel_formats())
-        .WillOnce(Return(pixel_formats));
-
-    
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    EXPECT_THAT(connection, mt::ProtobufConfigMatches(config.outputs, pixel_formats));
+    EXPECT_THAT(connection, mt::ProtobufConfigMatches(config.outputs));
 }
 
 TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)

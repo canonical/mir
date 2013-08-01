@@ -19,6 +19,7 @@
 #include "src/server/frontend/message_sender.h"
 #include "src/server/frontend/event_sender.h"
 #include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 
 #include <vector>
@@ -47,13 +48,11 @@ TEST(TestEventSender, display_send)
     mtd::StubDisplayConfig config;
     MockMsgSender mock_msg_sender;
 
-    auto msg_validator = [](std::string const& ){
-/*
-        mp::EventSequence seq;
-        seq.grabit(str)
+    auto msg_validator = [&config](std::string const& msg){
+        mir::protobuf::EventSequence seq;
+        seq.ParseFromString(msg);
 
-        EXPECT_THAT(seq, MATCHES(config))
-*/
+        EXPECT_THAT(seq, mt::ProtobufConfigMatches(config.outputs));
     };
 
     EXPECT_CALL(mock_msg_sender, send(_))
