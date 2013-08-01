@@ -13,24 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_INPUT_RECEPTION_MODE_H_
-#define MIR_INPUT_RECEPTION_MODE_H_
+#ifndef MIR_GRAPHICS_NESTED_NESTED_PLATFORM_H_
+#define MIR_GRAPHICS_NESTED_NESTED_PLATFORM_H_
+
+#include "mir/graphics/platform.h"
+#include "mir/graphics/native_platform.h"
 
 namespace mir
 {
-namespace input
+namespace graphics
 {
-
-enum class InputReceptionMode
+namespace nested
 {
-    normal,
-    receives_all_input
-};
-
+class NestedPlatform; //TODO
+}
 }
 }
 
-#endif /* MIR_INPUT_RECEPTION_MODE_H_ */
+#endif // MIR_GRAPHICS_NESTED_NESTED_PLATFORM_H_

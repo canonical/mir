@@ -67,32 +67,11 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
     }
 };
 
-class StubDisplayConfiguration : public mtd::NullDisplayConfiguration
-{
-public:
-    StubDisplayConfiguration(geom::Rectangle& rect)
-         : modes{mg::DisplayConfigurationMode{rect.size, 1.0f}}
-    {
-    }
-
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
-    {
-        mg::DisplayConfigurationOutput dummy_output_config{
-            mg::DisplayConfigurationOutputId{0}, mg::DisplayConfigurationCardId{0},
-            modes, geom::Size{}, true, true, geom::Point{0,0}, 0};
-
-        f(dummy_output_config);
-    }
-private:
-    std::vector<mg::DisplayConfigurationMode> modes;
-};
-
 class StubDisplay : public mtd::NullDisplay
 {
 public:
     StubDisplay()
-        : rect{geom::Point{0,0}, geom::Size{1600,1600}},
-          display_buffer(rect)
+        : display_buffer{geom::Rectangle{geom::Point{0,0}, geom::Size{1600,1600}}}
     {
     }
 
@@ -100,14 +79,8 @@ public:
     {
         f(display_buffer);
     }
- 
-    std::shared_ptr<mg::DisplayConfiguration> configuration() override
-    {
-        return std::make_shared<StubDisplayConfiguration>(rect);
-    }
 
 private:
-    geom::Rectangle rect;
     mtd::StubDisplayBuffer display_buffer;
 };
 

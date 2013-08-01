@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
 
 namespace mir
 {
@@ -30,19 +31,24 @@ namespace gbm
 {
 
 class KMSOutput;
+class PageFlipper;
 
 class KMSOutputContainer
 {
 public:
-    virtual ~KMSOutputContainer() = default;
+    KMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipper> const& page_flipper);
 
-    virtual std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id) = 0;
-    virtual void for_each_output(std::function<void(KMSOutput&)> functor) const = 0;
+    std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
 
-protected:
-    KMSOutputContainer() = default;
+    void for_each_output(std::function<void(KMSOutput&)> functor) const;
+
+private:
     KMSOutputContainer(KMSOutputContainer const&) = delete;
     KMSOutputContainer& operator=(KMSOutputContainer const&) = delete;
+
+    int const drm_fd;
+    std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
+    std::shared_ptr<PageFlipper> const page_flipper;
 };
 
 }

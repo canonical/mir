@@ -34,6 +34,7 @@
 #include "client_context.h"
 
 #include "mir_wait_handle.h"
+#include "mir/events/event_sink.h"
 
 namespace mir
 {

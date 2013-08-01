@@ -31,10 +31,11 @@
 
 namespace mir
 {
-namespace frontend
+namespace events
 {
 class EventSink;
 }
+
 namespace shell
 {
 class InputTargeter;
@@ -46,9 +47,13 @@ class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
+        SurfaceCreationParameters const& params);
+
+    Surface(
+        std::shared_ptr<SurfaceBuilder> const& builder,
         SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& event_sink);
+        std::shared_ptr<events::EventSink> const& sink);
 
     ~Surface() noexcept;
 
@@ -92,7 +97,7 @@ private:
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
     frontend::SurfaceId const id;
-    std::shared_ptr<frontend::EventSink> const event_sink;
+    std::shared_ptr<events::EventSink> const event_sink;
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;
