@@ -509,8 +509,8 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
 
         /*
          * Tecnhically we would like to distinguish between final shutdown
-         * and temporary shutdown (VT switch). The latter should permanently
-         * unblock clients. The former only temporarily unblock clients.
+         * and temporary shutdown (VT switch). The former should permanently
+         * unblock clients. The latter only temporarily unblock clients.
          * But that requires interface changes all over the place...
          */
         bundle.force_requests_to_complete();
