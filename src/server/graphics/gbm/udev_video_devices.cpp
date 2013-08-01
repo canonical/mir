@@ -17,7 +17,7 @@
  */
 
 #include "udev_video_devices.h"
-#include "mir/main_loop.h"
+#include "mir/graphics/event_handler_register.h"
 
 #include <boost/throw_exception.hpp>
 

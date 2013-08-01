@@ -18,7 +18,7 @@
 
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/display_report.h"
-#include "mir/main_loop.h"
+#include "mir/graphics/event_handler_register.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
