@@ -64,7 +64,7 @@ public:
 
     MOCK_METHOD0(set_graphics_mode, void());
     MOCK_METHOD3(register_switch_handlers,
-                 void(mir::MainLoop&,
+                 void(mg::EventHandlerRegister&,
                       std::function<bool()> const&,
                       std::function<bool()> const&));
 };
@@ -75,7 +75,7 @@ public:
     ~MockVideoDevices() noexcept(true) {}
 
     MOCK_METHOD2(register_change_handler,
-                 void(mir::MainLoop&,
+                 void(mg::EventHandlerRegister&,
                       std::function<void()> const&));
 };
 

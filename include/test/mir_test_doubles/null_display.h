@@ -45,13 +45,13 @@ class NullDisplay : public graphics::Display
     }
     void configure(graphics::DisplayConfiguration const&) {}
     void register_configuration_change_handler(
-        MainLoop&,
-        graphics::DisplayConfigurationChangeHandler const&)
+        graphics::EventHandlerRegister&,
+        graphics::DisplayConfigurationChangeHandler const&) override
     {
     }
-    void register_pause_resume_handlers(MainLoop&,
+    void register_pause_resume_handlers(graphics::EventHandlerRegister&,
                                         graphics::DisplayPauseHandler const&,
-                                        graphics::DisplayResumeHandler const&)
+                                        graphics::DisplayResumeHandler const&) override
     {
     }
     void pause() {}

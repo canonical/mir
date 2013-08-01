@@ -166,7 +166,7 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 }
 
 void mgg::GBMDisplay::register_configuration_change_handler(
-    MainLoop& main_loop,
+    EventHandlerRegister& main_loop,
     DisplayConfigurationChangeHandler const& conf_change_handler)
 {
     video_devices->register_change_handler(
@@ -175,7 +175,7 @@ void mgg::GBMDisplay::register_configuration_change_handler(
 }
 
 void mgg::GBMDisplay::register_pause_resume_handlers(
-    MainLoop& main_loop,
+    EventHandlerRegister& main_loop,
     DisplayPauseHandler const& pause_handler,
     DisplayResumeHandler const& resume_handler)
 {

@@ -23,11 +23,10 @@
 
 namespace mir
 {
-
-class MainLoop;
-
 namespace graphics
 {
+class EventHandlerRegister;
+
 namespace gbm
 {
 
@@ -37,7 +36,7 @@ public:
     virtual ~VideoDevices() = default;
 
     virtual void register_change_handler(
-        MainLoop& main_loop,
+        EventHandlerRegister& main_loop,
         std::function<void()> const& change_handler) = 0;
 
 protected:

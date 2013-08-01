@@ -88,7 +88,7 @@ public:
     MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
 
     void register_configuration_change_handler(
-        mir::MainLoop& main_loop,
+        mg::EventHandlerRegister& main_loop,
         mg::DisplayConfigurationChangeHandler const& conf_change_handler) override
     {
         main_loop.register_fd_handler(
@@ -102,7 +102,7 @@ public:
     }
 
     void register_pause_resume_handlers(
-        mir::MainLoop& main_loop,
+        mg::EventHandlerRegister& main_loop,
         mg::DisplayPauseHandler const& pause_handler,
         mg::DisplayResumeHandler const& resume_handler) override
     {

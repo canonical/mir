@@ -25,8 +25,6 @@
 namespace mir
 {
 
-class MainLoop;
-
 namespace graphics
 {
 
@@ -34,6 +32,7 @@ class DisplayBuffer;
 class DisplayConfiguration;
 class Cursor;
 class GLContext;
+class EventHandlerRegister;
 
 typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
@@ -70,7 +69,7 @@ public:
      * to register the handlers in a way appropriate for the platform.
      */
     virtual void register_configuration_change_handler(
-        MainLoop& main_loop,
+        EventHandlerRegister& main_loop,
         DisplayConfigurationChangeHandler const& conf_change_handler) = 0;
 
     /**
@@ -80,7 +79,7 @@ public:
      * to register the handlers in a way appropriate for the platform.
      */
     virtual void register_pause_resume_handlers(
-        MainLoop& main_loop,
+        EventHandlerRegister& main_loop,
         DisplayPauseHandler const& pause_handler,
         DisplayResumeHandler const& resume_handler) = 0;
 

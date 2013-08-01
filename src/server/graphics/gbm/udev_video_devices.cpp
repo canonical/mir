@@ -32,7 +32,7 @@ mgg::UdevVideoDevices::UdevVideoDevices(udev* udev_ctx)
 }
 
 void mgg::UdevVideoDevices::register_change_handler(
-        MainLoop& main_loop,
+    EventHandlerRegister& main_loop,
         std::function<void()> const& change_handler)
 {
     auto monitor = std::shared_ptr<udev_monitor>(

@@ -84,7 +84,7 @@ void mgg::LinuxVirtualTerminal::set_graphics_mode()
 }
 
 void mgg::LinuxVirtualTerminal::register_switch_handlers(
-    MainLoop& main_loop,
+    EventHandlerRegister& main_loop,
     std::function<bool()> const& switch_away,
     std::function<bool()> const& switch_back)
 {
