@@ -192,6 +192,7 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
      * It's a little weird to do this in the release function, but doing it
      * here allows for maximum concurrency, so we always have a new client
      * buffer ready to give the compositor, even for slow clients.
+     * See also the fix for LP: #1199450 in compositor_acquire.
      */
     while (!framedropping && nready > 0)
         cond.wait(lock);
@@ -227,11 +228,16 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     }
     else
     {
-        // Make sure the compositor gets the latest frame (LP: #1199450)
+        /*
+         * Make sure the compositor gets the latest frame (LP: #1199450)
+         * This is arguably more of a workaround than a fix. The real issue
+         * is that Mir's compositor doesn't have the smarts to understand
+         * that a surface might have multiple frames ready, and therefore it
+         * should schedule multiple page flips. If that is ever resolved, then
+         * this drop_frames and the wait in client_release can be safely
+         * removed.
+         */
         drop_frames(nready - 1);
-
-        // XXX ^ If !framedropping then the wait in client_release also
-        //       enforces this.
 
         compositor = first_ready;
         first_ready = (first_ready + 1) % nbuffers;
