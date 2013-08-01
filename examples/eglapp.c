@@ -114,6 +114,29 @@ static unsigned int get_bpp(MirPixelFormat pf)
     }
 }
 
+static const MirDisplayOutput *find_active_output(
+    const MirDisplayConfiguration *conf)
+{
+    const MirDisplayOutput *output = NULL;
+    int d;
+
+    for (d = 0; d < (int)conf->num_displays; d++)
+    {
+        const MirDisplayOutput *out = conf->displays + d;
+
+        if (out->used &&
+            out->connected &&
+            out->num_modes &&
+            out->current_mode < out->num_modes)
+        {
+            output = out;
+            break;
+        }
+    }
+
+    return output;
+}
+
 mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                                 unsigned int *width, unsigned int *height)
 {
@@ -180,20 +203,33 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     connection = mir_connect_sync(NULL, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    /* eglapps are interested in the screen size, so use mir_connection_create_display_config */
-    MirDisplayConfiguration* display_config = mir_connection_create_display_config(connection);
-    MirDisplayOutput* display_state = &display_config->displays[0];
-    MirDisplayMode mode = display_state->modes[display_state->current_mode]; 
+    /* eglapps are interested in the screen size, so
+       use mir_connection_create_display_config */
+    MirDisplayConfiguration* display_config =
+        mir_connection_create_display_config(connection);
+
+    const MirDisplayOutput *output = find_active_output(display_config);
+
+    if (output == NULL)
+    {
+        printf("No active outputs found.\n");
+        return 0;
+    }
+
+    const MirDisplayMode *mode = &output->modes[0];
+
     unsigned int valid_formats;
-    mir_connection_get_available_surface_formats(connection, &surfaceparm.pixel_format, 1, &valid_formats);
+    mir_connection_get_available_surface_formats(connection,
+        &surfaceparm.pixel_format, 1, &valid_formats);
 
-    printf("Connected to display: resolution (%dx%d), position(%dx%d), supports %d pixel formats\n",
-           mode.horizontal_resolution, mode.vertical_resolution,
-           display_state->position_x, display_state->position_y,
-           display_state->num_output_formats);
+    printf("Connected to display: resolution (%dx%d), position(%dx%d), "
+           "supports %d pixel formats\n",
+           mode->horizontal_resolution, mode->vertical_resolution,
+           output->position_x, output->position_y,
+           output->num_output_formats);
 
-    surfaceparm.width = *width > 0 ? *width : mode.horizontal_resolution;
-    surfaceparm.height = *height > 0 ? *height : mode.vertical_resolution;
+    surfaceparm.width = *width > 0 ? *width : mode->horizontal_resolution;
+    surfaceparm.height = *height > 0 ? *height : mode->vertical_resolution;
 
     mir_display_config_destroy(display_config);
 
