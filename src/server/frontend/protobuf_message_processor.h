@@ -21,10 +21,11 @@
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
 #include "message_processor.h"
+#include "message_sender.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 
 #include <vector>
 #include <memory>
@@ -43,11 +44,11 @@ class MessageProcessorReport;
 namespace detail
 {
 
-struct ProtobufMessageProcessor : MessageProcessor,
-                                  public events::EventSink
+class ProtobufMessageProcessor : public MessageProcessor
 {
+public:
     ProtobufMessageProcessor(
-        MessageSender* sender,
+        std::shared_ptr<MessageSender> const& sender,
         std::shared_ptr<protobuf::DisplayServer> const& display_server,
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<MessageProcessorReport> const& report);
@@ -72,10 +73,6 @@ private:
     // OTOH until we have a real requirement it is hard to see how best to generalise.
     void send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response);
 
-    void send_event(MirEvent const& e);
-
-    void handle_event(MirEvent const& e);
-
     template<class Response>
     std::vector<int32_t> extract_fds_from(Response* response);
 
@@ -92,7 +89,7 @@ private:
             ::google::protobuf::Closure* done),
         mir::protobuf::wire::Invocation const& invocation);
 
-    MessageSender* const sender;
+    std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<protobuf::DisplayServer> const display_server;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<MessageProcessorReport> const report;

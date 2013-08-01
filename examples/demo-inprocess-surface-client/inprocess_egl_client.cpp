@@ -97,7 +97,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_buffer_usage(mc::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
     auto session = session_manager->open_session("Inprocess client",
-                                                 std::shared_ptr<mir::events::EventSink>());
+                                                 std::shared_ptr<mf::EventSink>());
     // TODO: Why do we get an ID? ~racarr
     auto surface = session->get_surface(session_manager->create_surface_for(session, params));
 
