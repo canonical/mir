@@ -98,6 +98,7 @@ int mc::SwitchingBundle::nfree() const
 
 int mc::SwitchingBundle::drop_frames(int max)
 {
+    // Drop up to max of the oldest ready frames, and put them on the free list
     int dropped = (max > nready) ? nready : max;
 
     for (int d = 0; d < dropped; d++)
