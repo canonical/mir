@@ -104,9 +104,6 @@ find_package(GFlags REQUIRED)
 find_package(XKBCOMMON REQUIRED)
 find_package(LTTngUST REQUIRED)
   
-find_package( PkgConfig )
-pkg_check_modules( MIRCLIENT REQUIRED mirclient )
-
 include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})
 include_directories (${GLM_INCLUDE_DIRS})

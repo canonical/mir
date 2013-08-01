@@ -324,7 +324,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             std::string server_socket = the_options()->get("file", default_server_socket);
 
             if (!server_socket.compare(host_socket))
-                BOOST_THROW_EXCEPTION(mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"));
+                mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!");
 
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
             return std::make_shared<mir::graphics::nested::NestedPlatform>(host_socket, the_display_report(), create_native_platform());
