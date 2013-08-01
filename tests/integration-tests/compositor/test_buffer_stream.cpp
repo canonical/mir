@@ -18,7 +18,7 @@
 
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "mir/compositor/swapper_factory.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/compositor/switching_bundle.h"
 
 #include "mir_test_doubles/stub_buffer.h"
@@ -51,9 +51,9 @@ struct BufferStreamTest : public ::testing::Test
     {
         auto allocator = std::make_shared<mtd::StubBufferAllocator>();
         auto factory = std::make_shared<mc::SwapperFactory>(allocator);
-        mc::BufferProperties properties{geom::Size{380, 210},
+        mg::BufferProperties properties{geom::Size{380, 210},
                                         geom::PixelFormat::abgr_8888,
-                                        mc::BufferUsage::hardware};
+                                        mg::BufferUsage::hardware};
 
         return std::make_shared<mc::SwitchingBundle>(factory, properties);
     }

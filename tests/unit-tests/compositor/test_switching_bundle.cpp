@@ -38,8 +38,8 @@ struct SwitchingBundleTest : public ::testing::Test
         mock_default_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         mock_secondary_swapper = std::make_shared<testing::NiceMock<mtd::MockSwapper>>();
         stub_buffer = std::make_shared<mtd::StubBuffer>();
-        properties = mc::BufferProperties{geom::Size{4, 2},
-                                          geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
+        properties = mg::BufferProperties{geom::Size{4, 2},
+                                          geom::PixelFormat::abgr_8888, mg::BufferUsage::hardware};
 
         ON_CALL(*mock_swapper_factory, create_swapper_new_buffers(_,_,_))
             .WillByDefault(Return(mock_default_swapper));
@@ -49,14 +49,14 @@ struct SwitchingBundleTest : public ::testing::Test
     std::shared_ptr<mtd::MockSwapper> mock_default_swapper;
     std::shared_ptr<mtd::MockSwapper> mock_secondary_swapper;
     std::shared_ptr<mg::Buffer> stub_buffer;
-    mc::BufferProperties properties;
+    mg::BufferProperties properties;
 };
 
 TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
     using namespace testing;
-    auto actual_properties = mc::BufferProperties{geom::Size{7, 8},
-                                                  geom::PixelFormat::argb_8888, mc::BufferUsage::software};
+    auto actual_properties = mg::BufferProperties{geom::Size{7, 8},
+                                                  geom::PixelFormat::argb_8888, mg::BufferUsage::software};
     EXPECT_CALL(*mock_swapper_factory, create_swapper_new_buffers(_,_,mc::SwapperType::synchronous))
         .Times(1)
         .WillOnce(DoAll(SetArgReferee<0>(actual_properties),

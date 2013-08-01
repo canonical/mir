@@ -23,31 +23,29 @@
 
 namespace mir
 {
+namespace graphics { class GraphicBufferAllocator; }
+
 namespace compositor
 {
-
-class GraphicBufferAllocator;
-struct BufferProperties;
-
 class SwapperFactory : public BufferAllocationStrategy
 {
 public:
     explicit SwapperFactory(
-        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& gr_alloc);
     SwapperFactory(
-        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& gr_alloc,
         int number_of_buffers);
 
-    std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(BufferProperties const&,
+    std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(graphics::BufferProperties const&,
         std::vector<std::shared_ptr<graphics::Buffer>>&, size_t, SwapperType) const;
     std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
-        BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const;
+        graphics::BufferProperties& actual_properties, graphics::BufferProperties const& requested_properties, SwapperType) const;
 
 private:
     void change_swapper_size(
-        std::vector<std::shared_ptr<graphics::Buffer>>&, size_t const, size_t, BufferProperties const&) const;
+        std::vector<std::shared_ptr<graphics::Buffer>>&, size_t const, size_t, graphics::BufferProperties const&) const;
 
-    std::shared_ptr<GraphicBufferAllocator> const gr_allocator;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const gr_allocator;
     unsigned int const synchronous_number_of_buffers;
     unsigned int const spin_number_of_buffers;
 };

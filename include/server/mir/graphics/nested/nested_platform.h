@@ -35,7 +35,7 @@ public:
     NestedPlatform(std::shared_ptr<DisplayReport> const& display_report,
                    std::shared_ptr<NativePlatform> const& native_platform);
 
-    std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
             std::shared_ptr<BufferInitializer> const& buffer_initializer);
     std::shared_ptr<Display> create_display(
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy);

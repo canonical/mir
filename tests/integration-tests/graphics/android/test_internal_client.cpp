@@ -98,7 +98,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     params.name = std::string("test");
     params.size = size; 
     params.pixel_format = pf;
-    params.buffer_usage = mc::BufferUsage::hardware; 
+    params.buffer_usage = mg::BufferUsage::hardware;
     auto id = mf::SurfaceId{4458};
 
     auto stub_input_factory = std::make_shared<StubInputFactory>();
