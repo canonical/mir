@@ -492,7 +492,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     size_t mode_index0 = 1, mode_index1 = 3; 
     mg::DisplayConfigurationOutputId id0{6}, id1{3};
 
-    MockConfig mock_display_config;
+    NiceMock<MockConfig> mock_display_config;
     auto mock_display_selector = std::make_shared<mtd::MockDisplayChanger>();
 
     Sequence seq;
