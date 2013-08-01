@@ -1,3 +1,29 @@
+mir (0.0.8+13.10.20130801-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * connect multi-display info from the display, to the client by
+    improving SessionMediator.
+  * prepare for global event sending (like display resizing) by
+    separating the ability to send messages into distinct classes that
+    is used in the client request service loops clean up constructors
+    that aren't used, functions that aren't needed as well.
+
+  [ Robert Carr ]
+  * Support monitor input channels for the shell.
+
+  [ Eleni Maria Stea ]
+  * stub Platform functions to NestedPlatform replaced
+    create_nested_platform with a call to the NestedPlatform constructor
+    in the default_server_configuration.cpp.
+
+  [ Alexandros Frantzis ]
+  * gbm: Handle the cursor properly with multiple monitors.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 907
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 01 Aug 2013 00:02:49 +0000
+
 mir (0.0.8+13.10.20130731.2-0ubuntu1) saucy; urgency=low
 
   [ Dmitrijs Ledkovs ]

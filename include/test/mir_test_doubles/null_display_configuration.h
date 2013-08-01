@@ -13,13 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIGURATION_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIGURATION_H_
 
-#include "mir/surfaces/input_registrar.h"
+#include "mir/graphics/display_configuration.h"
 
 namespace mir
 {
@@ -27,21 +27,19 @@ namespace test
 {
 namespace doubles
 {
-
-struct StubInputRegistrar : public surfaces::InputRegistrar
+class NullDisplayConfiguration : public graphics::DisplayConfiguration
 {
-    void input_channel_opened(std::shared_ptr<input::InputChannel> const&,
-                              std::shared_ptr<input::Surface> const&,
-                              input::InputReceptionMode)
+    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
     {
     }
-    void input_channel_closed(std::shared_ptr<input::InputChannel> const&)
+    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const
+    {
+    }
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
     {
     }
 };
-
 }
 }
-} // namespace mir
-
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
+}
+#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIGURATION_H_ */

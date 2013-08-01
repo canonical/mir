@@ -15,40 +15,32 @@
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
+#ifndef MIR_FRONTEND_MESSAGE_SENDER_H_
+#define MIR_FRONTEND_MESSAGE_SENDER_H_
 
-#ifndef MIR_FRONTEND_PROTOBUF_IPC_FACTORY_H_
-#define MIR_FRONTEND_PROTOBUF_IPC_FACTORY_H_
-
-#include <memory>
+#include <vector>
+#include <boost/asio.hpp>
 
 namespace mir
 {
-namespace protobuf
-{
-class DisplayServer;
-}
 namespace frontend
 {
-class EventSink;
-class ResourceCache;
-class MessageProcessorReport;
-
-class ProtobufIpcFactory
+namespace detail
+{
+class MessageSender
 {
 public:
-    virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<EventSink> const& sink) = 0;
-    virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
-    virtual std::shared_ptr<MessageProcessorReport> report() = 0;
+    virtual void send(std::string const& body) = 0;
+    virtual void send_fds(std::vector<int32_t> const& fd) = 0;
 
 protected:
-    ProtobufIpcFactory() {}
-    virtual ~ProtobufIpcFactory() {}
-    ProtobufIpcFactory(ProtobufIpcFactory const&) = delete;
-    ProtobufIpcFactory& operator =(ProtobufIpcFactory const&) = delete;
+    MessageSender() = default;
+    virtual ~MessageSender() = default;
+    MessageSender(MessageSender const&) = delete;
+    MessageSender& operator=(MessageSender const&) = delete;
 };
 
 }
 }
-
-#endif // MIR_FRONTEND_PROTOBUF_IPC_FACTORY_H_
+}
+#endif /* MIR_FRONTEND_MESSAGE_SENDER_H_ */
