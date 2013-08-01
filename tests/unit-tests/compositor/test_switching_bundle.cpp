@@ -28,7 +28,7 @@
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
-namespace mg=mir::graphics;
+namespace mg = mir::graphics;
 
 using namespace testing;
 
