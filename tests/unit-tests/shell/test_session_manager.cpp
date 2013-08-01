@@ -39,7 +39,6 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
-namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
@@ -100,7 +99,7 @@ TEST_F(SessionManagerSetup, open_and_close_session)
 
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
 
-    auto session = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
+    auto session = session_manager.open_session("Visual Basic Studio", std::shared_ptr<mf::EventSink>());
     session_manager.close_session(session);
 }
 
@@ -113,7 +112,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
        Return(std::make_shared<msh::Surface>(
            mt::fake_shared(surface_builder),
-           msh::a_surface())));
+           msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
 
 
     EXPECT_CALL(container, insert_session(_)).Times(1);
@@ -124,7 +123,7 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
 
-    auto session = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
+    auto session = session_manager.open_session("Visual Basic Studio", std::shared_ptr<mf::EventSink>());
     session->create_surface(msh::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
 
     session_manager.close_session(session);
@@ -138,7 +137,7 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(focus_setter, set_focus_to(_)).WillOnce(SaveArg<0>(&new_session));
 
-    auto session = session_manager.open_session("Visual Basic Studio", std::shared_ptr<me::EventSink>());
+    auto session = session_manager.open_session("Visual Basic Studio", std::shared_ptr<mf::EventSink>());
     EXPECT_EQ(session, new_session);
 }
 
@@ -147,8 +146,8 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
     using namespace ::testing;
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
         Return(std::make_shared<msh::Surface>(
-            mt::fake_shared(surface_builder),
-            msh::a_surface())));
+           mt::fake_shared(surface_builder),
+           msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
 
     // Once for session creation and once for surface creation
     {
@@ -159,7 +158,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
     }
 
-    auto session1 = session_manager.open_session("Weather Report", std::shared_ptr<me::EventSink>());
+    auto session1 = session_manager.open_session("Weather Report", std::shared_ptr<mf::EventSink>());
     session_manager.create_surface_for(session1, msh::a_surface());
 }
 
@@ -200,6 +199,6 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifec
 
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
     
-    auto session = session_manager.open_session("XPlane", std::shared_ptr<me::EventSink>());
+    auto session = session_manager.open_session("XPlane", std::shared_ptr<mf::EventSink>());
     session_manager.close_session(session);
 }

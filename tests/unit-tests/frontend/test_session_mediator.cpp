@@ -23,17 +23,20 @@
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/application_session.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_shell.h"
-#include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/shell/surface.h"
 
 #include <gtest/gtest.h>
@@ -61,7 +64,7 @@ public:
     {
         using namespace ::testing;
 
-        mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+        mock_surface = std::make_shared<mtd::MockFrontendSurface>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), geom::PixelFormat());
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
@@ -78,7 +81,7 @@ public:
     }
 
     mtd::StubSurfaceBuilder surface_builder;
-    std::shared_ptr<mtd::MockSurface> mock_surface;
+    std::shared_ptr<mtd::MockFrontendSurface> mock_surface;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     static int const testing_client_input_fd;
 };
@@ -127,7 +130,7 @@ class MockPlatform : public mg::Platform
                                               std::shared_ptr<mg::Buffer> const&));
 };
 
-class NullEventSink : public mir::events::EventSink
+class NullEventSink : public mir::frontend::EventSink
 {
 public:
     void handle_event(MirEvent const& ) override {}
@@ -137,7 +140,7 @@ struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
-          graphics_platform{std::make_shared<MockPlatform>()},
+          graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
@@ -296,12 +299,62 @@ TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
+namespace
+{
+struct StubConfig : public mg::DisplayConfiguration
+{
+    StubConfig(std::shared_ptr<mg::DisplayConfigurationOutput> const& conf)
+       : outputs{conf, conf}
+    {
+    }
+    virtual void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
+    {
+    }
+    virtual void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    {
+        for (auto const& disp : outputs)
+        {
+            f(*disp);
+        }
+    }
+    virtual void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
+    {
+    }
+
+    std::vector<std::shared_ptr<mg::DisplayConfigurationOutput>> outputs;
+};
+
+}
+
 TEST_F(SessionMediatorTest, connect_packs_display_output)
 {
     using namespace testing;
+    geom::Size sz{1022, 2411};
+   
+    std::vector<mg::DisplayConfigurationMode> modes{{sz, 344.0f},{sz, 234.0f}};
+    mg::DisplayConfigurationOutput output{
+        mg::DisplayConfigurationOutputId{static_cast<int>(3)},
+        mg::DisplayConfigurationCardId{static_cast<int>(2)},
+        modes, sz, true, false,
+        geom::Point{4,12}, 0u};
+
+    StubConfig config(mt::fake_shared(output));
+
+    auto mock_display = std::make_shared<mtd::MockDisplay>();
+    EXPECT_CALL(*mock_display, configuration())
+        .Times(1)
+        .WillOnce(Return(mt::fake_shared(config)));
+    mf::SessionMediator mediator{
+        shell, graphics_platform, mock_display,
+        buffer_allocator, report, 
+        std::make_shared<NullEventSink>(),
+        resource_cache};
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
+    connection.clear_platform();
+    connection.clear_display_info();
+    connection.clear_display_output();
 
     std::vector<geom::PixelFormat> const pixel_formats{
         geom::PixelFormat::bgr_888,
@@ -312,18 +365,10 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     EXPECT_CALL(*buffer_allocator, supported_pixel_formats())
         .WillOnce(Return(pixel_formats));
 
+    
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    ASSERT_EQ(1, connection.display_output().size());
-    auto output = connection.display_output(0);
-
-    ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(output.pixel_format_size()));
-
-    for (size_t i = 0; i < pixel_formats.size(); ++i)
-    {
-        EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(output.pixel_format(i)))
-            << "i = " << i;
-    }
+    EXPECT_THAT(connection, mt::ProtobufConfigMatches(config.outputs, pixel_formats));
 }
 
 TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)

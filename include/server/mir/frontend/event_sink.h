@@ -1,9 +1,9 @@
 /*
  * Copyright © 2013 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,27 +16,28 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_EVENT_PIPE_H_
-#define MIR_FRONTEND_EVENT_PIPE_H_
+#ifndef MIR_EVENTS_EVENT_SINK_H_
+#define MIR_EVENTS_EVENT_SINK_H_
 
 #include "mir_toolkit/event.h"
-#include "mir/events/event_sink.h"
-#include <memory>
 
 namespace mir
 {
 namespace frontend
 {
-class EventPipe : public events::EventSink
+class EventSink
 {
 public:
-    void set_target(std::weak_ptr<events::EventSink> const& s);
-    void handle_event(MirEvent const& e) override;
+    virtual ~EventSink() = default;
 
-private:
-    std::weak_ptr<events::EventSink> target;
+    virtual void handle_event(MirEvent const& e) = 0;
+
+protected:
+    EventSink() = default;
+    EventSink(EventSink const&) = delete;
+    EventSink& operator=(EventSink const&) = delete;
 };
 }
-}
+} // namespace mir
 
-#endif // MIR_FRONTEND_EVENT_PIPE_H_
+#endif // MIR_EVENTS_EVENT_SINK_H_

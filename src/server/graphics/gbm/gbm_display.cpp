@@ -105,27 +105,28 @@ mgg::GBMDisplay::~GBMDisplay()
 {
 }
 
-geom::Rectangle mgg::GBMDisplay::view_area() const
-{
-    return display_buffers[0]->view_area();
-}
-
 void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f)
 {
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
     for (auto& db_ptr : display_buffers)
         f(*db_ptr);
 }
 
 std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
 {
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
     /* Give back a copy of the latest configuration information */
     current_display_configuration.update();
-    return std::make_shared<mgg::KMSDisplayConfiguration>(current_display_configuration);
+    return std::make_shared<mgg::RealKMSDisplayConfiguration>(current_display_configuration);
 }
 
 void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
-    auto const& kms_conf = dynamic_cast<KMSDisplayConfiguration const&>(conf);
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
+    auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
     std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers_new;
 
     OverlappingOutputGrouping grouping{conf};
@@ -209,13 +210,39 @@ void mgg::GBMDisplay::resume()
         throw;
     }
 
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
     for (auto& db_ptr : display_buffers)
         db_ptr->schedule_set_crtc();
 }
 
 auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
 {
-    if (!cursor) cursor = std::make_shared<GBMCursor>(platform, output_container);
+    if (!cursor)
+    {
+        class KMSCurrentConfiguration : public CurrentConfiguration
+        {
+        public:
+            KMSCurrentConfiguration(GBMDisplay& display)
+                : display(display)
+            {
+            }
+
+            void with_current_configuration_do(
+                std::function<void(KMSDisplayConfiguration const&)> const& exec)
+            {
+                std::lock_guard<std::mutex> lg{display.configuration_mutex};
+                exec(display.current_display_configuration);
+            }
+
+        private:
+            GBMDisplay& display;
+        };
+
+        cursor = std::make_shared<GBMCursor>(platform->gbm.device, output_container,
+                                             std::make_shared<KMSCurrentConfiguration>(*this));
+    }
+
     return cursor;
 }
 
