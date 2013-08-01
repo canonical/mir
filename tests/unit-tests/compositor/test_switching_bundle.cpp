@@ -417,20 +417,29 @@ namespace
                            std::atomic<bool> &done)
     {
         while (!done)
+        {
             bundle.compositor_release(bundle.compositor_acquire());
+            std::this_thread::yield();
+        }
     }
 
     void snapshot_thread(mc::SwitchingBundle &bundle,
                            std::atomic<bool> &done)
     {
         while (!done)
+        {
             bundle.snapshot_release(bundle.snapshot_acquire());
+            std::this_thread::yield();
+        }
     }
 
     void client_thread(mc::SwitchingBundle &bundle, int nframes)
     {
         for (int i = 0; i < nframes; i++)
+        {
             bundle.client_release(bundle.client_acquire());
+            std::this_thread::yield();
+        }
     }
 
     void switching_client_thread(mc::SwitchingBundle &bundle, int nframes)
@@ -440,10 +449,12 @@ namespace
             bundle.allow_framedropping(false);
             for (int j = 0; j < 5; j++)
                 bundle.client_release(bundle.client_acquire());
+            std::this_thread::yield();
 
             bundle.allow_framedropping(true);
             for (int j = 0; j < 5; j++)
                 bundle.client_release(bundle.client_acquire());
+            std::this_thread::yield();
         }
     }
 }
