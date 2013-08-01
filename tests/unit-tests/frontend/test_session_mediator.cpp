@@ -330,8 +330,9 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     mg::DisplayConfigurationOutput output{
         mg::DisplayConfigurationOutputId{static_cast<int>(3)},
         mg::DisplayConfigurationCardId{static_cast<int>(2)},
+        std::vector<geom::PixelFormat>{geom::PixelFormat::abgr_8888},
         modes, sz, true, false,
-        geom::Point{4,12}, 0u};
+        geom::Point{4,12}, 0u, 0u};
 
     StubConfig config(mt::fake_shared(output));
 

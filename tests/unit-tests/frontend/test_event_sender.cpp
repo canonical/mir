@@ -21,6 +21,7 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test/fake_shared.h"
 
+#include <vector>
 #include "mir_protobuf.pb.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -28,6 +29,7 @@
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace mfd=mir::frontend::detail;
+namespace geom=mir::geometry;
 
 namespace 
 {
@@ -45,18 +47,20 @@ TEST(TestEventSender, display_send)
     mtd::StubDisplayConfig config;
     MockMsgSender mock_msg_sender;
 
+    auto msg_validator = [](std::string const& ){
 /*
-    auto msg_validator = [](std::string){
         mp::EventSequence seq;
         seq.grabit(str)
 
         EXPECT_THAT(seq, MATCHES(config))
-    };
 */
+    };
+
     EXPECT_CALL(mock_msg_sender, send(_))
-        .Times(1);
-//        .WillOnce(Invoke(msg_validator));
+        .Times(1)
+        .WillOnce(Invoke(msg_validator));
 
     mfd::EventSender sender(mt::fake_shared(mock_msg_sender));
+
     sender.send_display_config(config);
 }
