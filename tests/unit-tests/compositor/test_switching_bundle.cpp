@@ -505,9 +505,32 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
 
         bundle.allow_framedropping(false);
 
-        std::thread client(client_thread, std::ref(bundle), 1000);
+        std::thread client(client_thread, std::ref(bundle), nbuffers);
+
+        /*
+         * Tecnhically we would like to distinguish between final shutdown
+         * and temporary shutdown (VT switch). The latter should permanently
+         * unblock clients. The former only temporarily unblock clients.
+         * But that requires interface changes all over the place...
+         */
         bundle.force_requests_to_complete();
         client.join();
+    }
+}
+
+TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_vt_switch_not_permanent)
+{   // Regression test for LP: #1207226
+    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+        bundle.allow_framedropping(false);
+
+        std::thread client(client_thread, std::ref(bundle), nbuffers);
+        bundle.force_requests_to_complete();
+        client.join();
+
+        EXPECT_FALSE(bundle.framedropping_allowed());
     }
 }
 

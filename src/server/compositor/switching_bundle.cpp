@@ -75,7 +75,7 @@ mc::SwitchingBundle::SwitchingBundle(
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
-      framedropping{false}
+      framedropping{false}, force_drop{0}
 {
     if (nbuffers < 1)
         BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle requires a "
@@ -162,7 +162,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (framedropping && nbuffers > 1)
+    if ((framedropping || force_drop) && nbuffers > 1)
     {
         if (nfree() <= 0)
         {
@@ -177,6 +177,9 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         while (!nfree())
             cond.wait(lock);
     }
+
+    if (force_drop > 0)
+        force_drop--;
 
     int client = (first_client + nclients) % nbuffers;
     nclients++;
@@ -222,7 +225,7 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
      * buffer ready to give the compositor, even for slow clients.
      * See also the fix for LP: #1199450 in compositor_acquire.
      */
-    while (!framedropping && nready > 0)
+    while (!(framedropping || force_drop) && nready > 0)
         cond.wait(lock);
 
     first_client = (first_client + 1) % nbuffers;
@@ -341,7 +344,7 @@ void mc::SwitchingBundle::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
     drop_frames(nready);
-    framedropping = true;
+    force_drop = nbuffers + 1;
     cond.notify_all();
 }
 

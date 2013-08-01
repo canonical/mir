@@ -85,6 +85,7 @@ private:
     std::condition_variable cond;
 
     bool framedropping;
+    int force_drop;
 };
 
 }
