@@ -248,6 +248,29 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     }
 }
 
+static const MirDisplayOutput *find_active_output(
+    const MirDisplayConfiguration *conf)
+{
+    const MirDisplayOutput *output = NULL;
+    int d;
+
+    for (d = 0; d < (int)conf->num_displays; d++)
+    {
+        const MirDisplayOutput *out = conf->displays + d;
+
+        if (out->used &&
+            out->connected &&
+            out->num_modes &&
+            out->current_mode < out->num_modes)
+        {
+            output = out;
+            break;
+        }
+    }
+
+    return output;
+}
+
 int main(int argc, char *argv[])
 {
     static const Color background = {0x40, 0x40, 0x40, 0xff};
@@ -267,8 +290,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirDisplayConfiguration* display_config = mir_connection_create_display_config(conn);
-    MirDisplayOutput* dinfo = &display_config->displays[0];
+    MirDisplayConfiguration *display_config =
+        mir_connection_create_display_config(conn);
+
+    const MirDisplayOutput *dinfo = find_active_output(display_config);
+    if (dinfo == NULL)
+    {
+        fprintf(stderr, "No active outputs found.\n");
+        mir_connection_release(conn);
+        return 1;
+    }
 
     parm.buffer_usage = mir_buffer_usage_software;
 
