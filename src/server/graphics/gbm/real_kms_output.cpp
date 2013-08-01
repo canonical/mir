@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "kms_output.h"
+#include "real_kms_output.h"
 #include "page_flipper.h"
 
 #include <boost/throw_exception.hpp>
@@ -91,11 +91,11 @@ bool encoder_supports_crtc_index(drmModeEncoder const* encoder, uint32_t crtc_in
 
 }
 
-mgg::KMSOutput::KMSOutput(int drm_fd, uint32_t connector_id,
-                          std::shared_ptr<PageFlipper> const& page_flipper)
+mgg::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
+                                  std::shared_ptr<PageFlipper> const& page_flipper)
     : drm_fd{drm_fd}, connector_id{connector_id}, page_flipper{page_flipper},
       connector(), mode_index{0}, current_crtc(), saved_crtc(),
-      using_saved_crtc{true}
+      using_saved_crtc{true}, has_cursor_{false}
 {
     reset();
 
@@ -110,12 +110,12 @@ mgg::KMSOutput::KMSOutput(int drm_fd, uint32_t connector_id,
     }
 }
 
-mgg::KMSOutput::~KMSOutput()
+mgg::RealKMSOutput::~RealKMSOutput()
 {
     restore_saved_crtc();
 }
 
-void mgg::KMSOutput::reset()
+void mgg::RealKMSOutput::reset()
 {
     DRMModeResources resources{drm_fd};
 
@@ -129,19 +129,19 @@ void mgg::KMSOutput::reset()
     current_crtc = nullptr;
 }
 
-geom::Size mgg::KMSOutput::size() const
+geom::Size mgg::RealKMSOutput::size() const
 {
     drmModeModeInfo const& mode(connector->modes[mode_index]);
     return {mode.hdisplay, mode.vdisplay};
 }
 
-void mgg::KMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
+void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
 {
     fb_offset = offset;
     mode_index = kms_mode_index;
 }
 
-bool mgg::KMSOutput::set_crtc(uint32_t fb_id)
+bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
 {
     if (!ensure_crtc())
         BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
@@ -160,7 +160,7 @@ bool mgg::KMSOutput::set_crtc(uint32_t fb_id)
     return true;
 }
 
-bool mgg::KMSOutput::schedule_page_flip(uint32_t fb_id)
+bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
 {
     if (!current_crtc)
         BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
@@ -168,7 +168,7 @@ bool mgg::KMSOutput::schedule_page_flip(uint32_t fb_id)
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
 }
 
-void mgg::KMSOutput::wait_for_page_flip()
+void mgg::RealKMSOutput::wait_for_page_flip()
 {
     if (!current_crtc)
         BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
@@ -176,7 +176,7 @@ void mgg::KMSOutput::wait_for_page_flip()
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
 
-void mgg::KMSOutput::set_cursor(gbm_bo* buffer)
+void mgg::RealKMSOutput::set_cursor(gbm_bo* buffer)
 {
     if (current_crtc)
     {
@@ -191,10 +191,12 @@ void mgg::KMSOutput::set_cursor(gbm_bo* buffer)
                 ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
                     << (boost::error_info<KMSOutput, decltype(result)>(result)));
         }
+
+        has_cursor_ = true;
     }
 }
 
-void mgg::KMSOutput::move_cursor(geometry::Point destination)
+void mgg::RealKMSOutput::move_cursor(geometry::Point destination)
 {
     if (current_crtc)
     {
@@ -209,15 +211,21 @@ void mgg::KMSOutput::move_cursor(geometry::Point destination)
     }
 }
 
-void mgg::KMSOutput::clear_cursor()
+void mgg::RealKMSOutput::clear_cursor()
 {
     if (current_crtc)
     {
         drmModeSetCursor(drm_fd, current_crtc->crtc_id, 0, 0, 0);
+        has_cursor_ = false;
     }
 }
 
-bool mgg::KMSOutput::ensure_crtc()
+bool mgg::RealKMSOutput::has_cursor() const
+{
+    return has_cursor_;
+}
+
+bool mgg::RealKMSOutput::ensure_crtc()
 {
     /* Nothing to do if we already have a crtc */
     if (current_crtc)
@@ -262,7 +270,7 @@ bool mgg::KMSOutput::ensure_crtc()
     return (current_crtc != nullptr);
 }
 
-void mgg::KMSOutput::restore_saved_crtc()
+void mgg::RealKMSOutput::restore_saved_crtc()
 {
     if (!using_saved_crtc)
     {

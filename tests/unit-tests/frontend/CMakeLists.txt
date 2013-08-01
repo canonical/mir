@@ -7,7 +7,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_buffer_packer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_resource_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session_mediator.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_event_pipe.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_socket_session.cpp
 )
 
 # TODO this test is a mess - something better is needed.

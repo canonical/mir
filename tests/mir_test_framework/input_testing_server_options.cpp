@@ -68,10 +68,11 @@ public:
     ~ProxyInputRegistrar() noexcept(true) = default;
     
     void input_channel_opened(std::shared_ptr<mi::InputChannel> const& opened_channel,
-                              std::shared_ptr<mi::Surface> const& surface)
+                              std::shared_ptr<mi::Surface> const& surface,
+                              mi::InputReceptionMode input_mode)
     {
         outstanding_channels[opened_channel] = surface->name();
-        underlying_registrar->input_channel_opened(opened_channel, surface);
+        underlying_registrar->input_channel_opened(opened_channel, surface, input_mode);
         listener->channel_ready_for_input(surface->name());
     }
     void input_channel_closed(std::shared_ptr<mi::InputChannel> const& closed_channel)

@@ -20,11 +20,11 @@ add_library(
   gbm_cursor.cpp
   gbm_display_helpers.cpp
   gbm_display.cpp
-  kms_display_configuration.cpp
+  real_kms_display_configuration.cpp
   drm_mode_resources.cpp
   gbm_display_buffer.cpp
-  kms_output.cpp
-  kms_output_container.cpp
+  real_kms_output.cpp
+  real_kms_output_container.cpp
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
   internal_native_display.cpp

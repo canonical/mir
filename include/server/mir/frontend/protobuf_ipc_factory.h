@@ -23,16 +23,13 @@
 
 namespace mir
 {
-namespace events
-{
-class EventSink;
-}
 namespace protobuf
 {
 class DisplayServer;
 }
 namespace frontend
 {
+class EventSink;
 class ResourceCache;
 class MessageProcessorReport;
 
@@ -40,7 +37,7 @@ class ProtobufIpcFactory
 {
 public:
     virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<events::EventSink> const& sink) = 0;
+        std::shared_ptr<EventSink> const& sink) = 0;
     virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
     virtual std::shared_ptr<MessageProcessorReport> report() = 0;
 

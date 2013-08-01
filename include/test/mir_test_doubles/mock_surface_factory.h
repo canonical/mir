@@ -36,7 +36,7 @@ struct MockSurfaceFactory : public shell::SurfaceFactory
     MOCK_METHOD3(create_surface, std::shared_ptr<shell::Surface>(
         const shell::SurfaceCreationParameters&,
         frontend::SurfaceId,
-        std::shared_ptr<events::EventSink> const&));
+        std::shared_ptr<frontend::EventSink> const&));
 };
 
 }

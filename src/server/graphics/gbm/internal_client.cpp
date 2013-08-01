@@ -20,7 +20,6 @@
 
 namespace mg=mir::graphics;
 namespace mgg=mir::graphics::gbm;
-namespace mf=mir::frontend;
 
 mgg::InternalClient::InternalClient(std::shared_ptr<MirMesaEGLNativeDisplay> const& native_display)
     : native_display(native_display)
@@ -32,7 +31,7 @@ EGLNativeDisplayType mgg::InternalClient::egl_native_display()
     return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
 }
 
-EGLNativeWindowType mgg::InternalClient::egl_native_window(std::shared_ptr<mf::Surface> const& surface)
+EGLNativeWindowType mgg::InternalClient::egl_native_window(std::shared_ptr<InternalSurface> const& surface)
 {
     if (!client_window)
     {
