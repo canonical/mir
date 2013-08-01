@@ -35,6 +35,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/event_sink.h"
@@ -294,50 +295,12 @@ TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
-namespace
-{
-struct StubConfig : public mg::DisplayConfiguration
-{
-    StubConfig(std::shared_ptr<mg::DisplayConfigurationOutput> const& conf)
-       : outputs{conf, conf}
-    {
-    }
-    virtual void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
-    {
-    }
-    virtual void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
-    {
-        for (auto const& disp : outputs)
-        {
-            f(*disp);
-        }
-    }
-    virtual void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
-    {
-    }
-
-    std::vector<std::shared_ptr<mg::DisplayConfigurationOutput>> outputs;
-};
-
-}
-
 TEST_F(SessionMediatorTest, connect_packs_display_output)
 {
     using namespace testing;
     geom::Size sz{1022, 2411};
-   
-    std::vector<mg::DisplayConfigurationMode> modes{{sz, 344.0f},{sz, 234.0f}};
-    mg::DisplayConfigurationOutput output{
-        mg::DisplayConfigurationOutputId{static_cast<int>(3)},
-        mg::DisplayConfigurationCardId{static_cast<int>(2)},
-        std::vector<geom::PixelFormat>{
-            geom::PixelFormat::bgr_888,
-            geom::PixelFormat::abgr_8888,
-            geom::PixelFormat::xbgr_8888},
-        modes, sz, true, false,
-        geom::Point{4,12}, 0u, 0u};
 
-    StubConfig config(mt::fake_shared(output));
+    mtd::StubDisplayConfig config;
 
     auto mock_display = std::make_shared<mtd::MockDisplay>();
     EXPECT_CALL(*mock_display, configuration())

@@ -51,8 +51,8 @@ TEST(TestEventSender, display_send)
     auto msg_validator = [&config](std::string const& msg){
         mir::protobuf::EventSequence seq;
         seq.ParseFromString(msg);
-
-        EXPECT_THAT(seq, mt::ProtobufConfigMatches(config.outputs));
+        ASSERT_TRUE(seq.has_display_configuration());
+        EXPECT_THAT(seq.display_configuration(), mt::ProtobufConfigMatches(config.outputs));
     };
 
     EXPECT_CALL(mock_msg_sender, send(_))

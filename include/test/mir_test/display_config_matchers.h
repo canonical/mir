@@ -28,9 +28,7 @@ namespace protobuf
 
 //avoid a valgrind complaint by defining printer for this type
 class Connection;
-void PrintTo(mir::protobuf::Connection const&, ::std::ostream*)
-{
-}
+//static void PrintTo(mir::protobuf::Connection const&, ::std::ostream*);
 
 }
 namespace test
@@ -79,7 +77,6 @@ MATCHER_P(ClientTypeConfigMatches, config, "")
     return false;
 }
 
- 
 MATCHER_P(ProtobufConfigMatches, config, "")
 {
     //ASSERT_ doesn't work in MATCHER_P apparently.
@@ -90,35 +87,32 @@ MATCHER_P(ProtobufConfigMatches, config, "")
         for (auto const& info : config) 
         {
             auto& arg_display = arg.display_output(i++);
-            EXPECT_EQ(info->connected, arg_display.connected());
-            EXPECT_EQ(info->used, arg_display.used());
-            EXPECT_EQ(info->id.as_value(), arg_display.output_id());
-            EXPECT_EQ(info->card_id.as_value(), arg_display.card_id());
-            EXPECT_EQ(info->physical_size_mm.width.as_uint32_t(), arg_display.physical_width_mm()); 
-            EXPECT_EQ(info->physical_size_mm.height.as_uint32_t(), arg_display.physical_height_mm()); 
-            EXPECT_EQ(static_cast<int>(info->top_left.x.as_uint32_t()), arg_display.position_x()); 
-            EXPECT_EQ(static_cast<int>(info->top_left.y.as_uint32_t()), arg_display.position_y());
-            EXPECT_EQ(info->current_mode_index, arg_display.current_mode());
-            EXPECT_EQ(info->modes.size(), arg_display.mode_size());
-            if (info->modes.size() != static_cast<unsigned int>(arg_display.mode_size())) return false;
+            EXPECT_EQ(info.connected, arg_display.connected());
+            EXPECT_EQ(info.used, arg_display.used());
+            EXPECT_EQ(info.id.as_value(), arg_display.output_id());
+            EXPECT_EQ(info.card_id.as_value(), arg_display.card_id());
+            EXPECT_EQ(info.physical_size_mm.width.as_uint32_t(), arg_display.physical_width_mm()); 
+            EXPECT_EQ(info.physical_size_mm.height.as_uint32_t(), arg_display.physical_height_mm()); 
+            EXPECT_EQ(static_cast<int>(info.top_left.x.as_uint32_t()), arg_display.position_x()); 
+            EXPECT_EQ(static_cast<int>(info.top_left.y.as_uint32_t()), arg_display.position_y());
+            EXPECT_EQ(info.current_mode_index, arg_display.current_mode());
+            EXPECT_EQ(info.modes.size(), arg_display.mode_size());
+            if (info.modes.size() != static_cast<unsigned int>(arg_display.mode_size())) return false;
             auto j = 0u;
-            for (auto const& mode : info->modes)
+            for (auto const& mode : info.modes)
             {
                 auto& arg_mode = arg_display.mode(j++);
                 EXPECT_EQ(mode.size.width.as_uint32_t(), arg_mode.horizontal_resolution());
                 EXPECT_EQ(mode.size.height.as_uint32_t(), arg_mode.vertical_resolution());
                 EXPECT_FLOAT_EQ(mode.vrefresh_hz, arg_mode.refresh_rate());
             }
-
-#if 0
             EXPECT_EQ(0u, arg_display.current_format());
-            EXPECT_EQ(formats.size(), arg_display.pixel_format_size()); 
-            if (formats.size() != static_cast<unsigned int>(arg_display.pixel_format_size())) return false;
-            for (j=0u; j<formats.size(); j++)
+            EXPECT_EQ(info.pixel_formats.size(), arg_display.pixel_format_size()); 
+            if (info.pixel_formats.size() != static_cast<unsigned int>(arg_display.pixel_format_size())) return false;
+            for (j=0u; j<info.pixel_formats.size(); j++)
             {
-                EXPECT_EQ(formats[j], static_cast<mir::geometry::PixelFormat>(arg_display.pixel_format(j)));
+                EXPECT_EQ(info.pixel_formats[j], static_cast<mir::geometry::PixelFormat>(arg_display.pixel_format(j)));
             }
-#endif
         }
         return true;;
     }
