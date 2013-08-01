@@ -28,18 +28,13 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mo = mir::options;
 
-static std::string host_socket;
-
 mgn::NestedPlatform::NestedPlatform(std::string const& host,
                                     std::shared_ptr<mg::DisplayReport> const& display_report,
                                     std::shared_ptr<mg::NativePlatform> const& native_platform) :
     native_platform{native_platform},
     display_report{display_report},
-    connection{0}
+    connection{mir_connect_sync(host.c_str(), "nested_mir")}
 {
-    host_socket = host;
-    connection = mir_connect_sync(host_socket.c_str(), "nested_mir");
-
     if (!mir_connection_is_valid(connection))
     {
         char const* conn_error = mir_connection_get_error_message(connection);
@@ -52,8 +47,7 @@ mgn::NestedPlatform::NestedPlatform(std::string const& host,
 
 mgn::NestedPlatform::~NestedPlatform() noexcept(true)
 {
-    if(connection)
-        mir_connection_release(connection);
+    mir_connection_release(connection);
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(

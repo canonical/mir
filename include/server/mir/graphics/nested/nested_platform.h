@@ -22,7 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
 
-class MirConnection;
+struct MirConnection;
 
 namespace mir
 {
@@ -52,7 +52,7 @@ private:
     std::shared_ptr<NativePlatform> const native_platform;
     std::shared_ptr<DisplayReport> const display_report;
 
-    MirConnection* connection;
+    MirConnection* const connection;
 };
 
 }
