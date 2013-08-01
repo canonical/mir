@@ -24,7 +24,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -74,7 +74,7 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 
-class NullEventSink : public mir::events::EventSink
+class NullEventSink : public mir::frontend::EventSink
 {
 public:
     void handle_event(MirEvent const& ) override {}

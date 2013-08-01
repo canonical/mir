@@ -31,8 +31,7 @@
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
 #include "mir_test_doubles/null_platform.h"
-
-#include "mir/events/event_sink.h"
+#include "mir_test_doubles/null_event_sink.h"
 
 #include <gtest/gtest.h>
 
@@ -63,12 +62,6 @@ public:
     }
 };
 
-class NullEventSink : public mir::events::EventSink
-{
-public:
-    void handle_event(MirEvent const& ) override {}
-};
-
 struct SessionMediatorAndroidTest : public ::testing::Test
 {
     SessionMediatorAndroidTest()
@@ -80,7 +73,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report,
-                   std::make_shared<NullEventSink>(),
+                   std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {

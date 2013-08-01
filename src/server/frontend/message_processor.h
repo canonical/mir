@@ -16,16 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #ifndef MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 
-#include <vector>
-#include <memory>
 #include <iosfwd>
-#include <cstdint>
-
-#include <sys/types.h>
 
 namespace mir
 {
@@ -33,21 +27,10 @@ namespace frontend
 {
 namespace detail
 {
-struct MessageSender
-{
-    virtual void send(std::string const& body) = 0;
-    virtual void send_fds(std::vector<int32_t> const& fd) = 0;
 
-    virtual pid_t client_pid() = 0;
-protected:
-    MessageSender() = default;
-    virtual ~MessageSender() { /* TODO: make nothrow */ }
-    MessageSender(MessageSender const&) = delete;
-    MessageSender& operator=(MessageSender const&) = delete;
-};
-
-struct MessageProcessor
+class MessageProcessor
 {
+public:
     virtual bool process_message(std::istream& msg) = 0;
 protected:
     MessageProcessor() = default;
@@ -56,15 +39,13 @@ protected:
     MessageProcessor& operator=(MessageProcessor const&) = delete;
 };
 
-struct NullMessageProcessor : MessageProcessor
+class NullMessageProcessor : MessageProcessor
 {
+public:
     bool process_message(std::istream&);
 };
 
 }
 }
 }
-
-
-
 #endif /* PROTOBUF_MESSAGE_PROCESSOR_H_ */

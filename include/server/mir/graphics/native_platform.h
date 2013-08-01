@@ -32,7 +32,6 @@ class NativePlatform;
 
 extern "C" typedef std::shared_ptr<NativePlatform>(*CreateNativePlatform)(/* TODO */);
 extern "C" std::shared_ptr<NativePlatform> create_native_platform(/* TODO */);
-std::shared_ptr<Platform> create_nested_platform(std::shared_ptr<options::Option> const& options, std::shared_ptr<NativePlatform> const& native_platform);
 }
 }
 
