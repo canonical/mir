@@ -23,7 +23,6 @@
 
 namespace mfd=mir::frontend::detail;
 namespace mp=mir::protobuf;
-namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 
 TEST(ProtobufBufferPacker, packing)

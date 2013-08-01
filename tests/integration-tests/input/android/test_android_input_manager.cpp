@@ -341,7 +341,7 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, server_input_fd_of_focused_c
     EXPECT_CALL(*dispatcher_policy, interceptKeyBeforeDispatching(WindowHandleWithInputFd(input_fd), _, _))
         .Times(1).WillOnce(DoAll(mt::WakeUp(&wait_condition), Return(-1)));
 
-    input_registrar->input_channel_opened(mt::fake_shared(channel), mt::fake_shared(surface));
+    input_registrar->input_channel_opened(mt::fake_shared(channel), mt::fake_shared(surface), mi::InputReceptionMode::normal);
     input_targeter->focus_changed(mt::fake_shared(channel));
 
     fake_event_hub->synthesize_builtin_keyboard_added();
@@ -364,8 +364,8 @@ TEST_F(AndroidInputManagerDispatcherInterceptSetup, changing_focus_changes_event
     auto input_fd_2 = test_fd();
     mtd::StubInputChannel channel2(input_fd_2);
 
-    input_registrar->input_channel_opened(mt::fake_shared(channel1), mt::fake_shared(surface));
-    input_registrar->input_channel_opened(mt::fake_shared(channel2), mt::fake_shared(surface));
+    input_registrar->input_channel_opened(mt::fake_shared(channel1), mt::fake_shared(surface), mi::InputReceptionMode::normal);
+    input_registrar->input_channel_opened(mt::fake_shared(channel2), mt::fake_shared(surface), mi::InputReceptionMode::normal);
 
     EXPECT_CALL(*event_filter, handle(_)).Times(3).WillRepeatedly(Return(false));
 

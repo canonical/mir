@@ -13,24 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "event_pipe.h"
+#ifndef MIR_EXAMPLES_SERVER_CONFIGURATION_H_
+#define MIR_EXAMPLES_SERVER_CONFIGURATION_H_
 
-namespace mf = mir::frontend;
+#include "mir/default_server_configuration.h"
 
-void mf::EventPipe::set_target(std::weak_ptr<EventSink> const& s)
+namespace mir
 {
-    target = s;
+namespace examples
+{
+
+class ServerConfiguration : public DefaultServerConfiguration
+{
+public:
+    ServerConfiguration(int argc, char const** argv);
+
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy() override;
+};
+
+}
 }
 
-void mf::EventPipe::handle_event(MirEvent const& e)
-{
-    // In future, we might put e on a queue and wait for some background
-    // thread to push it through to target. But that's not required right now.
-
-    std::shared_ptr<EventSink> p = target.lock();
-    if (p)
-        p->handle_event(e);
-}
+#endif /* MIR_EXAMPLES_SERVER_CONFIGURATION_H_ */

@@ -16,11 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/swapper_factory.h"
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/display.h"
@@ -53,11 +53,11 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 geom::Size const size{640, 480};
 geom::PixelFormat const format{geom::PixelFormat::abgr_8888};
-mc::BufferUsage const usage{mc::BufferUsage::hardware};
-mc::BufferProperties const buffer_properties{size, format, usage};
+mg::BufferUsage const usage{mg::BufferUsage::hardware};
+mg::BufferProperties const buffer_properties{size, format, usage};
 
 
-class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class MockGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
  public:
     MockGraphicBufferAllocator()
@@ -69,7 +69,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
 
     MOCK_METHOD1(
         alloc_buffer,
-        std::shared_ptr<mg::Buffer> (mc::BufferProperties const&));
+        std::shared_ptr<mg::Buffer> (mg::BufferProperties const&));
 
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -77,7 +77,7 @@ class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
         return std::vector<geom::PixelFormat>();
     }
 
-    std::unique_ptr<mg::Buffer> on_create_swapper(mc::BufferProperties const&)
+    std::unique_ptr<mg::Buffer> on_create_swapper(mg::BufferProperties const&)
     {
         return std::unique_ptr<mg::Buffer>(new mtd::StubBuffer(::buffer_properties));
     }
@@ -236,8 +236,8 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server
                 return buffer_allocation_strategy;
         }
 
-        std::shared_ptr<mc::BufferSwapper> on_create_swapper(mc::BufferProperties& actual,
-                                                             mc::BufferProperties const& requested,
+        std::shared_ptr<mc::BufferSwapper> on_create_swapper(mg::BufferProperties& actual,
+                                                             mg::BufferProperties const& requested,
                                                              mc::SwapperType)
         {
             actual = requested;
@@ -313,7 +313,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
     class StubPlatform : public mtd::NullPlatform
     {
      public:
-        std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+        std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
         {
             using testing::AtLeast;
@@ -421,11 +421,11 @@ struct BufferCounterConfig : TestingServerConfiguration
         static std::atomic<int> buffers_destroyed;
     };
 
-    class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+    class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
     {
      public:
         virtual std::shared_ptr<mg::Buffer> alloc_buffer(
-            mc::BufferProperties const&)
+            mg::BufferProperties const&)
         {
             return std::unique_ptr<mg::Buffer>(new CountingStubBuffer());
         }
@@ -439,7 +439,7 @@ struct BufferCounterConfig : TestingServerConfiguration
     class StubPlatform : public mtd::NullPlatform
     {
     public:
-        std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+        std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
         {
             return std::make_shared<StubGraphicBufferAllocator>();

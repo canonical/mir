@@ -17,24 +17,29 @@
  */
 
 #include "mir/surfaces/buffer_stream.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/frontend/shell.h"
 #include "mir/shell/application_session.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/surfaces/surface.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_surface.h"
+#include "mir_test_doubles/mock_display.h"
+#include "mir_test_doubles/mock_shell.h"
+#include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/shell/surface.h"
 
 #include <gtest/gtest.h>
@@ -49,7 +54,6 @@ namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
-namespace me = mir::events;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
@@ -63,7 +67,7 @@ public:
     {
         using namespace ::testing;
 
-        mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+        mock_surface = std::make_shared<mtd::MockFrontendSurface>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), geom::PixelFormat());
 
         EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
@@ -80,14 +84,14 @@ public:
     }
 
     mtd::StubSurfaceBuilder surface_builder;
-    std::shared_ptr<mtd::MockSurface> mock_surface;
+    std::shared_ptr<mtd::MockFrontendSurface> mock_surface;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     static int const testing_client_input_fd;
 };
 
 int const StubSession::testing_client_input_fd{11};
 
-class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class MockGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
 public:
     MockGraphicBufferAllocator()
@@ -96,7 +100,7 @@ public:
             .WillByDefault(testing::Return(std::vector<geom::PixelFormat>()));
     }
 
-    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
     {
         return std::shared_ptr<mg::Buffer>();
     }
@@ -112,20 +116,20 @@ class MockPlatform : public mg::Platform
     {
         using namespace testing;
         ON_CALL(*this, create_buffer_allocator(_))
-            .WillByDefault(Return(std::shared_ptr<mc::GraphicBufferAllocator>()));
+            .WillByDefault(Return(std::shared_ptr<mg::GraphicBufferAllocator>()));
         ON_CALL(*this, create_display(_))
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
         ON_CALL(*this, get_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
     }
 
-    MOCK_METHOD1(create_buffer_allocator, std::shared_ptr<mc::GraphicBufferAllocator>(std::shared_ptr<mg::BufferInitializer> const&));
+    MOCK_METHOD1(create_buffer_allocator, std::shared_ptr<mg::GraphicBufferAllocator>(std::shared_ptr<mg::BufferInitializer> const&));
     MOCK_METHOD1(create_display,
                  std::shared_ptr<mg::Display>(
                      std::shared_ptr<mg::DisplayConfigurationPolicy> const&));
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
-    MOCK_CONST_METHOD2(fill_ipc_package, void(std::shared_ptr<mc::BufferIPCPacker> const&,
+    MOCK_CONST_METHOD2(fill_ipc_package, void(std::shared_ptr<mg::BufferIPCPacker> const&,
                                               std::shared_ptr<mg::Buffer> const&));
 };
 
@@ -136,7 +140,7 @@ struct StubShell : public mf::Shell
     {
     }
 
-    std::shared_ptr<mf::Session> open_session(std::string const&, std::shared_ptr<me::EventSink> const&)
+    std::shared_ptr<mf::Session> open_session(std::string const&, std::shared_ptr<mf::EventSink> const&)
     {
         return stub_session;
     }
@@ -152,7 +156,7 @@ struct StubShell : public mf::Shell
     std::shared_ptr<mf::Session> const stub_session;
 };
 
-class NullEventSink : public mir::events::EventSink
+class NullEventSink : public mir::frontend::EventSink
 {
 public:
     void handle_event(MirEvent const& ) override {}
@@ -163,7 +167,7 @@ struct SessionMediatorTest : public ::testing::Test
     SessionMediatorTest()
         : stub_session{std::make_shared<StubSession>()},
           shell{std::make_shared<StubShell>(stub_session)},
-          graphics_platform{std::make_shared<MockPlatform>()},
+          graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
           graphics_display{std::make_shared<mtd::NullDisplay>()},
           buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
@@ -326,12 +330,62 @@ TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
+namespace
+{
+struct StubConfig : public mg::DisplayConfiguration
+{
+    StubConfig(std::shared_ptr<mg::DisplayConfigurationOutput> const& conf)
+       : outputs{conf, conf}
+    {
+    }
+    virtual void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
+    {
+    }
+    virtual void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    {
+        for (auto const& disp : outputs)
+        {
+            f(*disp);
+        }
+    }
+    virtual void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
+    {
+    }
+
+    std::vector<std::shared_ptr<mg::DisplayConfigurationOutput>> outputs;
+};
+
+}
+
 TEST_F(SessionMediatorTest, connect_packs_display_output)
 {
     using namespace testing;
+    geom::Size sz{1022, 2411};
+   
+    std::vector<mg::DisplayConfigurationMode> modes{{sz, 344.0f},{sz, 234.0f}};
+    mg::DisplayConfigurationOutput output{
+        mg::DisplayConfigurationOutputId{static_cast<int>(3)},
+        mg::DisplayConfigurationCardId{static_cast<int>(2)},
+        modes, sz, true, false,
+        geom::Point{4,12}, 0u};
+
+    StubConfig config(mt::fake_shared(output));
+
+    auto mock_display = std::make_shared<mtd::MockDisplay>();
+    EXPECT_CALL(*mock_display, configuration())
+        .Times(1)
+        .WillOnce(Return(mt::fake_shared(config)));
+    mf::SessionMediator mediator{
+        shell, graphics_platform, mock_display,
+        buffer_allocator, report, 
+        std::make_shared<NullEventSink>(),
+        resource_cache};
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
+    connection.clear_platform();
+    connection.clear_display_info();
+    connection.clear_display_output();
 
     std::vector<geom::PixelFormat> const pixel_formats{
         geom::PixelFormat::bgr_888,
@@ -342,18 +396,10 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     EXPECT_CALL(*buffer_allocator, supported_pixel_formats())
         .WillOnce(Return(pixel_formats));
 
+    
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    ASSERT_EQ(1, connection.display_output().size());
-    auto output = connection.display_output(0);
-
-    ASSERT_EQ(pixel_formats.size(), static_cast<size_t>(output.pixel_format_size()));
-
-    for (size_t i = 0; i < pixel_formats.size(); ++i)
-    {
-        EXPECT_EQ(pixel_formats[i], static_cast<geom::PixelFormat>(output.pixel_format(i)))
-            << "i = " << i;
-    }
+    EXPECT_THAT(connection, mt::ProtobufConfigMatches(config.outputs, pixel_formats));
 }
 
 TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)
@@ -467,7 +513,7 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
 namespace
 {
 
-struct MockEventSink : public me::EventSink
+struct MockEventSink : public mf::EventSink
 {
      ~MockEventSink() noexcept(true) {}
      MOCK_METHOD1(handle_event, void(MirEvent const&));
@@ -478,7 +524,7 @@ struct MockEventSink : public me::EventSink
 
 class EventProducingShell : public mf::Shell
 {
-     std::shared_ptr<mf::Session> open_session(std::string const& /* name */, std::shared_ptr<me::EventSink> const& sink)
+     std::shared_ptr<mf::Session> open_session(std::string const& /* name */, std::shared_ptr<mf::EventSink> const& sink)
      {
          event_sink = sink;
          return std::make_shared<StubSession>();
@@ -497,7 +543,7 @@ class EventProducingShell : public mf::Shell
          return mf::SurfaceId{1};
      }
 
-     std::shared_ptr<me::EventSink> event_sink;
+     std::shared_ptr<mf::EventSink> event_sink;
 };
 
 struct SessionMediatorEventTest : public ::testing::Test

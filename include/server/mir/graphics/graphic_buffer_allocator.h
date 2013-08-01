@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
-#define MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+#ifndef MIR_GRAPHICS_GRAPHIC_BUFFER_ALLOCATOR_H_
+#define MIR_GRAPHICS_GRAPHIC_BUFFER_ALLOCATOR_H_
 
 #include "mir/graphics/buffer.h"
 
@@ -26,7 +26,7 @@
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 
 struct BufferProperties;
@@ -44,7 +44,7 @@ public:
      *
      * \param [in] buffer_properties the properties the allocated buffer should have
      */
-    virtual std::shared_ptr<graphics::Buffer> alloc_buffer(
+    virtual std::shared_ptr<Buffer> alloc_buffer(
         BufferProperties const& buffer_properties) = 0;
 
     /**
@@ -60,4 +60,4 @@ protected:
 
 }
 }
-#endif // MIR_COMPOSITOR_GRAPHIC_BUFFER_ALLOCATOR_H_
+#endif // MIR_GRAPHICS_GRAPHIC_BUFFER_ALLOCATOR_H_

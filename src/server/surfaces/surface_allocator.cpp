@@ -41,7 +41,7 @@ ms::SurfaceAllocator::SurfaceAllocator(
 std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     msh::SurfaceCreationParameters const& params, std::function<void()> const& change_callback)
 {
-    mc::BufferProperties buffer_properties{params.size,
+    mg::BufferProperties buffer_properties{params.size,
                                            params.pixel_format,
                                            params.buffer_usage};
     auto buffer_stream = buffer_stream_factory->create_buffer_stream(buffer_properties);

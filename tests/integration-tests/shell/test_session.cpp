@@ -18,7 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/input/null_input_configuration.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/compositor.h"
 #include "mir/shell/application_session.h"
 #include "mir/shell/pixel_buffer.h"
@@ -33,6 +33,7 @@
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 
 #include <gtest/gtest.h>
@@ -71,11 +72,11 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
         return std::make_shared<NullCommunicator>();
     }
 
-    std::shared_ptr<mc::GraphicBufferAllocator> the_buffer_allocator() override
+    std::shared_ptr<mg::GraphicBufferAllocator> the_buffer_allocator() override
     {
-        struct StubBufferAllocator : public mc::GraphicBufferAllocator
+        struct StubBufferAllocator : public mg::GraphicBufferAllocator
         {
-            std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const& buffer_properties)
+            std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& buffer_properties)
             {
                 return std::make_shared<mtd::StubBuffer>(buffer_properties);
             }
@@ -175,8 +176,10 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
         conf.the_shell_surface_factory(),
         "stress",
         conf.the_shell_snapshot_strategy(),
-        std::make_shared<msh::NullSessionListener>()};
-    session.create_surface(msh::a_surface().of_size({50,50}));
+        std::make_shared<msh::NullSessionListener>(),
+        std::make_shared<mtd::NullEventSink>()
+    };
+    session.create_surface(msh::a_surface());
 
     auto compositor = conf.the_compositor();
 

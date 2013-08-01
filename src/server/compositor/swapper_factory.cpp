@@ -18,8 +18,8 @@
 
 #include "mir/compositor/swapper_factory.h"
 #include "mir/compositor/buffer_allocation_strategy.h"
-#include "mir/compositor/buffer_properties.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/graphics/buffer_id.h"
@@ -34,7 +34,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::SwapperFactory::SwapperFactory(
-        std::shared_ptr<GraphicBufferAllocator> const& gr_alloc,
+        std::shared_ptr<mg::GraphicBufferAllocator> const& gr_alloc,
         int number_of_buffers)
     : gr_allocator(gr_alloc),
       synchronous_number_of_buffers(number_of_buffers),
@@ -43,14 +43,14 @@ mc::SwapperFactory::SwapperFactory(
 }
 
 mc::SwapperFactory::SwapperFactory(
-    std::shared_ptr<GraphicBufferAllocator> const& gr_alloc)
+    std::shared_ptr<mg::GraphicBufferAllocator> const& gr_alloc)
     : SwapperFactory(gr_alloc, 2)
 {
 }
 
 void mc::SwapperFactory::change_swapper_size(
     std::vector<std::shared_ptr<mg::Buffer>>& list,
-    size_t const desired_size, size_t current_size, BufferProperties const& buffer_properties) const
+    size_t const desired_size, size_t current_size, mg::BufferProperties const& buffer_properties) const
 {
     while (current_size < desired_size)
     {
@@ -73,7 +73,7 @@ void mc::SwapperFactory::change_swapper_size(
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buffers(
-    BufferProperties const& buffer_properties, std::vector<std::shared_ptr<mg::Buffer>>& list,
+    mg::BufferProperties const& buffer_properties, std::vector<std::shared_ptr<mg::Buffer>>& list,
     size_t buffer_num, SwapperType type) const
 {
     if (type == mc::SwapperType::synchronous)
@@ -89,8 +89,8 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_reuse_buff
 }
 
 std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_new_buffers(
-    BufferProperties& actual_buffer_properties,
-    BufferProperties const& requested_buffer_properties, SwapperType type) const
+    mg::BufferProperties& actual_buffer_properties,
+    mg::BufferProperties const& requested_buffer_properties, SwapperType type) const
 {
     std::vector<std::shared_ptr<mg::Buffer>> list;
     std::shared_ptr<mc::BufferSwapper> new_swapper;
@@ -112,7 +112,7 @@ std::shared_ptr<mc::BufferSwapper> mc::SwapperFactory::create_swapper_new_buffer
         new_swapper = std::make_shared<mc::BufferSwapperSpin>(list, spin_number_of_buffers);
     }
 
-    actual_buffer_properties = BufferProperties{
+    actual_buffer_properties = mg::BufferProperties{
         list[0]->size(), list[0]->pixel_format(), requested_buffer_properties.usage};
     return new_swapper;
 }

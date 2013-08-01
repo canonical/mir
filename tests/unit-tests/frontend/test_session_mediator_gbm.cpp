@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
@@ -24,7 +24,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/drm_authenticator.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -39,7 +39,6 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
@@ -48,10 +47,10 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
     {
         return std::shared_ptr<mg::Buffer>();
     }
@@ -65,7 +64,7 @@ public:
 class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
 {
  public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::shared_ptr<StubGraphicBufferAllocator>();
@@ -74,7 +73,7 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 
-class NullEventSink : public mir::events::EventSink
+class NullEventSink : public mir::frontend::EventSink
 {
 public:
     void handle_event(MirEvent const& ) override {}
@@ -100,7 +99,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
     std::shared_ptr<mg::Display> const graphics_display;
-    std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

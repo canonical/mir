@@ -13,30 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
-#define MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
-
-#include "mir/geometry/dimensions.h"
+#ifndef MIR_INPUT_RECEPTION_MODE_H_
+#define MIR_INPUT_RECEPTION_MODE_H_
 
 namespace mir
 {
-namespace compositor
+namespace input
 {
 
-class BufferIPCPacker
+enum class InputReceptionMode
 {
-public:
-    BufferIPCPacker() {};
-    virtual ~BufferIPCPacker() = default;
-    virtual void pack_fd(int) = 0;
-    virtual void pack_data(int) = 0;
-    virtual void pack_stride(geometry::Stride) = 0;
+    normal,
+    receives_all_input
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_ */
+#endif /* MIR_INPUT_RECEPTION_MODE_H_ */

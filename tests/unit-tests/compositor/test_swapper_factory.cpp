@@ -18,9 +18,9 @@
 
 #include "mir/compositor/swapper_factory.h"
 #include "mir/graphics/buffer_basic.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/compositor/buffer_swapper.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "src/server/compositor/buffer_bundle.h"
 
@@ -37,17 +37,17 @@ namespace
 static geom::Size const buf_size{100, 121};
 static geom::PixelFormat const buf_pixel_format{geom::PixelFormat::xbgr_8888};
 
-class MockGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class MockGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
 public:
     MockGraphicBufferAllocator()
     {
         using namespace testing;
-        mc::BufferProperties properties(buf_size, buf_pixel_format, mc::BufferUsage::hardware);
+        mg::BufferProperties properties(buf_size, buf_pixel_format, mg::BufferUsage::hardware);
         ON_CALL(*this, alloc_buffer(_))
             .WillByDefault(Return(std::make_shared<mtd::StubBuffer>(properties)));
     }
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mc::BufferProperties const&));
+    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 
     ~MockGraphicBufferAllocator() noexcept {}
@@ -59,7 +59,7 @@ struct SwapperFactoryTest : testing::Test
         : mock_buffer_allocator{std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>()},
           size{10, 20},
           pf{geom::PixelFormat::abgr_8888},
-          usage{mc::BufferUsage::hardware},
+          usage{mg::BufferUsage::hardware},
           properties{size, pf, usage}
 
     {
@@ -68,8 +68,8 @@ struct SwapperFactoryTest : testing::Test
     std::shared_ptr<MockGraphicBufferAllocator> const mock_buffer_allocator;
     geom::Size const size;
     geom::PixelFormat const pf;
-    mc::BufferUsage const usage;
-    mc::BufferProperties const properties;
+    mg::BufferUsage const usage;
+    mg::BufferProperties const properties;
 };
 }
 
@@ -78,7 +78,7 @@ TEST_F(SwapperFactoryTest, create_sync_uses_default_number_of_buffers)
 {
     using namespace testing;
 
-    mc::BufferProperties actual_properties;
+    mg::BufferProperties actual_properties;
     int default_num_of_buffers = 2;
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(default_num_of_buffers);
@@ -93,7 +93,7 @@ TEST_F(SwapperFactoryTest, create_sync_with_two_makes_double_buffer)
     using namespace testing;
 
     int num_of_buffers = 2;
-    mc::BufferProperties actual_properties;
+    mg::BufferProperties actual_properties;
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(num_of_buffers);
@@ -108,7 +108,7 @@ TEST_F(SwapperFactoryTest, create_sync_with_three_makes_triple_buffer)
     using namespace testing;
 
     int num_of_buffers = 3;
-    mc::BufferProperties actual_properties;
+    mg::BufferProperties actual_properties;
 
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
         .Times(num_of_buffers);
@@ -122,7 +122,7 @@ TEST_F(SwapperFactoryTest, create_async_ignores_preference)
 {
     using namespace testing;
 
-    mc::BufferProperties actual_properties;
+    mg::BufferProperties actual_properties;
 
     int num_of_buffers = 3;
     EXPECT_CALL(*mock_buffer_allocator, alloc_buffer(properties))
@@ -135,7 +135,7 @@ TEST_F(SwapperFactoryTest, create_async_ignores_preference)
 
 TEST_F(SwapperFactoryTest, creation_returns_new_parameters)
 {
-    mc::BufferProperties actual1, actual2;
+    mg::BufferProperties actual1, actual2;
     mc::SwapperFactory strategy(mock_buffer_allocator);
     strategy.create_swapper_new_buffers(actual1, properties, mc::SwapperType::synchronous);
 
@@ -148,7 +148,7 @@ TEST_F(SwapperFactoryTest, create_async_reuse)
 {
     using namespace testing;
 
-    mc::BufferProperties properties;
+    mg::BufferProperties properties;
     std::vector<std::shared_ptr<mg::Buffer>> list {};
     size_t size = 3;
 
@@ -163,7 +163,7 @@ TEST_F(SwapperFactoryTest, create_sync_reuse)
 {
     using namespace testing;
 
-    mc::BufferProperties properties;
+    mg::BufferProperties properties;
     std::vector<std::shared_ptr<mg::Buffer>> list;
     size_t size = 3;
 

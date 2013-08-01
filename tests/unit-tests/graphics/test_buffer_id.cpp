@@ -22,7 +22,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
 TEST(buffer_id, value_set )

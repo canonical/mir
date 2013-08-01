@@ -39,12 +39,8 @@ msh::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface
 std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
-    std::shared_ptr<events::EventSink> const& sink)
+    std::shared_ptr<mf::EventSink> const& sender)
 {
-    return std::make_shared<Surface>(
-        surface_builder,
-        params,
-        id,
-        sink);
+    return std::make_shared<Surface>(surface_builder, params, id, sender);
 }
 

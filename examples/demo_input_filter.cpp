@@ -17,9 +17,9 @@
  */
 
 #include "mir/run_mir.h"
-#include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/input/event_filter.h"
+#include "server_configuration.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -49,10 +49,10 @@ struct PrintingEventFilter : public mi::EventFilter
     }
 };
 
-struct DemoServerConfiguration : public mir::DefaultServerConfiguration
+struct DemoServerConfiguration : public mir::examples::ServerConfiguration
 {
     DemoServerConfiguration(int argc, char const* argv[])
-      : DefaultServerConfiguration(argc, argv),
+      : ServerConfiguration(argc, argv),
         event_filter(std::make_shared<PrintingEventFilter>())
     {
     }

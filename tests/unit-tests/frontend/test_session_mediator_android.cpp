@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/resource_cache.h"
@@ -31,8 +31,7 @@
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
 #include "mir_test_doubles/null_platform.h"
-
-#include "mir/events/event_sink.h"
+#include "mir_test_doubles/null_event_sink.h"
 
 #include <gtest/gtest.h>
 
@@ -40,7 +39,6 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace msh = mir::shell;
@@ -49,10 +47,10 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
 public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
     {
         return std::shared_ptr<mg::Buffer>();
     }
@@ -61,12 +59,6 @@ public:
     {
         return std::vector<geom::PixelFormat>();
     }
-};
-
-class NullEventSink : public mir::events::EventSink
-{
-public:
-    void handle_event(MirEvent const& ) override {}
 };
 
 struct SessionMediatorAndroidTest : public ::testing::Test
@@ -80,7 +72,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, graphics_platform, graphics_display,
                    buffer_allocator, report,
-                   std::make_shared<NullEventSink>(),
+                   std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -89,7 +81,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<mtd::NullPlatform> const graphics_platform;
     std::shared_ptr<mg::Display> const graphics_display;
-    std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     mf::SessionMediator mediator;

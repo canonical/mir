@@ -30,6 +30,10 @@
 namespace mir
 {
 
+namespace frontend
+{
+class EventSink;
+}
 /// Management of sessions and surfaces
 namespace shell
 {
@@ -54,7 +58,8 @@ public:
                             std::shared_ptr<SessionListener> const& session_listener);
     virtual ~SessionManager();
 
-    virtual std::shared_ptr<frontend::Session> open_session(std::string const& name, std::shared_ptr<events::EventSink> const& sink);
+    virtual std::shared_ptr<frontend::Session> open_session(
+        std::string const& name, std::shared_ptr<frontend::EventSink> const& sink);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,

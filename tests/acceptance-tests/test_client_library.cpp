@@ -708,11 +708,10 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
             ASSERT_TRUE(connection != NULL);
 
             auto configuration = mir_connection_create_display_config(connection);
-
+            ASSERT_NE(nullptr, configuration);
             ASSERT_GT(configuration->num_displays, 0u);
             ASSERT_NE(nullptr, configuration->displays);
-
-            for(auto i=0u; i < configuration->num_displays; i++)
+            for (auto i=0u; i < configuration->num_displays; i++)
             {
                 MirDisplayOutput* disp = &configuration->displays[i];
                 ASSERT_NE(nullptr, disp); 

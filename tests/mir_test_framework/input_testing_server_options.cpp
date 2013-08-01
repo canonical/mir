@@ -79,7 +79,7 @@ public:
     }
 
     std::shared_ptr<mf::Session> open_session(std::string const& name, 
-                                              std::shared_ptr<mir::events::EventSink> const& sink)
+                                              std::shared_ptr<mf::EventSink> const& sink)
     {
         return underlying_shell->open_session(name, sink);
     }
