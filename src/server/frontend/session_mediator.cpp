@@ -97,8 +97,7 @@ void mf::SessionMediator::connect(
         platform->add_fd(ipc_fds);
 
     auto display_config = display->configuration();
-    auto supported_pfs = buffer_allocator->supported_pixel_formats();
-    display_config->for_each_output([&response, &supported_pfs](mg::DisplayConfigurationOutput const& config)
+    display_config->for_each_output([&response](mg::DisplayConfigurationOutput const& config)
     {
         auto output = response->add_display_output();
         output->set_output_id(config.id.as_value());
@@ -118,7 +117,7 @@ void mf::SessionMediator::connect(
         }
         output->set_current_mode(config.current_mode_index);
 
-        for (auto const& pf : supported_pfs)
+        for (auto const& pf : config.pixel_formats)
         {
             output->add_pixel_format(static_cast<uint32_t>(pf));
         }
