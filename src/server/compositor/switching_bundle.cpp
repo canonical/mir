@@ -83,10 +83,7 @@ mc::SwitchingBundle::SwitchingBundle(
 
     ring = new SharedBuffer[nbuffers];
     for (int i = 0; i < nbuffers; i++)
-    {
-        ring[i].buf = gralloc->alloc_buffer(bundle_properties);
         ring[i].users = 0;
-    }
 }
 
 mc::SwitchingBundle::~SwitchingBundle()
@@ -130,6 +127,36 @@ int mc::SwitchingBundle::drop_frames(int max)
     return dropped;
 }
 
+const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
+{
+    /*
+     * Many clients will behave in a way that never requires more than 2 or 3
+     * buffers, even though nbuffers may be higher. So to optimize memory
+     * usage for this common case, try to avoid allocating new buffers if
+     * we don't need to.
+     */
+    if (!ring[slot].buf)
+    {
+        int i = (first_client + nclients) % nbuffers;  // first free slot
+
+        while (i != first_compositor && !ring[i].buf)
+            i = (i + 1) % nbuffers;
+
+        if (i != slot && ring[i].buf && ring[i].buf.unique())
+        {
+            auto tmp = ring[slot];
+            ring[slot] = ring[i];
+            ring[i] = tmp;
+        }
+        else
+        {
+            ring[slot].buf = gralloc->alloc_buffer(bundle_properties);
+        }
+    }
+
+    return ring[slot].buf;
+}
+
 std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
 {
     std::unique_lock<std::mutex> lock(guard);
@@ -153,7 +180,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     int client = (first_client + nclients) % nbuffers;
     nclients++;
 
-    auto ret = ring[client].buf;
+    auto ret = alloc_buffer(client);
     if (client == snapshot)
     {
         /*
@@ -167,7 +194,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
             auto tmp = ring[snapshot];
             ring[snapshot] = ring[client];
             ring[client] = tmp;
-            ret = tmp.buf;
+            ret = alloc_buffer(client);
         }
         else
         {
@@ -246,7 +273,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     }
 
     ring[compositor].users++;
-    return ring[compositor].buf;
+    return alloc_buffer(compositor);
 }
 
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
@@ -288,8 +315,9 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
         if (!nsnapshotters)
             snapshot = (first_client + nbuffers - 1) % nbuffers;
     }
+
     nsnapshotters++;
-    return ring[snapshot].buf;
+    return alloc_buffer(snapshot);
 }
 
 void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& released_buffer)

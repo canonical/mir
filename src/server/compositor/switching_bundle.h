@@ -62,6 +62,7 @@ private:
 
     int drop_frames(int max);
     int nfree() const;
+    const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
 
     struct SharedBuffer
     {

@@ -117,9 +117,8 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
         for (int i = 0; i < 100; i++)
         {
             auto client1 = bundle.client_acquire();
-            bundle.client_release(client1);
-    
             mg::BufferID expect_id = client1->id(), composited_id;
+            bundle.client_release(client1);
     
             std::thread compositor(composite_thread,
                                    std::ref(bundle),
@@ -130,9 +129,6 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
             
             if (i >= 2 && nbuffers == 2)
                 ASSERT_EQ(composited_id, prev_prev_id);
-    
-            if (i >= 1 && nbuffers > 1)
-                ASSERT_NE(composited_id, prev_id);
     
             prev_prev_id = prev_id;
             prev_id = composited_id;

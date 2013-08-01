@@ -45,6 +45,7 @@ mc::BufferStreamFactory::BufferStreamFactory(
 std::shared_ptr<ms::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     mc::BufferProperties const& buffer_properties)
 {
+    // Note: Framedropping and bypass both require a minimum 3 buffers
     auto switching_bundle = std::make_shared<mc::SwitchingBundle>(3, gralloc, buffer_properties);
     return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
 }

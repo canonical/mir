@@ -284,10 +284,11 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
         std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
         {
-            using testing::AtLeast;
+            using testing::AtMost;
 
             auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
-            EXPECT_CALL(*buffer_allocator, alloc_buffer(buffer_properties)).Times(AtLeast(2));
+            EXPECT_CALL(*buffer_allocator, alloc_buffer(buffer_properties))
+                .Times(AtMost(3));
             return buffer_allocator;
         }
 
@@ -442,8 +443,8 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
     {
         void on_exit() override
         {
-            EXPECT_EQ(3*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
-            EXPECT_EQ(3*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
+            EXPECT_EQ(CountingStubBuffer::buffers_created.load(),
+                      CountingStubBuffer::buffers_destroyed.load());
         }
 
     } server_config;
@@ -491,8 +492,8 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_witho
     {
         void on_exit() override
         {
-            EXPECT_EQ(3*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
-            EXPECT_EQ(3*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
+            EXPECT_EQ(CountingStubBuffer::buffers_created.load(),
+                      CountingStubBuffer::buffers_destroyed.load());
         }
 
     } server_config;
