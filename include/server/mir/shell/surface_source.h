@@ -34,8 +34,7 @@ class SurfaceController;
 class SurfaceSource : public SurfaceFactory
 {
 public:
-   SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
-                 std::shared_ptr<SurfaceController> const& surface_controller);
+    SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder);
     virtual ~SurfaceSource() {}
 
     std::shared_ptr<Surface> create_surface(
@@ -49,7 +48,6 @@ protected:
 
 private:
     std::shared_ptr<SurfaceBuilder> const surface_builder;
-    std::shared_ptr<SurfaceController> const surface_controller;
 };
 
 }
