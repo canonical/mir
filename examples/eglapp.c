@@ -124,7 +124,8 @@ static const MirDisplayOutput *find_active_output(
     {
         const MirDisplayOutput *out = conf->displays + d;
 
-        if (out->connected &&
+        if (out->used &&
+            out->connected &&
             out->num_modes &&
             out->current_mode < out->num_modes)
         {
