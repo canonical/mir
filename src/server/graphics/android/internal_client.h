@@ -24,21 +24,27 @@
 
 namespace mir
 {
+namespace frontend
+{
+class Surface;
+}
 namespace graphics
 {
 namespace android
 {
+
 class MirNativeWindow;
 class InternalClient : public mir::graphics::InternalClient
 {
 public:
     InternalClient();
     EGLNativeDisplayType egl_native_display();
-    EGLNativeWindowType egl_native_window(std::shared_ptr<InternalSurface> const&);
+    EGLNativeWindowType egl_native_window(std::shared_ptr<frontend::Surface> const&);
 
 private:
     std::shared_ptr<MirNativeWindow> client_window;
 };
+
 }
 }
 }

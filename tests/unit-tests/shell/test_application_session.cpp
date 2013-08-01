@@ -27,7 +27,6 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
-#include "mir_test_doubles/null_event_sink.h"
 
 #include "mir/shell/surface.h"
 
@@ -35,6 +34,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace me = mir::events;
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
@@ -46,12 +46,11 @@ TEST(ApplicationSession, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    mtd::NullEventSink sender;
     mtd::StubSurfaceBuilder surface_builder;
     auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
 
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_,_,_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
 
     EXPECT_CALL(surface_factory, create_surface(_, _, _));
     EXPECT_CALL(*mock_surface, destroy());
@@ -62,7 +61,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo",
                                     std::make_shared<mtd::NullSnapshotStrategy>(),
-                                    mt::fake_shared(listener), mt::fake_shared(sender));
+                                    mt::fake_shared(listener));
 
     msh::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);
@@ -74,7 +73,6 @@ TEST(ApplicationSession, default_surface_is_first_surface)
 {
     using namespace ::testing;
 
-    mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
     mtd::StubSurfaceBuilder surface_builder;
     {
@@ -89,7 +87,7 @@ TEST(ApplicationSession, default_surface_is_first_surface)
 
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+                                        std::make_shared<msh::NullSessionListener>());
                                         
 
     msh::SurfaceCreationParameters params;
@@ -114,7 +112,6 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 {
     using namespace ::testing;
 
-    mtd::NullEventSink sender;
     mtd::StubSurfaceBuilder surface_builder;
     auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
 
@@ -123,7 +120,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
 
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+                                        std::make_shared<msh::NullSessionListener>());
 
     EXPECT_CALL(surface_factory, create_surface(_, _, _));
 
@@ -147,11 +144,10 @@ TEST(Session, get_invalid_surface_throw_behavior)
 {
     using namespace ::testing;
 
-    mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+                                        std::make_shared<msh::NullSessionListener>());
     mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
@@ -163,11 +159,10 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
 {
     using namespace ::testing;
 
-    mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+                                        std::make_shared<msh::NullSessionListener>());
     mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
@@ -191,11 +186,10 @@ TEST(Session, uses_snapshot_strategy)
     };
 
     auto snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
-    mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         snapshot_strategy,
-                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+                                        std::make_shared<msh::NullSessionListener>());
 
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_));
 

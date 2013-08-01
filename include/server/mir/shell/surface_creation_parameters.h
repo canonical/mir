@@ -24,7 +24,6 @@
 #include "mir/geometry/size.h"
 #include "mir/compositor/buffer_properties.h"
 #include "mir/surfaces/depth_id.h"
-#include "mir/input/input_reception_mode.h"
 
 #include <memory>
 #include <string>
@@ -51,8 +50,6 @@ struct SurfaceCreationParameters
     SurfaceCreationParameters& of_pixel_format(geometry::PixelFormat new_pixel_format);
     
     SurfaceCreationParameters& of_depth(surfaces::DepthId const& new_depth);
-    
-    SurfaceCreationParameters& with_input_mode(input::InputReceptionMode const& new_mode);
 
     std::string name;
     geometry::Size size;
@@ -60,7 +57,6 @@ struct SurfaceCreationParameters
     compositor::BufferUsage buffer_usage;
     geometry::PixelFormat pixel_format;
     surfaces::DepthId depth;
-    input::InputReceptionMode input_mode;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

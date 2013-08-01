@@ -29,6 +29,10 @@
 
 namespace mir
 {
+namespace events
+{
+class EventSink;
+}
 namespace protobuf
 {
 namespace wire

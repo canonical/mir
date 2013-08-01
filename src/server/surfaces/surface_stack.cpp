@@ -98,7 +98,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreati
         layers_by_depth[params.depth].push_back(surface);
     }
 
-    input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface(), params.input_mode);
+    input_registrar->input_channel_opened(surface->input_channel(), surface->input_surface());
 
     emit_change_notification();
 

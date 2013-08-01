@@ -20,8 +20,6 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/main_loop.h"
-#include "mir_test/gmock_fixes.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -46,8 +44,7 @@ public:
                                                       graphics::DisplayResumeHandler const&));
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
-    MOCK_METHOD0(the_cursor, std::weak_ptr<graphics::Cursor>());
-    MOCK_METHOD0(create_gl_context, std::unique_ptr<graphics::GLContext>());
+    MOCK_METHOD0(create_gl_context, std::unique_ptr<mg::GLContext>());
 };
 
 }

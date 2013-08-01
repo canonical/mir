@@ -20,11 +20,9 @@
 #define MIR_GRAPHICS_GBM_GBM_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "real_kms_output_container.h"
-#include "real_kms_display_configuration.h"
+#include "kms_output_container.h"
+#include "kms_display_configuration.h"
 #include "gbm_display_helpers.h"
-
-#include <mutex>
 
 #include <vector>
 
@@ -81,14 +79,13 @@ public:
     std::unique_ptr<GLContext> create_gl_context();
 
 private:
-    std::mutex configuration_mutex;
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<VideoDevices> const video_devices;
     std::shared_ptr<DisplayReport> const listener;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers;
-    RealKMSOutputContainer output_container;
-    RealKMSDisplayConfiguration current_display_configuration;
+    KMSOutputContainer output_container;
+    KMSDisplayConfiguration current_display_configuration;
     std::shared_ptr<GBMCursor> cursor;
 };
 

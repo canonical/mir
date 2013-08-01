@@ -29,10 +29,6 @@
 
 #include "drm_close_threadsafe.h"
 
-#include "mir/graphics/native_platform.h"
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
@@ -163,10 +159,4 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 {
     return ((mgg::GBMPlatform::internal_display_clients_present) &&
             (display == mgg::GBMPlatform::internal_native_display.get()));
-}
-
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir create_native_platform is not implemented yet!"));
-    return 0;
 }
