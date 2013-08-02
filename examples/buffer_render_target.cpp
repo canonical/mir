@@ -29,6 +29,11 @@ namespace mt = mir::tools;
 mt::BufferRenderTarget::BufferRenderTarget(mg::Buffer& buffer)
     : buffer(buffer)
 {
+    /*
+     * With the new lazy buffer allocation method, we may be executing inside
+     * the compositor's GL context. So be careful to save and restore what
+     * we change...
+     */
     glGetIntegerv(GL_VIEWPORT, old_viewport);
     resources.setup(buffer);
 }
