@@ -17,22 +17,51 @@
  */
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir/frontend/session_mediator_report.h"
 
 #include "mir/run_mir.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-//namespace mf = mir::frontend;
+namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 
 using namespace testing;
 
 namespace
 {
+struct MockSessionMediatorReport : mf::NullSessionMediatorReport
+{
+    MockSessionMediatorReport()
+    {
+        EXPECT_CALL(*this, session_connect_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_disconnect_called(_)).Times(AnyNumber());
+
+        // These are not needed for the 1st test, but they will be soon
+        EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
+    }
+
+    MOCK_METHOD1(session_connect_called, void (std::string const&));
+    MOCK_METHOD1(session_create_surface_called, void (std::string const&));
+    MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_release_surface_called, void (std::string const&));
+    MOCK_METHOD1(session_disconnect_called, void (std::string const&));
+};
+
 struct HostServerConfiguration : public mtf::TestingServerConfiguration
 {
-    // TODO - set up mocks to verify client connects
+    virtual std::shared_ptr<mf::SessionMediatorReport>  the_session_mediator_report()
+    {
+        if (!mock_session_mediator_report)
+            mock_session_mediator_report = std::make_shared<MockSessionMediatorReport>();
+
+        return mock_session_mediator_report;
+    }
+
+    std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
 };
 
 struct FakeCommandLine
@@ -89,11 +118,21 @@ using TestNestedMir = mtf::BespokeDisplayServerTestFixture;
 
 TEST_F(TestNestedMir, nested_platform_connects_and_disconnects)
 {
-    HostServerConfiguration host_config;
-    launch_server_process(host_config);
+    struct MyHostServerConfiguration : HostServerConfiguration
+    {
+        void exec() override
+        {
+            InSequence seq;
+            EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
+            EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
+        }
+    };
 
+    MyHostServerConfiguration host_config;
     NestedServerConfiguration nested_config(host_config.the_socket_file());
-
     ClientConfig client_config(nested_config);
+
+
+    launch_server_process(host_config);
     launch_client_process(client_config);
 }
