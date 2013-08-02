@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
@@ -42,14 +43,23 @@ namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+static std::shared_ptr<mtd::MockSurface> make_mock_surface()
+{
+    mtd::StubSurfaceBuilder surface_builder;
+
+    return std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
+}
+}
+
 TEST(ApplicationSession, create_and_destroy_surface)
 {
     using namespace ::testing;
 
-    mtd::NullEventSink sender;
-    mtd::StubSurfaceBuilder surface_builder;
-    auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+    auto mock_surface = make_mock_surface();
 
+    mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_,_,_)).WillByDefault(Return(mock_surface));
 
@@ -76,15 +86,15 @@ TEST(ApplicationSession, default_surface_is_first_surface)
 
     mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
-    mtd::StubSurfaceBuilder surface_builder;
+
     {
         InSequence seq;
         EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
-            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
+            .WillOnce(Return(make_mock_surface()));
         EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
-            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
+            .WillOnce(Return(make_mock_surface()));
         EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
-            .WillOnce(Return(std::make_shared<NiceMock<mtd::MockSurface>>(mt::fake_shared(surface_builder))));
+            .WillOnce(Return(make_mock_surface()));
     }
 
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
@@ -115,8 +125,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     using namespace ::testing;
 
     mtd::NullEventSink sender;
-    mtd::StubSurfaceBuilder surface_builder;
-    auto const mock_surface = std::make_shared<mtd::MockSurface>(mt::fake_shared(surface_builder));
+    auto mock_surface = make_mock_surface();
 
     mtd::MockSurfaceFactory surface_factory;
     ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));

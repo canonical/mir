@@ -22,6 +22,8 @@
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_builder.h"
 
+#include "mir_test_doubles/stub_surface_controller.h"
+#include "mir_test_doubles/mock_surface_controller.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -112,6 +114,7 @@ struct ShellSurface : testing::Test
 {
     std::shared_ptr<StubBufferStream> const buffer_stream;
     StubSurfaceBuilder surface_builder;
+    mtd::StubSurfaceController surface_controller;
 
     ShellSurface() :
         buffer_stream(std::make_shared<StubBufferStream>()),
@@ -370,8 +373,8 @@ TEST_F(ShellSurface, types)
     using namespace testing;
 
     msh::Surface surf(
-            mt::fake_shared(surface_builder),
-            msh::a_surface(), stub_id, stub_sender);
+        mt::fake_shared(surface_builder),
+        msh::a_surface(), stub_id, stub_sender);
 
     EXPECT_EQ(mir_surface_type_normal, surf.type());
 
@@ -404,8 +407,8 @@ TEST_F(ShellSurface, states)
     using namespace testing;
 
     msh::Surface surf(
-            mt::fake_shared(surface_builder),
-            msh::a_surface(), stub_id, stub_sender);
+        mt::fake_shared(surface_builder),
+        msh::a_surface(), stub_id, stub_sender);
 
     EXPECT_EQ(mir_surface_state_restored, surf.state());
 
@@ -498,4 +501,18 @@ TEST_F(ShellSurface, with_most_recent_buffer_do_uses_compositor_buffer)
 
     EXPECT_EQ(surface_builder.stub_buffer_stream()->stub_compositor_buffer.get(),
               buf_ptr);
+}
+
+TEST_F(ShellSurface, raise)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceController surface_controller;
+    msh::Surface test(
+        mt::fake_shared(surface_builder),
+        msh::a_surface(), stub_id, stub_sender);
+    
+    EXPECT_CALL(surface_controller, raise(_)).Times(1);
+
+    test.raise(mt::fake_shared(surface_controller));
 }

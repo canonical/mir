@@ -26,7 +26,7 @@
 #include "mir/report_exception.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
