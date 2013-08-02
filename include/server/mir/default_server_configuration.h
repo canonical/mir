@@ -53,6 +53,7 @@ namespace shell
 {
 class SurfaceFactory;
 class SurfaceBuilder;
+class SurfaceController;
 class InputTargeter;
 class SessionContainer;
 class FocusSetter;
@@ -174,6 +175,8 @@ public:
      * dependencies of shell on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<shell::SurfaceBuilder>     the_surface_builder();
+    virtual std::shared_ptr<surfaces::SurfaceController>     the_surface_controller();
+
     /** @} */
 
 

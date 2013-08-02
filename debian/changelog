@@ -1,3 +1,34 @@
+mir (0.0.8+13.10.20130802-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Fix crashing demo clients, since the introduction of multimonitor.
+    (LP: #1207145). (LP: #1207145)
+  * tools/install_on_android.sh: Don't upload to/test in Android
+    directories. We don't need to now that the phablet images are
+    flipped. /tmp is much safer. Also don't hardcode a particular ABI
+    (which was wrong). .
+
+  [ Alan Griffiths ]
+  * graphics, compositor: Move compositor/buffer_properties.h and
+    compositor/graphic_buffer_allocator.h to graphics.
+  * graphics, compositor: Move buffer_ipc_packer.h to graphics.
+  * graphics/gbm: negate negative error codes returned by drm so they
+    can be interpreted by boost.
+
+  [ Alexandros Frantzis ]
+  * examples: Add option to specify the display configuration policy to
+    use We offer three display configuration policies to all the
+    examples that use configurations based on
+    mir::example::ServerConfiguration: 1. clone (default) 2. sidebyside
+    (outputs are placed side-by-side in the virtual space, in increasing
+    connector id order) 3. single (only the first, in connector id
+    order, is used).
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 914
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 02 Aug 2013 00:02:52 +0000
+
 mir (0.0.8+13.10.20130801-0ubuntu1) saucy; urgency=low
 
   [ Kevin DuBois ]
