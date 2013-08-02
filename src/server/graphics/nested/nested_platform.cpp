@@ -37,9 +37,7 @@ mgn::NestedPlatform::NestedPlatform(std::string const& host,
 {
     if (!mir_connection_is_valid(connection))
     {
-        char const* conn_error = mir_connection_get_error_message(connection);
-        if (strcmp(conn_error,""))
-            BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(conn_error, strlen(conn_error))));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(mir_connection_get_error_message(connection))));
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NestedPlatform is not fully implemented yet! Coming soon!"));
