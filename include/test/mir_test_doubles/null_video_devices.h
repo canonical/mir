@@ -32,7 +32,7 @@ class NullVideoDevices : public graphics::gbm::VideoDevices
 {
 public:
     void register_change_handler(
-        MainLoop&,
+        graphics::EventHandlerRegister&,
         std::function<void()> const&)
     {
     }
