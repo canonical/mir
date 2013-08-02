@@ -21,6 +21,8 @@
 
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"
+
+#include <mutex>
 #include <functional>
 #include <vector>
 #include <memory>
@@ -65,6 +67,7 @@ public:
     MirDisplayConfiguration* copy_to_client() const;
 
 private:
+    std::mutex mutable guard;
     std::vector<std::shared_ptr<DisplayOutput>> outputs;
     std::function<void()> notify_change;
 };
