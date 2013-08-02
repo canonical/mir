@@ -28,12 +28,11 @@
 
 namespace mir
 {
+namespace graphics { struct BufferProperties; }
+
 namespace compositor
 {
-
-class GraphicBufferAllocator;
 class BufferSwapper;
-struct BufferProperties;
 
 enum class SwapperType
 {
@@ -45,10 +44,10 @@ enum class SwapperType
 class BufferAllocationStrategy
 {
 public:
-    virtual std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(BufferProperties const&,
+    virtual std::shared_ptr<BufferSwapper> create_swapper_reuse_buffers(graphics::BufferProperties const&,
         std::vector<std::shared_ptr<graphics::Buffer>>&, size_t, SwapperType) const = 0;
     virtual std::shared_ptr<BufferSwapper> create_swapper_new_buffers(
-        BufferProperties& actual_properties, BufferProperties const& requested_properties, SwapperType) const = 0;
+        graphics::BufferProperties& actual_properties, graphics::BufferProperties const& requested_properties, SwapperType) const = 0;
 
 protected:
     BufferAllocationStrategy() {}

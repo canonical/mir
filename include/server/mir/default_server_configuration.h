@@ -30,13 +30,12 @@ namespace mir
 namespace compositor
 {
 class Renderer;
-class BufferAllocationStrategy;
-class GraphicBufferAllocator;
 class BufferStreamFactory;
 class Scene;
 class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
+class BufferAllocationStrategy;
 class OverlayRenderer;
 class RendererFactory;
 }
@@ -54,6 +53,7 @@ namespace shell
 {
 class SurfaceFactory;
 class SurfaceBuilder;
+class SurfaceController;
 class InputTargeter;
 class SessionContainer;
 class FocusSetter;
@@ -84,6 +84,7 @@ class Platform;
 class Display;
 class BufferInitializer;
 class DisplayReport;
+class GraphicBufferAllocator;
 }
 namespace input
 {
@@ -141,7 +142,7 @@ public:
     /** @name compositor configuration - dependencies
      * dependencies of compositor on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> the_buffer_allocator();
+    virtual std::shared_ptr<graphics::GraphicBufferAllocator> the_buffer_allocator();
     virtual std::shared_ptr<compositor::Scene>                  the_scene();
     /** @} */
 
@@ -174,6 +175,8 @@ public:
      * dependencies of shell on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<shell::SurfaceBuilder>     the_surface_builder();
+    virtual std::shared_ptr<surfaces::SurfaceController>     the_surface_controller();
+
     /** @} */
 
 
@@ -235,7 +238,7 @@ protected:
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
-    CachedPtr<compositor::GraphicBufferAllocator> buffer_allocator;
+    CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
 
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
@@ -275,7 +278,7 @@ private:
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::Display> const& display,
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
 };

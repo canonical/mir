@@ -37,9 +37,9 @@ class BufferAllocationStrategy;
 class SwitchingBundle : public BufferBundle 
 {
 public:
-    SwitchingBundle(std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const&);
+    SwitchingBundle(std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, graphics::BufferProperties const&);
 
-    BufferProperties properties() const;
+    graphics::BufferProperties properties() const;
 
     std::shared_ptr<graphics::Buffer> client_acquire();
     void client_release(std::shared_ptr<graphics::Buffer> const&);
@@ -49,7 +49,7 @@ public:
     void allow_framedropping(bool dropping_allowed);
 
 private:
-    BufferProperties bundle_properties; //must be before swapper
+    graphics::BufferProperties bundle_properties; //must be before swapper
     std::shared_ptr<BufferAllocationStrategy> const swapper_factory;
     std::shared_ptr<BufferSwapper> swapper;
     RWLockWriterBias rw_lock;

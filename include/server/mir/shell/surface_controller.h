@@ -13,30 +13,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
-#define MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
 
-#include "mir/geometry/dimensions.h"
+#ifndef MIR_SHELL_SURFACE_CONTROLLER_H_
+#define MIR_SHELL_SURFACE_CONTROLLER_H_
+
+#include <memory>
 
 namespace mir
 {
-namespace compositor
+namespace surfaces 
+{
+class Surface;
+}
+
+namespace shell
 {
 
-class BufferIPCPacker
+class SurfaceController
 {
 public:
-    BufferIPCPacker() {};
-    virtual ~BufferIPCPacker() = default;
-    virtual void pack_fd(int) = 0;
-    virtual void pack_data(int) = 0;
-    virtual void pack_stride(geometry::Stride) = 0;
+    virtual void raise(std::weak_ptr<surfaces::Surface> const& surface) = 0;
+
+protected:
+    SurfaceController() = default;
+    virtual ~SurfaceController() = default;
+    SurfaceController(SurfaceController const&) = delete;
+    SurfaceController& operator=(SurfaceController const&) = delete;
 };
-
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_ */
+
+#endif /* MIR_SHELL_SURFACE_CONTROLLER_H_ */

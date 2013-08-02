@@ -20,7 +20,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/egl_extensions.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
 #include "buffer.h"
@@ -31,7 +31,6 @@
 
 namespace mg  = mir::graphics;
 namespace mga = mir::graphics::android;
-namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
 namespace
@@ -71,7 +70,7 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
 }
 
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
-    mc::BufferProperties const& buffer_properties)
+    mg::BufferProperties const& buffer_properties)
 {
     auto usage = convert_from_compositor_usage(buffer_properties.usage);
     return alloc_buffer_platform(buffer_properties.size, buffer_properties.format, usage);
@@ -97,13 +96,13 @@ std::vector<geom::PixelFormat> mga::AndroidGraphicBufferAllocator::supported_pix
     return pixel_formats;
 }
 
-mga::BufferUsage mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mc::BufferUsage usage)
+mga::BufferUsage mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mg::BufferUsage usage)
 {
     switch (usage)
     {
-        case mc::BufferUsage::software:
+        case mg::BufferUsage::software:
             return mga::BufferUsage::use_software;
-        case mc::BufferUsage::hardware:
+        case mg::BufferUsage::hardware:
         default:
             return mga::BufferUsage::use_hardware;
     } 

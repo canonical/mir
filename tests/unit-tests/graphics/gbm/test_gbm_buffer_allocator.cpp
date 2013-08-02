@@ -17,9 +17,9 @@
  */
 
 #include "src/server/graphics/gbm/gbm_platform.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
@@ -40,7 +40,6 @@
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
@@ -56,8 +55,8 @@ protected:
 
         size = geom::Size{300, 200};
         pf = geom::PixelFormat::argb_8888;
-        usage = mc::BufferUsage::hardware;
-        buffer_properties = mc::BufferProperties{size, pf, usage};
+        usage = mg::BufferUsage::hardware;
+        buffer_properties = mg::BufferProperties{size, pf, usage};
 
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
@@ -71,8 +70,8 @@ protected:
     // Defaults
     geom::Size size;
     geom::PixelFormat pf;
-    mc::BufferUsage usage;
-    mc::BufferProperties buffer_properties;
+    mg::BufferUsage usage;
+    mg::BufferProperties buffer_properties;
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
@@ -100,7 +99,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_argb_8888)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_ARGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::argb_8888, usage});
+    allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::argb_8888, usage});
 }
 
 TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
@@ -110,7 +109,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,GBM_FORMAT_XRGB8888,_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::xrgb_8888, usage});
+    allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::xrgb_8888, usage});
 }
 
 TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_abgr_8888_to_invalid)
@@ -120,7 +119,7 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_abgr_8888_to_in
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,std::numeric_limits<uint32_t>::max(),_));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
 
-    allocator->alloc_buffer(mc::BufferProperties{size, geom::PixelFormat::abgr_8888, usage});
+    allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::abgr_8888, usage});
 }
 
 MATCHER_P(has_flag_set, flag, "")
@@ -132,7 +131,7 @@ TEST_F(GBMBufferAllocatorTest, creates_hardware_rendering_buffer)
 {
     using namespace testing;
 
-    mc::BufferProperties properties{size, pf, mc::BufferUsage::hardware};
+    mg::BufferProperties properties{size, pf, mg::BufferUsage::hardware};
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_RENDERING)));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
@@ -144,7 +143,7 @@ TEST_F(GBMBufferAllocatorTest, creates_software_rendering_buffer)
 {
     using namespace testing;
 
-    mc::BufferProperties properties{size, pf, mc::BufferUsage::software};
+    mg::BufferProperties properties{size, pf, mg::BufferUsage::software};
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_WRITE|GBM_BO_USE_RENDERING)));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
@@ -156,7 +155,7 @@ TEST_F(GBMBufferAllocatorTest, creates_hardware_rendering_buffer_for_undefined_u
 {
     using namespace testing;
 
-    mc::BufferProperties properties{size, pf, mc::BufferUsage::undefined};
+    mg::BufferProperties properties{size, pf, mg::BufferUsage::undefined};
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,has_flag_set(GBM_BO_USE_RENDERING)));
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));

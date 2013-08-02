@@ -16,30 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
-#define MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
+#ifndef MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
+#define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
 
-#include "mir/graphics/buffer_ipc_packer.h"
-
-#include <gmock/gmock.h>
+#include "mir/geometry/dimensions.h"
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace graphics
 {
 
-struct MockPacker : public graphics::BufferIPCPacker
+class BufferIPCPacker
 {
-    ~MockPacker() noexcept {}
-    MOCK_METHOD1(pack_fd, void(int));
-    MOCK_METHOD1(pack_data, void(int));
-    MOCK_METHOD1(pack_stride, void(geometry::Stride));
+public:
+    virtual ~BufferIPCPacker() = default;
+    virtual void pack_fd(int) = 0;
+    virtual void pack_data(int) = 0;
+    virtual void pack_stride(geometry::Stride) = 0;
+
+protected:
+    BufferIPCPacker() {}
+    BufferIPCPacker(BufferIPCPacker const&) = delete;
+    BufferIPCPacker& operator=(BufferIPCPacker const&) = delete;
+
 };
 
 }
 }
-}
 
-#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_ */
+#endif /* MIR_GRAPHICS_BUFFER_IPC_PACKER_H_ */

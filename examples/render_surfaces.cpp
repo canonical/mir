@@ -18,7 +18,7 @@
 
 #include "mir/compositor/default_display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/communicator.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
@@ -29,13 +29,13 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
-#include "mir/default_server_configuration.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
 #include "image_renderer.h"
+#include "server_configuration.h"
 
 #include <thread>
 #include <atomic>
@@ -248,11 +248,11 @@ private:
 
 ///\internal [RenderSurfacesServerConfiguration_tag]
 // Extend the default configuration to manage moveables.
-class RenderSurfacesServerConfiguration : public mir::DefaultServerConfiguration
+class RenderSurfacesServerConfiguration : public mir::examples::ServerConfiguration
 {
 public:
     RenderSurfacesServerConfiguration(int argc, char const** argv)
-        : mir::DefaultServerConfiguration(argc, argv)
+        : ServerConfiguration(argc, argv)
     {
         namespace po = boost::program_options;
 
@@ -409,7 +409,7 @@ public:
             std::shared_ptr<ms::Surface> s = surface_builder->create_surface(
                     msh::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
-                                   .of_buffer_usage(mc::BufferUsage::hardware)
+                                   .of_buffer_usage(mg::BufferUsage::hardware)
                     ).lock();
 
             /*
