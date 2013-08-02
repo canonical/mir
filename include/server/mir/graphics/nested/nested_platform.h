@@ -21,8 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
-
-struct MirConnection;
+#include "nested_mir_connection_handle.h"
 
 namespace mir
 {
@@ -52,11 +51,11 @@ private:
     std::shared_ptr<NativePlatform> const native_platform;
     std::shared_ptr<DisplayReport> const display_report;
 
-    MirConnection* const connection;
+    MirConnectionHandle connection;
 };
 
 }
 }
 }
 
-#endif // MIR_GRAPHICS_NESTED_NESTED_PLATFORM_H_
+#endif // MIR_GRAPHICS_NESTED_NESTED_PLATFORM_H
