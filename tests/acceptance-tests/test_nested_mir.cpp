@@ -59,12 +59,7 @@ struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerCon
         FakeCommandLine(host_socket),
         DefaultServerConfiguration(FakeCommandLine::argc, FakeCommandLine::argv)
     {
-        // TODO - set up options for nested execution
     }
-
-    std::string the_socket_file() const { return "nested-in-" + host_socket; }
-
-    std::string const host_socket;
 };
 
 struct ClientConfig : mtf::TestingClientConfiguration
