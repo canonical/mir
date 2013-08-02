@@ -255,7 +255,19 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     auto config = mir_connection_create_display_config(connection);
     if (config->num_displays < 1)
         return;
-    MirDisplayOutput* state = &config->displays[0];
+
+    MirDisplayOutput* state;
+    // We can't handle more than one display, so just populate based on the first
+    // active display we find.
+    for (unsigned int i = 0; i < config->num_displays; ++i) 
+    {
+        if (config->displays[i].current_mode != (uint32_t)-1)
+        {
+            state = &config->displays[i];
+            break;
+        }
+    }
+	
     MirDisplayMode mode = state->modes[state->current_mode];
    
     display_info->width = mode.horizontal_resolution;
