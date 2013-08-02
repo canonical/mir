@@ -27,25 +27,25 @@ namespace mir
 
 namespace shell
 {
-class SessionContainer;
 class InputTargeter;
+class SurfaceController;
 
-class SingleVisibilityFocusMechanism : public FocusSetter
+class DefaultFocusMechanism : public FocusSetter
 {
 public:
-    explicit SingleVisibilityFocusMechanism(std::shared_ptr<SessionContainer> const& app_container,
-                                            std::shared_ptr<InputTargeter> const& input_targeter);
-    virtual ~SingleVisibilityFocusMechanism() {}
+    explicit DefaultFocusMechanism(std::shared_ptr<InputTargeter> const& input_targeter,
+                                   std::shared_ptr<SurfaceController> const& surface_controller);
+    virtual ~DefaultFocusMechanism() = default;
 
     void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
 
 protected:
-    SingleVisibilityFocusMechanism(const SingleVisibilityFocusMechanism&) = delete;
-    SingleVisibilityFocusMechanism& operator=(const SingleVisibilityFocusMechanism&) = delete;
+    DefaultFocusMechanism(const DefaultFocusMechanism&) = delete;
+    DefaultFocusMechanism& operator=(const DefaultFocusMechanism&) = delete;
 
 private:
-    std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<InputTargeter> const input_targeter;
+    std::shared_ptr<SurfaceController> const surface_controller;
 };
 
 }

@@ -187,13 +187,13 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(
-    MainLoop&,
+    EventHandlerRegister&,
     DisplayConfigurationChangeHandler const&)
 {
 }
 
 void mga::AndroidDisplay::register_pause_resume_handlers(
-    MainLoop& /*main_loop*/,
+    EventHandlerRegister& /*handlers*/,
     DisplayPauseHandler const& /*pause_handler*/,
     DisplayResumeHandler const& /*resume_handler*/)
 {
