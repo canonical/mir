@@ -249,17 +249,15 @@ TEST_F(SwitchingBundleTest, out_of_order_compositor_release)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
     
-        bundle.client_release(bundle.client_acquire());
-        auto compositor1 = bundle.compositor_acquire();
-
-        bundle.client_release(bundle.client_acquire());
-        auto compositor2 = bundle.compositor_acquire();
+        auto client = bundle.client_acquire();
 
         EXPECT_THROW(
-            bundle.compositor_release(compositor2),
+            bundle.compositor_release(client),
             std::logic_error
         );
+        bundle.client_release(client);
 
+        auto compositor1 = bundle.compositor_acquire();
         bundle.compositor_release(compositor1);
         EXPECT_THROW(
             bundle.compositor_release(compositor1),

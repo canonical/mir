@@ -262,15 +262,31 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
 void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& released_buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
+    int compositor = -1;
 
-    if (ncompositors <= 0 || ring[first_compositor].buf != released_buffer)
-        BOOST_THROW_EXCEPTION(std::logic_error(
-            "Compositor release out of order"));
-
-    if ((--ring[first_compositor].users) == 0)
+    for (int n = 0, i = first_compositor;
+         n < ncompositors;
+         n++, i = (i + 1) % nbuffers)
     {
-        first_compositor = (first_compositor + 1) % nbuffers;
-        ncompositors--;
+        if (ring[i].buf == released_buffer)
+        {
+            compositor = i;
+            break;
+        }
+    }
+
+    if (compositor < 0)
+        BOOST_THROW_EXCEPTION(std::logic_error(
+            "compositor_release given a non-compositor buffer"));
+
+    ring[compositor].users--;
+    if (compositor == first_compositor)
+    {
+        while (!ring[first_compositor].users && ncompositors)
+        {
+            first_compositor = (first_compositor + 1) % nbuffers;
+            ncompositors--;
+        }
         cond.notify_all();
     }
 }
