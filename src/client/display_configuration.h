@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"
+#include <functional>
 
 namespace mir
 {
@@ -29,7 +30,25 @@ namespace client
 
 //convenient helpers
 void delete_config_storage(MirDisplayConfiguration* config);
-MirDisplayConfiguration* set_display_config_from_message(mir::protobuf::Connection const& connection_msg);
+
+class DisplayConfiguration
+{
+public:
+    DisplayConfiguration();
+    ~DisplayConfiguration();
+
+    void update_configuration(mir::protobuf::Connection const& msg);
+    void update_configuration(mir::protobuf::DisplayConfiguration const& msg);
+    void set_display_change_handler(std::function<void()> const&);
+
+    //copying to a c POD, so kinda kludgy
+    MirDisplayConfiguration* copy_to_client() const;
+
+private:
+    MirDisplayConfiguration* config;
+    std::function<void()> notify_change;
+};
+
 
 }
 }

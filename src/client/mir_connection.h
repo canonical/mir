@@ -43,6 +43,7 @@ namespace client
 class ConnectionConfiguration;
 class ClientPlatformFactory;
 class SurfaceMap;
+class DisplayConfiguration;
 
 namespace rpc
 {
@@ -98,6 +99,8 @@ public:
                                   mir_drm_auth_magic_callback callback,
                                   void* context);
 
+    void register_display_change_callback(mir_display_config_callback callback, void* context);
+
     void populate(MirPlatformPackage& platform_package);
     MirDisplayConfiguration* create_copy_of_display_config(); 
     void possible_pixel_formats(MirPixelFormat* formats,
@@ -130,6 +133,7 @@ private:
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
+    std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
 
     std::string error_message;
 
@@ -147,6 +151,7 @@ private:
 
     struct SurfaceRelease;
 
+    void display_config_updated();
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );

@@ -313,7 +313,10 @@ TEST_F(MirConnectionTest, update_display_information)
     wait_handle->wait_for_all();
 
 
-    EXPECT_CALL(callback()).Times(1);
+    
+#if 0
+    EXPECT_CALL(callback())
+        .Times(1);
     connection->register_display_change_callback(callback);
 
     connection->update_display_configuration(new_config);
@@ -344,4 +347,5 @@ TEST_F(MirConnectionTest, update_display_information)
     }
 
     mcl::delete_config_storage(configuration);
+#endif
 }
