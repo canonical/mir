@@ -378,9 +378,9 @@ int mir_surface_get_swapinterval(MirSurface* surf)
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
 }
 
-void mir_connection_set_display_config_change_callback(
+void mir_connection_set_display_config_change_callback(MirConnection* connection,
     mir_display_config_callback callback, void* context)
 {
-    (void) callback;
-    (void) context;
+    if (connection)
+        connection->register_display_change_callback(callback, context);
 }

@@ -114,7 +114,7 @@ MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *con
  *   \param [in] callback     The function to be called when a display change occurs
  *   \param [in,out] context  User data passed to the callback function
  */
-void mir_connection_set_display_config_change_callback(
+void mir_connection_set_display_config_change_callback(MirConnection* connection,
     mir_display_config_callback callback, void* context);
 
 /**

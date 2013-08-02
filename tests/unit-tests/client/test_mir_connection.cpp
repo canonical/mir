@@ -119,6 +119,7 @@ public:
         std::shared_ptr<mcl::ClientPlatform> const& platform,
         std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const& channel)
         : DefaultConnectionConfiguration(""),
+          disp_config(std::make_shared<mcl::DisplayConfiguration>()),
           platform{platform},
           channel{channel}
     {
@@ -134,7 +135,12 @@ public:
         return std::make_shared<StubClientPlatformFactory>(platform);
     }
 
+    std::shared_ptr<mcl::DisplayConfiguration> the_display_configuration() override
+    {
+        return disp_config;
+    }
 private:
+    std::shared_ptr<mcl::DisplayConfiguration> disp_config;
     std::shared_ptr<mcl::ClientPlatform> const platform;
     std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const channel;
 };
@@ -301,51 +307,4 @@ TEST_F(MirConnectionTest, populates_pfs_correctly)
     {
         EXPECT_EQ(supported_output_formats[i], formats[i]);
     }
-}
-
-TEST_F(MirConnectionTest, update_display_information)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_output));
-    auto wait_handle = connection->connect("MirClientSurfaceTest", connected_callback, 0);
-    wait_handle->wait_for_all();
-
-
-    
-#if 0
-    EXPECT_CALL(callback())
-        .Times(1);
-    connection->register_display_change_callback(callback);
-
-    connection->update_display_configuration(new_config);
-
-    auto configuration = connection->create_copy_of_display_config();
-
-    ASSERT_EQ(number_of_displays, configuration->num_displays);
-    for(auto i=0u; i < number_of_displays; i++)
-    {
-        auto output = configuration->displays[i];
-        auto rect = rects[i];
-
-        ASSERT_EQ(1u, output.num_modes);
-        ASSERT_NE(nullptr, output.modes);
-        EXPECT_EQ(rect.size.width.as_uint32_t(), output.modes[0].horizontal_resolution);
-        EXPECT_EQ(rect.size.height.as_uint32_t(), output.modes[0].vertical_resolution);
-
-        EXPECT_EQ(output.position_x, static_cast<int>(rect.top_left.x.as_uint32_t()));
-        EXPECT_EQ(output.position_y, static_cast<int>(rect.top_left.y.as_uint32_t()));
- 
-        ASSERT_EQ(supported_output_formats.size(),
-                  static_cast<uint32_t>(output.num_output_formats));
-
-        for (size_t i = 0; i < supported_output_formats.size(); ++i)
-        {
-            EXPECT_EQ(supported_output_formats[i], output.output_formats[i]);
-        }
-    }
-
-    mcl::delete_config_storage(configuration);
-#endif
 }

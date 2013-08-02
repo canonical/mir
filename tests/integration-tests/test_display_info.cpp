@@ -304,8 +304,8 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification)
         void exec() override
         {
             change_thread = std::move(std::thread([this](){
-                auto notifier = ipc_factory->last_clients_event_sink();
                 send_event_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
+                auto notifier = ipc_factory->last_clients_event_sink();
                 notifier->send_display_config(StubDisplay::stub_display_config);
             })); 
         }
@@ -350,7 +350,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification)
             MirConnection* connection = mir_connect_sync(mir_test_socket, "notifier");
             callback_called = false;
         
-            mir_connection_set_display_config_change_callback(&change_handler, this);
+            mir_connection_set_display_config_change_callback(connection, &change_handler, this);
 
             client_ready_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
 
