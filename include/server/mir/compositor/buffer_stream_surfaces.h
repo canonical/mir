@@ -30,7 +30,6 @@ namespace compositor
 {
 
 class BufferIDUniqueGenerator;
-struct BufferProperties;
 class BufferBundle;
 class BackBufferStrategy;
 

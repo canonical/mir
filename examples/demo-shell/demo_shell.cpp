@@ -20,10 +20,10 @@
 
 #include "window_manager.h"
 #include "fullscreen_placement_strategy.h"
+#include "../server_configuration.h"
 
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
-#include "mir/default_server_configuration.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/single_visibility_focus_mechanism.h"
@@ -44,21 +44,29 @@ namespace mir
 namespace examples
 {
 
-struct DemoServerConfiguration : mir::DefaultServerConfiguration
+struct DemoServerConfiguration : mir::examples::ServerConfiguration
 {
     DemoServerConfiguration(int argc, char const* argv[],
                             std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filter_list)
-      : DefaultServerConfiguration(argc, argv),
+      : ServerConfiguration(argc, argv),
         filter_list(filter_list)
     {
+        namespace po = boost::program_options;
+
+        add_options()
+            ("fullscreen-surfaces", po::value<bool>(),
+                "Make all surfaces fullscreen [bool:default=false]");
     }
 
-    std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy()
+    std::shared_ptr<msh::PlacementStrategy> the_shell_placement_strategy() override
     {
         return shell_placement_strategy(
-            [this]
+            [this]() -> std::shared_ptr<msh::PlacementStrategy>
             {
-                return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_display_layout());
+                if (the_options()->is_set("fullscreen-surfaces"))
+                    return std::make_shared<me::FullscreenPlacementStrategy>(the_shell_display_layout());
+                else
+                    return DefaultServerConfiguration::the_shell_placement_strategy();
             });
     }
 

@@ -25,10 +25,7 @@
 
 namespace mir
 {
-namespace compositor
-{
-struct BufferProperties;
-}
+namespace graphics { struct BufferProperties; }
 
 namespace surfaces
 {
@@ -40,7 +37,7 @@ public:
     virtual ~BufferStreamFactory() {}
 
     virtual std::shared_ptr<BufferStream> create_buffer_stream(
-        compositor::BufferProperties const& buffer_properties) = 0;
+        graphics::BufferProperties const& buffer_properties) = 0;
 
 protected:
     BufferStreamFactory() = default;

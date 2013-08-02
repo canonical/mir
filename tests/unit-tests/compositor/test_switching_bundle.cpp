@@ -41,20 +41,20 @@ struct SwitchingBundleTest : public ::testing::Test
         {
             geom::Size{3, 4},
             geom::PixelFormat::abgr_8888,
-            mc::BufferUsage::hardware
+            mg::BufferUsage::hardware
         };
     }
 
     std::shared_ptr<mtd::StubBufferAllocator> allocator;
 
-    mc::BufferProperties basic_properties;
+    mg::BufferProperties basic_properties;
 };
 
 TEST_F(SwitchingBundleTest, sync_swapper_by_default)
 {
-    mc::BufferProperties properties{geom::Size{7, 8},
+    mg::BufferProperties properties{geom::Size{7, 8},
                                     geom::PixelFormat::argb_8888,
-                                    mc::BufferUsage::software};
+                                    mg::BufferUsage::software};
 
     for (int nbuffers = 1; nbuffers < 10; nbuffers++)
     {

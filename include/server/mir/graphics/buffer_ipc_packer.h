@@ -16,27 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
-#define MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_
+#ifndef MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
+#define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
 
 #include "mir/geometry/dimensions.h"
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 
 class BufferIPCPacker
 {
 public:
-    BufferIPCPacker() {};
     virtual ~BufferIPCPacker() = default;
     virtual void pack_fd(int) = 0;
     virtual void pack_data(int) = 0;
     virtual void pack_stride(geometry::Stride) = 0;
+
+protected:
+    BufferIPCPacker() {}
+    BufferIPCPacker(BufferIPCPacker const&) = delete;
+    BufferIPCPacker& operator=(BufferIPCPacker const&) = delete;
+
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_IPC_PACKER_H_ */
+#endif /* MIR_GRAPHICS_BUFFER_IPC_PACKER_H_ */

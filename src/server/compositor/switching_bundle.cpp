@@ -56,7 +56,7 @@
  * threads.
  */
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "switching_bundle.h"
 
 #include <boost/throw_exception.hpp>
@@ -66,8 +66,8 @@ namespace mg = mir::graphics;
 
 mc::SwitchingBundle::SwitchingBundle(
     int nbuffers,
-    const std::shared_ptr<GraphicBufferAllocator> &gralloc,
-    const BufferProperties &property_request)
+    const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc,
+    const mg::BufferProperties &property_request)
     : bundle_properties{property_request},
       gralloc{gralloc},
       nbuffers{nbuffers},
@@ -358,7 +358,7 @@ bool mc::SwitchingBundle::framedropping_allowed() const
     return framedropping;
 }
 
-mc::BufferProperties mc::SwitchingBundle::properties() const
+mg::BufferProperties mc::SwitchingBundle::properties() const
 {
     return bundle_properties;
 }

@@ -30,21 +30,21 @@ namespace mir
 namespace graphics
 {
 class Buffer;
+class GraphicBufferAllocator;
 }
 namespace compositor
 {
-class GraphicBufferAllocator;
 
 class SwitchingBundle : public BufferBundle 
 {
 public:
     SwitchingBundle(int nbuffers,
-                    const std::shared_ptr<GraphicBufferAllocator> &,
-                    const BufferProperties &);
+                    const std::shared_ptr<graphics::GraphicBufferAllocator> &,
+                    const graphics::BufferProperties &);
 
     ~SwitchingBundle() noexcept;
 
-    BufferProperties properties() const;
+    graphics::BufferProperties properties() const;
 
     std::shared_ptr<graphics::Buffer> client_acquire();
     void client_release(std::shared_ptr<graphics::Buffer> const&);
@@ -57,8 +57,8 @@ public:
     bool framedropping_allowed() const;
 
 private:
-    BufferProperties bundle_properties;
-    std::shared_ptr<GraphicBufferAllocator> gralloc;
+    graphics::BufferProperties bundle_properties;
+    std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
 
     int drop_frames(int max);
     int nfree() const;

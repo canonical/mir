@@ -18,7 +18,7 @@
 
 #include "src/server/graphics/android/default_framebuffer_factory.h"
 #include "src/server/graphics/android/graphic_buffer_allocator.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/mock_display_support_provider.h"
 
 #include "mir_test_doubles/mock_android_hw.h"
@@ -32,7 +32,6 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace mt=mir::test;
 namespace geom=mir::geometry;
-namespace mc=mir::compositor;
 
 namespace
 {
@@ -40,7 +39,7 @@ namespace
 class MockAndroidGraphicBufferAllocator : public mga::GraphicBufferAllocator
 {
 public:
-    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mc::BufferProperties const&));
+    MOCK_METHOD1(alloc_buffer, std::shared_ptr<mg::Buffer>(mg::BufferProperties const&));
     MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mga::Buffer>(geom::Size, geom::PixelFormat, mga::BufferUsage));
     MOCK_METHOD0(supported_pixel_formats, std::vector<geom::PixelFormat>());
 

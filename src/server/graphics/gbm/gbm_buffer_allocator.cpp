@@ -23,7 +23,7 @@
 #include "buffer_texture_binder.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/egl_extensions.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include <boost/throw_exception.hpp>
 
 #include <EGL/egl.h>
@@ -37,7 +37,6 @@
 
 namespace mg  = mir::graphics;
 namespace mgg = mir::graphics::gbm;
-namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
 namespace
@@ -116,13 +115,12 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
     assert(buffer_initializer.get() != 0);
 }
 
-std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
-    mc::BufferProperties const& buffer_properties)
+std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
 {
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
     /* Create the GBM buffer object */
-    if (buffer_properties.usage == mc::BufferUsage::software)
+    if (buffer_properties.usage == BufferUsage::software)
         bo_flags |= GBM_BO_USE_WRITE;
 
     gbm_bo *bo_raw = gbm_bo_create(

@@ -32,10 +32,10 @@ namespace doubles
 class NullPlatform : public graphics::Platform
 {
  public:
-    std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<graphics::BufferInitializer>& /*buffer_initializer*/)
     {
-        return std::shared_ptr<compositor::GraphicBufferAllocator>();
+        return std::shared_ptr<graphics::GraphicBufferAllocator>();
     }
 
     std::shared_ptr<graphics::Display> create_display(
@@ -54,7 +54,7 @@ class NullPlatform : public graphics::Platform
         return std::shared_ptr<graphics::InternalClient>();
     }
 
-    void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const&,
+    void fill_ipc_package(std::shared_ptr<graphics::BufferIPCPacker> const&,
                           std::shared_ptr<graphics::Buffer> const&) const
     {
     }

@@ -671,10 +671,10 @@ TEST_F(GBMDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     using namespace testing;
 
     EXPECT_CALL(mock_drm, drmDropMaster(_))
-        .WillOnce(SetErrnoAndReturn(EACCES, -1));
+        .WillOnce(SetErrnoAndReturn(EACCES, -EACCES));
 
     EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .WillOnce(SetErrnoAndReturn(EPERM, -1));
+        .WillOnce(SetErrnoAndReturn(EPERM, -EPERM));
 
     EXPECT_CALL(*mock_report, report_drm_master_failure(EACCES));
     EXPECT_CALL(*mock_report, report_drm_master_failure(EPERM));

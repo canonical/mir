@@ -31,7 +31,6 @@
 #include <thread>
 #include <atomic>
 
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace mt = mir::test;

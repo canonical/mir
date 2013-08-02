@@ -21,7 +21,7 @@
 #include "src/server/graphics/gbm/gbm_buffer_allocator.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_platform.h"
@@ -69,10 +69,10 @@ private:
     std::thread::id creation_thread_id;
 };
 
-class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
  public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mc::BufferProperties const&)
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
     {
         return std::shared_ptr<mg::Buffer>(new StubBufferThread());
     }
@@ -86,7 +86,7 @@ class StubGraphicBufferAllocator : public mc::GraphicBufferAllocator
 class StubGraphicPlatform : public mtd::NullPlatform
 {
 public:
-    std::shared_ptr<mc::GraphicBufferAllocator> create_buffer_allocator(
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
@@ -111,23 +111,23 @@ protected:
         allocator = platform->create_buffer_allocator(buffer_initializer);
         size = geom::Size{100, 100};
         pf = geom::PixelFormat::abgr_8888;
-        usage = mc::BufferUsage::hardware;
-        buffer_properties = mc::BufferProperties{size, pf, usage};
+        usage = mg::BufferUsage::hardware;
+        buffer_properties = mg::BufferProperties{size, pf, usage};
     }
 
     std::shared_ptr<mg::Platform> platform;
     std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mc::GraphicBufferAllocator> allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> allocator;
     geom::Size size;
     geom::PixelFormat pf;
-    mc::BufferUsage usage;
-    mc::BufferProperties buffer_properties;
+    mg::BufferUsage usage;
+    mg::BufferProperties buffer_properties;
 };
 
 struct BufferCreatorThread
 {
-    BufferCreatorThread(const std::shared_ptr<mc::GraphicBufferAllocator>& allocator,
-                        mc::BufferProperties const& buffer_properties)
+    BufferCreatorThread(const std::shared_ptr<mg::GraphicBufferAllocator>& allocator,
+                        mg::BufferProperties const& buffer_properties)
         : allocator{allocator}, buffer_properties{buffer_properties}
     {
     }
@@ -138,9 +138,9 @@ struct BufferCreatorThread
         buffer = allocator->alloc_buffer(buffer_properties);
     }
 
-    std::shared_ptr<mc::GraphicBufferAllocator> allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> allocator;
     std::shared_ptr<mg::Buffer> buffer;
-    mc::BufferProperties buffer_properties;
+    mg::BufferProperties buffer_properties;
 };
 
 struct BufferDestructorThread

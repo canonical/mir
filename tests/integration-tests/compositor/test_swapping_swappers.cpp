@@ -21,7 +21,7 @@
 
 #include "src/server/compositor/switching_bundle.h"
 #include "mir/compositor/buffer_stream_surfaces.h"
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
 #include <future>
@@ -42,8 +42,9 @@ struct SwapperSwappingStress : public ::testing::Test
     void SetUp()
     {
         auto allocator = std::make_shared<mtd::StubBufferAllocator>();
-        auto properties = mc::BufferProperties{geom::Size{380, 210},
-                                          geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
+        auto properties = mg::BufferProperties{geom::Size{380, 210},
+                                          geom::PixelFormat::abgr_8888,
+                                          mg::BufferUsage::hardware};
         switching_bundle = std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
     }
 

@@ -19,7 +19,7 @@
 
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "buffer_bundle.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include "temporary_buffers.h"
 

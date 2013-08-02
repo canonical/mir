@@ -27,7 +27,6 @@
 #include "video_devices.h"
 #include "overlapping_output_grouping.h"
 
-#include "mir/main_loop.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
