@@ -29,12 +29,15 @@ namespace mt = mir::tools;
 mt::BufferRenderTarget::BufferRenderTarget(mg::Buffer& buffer)
     : buffer(buffer)
 {
+    glGetIntegerv(GL_VIEWPORT, old_viewport);
     resources.setup(buffer);
 }
 
 mt::BufferRenderTarget::~BufferRenderTarget()
 {
     glFinish();
+    glViewport(old_viewport[0], old_viewport[1],
+               old_viewport[2], old_viewport[3]);
 }
 
 void mt::BufferRenderTarget::make_current()
