@@ -28,7 +28,11 @@ class Option;
 }
 namespace graphics
 {
-class NativePlatform;
+class NativePlatform
+{
+public:
+    NativePlatform() {}
+};
 
 extern "C" typedef std::shared_ptr<NativePlatform>(*CreateNativePlatform)(/* TODO */);
 extern "C" std::shared_ptr<NativePlatform> create_native_platform(/* TODO */);
