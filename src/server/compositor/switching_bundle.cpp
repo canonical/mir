@@ -86,7 +86,7 @@ mc::SwitchingBundle::SwitchingBundle(
         ring[i].users = 0;
 }
 
-mc::SwitchingBundle::~SwitchingBundle()
+mc::SwitchingBundle::~SwitchingBundle() noexcept
 {
     delete[] ring;
 }
