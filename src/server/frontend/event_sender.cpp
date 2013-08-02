@@ -51,7 +51,6 @@ void mfd::EventSender::handle_event(MirEvent const& e)
 
 void mfd::EventSender::send_display_config(graphics::DisplayConfiguration const& display_config)
 {
-printf("Sund.\n");
     mp::EventSequence seq;
     auto message = seq.mutable_display_configuration();
 

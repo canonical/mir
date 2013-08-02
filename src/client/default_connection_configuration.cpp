@@ -59,7 +59,7 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         [this]
         {
             return mcl::rpc::make_rpc_channel(
-                the_socket_file(), the_surface_map(), the_rpc_report());
+                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report());
         });
 }
 
