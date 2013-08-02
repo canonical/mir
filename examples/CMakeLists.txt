@@ -82,6 +82,7 @@ target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/include/platform
   ${GLESv2_INCLUDE_DIRS}
 )
 
