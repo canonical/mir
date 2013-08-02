@@ -256,7 +256,7 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     if (config->num_displays < 1)
         return;
 
-    MirDisplayOutput* state = NULL;
+    MirDisplayOutput* state = nullptr;
     // We can't handle more than one display, so just populate based on the first
     // active display we find.
     for (unsigned int i = 0; i < config->num_displays; ++i) 
@@ -269,7 +269,7 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
         }
     }
     // Oh, oh! No connected outputs?!
-    if (state == NULL)
+    if (state == nullptr)
     {
         memset(display_info, 0, sizeof(*display_info));
         return;
