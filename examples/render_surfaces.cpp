@@ -29,13 +29,13 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/shell/surface_builder.h"
 #include "mir/surfaces/surface.h"
-#include "mir/default_server_configuration.h"
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
 #include "image_renderer.h"
+#include "server_configuration.h"
 
 #include <thread>
 #include <atomic>
@@ -248,11 +248,11 @@ private:
 
 ///\internal [RenderSurfacesServerConfiguration_tag]
 // Extend the default configuration to manage moveables.
-class RenderSurfacesServerConfiguration : public mir::DefaultServerConfiguration
+class RenderSurfacesServerConfiguration : public mir::examples::ServerConfiguration
 {
 public:
     RenderSurfacesServerConfiguration(int argc, char const** argv)
-        : mir::DefaultServerConfiguration(argc, argv)
+        : ServerConfiguration(argc, argv)
     {
         namespace po = boost::program_options;
 

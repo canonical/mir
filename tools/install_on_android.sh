@@ -21,7 +21,7 @@ pushd ${BUILD_DIR} > /dev/null
     # Upload and run the tests!
     # Requires: https://wiki.canonical.com/ProductStrategyTeam/Android/Deploy
     #
-    RUN_DIR=/data/mirtest
+    RUN_DIR=/tmp/mirtest
 
     adb wait-for-device
     adb root
@@ -31,9 +31,9 @@ pushd ${BUILD_DIR} > /dev/null
     for x in bin/acceptance-tests \
              bin/integration-tests \
              bin/unit-tests \
-             lib/libmirclient.so.0 \
-             lib/libmirprotobuf.so.0 \
-             lib/libmirserver.so.0
+             lib/libmirclient.so.* \
+             lib/libmirprotobuf.so.* \
+             lib/libmirserver.so.*
     do
         adb push $x ${RUN_DIR}
     done

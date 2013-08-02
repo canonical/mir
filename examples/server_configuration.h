@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2013 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,25 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/run_mir.h"
-#include "mir/report_exception.h"
-#include "server_configuration.h"
+#ifndef MIR_EXAMPLES_SERVER_CONFIGURATION_H_
+#define MIR_EXAMPLES_SERVER_CONFIGURATION_H_
 
-#include <iostream>
+#include "mir/default_server_configuration.h"
 
-int main(int argc, char const* argv[])
-try
+namespace mir
 {
-    mir::examples::ServerConfiguration config(argc, argv);
-
-    run_mir(config, [](mir::DisplayServer&) {/* empty init */});
-    return 0;
-}
-catch (...)
+namespace examples
 {
-    mir::report_exception(std::cerr);
-    return 1;
+
+class ServerConfiguration : public DefaultServerConfiguration
+{
+public:
+    ServerConfiguration(int argc, char const** argv);
+
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy() override;
+};
+
 }
+}
+
+#endif /* MIR_EXAMPLES_SERVER_CONFIGURATION_H_ */

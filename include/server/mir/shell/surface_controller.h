@@ -13,33 +13,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_VIDEO_DEVICES_H_
-#define MIR_TEST_DOUBLES_NULL_VIDEO_DEVICES_H_
 
-#include "src/server/graphics/gbm/video_devices.h"
+#ifndef MIR_SHELL_SURFACE_CONTROLLER_H_
+#define MIR_SHELL_SURFACE_CONTROLLER_H_
+
+#include <memory>
 
 namespace mir
 {
-namespace test
+namespace surfaces 
 {
-namespace doubles
+class Surface;
+}
+
+namespace shell
 {
 
-class NullVideoDevices : public graphics::gbm::VideoDevices
+class SurfaceController
 {
 public:
-    void register_change_handler(
-        graphics::EventHandlerRegister&,
-        std::function<void()> const&)
-    {
-    }
+    virtual void raise(std::weak_ptr<surfaces::Surface> const& surface) = 0;
+
+protected:
+    SurfaceController() = default;
+    virtual ~SurfaceController() = default;
+    SurfaceController(SurfaceController const&) = delete;
+    SurfaceController& operator=(SurfaceController const&) = delete;
 };
-
-}
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_VIDEO_DEVICES_H_ */
+
+#endif /* MIR_SHELL_SURFACE_CONTROLLER_H_ */
