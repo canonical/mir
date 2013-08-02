@@ -56,28 +56,23 @@ TEST(TestDisplayConfiguration, config)
     mcl::DisplayConfiguration internal_config;
 
     internal_config.update_configuration(connect_result);
-    MirDisplayConfiguration* info, *new_info;
+    MirDisplayConfiguration *info;
     info = internal_config.copy_to_client();
    
     EXPECT_THAT(*info, mt::ClientTypeMatchesProtobuf(connect_result)); 
+    mcl::delete_config_storage(info);
 
     int called_count = 0u;
-    auto fn = [&]()
-    {
-        called_count++;
-    };
-    internal_config.set_display_change_handler(fn);
+    internal_config.set_display_change_handler([&]() { called_count++; });
 
     mp::DisplayConfiguration new_result; 
     fill(new_result.add_display_output());
 
     internal_config.update_configuration(new_result);
+
+    info = internal_config.copy_to_client();
+    EXPECT_THAT(*info, mt::ClientTypeMatchesProtobuf(new_result)); 
     EXPECT_EQ(1u, called_count);
 
-    new_info = internal_config.copy_to_client();
-
-    EXPECT_THAT(*new_info, mt::ClientTypeMatchesProtobuf(new_result)); 
-
     mcl::delete_config_storage(info);
-    mcl::delete_config_storage(new_info);
 }

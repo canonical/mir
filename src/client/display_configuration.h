@@ -22,16 +22,36 @@
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"
 #include <functional>
+#include <vector>
+#include <memory>
 
 namespace mir
 {
 namespace client
 {
+class DisplayOutput : public MirDisplayOutput
+{
+public:
+    DisplayOutput(size_t num_modes_, size_t num_formats)
+    {
+        num_modes = num_modes_;
+        modes = (MirDisplayMode*) ::operator new(sizeof(MirDisplayMode) * num_modes);
+       
+        num_output_formats = num_formats; 
+        output_formats = (MirPixelFormat*) ::operator new(sizeof(MirPixelFormat) * num_formats);
+    }
 
-//convenient helpers
+    ~DisplayOutput()
+    {
+        ::operator delete(modes);
+        ::operator delete(output_formats);
+    }
+};
+
+//convenient helper
 void delete_config_storage(MirDisplayConfiguration* config);
 
-class DisplayConfiguration
+class DisplayConfiguration : public MirDisplayConfiguration
 {
 public:
     DisplayConfiguration();
@@ -45,7 +65,7 @@ public:
     MirDisplayConfiguration* copy_to_client() const;
 
 private:
-    MirDisplayConfiguration* config;
+    std::vector<std::shared_ptr<DisplayOutput>> outputs;
     std::function<void()> notify_change;
 };
 

@@ -129,8 +129,8 @@ MATCHER_P(ClientTypeMatchesProtobuf, config, "")
     {
         for (auto i=0u; i < arg.num_displays; i++) 
         {
-            auto& conf_display = config.display_output(i++);
-            auto& arg_display = arg.displays[i++];
+            auto& conf_display = config.display_output(i);
+            auto& arg_display = arg.displays[i];
             EXPECT_EQ(conf_display.connected(), arg_display.connected);
             EXPECT_EQ(conf_display.used(), arg_display.used);
             EXPECT_EQ(conf_display.output_id(), arg_display.output_id);
@@ -145,6 +145,11 @@ MATCHER_P(ClientTypeMatchesProtobuf, config, "")
             if (conf_display.mode_size() != arg_display.num_modes) return false;
             for (auto j = 0u; j <  arg_display.num_modes; j++)
             {
+                auto const& conf_mode = conf_display.mode(j);
+                auto const& arg_mode = arg_display.modes[j];
+                EXPECT_EQ(conf_mode.horizontal_resolution(), arg_mode.horizontal_resolution);
+                EXPECT_EQ(conf_mode.vertical_resolution(), arg_mode.vertical_resolution);
+                EXPECT_FLOAT_EQ(conf_mode.refresh_rate(), arg_mode.refresh_rate);
             }
 
             EXPECT_EQ(conf_display.current_format(), arg_display.current_output_format);
@@ -154,21 +159,6 @@ MATCHER_P(ClientTypeMatchesProtobuf, config, "")
             {
                 EXPECT_EQ(conf_display.pixel_format(j), arg_display.output_formats[j]);
             }
-#if 0
-            //modes
-            auto j = 0u;
-            for (auto const& mode : conf_display.modes)
-            {
-                auto const& arg_mode = arg_display.modes[j++];
-                EXPECT_EQ(mode.size.width.as_uint32_t(), arg_mode.horizontal_resolution);
-                EXPECT_EQ(mode.size.height.as_uint32_t(), arg_mode.vertical_resolution);
-                EXPECT_FLOAT_EQ(mode.vrefresh_hz, arg_mode.refresh_rate);
-            }
-    
-            for (j = 0u; j < conf_display.pixel_formats.size(); j++)
-            {
-            }
-#endif
         }
         return true;
     }
