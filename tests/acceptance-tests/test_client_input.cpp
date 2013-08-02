@@ -21,6 +21,8 @@
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/surface.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session.h"
 #include "mir/surfaces/surface_controller.h"
 #include "mir/surfaces/surface_stack_model.h"
 
@@ -121,9 +123,9 @@ struct MockInputHandler
 
 struct InputClient : ClientConfig
 {
-    InputClient(const mtf::CrossProcessSync& input_cb_setup_fence, std::string const& surface_name)
+    InputClient(const mtf::CrossProcessSync& input_cb_setup_fence, std::string const& client_name)
             : input_cb_setup_fence(input_cb_setup_fence),
-              surface_name(surface_name)
+              client_name(client_name)
     {
     }
 
@@ -163,7 +165,7 @@ struct InputClient : ClientConfig
     {
         MirSurfaceParameters const request_params =
          {
-             surface_name.c_str(),
+             client_name.c_str(),
              surface_width, surface_height,
              mir_pixel_format_abgr_8888,
              mir_buffer_usage_hardware
@@ -179,7 +181,7 @@ struct InputClient : ClientConfig
 
         mir_wait_for(mir_connect(
             mir_test_socket,
-            __PRETTY_FUNCTION__,
+            client_name.c_str(),
             connection_callback,
             this));
          ASSERT_TRUE(connection != NULL);
@@ -202,7 +204,7 @@ struct InputClient : ClientConfig
     mt::WaitCondition events_received;
 
     mtf::CrossProcessSync input_cb_setup_fence;
-    std::string const surface_name;
+    std::string const client_name;
 
     static int const surface_width = 100;
     static int const surface_height = 100;
@@ -828,4 +830,109 @@ TEST_F(TestClientInput, surfaces_obscure_motion_events_by_stacking)
         }
     } client_config_2{fence};
     launch_client_process(client_config_2);
+}
+
+namespace
+{
+
+ACTION_P(SignalFence, fence)
+{
+    fence->try_signal_ready_for();
+}
+
+}
+
+TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
+{
+    using namespace ::testing;
+    
+    static std::string const test_client_name = "1";
+    static std::string const test_client_2_name = "2";
+    mtf::CrossProcessSync fence, second_client_done_fence;
+
+    struct ServerConfiguration : public mtf::InputTestingServerConfiguration
+    {
+        mtf::CrossProcessSync input_cb_setup_fence;
+        mtf::CrossProcessSync second_client_done_fence;
+
+        ServerConfiguration(const mtf::CrossProcessSync& input_cb_setup_fence,
+                            const mtf::CrossProcessSync& second_client_done_fence) 
+                : input_cb_setup_fence(input_cb_setup_fence),
+                  second_client_done_fence(second_client_done_fence)
+        {
+        }
+        
+        void hide_session_by_name(std::string const& session_name)
+        {
+            the_shell_session_container()->for_each([&](std::shared_ptr<msh::Session> const& session) -> void
+            {
+                if (session->name() == session_name)
+                    session->hide();
+            });
+        }
+
+        void inject_input()
+        {
+            wait_until_client_appears(test_client_name);
+            wait_until_client_appears(test_client_2_name);
+            input_cb_setup_fence.wait_for_signal_ready_for();
+
+            // We send one event and then hide the surface on top before sending the next. 
+            // So we expect each of the two surfaces to receive one event pair.
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
+
+            // We use a fence to ensure we do not hide the client
+            // before event dispatch occurs
+            second_client_done_fence.wait_for_signal_ready_for();
+            hide_session_by_name(test_client_2_name);
+
+            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
+        }
+    } server_config{fence, second_client_done_fence};
+    launch_server_process(server_config);
+    
+    struct ButtonClientOne : InputClient
+    {
+        ButtonClientOne(const mtf::CrossProcessSync& fence)
+                : InputClient(fence, test_client_name)
+        {
+        }
+        
+        void expect_input(mt::WaitCondition& events_received) override
+        {
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(2, 2))).Times(1)
+                .WillOnce(mt::WakeUp(&events_received));
+        }
+    } client_1{fence};
+    struct ButtonClientTwo : InputClient
+    {
+        mtf::CrossProcessSync done_fence;
+
+        ButtonClientTwo(mtf::CrossProcessSync const& fence, mtf::CrossProcessSync const& done_fence) 
+            : InputClient(fence, test_client_2_name),
+              done_fence(done_fence)
+        {
+        }
+        void exec()
+        {
+            // Ensure we stack on top of the first client
+            input_cb_setup_fence.wait_for_signal_ready_for();
+            InputClient::exec();
+        }
+
+        void expect_input(mt::WaitCondition& events_received) override
+        {
+            EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(HoverExitEvent())).Times(AnyNumber());
+            EXPECT_CALL(*handler, handle_input(MotionEventWithPosition(1, 1))).Times(1)
+                .WillOnce(DoAll(SignalFence(&done_fence), mt::WakeUp(&events_received)));
+        }
+    } client_2{fence, second_client_done_fence};
+
+    // Client 2 is launched second so will be the first to receive input
+
+    launch_client_process(client_1);
+    launch_client_process(client_2);
 }
