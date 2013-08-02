@@ -159,6 +159,9 @@ void ms::SurfaceData::move_to(geom::Point new_pt)
 
 bool ms::SurfaceData::contains(geom::Point const& point) const
 {
+    if (hidden)
+        return false;
+
     for (auto const& rectangle : input_rectangles)
     {
         if (rectangle.contains(point))
