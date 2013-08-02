@@ -355,11 +355,11 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
                         surface->handle_event(e);
                     });
             }
+            else
+            {
+                rpc_report->event_parsing_failed(event);
+            }
         } 
-        else
-        {
-            rpc_report->event_parsing_failed(event);
-        }
     }
 }
 

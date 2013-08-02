@@ -170,7 +170,8 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
     bool connected{connector.connection == DRM_MODE_CONNECTED};
     size_t current_mode_index{std::numeric_limits<size_t>::max()};
     std::vector<DisplayConfigurationMode> modes;
-    std::vector<geom::PixelFormat> formats {geom::PixelFormat::abgr_8888};
+    std::vector<geom::PixelFormat> formats {geom::PixelFormat::abgr_8888,
+                                            geom::PixelFormat::xbgr_8888};
 
     drmModeModeInfo current_mode_info = drmModeModeInfo();
 
