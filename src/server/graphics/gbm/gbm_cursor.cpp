@@ -109,7 +109,19 @@ void mgg::GBMCursor::move_to(geometry::Point position)
 
 void mgg::GBMCursor::show_at_last_known_position()
 {
-    move_to(current_position);
+    for_each_used_output([this](KMSOutput& output, geom::Rectangle const& output_rect)
+    {
+        if (output_rect.contains(current_position))
+        {
+            auto dp = current_position - output_rect.top_left;
+            output.move_cursor({dp.dx.as_int(), dp.dy.as_int()});
+            output.set_cursor(buffer);
+        }
+        else
+        {
+            output.clear_cursor();
+        }
+    });
 }
 
 void mgg::GBMCursor::hide()
