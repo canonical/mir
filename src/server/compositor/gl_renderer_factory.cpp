@@ -26,6 +26,14 @@ namespace geom = mir::geometry;
 std::unique_ptr<mc::Renderer>
 mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
 {
+    /*
+     * We need to serialize renderer creation because some GL calls used
+     * during renderer construction that create unique resource ids
+     * (e.g. glCreateProgram) are not thread-safe when the threads are
+     * have the same or shared EGL contexts.
+     */
+    std::lock_guard<std::mutex> lg{renderer_mutex};
+
     auto raw = new GLRenderer(rect);
     return std::unique_ptr<mc::Renderer>(raw);
 }
