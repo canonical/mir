@@ -256,7 +256,7 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     if (config->num_displays < 1)
         return;
 
-    MirDisplayOutput* state;
+    MirDisplayOutput* state = NULL;
     // We can't handle more than one display, so just populate based on the first
     // active display we find.
     for (unsigned int i = 0; i < config->num_displays; ++i) 
@@ -268,7 +268,13 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
             break;
         }
     }
-	
+    // Oh, oh! No connected outputs?!
+    if (state == NULL)
+    {
+        memset(display_info, 0, sizeof(*display_info));
+        return;
+    }
+
     MirDisplayMode mode = state->modes[state->current_mode];
    
     display_info->width = mode.horizontal_resolution;
