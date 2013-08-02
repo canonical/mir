@@ -19,15 +19,14 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir/run_mir.h"
-#include "mir/report_exception.h" // TODO - for debugging output
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 //namespace mf = mir::frontend;
-//namespace mc = mir::compositor;
-//namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
+
+using namespace testing;
 
 namespace
 {
@@ -44,11 +43,12 @@ struct FakeCommandLine
     FakeCommandLine(std::string const& host_socket)
     {
         char const** to = argv;
-        for(auto from : { "--file",        "NestedServer",
-                          "--nested-mode", host_socket.c_str()})
+        for(auto from : { "--file", "NestedServer", "--nested-mode", host_socket.c_str()})
         {
             *to++ = from;
         }
+
+        EXPECT_THAT(to - argv, Eq(argc)); // Check the array size matches parameter list
     }
 };
 
@@ -79,7 +79,7 @@ struct ClientConfig : mtf::TestingClientConfiguration
         catch (std::exception const& x)
         {
             // TODO - this is only temporary until NestedPlatform is implemented.
-            EXPECT_THAT(x.what(), testing::HasSubstr("Mir NestedPlatform is not fully implemented yet!"));
+            EXPECT_THAT(x.what(), HasSubstr("Mir NestedPlatform is not fully implemented yet!"));
         }
     }
 };
