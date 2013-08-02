@@ -261,7 +261,8 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     // active display we find.
     for (unsigned int i = 0; i < config->num_displays; ++i) 
     {
-        if (config->displays[i].current_mode != (uint32_t)-1)
+        if (config->displays[i].used && config->displays[i].connected &&
+            config->displays[i].current_mode < config->displays[i].num_modes)
         {
             state = &config->displays[i];
             break;
