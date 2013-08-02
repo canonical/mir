@@ -24,6 +24,10 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class EventSequence;
+}
 namespace frontend
 {
 namespace detail
@@ -38,6 +42,8 @@ public:
     void send_display_config(graphics::DisplayConfiguration const& config);
 
 private:
+    void send_event_sequence(protobuf::EventSequence&);
+
     std::shared_ptr<MessageSender> const sender;
 };
  

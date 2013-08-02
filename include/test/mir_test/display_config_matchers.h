@@ -64,7 +64,7 @@ MATCHER_P(ClientTypeConfigMatches, config, "")
                 EXPECT_FLOAT_EQ(mode.vrefresh_hz, arg_mode.refresh_rate);
             }
     
-            EXPECT_EQ(0u, arg_display.current_output_format);
+            EXPECT_EQ(info.current_format_index, arg_display.current_output_format);
             EXPECT_EQ(info.pixel_formats.size(), arg_display.num_output_formats); 
             if (info.pixel_formats.size() != arg_display.num_output_formats) return false;
             for (j = 0u; j < info.pixel_formats.size(); j++)
@@ -107,7 +107,7 @@ MATCHER_P(ProtobufConfigMatches, config, "")
                 EXPECT_FLOAT_EQ(mode.vrefresh_hz, arg_mode.refresh_rate());
             }
 
-            EXPECT_EQ(0u, arg_display.current_format());
+            EXPECT_EQ(info.current_format_index, arg_display.current_format());
             EXPECT_EQ(info.pixel_formats.size(), arg_display.pixel_format_size()); 
             if (info.pixel_formats.size() != static_cast<unsigned int>(arg_display.pixel_format_size())) return false;
             for (j=0u; j<info.pixel_formats.size(); j++)

@@ -24,6 +24,7 @@
 
 #include <vector>
 #include "mir_protobuf.pb.h"
+#include "mir_protobuf_wire.pb.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -49,9 +50,11 @@ TEST(TestEventSender, display_send)
     MockMsgSender mock_msg_sender;
 
     auto msg_validator = [&config](std::string const& msg){
+        mir::protobuf::wire::Result wire;
+        wire.ParseFromString(msg);
+        std::string str = wire.events(0);
         mir::protobuf::EventSequence seq;
-        seq.ParseFromString(msg);
-        ASSERT_TRUE(seq.has_display_configuration());
+        seq.ParseFromString(str);
         EXPECT_THAT(seq.display_configuration(), mt::ProtobufConfigMatches(config.outputs));
     };
 
