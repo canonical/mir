@@ -1,3 +1,28 @@
+mir (0.0.8+13.10.20130803-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * fingerpaint: Paint on single clicks, and not just drags. This helps
+    in testing input/buffer lag issues ;).
+
+  [ Robert Carr ]
+  * Replace SingleVisibilityFocusMechanism with a simpler and more
+    flexible mechanism based around raising the surface.
+  * Do not target hidden surfaces for pointer events.
+
+  [ Alan Griffiths ]
+  * graphics: Break the dependency of graphics platforms on MainLoop.
+
+  [ Christopher James Halse Rogers ]
+  * Fix mir_connection_get_display_info There's no guarantee that
+    config->displays[0] will be valid, and indeed it's always invalid in
+    all my tests. This causes a segfault when trying to dereference the
+    current mode of an inactive display.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 920
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 03 Aug 2013 00:02:40 +0000
+
 mir (0.0.8+13.10.20130802-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
