@@ -125,7 +125,7 @@ MATCHER_P(ClientTypeMatchesProtobuf, config, "")
 {
     //ASSERT_ doesn't work in MATCHER_P apparently.
     EXPECT_EQ(config.display_output_size(), arg.num_displays);
-    if (config.display_output_size() == arg.num_displays)
+    if (config.display_output_size() == static_cast<int>(arg.num_displays))
     {
         for (auto i=0u; i < arg.num_displays; i++) 
         {
@@ -154,7 +154,7 @@ MATCHER_P(ClientTypeMatchesProtobuf, config, "")
 
             EXPECT_EQ(conf_display.current_format(), arg_display.current_output_format);
             EXPECT_EQ(conf_display.pixel_format_size(), arg_display.num_output_formats); 
-            if (conf_display.pixel_format_size() != arg_display.num_output_formats) return false;
+            if (conf_display.pixel_format_size() != static_cast<int>(arg_display.num_output_formats)) return false;
             for (auto j = 0u; j <  arg_display.num_output_formats; j++)
             {
                 EXPECT_EQ(conf_display.pixel_format(j), arg_display.output_formats[j]);

@@ -41,6 +41,21 @@ void mcl::delete_config_storage(MirDisplayConfiguration* config)
     ::operator delete(config);
 }
 
+mcl::DisplayOutput::DisplayOutput(size_t num_modes_, size_t num_formats)
+{
+    num_modes = num_modes_;
+    modes = (MirDisplayMode*) ::operator new(sizeof(MirDisplayMode) * num_modes);
+   
+    num_output_formats = num_formats; 
+    output_formats = (MirPixelFormat*) ::operator new(sizeof(MirPixelFormat) * num_formats);
+}
+
+mcl::DisplayOutput::~DisplayOutput()
+{
+    ::operator delete(modes);
+    ::operator delete(output_formats);
+}
+
 namespace
 {
 void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)

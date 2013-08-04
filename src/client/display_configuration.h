@@ -34,20 +34,8 @@ namespace client
 class DisplayOutput : public MirDisplayOutput
 {
 public:
-    DisplayOutput(size_t num_modes_, size_t num_formats)
-    {
-        num_modes = num_modes_;
-        modes = (MirDisplayMode*) ::operator new(sizeof(MirDisplayMode) * num_modes);
-       
-        num_output_formats = num_formats; 
-        output_formats = (MirPixelFormat*) ::operator new(sizeof(MirPixelFormat) * num_formats);
-    }
-
-    ~DisplayOutput()
-    {
-        ::operator delete(modes);
-        ::operator delete(output_formats);
-    }
+    DisplayOutput(size_t num_modes_, size_t num_formats);
+    ~DisplayOutput();
 };
 
 //convenient helper

@@ -326,9 +326,6 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
     surface_map->insert(id, surface);
 }
 
-void MirConnection::display_config_updated()
-{
-}
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)
 {
     display_configuration->set_display_change_handler(std::bind(callback, this, context));

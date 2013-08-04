@@ -152,7 +152,6 @@ private:
 
     struct SurfaceRelease;
 
-    void display_config_updated();
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
