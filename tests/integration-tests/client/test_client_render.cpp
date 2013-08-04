@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/process.h"
 
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "src/server/graphics/android/android_graphic_buffer_allocator.h"
 
@@ -453,7 +453,7 @@ struct TestClientIPCRender : public testing::Test
 
         auto initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
-        mc::BufferProperties properties(size, pf, mc::BufferUsage::hardware);
+        mg::BufferProperties properties(size, pf, mg::BufferUsage::hardware);
         android_buffer = allocator->alloc_buffer(properties);
         second_android_buffer = allocator->alloc_buffer(properties);
 

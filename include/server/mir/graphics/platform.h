@@ -28,11 +28,6 @@ namespace frontend
 {
 class Surface;
 }
-namespace compositor
-{
-class GraphicBufferAllocator;
-class BufferIPCPacker;
-}
 namespace options
 {
 class Option;
@@ -42,7 +37,7 @@ class Option;
 /// the graphics environment.
 namespace graphics
 {
-
+class BufferIPCPacker;
 class Buffer;
 class Display;
 struct PlatformIPCPackage;
@@ -50,6 +45,7 @@ class BufferInitializer;
 class InternalClient;
 class DisplayReport;
 class DisplayConfigurationPolicy;
+class GraphicBufferAllocator;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -76,7 +72,7 @@ public:
      * \param [in] buffer_initializer the object responsible for initializing the buffers
      */
 
-    virtual std::shared_ptr<compositor::GraphicBufferAllocator> create_buffer_allocator(
+    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
 
     /**
@@ -101,7 +97,7 @@ public:
      * \param [in] packer the object providing the packing functionality
      * \param [in] buffer the buffer to fill the IPC package for
      */
-    virtual void fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+    virtual void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
                                   std::shared_ptr<graphics::Buffer> const& buffer) const = 0;
 
     /**

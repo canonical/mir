@@ -33,6 +33,7 @@
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 
 #include <gmock/gmock.h>
@@ -77,6 +78,7 @@ struct SessionManagerSetup : public testing::Test
     }
 
     mtd::StubSurfaceBuilder surface_builder;
+    mtd::StubSurfaceController surface_controller;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     MockFocusSequence focus_sequence;
@@ -177,7 +179,6 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     {
     }
 
-    mtd::StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<MockFocusSequence> focus_sequence;

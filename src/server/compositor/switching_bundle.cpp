@@ -28,7 +28,7 @@ namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
 mc::SwitchingBundle::SwitchingBundle(
-    std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, BufferProperties const& property_request)
+    std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, mg::BufferProperties const& property_request)
     : swapper_factory(swapper_factory),
       swapper(swapper_factory->create_swapper_new_buffers(
                   bundle_properties, property_request, mc::SwapperType::synchronous))
@@ -100,7 +100,7 @@ void mc::SwitchingBundle::allow_framedropping(bool allow_dropping)
     cv.notify_all();
 }
 
-mc::BufferProperties mc::SwitchingBundle::properties() const
+mg::BufferProperties mc::SwitchingBundle::properties() const
 {
     return bundle_properties;
 }

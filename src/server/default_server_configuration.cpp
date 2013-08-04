@@ -38,7 +38,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/unauthorized_display_changer.h"
 #include "mir/shell/registration_order_focus_sequence.h"
-#include "mir/shell/single_visibility_focus_mechanism.h"
+#include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/organising_surface_factory.h"
@@ -112,7 +112,7 @@ public:
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
         std::shared_ptr<msh::DisplayChanger> const& display_changer,
-        std::shared_ptr<mc::GraphicBufferAllocator> const& buffer_allocator) :
+        std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
         mp_report(mr_report),
@@ -130,7 +130,7 @@ private:
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<msh::DisplayChanger> const display_changer;
-    std::shared_ptr<mc::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         std::shared_ptr<mf::EventSink> const& sink, bool authorized_to_resize_display)
@@ -389,8 +389,7 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
     return shell_focus_setter(
         [this]
         {
-            return std::make_shared<msh::SingleVisibilityFocusMechanism>(
-                the_shell_session_container(), the_input_targeter());
+            return std::make_shared<msh::DefaultFocusMechanism>(the_input_targeter(), the_surface_controller());
         });
 }
 
@@ -565,7 +564,7 @@ mir::DefaultServerConfiguration::the_input_manager()
         });
 }
 
-std::shared_ptr<mc::GraphicBufferAllocator>
+std::shared_ptr<mg::GraphicBufferAllocator>
 mir::DefaultServerConfiguration::the_buffer_allocator()
 {
     return buffer_allocator(
@@ -650,6 +649,12 @@ mir::DefaultServerConfiguration::the_shell_surface_factory()
 std::shared_ptr<msh::SurfaceBuilder>
 mir::DefaultServerConfiguration::the_surface_builder()
 {
+    return the_surface_controller();
+}
+
+std::shared_ptr<ms::SurfaceController>
+mir::DefaultServerConfiguration::the_surface_controller()
+{
     return surface_controller(
         [this]()
         {
@@ -709,7 +714,7 @@ mir::DefaultServerConfiguration::the_compositor()
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mc::GraphicBufferAllocator> const& allocator)
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
 {
     return ipc_factory(
         [&]()

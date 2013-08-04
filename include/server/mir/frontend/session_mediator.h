@@ -37,10 +37,6 @@ namespace graphics
 class Buffer;
 class Platform;
 class Display;
-}
-
-namespace compositor
-{
 class GraphicBufferAllocator;
 }
 
@@ -64,7 +60,7 @@ public:
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<shell::DisplayChanger> const& display_changer,
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
@@ -119,7 +115,7 @@ private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
     // TODO this is a dubious dependency - to get supported_pixel_formats
-    std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
 
     std::shared_ptr<shell::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
