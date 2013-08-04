@@ -144,8 +144,6 @@ private:
     std::vector<MirWaitHandle*> release_wait_handles;
 
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
-    mir_display_config_callback display_change_cb;
-    void *display_change_context;
 
     std::shared_ptr<mir::client::SurfaceMap> surface_map;
     static std::mutex connection_guard;

@@ -26,7 +26,7 @@ namespace mir
 {
 namespace graphics
 {
-class DisplayConfigurationOutput;
+struct DisplayConfigurationOutput;
 }
 namespace frontend
 {

@@ -125,7 +125,7 @@ MATCHER_P(ClientTypeMatchesProtobuf, config, "")
 {
     //ASSERT_ doesn't work in MATCHER_P apparently.
     EXPECT_EQ(config.display_output_size(), arg.num_displays);
-    if (config.display_output_size() == static_cast<unsigned int>(arg.num_displays))
+    if (config.display_output_size() == arg.num_displays)
     {
         for (auto i=0u; i < arg.num_displays; i++) 
         {
@@ -142,7 +142,7 @@ MATCHER_P(ClientTypeMatchesProtobuf, config, "")
 
             EXPECT_EQ(conf_display.current_mode(), arg_display.current_mode);
             EXPECT_EQ(conf_display.mode_size(), arg_display.num_modes);
-            if (conf_display.mode_size() != arg_display.num_modes) return false;
+            if (conf_display.mode_size() != static_cast<int>(arg_display.num_modes)) return false;
             for (auto j = 0u; j <  arg_display.num_modes; j++)
             {
                 auto const& conf_mode = conf_display.mode(j);
