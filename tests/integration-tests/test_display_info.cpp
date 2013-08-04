@@ -226,7 +226,7 @@ public:
 
     std::shared_ptr<mf::EventSink> last_clients_event_sink()
     {
-        return last_event_sink;
+        return std::move(last_event_sink);
     }
 
 private:
