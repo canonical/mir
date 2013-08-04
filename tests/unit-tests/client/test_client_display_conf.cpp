@@ -47,7 +47,7 @@ void fill(mp::DisplayOutput* out)
 }
 }
 
-TEST(TestDisplayConfiguration, config)
+TEST(TestDisplayConfiguration, configuration_storage)
 {
     mp::Connection connect_result;
     fill(connect_result.add_display_output());

@@ -19,17 +19,30 @@
 #ifndef MIR_TEST_DISPLAY_CONFIG_MATCHERS_H_
 #define MIR_TEST_DISPLAY_CONFIG_MATCHERS_H_
 
+#include "mir_protobuf.pb.h"
+#include "mir_toolkit/client_types.h"
 #include "mir/geometry/pixel_format.h"
 #include <gmock/gmock.h>
+
+//avoid a valgrind complaint by defining printer for this type
+static void PrintTo(MirDisplayConfiguration const&, ::std::ostream*) __attribute__ ((unused));
+void PrintTo(MirDisplayConfiguration const&, ::std::ostream*)
+{
+}
 
 namespace mir
 {
 namespace protobuf
 {
 
-//avoid a valgrind complaint by defining printer for this type
 class Connection;
-//static void PrintTo(mir::protobuf::Connection const&, ::std::ostream*);
+static void PrintTo(mir::protobuf::DisplayConfiguration const&, ::std::ostream*) __attribute__ ((unused));
+void PrintTo(mir::protobuf::DisplayConfiguration const&, ::std::ostream*) {}
+
+static void PrintTo(mir::protobuf::Connection const&, ::std::ostream*) __attribute__ ((unused));
+void PrintTo(mir::protobuf::Connection const&, ::std::ostream*)
+{
+}
 
 }
 namespace test
