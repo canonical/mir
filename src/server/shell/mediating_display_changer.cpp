@@ -34,35 +34,62 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<msh::FocusController> const& focus)
     : display(display),
       compositor(compositor),
-      focus(focus)
+      focus(focus),
+      base_config(display->configuration()),
+      active_config(base_config)
 {
 }
 
 std::shared_ptr<mg::DisplayConfiguration> msh::MediatingDisplayChanger::active_configuration()
 {
-    return display->configuration();
+    return active_config;
+}
+
+void msh::MediatingDisplayChanger::apply_config(
+    std::shared_ptr<mg::DisplayConfiguration> const& requested_configuration)
+{
+    compositor->stop();
+    display->configure(*requested_configuration);
+    active_config = requested_configuration;
+    compositor->start();
 }
 
 void msh::MediatingDisplayChanger::configure(
-    std::weak_ptr<mf::Session> const& requesting_application,
+    std::weak_ptr<mf::Session> const& app,
     std::shared_ptr<mg::DisplayConfiguration> const& requested_configuration)
 {
-    if ( requesting_application.lock() != focus->focussed_application().lock())
+    auto requesting_application = app.lock();
+    config_map[requesting_application.get()] = requested_configuration;
+
+    if ( requesting_application == focus->focussed_application().lock())
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("display change request denied, application does not have focus"));
+        apply_config(requested_configuration);
+    }
+}
+
+void msh::MediatingDisplayChanger::set_focus_to(std::weak_ptr<mf::Session> const& app)
+{
+    auto it = config_map.find(app.lock().get());
+    if (it == config_map.end())
+    {
+        apply_config(base_config);
     }
     else
     {
-        compositor->stop();
-        display->configure(*requested_configuration);
-        compositor->start();
+        apply_config(it->second);
     }
 }
 
-void msh::MediatingDisplayChanger::set_focus_to(std::weak_ptr<mf::Session> const&)
+void msh::MediatingDisplayChanger::remove_configuration_for(std::weak_ptr<mf::Session> const& app)
 {
-}
+    auto it = config_map.find(app.lock().get());
+    if (it != config_map.end())
+    {
+        config_map.erase(it);
+        if (it->second == active_config)
+        {
+            apply_config(base_config);
+        }
+    }
 
-void msh::MediatingDisplayChanger::remove_configuration_for(std::weak_ptr<mf::Session> const&)
-{
 }
