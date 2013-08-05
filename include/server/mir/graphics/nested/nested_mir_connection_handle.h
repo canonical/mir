@@ -34,8 +34,8 @@ public:
     MirConnectionHandle(MirConnection* const mir_connection);
     ~MirConnectionHandle();
 
-    MirConnectionHandle(const MirConnectionHandle&) = delete;
-    MirConnectionHandle& operator=(const MirConnectionHandle connection_handle) = delete;
+    MirConnectionHandle(MirConnectionHandle const&) = delete;
+    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
 
     operator MirConnection*() {return (MirConnection*)connection;}
 
