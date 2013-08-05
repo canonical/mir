@@ -58,3 +58,11 @@ void msh::MediatingDisplayChanger::configure(
         compositor->start();
     }
 }
+
+void msh::MediatingDisplayChanger::set_focus_to(std::weak_ptr<mf::Session> const&)
+{
+}
+
+void msh::MediatingDisplayChanger::remove_configuration_for(std::weak_ptr<mf::Session> const&)
+{
+}

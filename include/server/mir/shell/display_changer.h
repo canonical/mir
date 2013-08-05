@@ -41,6 +41,8 @@ public:
 
     virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration() = 0;
     virtual void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
+    virtual void set_focus_to(std::weak_ptr<frontend::Session> const&) = 0;
+    virtual void remove_configuration_for(std::weak_ptr<frontend::Session> const&) = 0;
 
 protected:
     DisplayChanger() = default;

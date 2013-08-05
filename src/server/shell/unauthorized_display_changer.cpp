@@ -38,3 +38,11 @@ void msh::UnauthorizedDisplayChanger::configure(
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }
+
+void msh::UnauthorizedDisplayChanger::set_focus_to(std::weak_ptr<mf::Session> const&)
+{
+}
+
+void msh::UnauthorizedDisplayChanger::remove_configuration_for(std::weak_ptr<mf::Session> const&)
+{
+}
