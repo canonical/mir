@@ -75,6 +75,7 @@ struct DefaultFocusMechanism : public testing::Test
     }
     testing::NiceMock<mtd::MockDisplayChanger> mock_display_changer;
     testing::NiceMock<MockShellSession> app1;
+    mtd::StubInputTargeter targeter;
     std::shared_ptr<mtd::StubSurfaceController> controller;
 };
 
@@ -92,7 +93,6 @@ TEST_F(DefaultFocusMechanism, raises_default_surface)
     }
 
     EXPECT_CALL(mock_surface, raise(Eq(controller))).Times(1);
-    mtd::StubInputTargeter targeter;
     msh::DefaultFocusMechanism focus_mechanism(
         mt::fake_shared(targeter), controller, mt::fake_shared(mock_display_changer));
     
@@ -130,4 +130,17 @@ TEST_F(DefaultFocusMechanism, sets_input_focus)
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(std::shared_ptr<msh::Session>());
+}
+
+TEST_F(DefaultFocusMechanism, set_focus_notifies_display_changer)
+{
+    using namespace ::testing;
+    
+    EXPECT_CALL(mock_display_changer, set_focus_to(_))
+        .Times(1);
+        
+    msh::DefaultFocusMechanism focus_mechanism(
+        mt::fake_shared(targeter), controller, mt::fake_shared(mock_display_changer));
+    
+    focus_mechanism.set_focus_to(mt::fake_shared(app1));
 }
