@@ -22,6 +22,7 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
+#include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
@@ -326,4 +327,88 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
     } client_config;
 
     launch_client_process(client_config);
+}
+
+namespace
+{
+class ConfigureNotifyingDisplay : public mtd::NullDisplay
+{
+public:
+    ConfigureNotifyingDisplay(mtf::CrossProcessSync const& configure_fence)
+        : configure_fence(configure_fence)
+    {
+    }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+
+    void configure(mg::DisplayConfiguration const&) override
+    {
+        configure_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
+    }
+private:
+    int configure_request_counter;
+    mtd::NullDisplayBuffer display_buffer;
+    mtf::CrossProcessSync configure_fence;
+};
+}
+
+TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_authorized_client)
+{
+    mtf::CrossProcessSync server_configure_fence;
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        ServerConfig(mtf::CrossProcessSync const& fence)
+            : configure_fence(fence)
+        {
+        }
+        //note, at the moment, the default authorizer always returns true. if this changes,
+        //then we should put a stub in the_session_authorizer();
+        std::shared_ptr<mg::Platform> the_graphics_platform()
+        {
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+            return platform;
+        }
+
+        std::shared_ptr<mg::Display> the_display()
+        {
+            if (!display)
+                display = std::make_shared<ConfigureNotifyingDisplay>(configure_fence);
+            return display; 
+        }
+
+        std::shared_ptr<ConfigureNotifyingDisplay> display;
+        std::shared_ptr<StubAuthorizer> authorizer;
+        std::shared_ptr<StubPlatform> platform;
+        mtf::CrossProcessSync configure_fence;
+
+    } server_config(server_configure_fence);
+
+    launch_server_process(server_config);
+    
+    struct Client : TestingClientConfiguration
+    {
+        void exec()
+        {
+            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            auto configuration = mir_connection_create_display_config(connection);
+
+            mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+            EXPECT_STREQ(mir_connection_get_error_message(connection),  "");
+ 
+            mir_display_config_destroy(configuration);
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+
+    run_in_test_process([&]
+    {
+        server_configure_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
+    });
 }
