@@ -91,5 +91,4 @@ void msh::MediatingDisplayChanger::remove_configuration_for(std::weak_ptr<mf::Se
             apply_config(base_config);
         }
     }
-
 }
