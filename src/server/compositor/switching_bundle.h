@@ -63,6 +63,11 @@ private:
 
     int drop_frames(int max);
     int nfree() const;
+    int first_free() const;
+    int next(int slot) const;
+    int prev(int slot) const;
+    int last_compositor() const;
+
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
 
     struct SharedBuffer

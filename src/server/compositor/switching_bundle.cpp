@@ -100,6 +100,26 @@ int mc::SwitchingBundle::nfree() const
     return nbuffers - ncompositors - nready - nclients;
 }
 
+int mc::SwitchingBundle::first_free() const
+{
+    return (first_client + nclients) % nbuffers;
+}
+
+int mc::SwitchingBundle::next(int slot) const
+{
+    return (slot + 1) % nbuffers;
+}
+
+int mc::SwitchingBundle::prev(int slot) const
+{
+    return (slot + nbuffers - 1) % nbuffers;
+}
+
+int mc::SwitchingBundle::last_compositor() const
+{
+    return (first_compositor + ncompositors - 1) % nbuffers;
+}
+
 int mc::SwitchingBundle::drop_frames(int max)
 {
     // Drop up to max of the oldest ready frames, and put them on the free list
@@ -109,13 +129,13 @@ int mc::SwitchingBundle::drop_frames(int max)
     {
         auto tmp = ring[first_ready];
         nready--;
-        first_client = (first_ready + nready) % nbuffers;
-        int end = (first_client + nclients) % nbuffers;
+        first_client = prev(first_client);
+        int end = first_free();
         int new_snapshot = snapshot;
 
         for (int i = first_ready, j = 0; i != end; i = j)
         {
-            j = (i + 1) % nbuffers;
+            j = next(i);
             ring[i] = ring[j];
             if (j == snapshot)
                 new_snapshot = i;
@@ -142,10 +162,10 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
      */
     if (!ring[slot].buf)
     {
-        int i = (first_client + nclients) % nbuffers;  // first free slot
+        int i = first_free();
 
         while (i != first_compositor && !ring[i].buf)
-            i = (i + 1) % nbuffers;
+            i = next(i);
 
         if (i != slot && ring[i].buf && ring[i].buf.unique())
         {
@@ -185,7 +205,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     if (force_drop > 0)
         force_drop--;
 
-    int client = (first_client + nclients) % nbuffers;
+    int client = first_free();
     nclients++;
 
     auto ret = alloc_buffer(client);
@@ -198,7 +218,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
          */
         if (nfree() > 0)
         {
-            snapshot = (client + 1) % nbuffers;
+            snapshot = next(client);
             auto tmp = ring[snapshot];
             ring[snapshot] = ring[client];
             ring[client] = tmp;
@@ -224,7 +244,7 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
             "Client release out of order"));
     }
 
-    first_client = (first_client + 1) % nbuffers;
+    first_client = next(first_client);
     nclients--;
     nready++;
     cond.notify_all();
@@ -247,11 +267,11 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     {
         if (ncompositors)
         {
-            compositor = (first_compositor + ncompositors - 1) % nbuffers;
+            compositor = last_compositor();
         }
         else if (avail)
         {
-            first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
+            first_compositor = prev(first_compositor);
             compositor = first_compositor;
             ncompositors++;
         }
@@ -264,7 +284,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     else
     {
         compositor = first_ready;
-        first_ready = (first_ready + 1) % nbuffers;
+        first_ready = next(first_ready);
         nready--;
         ncompositors++;
         last_consumed = t;
@@ -279,9 +299,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
     std::unique_lock<std::mutex> lock(guard);
     int compositor = -1;
 
-    for (int n = 0, i = first_compositor;
-         n < ncompositors;
-         n++, i = (i + 1) % nbuffers)
+    for (int n = 0, i = first_compositor; n < ncompositors; n++, i = next(i))
     {
         if (ring[i].buf == released_buffer)
         {
@@ -301,7 +319,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
     {
         while (!ring[first_compositor].users && ncompositors)
         {
-            first_compositor = (first_compositor + 1) % nbuffers;
+            first_compositor = next(first_compositor);
             ncompositors--;
         }
         cond.notify_all();
@@ -329,7 +347,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::snapshot_acquire()
             cond.wait(lock);
 
         if (!nsnapshotters)
-            snapshot = (first_client + nbuffers - 1) % nbuffers;
+            snapshot = prev(first_client);
     }
 
     nsnapshotters++;
