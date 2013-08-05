@@ -24,6 +24,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <memory>
+#include <chrono>
 
 namespace mir
 {
@@ -83,6 +84,10 @@ private:
 
     std::mutex guard;
     std::condition_variable cond;
+
+    typedef std::chrono::high_resolution_clock::time_point time_point;
+    time_point now() const { return std::chrono::high_resolution_clock::now(); }
+    time_point last_consumed;
 
     bool framedropping;
     int force_drop;

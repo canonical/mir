@@ -84,6 +84,8 @@ mc::SwitchingBundle::SwitchingBundle(
     ring = new SharedBuffer[nbuffers];
     for (int i = 0; i < nbuffers; i++)
         ring[i].users = 0;
+
+    last_consumed = now() - std::chrono::seconds(1);
 }
 
 mc::SwitchingBundle::~SwitchingBundle() noexcept
@@ -229,13 +231,21 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
-    if (!nready)
+    auto t = now();
+    auto millisec_since_last =
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            t - last_consumed).count();
+
+    int avail = nfree();
+    bool can_recycle = ncompositors || avail;
+
+    if (!nready || (millisec_since_last < 10 && can_recycle))
     {
         if (ncompositors)
         {
             compositor = (first_compositor + ncompositors - 1) % nbuffers;
         }
-        else if (nfree())
+        else if (avail)
         {
             first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
             compositor = first_compositor;
@@ -253,6 +263,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         first_ready = (first_ready + 1) % nbuffers;
         nready--;
         ncompositors++;
+        last_consumed = t;
     }
 
     ring[compositor].users++;

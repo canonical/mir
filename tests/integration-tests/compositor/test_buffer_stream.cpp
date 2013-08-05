@@ -64,6 +64,11 @@ struct BufferStreamTest : public ::testing::Test
     mc::BufferStreamSurfaces buffer_stream;
 };
 
+void sleep_one_frame()
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(16));
+}
+
 }
 
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
@@ -81,6 +86,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
     comp1.reset();
 
     buffer_stream.secure_client_buffer().reset();
+    sleep_one_frame();
     auto comp3 = buffer_stream.lock_compositor_buffer();
 
     EXPECT_NE(client1_id, comp3->id());
@@ -93,13 +99,31 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
     EXPECT_EQ(comp3_id, comp4->id());
 }
 
+TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
+{
+    for (int i = 0; i < nbuffers; i++)
+        buffer_stream.secure_client_buffer().reset();
+
+    auto first_monitor = buffer_stream.lock_compositor_buffer();
+    auto first_compositor_id = first_monitor->id();
+    first_monitor.reset();
+
+    for (int m = 0; m < 10; m++)
+    {
+        auto monitor = buffer_stream.lock_compositor_buffer();
+        ASSERT_EQ(first_compositor_id, monitor->id());
+    }
+}
+
 TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
     if (nbuffers > 1)
     {
         buffer_stream.secure_client_buffer().reset();
         auto comp1 = buffer_stream.lock_compositor_buffer();
-    
+
+        sleep_one_frame();
+
         buffer_stream.secure_client_buffer().reset();
         auto comp2 = buffer_stream.lock_compositor_buffer();
     
