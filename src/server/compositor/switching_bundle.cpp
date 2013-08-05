@@ -78,8 +78,10 @@ mc::SwitchingBundle::SwitchingBundle(
       framedropping{false}, force_drop{0}
 {
     if (nbuffers < 1)
+    {
         BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle requires a "
                                                "positive number of buffers"));
+    }
 
     ring = new SharedBuffer[nbuffers];
     for (int i = 0; i < nbuffers; i++)
@@ -217,8 +219,10 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
     std::unique_lock<std::mutex> lock(guard);
 
     if (nclients <= 0 || ring[first_client].buf != released_buffer)
+    {
         BOOST_THROW_EXCEPTION(std::logic_error(
             "Client release out of order"));
+    }
 
     first_client = (first_client + 1) % nbuffers;
     nclients--;
@@ -287,8 +291,10 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
     }
 
     if (compositor < 0)
+    {
         BOOST_THROW_EXCEPTION(std::logic_error(
             "compositor_release given a non-compositor buffer"));
+    }
 
     ring[compositor].users--;
     if (compositor == first_compositor)
@@ -335,8 +341,10 @@ void mc::SwitchingBundle::snapshot_release(std::shared_ptr<mg::Buffer> const& re
     std::unique_lock<std::mutex> lock(guard);
 
     if (nsnapshotters <= 0 || ring[snapshot].buf != released_buffer)
+    {
         BOOST_THROW_EXCEPTION(std::logic_error(
             "snapshot_release passed a non-snapshot buffer"));
+    }
 
     nsnapshotters--;
 
