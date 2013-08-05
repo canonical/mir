@@ -166,7 +166,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
 
     if ((framedropping || force_drop) && nbuffers > 1)
     {
-        if (nfree() <= 0)
+        if (nfree() <= 1)
         {
             while (nready == 0)
                 cond.wait(lock);
@@ -174,9 +174,14 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
             drop_frames(1);
         }
     }
+    else if (nbuffers == 1)
+    {
+        while (nfree() == 0)
+            cond.wait(lock);
+    }
     else
     {
-        while (!nfree())
+        while (nfree() <= 1)
             cond.wait(lock);
     }
 
@@ -236,16 +241,13 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         std::chrono::duration_cast<std::chrono::milliseconds>(
             t - last_consumed).count();
 
-    int avail = nfree();
-    bool can_recycle = ncompositors || avail;
-
-    if (!nready || (millisec_since_last < 10 && can_recycle))
+    if (!nready || millisec_since_last < 10)
     {
         if (ncompositors)
         {
             compositor = (first_compositor + ncompositors - 1) % nbuffers;
         }
-        else if (avail)
+        else if (nfree())
         {
             first_compositor = (first_compositor + nbuffers - 1) % nbuffers;
             compositor = first_compositor;
@@ -253,8 +255,8 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         }
         else
         {
-            BOOST_THROW_EXCEPTION(std::logic_error(
-                "compositor_acquire would block; probably too many clients."));
+            BOOST_THROW_EXCEPTION(std::runtime_error(
+                "All buffers in use. This should be impossible(!?)"));
         }
     }
     else

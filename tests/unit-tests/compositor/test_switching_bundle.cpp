@@ -181,7 +181,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
 
 TEST_F(SwitchingBundleTest, out_of_order_client_release)
 {
-    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    for (int nbuffers = 3; nbuffers < 10; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
     
@@ -299,19 +299,13 @@ TEST_F(SwitchingBundleTest, clients_steal_all_the_buffers)
             bundle.client_acquire();
 
         bundle.compositor_release(bundle.compositor_acquire());
-        bundle.client_acquire();
-
-        EXPECT_THROW(
-            bundle.compositor_acquire(),
-            std::logic_error
-        );
     }
 }
 
 TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
-    for (int nbuffers = 2; nbuffers < 5; nbuffers++)
+    for (int nbuffers = 3; nbuffers < 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
     
@@ -385,11 +379,11 @@ TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
             std::logic_error
         );
 
-        auto client = bundle.client_acquire();
         auto snapshot = bundle.snapshot_acquire();
-
         EXPECT_EQ(compositor->id(), snapshot->id());
+        bundle.compositor_release(compositor);
 
+        auto client = bundle.client_acquire();
         EXPECT_NE(client->id(), snapshot->id());
 
         EXPECT_THROW(
@@ -456,7 +450,7 @@ namespace
 
 TEST_F(SwitchingBundleTest, stress)
 {
-    for (int nbuffers = 2; nbuffers < 10; nbuffers++)
+    for (int nbuffers = 2; nbuffers < 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -474,15 +468,18 @@ TEST_F(SwitchingBundleTest, stress)
                                 std::ref(done));
 
         bundle.allow_framedropping(false);
-        std::thread client1(client_thread, std::ref(bundle), 1000);
+        std::thread client1(client_thread, std::ref(bundle), 100);
         client1.join();
 
         bundle.allow_framedropping(true);
-        std::thread client2(client_thread, std::ref(bundle), 1000);
+        std::thread client2(client_thread, std::ref(bundle), 100);
         client2.join();
 
-        std::thread client3(switching_client_thread, std::ref(bundle), 1000);
-        client3.join();
+        if (nbuffers > 2)
+        {
+            std::thread client3(switching_client_thread, std::ref(bundle),100);
+            client3.join();
+        }
 
         done = true;
 
