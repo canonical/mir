@@ -17,6 +17,9 @@
  */
 
 #include "mir/shell/mediating_display_changer.h"
+#include "mir/shell/focus_controller.h"
+#include "mir/shell/session.h"
+#include "mir/compositor/compositor.h"
 #include "mir/graphics/display.h"
 #include <boost/throw_exception.hpp>
 
@@ -41,7 +44,17 @@ std::shared_ptr<mg::DisplayConfiguration> msh::MediatingDisplayChanger::active_c
 }
 
 void msh::MediatingDisplayChanger::configure(
-    std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
+    std::weak_ptr<mf::Session> const& requesting_application,
+    std::shared_ptr<mg::DisplayConfiguration> const& requested_configuration)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("TODO: display changing not implemented!"));
+    if ( requesting_application.lock() != focus->focussed_application().lock())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("display change request denied, application does not have focus"));
+    }
+    else
+    {
+        compositor->stop();
+        display->configure(*requested_configuration);
+        compositor->start();
+    }
 }
