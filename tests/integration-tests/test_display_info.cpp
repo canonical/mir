@@ -214,13 +214,13 @@ public:
         std::shared_ptr<mg::Display> const& graphics_display,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator)
         : shell(shell),
-        sm_report(sm_report),
-        mp_report(mr_report),
-        cache(std::make_shared<mf::ResourceCache>()),
-        graphics_platform(graphics_platform),
-        graphics_display(graphics_display),
-        buffer_allocator(buffer_allocator),
-        last_event_sink(std::make_shared<mtd::NullEventSink>())
+          sm_report(sm_report),
+          mp_report(mr_report),
+          cache(std::make_shared<mf::ResourceCache>()),
+          graphics_platform(graphics_platform),
+          graphics_display(graphics_display),
+          buffer_allocator(buffer_allocator),
+          last_event_sink(std::make_shared<mtd::NullEventSink>())
     {
     }
 
@@ -292,12 +292,14 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification)
             std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) override
         {
             if (!ipc_factory)
+            {
                 ipc_factory = std::make_shared<EventSinkSkimmingIpcFactory>(
                                 shell,
                                 the_session_mediator_report(),
                                 the_message_processor_report(),
                                 the_graphics_platform(),
                                 display, allocator);
+            }
             return ipc_factory;
         }
 

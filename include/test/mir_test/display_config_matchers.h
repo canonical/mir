@@ -124,7 +124,7 @@ MATCHER_P(ProtobufConfigMatches, config, "")
             EXPECT_EQ(info.current_format_index, arg_display.current_format());
             EXPECT_EQ(info.pixel_formats.size(), arg_display.pixel_format_size()); 
             if (info.pixel_formats.size() != static_cast<unsigned int>(arg_display.pixel_format_size())) return false;
-            for (j=0u; j<info.pixel_formats.size(); j++)
+            for ( j = 0u; j < info.pixel_formats.size(); j++)
             {
                 EXPECT_EQ(info.pixel_formats[j], static_cast<mir::geometry::PixelFormat>(arg_display.pixel_format(j)));
             }
@@ -140,7 +140,7 @@ MATCHER_P(ClientTypeMatchesProtobuf, config, "")
     EXPECT_EQ(config.display_output_size(), arg.num_displays);
     if (config.display_output_size() == static_cast<int>(arg.num_displays))
     {
-        for (auto i=0u; i < arg.num_displays; i++) 
+        for (auto i = 0u; i < arg.num_displays; i++) 
         {
             auto& conf_display = config.display_output(i);
             auto& arg_display = arg.displays[i];

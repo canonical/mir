@@ -63,7 +63,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     output.card_id = msg.card_id();
     output.output_id = msg.output_id();
 
-    for(auto i=0u; i < output.num_modes; i++)
+    for (auto i = 0u; i < output.num_modes; i++)
     {
         auto mode = msg.mode(i);
         output.modes[i].horizontal_resolution = mode.horizontal_resolution(); 
@@ -72,7 +72,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     }
     output.current_mode = msg.current_mode();
 
-    for(auto i=0u; i < output.num_output_formats; i++)
+    for (auto i = 0u; i < output.num_output_formats; i++)
     {
         output.output_formats[i] = static_cast<MirPixelFormat>(msg.pixel_format(i));
     }
@@ -102,7 +102,7 @@ void mcl::DisplayConfiguration::update_configuration(mp::Connection const& conne
 {
     std::unique_lock<std::mutex> lk(guard);
     outputs.clear();
-    for(auto i=0; i < connection_msg.display_output_size(); i++)
+    for (auto i = 0; i < connection_msg.display_output_size(); i++)
     {
         auto const& msg_output = connection_msg.display_output(i);
         auto output = std::make_shared<mcl::DisplayOutput>(msg_output.mode_size(), msg_output.pixel_format_size());
@@ -116,7 +116,7 @@ void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration co
     {
         std::unique_lock<std::mutex> lk(guard);
         outputs.clear();
-        for(auto i=0; i < msg.display_output_size(); i++)
+        for (auto i = 0; i < msg.display_output_size(); i++)
         {
             auto const& msg_output = msg.display_output(i);
             auto output = std::make_shared<mcl::DisplayOutput>(msg_output.mode_size(), msg_output.pixel_format_size());
@@ -137,7 +137,7 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
     new_config->displays = new MirDisplayOutput[new_config->num_displays];
 
     auto i=0u;
-    for( auto const& out : outputs)
+    for (auto const& out : outputs)
     {
         auto new_info = &new_config->displays[i++];
         MirDisplayOutput* output = out.get();
