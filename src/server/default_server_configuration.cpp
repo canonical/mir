@@ -376,7 +376,8 @@ std::shared_ptr<msh::DisplayChanger>
 mir::DefaultServerConfiguration::the_shell_display_changer()
 {
     return shell_display_changer([this]()
-        { return std::make_shared<msh::MediatingDisplayChanger>(the_display()); });
+        { return std::make_shared<msh::MediatingDisplayChanger>(
+            the_display(), the_compositor(), the_focus_controller()); });
 }
 
 std::shared_ptr<msh::SessionContainer>

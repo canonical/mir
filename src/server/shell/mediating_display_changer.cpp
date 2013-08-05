@@ -23,9 +23,15 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
+namespace mc = mir::compositor;
 
-msh::MediatingDisplayChanger::MediatingDisplayChanger(std::shared_ptr<mg::Display> const& display)
-    : display(display)
+msh::MediatingDisplayChanger::MediatingDisplayChanger(
+    std::shared_ptr<mg::Display> const& display,
+    std::shared_ptr<mc::Compositor> const& compositor,
+    std::shared_ptr<msh::FocusController> const& focus)
+    : display(display),
+      compositor(compositor),
+      focus(focus)
 {
 }
 

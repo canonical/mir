@@ -28,19 +28,31 @@ namespace graphics
 {
 class Display;
 }
+
+namespace compositor
+{
+class Compositor;
+}
+
 namespace shell
 {
+class FocusController;
 
 class MediatingDisplayChanger : public shell::DisplayChanger 
 {
 public:
-    explicit MediatingDisplayChanger(std::shared_ptr<graphics::Display> const& changer);
+    explicit MediatingDisplayChanger(
+        std::shared_ptr<graphics::Display> const& display,
+        std::shared_ptr<compositor::Compositor> const& compositor,
+        std::shared_ptr<FocusController> const& focus);
 
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
     void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
 
 private:
     std::shared_ptr<graphics::Display> const display;
+    std::shared_ptr<compositor::Compositor> const compositor;
+    std::shared_ptr<FocusController> const focus;
 };
 
 }
