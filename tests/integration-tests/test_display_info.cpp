@@ -19,11 +19,14 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/buffer.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_display_config.h"
+#include "mir_test_doubles/null_display_changer.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test/display_config_matchers.h"
@@ -34,6 +37,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -44,7 +48,7 @@ namespace mt = mir::test;
 
 namespace
 {
-class StubDisplayConfig : public mg::DisplayConfiguration
+class StubDisplayConfig : public mtd::NullDisplayConfig
 {
 public:
     StubDisplayConfig()
@@ -80,20 +84,12 @@ public:
         }
     };
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
-    {
-    }
-
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         for (auto& disp : outputs)
         {
             f(disp);
         }
-    }
-
-    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
-    {
     }
 
     std::vector<mg::DisplayConfigurationOutput> outputs;
@@ -110,17 +106,21 @@ public:
     {
         f(display_buffer);
     }
-
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
-    {
-        return mt::fake_shared(stub_display_config);
-    }
-
-    static StubDisplayConfig stub_display_config;
 private:
     mtd::NullDisplayBuffer display_buffer;
 };
-StubDisplayConfig StubDisplay::stub_display_config;
+
+class StubChanger : public mtd::NullDisplayChanger
+{
+public:
+    std::shared_ptr<mg::DisplayConfiguration> active_configuration() override
+    {
+        return mt::fake_shared(stub_display_config);
+    }
+    static StubDisplayConfig stub_display_config;
+};
+StubDisplayConfig StubChanger::stub_display_config;
+
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
@@ -162,6 +162,19 @@ public:
     }
 };
 
+class StubAuthorizer : public mf::SessionAuthorizer
+{
+    bool connection_is_allowed(pid_t)
+    {
+        return true;
+    }
+
+    bool configure_display_is_allowed(pid_t)
+    {
+        return false;
+    }
+};
+
 }
 
 TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
@@ -170,14 +183,20 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
     {
         std::shared_ptr<mg::Platform> the_graphics_platform()
         {
-            using namespace testing;
-
             if (!platform)
                 platform = std::make_shared<StubPlatform>();
 
             return platform;
         }
 
+        std::shared_ptr<msh::DisplayChanger> the_shell_display_changer()
+        {
+            if (!changer)
+                changer = std::make_shared<StubChanger>();
+            return changer; 
+        }
+
+        std::shared_ptr<StubChanger> changer;
         std::shared_ptr<StubPlatform> platform;
     } server_config;
 
@@ -190,9 +209,62 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             auto configuration = mir_connection_create_display_config(connection);
 
-            EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(StubDisplay::stub_display_config.outputs,
+            EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(StubChanger::stub_display_config.outputs,
                                                                    StubGraphicBufferAllocator::pixel_formats));
 
+            mir_display_config_destroy(configuration);
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_client)
+{
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mg::Platform> the_graphics_platform()
+        {
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+            return platform;
+        }
+
+        std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer()
+        {
+            if (!authorizer)
+            {
+                authorizer = std::make_shared<StubAuthorizer>();
+            }
+            return authorizer;
+        }
+
+        std::shared_ptr<msh::DisplayChanger> the_shell_display_changer()
+        {
+            if (!changer)
+                changer = std::make_shared<StubChanger>();
+            return changer; 
+        }
+
+        std::shared_ptr<StubChanger> changer;
+        std::shared_ptr<StubAuthorizer> authorizer;
+        std::shared_ptr<StubPlatform> platform;
+    } server_config;
+
+    launch_server_process(server_config);
+    
+    struct Client : TestingClientConfiguration
+    {
+        void exec()
+        {
+            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            auto configuration = mir_connection_create_display_config(connection);
+
+            mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+            EXPECT_THAT(mir_connection_get_error_message(connection),
+                        testing::HasSubstr("not authorized to apply display configurations"));
+ 
             mir_display_config_destroy(configuration);
             mir_connection_release(connection);
         }
@@ -217,6 +289,14 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
             return platform;
         }
 
+        std::shared_ptr<msh::DisplayChanger> the_shell_display_changer()
+        {
+            if (!changer)
+                changer = std::make_shared<StubChanger>();
+            return changer; 
+        }
+
+        std::shared_ptr<StubChanger> changer;
         std::shared_ptr<StubPlatform> platform;
     } server_config;
 

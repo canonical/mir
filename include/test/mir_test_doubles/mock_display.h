@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/gl_context.h"
 #include "mir/main_loop.h"
 #include "mir_test/gmock_fixes.h"
 #include <gmock/gmock.h>
@@ -34,7 +35,6 @@ namespace doubles
 struct MockDisplay : public graphics::Display
 {
 public:
-    MOCK_CONST_METHOD0(view_area, geometry::Rectangle ());
     MOCK_METHOD1(for_each_display_buffer, void (std::function<void(graphics::DisplayBuffer&)> const&));
     MOCK_METHOD0(configuration, std::shared_ptr<graphics::DisplayConfiguration>());
     MOCK_METHOD1(configure, void(graphics::DisplayConfiguration const&));

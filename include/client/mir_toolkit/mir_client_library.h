@@ -115,6 +115,15 @@ MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *con
 void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
 
 /**
+ * Apply the display configuration
+ *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
+ *   \param [in] connection             The connection
+ *   \param [in] display_configuration  The display_configuration to apply 
+ *   \return                            A handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
+
+/**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
  *   \param [in] connection  The connection
  *   \return                 An EGLNativeDisplayType that the client can use

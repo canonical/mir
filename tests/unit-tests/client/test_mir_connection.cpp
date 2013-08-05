@@ -60,12 +60,17 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
             connect(static_cast<mp::ConnectParameters const*>(parameters),
                     static_cast<mp::Connection*>(response));
         }
+        else if (method->name() == "configure_display")
+        {
+            configure_display_sent(static_cast<mp::DisplayConfiguration const*>(parameters));
+        }
 
         complete->Run();
     }
 
     MOCK_METHOD1(drm_auth_magic, void(const mp::DRMMagic*));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
+    MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
 };
 
 struct MockClientPlatform : public mcl::ClientPlatform
@@ -280,6 +285,50 @@ TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
     mcl::delete_config_storage(configuration);
 }
 
+TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_output));
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_all();
+
+    auto configuration = connection->create_copy_of_display_config();
+    EXPECT_GT(configuration->num_displays, 0u);
+    auto proper_num_displays = configuration->num_displays;
+    auto proper_displays = configuration->displays;
+    auto proper_output_id = configuration->displays[0].output_id;
+
+    //user lies about num_displays
+    configuration->num_displays = 0;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+
+    configuration->num_displays = proper_num_displays + 1;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+
+    configuration->num_displays = proper_num_displays;
+   
+    //user sends nullptr for displays 
+    configuration->displays = nullptr;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+
+    configuration->displays = proper_displays;
+
+    //user makes up own id
+    configuration->displays[0].output_id = 4944949;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+    configuration->displays[0].output_id = proper_output_id; 
+
+    //user tries to set nonsense mode
+    configuration->displays[0].current_mode++;
+    EXPECT_EQ(nullptr, connection->configure_display(configuration));
+
+    mcl::delete_config_storage(configuration);
+}
+
 TEST_F(MirConnectionTest, populates_pfs_correctly)
 {
     using namespace testing;
@@ -301,4 +350,42 @@ TEST_F(MirConnectionTest, populates_pfs_correctly)
     {
         EXPECT_EQ(supported_output_formats[i], formats[i]);
     }
+}
+
+TEST_F(MirConnectionTest, valid_display_configure_sent)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_output));
+
+    MirDisplayOutput output;
+    output.output_id = 0;
+    output.current_mode = 0;
+    output.used = 0;
+    output.position_x = 4;
+    output.position_y = 6;
+    MirDisplayConfiguration user_config{1, &output};
+
+    auto verify_display_change = [&](mp::DisplayConfiguration const* config)
+    {
+        ASSERT_NE(nullptr, config);
+        ASSERT_EQ(1, config->display_output_size());
+        auto const& disp1 = config->display_output(0);
+        EXPECT_EQ(output.output_id, disp1.output_id());
+        EXPECT_EQ(output.used, disp1.used());
+        EXPECT_EQ(output.current_mode, disp1.current_mode());
+        EXPECT_EQ(output.position_x, disp1.position_x());
+        EXPECT_EQ(output.position_y, disp1.position_y());
+    };
+
+    EXPECT_CALL(*mock_channel, configure_display_sent(_))
+        .Times(1)
+        .WillOnce(Invoke(verify_display_change));
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest", connected_callback, 0);
+    wait_handle->wait_for_all();
+
+    auto config_wait_handle = connection->configure_display(&user_config);
+    config_wait_handle->wait_for_all();
 }
