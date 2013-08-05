@@ -43,7 +43,7 @@ Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
 
 Package: libmirprotobuf0
 Section: libs
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -56,7 +56,7 @@ Description: Display server for Ubuntu - protocol implementation
 
 Package: libmirprotobuf-dev
 Section: libdevel
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirprotobuf0 (= ${binary:Version}),
@@ -71,7 +71,7 @@ Description: Display server for Ubuntu - protocol definition
 
 Package: libmirserver0
 Section: libs
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -84,7 +84,7 @@ Description: Display server for Ubuntu - server library
 
 Package: mircommon-dev
 Section: libdevel
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -96,7 +96,7 @@ Description: Display server for Ubuntu - development headers
 
 Package: libmirserver-dev
 Section: libdevel
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirserver0 (= ${binary:Version}),
@@ -113,7 +113,7 @@ Description: Display server for Ubuntu - development headers
 
 Package: libmirclient1
 Section: libs
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -126,7 +126,7 @@ Description: Display server for Ubuntu - client library
 
 Package: libmirclient-dev
 Section: libdevel
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirclient1 (= ${binary:Version}),
@@ -140,7 +140,7 @@ Description: Display server for Ubuntu - development headers
  Contains header files required to develop against Mir.
 
 Package: mir-demos
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Recommends: mir-doc
@@ -160,7 +160,7 @@ Description: API documentation for mir
  This package installs the mir API documentation.
 
 Package: mir-test-tools
-Architecture: i386 amd64 armhf armel64
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
