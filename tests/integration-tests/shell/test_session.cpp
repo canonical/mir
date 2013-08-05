@@ -185,8 +185,6 @@ TEST(ShellSessionTest, stress_test_take_snapshot)
 
     compositor->start();
 
-    session.default_surface()->allow_framedropping(true);
-
     std::thread client_thread{
         [&session]
         {

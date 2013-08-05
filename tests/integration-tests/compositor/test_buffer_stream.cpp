@@ -101,7 +101,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 
 TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 {
-    for (int i = 0; i < nbuffers - 1; i++)
+    for (int i = 0; i < nbuffers; i++)
         buffer_stream.secure_client_buffer().reset();
 
     auto first_monitor = buffer_stream.lock_compositor_buffer();
