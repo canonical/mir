@@ -41,7 +41,7 @@ public:
 //convenient helper
 void delete_config_storage(MirDisplayConfiguration* config);
 
-class DisplayConfiguration : public MirDisplayConfiguration
+class DisplayConfiguration
 {
 public:
     DisplayConfiguration();
