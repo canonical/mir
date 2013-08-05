@@ -15,28 +15,18 @@
  *
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
-#ifndef MIR_GRAPHICS_NATIVE_PLATFORM_H_
-#define MIR_GRAPHICS_NATIVE_PLATFORM_H_
 
-#include <memory>
+#include "mir/graphics/nested/nested_mir_connection_handle.h"
+#include "mir_toolkit/mir_client_library.h"
 
-namespace mir
-{
-namespace options
-{
-class Option;
-}
-namespace graphics
-{
-class NativePlatform
-{
-public:
-    NativePlatform() {}
-};
+namespace mgn = mir::graphics::nested;
 
-extern "C" typedef std::shared_ptr<NativePlatform>(*CreateNativePlatform)(/* TODO */);
-extern "C" std::shared_ptr<NativePlatform> create_native_platform(/* TODO */);
-}
+mgn::MirConnectionHandle::MirConnectionHandle(MirConnection* const mir_connection)
+    : connection(mir_connection)
+{
 }
 
-#endif // MIR_GRAPHICS_NATIVE_PLATFORM_H_
+mgn::MirConnectionHandle::~MirConnectionHandle()
+{
+    mir_connection_release(connection);
+}

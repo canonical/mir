@@ -15,28 +15,35 @@
  *
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
-#ifndef MIR_GRAPHICS_NATIVE_PLATFORM_H_
-#define MIR_GRAPHICS_NATIVE_PLATFORM_H_
 
-#include <memory>
+#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+
+struct MirConnection;
 
 namespace mir
 {
-namespace options
-{
-class Option;
-}
 namespace graphics
 {
-class NativePlatform
+namespace nested
+{
+
+class MirConnectionHandle
 {
 public:
-    NativePlatform() {}
+    MirConnectionHandle(MirConnection* const mir_connection);
+    ~MirConnectionHandle();
+
+    MirConnectionHandle(MirConnectionHandle const&) = delete;
+    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
+
+    operator MirConnection*() {return (MirConnection*)connection;}
+
+private:
+    MirConnection* const connection;
 };
 
-extern "C" typedef std::shared_ptr<NativePlatform>(*CreateNativePlatform)(/* TODO */);
-extern "C" std::shared_ptr<NativePlatform> create_native_platform(/* TODO */);
 }
 }
-
-#endif // MIR_GRAPHICS_NATIVE_PLATFORM_H_
+}
+#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
