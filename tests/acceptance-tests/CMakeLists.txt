@@ -33,6 +33,7 @@ target_link_libraries(
 
   mirserver
   mirclient
+  mirplatform
 
   mir-test-framework
   mir-test-doubles
