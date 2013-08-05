@@ -17,7 +17,6 @@
  */
 
 #include "mir/shell/unauthorized_display_changer.h"
-#include "mir/shell/mediating_display_changer.h"
 
 #include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/mock_display.h"
@@ -56,25 +55,6 @@ TEST_F(UnauthorizedDisplayChangerTest, access_config)
 
     msh::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
 
-    auto returned_conf = changer.active_configuration();
-    EXPECT_EQ(&conf, returned_conf.get());
-}
-
-struct MediatingDisplayChangerTest : public ::testing::Test
-{
-    mtd::MockDisplay mock_display;
-};
-
-TEST_F(MediatingDisplayChangerTest, display_info)
-{
-    using namespace testing;
-    mtd::NullDisplayConfiguration conf;
-
-    EXPECT_CALL(mock_display, configuration())
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(conf)));
-
-    msh::MediatingDisplayChanger changer(mt::fake_shared(mock_display));
     auto returned_conf = changer.active_configuration();
     EXPECT_EQ(&conf, returned_conf.get());
 }
