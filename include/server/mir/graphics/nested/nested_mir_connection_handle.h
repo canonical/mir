@@ -16,10 +16,17 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_CONNECTION_HANDLE_H_
-#define MIR_CONNECTION_HANDLE_H_
+#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
 
 struct MirConnection;
+
+namespace mir
+{
+namespace graphics
+{
+namespace nested
+{
 
 class MirConnectionHandle
 {
@@ -27,11 +34,13 @@ public:
     MirConnectionHandle(MirConnection* const mir_connection);
     ~MirConnectionHandle();
 
-    MirConnection* operator ->() const {return connection;}
     operator MirConnection*() {return (MirConnection*)connection;}
 
 private:
     MirConnection* const connection;
 };
 
-#endif // MIR_CONNECTION_HANDLE_H_
+}
+}
+}
+#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_

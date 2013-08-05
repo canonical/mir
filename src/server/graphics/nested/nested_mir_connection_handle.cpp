@@ -19,12 +19,14 @@
 #include "mir/graphics/nested/nested_mir_connection_handle.h"
 #include "mir_toolkit/mir_client_library.h"
 
-MirConnectionHandle::MirConnectionHandle(MirConnection* const mir_connection)
+namespace mgn = mir::graphics::nested;
+
+mgn::MirConnectionHandle::MirConnectionHandle(MirConnection* const mir_connection)
     : connection(mir_connection)
 {
 }
 
-MirConnectionHandle::~MirConnectionHandle()
+mgn::MirConnectionHandle::~MirConnectionHandle()
 {
     mir_connection_release(connection);
 }

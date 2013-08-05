@@ -20,8 +20,6 @@
 #include "mir/graphics/nested/nested_mir_connection_handle.h"
 #include "mir_toolkit/mir_client_library.h"
 
-#include <string.h>
-
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -46,7 +44,6 @@ mgn::NestedPlatform::NestedPlatform(std::string const& host,
 
 mgn::NestedPlatform::~NestedPlatform() noexcept(true)
 {
-    mir_connection_release(connection);
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
