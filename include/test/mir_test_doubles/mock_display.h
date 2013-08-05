@@ -39,9 +39,9 @@ public:
     MOCK_METHOD0(configuration, std::shared_ptr<graphics::DisplayConfiguration>());
     MOCK_METHOD1(configure, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD2(register_configuration_change_handler,
-                 void(MainLoop&, graphics::DisplayConfigurationChangeHandler const&));
+                 void(graphics::EventHandlerRegister&, graphics::DisplayConfigurationChangeHandler const&));
 
-    MOCK_METHOD3(register_pause_resume_handlers, void(MainLoop&,
+    MOCK_METHOD3(register_pause_resume_handlers, void(graphics::EventHandlerRegister&,
                                                       graphics::DisplayPauseHandler const&,
                                                       graphics::DisplayResumeHandler const&));
     MOCK_METHOD0(pause, void());

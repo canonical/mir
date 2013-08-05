@@ -217,7 +217,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             max_fingers = 0;
         }
 
-        if (masked_action == mir_motion_action_move)
+        if (masked_action == mir_motion_action_move ||
+            masked_action == mir_motion_action_down)
         {
             size_t p;
 
