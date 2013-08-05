@@ -31,29 +31,29 @@ void mcl::delete_config_storage(MirDisplayConfiguration* config)
     for(auto i=0u; i< config->num_displays; i++)
     {
         if (config->displays[i].modes)
-            ::operator delete(config->displays[i].modes);
+            delete[] config->displays[i].modes;
         if (config->displays[i].output_formats)
-            ::operator delete(config->displays[i].output_formats);
+            delete[] config->displays[i].output_formats;
     }
     if (config->displays)
-        ::operator delete(config->displays);
+        delete[] config->displays;
 
-    ::operator delete(config);
+    delete config;
 }
 
 mcl::DisplayOutput::DisplayOutput(size_t num_modes_, size_t num_formats)
 {
     num_modes = num_modes_;
-    modes = (MirDisplayMode*) ::operator new(sizeof(MirDisplayMode) * num_modes);
+    modes = new MirDisplayMode[num_modes];
    
     num_output_formats = num_formats; 
-    output_formats = (MirPixelFormat*) ::operator new(sizeof(MirPixelFormat) * num_formats);
+    output_formats = new MirPixelFormat[num_formats];
 }
 
 mcl::DisplayOutput::~DisplayOutput()
 {
-    ::operator delete(modes);
-    ::operator delete(output_formats);
+    delete[] modes;
+    delete[] output_formats;
 }
 
 namespace
@@ -132,9 +132,9 @@ void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration co
 MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    auto new_config = static_cast<MirDisplayConfiguration*>(::operator new(sizeof(MirDisplayConfiguration)));
+    auto new_config = new MirDisplayConfiguration;
     new_config->num_displays = outputs.size();
-    new_config->displays = static_cast<MirDisplayOutput*>(::operator new(sizeof(MirDisplayOutput)*new_config->num_displays));
+    new_config->displays = new MirDisplayOutput[new_config->num_displays];
 
     auto i=0u;
     for( auto const& out : outputs)
@@ -143,12 +143,12 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
         MirDisplayOutput* output = out.get();
         std::memcpy(new_info, output, sizeof(MirDisplayOutput)); 
 
-        auto format_size = sizeof(MirPixelFormat)* new_info->num_output_formats;
-        new_info->output_formats = static_cast<MirPixelFormat*>(::operator new(format_size));
+        new_info->output_formats = new MirPixelFormat[new_info->num_output_formats];
+        auto format_size = sizeof(MirPixelFormat) * new_info->num_output_formats;
         std::memcpy(new_info->output_formats, output->output_formats, format_size);
 
+        new_info->modes = new MirDisplayMode[new_info->num_modes];
         auto mode_size = sizeof(MirDisplayMode)* new_info->num_modes;
-        new_info->modes = static_cast<MirDisplayMode*>(::operator new(mode_size));
         std::memcpy(new_info->modes, output->modes, mode_size);
     }
     return new_config;
