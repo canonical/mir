@@ -35,7 +35,7 @@ public:
     virtual ~EventSink() = default;
 
     virtual void handle_event(MirEvent const& e) = 0;
-    virtual void send_display_config(graphics::DisplayConfiguration const& config) = 0;
+    virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
 
 protected:
     EventSink() = default;

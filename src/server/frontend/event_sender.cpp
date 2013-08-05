@@ -49,7 +49,7 @@ void mfd::EventSender::handle_event(MirEvent const& e)
     }
 }
 
-void mfd::EventSender::send_display_config(graphics::DisplayConfiguration const& display_config)
+void mfd::EventSender::handle_display_config_change(graphics::DisplayConfiguration const& display_config)
 {
     mp::EventSequence seq;
     auto message = seq.mutable_display_configuration();

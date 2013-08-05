@@ -306,7 +306,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification)
             change_thread = std::move(std::thread([this](){
                 send_event_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
                 auto notifier = ipc_factory->last_clients_event_sink();
-                notifier->send_display_config(StubDisplay::stub_display_config);
+                notifier->handle_display_config_change(StubDisplay::stub_display_config);
             })); 
         }
 

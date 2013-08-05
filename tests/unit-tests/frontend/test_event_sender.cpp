@@ -64,5 +64,5 @@ TEST(TestEventSender, display_send)
 
     mfd::EventSender sender(mt::fake_shared(mock_msg_sender));
 
-    sender.send_display_config(config);
+    sender.handle_display_config_change(config);
 }
