@@ -1,5 +1,3 @@
-# By default, build for LLVM
-
 include_directories(${GLESv2_INCLUDE_DIRS})
 
 set(
