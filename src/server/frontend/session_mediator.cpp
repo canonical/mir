@@ -231,6 +231,7 @@ void mf::SessionMediator::release_surface(
 
         auto const id = SurfaceId(request->value());
 
+        display_changer->remove_configuration_for(session);
         session->destroy_surface(id);
     }
 
