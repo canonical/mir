@@ -40,6 +40,7 @@ namespace graphics
 class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
+class EventHandlerRegister;
 
 namespace gbm
 {
@@ -66,11 +67,11 @@ public:
     void configure(DisplayConfiguration const& conf);
 
     void register_configuration_change_handler(
-        MainLoop& main_loop,
+        EventHandlerRegister& handlers,
         DisplayConfigurationChangeHandler const& conf_change_handler);
 
     void register_pause_resume_handlers(
-        MainLoop& main_loop,
+        EventHandlerRegister& handlers,
         DisplayPauseHandler const& pause_handler,
         DisplayResumeHandler const& resume_handler);
 

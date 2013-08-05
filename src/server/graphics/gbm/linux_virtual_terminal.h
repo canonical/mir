@@ -62,7 +62,7 @@ public:
 
     void set_graphics_mode();
     void register_switch_handlers(
-        MainLoop& main_loop,
+        EventHandlerRegister& handlers,
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back);
 
