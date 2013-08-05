@@ -32,6 +32,7 @@
 #include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/mock_input_targeter.h"
+#include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/stub_surface_controller.h"
 
 #include <gmock/gmock.h>
@@ -45,6 +46,8 @@ namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
 struct MockShellSession : public msh::Session
 {
     MOCK_METHOD1(create_surface, mf::SurfaceId(msh::SurfaceCreationParameters const&));
@@ -63,11 +66,24 @@ struct MockShellSession : public msh::Session
     MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
 };
 
-TEST(DefaultFocusMechanism, raises_default_surface)
+struct DefaultFocusMechanism : public testing::Test
+{
+    void SetUp()
+    {
+
+        controller = std::make_shared<mtd::StubSurfaceController>();
+    }
+    testing::NiceMock<mtd::MockDisplayChanger> mock_display_changer;
+    testing::NiceMock<MockShellSession> app1;
+    std::shared_ptr<mtd::StubSurfaceController> controller;
+};
+
+}
+
+TEST_F(DefaultFocusMechanism, raises_default_surface)
 {
     using namespace ::testing;
     
-    NiceMock<MockShellSession> app1;
     mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
     {
         InSequence seq;
@@ -75,19 +91,18 @@ TEST(DefaultFocusMechanism, raises_default_surface)
             .WillOnce(Return(mt::fake_shared(mock_surface)));
     }
 
-    auto controller = std::make_shared<mtd::StubSurfaceController>();
     EXPECT_CALL(mock_surface, raise(Eq(controller))).Times(1);
     mtd::StubInputTargeter targeter;
-    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter), controller);
+    msh::DefaultFocusMechanism focus_mechanism(
+        mt::fake_shared(targeter), controller, mt::fake_shared(mock_display_changer));
     
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
 }
 
-TEST(DefaultFocusMechanism, sets_input_focus)
+TEST_F(DefaultFocusMechanism, sets_input_focus)
 {
     using namespace ::testing;
     
-    NiceMock<MockShellSession> app1;
     mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
     {
         InSequence seq;
@@ -99,16 +114,18 @@ TEST(DefaultFocusMechanism, sets_input_focus)
 
     mtd::MockInputTargeter targeter;
     
-    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter), std::make_shared<mtd::StubSurfaceController>());
+    msh::DefaultFocusMechanism focus_mechanism(
+        mt::fake_shared(targeter), controller, mt::fake_shared(mock_display_changer));
     
-    {
-        InSequence seq;
-        EXPECT_CALL(mock_surface, take_input_focus(_)).Times(1);
-        // When we have no default surface.
-        EXPECT_CALL(targeter, focus_cleared()).Times(1);
-        // When we have no session.
-        EXPECT_CALL(targeter, focus_cleared()).Times(1);
-    }
+    Sequence seq;
+    EXPECT_CALL(mock_surface, take_input_focus(_))
+        .InSequence(seq);
+    // When we have no default surface.
+    EXPECT_CALL(targeter, focus_cleared())
+        .InSequence(seq);
+    // When we have no session.
+    EXPECT_CALL(targeter, focus_cleared())
+        .InSequence(seq);
     
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
