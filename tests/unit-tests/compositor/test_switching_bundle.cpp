@@ -266,7 +266,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
     }
 }
 
-TEST_F(SwitchingBundleTest, out_of_order_compositor_release)
+TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
 {
     for (int nbuffers = 2; nbuffers < 10; nbuffers++)
     {
