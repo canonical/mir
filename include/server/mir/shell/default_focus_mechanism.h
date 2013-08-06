@@ -43,10 +43,7 @@ public:
                                    std::shared_ptr<DisplayChanger> const& display_changer);
     virtual ~DefaultFocusMechanism() = default;
 
-    void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
-    void focus_next();
-    void focus_clear();
-    void focus_default();
+    void reevaluate_focus();
     std::weak_ptr<Session> focused_application() const;
 
 protected:
@@ -60,8 +57,8 @@ private:
     std::shared_ptr<SurfaceController> const surface_controller;
     std::shared_ptr<DisplayChanger> const display_changer;
 
-    std::mutex mutex;
-    std::weak_ptr<Session> focus_application;
+    std::mutex mutable mutex;
+    std::shared_ptr<Session> focus_session;
 };
 
 }

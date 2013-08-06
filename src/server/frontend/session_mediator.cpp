@@ -146,7 +146,7 @@ void mf::SessionMediator::create_surface(
 
         report->session_create_surface_called(session->name());
 
-        auto const id = shell->create_surface_for(session,
+        auto const id = session->create_surface(
             msh::SurfaceCreationParameters()
             .of_name(request->surface_name())
             .of_size(request->width(), request->height())
@@ -181,6 +181,8 @@ void mf::SessionMediator::create_surface(
     }
 
     done->Run();
+
+    shell->reevaluate_sessions();
 }
 
 void mf::SessionMediator::next_buffer(

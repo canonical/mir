@@ -41,9 +41,7 @@ public:
     virtual std::shared_ptr<Session> open_session(
         std::string const& name, std::shared_ptr<EventSink> const& sink) = 0;
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
-
-    virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
-                                         shell::SurfaceCreationParameters const& params) = 0;
+    virtual void reevaluate_sessions() = 0; 
 
 protected:
     Shell() = default;

@@ -60,8 +60,7 @@ public:
         std::string const& name, std::shared_ptr<frontend::EventSink> const& sink);
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
-    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
-                                 SurfaceCreationParameters const& params);
+    virtual void reevaluate_sessions(); 
 
 protected:
     SessionManager(const SessionManager&) = delete;

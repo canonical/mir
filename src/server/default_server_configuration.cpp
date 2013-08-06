@@ -377,7 +377,7 @@ mir::DefaultServerConfiguration::the_shell_display_changer()
 {
     return shell_display_changer([this]()
         { return std::make_shared<msh::MediatingDisplayChanger>(
-            the_display(), the_compositor(), the_shell_focus_setter()); });
+            the_display(), the_compositor(), nullptr);});//the_shell_focus_setter()); });
 }
 
 std::shared_ptr<msh::SessionContainer>

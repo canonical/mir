@@ -141,9 +141,9 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
                 {
                     InSequence seq;
                     // Once on application registration and once on surface creation
-                    EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
-                    // Focus is cleared when the session is closed
-                    EXPECT_CALL(*focus_setter, set_focus_to(_)).Times(1);
+                    // and once when the session is closed
+                    EXPECT_CALL(*focus_setter, reevaluate_focus())
+                        .Times(3);
                 }
                 // TODO: Counterexample ~racarr
 

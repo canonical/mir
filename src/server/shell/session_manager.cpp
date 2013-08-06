@@ -73,16 +73,13 @@ msh::SessionManager::~SessionManager()
 std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const& name,
                                                 std::shared_ptr<mf::EventSink> const& sender)
 {
-    std::shared_ptr<msh::Session> new_session =
-        std::make_shared<msh::ApplicationSession>(
+    auto new_session = std::make_shared<msh::ApplicationSession>(
             surface_factory, name, snapshot_strategy, session_listener, sender);
 
     app_container->insert_session(new_session);
-    
     session_listener->starting(new_session);
 
-    focus_setter->set_focus_to(new_session);
-
+    focus_setter->reevaluate_focus();
     return new_session;
 }
 
@@ -91,20 +88,14 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
 {
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
-    session_listener->stopping(shell_session);
-
     app_container->remove_session(shell_session);
 
-    focus_setter->focus_default();
+    session_listener->stopping(shell_session);
+
+    focus_setter->reevaluate_focus();
 }
 
-mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
-    msh::SurfaceCreationParameters const& params)
+void msh::SessionManager::reevaluate_sessions()
 {
-    auto shell_session = std::dynamic_pointer_cast<Session>(session);
-    auto id = shell_session->create_surface(params);
-
-    focus_setter->set_focus_to(shell_session);
-
-    return id;
+    focus_setter->reevaluate_focus();
 }

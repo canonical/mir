@@ -38,11 +38,11 @@ class StubShell : public frontend::Shell
     void close_session(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
-    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& /* session */,
-                                        shell::SurfaceCreationParameters const& /* params */)
+
+    virtual void reevaluate_sessions()
     {
-        return frontend::SurfaceId{0};
     }
+ 
 };
 
 }
