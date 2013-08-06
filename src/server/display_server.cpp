@@ -94,11 +94,13 @@ struct mir::DisplayServer::Private
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
-          display_configuration_policy{config.the_display_configuration_policy()}
+          display_configuration_policy{config.the_display_configuration_policy()},
+          paused{false},
+          configure_display_on_resume{false}
     {
         display->register_configuration_change_handler(
             *main_loop,
-            [this] { return configure_display(); });
+            [this] { return configure_display_handler(); });
 
         display->register_pause_resume_handlers(
             *main_loop,
@@ -123,6 +125,8 @@ struct mir::DisplayServer::Private
                 [this] { communicator->start(); }};
 
             display->pause();
+
+            paused = true;
         }
         catch(std::runtime_error const&)
         {
@@ -144,11 +148,19 @@ struct mir::DisplayServer::Private
                 [this] { communicator->start(); },
                 [this] { communicator->stop(); }};
 
+            if (configure_display_on_resume)
+            {
+                configure_display();
+                configure_display_on_resume = false;
+            }
+
             TryButRevertIfUnwinding input{
                 [this] { input_manager->start(); },
                 [this] { input_manager->stop(); }};
 
             compositor->start();
+
+            paused = false;
         }
         catch(std::runtime_error const&)
         {
@@ -160,17 +172,29 @@ struct mir::DisplayServer::Private
 
     void configure_display()
     {
-        ApplyNowAndRevertOnScopeExit comp{
-            [this] { compositor->stop(); },
-            [this] { compositor->start(); }};
-
-        ApplyNowAndRevertOnScopeExit input{
-            [this] { input_manager->stop(); },
-            [this] { input_manager->start(); }};
-
         auto conf = display->configuration();
         display_configuration_policy->apply_to(*conf);
         display->configure(*conf);
+    }
+
+    void configure_display_handler()
+    {
+        if (!paused)
+        {
+            ApplyNowAndRevertOnScopeExit comp{
+                [this] { compositor->stop(); },
+                [this] { compositor->start(); }};
+
+            ApplyNowAndRevertOnScopeExit input{
+                [this] { input_manager->stop(); },
+                [this] { input_manager->start(); }};
+
+            configure_display();
+        }
+        else
+        {
+            configure_display_on_resume = true;
+        }
     }
 
     std::shared_ptr<mg::Display> display;
@@ -179,6 +203,8 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mir::MainLoop> main_loop;
     std::shared_ptr<mg::DisplayConfigurationPolicy> const display_configuration_policy;
+    bool paused;
+    bool configure_display_on_resume;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
