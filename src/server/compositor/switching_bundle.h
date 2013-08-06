@@ -91,7 +91,8 @@ private:
     std::condition_variable cond;
 
     typedef std::chrono::high_resolution_clock::time_point time_point;
-    time_point now() const { return std::chrono::high_resolution_clock::now(); }
+    static time_point now()
+        { return std::chrono::high_resolution_clock::now(); }
     time_point last_consumed;
 
     bool framedropping;
