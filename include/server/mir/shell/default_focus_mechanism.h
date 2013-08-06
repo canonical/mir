@@ -48,6 +48,7 @@ protected:
 private:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceController> const surface_controller;
+    std::shared_ptr<DisplayChanger> const display_changer;
 };
 
 }

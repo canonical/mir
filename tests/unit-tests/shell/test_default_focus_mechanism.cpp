@@ -138,7 +138,13 @@ TEST_F(DefaultFocusMechanism, set_focus_notifies_display_changer)
     
     EXPECT_CALL(mock_display_changer, set_focus_to(_))
         .Times(1);
-        
+
+    auto surface_builder = std::make_shared<mtd::StubSurfaceBuilder>();
+    mtd::MockSurface mock_surface(surface_builder);
+    EXPECT_CALL(app1, default_surface())
+        .Times(1)
+        .WillOnce(Return(mt::fake_shared(mock_surface)));
+
     msh::DefaultFocusMechanism focus_mechanism(
         mt::fake_shared(targeter), controller, mt::fake_shared(mock_display_changer));
     
