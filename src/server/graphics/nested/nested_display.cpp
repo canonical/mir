@@ -41,13 +41,12 @@ mgn::NestedDisplay::NestedDisplay(std::shared_ptr<NestedPlatform> const& platfor
     if (!egl_display_info.supported_pixel_format_items)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get the supported pixel format items."));
 
-   MirPixelFormat pixel_format = egl_display_info.supported_pixel_format[0];
+    MirPixelFormat pixel_format = egl_display_info.supported_pixel_format[0];
     if (!pixel_format || pixel_format == mir_pixel_format_invalid)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Invalid pixel format.\n"));
 
-    MirGraphicsRegion graphics_region;
-    mir_surface_get_graphics_region(mir_surface, &graphics_region);
-    MirSurfaceParameters const request_params = {__PRETTY_FUNCTION__, graphics_region.width, graphics_region.height, pixel_format, mir_buffer_usage_hardware};
+    MirSurfaceParameters const request_params =
+        {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
 
     mir_surface = mir_connection_create_surface_sync(platform->connection, &request_params);
     if (!mir_surface || !mir_surface_is_valid(mir_surface) || (strcmp(mir_surface_get_error_message(mir_surface), "") !=0))
@@ -137,7 +136,8 @@ geom::Rectangle mgn::NestedDisplay::view_area() const
 
 void mgn::NestedDisplay::post_update()
 {
-    mir_surface_swap_buffers_sync(mir_surface);
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
+    //mir_surface_swap_buffers_sync(mir_surface);
     //eglSwapBuffers(egl_display, egl_surface);
 }
 
@@ -148,17 +148,19 @@ void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayB
 
 std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
 {
-   return std::make_shared<NullDisplayConfiguration>();
+    return std::make_shared<NullDisplayConfiguration>();
 }
 
 void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& /*configuration*/)
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
 }
 
 void mgn::NestedDisplay::register_configuration_change_handler(
         EventHandlerRegister& /*handlers*/,
         DisplayConfigurationChangeHandler const& /*conf_change_handler*/)
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
 }
 
 void mgn::NestedDisplay::register_pause_resume_handlers(
@@ -166,24 +168,29 @@ void mgn::NestedDisplay::register_pause_resume_handlers(
         DisplayPauseHandler const& /*pause_handler*/,
         DisplayResumeHandler const& /*resume_handler*/)
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
 }
 
 void mgn::NestedDisplay::pause()
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
 }
 
 void mgn::NestedDisplay::resume()
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
 }
 
 void mgn::NestedDisplay::make_current()
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to MakeCurrent."));
 }
 
 void mgn::NestedDisplay::release_current()
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
 }
 
 auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
