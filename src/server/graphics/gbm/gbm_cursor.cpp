@@ -88,28 +88,12 @@ void mgg::GBMCursor::set_image(const void* raw_argb, geometry::Size size)
 
 void mgg::GBMCursor::move_to(geometry::Point position)
 {
-    for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect)
-    {
-        if (output_rect.contains(position))
-        {
-            auto dp = position - output_rect.top_left;
-            output.move_cursor({dp.dx.as_int(), dp.dy.as_int()});
-            if (!output.has_cursor())
-                output.set_cursor(buffer);
-        }
-        else
-        {
-            if (output.has_cursor())
-                output.clear_cursor();
-        }
-    });
-
-    current_position = position;
+    place_cursor_at(position, UpdateState);
 }
 
 void mgg::GBMCursor::show_at_last_known_position()
 {
-    move_to(current_position);
+    place_cursor_at(current_position, ForceState);
 }
 
 void mgg::GBMCursor::hide()
@@ -139,4 +123,31 @@ void mgg::GBMCursor::for_each_used_output(
                 }
             });
         });
+}
+
+void mgg::GBMCursor::place_cursor_at(
+    geometry::Point position,
+    ForceCursorState force_state)
+{
+    for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect)
+    {
+        if (output_rect.contains(position))
+        {
+            auto dp = position - output_rect.top_left;
+            output.move_cursor({dp.dx.as_int(), dp.dy.as_int()});
+            if (force_state || !output.has_cursor())
+            {
+                output.set_cursor(buffer);
+            }
+        }
+        else
+        {
+            if (force_state || output.has_cursor())
+            {
+                output.clear_cursor();
+            }
+        }
+    });
+
+    current_position = position;
 }

@@ -71,7 +71,10 @@ public:
         : display{display},
           pause_signal{pause_signal},
           resume_signal{resume_signal},
-          fd{fd}
+          fd{fd},
+          pause_handler_invoked_{false},
+          resume_handler_invoked_{false},
+          conf_change_handler_invoked_{false}
     {
     }
 
@@ -93,11 +96,14 @@ public:
     {
         handlers.register_fd_handler(
             {fd},
-            [conf_change_handler](int fd)
+            [this,conf_change_handler](int fd)
             {
                 char c;
                 if (read(fd, &c, 1) == 1)
+                {
                     conf_change_handler();
+                    conf_change_handler_invoked_ = true;
+                }
             });
     }
 
@@ -108,20 +114,46 @@ public:
     {
         handlers.register_signal_handler(
             {pause_signal},
-            [pause_handler](int) { pause_handler(); });
+            [this,pause_handler](int)
+            {
+                pause_handler();
+                pause_handler_invoked_ = true;
+            });
         handlers.register_signal_handler(
             {resume_signal},
-            [resume_handler](int) { resume_handler(); });
+            [this,resume_handler](int)
+            {
+                resume_handler();
+                resume_handler_invoked_ = true;
+            });
     }
 
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
+
+    bool pause_handler_invoked()
+    {
+        return pause_handler_invoked_.exchange(false);
+    }
+
+    bool resume_handler_invoked()
+    {
+        return resume_handler_invoked_.exchange(false);
+    }
+
+    bool conf_change_handler_invoked()
+    {
+        return conf_change_handler_invoked_.exchange(false);
+    }
 
 private:
     std::shared_ptr<mg::Display> const display;
     int const pause_signal;
     int const resume_signal;
     int const fd;
+    std::atomic<bool> pause_handler_invoked_;
+    std::atomic<bool> resume_handler_invoked_;
+    std::atomic<bool> conf_change_handler_invoked_;
 };
 
 class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
@@ -212,6 +244,14 @@ public:
         return mock_conf_policy;
     }
 
+    std::shared_ptr<mi::InputManager> the_input_manager() override
+    {
+        if (!mock_input_manager)
+            mock_input_manager = std::make_shared<mtd::MockInputManager>();
+
+        return mock_input_manager;
+    }
+
     std::shared_ptr<MockDisplay> the_mock_display()
     {
         the_display();
@@ -236,19 +276,30 @@ public:
         return mock_conf_policy;
     }
 
-    void emit_pause_event()
+    std::shared_ptr<mtd::MockInputManager> the_mock_input_manager()
+    {
+        the_input_manager();
+        return mock_input_manager;
+    }
+    void emit_pause_event_and_wait_for_handler()
     {
         kill(getpid(), pause_signal);
+        while (!mock_display->pause_handler_invoked())
+            std::this_thread::sleep_for(std::chrono::microseconds{500});
     }
 
-    void emit_resume_event()
+    void emit_resume_event_and_wait_for_handler()
     {
         kill(getpid(), resume_signal);
+        while (!mock_display->resume_handler_invoked())
+            std::this_thread::sleep_for(std::chrono::microseconds{500});
     }
 
-    void emit_configuration_change_event()
+    void emit_configuration_change_event_and_wait_for_handler()
     {
         if (write(p.write_fd(), "a", 1)) {}
+        while (!mock_display->conf_change_handler_invoked())
+            std::this_thread::sleep_for(std::chrono::microseconds{500});
     }
 
 private:
@@ -256,6 +307,7 @@ private:
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<MockCommunicator> mock_communicator;
     std::shared_ptr<MockDisplayConfigurationPolicy> mock_conf_policy;
+    std::shared_ptr<mtd::MockInputManager> mock_input_manager;
 
     mt::Pipe p;
     int const pause_signal;
@@ -295,6 +347,7 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
+    auto mock_input_manager = server_config.the_mock_input_manager();
 
     {
         InSequence s;
@@ -302,8 +355,10 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
         /* Start */
         EXPECT_CALL(*mock_communicator, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
 
         /* Pause */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_communicator, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
@@ -311,9 +366,11 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
         /* Resume */
         EXPECT_CALL(*mock_display, resume()).Times(1);
         EXPECT_CALL(*mock_communicator, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_communicator, stop()).Times(1);
     }
@@ -321,9 +378,14 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
     mir::run_mir(server_config,
                  [&server_config](mir::DisplayServer&)
                  {
-                    server_config.emit_pause_event();
-                    server_config.emit_resume_event();
-                    kill(getpid(), SIGTERM);
+                    std::thread t{
+                        [&]
+                        {
+                            server_config.emit_pause_event_and_wait_for_handler();
+                            server_config.emit_resume_event_and_wait_for_handler();
+                            kill(getpid(), SIGTERM);
+                        }};
+                    t.detach();
                  });
 }
 
@@ -336,6 +398,7 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
+    auto mock_input_manager = server_config.the_mock_input_manager();
 
     {
         InSequence s;
@@ -343,13 +406,16 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
         /* Start */
         EXPECT_CALL(*mock_communicator, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
 
         /* Pause */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_communicator, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_communicator, stop()).Times(1);
     }
@@ -357,8 +423,13 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
     mir::run_mir(server_config,
                  [&server_config](mir::DisplayServer&)
                  {
-                    server_config.emit_pause_event();
-                    kill(getpid(), SIGTERM);
+                    std::thread t{
+                        [&]
+                        {
+                            server_config.emit_pause_event_and_wait_for_handler();
+                            kill(getpid(), SIGTERM);
+                        }};
+                    t.detach();
                  });
 }
 
@@ -371,6 +442,7 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
+    auto mock_input_manager = server_config.the_mock_input_manager();
 
     {
         InSequence s;
@@ -378,8 +450,10 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
         /* Start */
         EXPECT_CALL(*mock_communicator, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
 
         /* Pause failure */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_communicator, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause())
@@ -388,8 +462,10 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
         /* Attempt to continue */
         EXPECT_CALL(*mock_communicator, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_communicator, stop()).Times(1);
     }
@@ -397,8 +473,13 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
     mir::run_mir(server_config,
                  [&server_config](mir::DisplayServer&)
                  {
-                    server_config.emit_pause_event();
-                    kill(getpid(), SIGTERM);
+                    std::thread t{
+                        [&]
+                        {
+                            server_config.emit_pause_event_and_wait_for_handler();
+                            kill(getpid(), SIGTERM);
+                        }};
+                    t.detach();
                  });
 }
 
@@ -407,12 +488,12 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
     using namespace testing;
 
     TestMainLoopServerConfig server_config;
-    std::atomic<bool> configuration_changed{false};
 
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
     auto mock_conf_policy = server_config.the_mock_display_configuration_policy();
+    auto mock_input_manager = server_config.the_mock_input_manager();
 
     {
         InSequence s;
@@ -420,30 +501,90 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
         /* Start */
         EXPECT_CALL(*mock_communicator, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
 
         /* Configuration change event */
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
+
         EXPECT_CALL(*mock_conf_policy, apply_to(_)).Times(1);
         EXPECT_CALL(*mock_display, configure(_)).Times(1);
-        EXPECT_CALL(*mock_compositor, start())
-            .Times(1)
-            .WillOnce(Assign(&configuration_changed, true));
+
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_communicator, stop()).Times(1);
     }
 
     mir::run_mir(server_config,
-                 [&server_config,&configuration_changed](mir::DisplayServer&)
+                 [&](mir::DisplayServer&)
                  {
                     std::thread t{
-                        [&server_config,&configuration_changed]
+                        [&]
                         {
-                           server_config.emit_configuration_change_event();
-                           while (!configuration_changed)
-                               std::this_thread::sleep_for(std::chrono::microseconds{500});
-                           kill(getpid(), SIGTERM);
+                            server_config.emit_configuration_change_event_and_wait_for_handler();
+                            kill(getpid(), SIGTERM);
+                        }};
+                    t.detach();
+                 });
+}
+
+TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
+{
+    using namespace testing;
+
+    TestMainLoopServerConfig server_config;
+
+    auto mock_compositor = server_config.the_mock_compositor();
+    auto mock_display = server_config.the_mock_display();
+    auto mock_communicator = server_config.the_mock_communicator();
+    auto mock_conf_policy = server_config.the_mock_display_configuration_policy();
+    auto mock_input_manager = server_config.the_mock_input_manager();
+
+    {
+        InSequence s;
+
+        /* Start */
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
+
+        /* Pause event */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
+        EXPECT_CALL(*mock_display, pause()) .Times(1);
+
+        /* Resume and reconfigure event */
+        EXPECT_CALL(*mock_display, resume()).Times(1);
+        EXPECT_CALL(*mock_communicator, start()).Times(1);
+
+        EXPECT_CALL(*mock_conf_policy, apply_to(_)).Times(1);
+        EXPECT_CALL(*mock_display, configure(_)).Times(1);
+
+        EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+
+        /* Stop */
+        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_communicator, stop()).Times(1);
+    }
+
+    mir::run_mir(server_config,
+                 [&](mir::DisplayServer&)
+                 {
+                    std::thread t{
+                        [&]
+                        {
+                            server_config.emit_pause_event_and_wait_for_handler();
+                            server_config.emit_configuration_change_event_and_wait_for_handler();
+                            server_config.emit_resume_event_and_wait_for_handler();
+
+                            kill(getpid(), SIGTERM);
                         }};
                     t.detach();
                  });

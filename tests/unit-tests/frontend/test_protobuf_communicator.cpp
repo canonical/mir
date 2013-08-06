@@ -184,8 +184,7 @@ MATCHER_P(InvocationMethodEq, name, "")
 
 }
 
-TEST_F(ProtobufCommunicator,
-       double_disconnection_attempt_throws_exception)
+TEST_F(ProtobufCommunicator, double_disconnection_attempt_throws_exception)
 {
     using namespace testing;
 
@@ -220,8 +219,7 @@ TEST_F(ProtobufCommunicator,
     }, std::runtime_error);
 }
 
-TEST_F(ProtobufCommunicator,
-       getting_and_advancing_buffers)
+TEST_F(ProtobufCommunicator, getting_and_advancing_buffers)
 {
     EXPECT_CALL(*client, create_surface_done()).Times(testing::AtLeast(0));
     EXPECT_CALL(*client, disconnect_done()).Times(testing::AtLeast(0));
@@ -330,8 +328,7 @@ TEST_F(ProtobufCommunicator, forces_requests_to_complete_when_stopping)
     comms->stop();
 }
 
-TEST_F(ProtobufCommunicator,
-       disorderly_disconnection_handled)
+TEST_F(ProtobufCommunicator, disorderly_disconnection_handled)
 {
     using namespace testing;
 
@@ -364,4 +361,18 @@ TEST_F(ProtobufCommunicator,
 
     auto const deadline = std::chrono::system_clock::now() + std::chrono::seconds(1);
     while (!done && cv.wait_until(lock, deadline) != std::cv_status::timeout);
+}
+
+TEST_F(ProtobufCommunicator, configure_display)
+{
+    EXPECT_CALL(*client, display_configure_done())
+        .Times(1);
+
+    client->display_server.configure_display(
+        0,
+        &client->disp_config,
+        &client->ignored,
+        google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::display_configure_done));
+
+    client->wait_for_configure_display_done();
 }

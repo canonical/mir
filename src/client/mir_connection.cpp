@@ -277,11 +277,7 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
 MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
-    {
-        return display_configuration->copy_to_client();
-    }
-    return nullptr;
+    return display_configuration->copy_to_client();
 }
 
 void MirConnection::possible_pixel_formats(MirPixelFormat* formats,
@@ -329,4 +325,67 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)
 {
     display_configuration->set_display_change_handler(std::bind(callback, this, context));
+}
+
+bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
+    if ((!config) || (config->num_displays == 0) || (config->displays == NULL) || 
+        (config->num_displays > static_cast<unsigned int>(connect_result.display_output_size())))
+    {
+        return false;
+    }
+
+    for(auto i = 0u; i < config->num_displays; i++)
+    {
+        if (config->displays[i].current_mode >= static_cast<unsigned int>(connect_result.display_output(i).mode_size()))
+            return false;
+
+        bool found = false;
+        for(auto j = 0; j < connect_result.display_output_size(); j++)
+        {
+            if (config->displays[i].output_id == connect_result.display_output(i).output_id())
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            return false; 
+    }
+
+    return true;
+}
+
+void MirConnection::done_display_configure()
+{
+    set_error_message(void_response.error());
+    return configure_display_wait_handle.result_received();
+}
+
+MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
+{
+    if (!validate_user_display_config(config))
+    {
+        return NULL;
+    }
+
+    mir::protobuf::DisplayConfiguration request;
+    for (auto i=0u; i < config->num_displays; i++)
+    {
+        auto output = config->displays[i];
+        auto display_request = request.add_display_output();
+        display_request->set_output_id(output.output_id); 
+        display_request->set_used(output.used); 
+        display_request->set_current_mode(output.current_mode); 
+        display_request->set_position_x(output.position_x); 
+        display_request->set_position_y(output.position_y); 
+    }
+
+    server.configure_display(0, &request, &void_response,
+        google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
+
+    return &configure_display_wait_handle;
 }

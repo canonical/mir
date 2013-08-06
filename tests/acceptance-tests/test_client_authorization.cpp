@@ -138,6 +138,7 @@ struct ClientPidTestFixture : BespokeDisplayServerTestFixture
 struct MockSessionAuthorizer : public mf::SessionAuthorizer
 {
     MOCK_METHOD1(connection_is_allowed, bool(pid_t));
+    MOCK_METHOD1(configure_display_is_allowed, bool(pid_t));
 };
 
 }

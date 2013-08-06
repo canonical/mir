@@ -10,6 +10,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_threaded_snapshot_strategy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_pixel_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_display_layout.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_unauthorized_display_changer.cpp
 )
 
 set(

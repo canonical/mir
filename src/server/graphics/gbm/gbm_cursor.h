@@ -72,7 +72,9 @@ public:
     void hide();
 
 private:
+    enum ForceCursorState { UpdateState, ForceState };
     void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&)> const& f);
+    void place_cursor_at(geometry::Point position, ForceCursorState force_state);
 
     KMSOutputContainer& output_container;
     geometry::Point current_position;

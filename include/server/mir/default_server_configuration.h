@@ -65,6 +65,7 @@ class SessionManager;
 class PixelBuffer;
 class SnapshotStrategy;
 class DisplayLayout;
+class DisplayChanger;
 }
 namespace time
 {
@@ -90,7 +91,7 @@ namespace input
 {
 class InputReport;
 class InputManager;
-class EventFilter;
+class CompositeEventFilter;
 class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
@@ -169,6 +170,7 @@ public:
     virtual std::shared_ptr<shell::PixelBuffer>       the_shell_pixel_buffer();
     virtual std::shared_ptr<shell::SnapshotStrategy>  the_shell_snapshot_strategy();
     virtual std::shared_ptr<shell::DisplayLayout>     the_shell_display_layout();
+    virtual std::shared_ptr<shell::DisplayChanger>    the_shell_display_changer();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -197,7 +199,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
-    virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
+    virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
@@ -258,6 +260,7 @@ protected:
     CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;
     CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
+    CachedPtr<shell::DisplayChanger>     shell_display_changer;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;
@@ -277,7 +280,6 @@ private:
     // the communications interface to use
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     virtual std::string the_socket_file() const;
