@@ -26,7 +26,7 @@ EGLContextStore::EGLContextStore(EGLDisplay egl_display, EGLContext egl_context)
     egl_context_{egl_context}
 {
     if (egl_context_ == EGL_NO_CONTEXT)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Mir Nested Display Error: Could not create EGL context\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Mir Nested Display Error: Could not create EGL context."));
 }
 
 EGLContextStore::~EGLContextStore()

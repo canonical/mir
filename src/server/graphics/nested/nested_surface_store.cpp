@@ -26,7 +26,7 @@ EGLSurfaceStore::EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface)
     egl_surface_{egl_surface}
 {
     if (egl_surface_ == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Display: Could not create egl surface\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Display: Could not create egl surface."));
 }
 
 EGLSurfaceStore::~EGLSurfaceStore()

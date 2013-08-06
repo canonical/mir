@@ -39,7 +39,7 @@ mgn::NestedDisplay::NestedDisplay(std::shared_ptr<NestedPlatform> const& platfor
 {
     mir_connection_get_display_info(platform->connection, &egl_display_info);
     if (!egl_display_info.supported_pixel_format_items)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get the supported pixel format items.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get the supported pixel format items."));
 
    MirPixelFormat pixel_format = egl_display_info.supported_pixel_format[0];
     if (!pixel_format || pixel_format == mir_pixel_format_invalid)
@@ -55,15 +55,15 @@ mgn::NestedDisplay::NestedDisplay(std::shared_ptr<NestedPlatform> const& platfor
 
     EGLNativeDisplayType native_display;
     if (!(native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(platform->connection)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native display.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native display."));
 
     egl_display = eglGetDisplay(native_display);
     if (egl_display == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
 
     EGLNativeWindowType native_window;
     if (!(native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(mir_surface)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window."));
 
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -88,22 +88,22 @@ mgn::NestedDisplay::NestedDisplay(std::shared_ptr<NestedPlatform> const& platfor
 
     res = eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
     if ((res != EGL_TRUE) || (n != 1))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to choose EGL configuration.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to choose EGL configuration."));
 
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
     if (egl_surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create window surface.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
 
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
     if (egl_context == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create context.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create context."));
 
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to MakeCurrent.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
 
     egl_surface = eglGetCurrentSurface(EGL_DRAW);
     if (egl_surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get current egl surface: "));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get current EGL surface."));
 }
 
 mgn::NestedDisplay::~NestedDisplay()
@@ -185,7 +185,7 @@ void mgn::NestedDisplay::resume()
 void mgn::NestedDisplay::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to MakeCurrent.\n"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to MakeCurrent."));
 }
 
 void mgn::NestedDisplay::release_current()
