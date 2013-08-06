@@ -13,34 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Robert Carr <racarr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SESSION_AUTHORIZER_H_
-#define MIR_FRONTEND_SESSION_AUTHORIZER_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 
-#include <sys/types.h>
+#include "mir/shell/display_changer.h"
+#include "null_display_config.h"
 
 namespace mir
 {
-namespace frontend
+namespace test
+{
+namespace doubles
 {
 
-class SessionAuthorizer
+class NullDisplayChanger : public shell::DisplayChanger
 {
 public:
-    virtual ~SessionAuthorizer() {}
-    
-    virtual bool connection_is_allowed(pid_t pid) = 0;
-    virtual bool configure_display_is_allowed(pid_t pid) = 0;
-protected:
-    SessionAuthorizer() = default;
-    SessionAuthorizer(SessionAuthorizer const&) = delete;
-    SessionAuthorizer& operator=(SessionAuthorizer const&) = delete;
+    virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration()
+    {
+        return std::make_shared<NullDisplayConfig>();
+    }
+    virtual void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
+    {
+    }
 };
-
+}
+}
 }
 
-} // namespace mir
-
-#endif // MIR_FRONTEND_SESSION_AUTHORIZER_H_
+#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_ */

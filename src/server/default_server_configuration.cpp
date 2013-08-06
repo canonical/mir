@@ -36,6 +36,7 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
+#include "mir/shell/unauthorized_display_changer.h"
 #include "mir/shell/registration_order_focus_sequence.h"
 #include "mir/shell/default_focus_mechanism.h"
 #include "mir/shell/default_session_container.h"
@@ -72,6 +73,7 @@
 #include "mir/lttng/message_processor_report.h"
 #include "mir/lttng/input_report.h"
 #include "mir/shell/surface_source.h"
+#include "mir/shell/mediating_display_changer.h"
 #include "mir/surfaces/surface_allocator.h"
 #include "mir/surfaces/surface_stack.h"
 #include "mir/surfaces/surface_controller.h"
@@ -109,14 +111,14 @@ public:
         std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<mg::Display> const& graphics_display,
+        std::shared_ptr<msh::DisplayChanger> const& display_changer,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
         mp_report(mr_report),
         cache(std::make_shared<mf::ResourceCache>()),
         graphics_platform(graphics_platform),
-        graphics_display(graphics_display),
+        display_changer(display_changer),
         buffer_allocator(buffer_allocator)
     {
     }
@@ -127,16 +129,26 @@ private:
     std::shared_ptr<mf::MessageProcessorReport> const mp_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<msh::DisplayChanger> const display_changer;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        std::shared_ptr<mf::EventSink> const& sink)
+        std::shared_ptr<mf::EventSink> const& sink, bool authorized_to_resize_display)
     {
+        std::shared_ptr<msh::DisplayChanger> changer;
+        if(authorized_to_resize_display)
+        {
+            changer = display_changer; 
+        }
+        else
+        {
+            changer = std::make_shared<msh::UnauthorizedDisplayChanger>(display_changer); 
+        }
+
         return std::make_shared<mf::SessionMediator>(
             shell,
             graphics_platform,
-            graphics_display,
+            changer,
             buffer_allocator,
             sm_report,
             sink,
@@ -319,12 +331,15 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_display_report());
             }
-            else
-            {
-                auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-                return std::make_shared<mir::graphics::nested::NestedPlatform>(/*TODO: the_options(),*/
-                    the_display_report(), create_native_platform());
-            }
+
+            const std::string host_socket = the_options()->get("nested-mode", default_server_socket);
+            const std::string server_socket = the_options()->get("file", default_server_socket);
+
+            if (server_socket == host_socket)
+                throw mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!");
+
+            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
+            return std::make_shared<mir::graphics::nested::NestedPlatform>(host_socket, the_display_report(), create_native_platform());
         });
 }
 
@@ -355,6 +370,13 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
         {
             return std::make_shared<mc::GLRendererFactory>();
         });
+}
+
+std::shared_ptr<msh::DisplayChanger>
+mir::DefaultServerConfiguration::the_shell_display_changer()
+{
+    return shell_display_changer([this]()
+        { return std::make_shared<msh::MediatingDisplayChanger>(the_display()); });
 }
 
 std::shared_ptr<msh::SessionContainer>
@@ -695,7 +717,6 @@ mir::DefaultServerConfiguration::the_compositor()
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
 {
     return ipc_factory(
@@ -706,7 +727,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                display, allocator);
+                the_shell_display_changer(), allocator);
         });
 }
 
@@ -716,6 +737,11 @@ mir::DefaultServerConfiguration::the_session_authorizer()
     struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
     {
         bool connection_is_allowed(pid_t /* pid */)
+        {
+            return true;
+        }
+
+        bool configure_display_is_allowed(pid_t /* pid */)
         {
             return true;
         }

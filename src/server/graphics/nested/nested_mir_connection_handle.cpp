@@ -13,34 +13,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Robert Carr <racarr@canonical.com>
+ * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SESSION_AUTHORIZER_H_
-#define MIR_FRONTEND_SESSION_AUTHORIZER_H_
+#include "mir/graphics/nested/nested_mir_connection_handle.h"
+#include "mir_toolkit/mir_client_library.h"
 
-#include <sys/types.h>
+namespace mgn = mir::graphics::nested;
 
-namespace mir
+mgn::MirConnectionHandle::MirConnectionHandle(MirConnection* const mir_connection)
+    : connection(mir_connection)
 {
-namespace frontend
-{
-
-class SessionAuthorizer
-{
-public:
-    virtual ~SessionAuthorizer() {}
-    
-    virtual bool connection_is_allowed(pid_t pid) = 0;
-    virtual bool configure_display_is_allowed(pid_t pid) = 0;
-protected:
-    SessionAuthorizer() = default;
-    SessionAuthorizer(SessionAuthorizer const&) = delete;
-    SessionAuthorizer& operator=(SessionAuthorizer const&) = delete;
-};
-
 }
 
-} // namespace mir
-
-#endif // MIR_FRONTEND_SESSION_AUTHORIZER_H_
+mgn::MirConnectionHandle::~MirConnectionHandle()
+{
+    mir_connection_release(connection);
+}

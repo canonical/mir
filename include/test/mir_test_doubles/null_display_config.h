@@ -13,13 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SESSION_AUTHORIZER_H_
-#define MIR_TEST_DOUBLES_STUB_SESSION_AUTHORIZER_H_
+#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_
+#define MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_
 
-#include "mir/frontend/session_authorizer.h"
+#include "mir/graphics/display_configuration.h"
 
 namespace mir
 {
@@ -28,20 +28,24 @@ namespace test
 namespace doubles
 {
 
-class StubSessionAuthorizer : public frontend::SessionAuthorizer
+struct NullDisplayConfig : public graphics::DisplayConfiguration
 {
-    bool connection_is_allowed(pid_t)
+    NullDisplayConfig()
     {
-        return true;
     }
-    bool configure_display_is_allowed(pid_t)
+    virtual void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
     {
-        return true;
+    }
+    virtual void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)>) const
+    {
+    }
+    virtual void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
+    {
     }
 };
 
 }
 }
-} // namespace mir
+}
 
-#endif // MIR_TEST_DOUBLES_STUB_SESSION_AUTHORIZER_H_
+#endif /*MIR_TEST_DOUBLES_NULL_DISPLAY_CONFIG_H_ */

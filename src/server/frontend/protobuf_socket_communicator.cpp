@@ -135,13 +135,15 @@ void mf::ProtobufSocketCommunicator::on_new_connection(
 {
     if (!ec)
     {
-        auto messenger = std::make_shared<detail::SocketMessenger>(socket); 
-        if (session_authorizer->connection_is_allowed(messenger->client_pid()))
+        auto messenger = std::make_shared<detail::SocketMessenger>(socket);
+        auto client_pid = messenger->client_pid(); 
+        if (session_authorizer->connection_is_allowed(client_pid))
         {
+            auto authorized_to_resize_display = session_authorizer->configure_display_is_allowed(client_pid);
             auto event_sink = std::make_shared<detail::EventSender>(messenger);
             auto msg_processor = std::make_shared<detail::ProtobufMessageProcessor>(
                 messenger,
-                ipc_factory->make_ipc_server(event_sink),
+                ipc_factory->make_ipc_server(event_sink, authorized_to_resize_display),
                 ipc_factory->resource_cache(),
                 ipc_factory->report());
             auto const& session = std::make_shared<mfd::SocketSession>(
