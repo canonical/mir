@@ -76,6 +76,7 @@ mc::SwitchingBundle::SwitchingBundle(
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
+      overlapping_compositors{false},
       framedropping{false}, force_drop{0}
 {
     if (nbuffers < 1 || nbuffers > MAX_NBUFFERS)
@@ -159,9 +160,12 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
     if (!ring[slot].buf)
     {
         int i = first_free();
-
-        while (i != first_compositor && !ring[i].buf)
+        int n = nfree();
+        while (n && !ring[i].buf)
+        {
             i = next(i);
+            n--;
+        }
 
         if (i != slot && ring[i].buf && ring[i].buf.unique())
         {
@@ -192,7 +196,20 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
     }
     else
     {
-        while (!nfree())
+        /*
+         * Even if there are free buffers available, we might wish to still
+         * wait. This is so we don't touch (hence allocate) a third or higher
+         * buffer until/unless it's absolutely necessary. It becomes necessary
+         * only when framedropping (above) or with overlapping compositors
+         * (like with bypass).
+         * The performance benefit of triple buffering is usually minimal,
+         * but always uses 50% more memory. So try to avoid it when possible.
+         */
+
+        int min_free = (nbuffers > 2 && !overlapping_compositors) ?
+            nbuffers - 1 : 1;
+
+        while (nfree() < min_free)
             cond.wait(lock);
     }
 
@@ -281,6 +298,8 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         ncompositors++;
         last_consumed = t;
     }
+
+    overlapping_compositors = (ncompositors > 1);
 
     ring[compositor].users++;
     return alloc_buffer(compositor);
