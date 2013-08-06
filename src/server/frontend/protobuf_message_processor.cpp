@@ -170,6 +170,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         {
             invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
         }
+        else if ("configure_display" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::configure_display, invocation);
+        }
         else if ("configure_surface" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::configure_surface, invocation);

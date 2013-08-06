@@ -22,6 +22,7 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/display_changer.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
@@ -30,7 +31,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
+#include "mir/shell/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
@@ -49,15 +50,15 @@ namespace mg = mir::graphics;
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
-    std::shared_ptr<graphics::Display> const& display,
+    std::shared_ptr<msh::DisplayChanger> const& display_changer,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
-    display(display),
     buffer_allocator(buffer_allocator),
+    display_changer(display_changer),
     report(report),
     event_sink(sender),
     resource_cache(resource_cache),
@@ -96,7 +97,7 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto display_config = display->configuration();
+    auto display_config = display_changer->active_configuration();
     auto supported_pfs = buffer_allocator->supported_pixel_formats();
     display_config->for_each_output([&response, &supported_pfs](mg::DisplayConfigurationOutput const& config)
     {
@@ -284,5 +285,28 @@ void mf::SessionMediator::configure_surface(
         response->set_ivalue(newvalue);
     }
 
+    done->Run();
+}
+
+void mf::SessionMediator::configure_display(
+    ::google::protobuf::RpcController*,
+    const ::mir::protobuf::DisplayConfiguration* request,
+    ::mir::protobuf::Void*,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto config = display_changer->active_configuration();
+        for (auto i=0; i < request->display_output_size(); i++)
+        {   
+            auto& output = request->display_output(i);
+            mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
+            config->configure_output(output_id, output.used(),
+                                     geom::Point{output.position_x(), output.position_y()},
+                                     output.current_mode());
+        }
+
+        display_changer->configure(session, config);
+    }
     done->Run();
 }

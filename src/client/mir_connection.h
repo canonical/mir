@@ -113,6 +113,9 @@ public:
 
     void on_surface_created(int id, MirSurface* surface);
 
+    MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
+    void done_display_configure();
+
 private:
     std::recursive_mutex mutex; // Protects all members of *this
 
@@ -136,6 +139,7 @@ private:
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
     MirWaitHandle drm_auth_magic_wait_handle;
+    MirWaitHandle configure_display_wait_handle;
 
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
@@ -144,13 +148,13 @@ private:
     static std::mutex connection_guard;
     static std::unordered_set<MirConnection*> valid_connections;
 
-
     struct SurfaceRelease;
 
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
     void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
+    bool validate_user_display_config(MirDisplayConfiguration* config);
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

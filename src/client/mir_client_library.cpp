@@ -396,3 +396,11 @@ int mir_surface_get_swapinterval(MirSurface* surf)
 {
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
 }
+
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
+{
+    if (!connection)
+        return NULL;
+ 
+    return connection->configure_display(display_configuration); 
+}
