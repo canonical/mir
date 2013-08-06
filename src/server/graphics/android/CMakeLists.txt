@@ -33,7 +33,8 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphics
-  mirserver
+
+  mirplatform
   mirsharedandroid
 
   ${LIBHARDWARE_LIBRARIES}
