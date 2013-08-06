@@ -43,8 +43,6 @@ public:
                     const std::shared_ptr<graphics::GraphicBufferAllocator> &,
                     const graphics::BufferProperties &);
 
-    ~SwitchingBundle() noexcept;
-
     graphics::BufferProperties properties() const;
 
     std::shared_ptr<graphics::Buffer> client_acquire();
@@ -70,12 +68,13 @@ private:
 
     const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
 
+    enum {MAX_NBUFFERS = 5};
     struct SharedBuffer
     {
         std::shared_ptr<graphics::Buffer> buf;
         int users;  // presently just a count of compositors sharing the buf
     };
-    SharedBuffer *ring;
+    SharedBuffer ring[MAX_NBUFFERS];
 
     const int nbuffers;
     int first_compositor;

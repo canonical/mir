@@ -77,22 +77,17 @@ mc::SwitchingBundle::SwitchingBundle(
       snapshot{-1}, nsnapshotters{0},
       framedropping{false}, force_drop{0}
 {
-    if (nbuffers < 1)
+    if (nbuffers < 1 || nbuffers > MAX_NBUFFERS)
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle requires a "
-                                               "positive number of buffers"));
+        BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle only supports "
+                                               "nbuffers betwee 1 and " +
+                                               std::to_string(MAX_NBUFFERS)));
     }
 
-    ring = new SharedBuffer[nbuffers];
     for (int i = 0; i < nbuffers; i++)
         ring[i].users = 0;
 
     last_consumed = now() - std::chrono::seconds(1);
-}
-
-mc::SwitchingBundle::~SwitchingBundle() noexcept
-{
-    delete[] ring;
 }
 
 int mc::SwitchingBundle::nfree() const
