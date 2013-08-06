@@ -21,7 +21,6 @@ target_link_libraries(
   mirplatform
   mirsharedgeometry
 
-  ${MIR_COMMON_PLATFORM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
