@@ -94,8 +94,6 @@ private:
         { return std::chrono::high_resolution_clock::now(); }
     time_point last_consumed;
 
-    bool overlapping_compositors;
-
     bool framedropping;
     int force_drop;
 };

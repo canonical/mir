@@ -294,6 +294,25 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
     }
 }
 
+TEST_F(SwitchingBundleTest, clients_steal_all_the_buffers)
+{
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
+    {
+        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+
+        for (int i = 1; i < nbuffers; i++)
+            bundle.client_acquire();
+
+        bundle.compositor_release(bundle.compositor_acquire());
+        bundle.client_acquire();
+
+        EXPECT_THROW(
+            bundle.compositor_acquire(),
+            std::logic_error
+        );
+    }
+}
+
 TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
@@ -475,115 +494,6 @@ TEST_F(SwitchingBundleTest, stress)
         compositor.join();
         snapshotter1.join();
         snapshotter2.join();
-    }
-}
-
-TEST_F(SwitchingBundleTest, synchronous_clients_only_get_two_real_buffers)
-{
-    /*
-     * You might ask for more buffers, but we should only allocate two
-     * unique ones while it makes sense to do so. Buffers are big things and
-     * should be allocated sparingly...
-     */
-    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
-    {
-        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
-
-        bundle.allow_framedropping(false);
-
-        const int nframes = 100;
-        mg::BufferID prev_id, prev_prev_id;
-
-        std::thread client(client_thread, std::ref(bundle), nframes);
-
-        for (int frame = 0; frame < nframes; frame++)
-        {
-            sleep_one_frame();
-
-            auto compositor = bundle.compositor_acquire();
-            auto compositor_id = compositor->id();
-            bundle.compositor_release(compositor);
-
-            if (frame >= 2)
-                ASSERT_EQ(prev_prev_id, compositor_id);
-
-            prev_prev_id = prev_id;
-            prev_id = compositor_id;
-        }
-
-        client.join();
-    }
-}
-
-TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
-{
-    for (int nbuffers = 3; nbuffers < 5; nbuffers++)
-    {
-        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
-    
-        std::shared_ptr<mg::Buffer> compositor[2];
-    
-        bundle.client_release(bundle.client_acquire());
-        compositor[0] = bundle.compositor_acquire();
-    
-        sleep_one_frame();
-        bundle.client_release(bundle.client_acquire());
-        compositor[1] = bundle.compositor_acquire();
-    
-        for (int i = 0; i < 50; i++)
-        {
-            // Two compositors acquired, and they're always different...
-            ASSERT_NE(compositor[0]->id(), compositor[1]->id());
-    
-            auto client = bundle.client_acquire();
-            ASSERT_NE(compositor[0]->id(), client->id());
-            ASSERT_NE(compositor[1]->id(), client->id());
-            bundle.client_release(client);
-
-            // One of the compositors (the oldest one) gets a new buffer...
-            int oldest = i & 1;
-            bundle.compositor_release(compositor[oldest]);
-
-            sleep_one_frame();
-            compositor[oldest] = bundle.compositor_acquire();
-        }
-    
-        bundle.compositor_release(compositor[0]);
-        bundle.compositor_release(compositor[1]);
-    }
-}
-
-TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
-{
-    const int max_nbuffers = 5;
-    for (int nbuffers = 2; nbuffers <= max_nbuffers; nbuffers++)
-    {
-        mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
-
-        bundle.allow_framedropping(true);
-
-        const int nframes = 100;
-        mg::BufferID expect[max_nbuffers];
-        std::shared_ptr<mg::Buffer> buf[max_nbuffers];
-            
-        for (int b = 0; b < nbuffers; b++)
-        {
-            buf[b] = bundle.client_acquire();
-            expect[b] = buf[b]->id();
-
-            for (int p = 0; p < b; p++)
-                ASSERT_NE(expect[p], expect[b]);
-        }
-
-        for (int b = 0; b < nbuffers; b++)
-            bundle.client_release(buf[b]);
-
-        for (int frame = 0; frame < nframes; frame++)
-        {
-            auto client = bundle.client_acquire();
-            ASSERT_EQ(expect[frame % nbuffers], client->id());
-            bundle.client_release(client);
-        }
     }
 }
 
