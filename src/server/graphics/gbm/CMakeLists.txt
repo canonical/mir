@@ -37,7 +37,7 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphics
-  mirserver
+  mirplatform
 
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
