@@ -168,12 +168,6 @@ void mgn::NestedDisplay::register_pause_resume_handlers(
 {
 }
 
-void mgn::NestedDisplay::register_configuration_change_handler(
-        MainLoop&,
-    DisplayConfigurationChangeHandler const&)
-{
-}
-
 void mgn::NestedDisplay::pause()
 {
 }
