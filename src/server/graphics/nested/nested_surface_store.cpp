@@ -16,35 +16,25 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
-#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#include "nested_surface_store.h"
 
-struct MirConnection;
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
-namespace mir
+EGLSurfaceStore::EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface) :
+    egl_display_{egl_display},
+    egl_surface_{egl_surface}
 {
-namespace graphics
-{
-namespace nested
-{
-
-class MirConnectionHandle
-{
-public:
-    MirConnectionHandle(MirConnection* const mir_connection);
-    ~MirConnectionHandle();
-
-    MirConnectionHandle(MirConnectionHandle const&) = delete;
-    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
-
-    operator MirConnection*() {return (MirConnection*)connection;}
-    MirConnection* operator ->() const {return connection;}
-
-private:
-    MirConnection* const connection;
-};
-
+    if (egl_surface_ == EGL_NO_SURFACE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Display: Could not create egl surface\n"));
 }
+
+EGLSurfaceStore::~EGLSurfaceStore()
+{
+    eglDestroySurface(egl_display_, egl_surface_);
 }
+
+EGLSurfaceStore::operator EGLSurface() const
+{
+    return egl_surface_;
 }
-#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_

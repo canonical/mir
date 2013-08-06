@@ -16,35 +16,20 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
-#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#include "nested_display_configuration.h"
 
-struct MirConnection;
-
-namespace mir
+NullDisplayConfiguration::~NullDisplayConfiguration()
 {
-namespace graphics
-{
-namespace nested
-{
-
-class MirConnectionHandle
-{
-public:
-    MirConnectionHandle(MirConnection* const mir_connection);
-    ~MirConnectionHandle();
-
-    MirConnectionHandle(MirConnectionHandle const&) = delete;
-    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
-
-    operator MirConnection*() {return (MirConnection*)connection;}
-    MirConnection* operator ->() const {return connection;}
-
-private:
-    MirConnection* const connection;
-};
-
 }
+
+void NullDisplayConfiguration::for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
+{
 }
+
+void NullDisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)>) const
+{
 }
-#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+
+void NullDisplayConfiguration::configure_output(mg::DisplayConfigurationOutputId /*id*/, bool /*used*/, geom::Point /*top_left*/, size_t /*mode_index*/)
+{
+}

@@ -16,35 +16,25 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
-#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#include "nested_gl_context_store.h"
 
-struct MirConnection;
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
-namespace mir
+EGLContextStore::EGLContextStore(EGLDisplay egl_display, EGLContext egl_context) :
+    egl_display_{egl_display},
+    egl_context_{egl_context}
 {
-namespace graphics
-{
-namespace nested
-{
-
-class MirConnectionHandle
-{
-public:
-    MirConnectionHandle(MirConnection* const mir_connection);
-    ~MirConnectionHandle();
-
-    MirConnectionHandle(MirConnectionHandle const&) = delete;
-    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
-
-    operator MirConnection*() {return (MirConnection*)connection;}
-    MirConnection* operator ->() const {return connection;}
-
-private:
-    MirConnection* const connection;
-};
-
+    if (egl_context_ == EGL_NO_CONTEXT)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Mir Nested Display Error: Could not create EGL context\n"));
 }
+
+EGLContextStore::~EGLContextStore()
+{
+    eglDestroyContext(egl_display_, egl_context_);
 }
+
+EGLContextStore::operator EGLContext() const
+{
+    return egl_context_;
 }
-#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
