@@ -114,3 +114,19 @@ TEST_F(SessionManagerSetup, create_surface)
 
     session_manager.handle_surface_created(session);
 }
+
+TEST_F(SessionManagerSetup, create_surface)
+{
+    using namespace testing;
+
+    mtd::MockSession session1, session2;
+
+    EXPECT_CALL(focus_setter, focused_session())
+        .Times(2)
+        .WillOnce(Return(mt::fake_shared(session1)))
+        .WillOnce(Return(mt::fake_shared(session2)));
+    EXPECT_CALL(display_changer, change_display(_))
+        .Times(1);
+
+    session_manager.handle_display_configuration(session);
+}
