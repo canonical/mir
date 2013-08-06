@@ -149,7 +149,6 @@ struct InputClient : ClientConfig
         {
             std::cout << e.what() << std::endl;
         }
-
     }
 
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
@@ -175,20 +174,28 @@ struct InputClient : ClientConfig
 
     void exec()
     {
+        printf("exec1\n");
         handler = std::make_shared<MockInputHandler>();
 
+        printf("exec2\n");
         expect_input(events_received);
 
+        printf("exec3\n");
         mir_wait_for(mir_connect(
             mir_test_socket,
             client_name.c_str(),
             connection_callback,
             this));
          ASSERT_TRUE(connection != NULL);
+        printf("exec4\n");
 
          auto request_params = parameters();
+        printf("exec5\n");
          mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
 
+        printf("exec6\n");
+
+        printf("exec7\n");
          events_received.wait_for_at_most_seconds(2);
 
          mir_surface_release_sync(surface);
@@ -868,27 +875,37 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             {
                 if (session->name() == session_name)
                     session->hide();
+                printf("hdier\n");
             });
         }
 
         void inject_input()
         {
+        printf("cli 1 here\n");
             wait_until_client_appears(test_client_name);
+        printf("cli 2 here\n");
             wait_until_client_appears(test_client_2_name);
+        printf("waiting for sig\n");
             input_cb_setup_fence.wait_for_signal_ready_for();
 
             // We send one event and then hide the surface on top before sending the next. 
             // So we expect each of the two surfaces to receive one event pair.
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
+        printf("sent\n");
 
             // We use a fence to ensure we do not hide the client
             // before event dispatch occurs
+        printf("waiting for 2sig\n");
             second_client_done_fence.wait_for_signal_ready_for();
+        printf("hiding\n");
             hide_session_by_name(test_client_2_name);
 
+        printf("now sending 2\n");
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
+        printf("done!\n");
         }
     } server_config{fence, second_client_done_fence};
+
     launch_server_process(server_config);
     
     struct ButtonClientOne : InputClient
@@ -898,6 +915,12 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
         {
         }
         
+        void exec()
+        {
+            printf("CLIENT 1 EXEC.\n");
+            InputClient::exec();
+            printf("CLIENT 1 EXIT.\n");
+        }
         void expect_input(mt::WaitCondition& events_received) override
         {
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(AnyNumber());
@@ -917,9 +940,12 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
         }
         void exec()
         {
+            printf("EXEC wait.\n");
             // Ensure we stack on top of the first client
             input_cb_setup_fence.wait_for_signal_ready_for();
+            printf("EXEC cont.\n");
             InputClient::exec();
+            printf("EXEC dune cont.\n");
         }
 
         void expect_input(mt::WaitCondition& events_received) override

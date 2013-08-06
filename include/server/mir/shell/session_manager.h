@@ -61,6 +61,7 @@ public:
     virtual void close_session(std::shared_ptr<frontend::Session> const& session);
 
     virtual void reevaluate_sessions(); 
+    virtual void set_focus(std::shared_ptr<frontend::Session> const& session);
 
 protected:
     SessionManager(const SessionManager&) = delete;

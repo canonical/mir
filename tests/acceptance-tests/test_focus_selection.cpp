@@ -139,11 +139,14 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 
                 auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
                 {
-                    InSequence seq;
-                    // Once on application registration and once on surface creation
-                    // and once when the session is closed
+                    Sequence seq;
+
                     EXPECT_CALL(*focus_setter, reevaluate_focus())
-                        .Times(3);
+                        .InSequence(seq);
+                    EXPECT_CALL(*focus_setter, set_focus(_))
+                        .InSequence(seq);
+                    EXPECT_CALL(*focus_setter, reevaluate_focus())
+                        .InSequence(seq);
                 }
                 // TODO: Counterexample ~racarr
 
@@ -184,7 +187,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
                 {
                     InSequence seq;
-                    EXPECT_CALL(*targeter, focus_changed(_)).Times(1);
+                    EXPECT_CALL(*targeter, focus_changed(_)).Times(2);
                     expected = true;
                 }
             }

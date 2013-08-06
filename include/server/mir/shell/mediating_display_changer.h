@@ -44,8 +44,7 @@ class MediatingDisplayChanger : public shell::DisplayChanger
 public:
     explicit MediatingDisplayChanger(
         std::shared_ptr<graphics::Display> const& display,
-        std::shared_ptr<compositor::Compositor> const& compositor,
-        std::shared_ptr<FocusSetter> const& focus);
+        std::shared_ptr<compositor::Compositor> const& compositor);
 
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
 
@@ -60,7 +59,6 @@ private:
     std::unordered_map<frontend::Session*, std::shared_ptr<graphics::DisplayConfiguration> > config_map;
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<compositor::Compositor> const compositor;
-    std::shared_ptr<FocusSetter> const focus;
     std::shared_ptr<graphics::DisplayConfiguration> const base_config;
     std::shared_ptr<graphics::DisplayConfiguration> active_config;
 };

@@ -42,6 +42,7 @@ public:
         std::string const& name, std::shared_ptr<EventSink> const& sink) = 0;
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
     virtual void reevaluate_sessions() = 0; 
+    virtual void set_focus(std::shared_ptr<Session> const& session) = 0;
 
 protected:
     Shell() = default;

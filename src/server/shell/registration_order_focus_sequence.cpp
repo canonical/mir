@@ -69,7 +69,11 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::successor_of(
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
+printf("SHOULD BE?\n");
+        return focused_app;
+       // return focused_app;
+//        return nullptr;
+        //BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
     }
 }
 
@@ -102,10 +106,13 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::predecessor_o
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
+        return focused_app;
+
+//        BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
     }
 }
 
+#include <iostream>
 std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::default_focus() const
 {
     std::shared_ptr<Session> result;
@@ -116,5 +123,6 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::default_focus
             result = session;
         });
 
+    std::cout << "default focuse " << result << std::endl;
     return result;
 }

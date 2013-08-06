@@ -32,7 +32,7 @@ struct StubSession : public frontend::Session
 {
     frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */)
     {
-        return frontend::SurfaceId{0};
+        return frontend::SurfaceId{1};
     }
     void destroy_surface(frontend::SurfaceId /* surface */)
     {

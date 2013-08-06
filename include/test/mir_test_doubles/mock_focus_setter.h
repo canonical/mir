@@ -35,6 +35,7 @@ struct MockFocusSetter : public shell::FocusSetter
     MOCK_METHOD0(focus_clear, void());
     MOCK_METHOD0(reevaluate_focus, void());
     MOCK_CONST_METHOD0(focused_application, std::weak_ptr<shell::Session>());
+    MOCK_METHOD1(set_focus, void(std::shared_ptr<shell::Session> const&));
 };
 
 }

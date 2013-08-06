@@ -29,6 +29,8 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
+#include <iostream>
+
 msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::FocusSequence> const& sequence,
                                                   std::shared_ptr<msh::InputTargeter> const& input_targeter,
                                                   std::shared_ptr<msh::SurfaceController> const& surface_controller,
@@ -39,35 +41,48 @@ msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::FocusSequ
     input_targeter(input_targeter),
     surface_controller(surface_controller),
     display_changer(changer),
-    focus_session(sequence->default_focus())
+    focus_session(nullptr)
 { 
 }
 
+void msh::DefaultFocusMechanism::set_focus(std::shared_ptr<msh::Session> const& session)
+{
+    focus_session = session;
+    display_changer->set_focus_to(focus_session);
+    session_listener->focused(focus_session);
+
+    //todo shouldnt do this here
+    auto surface = focus_session->default_surface();
+    if (surface)
+    {
+        std::cout << " focus change " << surface << std::endl;
+        printf("RAISIN \n");
+        surface->raise(surface_controller);
+        surface->take_input_focus(input_targeter);
+    } 
+
+}
 void msh::DefaultFocusMechanism::reevaluate_focus()
 {
-    //todo: nullptr passing is bad
-    auto next_focus = sequence->successor_of(focus_session);
-    if (!next_focus)
-    {
-        session_listener->unfocused();
-        input_targeter->focus_cleared();
-    }
+    std::unique_lock<std::mutex> lock(mutex);
+    //todo, should be in constructor, small dependency between sequence and the session manager to sort out
+    if(!focus_session)
+        focus_session = sequence->default_focus();
     else
+        focus_session = sequence->successor_of(focus_session);
+
+    display_changer->set_focus_to(focus_session);
+    session_listener->focused(focus_session);
+
+    //todo shouldnt do this here
+    auto surface = focus_session->default_surface();
+    if (surface)
     {
-        focus_session = next_focus;
-
-        display_changer->set_focus_to(focus_session);
-        session_listener->focused(focus_session);
-
-        //todo shouldnt do this here
-        auto surface = focus_session->default_surface();
-        if (surface)
-        {
-            surface->raise(surface_controller);
-            surface->take_input_focus(input_targeter);
-        } 
-    }
-
+        std::cout << " focus change " << surface << std::endl;
+        printf("RAISIN \n");
+        surface->raise(surface_controller);
+        surface->take_input_focus(input_targeter);
+    } 
 }
 
 std::weak_ptr<msh::Session> msh::DefaultFocusMechanism::focused_application() const

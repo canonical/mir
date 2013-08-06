@@ -35,6 +35,7 @@ class FocusSetter
 public:
     virtual ~FocusSetter() {}
 
+    virtual void set_focus(std::shared_ptr<Session> const& session) = 0;
     virtual void reevaluate_focus() = 0;
     virtual std::weak_ptr<Session> focused_application() const = 0;
 

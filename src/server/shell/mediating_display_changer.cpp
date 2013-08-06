@@ -30,11 +30,9 @@ namespace mc = mir::compositor;
 
 msh::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
-    std::shared_ptr<mc::Compositor> const& compositor,
-    std::shared_ptr<msh::FocusSetter> const& focus)
+    std::shared_ptr<mc::Compositor> const& compositor)
     : display(display),
       compositor(compositor),
-      focus(focus),
       base_config(display->configuration()),
       active_config(base_config)
 {
@@ -60,11 +58,6 @@ void msh::MediatingDisplayChanger::configure(
 {
     auto requesting_application = app.lock();
     config_map[requesting_application.get()] = requested_configuration;
-
-    if ( requesting_application == focus->focused_application().lock())
-    {
-        apply_config(requested_configuration);
-    }
 }
 
 void msh::MediatingDisplayChanger::set_focus_to(std::weak_ptr<mf::Session> const& app)

@@ -39,9 +39,8 @@ class StubShell : public frontend::Shell
     {
     }
 
-    virtual void reevaluate_sessions()
-    {
-    }
+    virtual void reevaluate_sessions() {}
+    void set_focus(std::shared_ptr<frontend::Session> const&) {}
  
 };
 

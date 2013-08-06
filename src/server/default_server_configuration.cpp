@@ -377,7 +377,7 @@ mir::DefaultServerConfiguration::the_shell_display_changer()
 {
     return shell_display_changer([this]()
         { return std::make_shared<msh::MediatingDisplayChanger>(
-            the_display(), the_compositor(), nullptr);});//the_shell_focus_setter()); });
+            the_display(), the_compositor());});
 }
 
 std::shared_ptr<msh::SessionContainer>
@@ -394,8 +394,10 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
         [this]
         {
             return std::make_shared<msh::DefaultFocusMechanism>(
-                the_shell_focus_sequence(), the_input_targeter(),
-                the_surface_controller(), the_shell_session_listener(),
+                the_shell_focus_sequence(),
+                the_input_targeter(),
+                the_surface_controller(),
+                the_shell_session_listener(),
                 the_shell_display_changer());
         });
 }

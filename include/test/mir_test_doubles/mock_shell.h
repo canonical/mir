@@ -38,6 +38,7 @@ struct MockShell : public frontend::Shell
         std::string const&, std::shared_ptr<frontend::EventSink> const&));
     MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::Session> const&));
     MOCK_METHOD0(reevaluate_sessions, void()); 
+    MOCK_METHOD1(set_focus, void(std::shared_ptr<frontend::Session> const&));
 };
 
 }

@@ -43,6 +43,7 @@ public:
                                    std::shared_ptr<DisplayChanger> const& display_changer);
     virtual ~DefaultFocusMechanism() = default;
 
+    void set_focus(std::shared_ptr<Session> const& session);
     void reevaluate_focus();
     std::weak_ptr<Session> focused_application() const;
 
