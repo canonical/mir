@@ -28,16 +28,17 @@ namespace shell
 {
 class Session;
 
-/// Interface used by the Shell to propagate changes in the focus model to interested views
-/// e.g. Input, or Surfaces.
+/// Interface used by the Shell to customize behavior based around focus
 class FocusSetter
 {
 public:
     virtual ~FocusSetter() {}
 
-    virtual void set_focus(std::shared_ptr<Session> const& session) = 0;
-    virtual void reevaluate_focus() = 0;
-    virtual std::weak_ptr<Session> focused_application() const = 0;
+    virtual void surface_created_for(std::shared_ptr<Session> const& session) = 0;
+    virtual void session_opened(std::shared_ptr<Session> const& session) = 0;
+    virtual void session_closed(std::shared_ptr<Session> const& session) = 0;
+
+    virtual std::weak_ptr<Session> focused_session() const = 0;
 
 protected:
     FocusSetter() = default;

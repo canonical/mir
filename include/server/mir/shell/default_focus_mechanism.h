@@ -43,15 +43,18 @@ public:
                                    std::shared_ptr<DisplayChanger> const& display_changer);
     virtual ~DefaultFocusMechanism() = default;
 
-    void set_focus(std::shared_ptr<Session> const& session);
-    void reevaluate_focus();
-    std::weak_ptr<Session> focused_application() const;
+    void surface_created_for(std::shared_ptr<Session> const& session);
+    void session_opened(std::shared_ptr<Session> const& session);
+    void session_closed(std::shared_ptr<Session> const& session);
+    std::weak_ptr<Session> focused_session() const;
 
 protected:
     DefaultFocusMechanism(const DefaultFocusMechanism&) = delete;
     DefaultFocusMechanism& operator=(const DefaultFocusMechanism&) = delete;
 
 private:
+    void set_focus(std::shared_ptr<Session> const& session);
+
     std::shared_ptr<FocusSequence> const sequence;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<InputTargeter> const input_targeter;

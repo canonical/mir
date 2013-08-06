@@ -90,25 +90,27 @@ TEST_F(SessionManagerSetup, open_and_close_session)
         .InSequence(seq);
     EXPECT_CALL(session_listener, starting(_))
         .InSequence(seq);
-    EXPECT_CALL(focus_setter, reevaluate_focus())
+    EXPECT_CALL(focus_setter, session_opened(_))
         .InSequence(seq);
 
     EXPECT_CALL(container, remove_session(_))
         .InSequence(seq);
     EXPECT_CALL(session_listener, stopping(_))
         .InSequence(seq);
-    EXPECT_CALL(focus_setter, reevaluate_focus())
+    EXPECT_CALL(focus_setter, session_closed(_))
         .InSequence(seq);
 
     auto session = session_manager.open_session("Visual Basic Studio", std::shared_ptr<mf::EventSink>());
     session_manager.close_session(session);
 }
 
-//TODO, this function is a bit of a frig
 TEST_F(SessionManagerSetup, create_surface)
 {
-    EXPECT_CALL(focus_setter, reevaluate_focus())
+    using namespace testing;
+
+    std::shared_ptr<mf::Session> session;
+    EXPECT_CALL(focus_setter, surface_created_for(_))
         .Times(1);
 
-    session_manager.reevaluate_sessions();
+    session_manager.handle_surface_created(session);
 }

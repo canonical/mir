@@ -78,9 +78,8 @@ std::shared_ptr<mf::Session> msh::SessionManager::open_session(std::string const
 
     app_container->insert_session(new_session);
     session_listener->starting(new_session);
+    focus_setter->session_opened(new_session);
 
-printf("starting, refocus.\n");
-    focus_setter->reevaluate_focus();
     return new_session;
 }
 
@@ -93,18 +92,20 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
 
     session_listener->stopping(shell_session);
 
-printf("ending, refocus.\n");
-    focus_setter->reevaluate_focus();
+    focus_setter->session_closed(shell_session);
 }
 
-void msh::SessionManager::reevaluate_sessions()
-{
-printf("arbitrary, refocus.\n");
-    focus_setter->reevaluate_focus();
-}
-
-void msh::SessionManager::set_focus(std::shared_ptr<mf::Session> const& session)
+void msh::SessionManager::handle_display_configuration(std::shared_ptr<mf::Session> const& session) 
 {
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
-    focus_setter->set_focus(shell_session);
+    if (focus_setter->focused_session().lock() == session)
+    {
+//        focus_setter->reevaluate_focus();
+    }
+}
+
+void msh::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> const& session)
+{
+    auto shell_session = std::dynamic_pointer_cast<Session>(session);
+    focus_setter->surface_created_for(shell_session);
 }

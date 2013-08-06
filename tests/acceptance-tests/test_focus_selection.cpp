@@ -141,11 +141,11 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
                 {
                     Sequence seq;
 
-                    EXPECT_CALL(*focus_setter, reevaluate_focus())
+                    EXPECT_CALL(*focus_setter, session_opened(_))
                         .InSequence(seq);
-                    EXPECT_CALL(*focus_setter, set_focus(_))
+                    EXPECT_CALL(*focus_setter, surface_created_for(_))
                         .InSequence(seq);
-                    EXPECT_CALL(*focus_setter, reevaluate_focus())
+                    EXPECT_CALL(*focus_setter, session_closed(_))
                         .InSequence(seq);
                 }
                 // TODO: Counterexample ~racarr

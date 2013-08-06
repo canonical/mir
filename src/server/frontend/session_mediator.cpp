@@ -182,8 +182,7 @@ void mf::SessionMediator::create_surface(
 
     done->Run();
 
-    shell->set_focus(session);
-
+    shell->handle_surface_created(session);
 }
 
 void mf::SessionMediator::next_buffer(
@@ -311,8 +310,9 @@ void mf::SessionMediator::configure_display(
         }
 
         display_changer->configure(session, config);
+
+        shell->handle_display_configuration(session); 
     }
     done->Run();
 
-    shell->reevaluate_sessions();
 }

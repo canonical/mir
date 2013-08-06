@@ -62,7 +62,36 @@ void msh::DefaultFocusMechanism::set_focus(std::shared_ptr<msh::Session> const& 
     } 
 
 }
-void msh::DefaultFocusMechanism::reevaluate_focus()
+
+void msh::DefaultFocusMechanism::surface_created_for(std::shared_ptr<Session> const& session)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    //just set focus when a new surface is created
+    set_focus(session);
+}
+void msh::DefaultFocusMechanism::session_opened(std::shared_ptr<Session> const& session)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    //just set focus to new session for now
+    set_focus(session);
+}
+
+void msh::DefaultFocusMechanism::session_closed(std::shared_ptr<Session> const& session)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    if (focus_session == session)
+    {
+        //cycle through to next focus if the currenttly-focused app is closed
+        focus_session = sequence->successor_of(focus_session);
+        set_focus(session); 
+    }
+}
+
+#if 0
+void msh::DefaultFocusMechanism::focus_next_session()
 {
     std::unique_lock<std::mutex> lock(mutex);
     //todo, should be in constructor, small dependency between sequence and the session manager to sort out
@@ -84,8 +113,8 @@ void msh::DefaultFocusMechanism::reevaluate_focus()
         surface->take_input_focus(input_targeter);
     } 
 }
-
-std::weak_ptr<msh::Session> msh::DefaultFocusMechanism::focused_application() const
+#endif
+std::weak_ptr<msh::Session> msh::DefaultFocusMechanism::focused_session() const
 {
     std::unique_lock<std::mutex> lock(mutex);
     return focus_session;
