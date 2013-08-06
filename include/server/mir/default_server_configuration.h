@@ -91,7 +91,7 @@ namespace input
 {
 class InputReport;
 class InputManager;
-class EventFilter;
+class CompositeEventFilter;
 class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
@@ -199,7 +199,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
-    virtual std::initializer_list<std::shared_ptr<input::EventFilter> const> the_event_filters();
+    virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();

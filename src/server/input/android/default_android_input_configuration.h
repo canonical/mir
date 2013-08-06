@@ -48,7 +48,6 @@ class InputTargeter;
 namespace input
 {
 class EventFilter;
-class EventFilterChain;
 class CursorListener;
 class InputReport;
 class InputRegion;
@@ -62,7 +61,7 @@ class InputThread;
 class DefaultInputConfiguration : public input::InputConfiguration
 {
 public:
-    DefaultInputConfiguration(std::initializer_list<std::shared_ptr<EventFilter> const> const& filters,
+    DefaultInputConfiguration(std::shared_ptr<EventFilter> const& event_filter,
                               std::shared_ptr<input::InputRegion> const& input_region,
                               std::shared_ptr<CursorListener> const& cursor_listener,
                               std::shared_ptr<input::InputReport> const& input_report);
@@ -114,7 +113,7 @@ private:
         }
     };
 
-    std::shared_ptr<EventFilterChain> const filter_chain;
+    std::shared_ptr<EventFilter> const event_filter;
     std::shared_ptr<input::InputRegion> const input_region;
     std::shared_ptr<CursorListener> const cursor_listener;
     

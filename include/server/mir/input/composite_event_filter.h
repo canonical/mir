@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,42 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
-#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
-
-#include <memory>
-#include <vector>
+#ifndef MIR_INPUT_COMPOSITE_EVENT_FILTER_H_
+#define MIR_INPUT_COMPOSITE_EVENT_FILTER_H_
 
 #include "mir/input/event_filter.h"
 
-namespace android
-{
-class InputEvent;
-}
-
-namespace droidinput = android;
+#include <memory>
 
 namespace mir
 {
 namespace input
 {
 
-class EventFilterChain : public EventFilter
+class CompositeEventFilter : public EventFilter
 {
 public:
-    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> values);
-
-    virtual bool handle(const MirEvent &event);
-
-private:
-    typedef std::vector<std::weak_ptr<EventFilter>> EventFilterVector;
-    EventFilterVector filters;
+    virtual void append(std::shared_ptr<EventFilter> const& filter) = 0;
+    virtual void prepend(std::shared_ptr<EventFilter> const& filter) = 0;
 };
 
 }
 }
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+#endif /* MIR_INPUT_COMPOSITE_EVENT_FILTER_H_ */

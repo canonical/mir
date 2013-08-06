@@ -30,6 +30,7 @@
 #include "mir/shell/session_container.h"
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/graphics/display.h"
+#include "mir/input/composite_event_filter.h"
 
 #include <iostream>
 
@@ -47,7 +48,7 @@ namespace examples
 struct DemoServerConfiguration : mir::examples::ServerConfiguration
 {
     DemoServerConfiguration(int argc, char const* argv[],
-                            std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& filter_list)
+                            std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
       : ServerConfiguration(argc, argv),
         filter_list(filter_list)
     {
@@ -70,12 +71,16 @@ struct DemoServerConfiguration : mir::examples::ServerConfiguration
             });
     }
 
-    std::initializer_list<std::shared_ptr<mi::EventFilter> const> the_event_filters() override
+    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
-        return filter_list;
+        auto composite_filter = ServerConfiguration::the_composite_event_filter();
+        for (auto const& filter : filter_list)
+            composite_filter->append(filter);
+
+        return composite_filter;
     }
 
-    std::initializer_list<std::shared_ptr<mi::EventFilter> const> const filter_list;
+    std::vector<std::shared_ptr<mi::EventFilter>> const filter_list;
 };
 
 }
