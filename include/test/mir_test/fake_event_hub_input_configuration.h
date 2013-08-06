@@ -23,8 +23,6 @@
 
 #include <utils/StrongPointer.h>
 
-#include <initializer_list>
-
 namespace droidinput = android;
 
 namespace android
@@ -53,7 +51,7 @@ namespace doubles
 class FakeEventHubInputConfiguration : public input::android::DefaultInputConfiguration
 {
 public:
-    FakeEventHubInputConfiguration(std::initializer_list<std::shared_ptr<input::EventFilter> const> const& filters,
+    FakeEventHubInputConfiguration(std::shared_ptr<input::EventFilter> const& event_filter,
                                    std::shared_ptr<input::InputRegion> const& input_region,
                                    std::shared_ptr<input::CursorListener> const& cursor_listener,
                                    std::shared_ptr<input::InputReport> const& input_report);

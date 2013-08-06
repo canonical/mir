@@ -16,30 +16,32 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVENT_FILTER_H_
-#define MIR_INPUT_EVENT_FILTER_H_
+#ifndef MIR_INPUT_EVENT_FILTER_CHAIN_H_
+#define MIR_INPUT_EVENT_FILTER_CHAIN_H_
 
-#include "mir_toolkit/event.h"
+#include "mir/input/composite_event_filter.h"
+
+#include <vector>
 
 namespace mir
 {
 namespace input
 {
 
-class EventFilter
+class EventFilterChain : public CompositeEventFilter
 {
 public:
-    virtual ~EventFilter() = default;
+    explicit EventFilterChain(std::initializer_list<std::shared_ptr<EventFilter> const> const& values);
 
-    virtual bool handle(MirEvent const& event) = 0;
+    bool handle(MirEvent const& event);
+    void append(std::shared_ptr<EventFilter> const& filter);
+    void prepend(std::shared_ptr<EventFilter> const& filter);
 
-protected:
-    EventFilter() = default;
-    EventFilter(const EventFilter&) = delete;
-    EventFilter& operator=(const EventFilter&) = delete;
+private:
+    std::vector<std::weak_ptr<EventFilter>> filters;
 };
 
 }
 }
 
-#endif // MIR_INPUT_EVENT_FILTER_H_
+#endif // MIR_INPUT_EVENT_FILTER_CHAIN_H_
