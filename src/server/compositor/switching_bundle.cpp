@@ -60,6 +60,7 @@
 #include "switching_bundle.h"
 
 #include <boost/throw_exception.hpp>
+#include <utility>
 
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
@@ -164,9 +165,7 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
 
         if (i != slot && ring[i].buf && ring[i].buf.unique())
         {
-            auto tmp = ring[slot];
-            ring[slot] = ring[i];
-            ring[i] = tmp;
+            std::swap(ring[slot], ring[i]);
         }
         else
         {
@@ -214,9 +213,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
         if (nfree() > 0)
         {
             snapshot = next(client);
-            auto tmp = ring[snapshot];
-            ring[snapshot] = ring[client];
-            ring[client] = tmp;
+            std::swap(ring[snapshot], ring[client]);
             ret = alloc_buffer(client);
         }
         else
