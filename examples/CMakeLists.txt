@@ -131,7 +131,7 @@ set (DEMO_CLIENTS
 )
 
 add_subdirectory(demo-inprocess-surface-client)
-add_subdirectory(demo-shell)
+#add_subdirectory(demo-shell)
 
 install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

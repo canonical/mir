@@ -377,7 +377,7 @@ mir::DefaultServerConfiguration::the_shell_display_changer()
 {
     return shell_display_changer([this]()
         { return std::make_shared<msh::MediatingDisplayChanger>(
-            the_display(), the_compositor(), the_focus_controller()); });
+            the_display(), the_compositor(), the_shell_focus_setter()); });
 }
 
 std::shared_ptr<msh::SessionContainer>
@@ -393,7 +393,10 @@ mir::DefaultServerConfiguration::the_shell_focus_setter()
     return shell_focus_setter(
         [this]
         {
-            return std::make_shared<msh::DefaultFocusMechanism>(the_input_targeter(), the_surface_controller(), the_shell_display_changer());
+            return std::make_shared<msh::DefaultFocusMechanism>(
+                the_shell_focus_sequence(), the_input_targeter(),
+                the_surface_controller(), the_shell_session_listener(),
+                the_shell_display_changer());
         });
 }
 
@@ -438,7 +441,6 @@ mir::DefaultServerConfiguration::the_session_manager()
             return std::make_shared<msh::SessionManager>(
                 the_shell_surface_factory(),
                 the_shell_session_container(),
-                the_shell_focus_sequence(),
                 the_shell_focus_setter(),
                 the_shell_snapshot_strategy(),
                 the_shell_session_listener());
@@ -469,12 +471,6 @@ mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
 
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
-{
-    return the_session_manager();
-}
-
-std::shared_ptr<msh::FocusController>
-mir::DefaultServerConfiguration::the_focus_controller()
 {
     return the_session_manager();
 }

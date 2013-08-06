@@ -30,25 +30,38 @@ namespace shell
 class InputTargeter;
 class SurfaceController;
 class DisplayChanger;
+class SessionListener;
+class FocusSequence;
 
 class DefaultFocusMechanism : public FocusSetter
 {
 public:
-    explicit DefaultFocusMechanism(std::shared_ptr<InputTargeter> const& input_targeter,
+    explicit DefaultFocusMechanism(std::shared_ptr<FocusSequence> const& sequence,
+                                   std::shared_ptr<InputTargeter> const& input_targeter,
                                    std::shared_ptr<SurfaceController> const& surface_controller,
+                                   std::shared_ptr<SessionListener> const& session_listener,
                                    std::shared_ptr<DisplayChanger> const& display_changer);
     virtual ~DefaultFocusMechanism() = default;
 
     void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
+    void focus_next();
+    void focus_clear();
+    void focus_default();
+    std::weak_ptr<Session> focused_application() const;
 
 protected:
     DefaultFocusMechanism(const DefaultFocusMechanism&) = delete;
     DefaultFocusMechanism& operator=(const DefaultFocusMechanism&) = delete;
 
 private:
+    std::shared_ptr<FocusSequence> const sequence;
+    std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceController> const surface_controller;
     std::shared_ptr<DisplayChanger> const display_changer;
+
+    std::mutex mutex;
+    std::weak_ptr<Session> focus_application;
 };
 
 }

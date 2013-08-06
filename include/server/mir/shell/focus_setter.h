@@ -36,6 +36,10 @@ public:
     virtual ~FocusSetter() {}
 
     virtual void set_focus_to(std::shared_ptr<shell::Session> const& new_focus) = 0;
+    virtual void focus_clear() = 0;
+    virtual void focus_next() = 0;
+    virtual void focus_default() = 0;
+    virtual std::weak_ptr<Session> focused_application() const = 0;
 
 protected:
     FocusSetter() = default;

@@ -17,7 +17,7 @@
  */
 
 #include "mir/shell/mediating_display_changer.h"
-#include "mir/shell/focus_controller.h"
+#include "mir/shell/focus_setter.h"
 #include "mir/shell/session.h"
 #include "mir/compositor/compositor.h"
 #include "mir/graphics/display.h"
@@ -31,7 +31,7 @@ namespace mc = mir::compositor;
 msh::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
-    std::shared_ptr<msh::FocusController> const& focus)
+    std::shared_ptr<msh::FocusSetter> const& focus)
     : display(display),
       compositor(compositor),
       focus(focus),
@@ -61,7 +61,7 @@ void msh::MediatingDisplayChanger::configure(
     auto requesting_application = app.lock();
     config_map[requesting_application.get()] = requested_configuration;
 
-    if ( requesting_application == focus->focussed_application().lock())
+    if ( requesting_application == focus->focused_application().lock())
     {
         apply_config(requested_configuration);
     }

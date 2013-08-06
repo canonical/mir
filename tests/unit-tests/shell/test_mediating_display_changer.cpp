@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/mock_display.h"
+#include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_display_configuration.h"
 #include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>
@@ -43,12 +44,6 @@ struct MockCompositor : public mc::Compositor
     MOCK_METHOD0(stop, void());
 };
 
-struct MockFocusController : public msh::FocusController
-{
-    MOCK_METHOD0(focus_next, void());
-    MOCK_CONST_METHOD0(focussed_application, std::weak_ptr<msh::Session>());
-};
-
 }
 
 struct MediatingDisplayChangerTest : public ::testing::Test
@@ -61,7 +56,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     }
     mtd::MockDisplay mock_display;
     MockCompositor mock_compositor;
-    MockFocusController mock_focus_controller;
+    mtd::MockFocusSetter mock_focus_setter;
     
     mtd::NullDisplayConfiguration default_config;
 };
@@ -76,7 +71,7 @@ TEST_F(MediatingDisplayChangerTest, display_info)
 
     msh::MediatingDisplayChanger changer(mt::fake_shared(mock_display),
                                          mt::fake_shared(mock_compositor),
-                                         mt::fake_shared(mock_focus_controller));
+                                         mt::fake_shared(mock_focus_setter));
     auto returned_conf = changer.active_configuration();
     EXPECT_EQ(&conf, returned_conf.get());
 }
@@ -136,13 +131,13 @@ TEST_F(MediatingDisplayChangerTest, display_configure_without_focus)
 
     EXPECT_CALL(mock_display, configure(_))
         .Times(0);
-    EXPECT_CALL(mock_focus_controller, focussed_application())
+    EXPECT_CALL(mock_focus_setter, focused_application())
         .Times(1)
         .WillOnce(Return(focused_session));
 
     msh::MediatingDisplayChanger changer(mt::fake_shared(mock_display),
                                          mt::fake_shared(mock_compositor),
-                                         mt::fake_shared(mock_focus_controller));
+                                         mt::fake_shared(mock_focus_setter));
 
     changer.configure(unfocused_session, mt::fake_shared(default_config));
 }
@@ -155,7 +150,7 @@ TEST_F(MediatingDisplayChangerTest, display_configure_sequence)
 
     mtd::NullDisplayConfiguration conf;
 
-    EXPECT_CALL(mock_focus_controller, focussed_application())
+    EXPECT_CALL(mock_focus_setter, focused_application())
         .Times(1)
         .WillOnce(Return(focused_session));
 
@@ -169,7 +164,7 @@ TEST_F(MediatingDisplayChangerTest, display_configure_sequence)
 
     msh::MediatingDisplayChanger changer(mt::fake_shared(mock_display),
                                          mt::fake_shared(mock_compositor),
-                                         mt::fake_shared(mock_focus_controller));
+                                         mt::fake_shared(mock_focus_setter));
     changer.configure(focused_session, mt::fake_shared(conf));
 }
 
@@ -193,7 +188,7 @@ TEST_F(MediatingDisplayChangerTest, display_configure_sets_focus_with_two)
     EXPECT_CALL(mock_display, configuration())
         .Times(1)
         .WillOnce(Return(mt::fake_shared(default_config)));
-    EXPECT_CALL(mock_focus_controller, focussed_application())
+    EXPECT_CALL(mock_focus_setter, focused_application())
         .Times(2)
         .WillRepeatedly(Return(session1));
 
@@ -209,7 +204,7 @@ TEST_F(MediatingDisplayChangerTest, display_configure_sets_focus_with_two)
 
     msh::MediatingDisplayChanger changer(mt::fake_shared(mock_display),
                                          mt::fake_shared(mock_compositor),
-                                         mt::fake_shared(mock_focus_controller));
+                                         mt::fake_shared(mock_focus_setter));
 
     //applies conf 1
     changer.configure(session1, mt::fake_shared(config1));

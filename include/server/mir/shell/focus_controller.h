@@ -31,8 +31,6 @@ class FocusController
 public:
     virtual ~FocusController() {}
 
-    virtual void focus_next() = 0;
-    virtual std::weak_ptr<Session> focussed_application() const = 0;
 
 protected:
     FocusController() = default;
