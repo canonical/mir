@@ -68,12 +68,17 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
         gbm_pf = GBM_FORMAT_XRGB8888;
         break;
     default:
-        /* There is no explicit invalid GBM pixel format! */
-        gbm_pf = std::numeric_limits<uint32_t>::max();
+        gbm_pf = mgg::invalid_gbm_format();
         break;
     }
 
     return gbm_pf;
+}
+
+uint32_t mgg::invalid_gbm_format()
+{
+    /* There is no explicit invalid GBM pixel format! */
+    return std::numeric_limits<uint32_t>::max();
 }
 
 mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,

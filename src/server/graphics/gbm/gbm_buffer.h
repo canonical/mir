@@ -35,6 +35,7 @@ namespace gbm
 
 geometry::PixelFormat gbm_format_to_mir_format(uint32_t format);
 uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
+uint32_t invalid_gbm_format();
 
 class BufferTextureBinder;
 

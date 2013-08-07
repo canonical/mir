@@ -112,16 +112,6 @@ TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_xrgb_8888)
     allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::xrgb_8888, usage});
 }
 
-TEST_F(GBMBufferAllocatorTest, correct_buffer_format_translation_abgr_8888_to_invalid)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,std::numeric_limits<uint32_t>::max(),_));
-    EXPECT_CALL(mock_gbm, gbm_bo_destroy(_));
-
-    allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::abgr_8888, usage});
-}
-
 MATCHER_P(has_flag_set, flag, "")
 {
     return arg & flag;
@@ -243,4 +233,16 @@ TEST_F(GBMBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_firs
 
     ASSERT_FALSE(supported_pixel_formats.empty());
     EXPECT_EQ(geom::PixelFormat::argb_8888, supported_pixel_formats[0]);
+}
+
+TEST_F(GBMBufferAllocatorTest, alloc_with_unsupported_pixel_format_throws)
+{
+    using namespace testing;
+
+    /* We shouldn't try to create a buffer with an unsupported format */
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_,_,_,_,_)).Times(0);
+
+    EXPECT_THROW({
+        allocator->alloc_buffer(mg::BufferProperties{size, geom::PixelFormat::abgr_8888, usage});
+    }, std::runtime_error);
 }
