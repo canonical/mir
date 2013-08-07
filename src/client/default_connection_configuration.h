@@ -45,7 +45,6 @@ public:
     std::shared_ptr<mir::logging::Logger> the_logger();
     std::shared_ptr<ClientPlatformFactory> the_client_platform_factory();
     std::shared_ptr<input::receiver::InputPlatform> the_input_platform();
-    std::shared_ptr<DisplayConfiguration> the_display_configuration();
 
     virtual std::string the_socket_file();
     virtual std::shared_ptr<rpc::RpcReport> the_rpc_report();
@@ -56,7 +55,6 @@ protected:
     CachedPtr<ClientPlatformFactory> client_platform_factory;
     CachedPtr<input::receiver::InputPlatform> input_platform;
     CachedPtr<SurfaceMap> surface_map;
-    CachedPtr<DisplayConfiguration> display_configuration;
 
     CachedPtr<rpc::RpcReport> rpc_report;
 

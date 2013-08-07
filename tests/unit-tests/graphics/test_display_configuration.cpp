@@ -31,9 +31,6 @@ mg::DisplayConfigurationOutput const tmpl_output
     mg::DisplayConfigurationOutputId{3},
     mg::DisplayConfigurationCardId{2},
     {
-        {geom::PixelFormat::abgr_8888}
-    },
-    {
         {geom::Size{10, 20}, 60.0},
         {geom::Size{10, 20}, 59.0},
         {geom::Size{15, 20}, 59.0}
@@ -42,8 +39,7 @@ mg::DisplayConfigurationOutput const tmpl_output
     true,
     true,
     geom::Point(),
-    2,
-    0
+    2
 };
 
 }

@@ -174,37 +174,31 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{connector0_id},
             mg::DisplayConfigurationCardId{0},
-            {},
             conf_modes0,
             connector0_physical_size_mm,
             true,
             true,
             geom::Point(),
-            1,
-            0
+            1
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
             mg::DisplayConfigurationCardId{0},
-            {},
             std::vector<mg::DisplayConfigurationMode>(),
             connector1_physical_size_mm,
             false,
             false,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max()
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
             mg::DisplayConfigurationCardId{0},
-            {},
             std::vector<mg::DisplayConfigurationMode>(),
             connector2_physical_size_mm,
             false,
             false,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max()
         }
     };
@@ -329,26 +323,22 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[0]),
             mg::DisplayConfigurationCardId{0},
-            {},
             conf_modes0,
             connector_physical_sizes_mm_before[0],
             true,
             true,
             geom::Point(),
-            1,
-            0
+            1
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
             mg::DisplayConfigurationCardId{0},
-            {},
             std::vector<mg::DisplayConfigurationMode>(),
             connector_physical_sizes_mm_before[1],
             false,
             false,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
-            std::numeric_limits<size_t>::max() 
+            std::numeric_limits<size_t>::max()
         },
     };
 
@@ -357,26 +347,22 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[0]),
             mg::DisplayConfigurationCardId{0},
-            {},
             std::vector<mg::DisplayConfigurationMode>(),
             connector_physical_sizes_mm_after[0],
             false,
             true,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
             std::numeric_limits<size_t>::max()
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
             mg::DisplayConfigurationCardId{0},
-            {},
             conf_modes0,
             connector_physical_sizes_mm_after[1],
             true,
             false,
             geom::Point(),
-            1,
-            0
+            1
         },
     };
 

@@ -124,7 +124,6 @@ public:
         std::shared_ptr<mcl::ClientPlatform> const& platform,
         std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const& channel)
         : DefaultConnectionConfiguration(""),
-          disp_config(std::make_shared<mcl::DisplayConfiguration>()),
           platform{platform},
           channel{channel}
     {
@@ -140,12 +139,7 @@ public:
         return std::make_shared<StubClientPlatformFactory>(platform);
     }
 
-    std::shared_ptr<mcl::DisplayConfiguration> the_display_configuration() override
-    {
-        return disp_config;
-    }
 private:
-    std::shared_ptr<mcl::DisplayConfiguration> disp_config;
     std::shared_ptr<mcl::ClientPlatform> const platform;
     std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const channel;
 };

@@ -56,13 +56,12 @@ public:
     AndroidDisplayConfiguration(geom::Size const& display_size)
         : configuration{mg::DisplayConfigurationOutputId{0},
                         mg::DisplayConfigurationCardId{0},
-                        {geom::PixelFormat::abgr_8888},
                         {mg::DisplayConfigurationMode{display_size,0.0f}},
                         geom::Size{0,0},
                         true,
                         true,
                         geom::Point{0,0},
-                        0, 0}
+                        0}
     {
     }
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const

@@ -22,7 +22,6 @@
 #include "mir/protobuf/google_protobuf_guard.h"
 #include "../surface_map.h"
 #include "../mir_surface.h"
-#include "../display_configuration.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -46,15 +45,13 @@ namespace mclr = mir::client::rpc;
 mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
-    std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
     endpoint(endpoint),
     socket(io_service),
-    surface_map(surface_map),
-    display_configuration(disp_config)
+    surface_map(surface_map)
 {
     socket.connect(endpoint);
 
@@ -322,12 +319,6 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
     mir::protobuf::EventSequence seq;
 
     seq.ParseFromString(event);
-
-    if (seq.has_display_configuration())
-    {
-        display_configuration->update_configuration(seq.display_configuration());
-    }
-
     int const nevents = seq.event_size();
     for (int i = 0; i != nevents; ++i)
     {
@@ -359,7 +350,7 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
             {
                 rpc_report->event_parsing_failed(event);
             }
-        } 
+        }
     }
 }
 

@@ -90,7 +90,6 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             {
                 mg::DisplayConfigurationOutputId{10},
                 card_id,
-                {},
                 {
                     {geom::Size{10, 20}, 59.9},
                     {geom::Size{200, 100}, 59.9},
@@ -99,14 +98,12 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 true,
                 true,
                 geom::Point{0, 0},
-                1,
-                0
+                1
             });
         outputs.push_back(
             {
                 mg::DisplayConfigurationOutputId{11},
                 card_id,
-                {},
                 {
                     {geom::Size{200, 200}, 59.9},
                     {geom::Size{100, 200}, 59.9},
@@ -115,7 +112,6 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 true,
                 true,
                 geom::Point{100, 50},
-                0,
                 0
             });
     }
