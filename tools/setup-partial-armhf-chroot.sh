@@ -76,8 +76,11 @@ pushd ${1} > /dev/null
         libgles2-mesa
         libgles2-mesa-dev
         libglapi-mesa
+        libffi6
         libdrm2
         libgbm1
+        libxau6
+        libxdmcp6
         libx11-6
         libx11-xcb1
         libxcb1
