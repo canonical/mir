@@ -1,3 +1,28 @@
+mir (0.0.8+13.10.20130807.1-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * Add support for sending display change events to the client to the
+    api/protocol.
+
+  [ Ricardo Salveti de Araujo ]
+  * Just use libhardware instead of libhybris when building mir (avoid
+    conflicts with egl/gles) .
+
+  [ Alan Griffiths ]
+  * graphics: Split off platform abstraction as a shared library.
+  * graphics: Split off platform abstraction as an LGPL shared library.
+
+  [ Alexandros Frantzis ]
+  * display_server: Don't configure the display while the display server
+    is paused Don't configure the display while the display server is
+    paused. Postpone the configuration until the display server resumes.
+  * server: Make EventFilter customization easier.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 932
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 07 Aug 2013 06:10:58 +0000
+
 mir (0.0.8+13.10.20130806-0ubuntu1) saucy; urgency=low
 
   [ Kevin DuBois ]
