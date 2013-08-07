@@ -61,6 +61,7 @@
 #include "mir/input/null_input_report.h"
 #include "mir/input/display_input_region.h"
 #include "mir/input/event_filter_chain.h"
+#include "input/vt_filter.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_input_targeter.h"
@@ -98,7 +99,6 @@ namespace mia = mi::android;
 
 namespace
 {
-std::initializer_list<std::shared_ptr<mi::EventFilter> const> empty_filter_list{};
 mir::SharedLibrary const* load_library(std::string const& libname);
 }
 
@@ -482,7 +482,13 @@ mir::DefaultServerConfiguration::the_focus_controller()
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
-    return std::make_shared<mi::EventFilterChain>(empty_filter_list);
+    return composite_event_filter(
+        [this]() -> std::shared_ptr<mi::CompositeEventFilter>
+        {
+            std::cerr << "create vt filter" << std::endl;
+            std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {vt_filter};
+            return std::make_shared<mi::EventFilterChain>(filter_list);
+        });
 }
 
 std::shared_ptr<mi::InputReport>

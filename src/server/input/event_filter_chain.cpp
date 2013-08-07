@@ -18,6 +18,8 @@
 
 #include "mir/input/event_filter_chain.h"
 
+#include <iostream>
+
 namespace mi = mir::input;
 
 mi::EventFilterChain::EventFilterChain(
@@ -28,6 +30,7 @@ mi::EventFilterChain::EventFilterChain(
 
 bool mi::EventFilterChain::handle(MirEvent const& event)
 {
+    std::cerr << "EventFilterChain::handle" << std::endl;
     auto it = filters.begin();
     while (it != filters.end())
     {
