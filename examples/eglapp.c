@@ -216,7 +216,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         return 0;
     }
 
-    const MirDisplayMode *mode = &output->modes[0];
+    const MirDisplayMode *mode = &output->modes[output->current_mode];
 
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection,
