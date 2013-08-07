@@ -17,7 +17,6 @@
  */
 
 #include "mir/shell/mediating_display_changer.h"
-#include "mir/shell/focus_controller.h"
 #include "mir/shell/session.h"
 #include "mir/compositor/compositor.h"
 

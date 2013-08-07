@@ -71,6 +71,7 @@ mf::SessionMediator::~SessionMediator() noexcept
     if (session)
     {
         report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
+        display_changer->remove_configuration_for(session);
         shell->close_session(session);
     }
 }
@@ -210,7 +211,6 @@ void mf::SessionMediator::release_surface(
 
         auto const id = SurfaceId(request->value());
 
-        display_changer->remove_configuration_for(session);
         session->destroy_surface(id);
     }
 
@@ -231,6 +231,7 @@ void mf::SessionMediator::disconnect(
 
         report->session_disconnect_called(session->name());
 
+        display_changer->remove_configuration_for(session);
         shell->close_session(session);
         session.reset();
     }

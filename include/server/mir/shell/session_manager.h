@@ -21,7 +21,6 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
-#include "mir/shell/focus_controller.h"
 
 #include <mutex>
 #include <memory>

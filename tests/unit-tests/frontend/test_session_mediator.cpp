@@ -514,7 +514,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     session_mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, surface_destroy)
+TEST_F(SessionMediatorTest, apply_session_display_config)
 {
     using namespace testing;
     mp::ConnectParameters connect_parameters;
@@ -529,14 +529,12 @@ TEST_F(SessionMediatorTest, surface_destroy)
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .WillOnce(Return(mt::fake_shared(mock_display_config))); 
     EXPECT_CALL(*mock_display_selector, remove_configuration_for(_))
-        .Times(1);
+        .Times(2);
 
     mf::SessionMediator session_mediator{
             shell, graphics_platform, mock_display_selector,
             buffer_allocator, report, std::make_shared<mtd::NullEventSink>(), resource_cache};
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-    session_mediator.create_surface(nullptr, &request, &response, null_callback.get());
-    session_mediator.release_surface(nullptr, &release_request, nullptr, null_callback.get());
     session_mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
