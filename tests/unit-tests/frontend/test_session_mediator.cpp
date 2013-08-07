@@ -529,7 +529,10 @@ TEST_F(SessionMediatorTest, apply_session_display_config)
     auto mock_display_selector = std::make_shared<mtd::MockDisplayChanger>();
 
     EXPECT_CALL(*mock_display_selector, active_configuration())
-        .WillRepeatedly(Return(mt::fake_shared(mock_display_config))); 
+        .WillRepeatedly(Return(mt::fake_shared(mock_display_config)));
+
+    EXPECT_CALL(*mock_display_selector, store_configuration_for(_,_))
+        .Times(1);
     EXPECT_CALL(*mock_display_selector, remove_configuration_for(_))
         .Times(1);
 
