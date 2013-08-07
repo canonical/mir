@@ -1,3 +1,24 @@
+mir (0.0.8+13.10.20130807.3-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * platform: Install and use mirplatform headers. (LP: #1209104)
+
+  [ Daniel van Vugt ]
+  * Revert r931. It is causing instant and widespread crashes (LP:
+    #1209053). (LP: #1209053)
+
+  [ Alan Griffiths ]
+  * platform: remove spurious ${MIR_COMMON_PLATFORM_LIBRARIES}.
+  * platform: Install and use mirplatform headers. (LP: #1209104)
+
+  [ Christopher James Halse Rogers ]
+  * Fix multihead API usage in EGL example clients.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 937
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 07 Aug 2013 16:24:16 +0000
+
 mir (0.0.8+13.10.20130807.1-0ubuntu1) saucy; urgency=low
 
   [ Kevin DuBois ]
