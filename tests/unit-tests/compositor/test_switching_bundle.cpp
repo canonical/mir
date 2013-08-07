@@ -649,6 +649,9 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
         std::chrono::duration_cast<std::chrono::microseconds>(frame_time)
         .count();
 
+    int nframes = 0;
+    int nhiccups = 0;
+
     for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
@@ -687,20 +690,12 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
                         std::chrono::duration_cast<std::chrono::microseconds>(d)
                         .count();
 
-                    ASSERT_TRUE(expected * 0.7f < measured_frame_time_usec &&
-                                expected * 1.3f > measured_frame_time_usec)
-                        << "measured client frame time "
-                        << measured_frame_time_usec
-                        << "us is nowhere near the expected "
-                        << expected
-                        << "us\n"
-                        << "[attempt " 
-                        << attempt
-                        << ", second "
-                        << second
-                        << ", frame "
-                        << frame
-                        << "]";
+                    nframes++;
+                    if (expected * 0.7f > measured_frame_time_usec ||
+                        expected * 1.3f < measured_frame_time_usec)
+                    {
+                        nhiccups++;
+                    }
                 }
             }
 
@@ -713,6 +708,9 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
         monitor1.join();
         monitor2.join();
         monitor3.join();
+
+        int hiccups_percent = nhiccups * 100 / nframes;
+        ASSERT_LT(hiccups_percent, 1);
     }
 }
 
