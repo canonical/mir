@@ -239,7 +239,7 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 
 MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
 {
-    if (connection)
+    if (connection) 
         return connection->create_copy_of_display_config();
     return nullptr;
 }
@@ -397,17 +397,10 @@ int mir_surface_get_swapinterval(MirSurface* surf)
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
 }
 
-void mir_connection_set_display_config_change_callback(MirConnection* connection,
-    mir_display_config_callback callback, void* context)
-{
-    if (connection)
-        connection->register_display_change_callback(callback, context);
-}
-
 MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
 {
     if (!connection)
         return NULL;
  
-    return connection->configure_display(display_configuration);
+    return connection->configure_display(display_configuration); 
 }

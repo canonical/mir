@@ -79,8 +79,7 @@ public:
     {
         mg::DisplayConfigurationOutput dummy_output_config{
             mg::DisplayConfigurationOutputId{0}, mg::DisplayConfigurationCardId{0},
-            std::vector<geom::PixelFormat>{geom::PixelFormat::abgr_8888},
-            modes, geom::Size{}, true, true, geom::Point{0,0}, 0, 0};
+            modes, geom::Size{}, true, true, geom::Point{0,0}, 0};
 
         f(dummy_output_config);
     }

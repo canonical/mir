@@ -41,7 +41,6 @@ class Result;
 
 namespace client
 {
-class DisplayConfiguration;
 class SurfaceMap;
 namespace rpc
 {
@@ -53,7 +52,6 @@ class MirSocketRpcChannel : public MirBasicRpcChannel
 public:
     MirSocketRpcChannel(std::string const& endpoint,
                         std::shared_ptr<SurfaceMap> const& surface_map,
-                        std::shared_ptr<DisplayConfiguration> const& disp_config,
                         std::shared_ptr<RpcReport> const& rpc_report);
     ~MirSocketRpcChannel();
 
@@ -86,7 +84,6 @@ private:
     mir::protobuf::wire::Result read_message_body(const size_t body_size);
 
     std::shared_ptr<SurfaceMap> surface_map;
-    std::shared_ptr<DisplayConfiguration> display_configuration;
 };
 
 }

@@ -24,16 +24,10 @@
 
 namespace mir
 {
-namespace graphics
-{
-struct DisplayConfigurationOutput;
-}
 namespace frontend
 {
 namespace detail
 {
-
-void pack_protobuf_display_output(protobuf::DisplayOutput* output, graphics::DisplayConfigurationOutput const&);
 
 class ProtobufBufferPacker : public graphics::BufferIPCPacker
 {

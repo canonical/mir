@@ -43,7 +43,6 @@ namespace client
 class ConnectionConfiguration;
 class ClientPlatformFactory;
 class SurfaceMap;
-class DisplayConfiguration;
 
 namespace rpc
 {
@@ -99,8 +98,6 @@ public:
                                   mir_drm_auth_magic_callback callback,
                                   void* context);
 
-    void register_display_change_callback(mir_display_config_callback callback, void* context);
-
     void populate(MirPlatformPackage& platform_package);
     MirDisplayConfiguration* create_copy_of_display_config(); 
     void possible_pixel_formats(MirPixelFormat* formats,
@@ -146,8 +143,6 @@ private:
 
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
-
-    std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
 
     std::shared_ptr<mir::client::SurfaceMap> surface_map;
     static std::mutex connection_guard;

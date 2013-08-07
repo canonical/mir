@@ -98,11 +98,33 @@ void mf::SessionMediator::connect(
         platform->add_fd(ipc_fds);
 
     auto display_config = display_changer->active_configuration();
-    display_config->for_each_output([&response](mg::DisplayConfigurationOutput const& config)
+    auto supported_pfs = buffer_allocator->supported_pixel_formats();
+    display_config->for_each_output([&response, &supported_pfs](mg::DisplayConfigurationOutput const& config)
     {
         auto output = response->add_display_output();
-        mfd::pack_protobuf_display_output(output, config);
+        output->set_output_id(config.id.as_value());
+        output->set_card_id(config.card_id.as_value());
+        output->set_connected(config.connected);
+        output->set_used(config.used);
+        output->set_physical_width_mm(config.physical_size_mm.width.as_uint32_t());
+        output->set_physical_height_mm(config.physical_size_mm.height.as_uint32_t());
+        output->set_position_x(config.top_left.x.as_uint32_t());
+        output->set_position_y(config.top_left.y.as_uint32_t());
+        for (auto const& mode : config.modes)
+        {
+            auto output_mode = output->add_mode();
+            output_mode->set_horizontal_resolution(mode.size.width.as_uint32_t()); 
+            output_mode->set_vertical_resolution(mode.size.height.as_uint32_t());
+            output_mode->set_refresh_rate(mode.vrefresh_hz);
+        }
+        output->set_current_mode(config.current_mode_index);
 
+        for (auto const& pf : supported_pfs)
+        {
+            output->add_pixel_format(static_cast<uint32_t>(pf));
+        }
+        //TODO: should set the actual display format from the display, once display lets us at that info
+        output->set_current_format(0);
     });
 
     resource_cache->save_resource(response, ipc_package);
