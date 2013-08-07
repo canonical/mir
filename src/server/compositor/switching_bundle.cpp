@@ -206,8 +206,12 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::client_acquire()
          * but always uses 50% more memory. So try to avoid it when possible.
          */
 
-        int min_free = 1; // FIXME:
-            //(nbuffers > 2 && !overlapping_compositors) ?  nbuffers - 1 : 1;
+        int min_free = 
+#if 0  // FIXME: This memory optimization breaks timing tests
+            (nbuffers > 2 && !overlapping_compositors) ?  nbuffers - 1 : 1;
+#else
+            1;
+#endif
 
         while (nfree() < min_free)
             cond.wait(lock);

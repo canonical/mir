@@ -481,7 +481,7 @@ TEST_F(SwitchingBundleTest, stress)
     }
 }
 
-#if 0  // FIXME (reintroduce optimization in switching_bundle.cpp)
+#if 0  // FIXME (enabling this optimization breaks timing tests)
 TEST_F(SwitchingBundleTest, synchronous_clients_only_get_two_real_buffers)
 {
     /*
@@ -687,8 +687,20 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
                         std::chrono::duration_cast<std::chrono::microseconds>(d)
                         .count();
 
-                    ASSERT_LT(expected * 0.7f, measured_frame_time_usec);
-                    ASSERT_GT(expected * 1.3f, measured_frame_time_usec);
+                    ASSERT_TRUE(expected * 0.7f < measured_frame_time_usec &&
+                                expected * 1.3f > measured_frame_time_usec)
+                        << "measured client frame time "
+                        << measured_frame_time_usec
+                        << "us is nowhere near the expected "
+                        << expected
+                        << "us\n"
+                        << "[attempt " 
+                        << attempt
+                        << ", second "
+                        << second
+                        << ", frame "
+                        << frame
+                        << "]";
                 }
             }
 
