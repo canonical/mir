@@ -80,13 +80,17 @@ struct DefaultFocusMechanism : public testing::Test
         controller = std::make_shared<mtd::StubSurfaceController>();
 
         //TODO: extremely kludgy that a mock needs to be constructed this way 
-        mock_surface = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
+        mock_surface1 = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
+        mock_surface2 = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
         ON_CALL(app1, default_surface())
-            .WillByDefault(testing::Return(mock_surface));
+            .WillByDefault(testing::Return(mock_surface1));
+        ON_CALL(app2, default_surface())
+            .WillByDefault(testing::Return(mock_surface2));
     }
 
-    std::shared_ptr<mtd::MockSurface> mock_surface;
+    std::shared_ptr<mtd::MockSurface> mock_surface1, mock_surface2;
     testing::NiceMock<MockShellSession> app1;
+    testing::NiceMock<MockShellSession> app2;
     testing::NiceMock<mtd::MockSessionListener> mock_listener;
     testing::NiceMock<MockFocusSequence> focus_sequence;
     mtd::StubInputTargeter targeter;
@@ -95,40 +99,14 @@ struct DefaultFocusMechanism : public testing::Test
 
 }
 
-#if 0
-TEST_F(DefaultFocusMechanism, listener_focus_notifications)
-{
-    using namespace ::testing;
-  
-    EXPECT_CALL(mock_listener, focused(_))
-        .Times(1); 
-
-    msh::DefaultFocusMechanism focus_mechanism(
-        mt::fake_shared(focus_sequence),
-        mt::fake_shared(targeter),
-        controller,
-        mt::fake_shared(mock_listener),
-        mt::fake_shared(mock_display_changer));
-    
-    focus_mechanism.set_focus_to(mt::fake_shared(app1));
-}
-
-TEST_F(DefaultFocusMechanism, unfocus_notifications)
-{
-    using namespace ::testing;
-  
-    EXPECT_CALL(mock_listener, unfocused())
-        .Times(1); 
-    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(focus_sequence),
-        mt::fake_shared(targeter), controller, mt::fake_shared(mock_listener), mt::fake_shared(mock_display_changer));
-    
-    focus_mechanism.focus_clear();
-}
 
 TEST_F(DefaultFocusMechanism, raises_default_surface)
 {
     using namespace ::testing;
     
+    EXPECT_CALL(mock_listener, focused(_))
+        .Times(1);
+ 
     mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
     EXPECT_CALL(app1, default_surface())
         .Times(1)
@@ -137,9 +115,48 @@ TEST_F(DefaultFocusMechanism, raises_default_surface)
          raise(Eq(controller))).Times(1);
 
     msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(focus_sequence),
-        mt::fake_shared(targeter), controller, mt::fake_shared(mock_listener), mt::fake_shared(mock_display_changer));
+        mt::fake_shared(targeter), controller, mt::fake_shared(mock_listener));
     
-    focus_mechanism.set_focus_to(mt::fake_shared(app1));
+    focus_mechanism.surface_created_for(mt::fake_shared(app1));
+}
+
+TEST_F(DefaultFocusMechanism, open_and_close)
+{
+    using namespace ::testing;
+
+    Sequence seq; 
+    EXPECT_CALL(mock_listener, focused(_))
+        .InSequence(seq);
+
+    EXPECT_CALL(focus_sequence, successor_of(_))
+        .InSequence(seq)
+        .WillOnce(Throw(std::logic_error("")));
+    EXPECT_CALL(mock_listener, unfocused())
+        .InSequence(seq);
+
+    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(focus_sequence),
+        mt::fake_shared(targeter), controller, mt::fake_shared(mock_listener));
+
+    auto app = mt::fake_shared(app1); 
+    focus_mechanism.session_opened(app);
+    focus_mechanism.session_closed(app);
+}
+
+TEST_F(DefaultFocusMechanism, unfocus_only_on_close_active_session)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(mock_listener, focused(_))
+        .Times(2);  
+    EXPECT_CALL(mock_listener, unfocused())
+        .Times(0);
+
+    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(focus_sequence),
+        mt::fake_shared(targeter), controller, mt::fake_shared(mock_listener));
+    
+    focus_mechanism.session_opened(mt::fake_shared(app1));
+    focus_mechanism.session_opened(mt::fake_shared(app2));
+    focus_mechanism.session_closed(mt::fake_shared(app1));
 }
 
 TEST_F(DefaultFocusMechanism, sets_input_focus)
@@ -158,7 +175,7 @@ TEST_F(DefaultFocusMechanism, sets_input_focus)
     mtd::MockInputTargeter targeter;
     
     msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(focus_sequence),
-        mt::fake_shared(targeter), controller, mt::fake_shared(mock_listener), mt::fake_shared(mock_display_changer));
+        mt::fake_shared(targeter), controller, mt::fake_shared(mock_listener));
     
     Sequence seq2;
     EXPECT_CALL(mock_surface, take_input_focus(_))
@@ -166,32 +183,8 @@ TEST_F(DefaultFocusMechanism, sets_input_focus)
     // When we have no default surface.
     EXPECT_CALL(targeter, focus_cleared())
         .InSequence(seq2);
-    // When we have no session.
-    EXPECT_CALL(targeter, focus_cleared())
-        .InSequence(seq2);
-    
-    focus_mechanism.set_focus_to(mt::fake_shared(app1));
-    focus_mechanism.set_focus_to(mt::fake_shared(app1));
-    focus_mechanism.set_focus_to(std::shared_ptr<msh::Session>());
+   
+    auto app = mt::fake_shared(app1); 
+    focus_mechanism.surface_created_for(app);
+    focus_mechanism.surface_created_for(app);
 }
-
-TEST_F(DefaultFocusMechanism, set_focus_notifies_display_changer)
-{
-    using namespace ::testing;
-    
-    EXPECT_CALL(mock_display_changer, set_focus_to(_))
-        .Times(1);
-
-    auto surface_builder = std::make_shared<mtd::StubSurfaceBuilder>();
-    mtd::MockSurface mock_surface(surface_builder);
-    EXPECT_CALL(app1, default_surface())
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(mock_surface)));
-
-    msh::DefaultFocusMechanism focus_mechanism(
-        mt::fake_shared(targeter), controller, mt::fake_shared(mock_display_changer));
-    
-    focus_mechanism.set_focus_to(mt::fake_shared(app1));
-}
-
-#endif

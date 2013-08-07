@@ -50,6 +50,8 @@ public:
     void focus_next();
 
 protected:
+    void focus_next_locked();
+
     DefaultFocusMechanism(const DefaultFocusMechanism&) = delete;
     DefaultFocusMechanism& operator=(const DefaultFocusMechanism&) = delete;
 
