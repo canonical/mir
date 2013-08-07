@@ -154,4 +154,5 @@ TEST_F(SessionManagerSetup, display_change_configuration)
         .Times(1);
 
     session_manager.handle_display_configuration(session2);
+    session_manager.handle_display_configuration(session2);
 }

@@ -39,7 +39,9 @@ TEST_F(UnauthorizedDisplayChangerTest, change_store)
     mtd::NullDisplayConfiguration conf;
     msh::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
 
-    changer.store_configuration_for(std::weak_ptr<mf::Session>(), mt::fake_shared(conf));
+    EXPECT_THROW({
+        changer.store_configuration_for(std::weak_ptr<mf::Session>(), mt::fake_shared(conf));
+    }, std::runtime_error);
 
     EXPECT_THROW({
         changer.apply_configuration_of(std::weak_ptr<mf::Session>());

@@ -69,7 +69,6 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::successor_of(
     }
     else
     {
-printf("SHOULD BE?\n");
         return focused_app;
        // return focused_app;
 //        return nullptr;

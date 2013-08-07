@@ -18,6 +18,7 @@
 
 #include "mir/shell/session_manager.h"
 #include "mir/shell/application_session.h"
+#include "mir/shell/display_changer.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/focus_sequence.h"
@@ -102,7 +103,7 @@ void msh::SessionManager::handle_display_configuration(std::shared_ptr<mf::Sessi
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
     if (focus_setter->focused_session().lock() == session)
     {
-//        focus_setter->reevaluate_focus();
+        display_changer->apply_configuration_of(session);
     }
 }
 

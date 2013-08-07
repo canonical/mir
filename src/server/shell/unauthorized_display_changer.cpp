@@ -41,6 +41,7 @@ void msh::UnauthorizedDisplayChanger::store_configuration_for(
 
 void msh::UnauthorizedDisplayChanger::apply_configuration_of(std::weak_ptr<mf::Session> const&)
 {
+    BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }
 
 void msh::UnauthorizedDisplayChanger::remove_configuration_for(std::weak_ptr<mf::Session> const&)
