@@ -681,12 +681,12 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
                     auto d = t - prev;
                     prev = t;
 
-                    int got =
+                    int measured_frame_time_usec =
                         std::chrono::duration_cast<std::chrono::microseconds>(d)
                         .count();
 
-                    ASSERT_LT(expected * 0.7f, got);
-                    ASSERT_GT(expected * 1.3f, got);
+                    ASSERT_LT(expected * 0.7f, measured_frame_time_usec);
+                    ASSERT_GT(expected * 1.3f, measured_frame_time_usec);
                 }
             }
 
