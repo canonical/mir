@@ -32,7 +32,6 @@
 #include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/stub_input_targeter.h"
 #include "mir_test_doubles/mock_input_targeter.h"
-#include "mir_test_doubles/mock_display_changer.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_controller.h"
 
@@ -87,7 +86,6 @@ struct DefaultFocusMechanism : public testing::Test
     }
 
     std::shared_ptr<mtd::MockSurface> mock_surface;
-    testing::NiceMock<mtd::MockDisplayChanger> mock_display_changer;
     testing::NiceMock<MockShellSession> app1;
     testing::NiceMock<mtd::MockSessionListener> mock_listener;
     testing::NiceMock<MockFocusSequence> focus_sequence;

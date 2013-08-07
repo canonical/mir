@@ -37,12 +37,14 @@ msh::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& 
     std::shared_ptr<msh::SessionContainer> const& container,
     std::shared_ptr<msh::FocusSetter> const& focus_setter,
     std::shared_ptr<msh::SnapshotStrategy> const& snapshot_strategy,
-    std::shared_ptr<msh::SessionListener> const& session_listener) :
+    std::shared_ptr<msh::SessionListener> const& session_listener,
+    std::shared_ptr<msh::DisplayChanger> const& display_changer) :
     surface_factory(surface_factory),
     app_container(container),
     focus_setter(focus_setter),
     snapshot_strategy(snapshot_strategy),
-    session_listener(session_listener)
+    session_listener(session_listener),
+    display_changer(display_changer)
 {
     assert(surface_factory);
     assert(container);

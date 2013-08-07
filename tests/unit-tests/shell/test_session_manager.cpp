@@ -29,6 +29,8 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/mock_display_changer.h"
+#include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/mock_surface_factory.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_session_listener.h"
@@ -65,7 +67,8 @@ struct SessionManagerSetup : public testing::Test
                         mt::fake_shared(container),
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
-                        mt::fake_shared(session_listener))
+                        mt::fake_shared(session_listener),
+                        mt::fake_shared(mock_display_changer))
     {
     }
 
@@ -75,6 +78,7 @@ struct SessionManagerSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
     mtd::MockSessionListener session_listener;
+    testing::NiceMock<mtd::MockDisplayChanger> mock_display_changer;
 
     msh::SessionManager session_manager;
 };
@@ -115,18 +119,39 @@ TEST_F(SessionManagerSetup, create_surface)
     session_manager.handle_surface_created(session);
 }
 
-TEST_F(SessionManagerSetup, create_surface)
+namespace
+{
+struct MockShellSession : public msh::Session
+{
+    MOCK_METHOD1(create_surface, mf::SurfaceId(msh::SurfaceCreationParameters const&));
+    MOCK_METHOD1(destroy_surface, void(mf::SurfaceId));
+    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<mf::Surface>(mf::SurfaceId));
+
+    MOCK_METHOD1(take_snapshot, void(msh::SnapshotCallback const&));
+    MOCK_CONST_METHOD0(default_surface, std::shared_ptr<msh::Surface>());
+
+    MOCK_CONST_METHOD0(name, std::string());
+    MOCK_METHOD0(force_requests_to_complete, void());
+
+    MOCK_METHOD0(hide, void());
+    MOCK_METHOD0(show, void());
+    
+    MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
+};
+}
+TEST_F(SessionManagerSetup, display_change_configuration)
 {
     using namespace testing;
 
-    mtd::MockSession session1, session2;
+    auto session1 = std::make_shared<MockShellSession>();
+    auto session2 = std::make_shared<MockShellSession>();
 
     EXPECT_CALL(focus_setter, focused_session())
         .Times(2)
-        .WillOnce(Return(mt::fake_shared(session1)))
-        .WillOnce(Return(mt::fake_shared(session2)));
-    EXPECT_CALL(display_changer, change_display(_))
+        .WillOnce(Return(session1))
+        .WillOnce(Return(session2));
+    EXPECT_CALL(mock_display_changer, apply_configuration_of(_))
         .Times(1);
 
-    session_manager.handle_display_configuration(session);
+    session_manager.handle_display_configuration(session2);
 }

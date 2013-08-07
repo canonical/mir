@@ -309,7 +309,7 @@ void mf::SessionMediator::configure_display(
                                      output.current_mode());
         }
 
-        display_changer->configure(session, config);
+        display_changer->store_configuration_for(session, config);
 
         shell->handle_display_configuration(session); 
     }

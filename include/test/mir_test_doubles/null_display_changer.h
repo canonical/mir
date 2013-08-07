@@ -36,15 +36,13 @@ public:
     {
         return std::make_shared<NullDisplayConfig>();
     }
-    virtual void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
-    {
-    }
-    virtual void set_focus_to(std::weak_ptr<frontend::Session> const&)
-    {
-    }
+    virtual void store_configuration_for(
+        std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
+    {}
+    virtual void apply_configuration_of(std::weak_ptr<frontend::Session> const&)
+    {}
     virtual void remove_configuration_for(std::weak_ptr<frontend::Session> const&)
-    {
-    }
+    {}
 };
 }
 }

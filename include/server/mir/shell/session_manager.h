@@ -45,6 +45,7 @@ class InputRegistrar;
 class SnapshotStrategy;
 class SessionListener;
 struct SurfaceCreationParameters;
+class DisplayChanger;
 
 class SessionManager : public frontend::Shell
 {
@@ -53,7 +54,8 @@ public:
                             std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-                            std::shared_ptr<SessionListener> const& session_listener);
+                            std::shared_ptr<SessionListener> const& session_listener,
+                            std::shared_ptr<DisplayChanger> const& display_changer);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(
@@ -73,6 +75,7 @@ private:
     std::shared_ptr<FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionListener> const session_listener;
+    std::shared_ptr<DisplayChanger> const display_changer;
 };
 
 }

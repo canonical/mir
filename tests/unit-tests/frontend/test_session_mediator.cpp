@@ -350,7 +350,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
         shell, graphics_platform, mock_display,
         buffer_allocator, report, 
         std::make_shared<NullEventSink>(),
-        resource_cache);
+        resource_cache );
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -505,7 +505,7 @@ TEST_F(SessionMediatorTest, display_config_request)
         .InSequence(seq);
     EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1))
         .InSequence(seq);
-    EXPECT_CALL(*mock_display_selector, configure(_,_))
+    EXPECT_CALL(*mock_display_selector, store_configuration_for(_,_))
         .InSequence(seq);
  
     mf::SessionMediator session_mediator{

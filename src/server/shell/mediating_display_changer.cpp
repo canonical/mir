@@ -52,7 +52,7 @@ void msh::MediatingDisplayChanger::apply_config(
     compositor->start();
 }
 
-void msh::MediatingDisplayChanger::configure(
+void msh::MediatingDisplayChanger::store_configuration_for(
     std::weak_ptr<mf::Session> const& app,
     std::shared_ptr<mg::DisplayConfiguration> const& requested_configuration)
 {
@@ -60,7 +60,7 @@ void msh::MediatingDisplayChanger::configure(
     config_map[requesting_application.get()] = requested_configuration;
 }
 
-void msh::MediatingDisplayChanger::set_focus_to(std::weak_ptr<mf::Session> const& app)
+void msh::MediatingDisplayChanger::apply_configuration_of(std::weak_ptr<mf::Session> const& app)
 {
     auto it = config_map.find(app.lock().get());
     if (it == config_map.end())

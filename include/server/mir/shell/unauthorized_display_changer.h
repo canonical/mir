@@ -32,8 +32,9 @@ public:
     explicit UnauthorizedDisplayChanger(std::shared_ptr<shell::DisplayChanger> const& changer);
 
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
-    void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
-    void set_focus_to(std::weak_ptr<frontend::Session> const&);
+    void store_configuration_for(
+        std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
+    void apply_configuration_of(std::weak_ptr<frontend::Session> const&);
     void remove_configuration_for(std::weak_ptr<frontend::Session> const&);
 
 private:

@@ -33,13 +33,13 @@ std::shared_ptr<mg::DisplayConfiguration> msh::UnauthorizedDisplayChanger::activ
     return changer->active_configuration();
 }
 
-void msh::UnauthorizedDisplayChanger::configure(
+void msh::UnauthorizedDisplayChanger::store_configuration_for(
     std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }
 
-void msh::UnauthorizedDisplayChanger::set_focus_to(std::weak_ptr<mf::Session> const&)
+void msh::UnauthorizedDisplayChanger::apply_configuration_of(std::weak_ptr<mf::Session> const&)
 {
 }
 

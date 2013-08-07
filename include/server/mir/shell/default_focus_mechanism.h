@@ -29,7 +29,6 @@ namespace shell
 {
 class InputTargeter;
 class SurfaceController;
-class DisplayChanger;
 class SessionListener;
 class FocusSequence;
 
@@ -39,8 +38,7 @@ public:
     explicit DefaultFocusMechanism(std::shared_ptr<FocusSequence> const& sequence,
                                    std::shared_ptr<InputTargeter> const& input_targeter,
                                    std::shared_ptr<SurfaceController> const& surface_controller,
-                                   std::shared_ptr<SessionListener> const& session_listener,
-                                   std::shared_ptr<DisplayChanger> const& display_changer);
+                                   std::shared_ptr<SessionListener> const& session_listener);
     virtual ~DefaultFocusMechanism() = default;
 
     void surface_created_for(std::shared_ptr<Session> const& session);
@@ -59,7 +57,6 @@ private:
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceController> const surface_controller;
-    std::shared_ptr<DisplayChanger> const display_changer;
 
     std::mutex mutable mutex;
     std::shared_ptr<Session> focus_session;

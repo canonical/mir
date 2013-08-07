@@ -22,25 +22,20 @@
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_controller.h"
-#include "mir/shell/display_changer.h"
 #include "mir/shell/session_listener.h"
 #include "mir/shell/focus_sequence.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-#include <iostream>
-
 msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::FocusSequence> const& sequence,
                                                   std::shared_ptr<msh::InputTargeter> const& input_targeter,
                                                   std::shared_ptr<msh::SurfaceController> const& surface_controller,
-                                                  std::shared_ptr<msh::SessionListener> const& session_listener,
-                                                  std::shared_ptr<msh::DisplayChanger> const& changer)
+                                                  std::shared_ptr<msh::SessionListener> const& session_listener)
   : sequence(sequence),
     session_listener(session_listener),
     input_targeter(input_targeter),
     surface_controller(surface_controller),
-    display_changer(changer),
     focus_session(nullptr)
 { 
 }
@@ -48,15 +43,12 @@ msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::FocusSequ
 void msh::DefaultFocusMechanism::set_focus(std::shared_ptr<msh::Session> const& session)
 {
     focus_session = session;
-    display_changer->set_focus_to(focus_session);
     session_listener->focused(focus_session);
 
     //todo shouldnt do this here
     auto surface = focus_session->default_surface();
     if (surface)
     {
-        std::cout << " focus change " << surface << std::endl;
-        printf("RAISIN \n");
         surface->raise(surface_controller);
         surface->take_input_focus(input_targeter);
     } 
