@@ -32,6 +32,10 @@ public:
     ServerConfiguration(int argc, char const** argv);
 
     std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy() override;
+    std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter() override;
+
+private:
+    std::shared_ptr<input::EventFilter> quit_filter;
 };
 
 }
