@@ -23,6 +23,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/session.h"
 #include "mir/frontend/session.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_properties.h"
@@ -42,7 +43,6 @@
 
 #include <assert.h>
 #include <signal.h>
-
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
@@ -69,8 +69,7 @@ private:
 };
 }
 
-me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
-                                           std::shared_ptr<mg::Platform> const& graphics_platform,
+me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
                                            std::shared_ptr<msh::SessionManager> const& session_manager)
   : graphics_platform(graphics_platform),
 
@@ -78,13 +77,16 @@ me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const&
     client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this),
     terminate(false)
 {
-    main_loop->register_signal_handler({SIGTERM, SIGINT},
-        [this](int)
-        {
-            terminate = true;
-        }
-    );
-    client_thread.detach();
+}
+
+me::InprocessEGLClient::~InprocessEGLClient()
+{
+    terminate = true;
+    //TODO: this is messy, need a better interface for internal clients to interact with shell
+    if ( auto ses = std::dynamic_pointer_cast<msh::Session>(session))
+        ses->force_requests_to_complete();
+
+    client_thread.join();
 }
 
 void me::InprocessEGLClient::thread_loop()
@@ -96,7 +98,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mg::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
-    auto session = session_manager->open_session("Inprocess client",
+    session = session_manager->open_session("Inprocess client",
                                                  std::shared_ptr<mf::EventSink>());
     // TODO: Why do we get an ID? ~racarr
     auto surface = session->get_surface(session_manager->create_surface_for(session, params));

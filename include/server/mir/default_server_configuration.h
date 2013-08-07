@@ -65,6 +65,7 @@ class SessionManager;
 class PixelBuffer;
 class SnapshotStrategy;
 class DisplayLayout;
+class SurfaceConfigurator;
 class DisplayChanger;
 }
 namespace time
@@ -159,16 +160,18 @@ public:
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
-    virtual std::shared_ptr<shell::SurfaceFactory>    the_shell_surface_factory();
-    virtual std::shared_ptr<shell::SessionContainer>  the_shell_session_container();
-    virtual std::shared_ptr<shell::FocusSetter>       the_shell_focus_setter();
-    virtual std::shared_ptr<shell::FocusSequence>     the_shell_focus_sequence();
-    virtual std::shared_ptr<shell::PlacementStrategy> the_shell_placement_strategy();
-    virtual std::shared_ptr<shell::SessionListener>   the_shell_session_listener();
-    virtual std::shared_ptr<shell::PixelBuffer>       the_shell_pixel_buffer();
-    virtual std::shared_ptr<shell::SnapshotStrategy>  the_shell_snapshot_strategy();
-    virtual std::shared_ptr<shell::DisplayLayout>     the_shell_display_layout();
-    virtual std::shared_ptr<shell::DisplayChanger>    the_shell_display_changer();
+    virtual std::shared_ptr<shell::SurfaceFactory>      the_shell_surface_factory();
+    virtual std::shared_ptr<shell::SessionContainer>    the_shell_session_container();
+    virtual std::shared_ptr<shell::FocusSetter>         the_shell_focus_setter();
+    virtual std::shared_ptr<shell::FocusSequence>       the_shell_focus_sequence();
+    virtual std::shared_ptr<shell::PlacementStrategy>   the_shell_placement_strategy();
+    virtual std::shared_ptr<shell::SessionListener>     the_shell_session_listener();
+    virtual std::shared_ptr<shell::PixelBuffer>         the_shell_pixel_buffer();
+    virtual std::shared_ptr<shell::SnapshotStrategy>    the_shell_snapshot_strategy();
+    virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
+    virtual std::shared_ptr<shell::DisplayChanger>      the_shell_display_changer();
+    virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
+
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -258,6 +261,7 @@ protected:
     CachedPtr<shell::PixelBuffer>       shell_pixel_buffer;
     CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
+    CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
     CachedPtr<shell::DisplayChanger>     shell_display_changer;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;

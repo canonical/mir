@@ -183,8 +183,13 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
             if (!expected)
             {
                 Sequence seq;
+                //connect session
+                EXPECT_CALL(*targeter, focus_cleared())
+                    .InSequence(seq);
+                //session has a default surface
                 EXPECT_CALL(*targeter, focus_changed(_))
                     .InSequence(seq);
+                //session is destroyed
                 EXPECT_CALL(*targeter, focus_cleared())
                     .InSequence(seq);
                 expected = true;

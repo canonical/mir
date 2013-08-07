@@ -37,6 +37,7 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -139,6 +140,7 @@ struct MockShellSession : public msh::Session
     MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
 };
 }
+
 TEST_F(SessionManagerSetup, display_change_configuration)
 {
     using namespace testing;

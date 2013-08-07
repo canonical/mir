@@ -152,10 +152,10 @@ void msh::ApplicationSession::show()
 
 int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
                                                MirSurfaceAttrib attrib,
-                                               int value)
+                                               int requested_value)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    std::shared_ptr<mf::Surface> surf(checked_find(id)->second);
+    std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 
-    return surf->configure(attrib, value);
+    return surf->configure(attrib, requested_value);
 }

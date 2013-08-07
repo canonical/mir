@@ -39,6 +39,10 @@ namespace graphics
 {
 class Platform;
 }
+namespace frontend
+{
+class Session;
+}
 namespace shell
 {
 class SessionManager;
@@ -51,9 +55,10 @@ namespace examples
 class InprocessEGLClient
 {
 public:
-    InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
-                       std::shared_ptr<graphics::Platform> const& graphics_platform,
+    InprocessEGLClient(std::shared_ptr<graphics::Platform> const& graphics_platform,
                        std::shared_ptr<shell::SessionManager> const& session_manager);
+
+    ~InprocessEGLClient();
 
 protected:
     InprocessEGLClient(InprocessEGLClient const&) = delete;
@@ -62,6 +67,7 @@ protected:
 private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<shell::SessionManager> const session_manager;
+    std::shared_ptr<frontend::Session> session;
 
     std::thread client_thread;
     
