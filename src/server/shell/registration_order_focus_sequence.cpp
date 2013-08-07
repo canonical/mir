@@ -69,10 +69,7 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::successor_of(
     }
     else
     {
-        return focused_app;
-       // return focused_app;
-//        return nullptr;
-        //BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
     }
 }
 
@@ -105,9 +102,7 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::predecessor_o
     }
     else
     {
-        return focused_app;
-
-//        BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid session"));
     }
 }
 

@@ -76,8 +76,15 @@ void msh::DefaultFocusMechanism::session_closed(std::shared_ptr<Session> const& 
     if (focus_session == session)
     {
         //cycle through to next focus if the currenttly-focused app is closed
-        focus_session = sequence->successor_of(focus_session);
-        set_focus(session); 
+        try
+        {
+            focus_session = sequence->successor_of(focus_session);
+            set_focus(session);
+        } catch (std::logic_error)
+        {
+            input_targeter->focus_cleared();
+            session_listener->unfocused();
+        } 
     }
 }
 
