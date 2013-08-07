@@ -40,7 +40,7 @@ namespace shell
 class InputTargeter;
 class SurfaceBuilder;
 class SurfaceConfigurator;
-
+class SurfaceController;
 struct SurfaceCreationParameters;
 
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
@@ -86,6 +86,8 @@ public:
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region);
 
     virtual void allow_framedropping(bool); 
+    
+    virtual void raise(std::shared_ptr<SurfaceController> const& controller);
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);

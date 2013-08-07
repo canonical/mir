@@ -239,7 +239,7 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 
 MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
 {
-    if (connection) 
+    if (connection)
         return connection->create_copy_of_display_config();
     return nullptr;
 }
@@ -255,7 +255,26 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
     auto config = mir_connection_create_display_config(connection);
     if (config->num_displays < 1)
         return;
-    MirDisplayOutput* state = &config->displays[0];
+
+    MirDisplayOutput* state = nullptr;
+    // We can't handle more than one display, so just populate based on the first
+    // active display we find.
+    for (unsigned int i = 0; i < config->num_displays; ++i) 
+    {
+        if (config->displays[i].used && config->displays[i].connected &&
+            config->displays[i].current_mode < config->displays[i].num_modes)
+        {
+            state = &config->displays[i];
+            break;
+        }
+    }
+    // Oh, oh! No connected outputs?!
+    if (state == nullptr)
+    {
+        memset(display_info, 0, sizeof(*display_info));
+        return;
+    }
+
     MirDisplayMode mode = state->modes[state->current_mode];
    
     display_info->width = mode.horizontal_resolution;
@@ -376,4 +395,19 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 int mir_surface_get_swapinterval(MirSurface* surf)
 {
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
+}
+
+void mir_connection_set_display_config_change_callback(MirConnection* connection,
+    mir_display_config_callback callback, void* context)
+{
+    if (connection)
+        connection->register_display_change_callback(callback, context);
+}
+
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
+{
+    if (!connection)
+        return NULL;
+ 
+    return connection->configure_display(display_configuration);
 }

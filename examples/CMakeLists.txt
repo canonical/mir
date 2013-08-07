@@ -82,6 +82,7 @@ target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/include/platform
   ${GLESv2_INCLUDE_DIRS}
 )
 
@@ -97,7 +98,12 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-set(RENDER_SURFACES_SOURCES render_surfaces.cpp buffer_render_target.cpp image_renderer.cpp)
+set(RENDER_SURFACES_SOURCES
+    render_surfaces.cpp
+    buffer_render_target.cpp
+    image_renderer.cpp
+    server_configuration.cpp
+)
 add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
 target_link_libraries(mir_demo_standalone_render_surfaces
     mirserver
@@ -107,6 +113,7 @@ target_link_libraries(mir_demo_standalone_render_surfaces
 
 add_executable(mir_demo_standalone_input_filter
   demo_input_filter.cpp
+  server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_standalone_input_filter  
@@ -131,6 +138,7 @@ install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server
   demo_server.cpp
+  server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_server

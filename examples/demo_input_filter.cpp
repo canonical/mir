@@ -17,9 +17,9 @@
  */
 
 #include "mir/run_mir.h"
-#include "mir/default_server_configuration.h"
 #include "mir/abnormal_exit.h"
-#include "mir/input/event_filter.h"
+#include "mir/input/composite_event_filter.h"
+#include "server_configuration.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -49,18 +49,19 @@ struct PrintingEventFilter : public mi::EventFilter
     }
 };
 
-struct DemoServerConfiguration : public mir::DefaultServerConfiguration
+struct DemoServerConfiguration : public mir::examples::ServerConfiguration
 {
     DemoServerConfiguration(int argc, char const* argv[])
-      : DefaultServerConfiguration(argc, argv),
+      : ServerConfiguration(argc, argv),
         event_filter(std::make_shared<PrintingEventFilter>())
     {
     }
     
-    std::initializer_list<std::shared_ptr<mi::EventFilter> const> the_event_filters() override
+    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
-        static std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list = { event_filter };
-        return filter_list;
+        auto composite_filter = ServerConfiguration::the_composite_event_filter();
+        composite_filter->prepend(event_filter);
+        return composite_filter;
     }
 
     std::shared_ptr<PrintingEventFilter> const event_filter;

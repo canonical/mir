@@ -6,8 +6,6 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper_triple.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_swapper_spin_triple.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_temporary_buffers.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_id.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_properties.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_swapper_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_rendering_operator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_multi_threaded_compositor.cpp

@@ -21,7 +21,7 @@
 
 #include "mir/geometry/pixel_format.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include <glm/glm.hpp>
 #include <vector>

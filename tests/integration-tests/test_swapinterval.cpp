@@ -79,7 +79,7 @@ public:
     {
     }
 
-    std::shared_ptr<ms::BufferStream> create_buffer_stream(mc::BufferProperties const&)
+    std::shared_ptr<ms::BufferStream> create_buffer_stream(mg::BufferProperties const&)
     {
         return std::make_shared<CountingBufferStream>(render_operations_fd);
     }

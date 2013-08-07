@@ -34,11 +34,11 @@ public:
     ~MockSwapperFactory() noexcept {}
 
     MOCK_CONST_METHOD4(create_swapper_reuse_buffers,
-        std::shared_ptr<compositor::BufferSwapper>(compositor::BufferProperties const&,
+        std::shared_ptr<compositor::BufferSwapper>(graphics::BufferProperties const&,
             std::vector<std::shared_ptr<graphics::Buffer>>&, size_t, compositor::SwapperType));
     MOCK_CONST_METHOD3(create_swapper_new_buffers,
         std::shared_ptr<compositor::BufferSwapper>(
-            compositor::BufferProperties&, compositor::BufferProperties const&, compositor::SwapperType));
+            graphics::BufferProperties&, graphics::BufferProperties const&, compositor::SwapperType));
 };
 }
 }

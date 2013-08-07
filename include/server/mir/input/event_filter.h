@@ -21,15 +21,6 @@
 
 #include "mir_toolkit/event.h"
 
-#include <memory>
-
-namespace android
-{
-class InputEvent;
-}
-
-namespace droidinput = android;
-
 namespace mir
 {
 namespace input
@@ -38,9 +29,9 @@ namespace input
 class EventFilter
 {
 public:
-    virtual ~EventFilter() {}
+    virtual ~EventFilter() = default;
 
-    virtual bool handle(const MirEvent& event) = 0;
+    virtual bool handle(MirEvent const& event) = 0;
 
 protected:
     EventFilter() = default;

@@ -25,7 +25,7 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
 #include "mir/geometry/size.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/platform.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
@@ -94,7 +94,7 @@ void me::InprocessEGLClient::thread_loop()
     ///\internal [setup_tag]
     auto params = msh::a_surface().of_name("Inprocess EGL Demo")
         .of_size(surface_size)
-        .of_buffer_usage(mc::BufferUsage::hardware)
+        .of_buffer_usage(mg::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
     auto session = session_manager->open_session("Inprocess client",
                                                  std::shared_ptr<mf::EventSink>());

@@ -18,14 +18,14 @@
 
 #include "mir/run_mir.h"
 #include "mir/report_exception.h"
-#include "mir/default_server_configuration.h"
+#include "server_configuration.h"
 
 #include <iostream>
 
 int main(int argc, char const* argv[])
 try
 {
-    mir::DefaultServerConfiguration config(argc, argv);
+    mir::examples::ServerConfiguration config(argc, argv);
 
     run_mir(config, [](mir::DisplayServer&) {/* empty init */});
     return 0;

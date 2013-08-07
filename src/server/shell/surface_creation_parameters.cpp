@@ -18,14 +18,15 @@
 
 #include "mir/shell/surface_creation_parameters.h"
 
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 msh::SurfaceCreationParameters::SurfaceCreationParameters()
-    : name(), size(), top_left(), buffer_usage(mc::BufferUsage::undefined),
+    : name(), size(), top_left(), buffer_usage(mg::BufferUsage::undefined),
       pixel_format(geom::PixelFormat::invalid),
-      depth{0}
+      depth{0}, input_mode(mi::InputReceptionMode::normal)
 {
 }
 
@@ -59,7 +60,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_position(geom
 }
 
 msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
-        mc::BufferUsage new_buffer_usage)
+        mg::BufferUsage new_buffer_usage)
 {
     buffer_usage = new_buffer_usage;
 
@@ -78,6 +79,13 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_depth(
     surfaces::DepthId const& new_depth)
 {
     depth = new_depth;
+    
+    return *this;
+}
+
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_input_mode(input::InputReceptionMode const& new_mode)
+{
+    input_mode = new_mode;
     
     return *this;
 }
