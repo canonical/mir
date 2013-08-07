@@ -50,7 +50,6 @@ pushd ${1} > /dev/null
         libboost-date-time1.53-dev
         libboost-filesystem1.53-dev
         libboost-program-options1.53-dev
-        libprotobuf-dev
         libboost-chrono1.53.0
         libboost-date-time1.53.0
         libboost-filesystem1.53.0
@@ -72,7 +71,9 @@ pushd ${1} > /dev/null
         libicu48
         libprotobuf7
         libprotobuf-dev
+        libegl1-mesa
         libegl1-mesa-dev
+        libgles2-mesa
         libgles2-mesa-dev
         libxkbcommon0
         libxkbcommon-dev
