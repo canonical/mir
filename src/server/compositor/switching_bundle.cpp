@@ -265,15 +265,14 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
     int compositor;
 
     auto t = now();
-    auto time_between_acquires = t - last_consumed;
 
-    // How close two acquire calls have to be to get the same frame:
-    const std::chrono::milliseconds same_frame(10);
+    // Multi-monitor acquires close to each other get the same frame:
+    bool same_frame = (t - last_consumed) < std::chrono::milliseconds(10);
 
     int avail = nfree();
     bool can_recycle = ncompositors || avail;
 
-    if (!nready || (time_between_acquires < same_frame && can_recycle))
+    if (!nready || (same_frame && can_recycle))
     {
         if (ncompositors)
         {
