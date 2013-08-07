@@ -74,20 +74,6 @@ struct StubInputFactory : public mi::InputChannelFactory
         return std::shared_ptr<mi::InputChannel>();
     }
 };
-
-// TODO this ought to be provided by the library
-class ForwardingInternalSurface : public mg::InternalSurface
-{
-public:
-    ForwardingInternalSurface(std::shared_ptr<mf::Surface> const& surface) : surface(surface) {}
-
-private:
-    virtual std::shared_ptr<mg::Buffer> advance_client_buffer() { return surface->advance_client_buffer(); }
-    virtual mir::geometry::Size size() const { return surface->size(); }
-    virtual MirPixelFormat pixel_format() const { return static_cast<MirPixelFormat>(surface->pixel_format()); }
-
-    std::shared_ptr<mf::Surface> const surface;
-};
 }
 
 TEST_F(AndroidInternalClient, internal_client_creation_and_use)
@@ -111,7 +97,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto ss = std::make_shared<ms::SurfaceStack>(surface_allocator, stub_input_registrar);
     auto surface_controller = std::make_shared<ms::SurfaceController>(ss);
     auto surface_source = std::make_shared<msh::SurfaceSource>(surface_controller);
-    auto mir_surface = std::make_shared<ForwardingInternalSurface>(
+    auto mir_surface = as_internal_surface(
         surface_source->create_surface(params, id, std::shared_ptr<mf::EventSink>()));
 
     auto options = std::shared_ptr<mo::ProgramOption>(); 
