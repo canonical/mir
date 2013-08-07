@@ -17,6 +17,7 @@ set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirserver")
+set(PLATFORM_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirplatform")
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
@@ -74,6 +75,7 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
   install(DIRECTORY
+    ${CMAKE_SOURCE_DIR}/include/platform/mir DESTINATION "include/mirplatform"
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
   )
 else()
