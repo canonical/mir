@@ -123,7 +123,7 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
     uint32_t gbm_format = mgg::mir_format_to_gbm_format(buffer_properties.format);
 
     if (!is_pixel_format_supported(buffer_properties.format) ||
-        gbm_format == mgg::invalid_gbm_format())
+        gbm_format == mgg::invalid_gbm_format)
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
