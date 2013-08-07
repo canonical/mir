@@ -1,3 +1,35 @@
+mir (0.0.8+13.10.20130806-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * Add protobuf message and api for requesting display configuration
+    change. Requests to change the display are authorized by the shell
+    authorizer .
+
+  [ Alan Griffiths ]
+  * 1. establish a MirConnection during the NestedPlatform
+    initialization 2. check that the socket filename that is used by the
+    nested mir to accept connections is not the same with the host mir's
+    socket filename 3. release the connection when the NestedPlatform is
+    deleted.
+
+  [ Eleni Maria Stea ]
+  * 1. establish a MirConnection during the NestedPlatform
+    initialization 2. check that the socket filename that is used by the
+    nested mir to accept connections is not the same with the host mir's
+    socket filename 3. release the connection when the NestedPlatform is
+    deleted.
+
+  [ Colin Watson ]
+  * The upcoming arm64 architecture is called arm64, not armel64.
+
+  [ Alexandros Frantzis ]
+  * gbm,compositor: Misc multimonitor related fixes. (LP: #1208354)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 925
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 06 Aug 2013 00:02:45 +0000
+
 mir (0.0.8+13.10.20130803-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]

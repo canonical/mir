@@ -60,6 +60,7 @@
 #include "mir/input/null_input_configuration.h"
 #include "mir/input/null_input_report.h"
 #include "mir/input/display_input_region.h"
+#include "mir/input/event_filter_chain.h"
 #include "input/android/default_android_input_configuration.h"
 #include "input/android/android_input_manager.h"
 #include "input/android/android_input_targeter.h"
@@ -478,10 +479,10 @@ mir::DefaultServerConfiguration::the_focus_controller()
     return the_session_manager();
 }
 
-std::initializer_list<std::shared_ptr<mi::EventFilter> const>
-mir::DefaultServerConfiguration::the_event_filters()
+std::shared_ptr<mi::CompositeEventFilter>
+mir::DefaultServerConfiguration::the_composite_event_filter()
 {
-    return empty_filter_list;
+    return std::make_shared<mi::EventFilterChain>(empty_filter_list);
 }
 
 std::shared_ptr<mi::InputReport>
@@ -542,7 +543,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         if (the_options()->get("enable-input", enable_input_default))
         {
             input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
-                the_event_filters(),
+                the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
                 the_input_report());

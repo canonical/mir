@@ -1,2 +1,3 @@
 usr/lib/*/libmirserver.so.0
+usr/lib/*/libmirplatform.so
 usr/lib/*/libmirplatformgraphics.so
