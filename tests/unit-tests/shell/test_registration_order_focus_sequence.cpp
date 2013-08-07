@@ -150,6 +150,7 @@ TEST_F(RegistrationOrderFocusSequenceSetup, invalid_session_throw_behavior)
     EXPECT_THROW({
             focus_sequence.predecessor_of(null_session);
     }, std::logic_error);
+
     EXPECT_THROW({
             focus_sequence.successor_of(invalid_session);
     }, std::logic_error);

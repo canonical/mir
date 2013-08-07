@@ -111,7 +111,6 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::predecessor_o
     }
 }
 
-#include <iostream>
 std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::default_focus() const
 {
     std::shared_ptr<Session> result;
@@ -122,6 +121,5 @@ std::shared_ptr<msh::Session> msh::RegistrationOrderFocusSequence::default_focus
             result = session;
         });
 
-    std::cout << "default focuse " << result << std::endl;
     return result;
 }

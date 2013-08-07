@@ -362,6 +362,11 @@ public:
     {
     }
 
+    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    {
+        return std::make_shared<mtd::StubDisplayConfig>();
+    }
+
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         f(display_buffer);
@@ -397,7 +402,6 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_authorized_cl
         }
 
         std::shared_ptr<ConfigureNotifyingDisplay> display;
-        std::shared_ptr<StubAuthorizer> authorizer;
         mtf::CrossProcessSync configure_fence;
 
     } server_config(server_configure_fence);
