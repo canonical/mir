@@ -24,11 +24,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <iostream>
-
 bool mir::input::VTFilter::handle(MirEvent const& event)
 {
-    std::cerr << "VTFilter::handle" << std::endl;
     if (event.type == mir_event_type_key &&
         event.key.action == mir_key_action_down &&
         (event.key.modifiers & mir_key_modifier_alt) &&
@@ -36,9 +33,6 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
     {
         switch (event.key.scan_code)
         {
-        case KEY_L:
-            set_active_vt(2);
-            return true;
         case KEY_F1:
             set_active_vt(1);
             return true;

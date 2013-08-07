@@ -485,7 +485,8 @@ mir::DefaultServerConfiguration::the_composite_event_filter()
     return composite_event_filter(
         [this]() -> std::shared_ptr<mi::CompositeEventFilter>
         {
-            std::cerr << "create vt filter" << std::endl;
+            if (!vt_filter)
+                vt_filter = std::make_shared<mi::VTFilter>();
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {vt_filter};
             return std::make_shared<mi::EventFilterChain>(filter_list);
         });
