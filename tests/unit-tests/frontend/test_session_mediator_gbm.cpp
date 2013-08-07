@@ -29,6 +29,8 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
+#include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_display_changer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_session.h"
@@ -73,12 +75,6 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 
-class NullEventSink : public mir::frontend::EventSink
-{
-public:
-    void handle_event(MirEvent const& ) override {}
-};
-
 struct SessionMediatorGBMTest : public ::testing::Test
 {
     SessionMediatorGBMTest()
@@ -90,7 +86,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
           resource_cache{std::make_shared<mf::ResourceCache>()},
           mediator{shell, mock_platform, display_changer,
                    buffer_allocator, report,
-                   std::make_shared<NullEventSink>(),
+                   std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
