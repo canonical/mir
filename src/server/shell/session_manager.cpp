@@ -112,3 +112,15 @@ void msh::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> co
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
     focus_setter->surface_created_for(shell_session);
 }
+
+//TODO: this function is a kludge for not distributing a SessionMediator-like object to the internal clients.
+//      we should have a the_internal_client_mediator() in the server configuration that would act as a factory
+//      and mediator for internal clients, much like the mf::SessionMediator acts for ipc clients
+mf::SurfaceId msh::SessionManager::create_surface_for(std::shared_ptr<mf::Session> const& session,
+    msh::SurfaceCreationParameters const& params)
+{
+    auto shell_session = std::dynamic_pointer_cast<Session>(session);
+    auto id = shell_session->create_surface(params);
+    handle_surface_created(shell_session);
+    return id;
+}

@@ -38,6 +38,9 @@ public:
     virtual void session_opened(std::shared_ptr<Session> const& session) = 0;
     virtual void session_closed(std::shared_ptr<Session> const& session) = 0;
 
+    //TODO: this is only used in example code
+    virtual void focus_next() = 0;
+
     virtual std::weak_ptr<Session> focused_session() const = 0;
 
 protected:

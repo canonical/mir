@@ -28,7 +28,7 @@ namespace mir
 {
 namespace shell
 {
-class FocusController;
+class FocusSetter;
 class SessionManager;
 }
 namespace examples
@@ -40,7 +40,7 @@ public:
     WindowManager();
     ~WindowManager() = default;
 
-    void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
+    void set_focus_controller(std::shared_ptr<shell::FocusSetter> const& focus_controller);
     void set_session_manager(std::shared_ptr<shell::SessionManager> const& sm);
     
     bool handle(MirEvent const& event) override;
@@ -50,7 +50,7 @@ protected:
     WindowManager& operator=(const WindowManager&) = delete;
 
 private:
-    std::shared_ptr<shell::FocusController> focus_controller;
+    std::shared_ptr<shell::FocusSetter> focus_controller;
     std::shared_ptr<shell::SessionManager> session_manager;
     geometry::Displacement relative_click;  // Click location in window space
     geometry::Point click;                  // Click location in screen space

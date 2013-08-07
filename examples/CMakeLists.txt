@@ -131,8 +131,8 @@ set (DEMO_CLIENTS
   mir_demo_client_fingerpaint
 )
 
-#add_subdirectory(demo-inprocess-surface-client)
-#add_subdirectory(demo-shell)
+add_subdirectory(demo-inprocess-surface-client)
+add_subdirectory(demo-shell)
 
 install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

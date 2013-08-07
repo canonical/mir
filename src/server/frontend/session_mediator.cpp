@@ -123,6 +123,7 @@ void mf::SessionMediator::create_surface(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         report->session_create_surface_called(session->name());
+        shell->handle_surface_created(session);
 
         auto const id = session->create_surface(
             msh::SurfaceCreationParameters()
@@ -160,7 +161,6 @@ void mf::SessionMediator::create_surface(
 
     done->Run();
 
-    shell->handle_surface_created(session);
 }
 
 void mf::SessionMediator::next_buffer(

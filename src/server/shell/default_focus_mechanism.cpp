@@ -45,7 +45,6 @@ void msh::DefaultFocusMechanism::set_focus(std::shared_ptr<msh::Session> const& 
     focus_session = session;
     session_listener->focused(focus_session);
 
-    //todo shouldnt do this here
     auto surface = focus_session->default_surface();
     if (surface)
     {
@@ -82,9 +81,9 @@ void msh::DefaultFocusMechanism::session_closed(std::shared_ptr<Session> const& 
     }
 }
 
-#if 0
-void msh::DefaultFocusMechanism::focus_next_session()
+void msh::DefaultFocusMechanism::focus_next()
 {
+#if 0
     std::unique_lock<std::mutex> lock(mutex);
     //todo, should be in constructor, small dependency between sequence and the session manager to sort out
     if(!focus_session)
@@ -104,8 +103,9 @@ void msh::DefaultFocusMechanism::focus_next_session()
         surface->raise(surface_controller);
         surface->take_input_focus(input_targeter);
     } 
-}
 #endif
+}
+
 std::weak_ptr<msh::Session> msh::DefaultFocusMechanism::focused_session() const
 {
     std::unique_lock<std::mutex> lock(mutex);

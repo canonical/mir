@@ -46,7 +46,14 @@ class StubShell : public frontend::Shell
 
     virtual void handle_surface_created(std::shared_ptr<frontend::Session> const&)
     {
-    } 
+    }
+ 
+    virtual frontend::SurfaceId create_surface_for(
+                                        std::shared_ptr<frontend::Session> const& /* session */,
+                                        shell::SurfaceCreationParameters const& /* params */)
+    {
+        return frontend::SurfaceId{4};
+    }
 };
 
 }

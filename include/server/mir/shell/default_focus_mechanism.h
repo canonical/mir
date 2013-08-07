@@ -46,6 +46,9 @@ public:
     void session_closed(std::shared_ptr<Session> const& session);
     std::weak_ptr<Session> focused_session() const;
 
+    //TODO: this is only used in example code
+    void focus_next();
+
 protected:
     DefaultFocusMechanism(const DefaultFocusMechanism&) = delete;
     DefaultFocusMechanism& operator=(const DefaultFocusMechanism&) = delete;

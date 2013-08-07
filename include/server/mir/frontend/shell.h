@@ -45,6 +45,10 @@ public:
     virtual void handle_display_configuration(std::shared_ptr<Session> const& session) = 0; 
     virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
+    //TODO: remove, object needed to handle calling appropriate shell notifications for internal clients
+   virtual SurfaceId create_surface_for(std::shared_ptr<Session> const& session,
+                                        shell::SurfaceCreationParameters const& params) = 0;
+
 protected:
     Shell() = default;
     Shell(const Shell&) = delete;
