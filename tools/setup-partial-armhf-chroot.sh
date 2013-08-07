@@ -43,7 +43,6 @@ download_and_extract_packages()
 pushd ${1} > /dev/null
 
     declare -a PACKAGES_ARMHF=(
-        android-platform-headers
         google-mock
         libboost1.53-dev
         libboost-chrono1.53-dev
@@ -87,7 +86,9 @@ pushd ${1} > /dev/null
         systemtap-sdt-dev
         zlib1g)
 
-    declare -a PACKAGES_ALL=(libglm-dev)
+    declare -a PACKAGES_ALL=(
+        android-platform-headers
+        libglm-dev)
 
     #cleanup
     for i in * ; do
