@@ -43,6 +43,7 @@ download_and_extract_packages()
 pushd ${1} > /dev/null
 
     declare -a PACKAGES_ARMHF=(
+        android-platform-headers
         google-mock
         libboost1.53-dev
         libboost-chrono1.53-dev
@@ -61,8 +62,9 @@ pushd ${1} > /dev/null
         libboost-regex1.53-dev
         libboost-regex1.53.0
         libboost-program-options1.53.0
-        libhybris
-        libhybris-dev
+        libhardware2
+        libhardware-dev
+        libhybris-common1
         libandroid-properties1
         libgflags2
         libgflags-dev
@@ -97,11 +99,4 @@ pushd ${1} > /dev/null
 
     download_and_extract_packages PACKAGES_ARMHF armhf
     download_and_extract_packages PACKAGES_ALL all
-
-    #todo: we get egl/gles headers from the mesa packages, but should be pointing at the hybris libraries
-    #just rewrite the symlinks for now
-    rm ./usr/lib/arm-linux-gnueabihf/libEGL.so 
-    rm ./usr/lib/arm-linux-gnueabihf/libGLESv2.so 
-    ln -s libhybris-egl/libEGL.so.1 ./usr/lib/arm-linux-gnueabihf/libEGL.so 
-    ln -s libhybris-egl/libGLESv2.so.2 ./usr/lib/arm-linux-gnueabihf/libGLESv2.so
 popd > /dev/null 
