@@ -22,14 +22,44 @@
 #include "mir_toolkit/client_types.h"
 #include "mir_protobuf.pb.h"
 
+#include <mutex>
+#include <functional>
+#include <vector>
+#include <memory>
+
 namespace mir
 {
 namespace client
 {
+class DisplayOutput : public MirDisplayOutput
+{
+public:
+    DisplayOutput(size_t num_modes_, size_t num_formats);
+    ~DisplayOutput();
+};
 
-//convenient helpers
+//convenient helper
 void delete_config_storage(MirDisplayConfiguration* config);
-MirDisplayConfiguration* set_display_config_from_message(mir::protobuf::Connection const& connection_msg);
+
+class DisplayConfiguration
+{
+public:
+    DisplayConfiguration();
+    ~DisplayConfiguration();
+
+    void update_configuration(mir::protobuf::Connection const& msg);
+    void update_configuration(mir::protobuf::DisplayConfiguration const& msg);
+    void set_display_change_handler(std::function<void()> const&);
+
+    //copying to a c POD, so kinda kludgy
+    MirDisplayConfiguration* copy_to_client() const;
+
+private:
+    std::mutex mutable guard;
+    std::vector<std::shared_ptr<DisplayOutput>> outputs;
+    std::function<void()> notify_change;
+};
+
 
 }
 }

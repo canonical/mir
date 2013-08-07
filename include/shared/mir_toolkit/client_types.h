@@ -76,6 +76,15 @@ typedef void (*mir_event_delegate_callback)(
     MirSurface* surface, MirEvent const* event, void* context);
 
 /**
+ * Callback called when a display config change has occurred
+ *   \param [in] connection     The connection associated with the display change
+ *   \param [in,out] context    The context provided by client
+ */
+
+typedef void (*mir_display_config_callback)(
+    MirConnection* connection, void* callback);
+
+/**
  * The order of components in a format enum matches the
  * order of the components as they would be written in an
  *  integer representing a pixel value of that format.

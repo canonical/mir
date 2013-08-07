@@ -17,6 +17,8 @@ add_library(
 target_link_libraries(
   mirlogging
 
+  mirplatform
+
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
 )

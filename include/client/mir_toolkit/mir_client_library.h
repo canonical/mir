@@ -109,6 +109,17 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
 MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
 
 /**
+ * Register a callback to be called when the DisplayConfiguration changes. Once a change has occurred,
+ * you can use mir_connection_create_display_config to see the new configuration
+ *   \param [in] connection  The connection
+ *   \param [in] callback     The function to be called when a display change occurs
+ *   \param [in,out] context  User data passed to the callback function
+ */
+void mir_connection_set_display_config_change_callback(
+    MirConnection* connection,
+    mir_display_config_callback callback, void* context);
+
+/**
  * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
  *   \param [in] display_configuration  The display_configuration information resource to be destroyed 
  */
