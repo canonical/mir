@@ -116,58 +116,69 @@ struct StubShellSession : public msh::Session
 };
 }
 
-#if 0
-TEST_F(MediatingDisplayChangerTest, display_configure_without_focus)
+#include <iostream>
+namespace
 {
-    using namespace testing;
-
-    auto focused_session = std::make_shared<StubShellSession>();
-    auto unfocused_session = std::make_shared<mtd::MockSession>();
-
-    EXPECT_CALL(mock_display, configure(_))
-        .Times(0);
-
-    msh::MediatingDisplayChanger changer(mt::fake_shared(mock_display),
-                                         mt::fake_shared(mock_compositor));
-
-    changer.configure(unfocused_session, mt::fake_shared(default_config));
+MATCHER_P(ConfigPtrsMatch, config_ptr, "")
+{
+    std::cout << "OUT " << &arg << std::endl;
+    return (&arg == config_ptr);
 }
 
-TEST_F(MediatingDisplayChangerTest, display_configure_sequence)
+}
+TEST_F(MediatingDisplayChangerTest, display_configure)
 {
     using namespace testing;
 
-    auto focused_session = std::make_shared<StubShellSession>();
+    auto session1 = std::make_shared<StubShellSession>();
+    auto session2 = std::make_shared<StubShellSession>();
+    mtd::NullDisplayConfiguration base_conf, applied_conf;
+    auto base_config = mt::fake_shared(base_conf);
+    auto applied_config1 = mt::fake_shared(applied_conf);
+    auto applied_config2 = mt::fake_shared(applied_conf);
 
-    mtd::NullDisplayConfiguration conf;
-
-    EXPECT_CALL(mock_focus_setter, focused_application())
+    //get base config
+    EXPECT_CALL(mock_display, configuration())
         .Times(1)
-        .WillOnce(Return(focused_session));
+        .WillOnce(Return(base_config));
 
+    //apply session config
     Sequence seq;
     EXPECT_CALL(mock_compositor, stop())
         .InSequence(seq);
-    EXPECT_CALL(mock_display, configure(_))
+    EXPECT_CALL(mock_display, configure(ConfigPtrsMatch(applied_config1.get())))
+        .InSequence(seq);
+    EXPECT_CALL(mock_compositor, start())
+        .InSequence(seq);
+
+    EXPECT_CALL(mock_compositor, stop())
+        .InSequence(seq);
+    EXPECT_CALL(mock_display, configure(ConfigPtrsMatch(applied_config1.get())))
+        .InSequence(seq);
+    EXPECT_CALL(mock_compositor, start())
+        .InSequence(seq);
+
+    //apply base config
+    EXPECT_CALL(mock_compositor, stop())
+        .InSequence(seq);
+    EXPECT_CALL(mock_display, configure(ConfigPtrsMatch(base_config.get())))
         .InSequence(seq);
     EXPECT_CALL(mock_compositor, start())
         .InSequence(seq);
 
     msh::MediatingDisplayChanger changer(mt::fake_shared(mock_display),
-                                         mt::fake_shared(mock_compositor),
-                                         mt::fake_shared(mock_focus_setter));
-    changer.configure(focused_session, mt::fake_shared(conf));
+                                         mt::fake_shared(mock_compositor));
+
+    changer.store_configuration_for(session1, applied_config1);
+    changer.store_configuration_for(session2, applied_config2);
+    changer.apply_configuration_of(session1);
+    changer.apply_configuration_of(session2);
+    changer.remove_configuration_for(session2);
+    changer.remove_configuration_for(session1);
 }
 
+#if 0
 
-namespace
-{
-MATCHER_P(ConfigPtrsMatch, config_ptr, "")
-{
-    return (&arg == config_ptr);
-}
-
-}
 TEST_F(MediatingDisplayChangerTest, display_configure_sets_focus_with_two)
 {
     using namespace testing;
