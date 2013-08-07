@@ -21,6 +21,7 @@
 #include "mir/input/input_channel.h"
 #include "mir/surfaces/input_registrar.h"
 #include "mir/input/surface.h"
+#include "mir/input/composite_event_filter.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
@@ -110,7 +111,8 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
     {
         std::shared_ptr<mi::CursorListener> null_cursor_listener{nullptr};
 
-        input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(the_event_filters(),
+        input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
+            the_composite_event_filter(),
             the_input_region(),
             null_cursor_listener,
             the_input_report());

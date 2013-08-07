@@ -25,8 +25,6 @@
 #include <utils/StrongPointer.h>
 #include <InputDispatcher.h>
 
-#include <initializer_list>
-
 namespace android
 {
 class EventHubInterface;

@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
+#include "mir/input/composite_event_filter.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
@@ -215,7 +216,7 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
             {
                 input_configuration =
                     std::make_shared<mtd::FakeEventHubInputConfiguration>(
-                        std::initializer_list<std::shared_ptr<mi::EventFilter> const>{},
+                        the_composite_event_filter(),
                         the_input_region(),
                         std::shared_ptr<mi::CursorListener>(),
                         the_input_report());

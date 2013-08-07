@@ -83,7 +83,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     {
         event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            std::initializer_list<std::shared_ptr<mi::EventFilter> const>{event_filter},
+            event_filter,
             mt::fake_shared(input_region),
             mt::fake_shared(cursor_listener),
             std::make_shared<mi::NullInputReport>());
