@@ -75,6 +75,14 @@ pushd ${1} > /dev/null
         libegl1-mesa-dev
         libgles2-mesa
         libgles2-mesa-dev
+        libglapi-mesa
+        libdrm2
+        libgbm1
+        libx11-6
+        libx11-xcb1
+        libxcb1
+        libxcb-dri2-0
+        libxcb-xfixes0
         libxkbcommon0
         libxkbcommon-dev
         libumockdev-dev
@@ -83,6 +91,9 @@ pushd ${1} > /dev/null
         libuuid1
         liblttng-ust-dev
         liburcu-dev
+        libudev1
+        libwayland-client0
+        libwayland-server0
         uuid-dev
         systemtap-sdt-dev
         zlib1g)
