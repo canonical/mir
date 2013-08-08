@@ -86,9 +86,6 @@ mc::SwitchingBundle::SwitchingBundle(
                                                std::to_string(MAX_NBUFFERS)));
     }
 
-    for (int i = 0; i < nbuffers; i++)
-        ring[i].users = 0;
-
     last_consumed = now() - std::chrono::seconds(1);
 }
 

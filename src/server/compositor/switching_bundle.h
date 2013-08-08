@@ -72,7 +72,7 @@ private:
     struct SharedBuffer
     {
         std::shared_ptr<graphics::Buffer> buf;
-        int users;  // presently just a count of compositors sharing the buf
+        int users = 0; // presently just a count of compositors sharing the buf
     };
     SharedBuffer ring[MAX_NBUFFERS];
 
