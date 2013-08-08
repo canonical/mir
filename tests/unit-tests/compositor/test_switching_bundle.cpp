@@ -129,7 +129,7 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
 
         ASSERT_FALSE(bundle.framedropping_allowed());
 
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 20; i++)
         {
             auto client1 = bundle.client_acquire();
             mg::BufferID expect_id = client1->id(), composited_id;
@@ -164,7 +164,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
         bundle.allow_framedropping(true);
         mg::BufferID last_client_id;
 
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 10; i++)
         {
             for (int j = 0; j < 100; j++)
             {
@@ -253,7 +253,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
 
         mg::BufferID client_id;
 
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 20; i++)
         {
             if (i % 10 == 0)
             {
@@ -313,7 +313,7 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
         bundle.client_release(bundle.client_acquire());
         compositor[1] = bundle.compositor_acquire();
 
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 20; i++)
         {
             // Two compositors acquired, and they're always different...
             ASSERT_NE(compositor[0]->id(), compositor[1]->id());
@@ -535,7 +535,7 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
         bundle.client_release(bundle.client_acquire());
         compositor[1] = bundle.compositor_acquire();
 
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 20; i++)
         {
             // Two compositors acquired, and they're always different...
             ASSERT_NE(compositor[0]->id(), compositor[1]->id());
@@ -652,7 +652,7 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
     int nframes = 0;
     int nhiccups = 0;
 
-    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
+    for (int nbuffers = 2; nbuffers <= 3; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -676,7 +676,7 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
 
             auto prev = std::chrono::high_resolution_clock::now();
 
-            for (int second = 0; second < 3; second++)
+            for (int second = 0; second < 2; second++)
             {
                 for (int frame = 0; frame < frame_rate; frame++)
                 {
