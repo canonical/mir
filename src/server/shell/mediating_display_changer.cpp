@@ -78,10 +78,10 @@ void msh::MediatingDisplayChanger::remove_configuration_for(std::weak_ptr<mf::Se
     auto it = config_map.find(app.lock().get());
     if (it != config_map.end())
     {
-        config_map.erase(it);
         if (it->second == active_config)
         {
             apply_config(base_config);
         }
+        config_map.erase(it);
     }
 }
