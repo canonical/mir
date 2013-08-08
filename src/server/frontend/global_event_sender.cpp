@@ -36,7 +36,6 @@ void mf::GlobalEventSender::handle_event(MirEvent const&)
 
 void mf::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguration const& config)
 {
-printf("GLOBAL SENDER!\n");
     sessions->for_each([&config](std::shared_ptr<msh::Session> const& session)
     {
         session->send_display_config(config);
