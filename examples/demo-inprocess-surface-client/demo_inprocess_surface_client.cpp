@@ -23,6 +23,8 @@
 
 #include "mir/report_exception.h"
 
+#include <iostream>
+
 namespace me = mir::examples;
 
 ///\page demo_inprocess_egl demo_inprocess_egl.cpp: A simple use of egl in process

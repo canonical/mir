@@ -97,6 +97,7 @@ class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
 class InputRegion;
+class VTFilter;
 }
 
 namespace logging
@@ -233,8 +234,10 @@ protected:
 
 
     std::shared_ptr<input::InputConfiguration> input_configuration;
+    std::shared_ptr<input::VTFilter> vt_filter;
 
     CachedPtr<input::InputReport> input_report;
+    CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::InputRegion>     input_region;
     CachedPtr<surfaces::InputRegistrar> input_registrar;

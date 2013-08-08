@@ -45,8 +45,11 @@ mgg::LinuxVirtualTerminal::LinuxVirtualTerminal(
       vt_fd{fops, open_vt(vt_number)},
       prev_kd_mode{0},
       prev_vt_mode(),
+      prev_tty_mode(),
+      prev_tcattr(),
       active{true}
 {
+    struct termios tcattr;
     if (fops->ioctl(vt_fd.fd(), KDGETMODE, &prev_kd_mode) < 0)
     {
         BOOST_THROW_EXCEPTION(
@@ -59,14 +62,44 @@ mgg::LinuxVirtualTerminal::LinuxVirtualTerminal(
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Failed to get the current VT")) << boost::errinfo_errno(errno));
+                std::runtime_error("Failed to get the current VT"))
+                    << boost::errinfo_errno(errno));
     }
+
+    if (fops->ioctl(vt_fd.fd(), KDGKBMODE, &prev_tty_mode) < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to get the current TTY mode"))
+                    << boost::errinfo_errno(errno));
+    }
+    if (fops->ioctl(vt_fd.fd(), KDSKBMODE, K_OFF) < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to mute keyboard"))
+                    << boost::errinfo_errno(errno));
+    }
+
+    fops->tcgetattr(vt_fd.fd(), &prev_tcattr);
+    tcattr = prev_tcattr;
+    tcattr.c_iflag = IGNPAR | IGNBRK;
+    cfsetispeed(&tcattr, B9600);
+    tcattr.c_oflag = 0;
+    cfsetospeed(&tcattr, B9600);
+    tcattr.c_cflag = CREAD | CS8;
+    tcattr.c_lflag = 0;
+    tcattr.c_cc[VTIME] = 0;
+    tcattr.c_cc[VMIN] = 1;
+    fops->tcsetattr(vt_fd.fd(), TCSANOW, &tcattr);
 }
 
 mgg::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
 {
     if (vt_fd.fd() > 0)
     {
+        fops->tcsetattr(vt_fd.fd(), TCSANOW, &prev_tcattr);
+        fops->ioctl(vt_fd.fd(), KDSKBMODE, prev_tty_mode);
         fops->ioctl(vt_fd.fd(), KDSETMODE, prev_kd_mode);
         fops->ioctl(vt_fd.fd(), VT_SETMODE, &prev_vt_mode);
     }
@@ -185,6 +218,26 @@ int mgg::LinuxVirtualTerminal::open_vt(int vt_number)
     vt_path_stream << "/dev/tty" << vt_number;
 
     std::string const active_vt_path{vt_path_stream.str()};
+
+    if (activate)
+    {
+        if (getpid() == getpgid(0) && setpgid(0, getpgid(getppid())) < 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to stop being a process group"))
+                       << boost::errinfo_errno(errno));
+        }
+
+        /* become process group leader */
+        if (setsid() < 0)
+        {
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to become session leader"))
+                       << boost::errinfo_errno(errno));
+        }
+    }
 
     auto vt_fd = fops->open(active_vt_path.c_str(), O_RDONLY | O_NDELAY);
 
