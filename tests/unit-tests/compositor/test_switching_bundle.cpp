@@ -727,7 +727,7 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
         monitor3.join();
 
         int hiccups_percent = nhiccups * 100 / nframes;
-        ASSERT_LT(hiccups_percent, 1);
+        ASSERT_LT(hiccups_percent, 10);
     }
 }
 
