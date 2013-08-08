@@ -21,6 +21,7 @@
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/snapshot_strategy.h"
 #include "mir/shell/session_listener.h"
+#include "mir/frontend/event_sink.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -161,6 +162,7 @@ int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
     return surf->configure(attrib, requested_value);
 }
 
-void msh::ApplicationSession::send_display_config(mg::DisplayConfiguration const&)//info)
+void msh::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
 {
+    event_sink->handle_display_config_change(info);
 }
