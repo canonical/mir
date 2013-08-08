@@ -122,7 +122,7 @@ namespace
 
 TEST_F(SwitchingBundleTest, is_really_synchronous)
 {
-    for (int nbuffers = 1; nbuffers < 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         mg::BufferID prev_id, prev_prev_id;
@@ -157,7 +157,7 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
 
 TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
 {
-    for (int nbuffers = 2; nbuffers < 5; nbuffers++)
+    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -247,7 +247,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
 {
-    for (int nbuffers = 1; nbuffers < 5; nbuffers++)
+    for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -300,7 +300,7 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
 TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
-    for (int nbuffers = 2; nbuffers < 5; nbuffers++)
+    for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
@@ -522,7 +522,7 @@ TEST_F(SwitchingBundleTest, synchronous_clients_only_get_two_real_buffers)
 
 TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
 {
-    for (int nbuffers = 3; nbuffers < 5; nbuffers++)
+    for (int nbuffers = 3; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
