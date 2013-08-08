@@ -163,5 +163,4 @@ int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
 
 void msh::ApplicationSession::send_display_config(mg::DisplayConfiguration const&)//info)
 {
-
 }

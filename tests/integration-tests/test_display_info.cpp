@@ -23,6 +23,7 @@
 #include "mir/frontend/protobuf_ipc_factory.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/frontend/session_mediator.h"
+#include "mir/frontend/global_event_sender.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/cross_process_sync.h"
@@ -503,7 +504,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
         std::shared_ptr<mf::EventSink> the_global_event_sink() override
         {
             if (!global_sender)
-                global_sender = std::make_shared<mf::GlobalEventSender>(the_shell_sesion_container());
+                global_sender = std::make_shared<mf::GlobalEventSender>(the_shell_session_container());
             return global_sender;
         }
     
