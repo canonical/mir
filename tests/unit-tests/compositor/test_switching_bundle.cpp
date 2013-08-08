@@ -481,8 +481,8 @@ TEST_F(SwitchingBundleTest, stress)
     }
 }
 
-#if 0  // FIXME (enabling this optimization breaks timing tests)
-TEST_F(SwitchingBundleTest, synchronous_clients_only_get_two_real_buffers)
+// FIXME (enabling this optimization breaks timing tests)
+TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
 {
     /*
      * You might ask for more buffers, but we should only allocate two
@@ -518,7 +518,6 @@ TEST_F(SwitchingBundleTest, synchronous_clients_only_get_two_real_buffers)
         client.join();
     }
 }
-#endif  // FIXME
 
 TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
 {
