@@ -82,7 +82,6 @@ public:
     }
 
     static mtd::StubDisplayConfig stub_display_config;
-    static mtd::StubDisplayConfig changed_stub_display_config;
 private:
     mtd::NullDisplayBuffer display_buffer;
 };
