@@ -53,7 +53,7 @@ TEST(TestDisplayConfiguration, configuration_storage)
     fill(connect_result.add_display_output());
     fill(connect_result.add_display_output());
  
-    mcl::ClientDisplayConfiguration internal_config;
+    mcl::DisplayConfiguration internal_config;
 
     internal_config.update_configuration(connect_result);
     MirDisplayConfiguration *info;

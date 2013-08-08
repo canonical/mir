@@ -35,7 +35,6 @@ class Scene;
 class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
-class BufferAllocationStrategy;
 class OverlayRenderer;
 class RendererFactory;
 }
@@ -255,7 +254,6 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
-    CachedPtr<compositor::BufferAllocationStrategy> buffer_allocation_strategy;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;

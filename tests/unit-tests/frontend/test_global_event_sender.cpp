@@ -62,8 +62,5 @@ TEST(GlobalEventSender, sender)
     auto mock_session = std::make_shared<mtd::MockShellSession>();
     EXPECT_CALL(*mock_session, send_display_config(_))
         .Times(1);
-
-//    auto ses = mt::fake_shared(mock_session);
-//std::shared_ptr<msh::Session> ses = mock_session;
     called_fn(mock_session);
 }

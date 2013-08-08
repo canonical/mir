@@ -124,7 +124,7 @@ public:
         std::shared_ptr<mcl::ClientPlatform> const& platform,
         std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const& channel)
         : DefaultConnectionConfiguration(""),
-          disp_config(std::make_shared<mcl::ClientDisplayConfiguration>()),
+          disp_config(std::make_shared<mcl::DisplayConfiguration>()),
           platform{platform},
           channel{channel}
     {
