@@ -117,14 +117,6 @@ struct SurfaceCreatingClient : ClientConfigCommon
 
 }
 
-namespace
-{
-MATCHER(NonNullSession, "")
-{
-    return arg != std::shared_ptr<msh::Session>();
-}
-}
-
 TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 {
     struct ServerConfig : TestingServerConfiguration

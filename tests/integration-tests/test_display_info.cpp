@@ -377,7 +377,6 @@ public:
         configure_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
     }
 private:
-    int configure_request_counter;
     mtd::NullDisplayBuffer display_buffer;
     mtf::CrossProcessSync configure_fence;
 };
