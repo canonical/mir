@@ -16,34 +16,37 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/frontend/message_sender.h"
-#include "src/server/frontend/event_sender.h"
+#include "mir/frontend/global_event_sender.h"
+#include "mir/shell/session_container.h"
+#include "mir_test_doubles/mock_frontend_surface.h"
+#include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 
-#include <vector>
-#include "mir_protobuf.pb.h"
-#include "mir_protobuf_wire.pb.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
-namespace mfd=mir::frontend::detail;
-namespace geom=mir::geometry;
+namespace msh=mir::shell;
+namespace mf=mir::frontend;
 
+namespace
+{
 class MockSessionStorage : public msh::SessionContainer
 {
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<Session> const&));
+public:
+    MOCK_METHOD1(insert_session, void(std::shared_ptr<msh::Session> const&));
+    MOCK_METHOD1(remove_session, void(std::shared_ptr<msh::Session> const&));
     MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<msh::Session> const&)>));
+};
 }
 
-
-TEST_F(GlobalEventSender, sender)
+TEST(GlobalEventSender, sender)
 {
-    MockSenssionStorage mock_storage;
+    using namespace testing;
+
+    MockSessionStorage mock_storage;
 
     std::function<void(std::shared_ptr<msh::Session> const&)> called_fn;
 
@@ -51,12 +54,16 @@ TEST_F(GlobalEventSender, sender)
         .Times(1)
         .WillOnce(SaveArg<0>(&called_fn)); 
 
-    GlobalEventSender g_sender(mt::fake_shared(mock_storage));
+    mf::GlobalEventSender g_sender(mt::fake_shared(mock_storage));
 
-    g_sender.send_display_configuration(config);
+    mtd::StubDisplayConfig stub_display_config;
+    g_sender.handle_display_config_change(stub_display_config);
 
-    mtd::MockShellSurface surface;
-    EXPECT_CALL(surface, send_display_configuration(_))
+    auto mock_session = std::make_shared<mtd::MockShellSession>();
+    EXPECT_CALL(*mock_session, send_display_config(_))
         .Times(1);
-    called_fn(mt::fake_shared(surface));
+
+//    auto ses = mt::fake_shared(mock_session);
+std::shared_ptr<msh::Session> ses = mock_session;
+//    called_fn(mock_session);
 }
