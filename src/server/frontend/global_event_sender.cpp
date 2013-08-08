@@ -17,20 +17,27 @@
  */
 
 #include "mir/frontend/global_event_sender.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session.h"
 
 namespace mf=mir::frontend;
 namespace mg=mir::graphics;
+namespace msh=mir::shell;
 
-mf::GlobalEventSender::GlobalEventSender(std::shared_ptr<shell::SessionContainer> const&)
+mf::GlobalEventSender::GlobalEventSender(std::shared_ptr<shell::SessionContainer> const& session_container)
+    : sessions(session_container)
 {
 }
 
-void mf::GlobalEventSender::handle_event(MirEvent const& e)
-{
-    (void) e;
+void mf::GlobalEventSender::handle_event(MirEvent const&)
+{ 
+    //TODO
 }
 
 void mf::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguration const& config)
 {
-    (void) config;
+    sessions->for_each([&config](std::shared_ptr<msh::Session> const& session)
+    {
+        session->send_display_config(config);
+    });
 }

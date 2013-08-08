@@ -64,6 +64,6 @@ TEST(GlobalEventSender, sender)
         .Times(1);
 
 //    auto ses = mt::fake_shared(mock_session);
-std::shared_ptr<msh::Session> ses = mock_session;
-//    called_fn(mock_session);
+//std::shared_ptr<msh::Session> ses = mock_session;
+    called_fn(mock_session);
 }

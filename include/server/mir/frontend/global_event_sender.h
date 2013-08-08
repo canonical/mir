@@ -38,6 +38,8 @@ public:
     void handle_event(MirEvent const& e);
     void handle_display_config_change(graphics::DisplayConfiguration const& config);
 
+private:
+    std::shared_ptr<shell::SessionContainer> const sessions;
 };
 }
 }
