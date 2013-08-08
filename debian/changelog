@@ -1,3 +1,31 @@
+mir (0.0.8+13.10.20130808.1-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * VT switch on alt+ctrl+Fn.
+  * Add missing iostream import. This was accidentally removed in
+    revision 939. Local builds and CI builds both seem to have treated
+    this as a warning; debian package builds as an error. Fixes
+    packaging builds.
+
+  [ Robert Carr ]
+  * Add an interface by which the shell may be notified of and interfere
+    with surface configuration requests.
+
+  [ Alexandros Frantzis ]
+  * Bring back revision 931 with a fix for the crash it caused (LP:
+    #1209053). (LP: #1209053)
+  * examples: Quit the example servers and standalone programs when
+    Ctrl+Alt+Backspace is pressed.
+
+  [ Maarten Lankhorst ]
+  * Re-introduce console support, and ignore control characters. (LP:
+    #1102756, #1195509)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 944
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 08 Aug 2013 05:03:26 +0000
+
 mir (0.0.8+13.10.20130807.3-0ubuntu1) saucy; urgency=low
 
   [ Robert Ancell ]
