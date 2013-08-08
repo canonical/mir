@@ -39,8 +39,8 @@ namespace shell
 {
 class InputTargeter;
 class SurfaceBuilder;
+class SurfaceConfigurator;
 class SurfaceController;
-
 struct SurfaceCreationParameters;
 
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
@@ -48,6 +48,7 @@ class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 public:
     Surface(
         std::shared_ptr<SurfaceBuilder> const& builder,
+        std::shared_ptr<SurfaceConfigurator> const& configurator,
         SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
         std::shared_ptr<frontend::EventSink> const& event_sink);
@@ -93,6 +94,7 @@ private:
     void notify_change(MirSurfaceAttrib attrib, int value);
 
     std::shared_ptr<SurfaceBuilder> const builder;
+    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
     frontend::SurfaceId const id;

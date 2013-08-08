@@ -40,6 +40,9 @@ public:
                 mg::DisplayConfigurationOutputId{10},
                 card_id,
                 {
+                    {geom::PixelFormat::abgr_8888}
+                },
+                {
                     {geom::Size{123, 111}, 59.9},
                     {geom::Size{123, 111}, 59.9},
                     {geom::Size{123, 111}, 59.9}
@@ -48,7 +51,8 @@ public:
                 true,
                 false,
                 geom::Point{geom::X{123}, geom::Y{343}},
-                1
+                1,
+                0
             });
         /* Connected without modes */
         outputs.push_back(
@@ -56,10 +60,12 @@ public:
                 mg::DisplayConfigurationOutputId{11},
                 card_id,
                 {},
+                {},
                 geom::Size{566, 111},
                 true,
                 false,
                 geom::Point(),
+                std::numeric_limits<size_t>::max(),
                 std::numeric_limits<size_t>::max()
             });
         /* Connected with a single mode */
@@ -68,12 +74,16 @@ public:
                 mg::DisplayConfigurationOutputId{12},
                 card_id,
                 {
+                    {geom::PixelFormat::abgr_8888}
+                },
+                {
                     {geom::Size{523, 555}, 60.0},
                 },
                 geom::Size{324, 642},
                 true,
                 false,
                 geom::Point(),
+                0,
                 0
             });
         /* Not connected */
@@ -81,12 +91,16 @@ public:
             {
                 mg::DisplayConfigurationOutputId{13},
                 card_id,
+                {
+                    {geom::PixelFormat::abgr_8888}
+                },
                 {},
                 geom::Size{324, 642},
                 false,
                 false,
                 geom::Point(),
-                1
+                1,
+                0
             });
     }
 

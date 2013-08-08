@@ -48,6 +48,7 @@ class MirBasicRpcChannel;
 class SurfaceMap;
 class Logger;
 class ClientPlatformFactory;
+class DisplayConfiguration;
 
 class ConnectionConfiguration
 {
@@ -59,6 +60,7 @@ public:
     virtual std::shared_ptr<mir::logging::Logger> the_logger() = 0;
     virtual std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() = 0;
     virtual std::shared_ptr<input::receiver::InputPlatform> the_input_platform() = 0;
+    virtual std::shared_ptr<DisplayConfiguration> the_display_configuration() = 0;
 
 protected:
     ConnectionConfiguration() = default;

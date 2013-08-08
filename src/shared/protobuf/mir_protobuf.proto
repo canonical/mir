@@ -144,12 +144,14 @@ message Event {
   optional bytes raw = 1;  // MirEvent structure
 }
 
-message EventSequence {
-  repeated Event event = 1;
-}
-
 message DisplayConfiguration {
   repeated DisplayOutput display_output = 1;
+  optional string error = 127;
+}
+
+message EventSequence {
+  repeated Event event = 1;
+  optional DisplayConfiguration display_configuration = 2;
   optional string error = 127;
 }
 

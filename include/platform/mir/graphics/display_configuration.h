@@ -22,6 +22,7 @@
 #include "mir/int_wrapper.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/pixel_format.h"
 
 #include <functional>
 #include <vector>
@@ -61,6 +62,8 @@ struct DisplayConfigurationOutput
     DisplayConfigurationOutputId id;
     /** The id of the card the output is connected to. */
     DisplayConfigurationCardId card_id;
+    /** The pixel formats supported by the output */
+    std::vector<geometry::PixelFormat> pixel_formats;
     /** The modes supported by the output. */
     std::vector<DisplayConfigurationMode> modes;
     /** The physical size of the output. */
@@ -73,6 +76,8 @@ struct DisplayConfigurationOutput
     geometry::Point top_left;
     /** The index in the 'modes' vector of the current output mode. */
     size_t current_mode_index;
+    /** The index in the 'pixel_format' vector of the current output pixel format. */
+    size_t current_format_index;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationMode const& val);

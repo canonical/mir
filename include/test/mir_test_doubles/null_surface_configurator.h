@@ -13,36 +13,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_EVENTS_EVENT_SINK_H_
-#define MIR_EVENTS_EVENT_SINK_H_
+#ifndef MIR_TEST_DOUBLES_NULL_SURFACE_CONFIGURATOR_H_
+#define MIR_TEST_DOUBLES_NULL_SURFACE_CONFIGURATOR_H_
 
-#include "mir_toolkit/event.h"
+#include "mir/shell/surface_configurator.h"
 
 namespace mir
 {
-namespace graphics
+namespace test
 {
-class DisplayConfiguration;
-}
-namespace frontend
+namespace doubles
 {
-class EventSink
-{
-public:
-    virtual ~EventSink() = default;
 
-    virtual void handle_event(MirEvent const& e) = 0;
-    virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
-
-protected:
-    EventSink() = default;
-    EventSink(EventSink const&) = delete;
-    EventSink& operator=(EventSink const&) = delete;
+struct NullSurfaceConfigurator : public shell::SurfaceConfigurator
+{
+    int select_attribute_value(shell::Surface const&,
+                               MirSurfaceAttrib, int requested_value)
+    {
+        return requested_value;
+    }
+    void attribute_set(shell::Surface const&,
+                       MirSurfaceAttrib, int)
+    {
+    }
 };
-}
-} // namespace mir
 
-#endif // MIR_EVENTS_EVENT_SINK_H_
+}
+}
+}
+
+#endif /* MIR_TEST_DOUBLES_NULL_SURFACE_CONFIGURATOR_H_ */
