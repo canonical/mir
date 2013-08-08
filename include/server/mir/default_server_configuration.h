@@ -140,7 +140,6 @@ public:
      *  @{ */
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
     virtual std::shared_ptr<compositor::OverlayRenderer>          the_overlay_renderer();
-    virtual std::shared_ptr<compositor::BufferAllocationStrategy> the_buffer_allocation_strategy();
     /** @} */
 
     /** @name compositor configuration - dependencies

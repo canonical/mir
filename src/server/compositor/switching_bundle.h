@@ -21,23 +21,27 @@
 #define MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
 
 #include "buffer_bundle.h"
-#include "rw_lock.h"
 #include <condition_variable>
+#include <mutex>
 #include <memory>
-#include <atomic>
+#include <chrono>
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
 class Buffer;
-class BufferSwapper;
-class BufferAllocationStrategy;
+class GraphicBufferAllocator;
+}
+namespace compositor
+{
 
 class SwitchingBundle : public BufferBundle 
 {
 public:
-    SwitchingBundle(std::shared_ptr<BufferAllocationStrategy> const& swapper_factory, graphics::BufferProperties const&);
+    SwitchingBundle(int nbuffers,
+                    const std::shared_ptr<graphics::GraphicBufferAllocator> &,
+                    const graphics::BufferProperties &);
 
     graphics::BufferProperties properties() const;
 
@@ -45,15 +49,55 @@ public:
     void client_release(std::shared_ptr<graphics::Buffer> const&);
     std::shared_ptr<graphics::Buffer> compositor_acquire();
     void compositor_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
+    std::shared_ptr<graphics::Buffer> snapshot_acquire();
+    void snapshot_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
     void force_requests_to_complete();
     void allow_framedropping(bool dropping_allowed);
+    bool framedropping_allowed() const;
 
 private:
-    graphics::BufferProperties bundle_properties; //must be before swapper
-    std::shared_ptr<BufferAllocationStrategy> const swapper_factory;
-    std::shared_ptr<BufferSwapper> swapper;
-    RWLockWriterBias rw_lock;
-    std::condition_variable_any cv;
+    graphics::BufferProperties bundle_properties;
+    std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
+
+    int drop_frames(int max);
+    int nfree() const;
+    int first_free() const;
+    int next(int slot) const;
+    int prev(int slot) const;
+    int last_compositor() const;
+
+    const std::shared_ptr<graphics::Buffer> &alloc_buffer(int slot);
+
+    enum {MAX_NBUFFERS = 5};
+    struct SharedBuffer
+    {
+        std::shared_ptr<graphics::Buffer> buf;
+        int users = 0; // presently just a count of compositors sharing the buf
+    };
+    SharedBuffer ring[MAX_NBUFFERS];
+
+    const int nbuffers;
+    int first_compositor;
+    int ncompositors;
+    int first_ready;
+    int nready;
+    int first_client;
+    int nclients;
+    int snapshot;
+    int nsnapshotters;
+
+    std::mutex guard;
+    std::condition_variable cond;
+
+    typedef std::chrono::high_resolution_clock::time_point time_point;
+    static time_point now()
+        { return std::chrono::high_resolution_clock::now(); }
+    time_point last_consumed;
+
+    bool overlapping_compositors;
+
+    bool framedropping;
+    int force_drop;
 };
 
 }
