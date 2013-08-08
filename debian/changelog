@@ -1,3 +1,14 @@
+mir (0.0.8+13.10.20130808.2-0ubuntu1) saucy; urgency=low
+
+  [ Alexandros Frantzis ]
+  * gbm: Don't try to allocate buffers with unsupported formats. (LP:
+    #1124948)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 946
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 08 Aug 2013 15:18:56 +0000
+
 mir (0.0.8+13.10.20130808.1-0ubuntu1) saucy; urgency=low
 
   [ Robert Ancell ]
