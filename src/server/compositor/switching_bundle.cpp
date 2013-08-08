@@ -157,14 +157,13 @@ const std::shared_ptr<mg::Buffer> &mc::SwitchingBundle::alloc_buffer(int slot)
     if (!ring[slot].buf)
     {
         int i = first_free();
-        int n = nfree();
-        while (n && !ring[i].buf)
-        {
+        while (i != first_compositor && !ring[i].buf)
             i = next(i);
-            n--;
-        }
 
-        if (i != slot && ring[i].buf && ring[i].buf.unique())
+        if (i != first_compositor &&
+            i != slot &&
+            ring[i].buf &&
+            ring[i].buf.unique())
         {
             std::swap(ring[slot], ring[i]);
         }

@@ -187,6 +187,24 @@ TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
     }
 }
 
+TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
+{  // Regression test for LP: #1210042
+    mc::SwitchingBundle bundle(3, allocator, basic_properties);
+
+    auto client1 = bundle.client_acquire();
+    auto client1_id = client1->id();
+    bundle.client_release(client1);
+    client1.reset();
+
+    auto client2 = bundle.client_acquire();
+    bundle.client_release(client2);
+    client2.reset();
+
+    auto compositor = bundle.compositor_acquire();
+    EXPECT_EQ(client1_id, compositor->id());
+    bundle.compositor_release(compositor);
+}
+
 TEST_F(SwitchingBundleTest, out_of_order_client_release)
 {
     for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
