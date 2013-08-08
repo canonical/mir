@@ -363,9 +363,8 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
     // Verify we never triggered more than 6 compositions
     EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 2*nbuffers, 2*nbuffers));
 
-    // Now trigger many surfaces changes close together
-    for (int i = 0; i < 10; i++)
-        scene->emit_change_event();
+    // Now trigger more surface changes
+    scene->emit_change_event();
 
     // Display buffers should be forced to render another 3, so that's 9
     while (!db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3*nbuffers))
