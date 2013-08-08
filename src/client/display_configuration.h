@@ -44,8 +44,27 @@ void delete_config_storage(MirDisplayConfiguration* config);
 class DisplayConfiguration
 {
 public:
-    DisplayConfiguration();
-    ~DisplayConfiguration();
+    virtual ~DisplayConfiguration() = default;
+
+    virtual void update_configuration(mir::protobuf::Connection const& msg) = 0;
+    virtual void update_configuration(mir::protobuf::DisplayConfiguration const& msg) = 0;
+    virtual void set_display_change_handler(std::function<void()> const&) = 0;
+
+    //copying to a c POD, so kinda kludgy
+    virtual MirDisplayConfiguration* copy_to_client() const = 0;
+
+protected:
+    DisplayConfiguration() = default;
+    DisplayConfiguration(DisplayConfiguration const&) = delete;
+    DisplayConfiguration& operator=(DisplayConfiguration const&) = delete;
+
+};
+
+class ClientDisplayConfiguration : public DisplayConfiguration
+{
+public:
+    ClientDisplayConfiguration();
+    ~ClientDisplayConfiguration();
 
     void update_configuration(mir::protobuf::Connection const& msg);
     void update_configuration(mir::protobuf::DisplayConfiguration const& msg);

@@ -122,6 +122,6 @@ std::shared_ptr<mcl::DisplayConfiguration> mcl::DefaultConnectionConfiguration::
     return display_configuration(
         []
         {
-            return std::make_shared<mcl::DisplayConfiguration>();
+            return std::make_shared<mcl::ClientDisplayConfiguration>();
         });
 }

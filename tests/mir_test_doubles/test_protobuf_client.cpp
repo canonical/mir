@@ -35,7 +35,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     channel(mir::client::rpc::make_rpc_channel(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
-        std::make_shared<mir::client::DisplayConfiguration>(),
+        std::make_shared<mir::client::ClientDisplayConfiguration>(),
         rpc_report)),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),

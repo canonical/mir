@@ -89,16 +89,16 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 }
 
 
-mcl::DisplayConfiguration::DisplayConfiguration()
+mcl::ClientDisplayConfiguration::ClientDisplayConfiguration()
     : notify_change([]{})
 {
 }
 
-mcl::DisplayConfiguration::~DisplayConfiguration()
+mcl::ClientDisplayConfiguration::~ClientDisplayConfiguration()
 {
 }
 
-void mcl::DisplayConfiguration::update_configuration(mp::Connection const& connection_msg)
+void mcl::ClientDisplayConfiguration::update_configuration(mp::Connection const& connection_msg)
 {
     std::unique_lock<std::mutex> lk(guard);
     outputs.clear();
@@ -111,7 +111,7 @@ void mcl::DisplayConfiguration::update_configuration(mp::Connection const& conne
     }
 }
 
-void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration const& msg)
+void mcl::ClientDisplayConfiguration::update_configuration(mp::DisplayConfiguration const& msg)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
@@ -129,7 +129,7 @@ void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration co
 }
 
 //user is responsible for freeing the returned value
-MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
+MirDisplayConfiguration* mcl::ClientDisplayConfiguration::copy_to_client() const
 {
     std::unique_lock<std::mutex> lk(guard);
     auto new_config = new MirDisplayConfiguration;
@@ -154,7 +154,7 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
     return new_config;
 }
 
-void mcl::DisplayConfiguration::set_display_change_handler(std::function<void()> const& fn)
+void mcl::ClientDisplayConfiguration::set_display_change_handler(std::function<void()> const& fn)
 {
     std::unique_lock<std::mutex> lk(guard);
     notify_change = fn;

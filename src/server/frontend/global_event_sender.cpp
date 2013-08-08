@@ -31,11 +31,12 @@ mf::GlobalEventSender::GlobalEventSender(std::shared_ptr<shell::SessionContainer
 
 void mf::GlobalEventSender::handle_event(MirEvent const&)
 { 
-    //TODO
+    //TODO, no driving test cases, although messages like 'server shutdown' could go here
 }
 
 void mf::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguration const& config)
 {
+printf("GLOBAL SENDER!\n");
     sessions->for_each([&config](std::shared_ptr<msh::Session> const& session)
     {
         session->send_display_config(config);
