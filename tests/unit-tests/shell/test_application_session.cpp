@@ -72,7 +72,8 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     msh::ApplicationSession session(mt::fake_shared(surface_factory), "Foo",
                                     std::make_shared<mtd::NullSnapshotStrategy>(),
-                                    mt::fake_shared(listener), mt::fake_shared(sender));
+                                    mt::fake_shared(listener),
+                                    mt::fake_shared(sender));
 
     msh::SurfaceCreationParameters params;
     auto surf = session.create_surface(params);

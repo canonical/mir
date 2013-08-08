@@ -170,6 +170,9 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
     bool connected{connector.connection == DRM_MODE_CONNECTED};
     size_t current_mode_index{std::numeric_limits<size_t>::max()};
     std::vector<DisplayConfigurationMode> modes;
+    std::vector<geom::PixelFormat> formats {geom::PixelFormat::argb_8888,
+                                            geom::PixelFormat::xrgb_8888};
+
     drmModeModeInfo current_mode_info = drmModeModeInfo();
 
     /* Get information about the current mode */
@@ -201,8 +204,8 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
 
     if (iter == outputs.end())
     {
-        outputs.push_back({id, card_id, modes, physical_size,
-                           connected, false, geom::Point(), current_mode_index});
+        outputs.push_back({id, card_id, formats, modes, physical_size,
+                           connected, false, geom::Point(), current_mode_index, 0u});
     }
     else
     {
