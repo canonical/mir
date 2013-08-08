@@ -77,9 +77,7 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
 
 void mir::input::VTFilter::set_active_vt(int vt)
 {
-    int console_fd;
-
-    console_fd = open("/dev/console", O_RDONLY | O_NDELAY);
+    auto console_fd = open("/dev/console", O_RDONLY | O_NDELAY);
     ioctl(console_fd, VT_ACTIVATE, vt);
     close(console_fd);
 }
