@@ -68,19 +68,7 @@ public:
         f(display_buffer);
     }
 
-    virtual void register_configuration_change_handler(mg::EventHandlerRegister& /*handlers*/,
-        mg::DisplayConfigurationChangeHandler const& conf_change_handler)
-    {
-        change_handler = conf_change_handler;
-    }
-
-    void force_display_change_signal()
-    {
-        change_handler();
-    }
-
 private:
-    mg::DisplayConfigurationChangeHandler change_handler;
     mtd::NullDisplayBuffer display_buffer;
 };
 
@@ -99,7 +87,6 @@ private:
 };
 
 mtd::StubDisplayConfig StubChanger::stub_display_config;
-mtd::StubDisplayConfig StubChanger::changed_stub_display_config{1};
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
@@ -513,11 +500,20 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
             return platform;
         }
 
+        std::shared_ptr<mf::EventSink> the_global_event_sink() override
+        {
+            if (!global_sender)
+                global_sender = std::make_shared<mf::GlobalEventSender>(the_shell_sesion_container());
+            return global_sender;
+        }
+    
         void exec() override
         {
             change_thread = std::move(std::thread([this](){
+                mtd::StubDisplayConfig changed_stub_display_config{1};
                 send_event_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
-                platform->display->force_display_change_signal();
+
+                global_sender->handle_display_config_change(changed_stub_display_config);
             })); 
         }
 
@@ -528,6 +524,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
 
         mtf::CrossProcessSync send_event_fence;
         std::shared_ptr<StubPlatform> platform;
+        std::shared_ptr<mf::EventSink> global_sender;
         std::thread change_thread;
     } server_config(send_event_fence);
 
