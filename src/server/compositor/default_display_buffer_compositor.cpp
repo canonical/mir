@@ -62,7 +62,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 {
     bool bypassed = false;
 
-    if (1)  // TODO: detect bypass support
+    if (display_buffer.can_bypass())
     {
         // TODO filter for a candidate bypass surface
         std::shared_ptr<graphics::Buffer> bypass =

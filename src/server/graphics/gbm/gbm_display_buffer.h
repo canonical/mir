@@ -55,6 +55,8 @@ public:
     void make_current();
     void release_current();
     void post_update();
+
+    bool can_bypass() const override;
     void post_update(std::shared_ptr<graphics::Buffer> client_buf) override;
 
     void schedule_set_crtc();

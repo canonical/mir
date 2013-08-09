@@ -43,7 +43,9 @@ public:
     virtual void release_current() = 0;
     /** Posts the DisplayBuffer to the screen. */
     virtual void post_update() = 0;
-    virtual void post_update(std::shared_ptr<graphics::Buffer>) {} // Optional
+
+    virtual bool can_bypass() const { return false; }
+    virtual void post_update(std::shared_ptr<graphics::Buffer>) {}
 
 protected:
     DisplayBuffer() = default;

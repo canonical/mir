@@ -161,6 +161,11 @@ geom::Rectangle mgg::GBMDisplayBuffer::view_area() const
     return area;
 }
 
+bool mgg::GBMDisplayBuffer::can_bypass() const
+{
+    return true;
+}
+
 void mgg::GBMDisplayBuffer::post_update()
 {
     post_update(nullptr);
