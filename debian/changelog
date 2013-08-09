@@ -1,3 +1,13 @@
+mir (0.0.8+13.10.20130809.4-0ubuntu1) saucy; urgency=low
+
+  [ Michael Terry ]
+  * Pass on the owning Session when creating Surfaces. (LP: #1200035)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 952
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 09 Aug 2013 18:05:05 +0000
+
 mir (0.0.8+13.10.20130809.3-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
