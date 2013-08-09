@@ -19,8 +19,6 @@
 #include "nested_display.h"
 #include "nested_gl_context.h"
 
-#include "mir/graphics/nested/nested_platform.h"
-
 #include <cstring>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -29,31 +27,29 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
-mgn::NestedDisplay::NestedDisplay(std::shared_ptr<NestedPlatform> const& platform,
-        std::shared_ptr<mg::DisplayReport> const& display_report) :
-    platform{platform},
+mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
     display_report{display_report},
     mir_surface{0},
     egl_display{EGL_NO_DISPLAY},
     egl_context{EGL_NO_CONTEXT}
 {
-    mir_connection_get_display_info(platform->connection, &egl_display_info);
+    mir_connection_get_display_info(connection, &egl_display_info);
     if (!egl_display_info.supported_pixel_format_items)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get the supported pixel format items."));
 
     MirPixelFormat pixel_format = egl_display_info.supported_pixel_format[0];
-    if (!pixel_format || pixel_format == mir_pixel_format_invalid)
+    if (pixel_format == mir_pixel_format_invalid)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Invalid pixel format.\n"));
 
     MirSurfaceParameters const request_params =
         {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
 
-    mir_surface = mir_connection_create_surface_sync(platform->connection, &request_params);
-    if (!mir_surface || !mir_surface_is_valid(mir_surface) || (strcmp(mir_surface_get_error_message(mir_surface), "") !=0))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create a mir surface.\n"));
+    mir_surface = mir_connection_create_surface_sync(connection, &request_params);
+    if (!mir_surface_is_valid(mir_surface))
+        BOOST_THROW_EXCEPTION(std::runtime_error(mir_surface_get_error_message(mir_surface)));
 
     EGLNativeDisplayType native_display;
-    if (!(native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(platform->connection)))
+    if (!(native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection)))
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native display."));
 
     egl_display = eglGetDisplay(native_display);
@@ -141,9 +137,9 @@ void mgn::NestedDisplay::post_update()
     //eglSwapBuffers(egl_display, egl_surface);
 }
 
-void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
+void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& /*f*/)
 {
-    f(*this);
+    // TODO
 }
 
 std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()

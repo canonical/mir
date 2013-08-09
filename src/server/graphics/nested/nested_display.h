@@ -42,11 +42,10 @@ class DisplayBuffer;
 namespace nested
 {
 
-class NestedDisplay : public Display, public DisplayBuffer
+class NestedDisplay : public Display
 {
 public:
-    NestedDisplay(std::shared_ptr<NestedPlatform>const& platform,
-            std::shared_ptr<DisplayReport>const& display_report);
+    NestedDisplay(MirConnection* connection, std::shared_ptr<DisplayReport>const& display_report);
     virtual ~NestedDisplay() noexcept;
 
     geometry::Rectangle view_area() const;
@@ -79,7 +78,6 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
 private:
-    std::shared_ptr<NestedPlatform> const platform;
     std::shared_ptr<DisplayReport> const display_report;
 
     MirSurface* mir_surface;
