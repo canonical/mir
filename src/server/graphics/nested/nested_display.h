@@ -21,8 +21,6 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/nested/nested_platform.h"
-#include "mir/main_loop.h"
 #include "mir_toolkit/mir_client_library.h"
 
 #include "nested_display_configuration.h"
@@ -41,6 +39,23 @@ class DisplayReport;
 class DisplayBuffer;
 namespace nested
 {
+namespace detail
+{
+class MirSurfaceHandle
+{
+public:
+    explicit MirSurfaceHandle(MirConnection* connection);
+    ~MirSurfaceHandle() noexcept;
+
+    operator MirSurface*() const { return mir_surface; }
+
+private:
+    MirSurface* mir_surface;
+
+    MirSurfaceHandle(MirSurfaceHandle const&) = delete;
+    MirSurfaceHandle operator=(MirSurfaceHandle const&) = delete;
+};
+}
 
 class NestedDisplay : public Display
 {
@@ -64,10 +79,6 @@ public:
             DisplayPauseHandler const& pause_handler,
             DisplayResumeHandler const& resume_handler);
 
-    void register_configuration_change_handler(
-            MainLoop& main_loop,
-            DisplayConfigurationChangeHandler const& conf_change_handler);
-
     void pause();
     void resume();
 
@@ -79,9 +90,7 @@ public:
 
 private:
     std::shared_ptr<DisplayReport> const display_report;
-
-    MirSurface* mir_surface;
-    MirDisplayInfo egl_display_info;
+    detail::MirSurfaceHandle mir_surface;
 
     EGLDisplay egl_display;
     EGLContext egl_context;
