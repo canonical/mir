@@ -172,17 +172,17 @@ void mgg::GBMDisplayBuffer::post_update()
 }
 
 void mgg::GBMDisplayBuffer::post_update(
-    std::shared_ptr<graphics::Buffer> client_buf)
+    std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
      * Bring the back buffer to the front and get the buffer object
      * corresponding to the front buffer.
      */
-    if (!client_buf && !egl.swap_buffers())
+    if (!bypass_buf && !egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
-    auto bufobj = client_buf ?
-        get_buffer_object((struct gbm_bo*)client_buf->native_buffer_addr()) :
+    auto bufobj = bypass_buf ?
+        get_buffer_object((struct gbm_bo*)bypass_buf->native_buffer_addr()) :
         get_front_buffer_object();
 
     if (!bufobj)
@@ -197,7 +197,7 @@ void mgg::GBMDisplayBuffer::post_update(
      */
     if (!needs_set_crtc && !schedule_and_wait_for_page_flip(bufobj))
     {
-        if (!client_buf)
+        if (!bypass_buf)
             bufobj->release();
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
     }
@@ -218,8 +218,8 @@ void mgg::GBMDisplayBuffer::post_update(
     if (last_flipped_bufobj)
         last_flipped_bufobj->release();
 
-    last_flipped_bufobj = client_buf ? nullptr : bufobj;
-    last_flipped_client_buf = client_buf;  // Can be nullptr
+    last_flipped_bufobj = bypass_buf ? nullptr : bufobj;
+    last_flipped_bypass_buf = bypass_buf;  // Can be nullptr
 }
 
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()

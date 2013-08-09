@@ -57,7 +57,7 @@ public:
     void post_update();
 
     bool can_bypass() const override;
-    void post_update(std::shared_ptr<graphics::Buffer> client_buf) override;
+    void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
 
     void schedule_set_crtc();
 
@@ -67,7 +67,7 @@ private:
     bool schedule_and_wait_for_page_flip(BufferObject* bufobj);
 
     BufferObject* last_flipped_bufobj;
-    std::shared_ptr<graphics::Buffer> last_flipped_client_buf;
+    std::shared_ptr<graphics::Buffer> last_flipped_bypass_buf;
     std::shared_ptr<GBMPlatform> const platform;
     std::shared_ptr<DisplayReport> const listener;
     /* DRM helper from GBMPlatform */
