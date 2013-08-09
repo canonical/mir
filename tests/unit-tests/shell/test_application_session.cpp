@@ -49,7 +49,7 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
     mtd::StubSurfaceBuilder surface_builder;
 
-    return std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
+    return std::make_shared<mtd::MockSurface>(nullptr, std::make_shared<mtd::StubSurfaceBuilder>());
 }
 }
 
@@ -61,9 +61,9 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_,_,_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_,_,_,_)).WillByDefault(Return(mock_surface));
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
     EXPECT_CALL(*mock_surface, destroy());
     
     mtd::MockSessionListener listener;
@@ -90,11 +90,11 @@ TEST(ApplicationSession, default_surface_is_first_surface)
 
     {
         InSequence seq;
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
     }
 
@@ -129,13 +129,13 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     auto mock_surface = make_mock_surface();
 
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(Return(mock_surface));
 
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
 
     {
         InSequence seq;

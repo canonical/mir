@@ -407,6 +407,7 @@ public:
         for (auto& m : moveables)
         {
             std::shared_ptr<ms::Surface> s = surface_builder->create_surface(
+                    nullptr,
                     msh::a_surface().of_size(surface_size)
                                    .of_pixel_format(surface_pf)
                                    .of_buffer_usage(mg::BufferUsage::hardware)
