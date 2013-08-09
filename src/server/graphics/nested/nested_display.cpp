@@ -72,13 +72,20 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
     eglTerminate(egl_display);
 }
 
-#include <iostream> // DEBUG
 mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
     display_report{display_report},
     mir_surface{connection},
     egl_display{connection},
     egl_context{EGL_NO_CONTEXT}
 {
+    int res, major, minor, n;
+
+    res = eglInitialize(egl_display, &major, &minor);
+    if ((res != EGL_TRUE) || (major != 1) || (minor != 4))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
+    }
+
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 8,
@@ -88,23 +95,6 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
-
-    EGLint context_attribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-
-    int res, major, minor, n;
-
-    res = eglInitialize(egl_display, &major, &minor);
-    if ((res != EGL_TRUE) || (major != 1) || (minor != 4))
-    {
-        std::cerr << "DEBUG: egl_display=" << egl_display << std::endl;
-        std::cerr << "DEBUG: res. . . . =" << res         << std::endl;
-        std::cerr << "DEBUG: major. . . =" << major       << std::endl;
-        std::cerr << "DEBUG: minor. . . =" << minor       << std::endl;
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
-    }
 
     res = eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
     if ((res != EGL_TRUE) || (n != 1))
@@ -117,6 +107,11 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
     if (egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
+
+    EGLint context_attribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
 
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
     if (egl_context == EGL_NO_CONTEXT)
