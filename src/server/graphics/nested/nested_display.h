@@ -54,6 +54,21 @@ private:
     MirSurfaceHandle(MirSurfaceHandle const&) = delete;
     MirSurfaceHandle operator=(MirSurfaceHandle const&) = delete;
 };
+
+class EGLDisplayHandle
+{
+public:
+    explicit EGLDisplayHandle(MirConnection* connection);
+    ~EGLDisplayHandle() noexcept;
+
+    operator EGLDisplay() const { return egl_display; }
+
+private:
+    EGLDisplay egl_display;
+
+    EGLDisplayHandle(EGLDisplayHandle const&) = delete;
+    EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
+};
 }
 
 class NestedDisplay : public Display
@@ -90,8 +105,8 @@ public:
 private:
     std::shared_ptr<DisplayReport> const display_report;
     detail::MirSurfaceHandle const mir_surface;
+    detail::EGLDisplayHandle const egl_display;
 
-    EGLDisplay egl_display;
     EGLContext egl_context;
     EGLSurface egl_surface;
     EGLConfig egl_config;

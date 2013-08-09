@@ -28,8 +28,7 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
-mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection) :
-    mir_surface{0}
+mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection)
 {
     MirDisplayInfo egl_display_info;
 
@@ -57,11 +56,7 @@ mgn::detail::MirSurfaceHandle::~MirSurfaceHandle() noexcept
     mir_surface_release_sync(mir_surface);
 }
 
-mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
-    display_report{display_report},
-    mir_surface{connection},
-    egl_display{EGL_NO_DISPLAY},
-    egl_context{EGL_NO_CONTEXT}
+mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
 {
     EGLNativeDisplayType const native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
     if (!native_display)
@@ -70,11 +65,20 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
     egl_display = eglGetDisplay(native_display);
     if (egl_display == EGL_NO_DISPLAY)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
+}
 
-    EGLNativeWindowType native_window;
-    if (!(native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(mir_surface)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window."));
+mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
+{
+    eglTerminate(egl_display);
+}
 
+#include <iostream> // DEBUG
+mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
+    display_report{display_report},
+    mir_surface{connection},
+    egl_display{connection},
+    egl_context{EGL_NO_CONTEXT}
+{
     EGLint attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 8,
@@ -94,11 +98,21 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
 
     res = eglInitialize(egl_display, &major, &minor);
     if ((res != EGL_TRUE) || (major != 1) || (minor != 4))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL.\n"));
+    {
+        std::cerr << "DEBUG: egl_display=" << egl_display << std::endl;
+        std::cerr << "DEBUG: res. . . . =" << res         << std::endl;
+        std::cerr << "DEBUG: major. . . =" << major       << std::endl;
+        std::cerr << "DEBUG: minor. . . =" << minor       << std::endl;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
+    }
 
     res = eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
     if ((res != EGL_TRUE) || (n != 1))
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to choose EGL configuration."));
+
+    EGLNativeWindowType native_window;
+    if (!(native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(mir_surface)))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window."));
 
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
     if (egl_surface == EGL_NO_SURFACE)
@@ -122,7 +136,6 @@ mgn::NestedDisplay::~NestedDisplay()
     eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
     eglDestroyContext(egl_display, egl_context);
-    eglTerminate(egl_display);
 }
 
 geom::Rectangle mgn::NestedDisplay::view_area() const
