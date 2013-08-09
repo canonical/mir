@@ -60,8 +60,6 @@ public:
 
     virtual void bind_to_texture();
 
-    virtual void* native_buffer_addr() const override;
-
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     std::unique_ptr<BufferTextureBinder> const texture_binder;

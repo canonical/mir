@@ -182,9 +182,18 @@ void mgg::GBMDisplayBuffer::post_update(
     if (!bypass_buf && !egl.swap_buffers())
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
 
-    auto bufobj = bypass_buf ?
-        get_buffer_object((struct gbm_bo*)bypass_buf->native_buffer_addr()) :
-        get_front_buffer_object();
+    mgg::BufferObject *bufobj;
+    if (bypass_buf)
+    {
+        // Is there a nicer way to find gbm_bo*, like looking up the prime fd?
+        auto native = bypass_buf->native_buffer_handle();
+        struct gbm_bo *bo = *(struct gbm_bo**)native->data;
+        bufobj = get_buffer_object(bo);
+    }
+    else
+    {
+        bufobj = get_front_buffer_object();
+    }
 
     if (!bufobj)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));

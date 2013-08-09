@@ -28,7 +28,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
-#include <cassert>
 
 namespace mgg=mir::graphics::gbm;
 namespace geom=mir::geometry;
@@ -127,12 +126,15 @@ std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
     temp->stride = stride().as_uint32_t();
+
+    /*
+     * In-server users of MirNativeBuffer can get the gbm_bo from the
+     * unused data[] buffer. This is a kludge to avoid breaking ABIs.
+     */
+    struct gbm_bo *bo = gbm_handle.get();
+    *(struct gbm_bo**)temp->data = bo;
+    temp->data_items = 0;  // Pretend. Mesa will assert otherwise.
+
     return temp;
 }
 
-void* mgg::GBMBuffer::native_buffer_addr() const
-{
-    struct gbm_bo *bo = gbm_handle.get();
-    assert(bo != NULL);
-    return bo;
-}

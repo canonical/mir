@@ -37,8 +37,6 @@ public:
     virtual ~Buffer() {}
 
     virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const = 0;
-    // TODO: Merge native_buffer_addr() into native_buffer_handle()
-    virtual void* native_buffer_addr() const { return NULL; }
     virtual BufferID id() const = 0;
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
