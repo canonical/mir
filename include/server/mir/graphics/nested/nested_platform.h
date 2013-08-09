@@ -21,7 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
-#include "nested_mir_connection_handle.h"
+#include "mir/graphics/nested/nested_mir_connection_handle.h"
 
 namespace mir
 {
@@ -30,7 +30,7 @@ namespace graphics
 namespace nested
 {
 
-class NestedPlatform : public Platform
+class NestedPlatform : public Platform, public std::enable_shared_from_this<NestedPlatform>
 {
 public:
     NestedPlatform(std::string const& host,
@@ -47,11 +47,10 @@ public:
     void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
                           std::shared_ptr<Buffer> const& Buffer) const;
 
+    MirConnectionHandle connection;
 private:
     std::shared_ptr<NativePlatform> const native_platform;
     std::shared_ptr<DisplayReport> const display_report;
-
-    MirConnectionHandle connection;
 };
 
 }

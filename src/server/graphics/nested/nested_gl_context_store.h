@@ -16,35 +16,24 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
-#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#ifndef NESTED_GL_CONTEXT_STORE_H_
+#define NESTED_GL_CONTEXT_STORE_H_
 
-struct MirConnection;
+#include <EGL/egl.h>
 
-namespace mir
-{
-namespace graphics
-{
-namespace nested
-{
-
-class MirConnectionHandle
+class EGLContextStore
 {
 public:
-    MirConnectionHandle(MirConnection* const mir_connection);
-    ~MirConnectionHandle();
+    EGLContextStore(EGLDisplay egl_display, EGLContext egl_context);
+    virtual ~EGLContextStore() noexcept;
 
-    MirConnectionHandle(MirConnectionHandle const&) = delete;
-    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
-
-    operator MirConnection*() {return (MirConnection*)connection;}
-    MirConnection* operator ->() const {return connection;}
+    operator EGLContext() const;
 
 private:
-    MirConnection* const connection;
+    EGLContextStore(EGLContextStore const&) = delete;
+    EGLContextStore& operator=(EGLContextStore const&) = delete;
+    EGLDisplay const egl_display_;
+    EGLContext const egl_context_;
 };
 
-}
-}
-}
-#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#endif // NESTED_GL_CONTEXT_STORE_H_
