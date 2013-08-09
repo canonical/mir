@@ -65,8 +65,6 @@ public:
                           std::shared_ptr<InputRegistrar> const& input_registrar);
     virtual ~SurfaceStack() noexcept(true) {}
 
-    virtual std::shared_ptr<graphics::Buffer> bypass_buffer();
-
     // From Scene
     virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
     virtual void set_change_callback(std::function<void()> const& f);

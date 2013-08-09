@@ -23,6 +23,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/surfaces/buffer_stream.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -42,6 +43,26 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
     }
 
     mir::geometry::Rectangle const& enclosing_region;
+};
+
+struct BypassFilter : public mc::FilterForScene
+{
+    bool operator()(mc::CompositingCriteria const& )
+    {
+        // TODO: actually test if we can or should bypass this surface
+        return true;
+    }
+};
+
+struct BypassSearch : public mc::OperatorForScene
+{
+    void operator()(mc::CompositingCriteria const&,
+                    mir::surfaces::BufferStream& stream)
+    {
+        result = &stream;
+    }
+
+    mir::surfaces::BufferStream *result = nullptr;
 };
 
 }
@@ -64,12 +85,15 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
     if (display_buffer.can_bypass())
     {
-        // TODO filter for a candidate bypass surface
-        std::shared_ptr<graphics::Buffer> bypass =
-            scene->bypass_buffer();
-        if (bypass)
+        // It would be *really* nice if Scene had an iterator to simplify this
+        BypassFilter filter;
+        BypassSearch search;
+        scene->for_each_if(filter, search);
+
+        if (search.result)
         {
-            display_buffer.post_update(bypass);
+            display_buffer.post_update(
+                search.result->lock_compositor_buffer());
             bypassed = true;
         }
     }

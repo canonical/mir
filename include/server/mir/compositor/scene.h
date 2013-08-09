@@ -20,7 +20,6 @@
 #define MIR_COMPOSITOR_SCENE_H_
 
 #include "mir/geometry/forward.h"
-#include "mir/graphics/buffer.h"
 
 #include <memory>
 #include <functional>
@@ -67,8 +66,6 @@ class Scene
 public:
     virtual ~Scene() {}
 
-    virtual std::shared_ptr<graphics::Buffer> bypass_buffer()
-        { return std::shared_ptr<graphics::Buffer>(); }
     virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
 
     /**

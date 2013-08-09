@@ -51,22 +51,6 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_fa
 {
 }
 
-std::shared_ptr<mg::Buffer> ms::SurfaceStack::bypass_buffer()
-{
-    std::shared_ptr<mg::Buffer> ret;
-
-    // Generalize this into a top() function?
-    std::map<DepthId, Layer>::iterator top = layers_by_depth.begin();
-    if (top != layers_by_depth.end())
-    {
-        Layer &layer = top->second;
-        if (!layer.empty())
-            ret = layer[0]->compositor_buffer();
-    }
-
-    return ret;
-}
-
 void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)
 {
     std::lock_guard<std::mutex> lock(guard);
