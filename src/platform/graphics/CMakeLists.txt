@@ -1,5 +1,3 @@
-include_directories(${GLESv2_INCLUDE_DIRS})
-
 set(
   GRAPHICS_SOURCES
 
@@ -22,7 +20,6 @@ target_link_libraries(
   mirsharedgeometry
 
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -17,9 +17,7 @@
  */
 
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/compositor/swapper_factory.h"
 #include "src/server/compositor/switching_bundle.h"
-#include "mir/compositor/buffer_swapper_multi.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_basic.h"
@@ -29,7 +27,6 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_swapper_factory.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -219,36 +216,7 @@ void wait_for_surface_release(SurfaceSync* context)
 
 TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server)
 {
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<mc::BufferAllocationStrategy> the_buffer_allocation_strategy()
-        {
-            using namespace testing;
-
-            if (!buffer_allocation_strategy)
-            {
-                using testing::_;
-                buffer_allocation_strategy = std::make_shared<mtd::MockSwapperFactory>();
-
-                EXPECT_CALL(*buffer_allocation_strategy, create_swapper_new_buffers(_,_,_))
-                    .WillOnce(testing::Invoke(this, &ServerConfig::on_create_swapper));
-            }
-                return buffer_allocation_strategy;
-        }
-
-        std::shared_ptr<mc::BufferSwapper> on_create_swapper(mg::BufferProperties& actual,
-                                                             mg::BufferProperties const& requested,
-                                                             mc::SwapperType)
-        {
-            actual = requested;
-            auto stub_buffer_a = std::make_shared<mtd::StubBuffer>(::buffer_properties);
-            auto stub_buffer_b = std::make_shared<mtd::StubBuffer>(::buffer_properties);
-            std::vector<std::shared_ptr<mg::Buffer>> list = {stub_buffer_a, stub_buffer_b};
-            return std::make_shared<mc::BufferSwapperMulti>(list, list.size());
-        }
-
-        std::shared_ptr<mtd::MockSwapperFactory> buffer_allocation_strategy;
-    } server_config;
+    TestingServerConfiguration server_config;
 
     launch_server_process(server_config);
 
@@ -316,10 +284,11 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
         std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
         {
-            using testing::AtLeast;
+            using testing::AtMost;
 
             auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
-            EXPECT_CALL(*buffer_allocator, alloc_buffer(buffer_properties)).Times(AtLeast(2));
+            EXPECT_CALL(*buffer_allocator, alloc_buffer(buffer_properties))
+                .Times(AtMost(3));
             return buffer_allocator;
         }
 
@@ -474,8 +443,8 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
     {
         void on_exit() override
         {
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
+            EXPECT_EQ(CountingStubBuffer::buffers_created.load(),
+                      CountingStubBuffer::buffers_destroyed.load());
         }
 
     } server_config;
@@ -523,8 +492,8 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_witho
     {
         void on_exit() override
         {
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_created.load());
-            EXPECT_EQ(2*ClientConfigCommon::max_surface_count, CountingStubBuffer::buffers_destroyed.load());
+            EXPECT_EQ(CountingStubBuffer::buffers_created.load(),
+                      CountingStubBuffer::buffers_destroyed.load());
         }
 
     } server_config;

@@ -18,6 +18,7 @@
 
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_builder.h"
+#include "mir/shell/surface_configurator.h"
 #include "mir/shell/surface_controller.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
@@ -40,10 +41,12 @@ namespace mf = mir::frontend;
 
 msh::Surface::Surface(
     std::shared_ptr<SurfaceBuilder> const& builder,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
+    configurator(configurator),
     surface(builder->create_surface(params)),
     id(id),
     event_sink(event_sink),
@@ -223,6 +226,7 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
      */
+    value = configurator->select_attribute_value(*this, attrib, value);
     switch (attrib)
     {
     case mir_surface_attrib_type:
@@ -247,6 +251,8 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
                                                "attribute."));
         break;
     }
+
+    configurator->attribute_set(*this, attrib, result);
 
     return result;
 }

@@ -23,6 +23,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/session.h"
 #include "mir/frontend/session.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_properties.h"
@@ -43,7 +44,6 @@
 #include <assert.h>
 #include <signal.h>
 
-
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
@@ -52,8 +52,7 @@ namespace me = mir::examples;
 namespace mircv = mir::input::receiver;
 namespace geom = mir::geometry;
 
-me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
-                                           std::shared_ptr<mg::Platform> const& graphics_platform,
+me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
                                            std::shared_ptr<msh::SessionManager> const& session_manager)
   : graphics_platform(graphics_platform),
 
@@ -61,13 +60,15 @@ me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const&
     client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this),
     terminate(false)
 {
-    main_loop->register_signal_handler({SIGTERM, SIGINT},
-        [this](int)
-        {
-            terminate = true;
-        }
-    );
-    client_thread.detach();
+}
+
+me::InprocessEGLClient::~InprocessEGLClient()
+{
+    terminate = true;
+    auto session = session_manager->focussed_application().lock();
+    if (session)
+        session->force_requests_to_complete();
+    client_thread.join();
 }
 
 void me::InprocessEGLClient::thread_loop()

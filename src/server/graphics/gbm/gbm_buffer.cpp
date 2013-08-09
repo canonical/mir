@@ -27,7 +27,6 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <limits>
 #include <stdexcept>
 
 namespace mgg=mir::graphics::gbm;
@@ -68,8 +67,7 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
         gbm_pf = GBM_FORMAT_XRGB8888;
         break;
     default:
-        /* There is no explicit invalid GBM pixel format! */
-        gbm_pf = std::numeric_limits<uint32_t>::max();
+        gbm_pf = mgg::invalid_gbm_format;
         break;
     }
 

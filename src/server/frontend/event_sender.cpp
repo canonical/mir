@@ -17,11 +17,15 @@
  */
 
 #include "mir/frontend/client_constants.h"
+#include "mir/graphics/display_configuration.h"
 #include "event_sender.h"
 #include "message_sender.h"
+#include "protobuf_buffer_packer.h"
+
 #include "mir_protobuf_wire.pb.h"
 #include "mir_protobuf.pb.h"
 
+namespace mg = mir::graphics;
 namespace mfd = mir::frontend::detail;
 namespace mp = mir::protobuf;
 
@@ -41,15 +45,32 @@ void mfd::EventSender::handle_event(MirEvent const& e)
         mp::Event *ev = seq.add_event();
         ev->set_raw(&e, sizeof(MirEvent));
 
-        std::string buffer;
-        buffer.reserve(serialization_buffer_size);
-        seq.SerializeToString(&buffer);
-
-        mir::protobuf::wire::Result result;
-        result.add_events(buffer);
-
-        result.SerializeToString(&buffer);
-
-        sender->send(buffer);
+        send_event_sequence(seq);
     }
+}
+
+void mfd::EventSender::handle_display_config_change(graphics::DisplayConfiguration const& display_config)
+{
+    mp::EventSequence seq;
+    auto message = seq.mutable_display_configuration();
+
+    display_config.for_each_output([&message](mg::DisplayConfigurationOutput const& config)
+    {
+        auto disp = message->add_display_output();
+        mfd::pack_protobuf_display_output(disp, config); 
+    });
+
+    send_event_sequence(seq);
+}
+
+void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
+{
+    std::string send_buffer;
+    send_buffer.reserve(serialization_buffer_size);
+    seq.SerializeToString(&send_buffer);
+
+    mir::protobuf::wire::Result result;
+    result.add_events(send_buffer);
+    result.SerializeToString(&send_buffer);
+    sender->send(send_buffer);
 }

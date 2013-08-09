@@ -30,10 +30,13 @@ namespace mi = mir::input;
 namespace mf = mir::frontend;
 
 
-msh::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder)
-    : surface_builder(surface_builder)
+msh::SurfaceSource::SurfaceSource(std::shared_ptr<SurfaceBuilder> const& surface_builder,
+                                  std::shared_ptr<SurfaceConfigurator> const& surface_configurator)
+    : surface_builder(surface_builder),
+      surface_configurator(surface_configurator)
 {
     assert(surface_builder);
+    assert(surface_configurator);
 }
 
 std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
@@ -41,6 +44,6 @@ std::shared_ptr<msh::Surface> msh::SurfaceSource::create_surface(
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& sender)
 {
-    return std::make_shared<Surface>(surface_builder, params, id, sender);
+    return std::make_shared<Surface>(surface_builder, surface_configurator, params, id, sender);
 }
 

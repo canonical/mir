@@ -45,7 +45,7 @@ struct PrintingEventFilter : public mi::EventFilter
             std::cout << "Handling motion event (time, pointer0_x, pointer0_y): " << ev.motion.event_time << " "
                 << ev.motion.pointer_coordinates[0].x << " " << ev.motion.pointer_coordinates[0].y << std::endl;
         }
-        return true;
+        return false;
     }
 };
 

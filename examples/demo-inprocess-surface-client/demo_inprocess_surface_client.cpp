@@ -19,9 +19,10 @@
 #include "inprocess_egl_client.h"
 
 #include "mir/run_mir.h"
-#include "mir/default_server_configuration.h"
+#include "../server_configuration.h"
 
 #include "mir/report_exception.h"
+
 #include <iostream>
 
 namespace me = mir::examples;
@@ -40,13 +41,13 @@ int main(int argc, char const* argv[])
 try
 {
     ///\internal [main_tag]
-    mir::DefaultServerConfiguration config(argc, argv);
+    me::ServerConfiguration config(argc, argv);
 
     std::shared_ptr<me::InprocessEGLClient> client;
+
     mir::run_mir(config, [&config, &client](mir::DisplayServer&)
     {
         client = std::make_shared<me::InprocessEGLClient>(
-              config.the_main_loop(),
               config.the_graphics_platform(),
               config.the_session_manager());
     });
