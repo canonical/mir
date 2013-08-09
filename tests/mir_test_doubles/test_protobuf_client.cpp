@@ -20,6 +20,7 @@
 #include "mir_test_doubles/mock_rpc_report.h"
 
 #include "src/client/connection_surface_map.h"
+#include "src/client/display_configuration.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
@@ -32,7 +33,10 @@ mir::test::TestProtobufClient::TestProtobufClient(
     int timeout_ms) :
     rpc_report(std::make_shared<testing::NiceMock<doubles::MockRpcReport>>()),
     channel(mir::client::rpc::make_rpc_channel(
-        socket_file,std::make_shared<mir::client::ConnectionSurfaceMap>(),rpc_report)),
+        socket_file,
+        std::make_shared<mir::client::ConnectionSurfaceMap>(),
+        std::make_shared<mir::client::DisplayConfiguration>(),
+        rpc_report)),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
@@ -40,6 +44,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     next_buffer_called(false),
     release_surface_called(false),
     disconnect_done_called(false),
+    configure_display_done_called(false),
     tfd_done_called(false),
     connect_done_count(0),
     create_surface_done_count(0),
@@ -50,12 +55,20 @@ mir::test::TestProtobufClient::TestProtobufClient(
     surface_parameters.set_pixel_format(0);
     surface_parameters.set_buffer_usage(0);
 
-    ON_CALL(*this, connect_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_connect_done));
-    ON_CALL(*this, create_surface_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_create_surface_done));
-    ON_CALL(*this, next_buffer_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_next_buffer_done));
-    ON_CALL(*this, release_surface_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_release_surface_done));
-    ON_CALL(*this, disconnect_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_disconnect_done));
-    ON_CALL(*this, drm_auth_magic_done()).WillByDefault(testing::Invoke(this, &TestProtobufClient::on_drm_auth_magic_done));
+    ON_CALL(*this, connect_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_connect_done));
+    ON_CALL(*this, create_surface_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_create_surface_done));
+    ON_CALL(*this, next_buffer_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_next_buffer_done));
+    ON_CALL(*this, release_surface_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_release_surface_done));
+    ON_CALL(*this, disconnect_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_disconnect_done));
+    ON_CALL(*this, drm_auth_magic_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_drm_auth_magic_done));
+    ON_CALL(*this, display_configure_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
 }
 
 void mir::test::TestProtobufClient::on_connect_done()
@@ -98,6 +111,22 @@ void mir::test::TestProtobufClient::on_disconnect_done()
 void mir::test::TestProtobufClient::on_drm_auth_magic_done()
 {
     drm_auth_magic_done_called.store(true);
+}
+
+void mir::test::TestProtobufClient::on_configure_display_done()
+{
+    configure_display_done_called.store(true);
+}
+
+void mir::test::TestProtobufClient::wait_for_configure_display_done()
+{
+    for (int i = 0; !configure_display_done_called.load() && i < maxwait; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::yield();
+    }
+
+    configure_display_done_called.store(false);
 }
 
 void mir::test::TestProtobufClient::wait_for_connect_done()

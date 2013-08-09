@@ -37,7 +37,7 @@ struct MockSurfaceFactory : public shell::SurfaceFactory
         shell::Session*,
         const shell::SurfaceCreationParameters&,
         frontend::SurfaceId,
-        std::shared_ptr<events::EventSink> const&));
+        std::shared_ptr<frontend::EventSink> const&));
 };
 
 }

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
 
 #include <gmock/gmock.h>
@@ -35,16 +35,16 @@ namespace test
 namespace doubles
 {
 
-struct StubBufferAllocator : public compositor::GraphicBufferAllocator
+struct StubBufferAllocator : public graphics::GraphicBufferAllocator
 {
     StubBufferAllocator() : id{1} {}
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(
-        compositor::BufferProperties const&)
+        graphics::BufferProperties const&)
     {
-        compositor::BufferProperties properties{geometry::Size{id, id},
+        graphics::BufferProperties properties{geometry::Size{id, id},
                                         geometry::PixelFormat::abgr_8888,
-                                        compositor::BufferUsage::hardware};
+                                        graphics::BufferUsage::hardware};
         ++id;
         return std::make_shared<StubBuffer>(properties);
     }

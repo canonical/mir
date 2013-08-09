@@ -25,22 +25,17 @@
 
 namespace mir
 {
-
-namespace frontend
-{
-class Surface;
-}
-
 namespace graphics
 {
+class InternalSurface;
+
 namespace android
 {
-
 class InterpreterResourceCache;
 class InternalClientWindow : public AndroidDriverInterpreter
 {
 public:
-    InternalClientWindow(std::shared_ptr<frontend::Surface> const&,
+    InternalClientWindow(std::shared_ptr<InternalSurface> const&,
                          std::shared_ptr<InterpreterResourceCache> const&);
     ANativeWindowBuffer* driver_requests_buffer();
     void driver_returns_buffer(ANativeWindowBuffer*, std::shared_ptr<SyncObject> const&);
@@ -49,7 +44,7 @@ public:
     void sync_to_display(bool sync); 
 
 private:
-    std::shared_ptr<frontend::Surface> const surface;
+    std::shared_ptr<InternalSurface> const surface;
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
     int format;
 };

@@ -29,7 +29,7 @@
 namespace mfd = mir::frontend::detail;
 
 mfd::ProtobufMessageProcessor::ProtobufMessageProcessor(
-    MessageSender* sender,
+    std::shared_ptr<MessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<MessageProcessorReport> const& report) :
@@ -136,35 +136,6 @@ void mfd::ProtobufMessageProcessor::send_response(
     sender->send(send_response_buffer);
 }
 
-void mfd::ProtobufMessageProcessor::send_event(MirEvent const& e)
-{
-    // In future we might send multiple events, or insert them into messages
-    // containing other responses, but for now we send them individually.
-    mir::protobuf::EventSequence seq;
-    mir::protobuf::Event *ev = seq.add_event();
-    ev->set_raw(&e, sizeof(MirEvent));
-
-    std::string buffer;
-    buffer.reserve(serialization_buffer_size);
-    seq.SerializeToString(&buffer);
-
-    mir::protobuf::wire::Result result;
-    result.add_events(buffer);
-
-    result.SerializeToString(&buffer);
-
-    sender->send(buffer);
-}
-
-void mfd::ProtobufMessageProcessor::handle_event(MirEvent const& e)
-{
-    // Limit the types of events we wish to send over protobuf, for now.
-    if (e.type == mir_event_type_surface)
-    {
-        send_event(e);
-    }
-}
-
 bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation const& invocation)
 {
     report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
@@ -198,6 +169,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(mir::protobuf::wire::Invocation con
         else if ("drm_auth_magic" == invocation.method_name())
         {
             invoke(&protobuf::DisplayServer::drm_auth_magic, invocation);
+        }
+        else if ("configure_display" == invocation.method_name())
+        {
+            invoke(&protobuf::DisplayServer::configure_display, invocation);
         }
         else if ("configure_surface" == invocation.method_name())
         {

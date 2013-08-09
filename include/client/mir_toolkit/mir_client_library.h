@@ -109,10 +109,30 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
 MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
 
 /**
+ * Register a callback to be called when the DisplayConfiguration changes. Once a change has occurred,
+ * you can use mir_connection_create_display_config to see the new configuration
+ *   \param [in] connection  The connection
+ *   \param [in] callback     The function to be called when a display change occurs
+ *   \param [in,out] context  User data passed to the callback function
+ */
+void mir_connection_set_display_config_change_callback(
+    MirConnection* connection,
+    mir_display_config_callback callback, void* context);
+
+/**
  * Destroy the DisplayConfiguration resource acquired from mir_connection_create_display_config
  *   \param [in] display_configuration  The display_configuration information resource to be destroyed 
  */
 void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
+
+/**
+ * Apply the display configuration
+ *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
+ *   \param [in] connection             The connection
+ *   \param [in] display_configuration  The display_configuration to apply 
+ *   \return                            A handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.

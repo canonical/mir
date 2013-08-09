@@ -25,8 +25,8 @@
 #include "kms_page_flipper.h"
 #include "virtual_terminal.h"
 #include "video_devices.h"
+#include "overlapping_output_grouping.h"
 
-#include "mir/main_loop.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -104,86 +104,82 @@ mgg::GBMDisplay::~GBMDisplay()
 {
 }
 
-geom::Rectangle mgg::GBMDisplay::view_area() const
-{
-    return display_buffers[0]->view_area();
-}
-
 void mgg::GBMDisplay::for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f)
 {
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
     for (auto& db_ptr : display_buffers)
         f(*db_ptr);
 }
 
 std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
 {
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
     /* Give back a copy of the latest configuration information */
     current_display_configuration.update();
-    return std::make_shared<mgg::KMSDisplayConfiguration>(current_display_configuration);
+    return std::make_shared<mgg::RealKMSDisplayConfiguration>(current_display_configuration);
 }
 
 void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
-    std::vector<std::shared_ptr<KMSOutput>> enabled_outputs;
-    auto const& kms_conf = dynamic_cast<KMSDisplayConfiguration const&>(conf);
+    std::lock_guard<std::mutex> lg{configuration_mutex};
 
-    /* Create or reset the KMS outputs */
-    conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
+    std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers_new;
+
+    OverlappingOutputGrouping grouping{conf};
+
+    grouping.for_each_group([&](OverlappingOutputGroup const& group)
     {
-        uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
+        auto bounding_rect = group.bounding_rectangle();
+        std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
 
-        auto output = output_container.get_kms_output_for(connector_id);
+        group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+        {
+            uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
+            auto kms_output = output_container.get_kms_output_for(connector_id);
 
-        if (conf_output.connected && conf_output.used)
-            enabled_outputs.push_back(output);
+            auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
+                                                                conf_output.current_mode_index);
+            kms_output->reset();
+            kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
+            kms_outputs.push_back(kms_output);
+        });
+
+        auto surface =
+            platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
+                                                 bounding_rect.size.height.as_uint32_t());
+
+        std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener,
+                                                                  kms_outputs,
+                                                                  std::move(surface),
+                                                                  bounding_rect,
+                                                                  shared_egl.context()}};
+        display_buffers_new.push_back(std::move(db));
     });
 
-    geom::Size max_size;
-
-    /* Find the size of the largest enabled output... */
-    for (auto const& output : enabled_outputs)
-    {
-        if (output->size().width > max_size.width)
-            max_size.width = output->size().width;
-        if (output->size().height > max_size.height)
-            max_size.height = output->size().height;
-    }
-
-    /* ...and create a scanout surface with that size */
-    auto surface = platform->gbm.create_scanout_surface(max_size.width.as_uint32_t(),
-                                                        max_size.height.as_uint32_t());
-
-    /* Create a single DisplayBuffer that displays the surface on all the outputs */
-    std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener, enabled_outputs,
-                                                              std::move(surface), max_size,
-                                                              shared_egl.context()}};
-
-    /*
-     * TODO: Investigate why we have to destroy the previous display buffers and
-     * their contexts after creating the new ones to avoid a crash in Mesa.
-     */
-    display_buffers.clear();
-    display_buffers.push_back(std::move(db));
+    display_buffers = std::move(display_buffers_new);
 
     /* Store applied configuration */
     current_display_configuration = kms_conf;
 }
 
 void mgg::GBMDisplay::register_configuration_change_handler(
-    MainLoop& main_loop,
+    EventHandlerRegister& handlers,
     DisplayConfigurationChangeHandler const& conf_change_handler)
 {
     video_devices->register_change_handler(
-        main_loop,
+        handlers,
         conf_change_handler);
 }
 
 void mgg::GBMDisplay::register_pause_resume_handlers(
-    MainLoop& main_loop,
+    EventHandlerRegister& handlers,
     DisplayPauseHandler const& pause_handler,
     DisplayResumeHandler const& resume_handler)
 {
-    platform->vt->register_switch_handlers(main_loop, pause_handler, resume_handler);
+    platform->vt->register_switch_handlers(handlers, pause_handler, resume_handler);
 }
 
 void mgg::GBMDisplay::pause()
@@ -213,13 +209,39 @@ void mgg::GBMDisplay::resume()
         throw;
     }
 
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
     for (auto& db_ptr : display_buffers)
         db_ptr->schedule_set_crtc();
 }
 
 auto mgg::GBMDisplay::the_cursor() -> std::weak_ptr<Cursor>
 {
-    if (!cursor) cursor = std::make_shared<GBMCursor>(platform, output_container);
+    if (!cursor)
+    {
+        class KMSCurrentConfiguration : public CurrentConfiguration
+        {
+        public:
+            KMSCurrentConfiguration(GBMDisplay& display)
+                : display(display)
+            {
+            }
+
+            void with_current_configuration_do(
+                std::function<void(KMSDisplayConfiguration const&)> const& exec)
+            {
+                std::lock_guard<std::mutex> lg{display.configuration_mutex};
+                exec(display.current_display_configuration);
+            }
+
+        private:
+            GBMDisplay& display;
+        };
+
+        cursor = std::make_shared<GBMCursor>(platform->gbm.device, output_container,
+                                             std::make_shared<KMSCurrentConfiguration>(*this));
+    }
+
     return cursor;
 }
 

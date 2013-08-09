@@ -26,6 +26,7 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace ms = mir::surfaces;
@@ -33,10 +34,14 @@ namespace ms = mir::surfaces;
 class BufferStreamTest : public ::testing::Test
 {
 protected:
-    virtual void SetUp()
+    BufferStreamTest()
     {
         mock_buffer = std::make_shared<mtd::StubBuffer>();
         mock_bundle = std::make_shared<mtd::MockBufferBundle>();
+
+        // Two of the tests care about this, the rest should not...
+        EXPECT_CALL(*mock_bundle, force_requests_to_complete())
+            .Times(::testing::AnyNumber());
     }
 
     std::shared_ptr<mtd::StubBuffer> mock_buffer;
@@ -46,7 +51,7 @@ protected:
 TEST_F(BufferStreamTest, size_query)
 {
     geom::Size size{4, 5};
-    mc::BufferProperties properties {size, geom::PixelFormat::abgr_8888, mc::BufferUsage::hardware};
+    mg::BufferProperties properties {size, geom::PixelFormat::abgr_8888, mg::BufferUsage::hardware};
     EXPECT_CALL(*mock_bundle, properties())
         .Times(1)
         .WillOnce(testing::Return(properties));
@@ -59,7 +64,7 @@ TEST_F(BufferStreamTest, size_query)
 TEST_F(BufferStreamTest, pixel_format_query)
 {
     geom::PixelFormat format{geom::PixelFormat::abgr_8888};
-    mc::BufferProperties properties {geom::Size{4, 5}, format, mc::BufferUsage::hardware};
+    mg::BufferProperties properties {geom::Size{4, 5}, format, mg::BufferUsage::hardware};
     EXPECT_CALL(*mock_bundle, properties())
         .Times(1)
         .WillOnce(testing::Return(properties));
@@ -72,10 +77,18 @@ TEST_F(BufferStreamTest, pixel_format_query)
 TEST_F(BufferStreamTest, force_requests_to_complete)
 {
     EXPECT_CALL(*mock_bundle, force_requests_to_complete())
-        .Times(1);
+        .Times(2);  // Once explcit, once on destruction
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     buffer_stream.force_requests_to_complete();
+}
+
+TEST_F(BufferStreamTest, requests_are_completed_before_destruction)
+{
+    EXPECT_CALL(*mock_bundle, force_requests_to_complete())
+        .Times(1);
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)

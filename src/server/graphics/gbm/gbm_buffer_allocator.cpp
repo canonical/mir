@@ -23,7 +23,7 @@
 #include "buffer_texture_binder.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/egl_extensions.h"
-#include "mir/compositor/buffer_properties.h"
+#include "mir/graphics/buffer_properties.h"
 #include <boost/throw_exception.hpp>
 
 #include <EGL/egl.h>
@@ -31,13 +31,13 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <algorithm>
 #include <stdexcept>
 #include <gbm.h>
 #include <cassert>
 
 namespace mg  = mir::graphics;
 namespace mgg = mir::graphics::gbm;
-namespace mc  = mir::compositor;
 namespace geom = mir::geometry;
 
 namespace
@@ -116,20 +116,28 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
     assert(buffer_initializer.get() != 0);
 }
 
-std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(
-    mc::BufferProperties const& buffer_properties)
+std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
 {
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
+    uint32_t gbm_format = mgg::mir_format_to_gbm_format(buffer_properties.format);
+
+    if (!is_pixel_format_supported(buffer_properties.format) ||
+        gbm_format == mgg::invalid_gbm_format)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Trying to create GBM buffer with unsupported pixel format"));
+    }
+
     /* Create the GBM buffer object */
-    if (buffer_properties.usage == mc::BufferUsage::software)
+    if (buffer_properties.usage == BufferUsage::software)
         bo_flags |= GBM_BO_USE_WRITE;
 
     gbm_bo *bo_raw = gbm_bo_create(
         platform->gbm.device,
         buffer_properties.size.width.as_uint32_t(),
         buffer_properties.size.height.as_uint32_t(),
-        mgg::mir_format_to_gbm_format(buffer_properties.format),
+        gbm_format,
         bo_flags);
 
     if (!bo_raw)
@@ -156,4 +164,13 @@ std::vector<geom::PixelFormat> mgg::GBMBufferAllocator::supported_pixel_formats(
     };
 
     return pixel_formats;
+}
+
+bool mgg::GBMBufferAllocator::is_pixel_format_supported(geom::PixelFormat format)
+{
+    auto formats = supported_pixel_formats();
+
+    auto iter = std::find(formats.begin(), formats.end(), format);
+
+    return iter != formats.end();
 }

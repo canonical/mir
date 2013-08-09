@@ -19,7 +19,7 @@
 #ifndef MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
 #define MIR_PLATFORM_GBM_GBM_BUFFER_ALLOCATOR_H_
 
-#include "mir/compositor/graphic_buffer_allocator.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 
 #include <memory>
@@ -35,18 +35,20 @@ namespace gbm
 {
 class GBMPlatform;
 
-class GBMBufferAllocator: public compositor::GraphicBufferAllocator
+class GBMBufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
     GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform,
                        const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
-        compositor::BufferProperties const& buffer_properties);
+        graphics::BufferProperties const& buffer_properties);
 
     std::vector<geometry::PixelFormat> supported_pixel_formats();
 
 private:
+    bool is_pixel_format_supported(geometry::PixelFormat format);
+
     std::shared_ptr<GBMPlatform> platform;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;

@@ -24,17 +24,20 @@
 #include "linux_virtual_terminal.h"
 #include "udev_video_devices.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 
 #include "drm_close_threadsafe.h"
+
+#include "mir/graphics/native_platform.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
-namespace mc = mir::compositor;
 namespace mo = mir::options;
 namespace
 {
@@ -74,6 +77,16 @@ struct RealVTFileOperations : public mgg::VTFileOperations
     {
         return ::ioctl(d, request, p_val);
     }
+
+    int tcsetattr(int d, int acts, const struct termios *tcattr)
+    {
+        return ::tcsetattr(d, acts, tcattr);
+    }
+
+    int tcgetattr(int d, struct termios *tcattr)
+    {
+        return ::tcgetattr(d, tcattr);
+    }
 };
 
 }
@@ -97,7 +110,7 @@ mgg::GBMPlatform::~GBMPlatform()
 }
 
 
-std::shared_ptr<mc::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
+std::shared_ptr<mg::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
 {
     return std::make_shared<mgg::GBMBufferAllocator>(this->shared_from_this(),
@@ -119,7 +132,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::GBMPlatform::get_ipc_package()
     return std::make_shared<GBMPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<compositor::BufferIPCPacker> const& packer,
+void mgg::GBMPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
                                         std::shared_ptr<Buffer> const& buffer) const
 {
     auto native_handle = buffer->native_buffer_handle();
@@ -159,4 +172,9 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 {
     return ((mgg::GBMPlatform::internal_display_clients_present) &&
             (display == mgg::GBMPlatform::internal_native_display.get()));
+}
+
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
+{
+    return std::make_shared<mg::NativePlatform>();
 }

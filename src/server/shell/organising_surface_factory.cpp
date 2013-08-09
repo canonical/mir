@@ -38,10 +38,10 @@ std::shared_ptr<msh::Surface> msh::OrganisingSurfaceFactory::create_surface(
     Session* session,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
-    std::shared_ptr<events::EventSink> const& sink)
+    std::shared_ptr<mf::EventSink> const& sender)
 {
     auto placed_params = placement_strategy->place(params);
 
-    return underlying_factory->create_surface(session, placed_params, id, sink);
+    return underlying_factory->create_surface(session, placed_params, id, sender);
 }
 

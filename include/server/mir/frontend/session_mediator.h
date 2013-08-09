@@ -28,19 +28,15 @@
 
 namespace mir
 {
-namespace events
+namespace shell
 {
-class EventSink;
+class DisplayChanger;
 }
 namespace graphics
 {
 class Buffer;
 class Platform;
 class Display;
-}
-
-namespace compositor
-{
 class GraphicBufferAllocator;
 }
 
@@ -54,19 +50,19 @@ class Session;
 class ResourceCache;
 class SessionMediatorReport;
 class ClientBufferTracker;
+class EventSink;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
-
     SessionMediator(
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
-        std::shared_ptr<graphics::Display> const& display,
-        std::shared_ptr<compositor::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<shell::DisplayChanger> const& display_changer,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& report,
-        std::shared_ptr<events::EventSink> const& event_sink,
+        std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache);
 
     ~SessionMediator() noexcept;
@@ -98,28 +94,32 @@ public:
                     mir::protobuf::Void* response,
                     google::protobuf::Closure* done);
 
+    void configure_surface(google::protobuf::RpcController* controller,
+                           const mir::protobuf::SurfaceSetting*,
+                           mir::protobuf::SurfaceSetting*,
+                           google::protobuf::Closure* done);
+
+    void configure_display(::google::protobuf::RpcController* controller,
+                       const ::mir::protobuf::DisplayConfiguration* request,
+                       ::mir::protobuf::Void* response,
+                       ::google::protobuf::Closure* done);
+
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
                         const mir::protobuf::DRMMagic* request,
                         mir::protobuf::DRMAuthMagicStatus* response,
                         google::protobuf::Closure* done);
 
-    void configure_surface(google::protobuf::RpcController* controller,
-                           const mir::protobuf::SurfaceSetting*,
-                           mir::protobuf::SurfaceSetting*,
-                           google::protobuf::Closure* done);
-
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
-    // TODO this is a dubious dependency - to get display_info (is there only one?)
-    std::shared_ptr<graphics::Display> const display;
     // TODO this is a dubious dependency - to get supported_pixel_formats
-    std::shared_ptr<compositor::GraphicBufferAllocator> const buffer_allocator;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
 
+    std::shared_ptr<shell::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
-    std::shared_ptr<events::EventSink> const event_sink;
+    std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<ClientBufferTracker> const client_tracker;
 

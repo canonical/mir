@@ -47,6 +47,8 @@ public:
     MOCK_METHOD1(close, int(int));
     MOCK_METHOD3(ioctl, int(int, int, int));
     MOCK_METHOD3(ioctl, int(int, int, void*));
+    MOCK_METHOD3(tcsetattr, int(int, int, const struct termios*));
+    MOCK_METHOD2(tcgetattr, int(int, struct termios*));
 };
 
 class MockMainLoop : public mir::MainLoop
@@ -73,6 +75,13 @@ ACTION_TEMPLATE(SetIoctlPointee,
     *static_cast<T*>(arg2) = param;
 }
 
+ACTION_TEMPLATE(SetTcAttrPointee,
+                HAS_1_TEMPLATE_PARAMS(typename, T),
+                AND_1_VALUE_PARAMS(param))
+{
+    *static_cast<T*>(arg1) = param;
+}
+
 MATCHER_P(ModeUsesSignal, sig, "")
 {
     auto vtm = static_cast<vt_mode*>(arg);
@@ -90,7 +99,9 @@ public:
     LinuxVirtualTerminalTest()
         : fake_vt_fd{5},
           fake_kd_mode{KD_TEXT},
-          fake_vt_mode{VT_AUTO, 0, 0, 0, 0}
+          fake_vt_mode{VT_AUTO, 0, 0, 0, 0},
+          fake_kb_mode{K_RAW},
+          fake_tc_attr()
     {
     }
 
@@ -142,6 +153,14 @@ public:
             .WillOnce(DoAll(SetIoctlPointee<int>(fake_kd_mode), Return(0)));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_GETMODE, An<void*>()))
             .WillOnce(DoAll(SetIoctlPointee<vt_mode>(fake_vt_mode), Return(0)));
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDGKBMODE, An<void*>()))
+            .WillOnce(DoAll(SetIoctlPointee<int>(fake_kb_mode), Return(0)));
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSKBMODE, K_OFF))
+            .WillOnce(Return(0));
+        EXPECT_CALL(mock_fops, tcgetattr(fake_vt_fd, An<struct termios *>()))
+            .WillOnce(DoAll(SetTcAttrPointee<struct termios>(fake_tc_attr), Return(0)));
+        EXPECT_CALL(mock_fops, tcsetattr(fake_vt_fd, TCSANOW, An<const struct termios *>()))
+            .WillOnce(Return(0));
     }
 
     void set_up_expectations_for_switch_handler(int sig)
@@ -158,9 +177,13 @@ public:
     {
         using namespace testing;
 
+        EXPECT_CALL(mock_fops, tcsetattr(fake_vt_fd, TCSANOW, An<const struct termios *>()))
+            .WillOnce(Return(0));
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSKBMODE, fake_kb_mode))
+            .WillOnce(Return(0));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, fake_kd_mode))
             .WillOnce(Return(0));
-        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE,An<void*>()))
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE, An<void*>()))
             .WillOnce(Return(0));
         EXPECT_CALL(mock_fops, close(fake_vt_fd))
             .WillOnce(Return(0));
@@ -169,6 +192,8 @@ public:
     int const fake_vt_fd;
     int const fake_kd_mode;
     vt_mode fake_vt_mode;
+    int const fake_kb_mode;
+    struct termios fake_tc_attr;
     std::function<void(int)> sig_handler;
     MockVTFileOperations mock_fops;
     MockMainLoop mock_main_loop;

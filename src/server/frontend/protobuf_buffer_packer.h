@@ -19,17 +19,23 @@
 #ifndef MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 #define MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 
-#include "mir/compositor/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir_protobuf.pb.h"
 
 namespace mir
 {
+namespace graphics
+{
+struct DisplayConfigurationOutput;
+}
 namespace frontend
 {
 namespace detail
 {
 
-class ProtobufBufferPacker : public compositor::BufferIPCPacker
+void pack_protobuf_display_output(protobuf::DisplayOutput* output, graphics::DisplayConfigurationOutput const&);
+
+class ProtobufBufferPacker : public graphics::BufferIPCPacker
 {
 public:
     ProtobufBufferPacker(protobuf::Buffer*);

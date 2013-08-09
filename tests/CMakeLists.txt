@@ -9,9 +9,11 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/include/server)
-include_directories(${PROJECT_SOURCE_DIR}/include/client)
-include_directories(${PROJECT_SOURCE_DIR}/include/test)
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/server
+  ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/include/test)
 
 if (MIR_PLATFORM STREQUAL "android")
   include_directories( ${LIBHARDWARE_INCLUDE_DIRS})

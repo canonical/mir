@@ -47,7 +47,7 @@ public:
                      std::shared_ptr<DisplayReport> const& listener,
                      std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                      GBMSurfaceUPtr surface_gbm,
-                     geometry::Size const& size,
+                     geometry::Rectangle const& area,
                      EGLContext shared_context);
     ~GBMDisplayBuffer();
 
@@ -70,7 +70,7 @@ private:
     std::vector<std::shared_ptr<KMSOutput>> outputs;
     GBMSurfaceUPtr surface_gbm;
     helpers::EGLHelper egl;
-    geometry::Size size;
+    geometry::Rectangle area;
     std::atomic<bool> needs_set_crtc;
 };
 

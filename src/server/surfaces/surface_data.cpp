@@ -81,10 +81,14 @@ glm::mat4 const& ms::SurfaceData::transformation() const
     return transformation_matrix;
 }
 
-bool ms::SurfaceData::should_be_rendered() const
+bool ms::SurfaceData::should_be_rendered_in(geom::Rectangle const& rect) const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return !hidden && first_frame_posted;
+
+    if (hidden || !first_frame_posted)
+        return false;
+
+    return rect.overlaps(surface_rect);
 }
 
 void ms::SurfaceData::apply_alpha(float alpha)
@@ -155,6 +159,9 @@ void ms::SurfaceData::move_to(geom::Point new_pt)
 
 bool ms::SurfaceData::contains(geom::Point const& point) const
 {
+    if (hidden)
+        return false;
+
     for (auto const& rectangle : input_rectangles)
     {
         if (rectangle.contains(point))

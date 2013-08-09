@@ -11,6 +11,8 @@ set(
   test_focus_selection.cpp
   test_server_shutdown.cpp
   test_client_authorization.cpp
+  test_shell_control_of_surface_configuration.cpp
+  test_nested_mir.cpp
 )
 
 list(APPEND SOURCES
@@ -33,6 +35,7 @@ target_link_libraries(
 
   mirserver
   mirclient
+  mirplatform
 
   mir-test-framework
   mir-test-doubles

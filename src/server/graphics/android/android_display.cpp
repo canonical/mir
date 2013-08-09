@@ -50,20 +50,37 @@ static EGLint const dummy_pbuffer_attribs[] =
     EGL_NONE
 };
 
-class NullDisplayConfiguration : public mg::DisplayConfiguration
+class AndroidDisplayConfiguration : public mg::DisplayConfiguration
 {
 public:
+    AndroidDisplayConfiguration(geom::Size const& display_size)
+        : configuration{mg::DisplayConfigurationOutputId{0},
+                        mg::DisplayConfigurationCardId{0},
+                        {geom::PixelFormat::abgr_8888},
+                        {mg::DisplayConfigurationMode{display_size,0.0f}},
+                        geom::Size{0,0},
+                        true,
+                        true,
+                        geom::Point{0,0},
+                        0, 0}
+    {
+    }
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
     {
     }
 
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)>) const
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
     {
+        f(configuration);
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t)
     {
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot configure output\n"));
     }
+
+private:
+    mg::DisplayConfigurationOutput configuration;
 };
 
 EGLDisplay create_and_initialize_display()
@@ -163,7 +180,7 @@ void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::Display
 
 std::shared_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration()
 {
-    return std::make_shared<NullDisplayConfiguration>();
+    return std::make_shared<AndroidDisplayConfiguration>(display_buffer->view_area().size);
 }
 
 void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
@@ -171,13 +188,13 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(
-    MainLoop&,
+    EventHandlerRegister&,
     DisplayConfigurationChangeHandler const&)
 {
 }
 
 void mga::AndroidDisplay::register_pause_resume_handlers(
-    MainLoop& /*main_loop*/,
+    EventHandlerRegister& /*handlers*/,
     DisplayPauseHandler const& /*pause_handler*/,
     DisplayResumeHandler const& /*resume_handler*/)
 {

@@ -18,6 +18,7 @@
 
 #include "default_connection_configuration.h"
 
+#include "display_configuration.h"
 #include "rpc/make_rpc_channel.h"
 #include "rpc/null_rpc_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -58,7 +59,7 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         [this]
         {
             return mcl::rpc::make_rpc_channel(
-                the_socket_file(), the_surface_map(), the_rpc_report());
+                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report());
         });
 }
 
@@ -113,5 +114,14 @@ mcl::DefaultConnectionConfiguration::the_rpc_report()
                 return std::make_shared<mcl::lttng::RpcReport>();
             else
                 return std::make_shared<mcl::rpc::NullRpcReport>();
+        });
+}
+
+std::shared_ptr<mcl::DisplayConfiguration> mcl::DefaultConnectionConfiguration::the_display_configuration()
+{
+    return display_configuration(
+        []
+        {
+            return std::make_shared<mcl::DisplayConfiguration>();
         });
 }

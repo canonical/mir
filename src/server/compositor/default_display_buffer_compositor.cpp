@@ -37,7 +37,7 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
     }
     bool operator()(mc::CompositingCriteria const& info)
     {
-        return info.should_be_rendered();
+        return info.should_be_rendered_in(enclosing_region);
     }
 
     mir::geometry::Rectangle const& enclosing_region;

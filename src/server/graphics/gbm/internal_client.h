@@ -26,22 +26,18 @@
 
 namespace mir
 {
-namespace frontend
-{
-class Surface;
-}
 namespace graphics
 {
 class Platform;
+
 namespace gbm
 {
-
 class InternalClient : public mir::graphics::InternalClient
 {
 public:
     InternalClient(std::shared_ptr<MirMesaEGLNativeDisplay> const&);
     EGLNativeDisplayType egl_native_display();
-    EGLNativeWindowType egl_native_window(std::shared_ptr<frontend::Surface> const&);
+    EGLNativeWindowType egl_native_window(std::shared_ptr<InternalSurface> const&);
 
 private:
     std::shared_ptr<MirMesaEGLNativeDisplay> const native_display;

@@ -41,7 +41,7 @@ public:
         Session* session,
         shell::SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
-        std::shared_ptr<events::EventSink> const& sink) override;
+        std::shared_ptr<frontend::EventSink> const& sink) override;
 
 protected:
     OrganisingSurfaceFactory(OrganisingSurfaceFactory const&) = delete;

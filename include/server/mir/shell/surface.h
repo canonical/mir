@@ -31,16 +31,17 @@
 
 namespace mir
 {
-namespace events
+namespace frontend
 {
 class EventSink;
 }
-
 namespace shell
 {
 class InputTargeter;
 class Session;
 class SurfaceBuilder;
+class SurfaceConfigurator;
+class SurfaceController;
 struct SurfaceCreationParameters;
 
 class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
@@ -49,14 +50,10 @@ public:
     Surface(
         Session* session,
         std::shared_ptr<SurfaceBuilder> const& builder,
-        SurfaceCreationParameters const& params);
-
-    Surface(
-        Session* session,
-        std::shared_ptr<SurfaceBuilder> const& builder,
+        std::shared_ptr<SurfaceConfigurator> const& configurator,
         SurfaceCreationParameters const& params,
         frontend::SurfaceId id,
-        std::shared_ptr<events::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& event_sink);
 
     ~Surface() noexcept;
 
@@ -91,16 +88,19 @@ public:
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region);
 
     virtual void allow_framedropping(bool); 
+    
+    virtual void raise(std::shared_ptr<SurfaceController> const& controller);
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
     void notify_change(MirSurfaceAttrib attrib, int value);
 
     std::shared_ptr<SurfaceBuilder> const builder;
+    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::weak_ptr<mir::surfaces::Surface> const surface;
 
     frontend::SurfaceId const id;
-    std::shared_ptr<events::EventSink> const event_sink;
+    std::shared_ptr<frontend::EventSink> const event_sink;
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;

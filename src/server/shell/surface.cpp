@@ -18,9 +18,11 @@
 
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_builder.h"
+#include "mir/shell/surface_configurator.h"
+#include "mir/shell/surface_controller.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
-#include "mir/events/event_sink.h"
+#include "mir/frontend/event_sink.h"
 
 #include "mir_toolkit/event.h"
 
@@ -35,30 +37,20 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
+namespace mf = mir::frontend;
 
 msh::Surface::Surface(
     Session* session,
     std::shared_ptr<SurfaceBuilder> const& builder,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
-    std::shared_ptr<events::EventSink> const& sink)
+    std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
+    configurator(configurator),
     surface(builder->create_surface(session, params)),
     id(id),
-    event_sink(sink),
-    type_value(mir_surface_type_normal),
-    state_value(mir_surface_state_restored)
-{
-}
-
-msh::Surface::Surface(
-    Session* session,
-    std::shared_ptr<SurfaceBuilder> const& builder,
-    shell::SurfaceCreationParameters const& params)
-  : builder(builder),
-    surface(builder->create_surface(session, params)),
-    id(),
-    event_sink(),
+    event_sink(event_sink),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored)
 {
@@ -235,6 +227,7 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
      */
+    value = configurator->select_attribute_value(*this, attrib, value);
     switch (attrib)
     {
     case mir_surface_attrib_type:
@@ -259,6 +252,8 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
                                                "attribute."));
         break;
     }
+
+    configurator->attribute_set(*this, attrib, result);
 
     return result;
 }
@@ -304,22 +299,19 @@ bool msh::Surface::set_state(MirSurfaceState s)
 
 void msh::Surface::notify_change(MirSurfaceAttrib attrib, int value)
 {
-    if (event_sink)
-    {
-        MirEvent e;
+    MirEvent e;
 
-        // This memset is not really required. However it does avoid some
-        // harmless uninitialized memory reads that valgrind will complain
-        // about, due to gaps in MirEvent.
-        memset(&e, 0, sizeof e);
+    // This memset is not really required. However it does avoid some
+    // harmless uninitialized memory reads that valgrind will complain
+    // about, due to gaps in MirEvent.
+    memset(&e, 0, sizeof e);
 
-        e.type = mir_event_type_surface;
-        e.surface.id = id.as_value();
-        e.surface.attrib = attrib;
-        e.surface.value = value;
+    e.type = mir_event_type_surface;
+    e.surface.id = id.as_value();
+    e.surface.attrib = attrib;
+    e.surface.value = value;
 
-        event_sink->handle_event(e);
-    }
+    event_sink->handle_event(e);
 }
 
 void msh::Surface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
@@ -336,6 +328,18 @@ void msh::Surface::set_input_region(std::vector<geom::Rectangle> const& region)
     if (auto const& s = surface.lock())
     {
         s->set_input_region(region);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
+void msh::Surface::raise(std::shared_ptr<msh::SurfaceController> const& controller)
+{
+    if (auto const& s = surface.lock())
+    {
+        controller->raise(s);
     }
     else
     {

@@ -1,4 +1,6 @@
-include_directories(${PROJECT_SOURCE_DIR}/include/server)
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/server)
 
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
@@ -15,6 +17,7 @@ set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirserver")
+set(PLATFORM_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirplatform")
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
@@ -41,9 +44,8 @@ list(APPEND MIRSERVER_ARCHIVES
   miroptions
   mircompositor
   mirfrontend
-  mirgraphics
+  mirplatform
   mirinput
-  mirsharedgeometry
   mirsharedinput
   mirsharedlogging
   mirsurfaces
@@ -53,6 +55,8 @@ list(APPEND MIRSERVER_ARCHIVES
 
 list(APPEND MIRSERVER_LINKS
   mirprotobuf
+  mirnestedgraphics
+  mirclient
   3rd_party
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
@@ -71,6 +75,9 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
   install(DIRECTORY
+    ${CMAKE_SOURCE_DIR}/include/platform/mir DESTINATION "include/mirplatform"
+  )
+  install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
   )
 else()
@@ -81,7 +88,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 0)
+set(MIRSERVER_ABI 1)
 
 set_target_properties(
   mirserver
