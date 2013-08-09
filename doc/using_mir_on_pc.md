@@ -15,25 +15,21 @@ or
     lsmod | grep drm
 
 Before you can use Mir you need to ensure you have the proper custom Mesa
-build installed. If you installed Mir using the packages from mir-team
-system-compositor-testing PPA (see \ref installing_prebuilt_on_pc), you
-should be good to go.
+build installed. If you are running Ubuntu saucy
+(see \ref installing_prebuilt_on_pc), you should be good to go.
 
 If you built Mir from source code (see \ref building_source_for_pc), you
-nee to ensure you are using the proper Mesa at runtime. You can do that by
-installing the Mesa packages manually from the system-compositor-testing PPA,
-or by building the custom Mesa yourself and ensuring it can be found by Mir,
-e.g., by using LD_LIBRARY_PATH.
+need to ensure you are using the proper Mesa at runtime. You can do that by
+installing the Mesa packages from saucy or by building the custom Mesa yourself
+and ensuring it can be found by Mir, e.g., by using LD_LIBRARY_PATH.
 
 Using Mir as system compositor with X
 -------------------------------------
 
 Note: for this to work you need to have Mir and all its dependencies (which
-include lightdm, Mesa and the Xorg drivers). The easiest way is to install
-pre-built packages from the system-compositor-testing PPA.
+include lightdm, Mesa and the Xorg drivers). The easiest way is to run saucy.
 
-If you have installed the unity-system-compositor from
-the system-compositor-testing PPA, it will have created a file in
+If you have installed unity-system-compositor it will have created a file in
 /etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf to run XMir. If you
 have build from source, to run X sessions under Mir, with Mir acting as the
 system compositor, create the file
@@ -61,6 +57,7 @@ If problems occur, have a look at the following log files:
     /var/log/lightdm/lightdm.log
     /var/log/lightdm/unity-system-compositor.log
     /var/log/lightdm/x-0.log
+    /var/log/Xorg.0.log
 
 You may not be able to get to a terminal if your video system has locked up. In
 that case secure shell into to your machine and read / copy these logs. They are
@@ -110,9 +107,7 @@ for this is to log in to a VT and:
 Getting some example client applications
 ----------------------------------------
 
-If you installed Mir using the packages from the mir-team
-system-compositor-testing PPA, you can
-get some example programs by installing the `mir-demos` package:
+You can get some example programs by installing the `mir-demos` package:
 
     $ sudo apt-get install mir-demos
 
