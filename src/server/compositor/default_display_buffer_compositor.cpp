@@ -45,13 +45,54 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
     mir::geometry::Rectangle const& enclosing_region;
 };
 
+
 struct BypassFilter : public mc::FilterForScene
 {
-    bool operator()(mc::CompositingCriteria const& )
+    BypassFilter(const mg::DisplayBuffer &display_buffer)
     {
-        // TODO: actually test if we can or should bypass this surface
-        return true;
+        const mir::geometry::Rectangle &rect = display_buffer.view_area();
+        int width = rect.size.width.as_int();
+        int height = rect.size.height.as_int();
+
+        /*
+         * For a surface to exactly fit the display_buffer, its transformation
+         * will look exactly like this:
+         */
+        fullscreen[0][0] = width;
+        fullscreen[0][1] = 0.0f;
+        fullscreen[0][2] = 0.0f;
+        fullscreen[0][3] = 0.0f;
+
+        fullscreen[1][0] = 0.0f;
+        fullscreen[1][1] = height;
+        fullscreen[1][2] = 0.0f;
+        fullscreen[1][3] = 0.0f;
+
+        fullscreen[2][0] = 0.0f;
+        fullscreen[2][1] = 0.0f;
+        fullscreen[2][2] = 0.0f;
+        fullscreen[2][3] = 0.0f;
+
+        fullscreen[3][0] = rect.top_left.x.as_int() + width / 2;
+        fullscreen[3][1] = rect.top_left.y.as_int() + height / 2;
+        fullscreen[3][2] = 0.0f;
+        fullscreen[3][3] = 1.0f;
     }
+
+    bool operator()(mc::CompositingCriteria const& criteria)
+    {
+#if 0
+        printf("filter for transformation:\n");
+        for (int y = 0; y < 4; y++)
+        {
+            printf("[%6.1f][%6.1f][%6.1f][%6.1f]\n",
+                trans[0][y], trans[1][y], trans[2][y], trans[3][y]);
+        }
+#endif
+        return criteria.transformation() == fullscreen;
+    }
+
+    glm::mat4 fullscreen;
 };
 
 struct BypassSearch : public mc::OperatorForScene
@@ -85,9 +126,10 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
     if (display_buffer.can_bypass())
     {
-        // It would be *really* nice if Scene had an iterator to simplify this
-        BypassFilter filter;
+        BypassFilter filter(display_buffer);
         BypassSearch search;
+
+        // It would be *really* nice if Scene had an iterator to simplify this
         scene->for_each_if(filter, search);
 
         if (search.result)
