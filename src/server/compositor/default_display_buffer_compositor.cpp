@@ -46,8 +46,9 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
 };
 
 
-struct BypassFilter : public mc::FilterForScene
+class BypassFilter : public mc::FilterForScene
 {
+public:
     BypassFilter(const mg::DisplayBuffer &display_buffer)
     {
         const mir::geometry::Rectangle &rect = display_buffer.view_area();
@@ -81,23 +82,36 @@ struct BypassFilter : public mc::FilterForScene
 
     bool operator()(mc::CompositingCriteria const& criteria)
     {
-        fullscreen_on_top = criteria.transformation() == fullscreen;
-        return fullscreen_on_top;
+        topmost_fits = criteria.transformation() == fullscreen;
+        return topmost_fits;
     }
 
-    bool fullscreen_on_top = false;
+    bool fullscreen_on_top() const
+    {
+        return topmost_fits;
+    }
+
+private:
+    bool topmost_fits = false;
     glm::mat4 fullscreen;
 };
 
-struct BypassSearch : public mc::OperatorForScene
+class BypassSearch : public mc::OperatorForScene
 {
+public:
     void operator()(mc::CompositingCriteria const&,
                     mir::surfaces::BufferStream& stream)
     {
-        result = &stream;
+        latest = &stream;
     }
 
-    mir::surfaces::BufferStream *result = nullptr;
+    mir::surfaces::BufferStream *topmost_fullscreen() const
+    {
+        return latest;
+    }
+
+private:
+    mir::surfaces::BufferStream *latest = nullptr;
 };
 
 }
@@ -126,10 +140,10 @@ void mc::DefaultDisplayBufferCompositor::composite()
         // It would be *really* nice if Scene had an iterator to simplify this
         scene->for_each_if(filter, search);
 
-        if (filter.fullscreen_on_top && search.result)
+        if (filter.fullscreen_on_top())
         {
             display_buffer.post_update(
-                search.result->lock_compositor_buffer());
+                search.topmost_fullscreen()->lock_compositor_buffer());
             bypassed = true;
         }
     }
