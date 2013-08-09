@@ -81,17 +81,11 @@ struct BypassFilter : public mc::FilterForScene
 
     bool operator()(mc::CompositingCriteria const& criteria)
     {
-#if 0
-        printf("filter for transformation:\n");
-        for (int y = 0; y < 4; y++)
-        {
-            printf("[%6.1f][%6.1f][%6.1f][%6.1f]\n",
-                trans[0][y], trans[1][y], trans[2][y], trans[3][y]);
-        }
-#endif
-        return criteria.transformation() == fullscreen;
+        fullscreen_on_top = criteria.transformation() == fullscreen;
+        return fullscreen_on_top;
     }
 
+    bool fullscreen_on_top = false;
     glm::mat4 fullscreen;
 };
 
@@ -132,7 +126,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
         // It would be *really* nice if Scene had an iterator to simplify this
         scene->for_each_if(filter, search);
 
-        if (search.result)
+        if (filter.fullscreen_on_top && search.result)
         {
             display_buffer.post_update(
                 search.result->lock_compositor_buffer());
