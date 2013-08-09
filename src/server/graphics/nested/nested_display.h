@@ -23,7 +23,6 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 
-#include "nested_display_configuration.h"
 
 #include <EGL/egl.h>
 
@@ -90,7 +89,7 @@ public:
 
 private:
     std::shared_ptr<DisplayReport> const display_report;
-    detail::MirSurfaceHandle mir_surface;
+    detail::MirSurfaceHandle const mir_surface;
 
     EGLDisplay egl_display;
     EGLContext egl_context;

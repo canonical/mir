@@ -17,6 +17,7 @@
  */
 
 #include "nested_display.h"
+#include "nested_display_configuration.h"
 #include "nested_gl_context.h"
 
 #include <cstring>
