@@ -20,12 +20,14 @@
 #define MIR_GRAPHICS_DISPLAY_BUFFER_H_
 
 #include <mir/geometry/rectangle.h>
-#include <mir/graphics/buffer.h>
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+
+class Buffer;
 
 /**
  * Interface to an output framebuffer.
@@ -45,7 +47,7 @@ public:
     virtual void post_update() = 0;
 
     virtual bool can_bypass() const { return false; }
-    virtual void post_update(std::shared_ptr<graphics::Buffer>) {}
+    virtual void post_update(std::shared_ptr<Buffer>) {}
 
 protected:
     DisplayBuffer() = default;

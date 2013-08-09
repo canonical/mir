@@ -20,6 +20,7 @@
 #include "gbm_platform.h"
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <GLES2/gl2.h>
