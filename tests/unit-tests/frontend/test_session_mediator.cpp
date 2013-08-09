@@ -325,7 +325,7 @@ TEST_F(SessionMediatorTest, can_reconnect_after_disconnect)
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, connect_packs_display_output)
+TEST_F(SessionMediatorTest, connect_packs_display_configuration)
 {
     using namespace testing;
     geom::Size sz{1022, 2411};
@@ -347,10 +347,12 @@ TEST_F(SessionMediatorTest, connect_packs_display_output)
     connection.clear_platform();
     connection.clear_display_info();
     connection.clear_display_output();
+    connection.clear_display_configuration();
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    EXPECT_THAT(connection, mt::ProtobufConfigMatches(config.outputs));
+    EXPECT_THAT(connection.display_configuration(),
+                mt::DisplayConfigMatches(std::cref(config)));
 }
 
 TEST_F(SessionMediatorTest, creating_surface_packs_response_with_input_fds)

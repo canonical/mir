@@ -55,7 +55,7 @@ TEST(TestEventSender, display_send)
         std::string str = wire.events(0);
         mir::protobuf::EventSequence seq;
         seq.ParseFromString(str);
-        EXPECT_THAT(seq.display_configuration(), mt::ProtobufConfigMatches(config.outputs));
+        EXPECT_THAT(seq.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
     };
 
     EXPECT_CALL(mock_msg_sender, send(_))

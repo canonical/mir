@@ -234,11 +234,13 @@ geom::Rectangle rects[number_of_displays] = {
     geom::Rectangle{geom::Point(7,8), geom::Size(9,10)},
 };
 
-void fill_display_output(mp::ConnectParameters const*, mp::Connection* response)
+void fill_display_configuration(mp::ConnectParameters const*, mp::Connection* response)
 {
-    for (auto i=0u; i < number_of_displays; i++)
+    auto protobuf_config = response->mutable_display_configuration();
+
+    for (auto i = 0u; i < number_of_displays; i++)
     {
-        auto output = response->add_display_output();
+        auto output = protobuf_config->add_display_output();
         auto const& rect = rects[i];
         output->set_position_x(rect.top_left.x.as_uint32_t());
         output->set_position_y(rect.top_left.y.as_uint32_t());
@@ -257,7 +259,7 @@ TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
     using namespace testing;
 
     EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_output));
+        .WillOnce(Invoke(fill_display_configuration));
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
@@ -296,7 +298,7 @@ TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
     using namespace testing;
 
     EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_output));
+        .WillOnce(Invoke(fill_display_configuration));
 
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
@@ -340,7 +342,7 @@ TEST_F(MirConnectionTest, populates_pfs_correctly)
     using namespace testing;
 
     EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_output));
+        .WillOnce(Invoke(fill_display_configuration));
     MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                      connected_callback, 0);
     wait_handle->wait_for_all();
@@ -363,7 +365,7 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
     using namespace testing;
 
     EXPECT_CALL(*mock_channel, connect(_,_))
-        .WillOnce(Invoke(fill_display_output));
+        .WillOnce(Invoke(fill_display_configuration));
 
     MirDisplayOutput output;
     output.output_id = 0;
