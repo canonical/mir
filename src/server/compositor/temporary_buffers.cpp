@@ -16,8 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/back_buffer_strategy.h"
-
 #include "buffer_bundle.h"
 #include "temporary_buffers.h"
 
@@ -43,16 +41,27 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 }
 
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
-    std::shared_ptr<BackBufferStrategy> const& back_buffer_strategy)
-    : TemporaryBuffer(back_buffer_strategy->acquire()),
-      back_buffer_strategy(back_buffer_strategy)
+    std::shared_ptr<BufferBundle> const& bun)
+    : TemporaryBuffer(bun->compositor_acquire()),
+      bundle(bun)
 {
 }
 
 mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
 {
-    if (auto strategy = back_buffer_strategy.lock())
-        strategy->release(buffer);
+    bundle->compositor_release(buffer);
+}
+
+mc::TemporarySnapshotBuffer::TemporarySnapshotBuffer(
+    std::shared_ptr<BufferBundle> const& bun)
+    : TemporaryBuffer(bun->snapshot_acquire()),
+      bundle(bun)
+{
+}
+
+mc::TemporarySnapshotBuffer::~TemporarySnapshotBuffer()
+{
+    bundle->snapshot_release(buffer);
 }
 
 geom::Size mc::TemporaryBuffer::size() const
