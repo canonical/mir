@@ -118,6 +118,7 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
 
 std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
 {
+    // TODO: Use GBM_BO_USE_SCANOUT more sparingly and intelligently
     uint32_t bo_flags{GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT};
 
     uint32_t gbm_format = mgg::mir_format_to_gbm_format(buffer_properties.format);
