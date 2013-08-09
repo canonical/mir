@@ -390,7 +390,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_state_events)
 
             mir_surface_set_event_handler(surface, &delegate);
 
-            int surface_id = mir_debug_surface_get_id(surface);
+            int surface_id = mir_debug_surface_id(surface);
 
             mir_wait_for(mir_surface_set_state(surface,
                                                mir_surface_state_fullscreen));

@@ -294,6 +294,12 @@ void mir_wait_for(MirWaitHandle *wait_handle);
 void mir_wait_for_one(MirWaitHandle *wait_handle);
 
 /**
+ * DEPRECATED: Use mir_debug_surface_id()
+ */
+__attribute__((__deprecated__("Use mir_debug_surface_id()")))
+int mir_surface_get_id(MirSurface *surface);
+
+/**
  * Set the type (purpose) of a surface. This is not guaranteed to always work
  * with some shell types (e.g. phone/tablet UIs). As such, you may have to
  * wait on the function and check the result using mir_surface_get_type.

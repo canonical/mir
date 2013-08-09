@@ -28,7 +28,7 @@
  *   \param [in] surface  The surface
  *   \return              An internal ID that identifies the surface
  */
-int mir_debug_surface_get_id(MirSurface *surface);
+int mir_debug_surface_id(MirSurface *surface);
 
 /**
  * Get the ID of the surface's current buffer (only useful for debug purposes)
@@ -38,6 +38,6 @@ int mir_debug_surface_get_id(MirSurface *surface);
  *                                This is the buffer that is currently being drawn to,
  *                                and would be returned by mir_surface_get_current_buffer.
  */
-uint32_t mir_debug_surface_get_current_buffer_id(MirSurface *surface); 
+uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface); 
 
 #endif /* MIR_CLIENT_LIBRARY_DEBUG_H */
