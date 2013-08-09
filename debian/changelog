@@ -1,3 +1,33 @@
+mir (0.0.8+13.10.20130809.3-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Simplify and generalize buffer swapping to support arbitrary numbers
+    of: - buffers - compositors - clients This is a unified N-buffers
+    algorithm which supports any positive number of buffers, as well as
+    dynamically switching between synchronous and asynchronous
+    behaviour. So it does everything the existing code does and more.
+    The key requirement is to support an arbitrary number of (different)
+    simultaneous compositor acquisitions, as is needed for bypass
+    support (coming soon). This then leads to the requirement that a
+    compositor and a snapshot buffer should be acquired differently.
+    Because a snapshot should never consume frames, only observe them.
+    On the other hand, a compositior acquire must consume a frame (if
+    available) so as to guarantee correct ordering when more than one
+    are acquired simultaneously in bypass mode. Also fixes LP: #1199717
+    and is half the fix for LP: #1199450. (LP: #1199450, #1199717)
+
+  [ Alan Griffiths ]
+  * doc, tools: update instructions for "flipped" image.
+
+  [ Christopher James Halse Rogers ]
+  * Split out unversioned Mir platform package to fix upgrades across
+    libmirserver SONAME bumps.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 950
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 09 Aug 2013 11:14:41 +0000
+
 mir (0.0.8+13.10.20130808.2-0ubuntu1) saucy; urgency=low
 
   [ Alexandros Frantzis ]
