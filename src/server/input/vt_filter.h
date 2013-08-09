@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,30 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_SWAPPER_EXCEPTIONS_H_
-#define MIR_COMPOSITOR_BUFFER_SWAPPER_EXCEPTIONS_H_
+#ifndef MIR_INPUT_VT_FILTER_H_
+#define MIR_INPUT_VT_FILTER_H_
 
-#include <stdexcept>
+#include "mir/input/event_filter.h"
 
 namespace mir
 {
-namespace compositor
+namespace input
 {
 
-struct BufferSwapperRequestAbortedException : public std::runtime_error
+class VTFilter : public EventFilter
 {
-    BufferSwapperRequestAbortedException() : std::runtime_error("Request aborted") {}
-};
+public:  
+    bool handle(MirEvent const& event) override;
 
-struct BufferSwapperOutOfBuffersException : public std::logic_error
-{
-    BufferSwapperOutOfBuffersException() : std::logic_error("Out of buffers") {}
+private:
+    void set_active_vt(int vt);
 };
 
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_SWAPPER_EXCEPTIONS_H_ */
+#endif // MIR_INPUT_VT_FILTER_H_

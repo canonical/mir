@@ -49,6 +49,7 @@ MirConnection::MirConnection(
         logger(conf.the_logger()),
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
+        display_configuration(conf.the_display_configuration()),
         surface_map(conf.the_surface_map())
 {
     {
@@ -156,6 +157,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          */
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
+        display_configuration->update_configuration(connect_result);
     }
 
     callback(this, context);
@@ -275,11 +277,7 @@ void MirConnection::populate(MirPlatformPackage& platform_package)
 MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
-    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
-    {
-        return mcl::set_display_config_from_message(connect_result);
-    }
-    return nullptr;
+    return display_configuration->copy_to_client();
 }
 
 void MirConnection::possible_pixel_formats(MirPixelFormat* formats,
@@ -322,6 +320,11 @@ EGLNativeDisplayType MirConnection::egl_native_display()
 void MirConnection::on_surface_created(int id, MirSurface* surface)
 {
     surface_map->insert(id, surface);
+}
+
+void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)
+{
+    display_configuration->set_display_change_handler(std::bind(callback, this, context));
 }
 
 bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config)

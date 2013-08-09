@@ -58,6 +58,7 @@ private:
 
     Resources resources;
     mir::graphics::Buffer& buffer;
+    GLint old_viewport[4];
 };
 
 }
