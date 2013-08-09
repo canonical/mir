@@ -20,10 +20,7 @@
 #include "multithread_harness.h"
 
 #include "src/server/compositor/switching_bundle.h"
-#include "mir/compositor/buffer_swapper_multi.h"
-#include "mir/compositor/buffer_swapper_spin.h"
 #include "mir/compositor/buffer_stream_surfaces.h"
-#include "mir/compositor/swapper_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
@@ -45,10 +42,10 @@ struct SwapperSwappingStress : public ::testing::Test
     void SetUp()
     {
         auto allocator = std::make_shared<mtd::StubBufferAllocator>();
-        auto factory = std::make_shared<mc::SwapperFactory>(allocator, 3);
         auto properties = mg::BufferProperties{geom::Size{380, 210},
-                                          geom::PixelFormat::abgr_8888, mg::BufferUsage::hardware};
-        switching_bundle = std::make_shared<mc::SwitchingBundle>(factory, properties);
+                                          geom::PixelFormat::abgr_8888,
+                                          mg::BufferUsage::hardware};
+        switching_bundle = std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
     }
 
     std::shared_ptr<mc::SwitchingBundle> switching_bundle;

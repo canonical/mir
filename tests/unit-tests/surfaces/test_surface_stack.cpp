@@ -69,6 +69,8 @@ public:
     virtual void client_release(std::shared_ptr<mg::Buffer> const&) {}
     virtual std::shared_ptr<mg::Buffer> compositor_acquire(){ return std::shared_ptr<mg::Buffer>(); };
     virtual void compositor_release(std::shared_ptr<mg::Buffer> const&){}
+    virtual std::shared_ptr<mg::Buffer> snapshot_acquire(){ return std::shared_ptr<mg::Buffer>(); };
+    virtual void snapshot_release(std::shared_ptr<mg::Buffer> const&){}
     virtual void force_client_abort() {}
     void force_requests_to_complete() {}
     virtual void allow_framedropping(bool) {}

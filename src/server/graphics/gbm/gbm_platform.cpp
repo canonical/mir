@@ -77,6 +77,16 @@ struct RealVTFileOperations : public mgg::VTFileOperations
     {
         return ::ioctl(d, request, p_val);
     }
+
+    int tcsetattr(int d, int acts, const struct termios *tcattr)
+    {
+        return ::tcsetattr(d, acts, tcattr);
+    }
+
+    int tcgetattr(int d, struct termios *tcattr)
+    {
+        return ::tcgetattr(d, tcattr);
+    }
 };
 
 }

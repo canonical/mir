@@ -18,7 +18,6 @@
 
 #include "src/server/graphics/android/internal_client_window.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_swapper.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 #include "mir/graphics/internal_surface.h"
 

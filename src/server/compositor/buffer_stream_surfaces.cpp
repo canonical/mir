@@ -20,7 +20,6 @@
 #include "mir/compositor/buffer_stream_surfaces.h"
 #include "buffer_bundle.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/compositor/multi_acquisition_back_buffer_strategy.h"
 
 #include "temporary_buffers.h"
 
@@ -29,25 +28,23 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle)
-    : buffer_bundle(buffer_bundle),
-      back_buffer_strategy(
-          std::make_shared<MultiAcquisitionBackBufferStrategy>(buffer_bundle))
+    : buffer_bundle(buffer_bundle)
 {
 }
 
 mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
+    force_requests_to_complete();
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer()
 {
-    return std::make_shared<mc::TemporaryCompositorBuffer>(back_buffer_strategy);
+    return std::make_shared<mc::TemporaryCompositorBuffer>(buffer_bundle);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
 {
-    // TODO (duflu): Implement differently for bypass
-    return std::make_shared<mc::TemporaryCompositorBuffer>(back_buffer_strategy);
+    return std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::secure_client_buffer()
