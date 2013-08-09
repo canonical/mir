@@ -22,10 +22,12 @@
 #include "mir/shell/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
+#include "mir/graphics/display_configuration.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
@@ -45,29 +47,11 @@ namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-struct MockShellSession : public msh::Session
-{
-    MOCK_METHOD1(create_surface, mf::SurfaceId(msh::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(mf::SurfaceId));
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<mf::Surface>(mf::SurfaceId));
-
-    MOCK_METHOD1(take_snapshot, void(msh::SnapshotCallback const&));
-    MOCK_CONST_METHOD0(default_surface, std::shared_ptr<msh::Surface>());
-
-    MOCK_CONST_METHOD0(name, std::string());
-    MOCK_METHOD0(force_requests_to_complete, void());
-
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
-    
-    MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
-};
-
 TEST(DefaultFocusMechanism, raises_default_surface)
 {
     using namespace ::testing;
     
-    NiceMock<MockShellSession> app1;
+    NiceMock<mtd::MockShellSession> app1;
     mtd::MockSurface mock_surface(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
     {
         InSequence seq;
@@ -87,7 +71,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
 {
     using namespace ::testing;
     
-    NiceMock<MockShellSession> app1;
+    NiceMock<mtd::MockShellSession> app1;
     mtd::MockSurface mock_surface(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
     {
         InSequence seq;

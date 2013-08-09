@@ -27,6 +27,7 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/stub_surface.h"
+#include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 
@@ -185,7 +186,6 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
     }, std::runtime_error);
 }
 
-
 TEST(Session, uses_snapshot_strategy)
 {
     using namespace ::testing;
@@ -210,4 +210,31 @@ TEST(Session, uses_snapshot_strategy)
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_));
 
     app_session.take_snapshot(msh::SnapshotCallback());
+}
+
+namespace
+{
+class MockEventSink : public mf::EventSink
+{
+public:
+    MOCK_METHOD1(handle_event, void(MirEvent const&));
+    MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
+};
+}
+TEST(Session, display_config_sender)
+{
+    using namespace ::testing;
+
+    mtd::StubDisplayConfig stub_config;
+    mtd::MockSurfaceFactory surface_factory;
+    MockEventSink sender;
+
+    EXPECT_CALL(sender, handle_display_config_change(testing::Ref(stub_config)))
+        .Times(1);
+
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
+                                        std::make_shared<mtd::NullSnapshotStrategy>(),
+                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+
+    app_session.send_display_config(stub_config);
 }

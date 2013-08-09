@@ -21,6 +21,7 @@
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/snapshot_strategy.h"
 #include "mir/shell/session_listener.h"
+#include "mir/frontend/event_sink.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -31,6 +32,7 @@
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace mg = mir::graphics;
 
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
@@ -158,4 +160,9 @@ int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
     std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 
     return surf->configure(attrib, requested_value);
+}
+
+void msh::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
+{
+    event_sink->handle_display_config_change(info);
 }

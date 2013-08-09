@@ -35,7 +35,6 @@ class Scene;
 class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
-class BufferAllocationStrategy;
 class OverlayRenderer;
 class RendererFactory;
 }
@@ -47,6 +46,7 @@ class ProtobufIpcFactory;
 class SessionMediatorReport;
 class MessageProcessorReport;
 class SessionAuthorizer;
+class EventSink;
 }
 
 namespace shell
@@ -155,6 +155,7 @@ public:
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
+    virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     /** @} */
 
     virtual std::shared_ptr<shell::FocusController> the_focus_controller();
@@ -252,6 +253,7 @@ protected:
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
+    CachedPtr<frontend::EventSink> global_event_sink;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
