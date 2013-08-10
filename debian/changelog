@@ -1,3 +1,25 @@
+mir (0.0.8+13.10.20130810-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Remove documentation on the system-compositor-testing PPA now
+    everything is in main/universe in saucy.
+
+  [ Kevin DuBois ]
+  * Add an object for sending display config change messages to all
+    connected clients (globally).
+
+  [ Daniel van Vugt ]
+  * Fix the compositor side of lag observed between input events and the
+    screen. This is half the fix for LP: #1199450. The other half of the
+    fix is to resolve client buffers arriving out of order, which has
+    not been fully diagnosed but is known to be resolved by the "switch"
+    branch. . (LP: #1199450)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 956
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sat, 10 Aug 2013 02:04:55 +0000
+
 mir (0.0.8+13.10.20130809.4-0ubuntu1) saucy; urgency=low
 
   [ Michael Terry ]
