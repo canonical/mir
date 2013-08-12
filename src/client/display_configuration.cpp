@@ -144,7 +144,7 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
 
     /* Cards */
     new_config->num_cards = cards.size();
-    new_config->cards = new MirDisplayCard[new_config->num_displays];
+    new_config->cards = new MirDisplayCard[new_config->num_cards];
 
     for (auto i = 0u; i < cards.size(); i++)
         new_config->cards[i] = cards[i];
