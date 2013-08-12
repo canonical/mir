@@ -47,6 +47,8 @@ public:
     std::vector<geometry::PixelFormat> supported_pixel_formats();
 
 private:
+    bool is_pixel_format_supported(geometry::PixelFormat format);
+
     std::shared_ptr<GBMPlatform> platform;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;

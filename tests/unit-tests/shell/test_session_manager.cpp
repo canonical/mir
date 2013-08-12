@@ -33,7 +33,9 @@
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/mock_session_listener.h"
 #include "mir_test_doubles/stub_surface_builder.h"
+#include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -77,6 +79,7 @@ struct SessionManagerSetup : public testing::Test
     }
 
     mtd::StubSurfaceBuilder surface_builder;
+    mtd::StubSurfaceController surface_controller;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     MockFocusSequence focus_sequence;
@@ -107,11 +110,12 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1);
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
 
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
+    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
        Return(std::make_shared<msh::Surface>(
-           mt::fake_shared(surface_builder),
+           nullptr,
+           mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
 
 
@@ -144,9 +148,10 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
     using namespace ::testing;
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
+    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
         Return(std::make_shared<msh::Surface>(
-           mt::fake_shared(surface_builder),
+           nullptr,
+           mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
 
     // Once for session creation and once for surface creation
@@ -154,7 +159,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         InSequence seq;
 
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1);
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
     }
 
@@ -177,7 +182,6 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     {
     }
 
-    mtd::StubSurfaceBuilder surface_builder;
     mtd::MockSurfaceFactory surface_factory;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<MockFocusSequence> focus_sequence;

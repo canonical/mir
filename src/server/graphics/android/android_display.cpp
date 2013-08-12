@@ -56,12 +56,13 @@ public:
     AndroidDisplayConfiguration(geom::Size const& display_size)
         : configuration{mg::DisplayConfigurationOutputId{0},
                         mg::DisplayConfigurationCardId{0},
+                        {geom::PixelFormat::abgr_8888},
                         {mg::DisplayConfigurationMode{display_size,0.0f}},
                         geom::Size{0,0},
                         true,
                         true,
                         geom::Point{0,0},
-                        0}
+                        0, 0}
     {
     }
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
@@ -187,13 +188,13 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const&)
 }
 
 void mga::AndroidDisplay::register_configuration_change_handler(
-    MainLoop&,
+    EventHandlerRegister&,
     DisplayConfigurationChangeHandler const&)
 {
 }
 
 void mga::AndroidDisplay::register_pause_resume_handlers(
-    MainLoop& /*main_loop*/,
+    EventHandlerRegister& /*handlers*/,
     DisplayPauseHandler const& /*pause_handler*/,
     DisplayResumeHandler const& /*resume_handler*/)
 {

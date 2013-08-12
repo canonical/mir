@@ -77,6 +77,16 @@ struct RealVTFileOperations : public mgg::VTFileOperations
     {
         return ::ioctl(d, request, p_val);
     }
+
+    int tcsetattr(int d, int acts, const struct termios *tcattr)
+    {
+        return ::tcsetattr(d, acts, tcattr);
+    }
+
+    int tcgetattr(int d, struct termios *tcattr)
+    {
+        return ::tcgetattr(d, tcattr);
+    }
 };
 
 }
@@ -166,6 +176,5 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir create_native_platform is not implemented yet!"));
-    return 0;
+    return std::make_shared<mg::NativePlatform>();
 }

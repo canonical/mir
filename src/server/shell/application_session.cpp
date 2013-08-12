@@ -21,6 +21,7 @@
 #include "mir/shell/surface_factory.h"
 #include "mir/shell/snapshot_strategy.h"
 #include "mir/shell/session_listener.h"
+#include "mir/frontend/event_sink.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -31,6 +32,7 @@
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
+namespace mg = mir::graphics;
 
 msh::ApplicationSession::ApplicationSession(
     std::shared_ptr<SurfaceFactory> const& surface_factory,
@@ -65,7 +67,7 @@ mf::SurfaceId msh::ApplicationSession::next_id()
 mf::SurfaceId msh::ApplicationSession::create_surface(const msh::SurfaceCreationParameters& params)
 {
     auto const id = next_id();
-    auto surf = surface_factory->create_surface(params, id, event_sink);
+    auto surf = surface_factory->create_surface(this, params, id, event_sink);
 
     std::unique_lock<std::mutex> lock(surfaces_mutex);
     surfaces[id] = surf;
@@ -152,10 +154,15 @@ void msh::ApplicationSession::show()
 
 int msh::ApplicationSession::configure_surface(mf::SurfaceId id,
                                                MirSurfaceAttrib attrib,
-                                               int value)
+                                               int requested_value)
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
-    std::shared_ptr<mf::Surface> surf(checked_find(id)->second);
+    std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
 
-    return surf->configure(attrib, value);
+    return surf->configure(attrib, requested_value);
+}
+
+void msh::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
+{
+    event_sink->handle_display_config_change(info);
 }

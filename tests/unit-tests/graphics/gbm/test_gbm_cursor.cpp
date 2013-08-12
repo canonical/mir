@@ -90,6 +90,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             {
                 mg::DisplayConfigurationOutputId{10},
                 card_id,
+                {},
                 {
                     {geom::Size{10, 20}, 59.9},
                     {geom::Size{200, 100}, 59.9},
@@ -98,12 +99,14 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 true,
                 true,
                 geom::Point{0, 0},
-                1
+                1,
+                0
             });
         outputs.push_back(
             {
                 mg::DisplayConfigurationOutputId{11},
                 card_id,
+                {},
                 {
                     {geom::Size{200, 200}, 59.9},
                     {geom::Size{100, 200}, 59.9},
@@ -112,6 +115,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 true,
                 true,
                 geom::Point{100, 50},
+                0,
                 0
             });
     }
@@ -214,6 +218,25 @@ TEST_F(GBMCursorTest, set_cursor_throws_on_incorrect_size)
         cursor.set_image(image, cursor_size);
     , std::logic_error);
 }
+
+TEST_F(GBMCursorTest, forces_cursor_state_on_construction)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*output_container.outputs[10], move_cursor(geom::Point{0,0}));
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_));
+    EXPECT_CALL(*output_container.outputs[11], clear_cursor());
+
+    /* No checking of existing cursor state */
+    EXPECT_CALL(*output_container.outputs[10], has_cursor()).Times(0);
+    EXPECT_CALL(*output_container.outputs[11], has_cursor()).Times(0);
+
+    mgg::GBMCursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+                              std::make_shared<StubCurrentConfiguration>()};
+
+    output_container.verify_and_clear_expectations();
+}
+
 
 TEST_F(GBMCursorTest, move_to_sets_clears_cursor_if_needed)
 {

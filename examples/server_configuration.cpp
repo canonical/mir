@@ -19,8 +19,12 @@
 #include "server_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/input/composite_event_filter.h"
+#include "mir/main_loop.h"
 
 #include <string>
+
+#include <linux/input.h>
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
@@ -86,6 +90,33 @@ public:
     }
 };
 
+class QuitFilter : public mir::input::EventFilter
+{
+public:
+    QuitFilter(std::shared_ptr<mir::MainLoop> const& main_loop)
+        : main_loop{main_loop}
+    {
+    }
+
+    bool handle(MirEvent const& event) override
+    {
+        if (event.type == mir_event_type_key &&
+            event.key.action == mir_key_action_down &&
+            (event.key.modifiers & mir_key_modifier_alt) &&
+            (event.key.modifiers & mir_key_modifier_ctrl) &&
+            event.key.scan_code == KEY_BACKSPACE)
+        {
+            main_loop->stop();
+            return true;
+        }
+
+        return false;
+    }
+
+private:
+    std::shared_ptr<mir::MainLoop> const main_loop;
+};
+
 }
 
 me::ServerConfiguration::ServerConfiguration(int argc, char const** argv)
@@ -113,4 +144,16 @@ me::ServerConfiguration::the_display_configuration_policy()
             else
                 return DefaultServerConfiguration::the_display_configuration_policy();
         });
+}
+
+std::shared_ptr<mir::input::CompositeEventFilter>
+me::ServerConfiguration::the_composite_event_filter()
+{
+    if (!quit_filter)
+        quit_filter = std::make_shared<QuitFilter>(the_main_loop());
+
+    auto composite_filter = DefaultServerConfiguration::the_composite_event_filter();
+    composite_filter->append(quit_filter);
+
+    return composite_filter;
 }

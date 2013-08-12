@@ -60,7 +60,7 @@ public:
         : display_buffer_compositor_factory{db_compositor_factory},
           buffer(buffer),
           running{true},
-          compositing_scheduled{false}
+          frames_scheduled{0}
     {
     }
 
@@ -79,10 +79,10 @@ public:
         while (running)
         {
             /* Wait until compositing has been scheduled or we are stopped */
-            while (!compositing_scheduled && running)
+            while (!frames_scheduled && running)
                 run_cv.wait(lock);
 
-            compositing_scheduled = false;
+            frames_scheduled--;
 
             /*
              * Check if we are running before compositing, since we may have
@@ -100,11 +100,17 @@ public:
     void schedule_compositing()
     {
         std::lock_guard<std::mutex> lock{run_mutex};
-        if (!compositing_scheduled)
-        {
-            compositing_scheduled = true;
-            run_cv.notify_one();
-        }
+
+        /*
+         * Each surface could have a number of frames ready in its buffer
+         * queue. And we need to ensure that we render all of them so that
+         * none linger in the queue indefinitely (seen as input lag). So while
+         * there's no API support for finding out queue lengths, assume the
+         * worst and schedule enough frames to ensure all surfaces' queues
+         * are fully drained.
+         */
+        frames_scheduled = max_client_buffers;
+        run_cv.notify_one();
     }
 
     void stop()
@@ -118,7 +124,7 @@ private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
     mg::DisplayBuffer& buffer;
     bool running;
-    bool compositing_scheduled;
+    int frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
 };

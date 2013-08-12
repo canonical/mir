@@ -111,6 +111,5 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir create_native_platform is not implemented yet!"));
-    return 0;
+    return std::make_shared<mg::NativePlatform>();
 }

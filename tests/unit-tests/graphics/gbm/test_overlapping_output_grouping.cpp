@@ -69,12 +69,14 @@ public:
             {
                 mg::DisplayConfigurationOutputId(i),
                 mg::DisplayConfigurationCardId{1},
+                {},
                 modes,
                 {100, 100},
                 connected,
                 used,
                 rect.top_left,
-                i - 1
+                i - 1,
+                0
             };
 
             f(output);

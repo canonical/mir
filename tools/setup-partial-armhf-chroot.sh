@@ -50,7 +50,6 @@ pushd ${1} > /dev/null
         libboost-date-time1.53-dev
         libboost-filesystem1.53-dev
         libboost-program-options1.53-dev
-        libprotobuf-dev
         libboost-chrono1.53.0
         libboost-date-time1.53.0
         libboost-filesystem1.53.0
@@ -61,8 +60,9 @@ pushd ${1} > /dev/null
         libboost-regex1.53-dev
         libboost-regex1.53.0
         libboost-program-options1.53.0
-        libhybris
-        libhybris-dev
+        libhardware2
+        libhardware-dev
+        libhybris-common1
         libandroid-properties1
         libgflags2
         libgflags-dev
@@ -71,8 +71,21 @@ pushd ${1} > /dev/null
         libicu48
         libprotobuf7
         libprotobuf-dev
+        libegl1-mesa
         libegl1-mesa-dev
+        libgles2-mesa
         libgles2-mesa-dev
+        libglapi-mesa
+        libffi6
+        libdrm2
+        libgbm1
+        libxau6
+        libxdmcp6
+        libx11-6
+        libx11-xcb1
+        libxcb1
+        libxcb-dri2-0
+        libxcb-xfixes0
         libxkbcommon0
         libxkbcommon-dev
         libumockdev-dev
@@ -81,11 +94,16 @@ pushd ${1} > /dev/null
         libuuid1
         liblttng-ust-dev
         liburcu-dev
+        libudev1
+        libwayland-client0
+        libwayland-server0
         uuid-dev
         systemtap-sdt-dev
         zlib1g)
 
-    declare -a PACKAGES_ALL=(libglm-dev)
+    declare -a PACKAGES_ALL=(
+        android-platform-headers
+        libglm-dev)
 
     #cleanup
     for i in * ; do
@@ -97,11 +115,4 @@ pushd ${1} > /dev/null
 
     download_and_extract_packages PACKAGES_ARMHF armhf
     download_and_extract_packages PACKAGES_ALL all
-
-    #todo: we get egl/gles headers from the mesa packages, but should be pointing at the hybris libraries
-    #just rewrite the symlinks for now
-    rm ./usr/lib/arm-linux-gnueabihf/libEGL.so 
-    rm ./usr/lib/arm-linux-gnueabihf/libGLESv2.so 
-    ln -s libhybris-egl/libEGL.so.1 ./usr/lib/arm-linux-gnueabihf/libEGL.so 
-    ln -s libhybris-egl/libGLESv2.so.2 ./usr/lib/arm-linux-gnueabihf/libGLESv2.so
 popd > /dev/null 

@@ -52,7 +52,7 @@ TEST(SurfaceController, create_and_destroy_surface)
     EXPECT_CALL(model, create_surface(_)).Times(1).WillOnce(Return(null_surface));
     EXPECT_CALL(model, destroy_surface(_)).Times(1);
 
-    auto surface = controller.create_surface(msh::a_surface());
+    auto surface = controller.create_surface(nullptr, msh::a_surface());
     controller.destroy_surface(surface);
 }
 

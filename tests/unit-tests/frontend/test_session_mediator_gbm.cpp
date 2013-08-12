@@ -30,6 +30,8 @@
 #include <boost/throw_exception.hpp>
 
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/null_display_changer.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
@@ -73,24 +75,18 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
     MOCK_METHOD1(drm_auth_magic, void(drm_magic_t));
 };
 
-class NullEventSink : public mir::frontend::EventSink
-{
-public:
-    void handle_event(MirEvent const& ) override {}
-};
-
 struct SessionMediatorGBMTest : public ::testing::Test
 {
     SessionMediatorGBMTest()
         : shell{std::make_shared<mtd::StubShell>()},
           mock_platform{std::make_shared<MockAuthenticatingPlatform>()},
-          graphics_display{std::make_shared<mtd::NullDisplay>()},
+          display_changer{std::make_shared<mtd::NullDisplayChanger>()},
           buffer_allocator{std::make_shared<StubGraphicBufferAllocator>()},
           report{std::make_shared<mf::NullSessionMediatorReport>()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{shell, mock_platform, graphics_display,
+          mediator{shell, mock_platform, display_changer,
                    buffer_allocator, report,
-                   std::make_shared<NullEventSink>(),
+                   std::make_shared<mtd::NullEventSink>(),
                    resource_cache},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -98,7 +94,7 @@ struct SessionMediatorGBMTest : public ::testing::Test
 
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<MockAuthenticatingPlatform> const mock_platform;
-    std::shared_ptr<mg::Display> const graphics_display;
+    std::shared_ptr<msh::DisplayChanger> const display_changer;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;

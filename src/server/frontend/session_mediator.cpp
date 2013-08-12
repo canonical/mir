@@ -22,6 +22,7 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/display_changer.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
@@ -30,7 +31,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/display.h"
+#include "mir/shell/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
@@ -51,101 +52,20 @@ namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-namespace mir
-{
-namespace frontend
-{
-
-class CloggableEventSink : public mf::EventSink
-{
-public:
-    CloggableEventSink(std::shared_ptr<mf::EventSink> const& drain)
-        : drain(drain),
-          clogged(false)
-    {
-    }
-    
-    ~CloggableEventSink()
-    {
-        assert(clogged == false);
-    }
-    
-    void clog()
-    {
-        std::unique_lock<std::mutex> lg(lock);
-
-        assert(clogged == false);
-        
-        clogged = true;
-    }
-
-    void unclog()
-    {
-        std::unique_lock<std::mutex> lg(lock);
-
-        assert(clogged == true);
-
-        clogged = false;
-        
-        for (auto const& ev : buffered_events)
-            drain->handle_event(ev);
-        buffered_events.clear();
-    }
-
-    void handle_event(MirEvent const& ev)
-    {
-        std::unique_lock<std::mutex> lg(lock);
-        if (clogged)
-            buffered_events.push_back(ev);
-        else
-            drain->handle_event(ev);
-    }
-
-private:
-    std::shared_ptr<mf::EventSink> const drain;
-    bool clogged;
-    
-    std::vector<MirEvent> buffered_events;
-
-    std::mutex lock;
-};
-
-class Clog
-{
-public:
-    Clog(CloggableEventSink& sink) : sink(sink)
-    {
-        sink.clog();
-    }
-    ~Clog()
-    {
-        sink.unclog();
-    }
-
-private:
-    Clog(Clog const&) = delete;
-    Clog& operator=(Clog const&) = delete;
-
-    CloggableEventSink& sink;
-};
-
-}
-}
-
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
-    std::shared_ptr<graphics::Display> const& display,
+    std::shared_ptr<msh::DisplayChanger> const& display_changer,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache) :
     shell(shell),
     graphics_platform(graphics_platform),
-    display(display),
     buffer_allocator(buffer_allocator),
+    display_changer(display_changer),
     report(report),
-    event_sink(std::make_shared<mf::CloggableEventSink>(sender)),
+    event_sink(sender),
     resource_cache(resource_cache),
     client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size))
 {
@@ -182,35 +102,9 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto display_config = display->configuration();
-    auto supported_pfs = buffer_allocator->supported_pixel_formats();
-    display_config->for_each_output([&response, &supported_pfs](mg::DisplayConfigurationOutput const& config)
-    {
-        auto output = response->add_display_output();
-        output->set_output_id(config.id.as_value());
-        output->set_card_id(config.card_id.as_value());
-        output->set_connected(config.connected);
-        output->set_used(config.used);
-        output->set_physical_width_mm(config.physical_size_mm.width.as_uint32_t());
-        output->set_physical_height_mm(config.physical_size_mm.height.as_uint32_t());
-        output->set_position_x(config.top_left.x.as_uint32_t());
-        output->set_position_y(config.top_left.y.as_uint32_t());
-        for (auto const& mode : config.modes)
-        {
-            auto output_mode = output->add_mode();
-            output_mode->set_horizontal_resolution(mode.size.width.as_uint32_t()); 
-            output_mode->set_vertical_resolution(mode.size.height.as_uint32_t());
-            output_mode->set_refresh_rate(mode.vrefresh_hz);
-        }
-        output->set_current_mode(config.current_mode_index);
-
-        for (auto const& pf : supported_pfs)
-        {
-            output->add_pixel_format(static_cast<uint32_t>(pf));
-        }
-        //TODO: should set the actual display format from the display, once display lets us at that info
-        output->set_current_format(0);
-    });
+    auto display_config = display_changer->active_configuration();
+    auto protobuf_config = response->mutable_display_configuration();
+    mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
     resource_cache->save_resource(response, ipc_package);
 
@@ -223,51 +117,42 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    Clog pause_events(*event_sink.get());
+    std::unique_lock<std::mutex> lock(session_mutex);
+    
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    
+    report->session_create_surface_called(session->name());
+    
+    auto const id = shell->create_surface_for(session,
+        msh::SurfaceCreationParameters()
+        .of_name(request->surface_name())
+        .of_size(request->width(), request->height())
+        .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
+        .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+        );
+     {
+         auto surface = session->get_surface(id);
+         response->mutable_id()->set_value(id.as_value());
+         response->set_width(surface->size().width.as_uint32_t());
+         response->set_height(surface->size().height.as_uint32_t());
+         response->set_pixel_format((int)surface->pixel_format());
+         response->set_buffer_usage(request->buffer_usage());
+         if (surface->supports_input())
+             response->add_fd(surface->client_input_fd());
+         client_buffer_resource = surface->advance_client_buffer();
+         auto const& id = client_buffer_resource->id();
+         auto buffer = response->mutable_buffer();
+         buffer->set_buffer_id(id.as_uint32_t());
+         if (!client_tracker->client_has(id))
+         {
+             auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
+             graphics_platform->fill_ipc_package(packer, client_buffer_resource);
+         }
+         client_tracker->add(id);
+     }
 
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-        report->session_create_surface_called(session->name());
-
-        auto const id = shell->create_surface_for(session,
-            msh::SurfaceCreationParameters()
-            .of_name(request->surface_name())
-            .of_size(request->width(), request->height())
-            .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-            .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
-            );
-
-        {
-            auto surface = session->get_surface(id);
-            response->mutable_id()->set_value(id.as_value());
-            response->set_width(surface->size().width.as_uint32_t());
-            response->set_height(surface->size().height.as_uint32_t());
-            response->set_pixel_format((int)surface->pixel_format());
-            response->set_buffer_usage(request->buffer_usage());
-
-            if (surface->supports_input())
-                response->add_fd(surface->client_input_fd());
-
-            client_buffer_resource = surface->advance_client_buffer();
-            auto const& id = client_buffer_resource->id();
-
-            auto buffer = response->mutable_buffer();
-            buffer->set_buffer_id(id.as_uint32_t());
-
-            if (!client_tracker->client_has(id))
-            {
-                auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
-                graphics_platform->fill_ipc_package(packer, client_buffer_resource);
-            }
-            client_tracker->add(id);
-        }
-    }
-
-    done->Run();
+     done->Run();
 }
 
 void mf::SessionMediator::next_buffer(
@@ -372,5 +257,28 @@ void mf::SessionMediator::configure_surface(
         response->set_ivalue(newvalue);
     }
 
+    done->Run();
+}
+
+void mf::SessionMediator::configure_display(
+    ::google::protobuf::RpcController*,
+    const ::mir::protobuf::DisplayConfiguration* request,
+    ::mir::protobuf::Void*,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto config = display_changer->active_configuration();
+        for (auto i=0; i < request->display_output_size(); i++)
+        {   
+            auto& output = request->display_output(i);
+            mg::DisplayConfigurationOutputId output_id{static_cast<int>(output.output_id())};
+            config->configure_output(output_id, output.used(),
+                                     geom::Point{output.position_x(), output.position_y()},
+                                     output.current_mode());
+        }
+
+        display_changer->configure(session, config);
+    }
     done->Run();
 }

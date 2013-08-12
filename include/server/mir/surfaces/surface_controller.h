@@ -21,20 +21,26 @@
 #define MIR_SURFACES_SURFACE_CONTROLLER_H_
 
 #include "mir/shell/surface_builder.h"
+#include "mir/shell/surface_controller.h"
 
 namespace mir
 {
+namespace shell
+{
+class Session;
+}
+
 namespace surfaces
 {
 class SurfaceStackModel;
 
 /// Will grow up to provide synchronization of model updates
-class SurfaceController : public shell::SurfaceBuilder
+class SurfaceController : public shell::SurfaceBuilder, public shell::SurfaceController
 {
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    virtual std::weak_ptr<Surface> create_surface(shell::SurfaceCreationParameters const& params);
+    virtual std::weak_ptr<Surface> create_surface(shell::Session* session, shell::SurfaceCreationParameters const& params);
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 
     virtual void raise(std::weak_ptr<Surface> const& surface);

@@ -43,7 +43,7 @@ public:
     {
     }
 
-    std::weak_ptr<surfaces::Surface> create_surface(shell::SurfaceCreationParameters const&)
+    std::weak_ptr<surfaces::Surface> create_surface(shell::Session*, shell::SurfaceCreationParameters const&)
     {
         auto state = std::make_shared<MockSurfaceState>();
         dummy_surface = std::make_shared<surfaces::Surface>(

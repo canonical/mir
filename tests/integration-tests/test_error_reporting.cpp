@@ -207,7 +207,6 @@ TEST_F(ErrorReporting, c_api_returns_error)
     {
         std::shared_ptr<mf::ProtobufIpcFactory> the_ipc_factory(
             std::shared_ptr<mir::frontend::Shell> const&,
-            std::shared_ptr<mg::Display> const&,
             std::shared_ptr<mg::GraphicBufferAllocator> const&) override
         {
             static auto error_server = std::make_shared<ErrorServer>();

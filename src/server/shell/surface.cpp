@@ -18,6 +18,8 @@
 
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_builder.h"
+#include "mir/shell/surface_configurator.h"
+#include "mir/shell/surface_controller.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_channel.h"
 #include "mir/frontend/event_sink.h"
@@ -38,12 +40,15 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
 msh::Surface::Surface(
+    Session* session,
     std::shared_ptr<SurfaceBuilder> const& builder,
+    std::shared_ptr<SurfaceConfigurator> const& configurator,
     shell::SurfaceCreationParameters const& params,
     frontend::SurfaceId id,
     std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
-    surface(builder->create_surface(params)),
+    configurator(configurator),
+    surface(builder->create_surface(session, params)),
     id(id),
     event_sink(event_sink),
     type_value(mir_surface_type_normal),
@@ -222,6 +227,7 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
      */
+    value = configurator->select_attribute_value(*this, attrib, value);
     switch (attrib)
     {
     case mir_surface_attrib_type:
@@ -249,6 +255,8 @@ int msh::Surface::configure(MirSurfaceAttrib attrib, int value)
                                                "attribute."));
         break;
     }
+
+    configurator->attribute_set(*this, attrib, result);
 
     return result;
 }
@@ -323,6 +331,18 @@ void msh::Surface::set_input_region(std::vector<geom::Rectangle> const& region)
     if (auto const& s = surface.lock())
     {
         s->set_input_region(region);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    }
+}
+
+void msh::Surface::raise(std::shared_ptr<msh::SurfaceController> const& controller)
+{
+    if (auto const& s = surface.lock())
+    {
+        controller->raise(s);
     }
     else
     {

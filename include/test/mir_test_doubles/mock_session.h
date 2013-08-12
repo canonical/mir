@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_SESSION_H_
 
 #include "mir/frontend/session.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 
@@ -42,6 +43,7 @@ struct MockSession : public frontend::Session
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
 
+    MOCK_METHOD1(send_display_config, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 };
 

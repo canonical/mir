@@ -24,10 +24,17 @@
 
 namespace mir
 {
+namespace graphics
+{
+class DisplayConfiguration;
+}
 namespace frontend
 {
 namespace detail
 {
+
+void pack_protobuf_display_configuration(protobuf::DisplayConfiguration& protobuf_config,
+                                         graphics::DisplayConfiguration const& display_config);
 
 class ProtobufBufferPacker : public graphics::BufferIPCPacker
 {

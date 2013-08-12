@@ -23,6 +23,7 @@
 #include "mir/shell/session_manager.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/session.h"
 #include "mir/frontend/session.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_properties.h"
@@ -43,7 +44,6 @@
 #include <assert.h>
 #include <signal.h>
 
-
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
@@ -52,25 +52,7 @@ namespace me = mir::examples;
 namespace mircv = mir::input::receiver;
 namespace geom = mir::geometry;
 
-namespace
-{
-// TODO this ought to be provided by the library
-class ForwardingInternalSurface : public mg::InternalSurface
-{
-public:
-    ForwardingInternalSurface(std::shared_ptr<mf::Surface> const& surface) : surface(surface) {}
-
-private:
-    virtual std::shared_ptr<mg::Buffer> advance_client_buffer() { return surface->advance_client_buffer(); }
-    virtual mir::geometry::Size size() const { return surface->size(); }
-    virtual MirPixelFormat pixel_format() const { return static_cast<MirPixelFormat>(surface->pixel_format()); }
-
-    std::shared_ptr<mf::Surface> const surface;
-};
-}
-
-me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const& main_loop,
-                                           std::shared_ptr<mg::Platform> const& graphics_platform,
+me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& graphics_platform,
                                            std::shared_ptr<msh::SessionManager> const& session_manager)
   : graphics_platform(graphics_platform),
 
@@ -78,13 +60,15 @@ me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mir::MainLoop> const&
     client_thread(std::mem_fn(&InprocessEGLClient::thread_loop), this),
     terminate(false)
 {
-    main_loop->register_signal_handler({SIGTERM, SIGINT},
-        [this](int)
-        {
-            terminate = true;
-        }
-    );
-    client_thread.detach();
+}
+
+me::InprocessEGLClient::~InprocessEGLClient()
+{
+    terminate = true;
+    auto session = session_manager->focussed_application().lock();
+    if (session)
+        session->force_requests_to_complete();
+    client_thread.join();
 }
 
 void me::InprocessEGLClient::thread_loop()
@@ -108,7 +92,7 @@ void me::InprocessEGLClient::thread_loop()
     input_thread->start();
 
     auto internal_client = graphics_platform->create_internal_client();
-    auto internal_surface = std::make_shared<ForwardingInternalSurface>(surface);
+    auto internal_surface = as_internal_surface(surface);
     me::EGLHelper helper(internal_client->egl_native_display(), internal_client->egl_native_window(internal_surface));
 
     auto rc = eglMakeCurrent(helper.the_display(), helper.the_surface(), helper.the_surface(), helper.the_context());
