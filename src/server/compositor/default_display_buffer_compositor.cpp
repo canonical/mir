@@ -80,8 +80,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
             if (bypass_buf->can_scanout())
             {
-                display_buffer.post_update(
-                    search.topmost_fullscreen()->lock_compositor_buffer());
+                display_buffer.post_update(bypass_buf);
                 bypassed = true;
             }
         }
