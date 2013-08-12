@@ -56,6 +56,7 @@ public:
 
 private:
     std::mutex mutable guard;
+    std::vector<MirDisplayCard> cards;
     std::vector<std::shared_ptr<DisplayOutput>> outputs;
     std::function<void()> notify_change;
 };

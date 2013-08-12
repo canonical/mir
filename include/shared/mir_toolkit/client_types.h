@@ -176,8 +176,14 @@ typedef struct MirDisplayInfo
 } MirDisplayInfo;
 
 /**
- * MirDisplayOutput provides details of the graphics environment.
+ * MirDisplayConfiguration provides details of the graphics environment.
  */
+
+typedef struct MirDisplayCard
+{
+    uint32_t card_id;
+    uint32_t max_simultaneous_outputs;
+} MirDisplayCard;
 
 typedef enum MirDisplayOutputType
 {
@@ -233,6 +239,8 @@ typedef struct MirDisplayConfiguration
 {
     uint32_t num_displays;
     MirDisplayOutput* displays;
+    uint32_t num_cards;
+    MirDisplayCard *cards;
 } MirDisplayConfiguration;
 
 /**

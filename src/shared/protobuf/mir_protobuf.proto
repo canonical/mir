@@ -44,6 +44,11 @@ message Platform {
   optional string error = 127;
 }
 
+message DisplayCard {
+    required uint32 card_id = 1;
+    required uint32 max_simultaneous_outputs = 2;
+}
+
 message DisplayMode {
     optional uint32 vertical_resolution = 1;
     optional uint32 horizontal_resolution = 2;
@@ -149,6 +154,7 @@ message Event {
 
 message DisplayConfiguration {
   repeated DisplayOutput display_output = 1;
+  repeated DisplayCard   display_card = 2;
   optional string error = 127;
 }
 
