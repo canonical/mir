@@ -65,20 +65,24 @@ struct BypassFilterTest : public Test
 {
     BypassFilterTest()
     {
-        monitor_rect.top_left = {0, 0};
-        monitor_rect.size = {1920, 1200};
+        monitor_rect[0].top_left = {0, 0};
+        monitor_rect[0].size = {1920, 1200};
+        EXPECT_CALL(display_buffer[0], view_area())
+            .WillRepeatedly(Return(monitor_rect[0]));
 
-        EXPECT_CALL(display_buffer, view_area())
-            .WillRepeatedly(Return(monitor_rect));
+        monitor_rect[1].top_left = {1920, 0};
+        monitor_rect[1].size = {1920, 1200};
+        EXPECT_CALL(display_buffer[1], view_area())
+            .WillRepeatedly(Return(monitor_rect[1]));
     }
 
-    Rectangle monitor_rect;
-    MockDisplayBuffer display_buffer;
+    Rectangle monitor_rect[2];
+    MockDisplayBuffer display_buffer[2];
 };
 
 TEST_F(BypassFilterTest, nothing_matches_nothing)
 {
-    BypassFilter filter(display_buffer);
+    BypassFilter filter(display_buffer[0]);
     BypassMatch match;
 
     EXPECT_FALSE(filter.fullscreen_on_top());
@@ -87,7 +91,7 @@ TEST_F(BypassFilterTest, nothing_matches_nothing)
 
 TEST_F(BypassFilterTest, small_window_not_bypassed)
 {
-    BypassFilter filter(display_buffer);
+    BypassFilter filter(display_buffer[0]);
 
     TestWindow win(12, 34, 56, 78);
 
@@ -97,7 +101,7 @@ TEST_F(BypassFilterTest, small_window_not_bypassed)
 
 TEST_F(BypassFilterTest, single_fullscreen_window_bypassed)
 {
-    BypassFilter filter(display_buffer);
+    BypassFilter filter(display_buffer[0]);
 
     TestWindow win(0, 0, 1920, 1200);
 
@@ -107,7 +111,7 @@ TEST_F(BypassFilterTest, single_fullscreen_window_bypassed)
 
 TEST_F(BypassFilterTest, offset_fullscreen_window_not_bypassed)
 {
-    BypassFilter filter(display_buffer);
+    BypassFilter filter(display_buffer[0]);
 
     TestWindow win(10, 50, 1920, 1200);
 
@@ -117,7 +121,7 @@ TEST_F(BypassFilterTest, offset_fullscreen_window_not_bypassed)
 
 TEST_F(BypassFilterTest, obscured_fullscreen_window_not_bypassed)
 {
-    BypassFilter filter(display_buffer);
+    BypassFilter filter(display_buffer[0]);
 
     TestWindow fs(0, 0, 1920, 1200);
     TestWindow small(20, 30, 40, 50);
@@ -129,7 +133,7 @@ TEST_F(BypassFilterTest, obscured_fullscreen_window_not_bypassed)
 
 TEST_F(BypassFilterTest, unobscured_fullscreen_window_bypassed)
 {
-    BypassFilter filter(display_buffer);
+    BypassFilter filter(display_buffer[0]);
 
     TestWindow fs(0, 0, 1920, 1200);
     TestWindow small(20, 30, 40, 50);
@@ -137,6 +141,79 @@ TEST_F(BypassFilterTest, unobscured_fullscreen_window_bypassed)
     EXPECT_FALSE(filter(small));
     EXPECT_TRUE(filter(fs));
     EXPECT_TRUE(filter.fullscreen_on_top());
+}
+
+TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top)
+{
+    BypassFilter filter(display_buffer[0]);
+
+    TestWindow a(0, 0, 1920, 1200);
+    EXPECT_TRUE(filter(a));
+    EXPECT_TRUE(filter.fullscreen_on_top());
+
+    TestWindow b(1, 2, 3, 4);
+    EXPECT_FALSE(filter(b));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    TestWindow c(0, 0, 1920, 1200);
+    EXPECT_TRUE(filter(c));
+    EXPECT_TRUE(filter.fullscreen_on_top());
+
+    TestWindow d(5, 6, 7, 8);
+    EXPECT_FALSE(filter(d));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    TestWindow e(0, 0, 1920, 1200);
+    EXPECT_TRUE(filter(e));
+    EXPECT_TRUE(filter.fullscreen_on_top());
+
+    TestWindow f(9, 10, 11, 12);
+    EXPECT_FALSE(filter(f));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+
+    TestWindow g(0, 0, 1920, 1200);
+    EXPECT_TRUE(filter(g));
+    EXPECT_TRUE(filter.fullscreen_on_top());
+}
+
+TEST_F(BypassFilterTest, multimonitor_one_bypassed)
+{
+    BypassFilter left(display_buffer[0]);
+    BypassFilter right(display_buffer[1]);
+
+    TestWindow fs(1920, 0, 1920, 1200);
+    TestWindow small(20, 30, 40, 50);
+
+    EXPECT_FALSE(left(small));
+    EXPECT_FALSE(left.fullscreen_on_top());
+    EXPECT_FALSE(left(fs));
+    EXPECT_FALSE(left.fullscreen_on_top());
+
+    EXPECT_FALSE(right(small));
+    EXPECT_FALSE(right.fullscreen_on_top());
+    EXPECT_TRUE(right(fs));
+    EXPECT_TRUE(right.fullscreen_on_top());
+    EXPECT_FALSE(right(small));
+    EXPECT_TRUE(right.fullscreen_on_top());
+}
+
+TEST_F(BypassFilterTest, dual_bypass)
+{
+    BypassFilter left_filter(display_buffer[0]);
+    BypassFilter right_filter(display_buffer[1]);
+
+    TestWindow left_win(0, 0, 1920, 1200);
+    TestWindow right_win(1920, 0, 1920, 1200);
+
+    EXPECT_TRUE(left_filter(left_win));
+    EXPECT_TRUE(left_filter.fullscreen_on_top());
+    EXPECT_FALSE(left_filter(right_win));
+    EXPECT_TRUE(left_filter.fullscreen_on_top());
+
+    EXPECT_FALSE(right_filter(left_win));
+    EXPECT_FALSE(right_filter.fullscreen_on_top());
+    EXPECT_TRUE(right_filter(right_win));
+    EXPECT_TRUE(right_filter.fullscreen_on_top());
 }
 
 TEST(BypassMatchTest, defaults_to_null)

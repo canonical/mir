@@ -35,6 +35,7 @@ class BypassFilter : public FilterForScene
 {
 public:
     BypassFilter(const graphics::DisplayBuffer &display_buffer)
+        : display_buffer(display_buffer)
     {
         const mir::geometry::Rectangle &rect = display_buffer.view_area();
         int width = rect.size.width.as_int();
@@ -67,18 +68,56 @@ public:
 
     bool operator()(CompositingCriteria const& criteria)
     {
+        if (!all_orthogonal)
+            return false;
+
+        const glm::mat4 &trans = criteria.transformation();
+        bool orthogonal =
+            trans[0][1] == 0.0f &&
+            trans[0][2] == 0.0f &&
+            trans[0][3] == 0.0f &&
+            trans[1][0] == 0.0f &&
+            trans[1][2] == 0.0f &&
+            trans[1][3] == 0.0f &&
+            trans[2][0] == 0.0f &&
+            trans[2][1] == 0.0f &&
+            trans[2][2] == 0.0f &&
+            trans[2][3] == 0.0f &&
+            trans[3][2] == 0.0f &&
+            trans[3][3] == 1.0f;
+
+        // Any weird transformations? Then we can't risk any bypass
+        if (!orthogonal)
+        {
+            all_orthogonal = false;
+            return false;
+        }
+
+        int width = trans[0][0];
+        int height = trans[1][1];
+        int x = trans[3][0] - width / 2;
+        int y = trans[3][1] - height / 2;
+        mir::geometry::Rectangle window{{x, y}, {width, height}};
+
+        // Not weirdly transformed but also not on this monitor? Don't care...
+        if (!window.overlaps(display_buffer.view_area()))
+            return false;
+
+        // Transformed perfectly to fit the monitor? Bypass!
         topmost_fits = criteria.transformation() == fullscreen;
         return topmost_fits;
     }
 
     bool fullscreen_on_top() const
     {
-        return topmost_fits;
+        return all_orthogonal && topmost_fits;
     }
 
 private:
+    bool all_orthogonal = true;
     bool topmost_fits = false;
     glm::mat4 fullscreen;
+    const graphics::DisplayBuffer &display_buffer;
 };
 
 class BypassMatch : public OperatorForScene
