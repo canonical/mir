@@ -49,7 +49,7 @@ private:
 
 char const* output_type_to_string(mg::DisplayConfigurationOutputType type)
 {
-    static std::vector<char const*> type_names
+    static char const* type_names[] =
     {
         "unknown",
         "vga",
@@ -67,8 +67,9 @@ char const* output_type_to_string(mg::DisplayConfigurationOutputType type)
         "edp"
     };
 
-    size_t index = static_cast<size_t>(type);
-    if (index >= type_names.size())
+    auto index = static_cast<ssize_t>(type);
+    static auto const size = std::distance(std::begin(type_names), std::end(type_names));
+    if (index >= size)
         return "invalid";
 
     return type_names[index];
