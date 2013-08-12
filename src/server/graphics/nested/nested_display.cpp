@@ -69,9 +69,41 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
 }
 
+void mgn::detail::EGLDisplayHandle::initialize_egl() const
+{
+    int res;
+    int major;
+    int minor;
+
+    // TODO Find out if we really care about the revision info
+    res = eglInitialize(egl_display, &major, &minor);
+    if ((res != EGL_TRUE) || (major != 1) || (minor != 4))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
+    }
+}
+
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 {
     eglTerminate(egl_display);
+}
+
+namespace
+{
+EGLint const egl_attribs[] = {
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 8,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
+
+EGLint const egl_context_attribs[] = {
+    EGL_CONTEXT_CLIENT_VERSION, 2,
+    EGL_NONE
+};
 }
 
 mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
@@ -80,27 +112,14 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
     egl_display{connection},
     egl_context{EGL_NO_CONTEXT}
 {
-    int res, major, minor, n;
+    egl_display.initialize_egl();
 
-    res = eglInitialize(egl_display, &major, &minor);
-    if ((res != EGL_TRUE) || (major != 1) || (minor != 4))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
-    }
+    int n;
 
-    EGLint attribs[] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };
-
-    res = eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
+    int res = eglChooseConfig(egl_display, egl_attribs, &egl_config, 1, &n);
     if ((res != EGL_TRUE) || (n != 1))
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to choose EGL configuration."));
+
 
     EGLNativeWindowType native_window;
     if (!(native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(mir_surface)))
@@ -110,12 +129,8 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
     if (egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
 
-    EGLint context_attribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
 
-    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
+    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs);
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create context."));
 

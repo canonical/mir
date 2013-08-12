@@ -59,6 +59,8 @@ public:
     explicit EGLDisplayHandle(MirConnection* connection);
     ~EGLDisplayHandle() noexcept;
 
+    void initialize_egl() const;
+
     operator EGLDisplay() const { return egl_display; }
 
 private:
