@@ -18,6 +18,7 @@
 
 #include "src/server/compositor/bypass.h"
 #include "mir_test_doubles/mock_display_buffer.h"
+#include "mir_test_doubles/stub_buffer_stream.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <gtest/gtest.h>
@@ -60,9 +61,9 @@ private:
     glm::mat4 trans;
 };
 
-struct BypassTest : public Test
+struct BypassFilterTest : public Test
 {
-    BypassTest()
+    BypassFilterTest()
     {
         monitor_rect.top_left = {0, 0};
         monitor_rect.size = {1920, 1200};
@@ -75,7 +76,7 @@ struct BypassTest : public Test
     MockDisplayBuffer display_buffer;
 };
 
-TEST_F(BypassTest, nothing_matches_nothing)
+TEST_F(BypassFilterTest, nothing_matches_nothing)
 {
     BypassFilter filter(display_buffer);
     BypassMatch match;
@@ -84,7 +85,7 @@ TEST_F(BypassTest, nothing_matches_nothing)
     EXPECT_FALSE(match.topmost_fullscreen());
 }
 
-TEST_F(BypassTest, small_window_not_bypassed)
+TEST_F(BypassFilterTest, small_window_not_bypassed)
 {
     BypassFilter filter(display_buffer);
 
@@ -94,7 +95,7 @@ TEST_F(BypassTest, small_window_not_bypassed)
     EXPECT_FALSE(filter.fullscreen_on_top());
 }
 
-TEST_F(BypassTest, single_fullscreen_window_bypassed)
+TEST_F(BypassFilterTest, single_fullscreen_window_bypassed)
 {
     BypassFilter filter(display_buffer);
 
@@ -104,7 +105,7 @@ TEST_F(BypassTest, single_fullscreen_window_bypassed)
     EXPECT_TRUE(filter.fullscreen_on_top());
 }
 
-TEST_F(BypassTest, offset_fullscreen_window_not_bypassed)
+TEST_F(BypassFilterTest, offset_fullscreen_window_not_bypassed)
 {
     BypassFilter filter(display_buffer);
 
@@ -114,7 +115,7 @@ TEST_F(BypassTest, offset_fullscreen_window_not_bypassed)
     EXPECT_FALSE(filter.fullscreen_on_top());
 }
 
-TEST_F(BypassTest, obscured_fullscreen_window_not_bypassed)
+TEST_F(BypassFilterTest, obscured_fullscreen_window_not_bypassed)
 {
     BypassFilter filter(display_buffer);
 
@@ -126,7 +127,7 @@ TEST_F(BypassTest, obscured_fullscreen_window_not_bypassed)
     EXPECT_FALSE(filter.fullscreen_on_top());
 }
 
-TEST_F(BypassTest, unobscured_fullscreen_window_bypassed)
+TEST_F(BypassFilterTest, unobscured_fullscreen_window_bypassed)
 {
     BypassFilter filter(display_buffer);
 
@@ -137,3 +138,39 @@ TEST_F(BypassTest, unobscured_fullscreen_window_bypassed)
     EXPECT_TRUE(filter(fs));
     EXPECT_TRUE(filter.fullscreen_on_top());
 }
+
+TEST(BypassMatchTest, defaults_to_null)
+{
+    BypassMatch match;
+
+    EXPECT_EQ(nullptr, match.topmost_fullscreen());
+}
+
+TEST(BypassMatchTest, returns_one)
+{
+    BypassMatch match;
+    TestWindow win(1, 2, 3, 4);
+    StubBufferStream bufs;
+
+    EXPECT_EQ(nullptr, match.topmost_fullscreen());
+    match(win, bufs);
+    EXPECT_EQ(&bufs, match.topmost_fullscreen());
+}
+
+TEST(BypassMatchTest, returns_latest)
+{
+    BypassMatch match;
+    TestWindow a(1, 2, 3, 4), b(5, 6, 7, 8), c(9, 10, 11, 12);
+    StubBufferStream abuf, bbuf, cbuf;
+
+    EXPECT_EQ(nullptr, match.topmost_fullscreen());
+    match(a, abuf);
+    EXPECT_EQ(&abuf, match.topmost_fullscreen());
+    match(b, bbuf);
+    EXPECT_EQ(&bbuf, match.topmost_fullscreen());
+    match(c, cbuf);
+    EXPECT_EQ(&cbuf, match.topmost_fullscreen());
+    EXPECT_EQ(&cbuf, match.topmost_fullscreen());
+    EXPECT_EQ(&cbuf, match.topmost_fullscreen());
+}
+
