@@ -20,9 +20,7 @@
 #define MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
-
 
 #include <EGL/egl.h>
 

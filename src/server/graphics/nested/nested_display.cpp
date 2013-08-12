@@ -20,6 +20,8 @@
 #include "nested_display_configuration.h"
 #include "nested_gl_context.h"
 
+#include "mir/geometry/rectangle.h"
+
 #include <cstring>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
