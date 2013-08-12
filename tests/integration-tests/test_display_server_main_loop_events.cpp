@@ -20,6 +20,7 @@
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/display_changer.h"
 #include "mir/main_loop.h"
 
 #include "mir_test/pipe.h"
@@ -55,6 +56,14 @@ class MockCommunicator : public mf::Communicator
 public:
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
+};
+
+class MockGraphicsDisplayChanger : public mg::DisplayChanger
+{
+public:
+    MOCK_METHOD2(configure_for_hardware_change,
+                 void(std::shared_ptr<mg::DisplayConfiguration> const& conf,
+                      SystemStateHandling pause_resume_system));
 };
 
 class MockDisplay : public mtd::NullDisplay
@@ -150,13 +159,6 @@ private:
     std::atomic<bool> conf_change_handler_invoked_;
 };
 
-class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
-{
-public:
-    ~MockDisplayConfigurationPolicy() noexcept {}
-    MOCK_METHOD1(apply_to, void(mg::DisplayConfiguration&));
-};
-
 class ServerConfig : public mtf::TestingServerConfiguration
 {
 public:
@@ -230,20 +232,20 @@ public:
         return mock_communicator;
     }
 
-    std::shared_ptr<mg::DisplayConfigurationPolicy> the_display_configuration_policy() override
-    {
-        if (!mock_conf_policy)
-            mock_conf_policy = std::make_shared<MockDisplayConfigurationPolicy>();
-
-        return mock_conf_policy;
-    }
-
     std::shared_ptr<mi::InputManager> the_input_manager() override
     {
         if (!mock_input_manager)
             mock_input_manager = std::make_shared<mtd::MockInputManager>();
 
         return mock_input_manager;
+    }
+
+    std::shared_ptr<mg::DisplayChanger> the_graphics_display_changer() override
+    {
+        if (!mock_graphics_display_changer)
+            mock_graphics_display_changer = std::make_shared<MockGraphicsDisplayChanger>();
+
+        return mock_graphics_display_changer;
     }
 
     std::shared_ptr<MockDisplay> the_mock_display()
@@ -264,17 +266,18 @@ public:
         return mock_communicator;
     }
 
-    std::shared_ptr<MockDisplayConfigurationPolicy> the_mock_display_configuration_policy()
-    {
-        the_display_configuration_policy();
-        return mock_conf_policy;
-    }
-
     std::shared_ptr<mtd::MockInputManager> the_mock_input_manager()
     {
         the_input_manager();
         return mock_input_manager;
     }
+
+    std::shared_ptr<MockGraphicsDisplayChanger> the_mock_graphics_display_changer()
+    {
+        the_graphics_display_changer();
+        return mock_graphics_display_changer;
+    }
+
     void emit_pause_event_and_wait_for_handler()
     {
         kill(getpid(), pause_signal);
@@ -300,8 +303,8 @@ private:
     std::shared_ptr<mtd::MockCompositor> mock_compositor;
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<MockCommunicator> mock_communicator;
-    std::shared_ptr<MockDisplayConfigurationPolicy> mock_conf_policy;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
+    std::shared_ptr<MockGraphicsDisplayChanger> mock_graphics_display_changer;
 
     mt::Pipe p;
     int const pause_signal;
@@ -486,8 +489,8 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
-    auto mock_conf_policy = server_config.the_mock_display_configuration_policy();
     auto mock_input_manager = server_config.the_mock_input_manager();
+    auto mock_graphics_display_changer = server_config.the_mock_graphics_display_changer();
 
     {
         InSequence s;
@@ -498,14 +501,9 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
 
         /* Configuration change event */
-        EXPECT_CALL(*mock_compositor, stop()).Times(1);
-        EXPECT_CALL(*mock_input_manager, stop()).Times(1);
-
-        EXPECT_CALL(*mock_conf_policy, apply_to(_)).Times(1);
-        EXPECT_CALL(*mock_display, configure(_)).Times(1);
-
-        EXPECT_CALL(*mock_input_manager, start()).Times(1);
-        EXPECT_CALL(*mock_compositor, start()).Times(1);
+        EXPECT_CALL(*mock_graphics_display_changer,
+                    configure_for_hardware_change(_, mg::DisplayChanger::PauseResumeSystem))
+            .Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
@@ -535,8 +533,8 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
     auto mock_compositor = server_config.the_mock_compositor();
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
-    auto mock_conf_policy = server_config.the_mock_display_configuration_policy();
     auto mock_input_manager = server_config.the_mock_input_manager();
+    auto mock_graphics_display_changer = server_config.the_mock_graphics_display_changer();
 
     {
         InSequence s;
@@ -556,8 +554,9 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
         EXPECT_CALL(*mock_display, resume()).Times(1);
         EXPECT_CALL(*mock_communicator, start()).Times(1);
 
-        EXPECT_CALL(*mock_conf_policy, apply_to(_)).Times(1);
-        EXPECT_CALL(*mock_display, configure(_)).Times(1);
+        EXPECT_CALL(*mock_graphics_display_changer,
+                    configure_for_hardware_change(_, mg::DisplayChanger::RetainSystemState))
+            .Times(1);
 
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);

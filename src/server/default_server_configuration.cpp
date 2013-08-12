@@ -362,15 +362,31 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
         });
 }
 
-std::shared_ptr<mf::DisplayChanger>
-mir::DefaultServerConfiguration::the_display_changer()
+std::shared_ptr<msh::MediatingDisplayChanger>
+mir::DefaultServerConfiguration::the_mediating_display_changer()
 {
-    return display_changer(
+    return mediating_display_changer(
         [this]()
         {
             return std::make_shared<msh::MediatingDisplayChanger>(
-                the_display(), the_compositor(), the_input_manager());
+                the_display(),
+                the_compositor(),
+                the_input_manager(),
+                the_display_configuration_policy());
         });
+
+}
+
+std::shared_ptr<mf::DisplayChanger>
+mir::DefaultServerConfiguration::the_frontend_display_changer()
+{
+    return the_mediating_display_changer();
+}
+
+std::shared_ptr<mg::DisplayChanger>
+mir::DefaultServerConfiguration::the_graphics_display_changer()
+{
+    return the_mediating_display_changer();
 }
 
 std::shared_ptr<msh::SessionContainer>
@@ -757,7 +773,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                the_display_changer(), allocator);
+                the_frontend_display_changer(), allocator);
         });
 }
 

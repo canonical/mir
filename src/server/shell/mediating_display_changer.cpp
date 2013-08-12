@@ -20,6 +20,7 @@
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
 #include "mir/input/input_manager.h"
+#include "mir/graphics/display_configuration_policy.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
@@ -57,10 +58,12 @@ private:
 msh::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
-    std::shared_ptr<mi::InputManager> const& input_manager)
+    std::shared_ptr<mi::InputManager> const& input_manager,
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& display_configuration_policy)
     : display{display},
       compositor{compositor},
-      input_manager{input_manager}
+      input_manager{input_manager},
+      display_configuration_policy{display_configuration_policy}
 {
 }
 
@@ -68,19 +71,44 @@ void msh::MediatingDisplayChanger::configure(
     std::weak_ptr<mf::Session> const&,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
-    ApplyNowAndRevertOnScopeExit comp{
-        [this] { compositor->stop(); },
-        [this] { compositor->start(); }};
-
-    ApplyNowAndRevertOnScopeExit input{
-        [this] { input_manager->stop(); },
-        [this] { input_manager->start(); }};
-
-    display->configure(*conf);
+    apply_config(conf, PauseResumeSystem);
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
 msh::MediatingDisplayChanger::active_configuration()
 {
+    std::lock_guard<std::mutex> lg{configuration_mutex};
     return display->configuration();
+}
+
+void msh::MediatingDisplayChanger::configure_for_hardware_change(
+    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
+    SystemStateHandling pause_resume_system)
+{
+    display_configuration_policy->apply_to(*conf);
+    apply_config(conf, pause_resume_system);
+}
+
+void msh::MediatingDisplayChanger::apply_config(
+    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
+    SystemStateHandling pause_resume_system)
+{
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
+    if (pause_resume_system)
+    {
+        ApplyNowAndRevertOnScopeExit comp{
+            [this] { compositor->stop(); },
+            [this] { compositor->start(); }};
+
+        ApplyNowAndRevertOnScopeExit input{
+            [this] { input_manager->stop(); },
+            [this] { input_manager->start(); }};
+
+        display->configure(*conf);
+    }
+    else
+    {
+        display->configure(*conf);
+    }
 }

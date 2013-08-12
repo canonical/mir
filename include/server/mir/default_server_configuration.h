@@ -67,6 +67,7 @@ class PixelBuffer;
 class SnapshotStrategy;
 class DisplayLayout;
 class SurfaceConfigurator;
+class MediatingDisplayChanger;
 }
 namespace time
 {
@@ -119,6 +120,7 @@ public:
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
     virtual std::shared_ptr<MainLoop>               the_main_loop();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
+    virtual std::shared_ptr<graphics::DisplayChanger> the_graphics_display_changer();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -156,7 +158,7 @@ public:
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
-    virtual std::shared_ptr<frontend::DisplayChanger>         the_display_changer();
+    virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
     /** @} */
 
     virtual std::shared_ptr<shell::FocusController> the_focus_controller();
@@ -229,6 +231,7 @@ protected:
     virtual std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
+    virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
@@ -254,7 +257,6 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
-    CachedPtr<frontend::DisplayChanger> display_changer;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
@@ -277,6 +279,7 @@ protected:
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
+    CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
 
 private:
     int const argc;

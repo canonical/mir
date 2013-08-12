@@ -159,7 +159,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             return platform;
         }
 
-        std::shared_ptr<mf::DisplayChanger> the_display_changer() override
+        std::shared_ptr<mf::DisplayChanger> the_frontend_display_changer() override
         {
             if (!changer)
                 changer = std::make_shared<StubChanger>();
@@ -209,7 +209,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_
             return authorizer;
         }
 
-        std::shared_ptr<mf::DisplayChanger> the_display_changer() override
+        std::shared_ptr<mf::DisplayChanger> the_frontend_display_changer() override
         {
             if (!changer)
                 changer = std::make_shared<StubChanger>();
@@ -258,7 +258,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
             return platform;
         }
 
-        std::shared_ptr<mf::DisplayChanger> the_display_changer() override
+        std::shared_ptr<mf::DisplayChanger> the_frontend_display_changer() override
         {
             if (!changer)
                 changer = std::make_shared<StubChanger>();
