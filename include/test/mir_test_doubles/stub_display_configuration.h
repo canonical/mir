@@ -32,10 +32,15 @@ class StubDisplayConfig : public graphics::DisplayConfiguration
 {
 public:
     StubDisplayConfig()
+        : StubDisplayConfig(3)
+    {
+    }
+
+    StubDisplayConfig(unsigned int num_displays)
     {
         /* construct a non-trivial dummy display config to send */
         int mode_index = 0;
-        for (auto i = 0u; i < 3u; i++)
+        for (auto i = 0u; i < num_displays; i++)
         {
             std::vector<graphics::DisplayConfigurationMode> modes;
             std::vector<geometry::PixelFormat> pfs{

@@ -58,6 +58,7 @@ mcl::DisplayOutput::~DisplayOutput()
 
 namespace
 {
+
 void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 {
     output.card_id = msg.card_id();
@@ -88,7 +89,6 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 
 }
 
-
 mcl::DisplayConfiguration::DisplayConfiguration()
     : notify_change([]{})
 {
@@ -98,13 +98,13 @@ mcl::DisplayConfiguration::~DisplayConfiguration()
 {
 }
 
-void mcl::DisplayConfiguration::update_configuration(mp::Connection const& connection_msg)
+void mcl::DisplayConfiguration::set_configuration(mp::DisplayConfiguration const& msg)
 {
     std::unique_lock<std::mutex> lk(guard);
     outputs.clear();
-    for (auto i = 0; i < connection_msg.display_output_size(); i++)
+    for (auto i = 0; i < msg.display_output_size(); i++)
     {
-        auto const& msg_output = connection_msg.display_output(i);
+        auto const& msg_output = msg.display_output(i);
         auto output = std::make_shared<mcl::DisplayOutput>(msg_output.mode_size(), msg_output.pixel_format_size());
         fill_display_output(*output, msg_output);
         outputs.push_back(output);
@@ -113,17 +113,7 @@ void mcl::DisplayConfiguration::update_configuration(mp::Connection const& conne
 
 void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration const& msg)
 {
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        outputs.clear();
-        for (auto i = 0; i < msg.display_output_size(); i++)
-        {
-            auto const& msg_output = msg.display_output(i);
-            auto output = std::make_shared<mcl::DisplayOutput>(msg_output.mode_size(), msg_output.pixel_format_size());
-            fill_display_output(*output, msg_output);
-            outputs.push_back(output);
-        }
-    }
+    set_configuration(msg);
 
     notify_change();
 }

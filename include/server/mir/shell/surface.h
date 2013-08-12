@@ -38,6 +38,7 @@ class EventSink;
 namespace shell
 {
 class InputTargeter;
+class Session;
 class SurfaceBuilder;
 class SurfaceConfigurator;
 class SurfaceController;
@@ -47,6 +48,7 @@ class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
 {
 public:
     Surface(
+        Session* session,
         std::shared_ptr<SurfaceBuilder> const& builder,
         std::shared_ptr<SurfaceConfigurator> const& configurator,
         SurfaceCreationParameters const& params,
