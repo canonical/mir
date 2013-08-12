@@ -23,6 +23,8 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/scene.h"
+#include "mir/compositor/compositing_criteria.h"
+#include "glm/glm.hpp"
 
 namespace mir
 {
