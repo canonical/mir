@@ -22,8 +22,6 @@
 #include "mir_toolkit/client_types.h"
 #include <gtest/gtest.h>
 
-#include <limits>
-
 namespace mg = mir::graphics;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
