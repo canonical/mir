@@ -160,6 +160,7 @@ void mf::SessionMediator::create_surface(
         }
     }
 
+    // TODO: We rely on this sending responses synchronously.
     done->Run();
     shell->handle_surface_created(session);
 }
