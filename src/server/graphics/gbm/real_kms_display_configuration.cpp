@@ -75,7 +75,8 @@ mgg::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(int drm_fd)
 
 mgg::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(
     RealKMSDisplayConfiguration const& conf)
-    : KMSDisplayConfiguration(), drm_fd{conf.drm_fd}, outputs{conf.outputs}
+    : KMSDisplayConfiguration(), drm_fd{conf.drm_fd},
+      card(conf.card), outputs{conf.outputs}
 {
 }
 
@@ -85,6 +86,7 @@ mgg::RealKMSDisplayConfiguration& mgg::RealKMSDisplayConfiguration::operator=(
     if (&conf != this)
     {
         drm_fd = conf.drm_fd;
+        card = conf.card;
         outputs = conf.outputs;
     }
 
@@ -94,7 +96,6 @@ mgg::RealKMSDisplayConfiguration& mgg::RealKMSDisplayConfiguration::operator=(
 void mgg::RealKMSDisplayConfiguration::for_each_card(
     std::function<void(DisplayConfigurationCard const&)> f) const
 {
-    DisplayConfigurationCard const card{DisplayConfigurationCardId{0}};
     f(card);
 }
 
@@ -159,6 +160,9 @@ size_t mgg::RealKMSDisplayConfiguration::get_kms_mode_index(
 void mgg::RealKMSDisplayConfiguration::update()
 {
     DRMModeResources resources{drm_fd};
+
+    size_t max_outputs = std::min(resources.num_crtcs(), resources.num_connectors());
+    card = {mg::DisplayConfigurationCardId{0}, max_outputs};
 
     resources.for_each_connector([&](DRMModeConnectorUPtr connector)
     {

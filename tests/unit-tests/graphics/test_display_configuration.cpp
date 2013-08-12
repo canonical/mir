@@ -50,6 +50,38 @@ mg::DisplayConfigurationOutput const tmpl_output
 
 }
 
+TEST(DisplayConfiguration, card_equality)
+{
+    mg::DisplayConfigurationCardId const id{1};
+    size_t const max_outputs{3};
+
+    mg::DisplayConfigurationCard const card1{id, max_outputs};
+    mg::DisplayConfigurationCard const card2 = card1;
+
+    EXPECT_EQ(card1, card1);
+    EXPECT_EQ(card1, card2);
+    EXPECT_EQ(card2, card1);
+}
+
+TEST(DisplayConfiguration, card_inequality)
+{
+    mg::DisplayConfigurationCardId const id1{1};
+    mg::DisplayConfigurationCardId const id2{2};
+    size_t const max_outputs1{3};
+    size_t const max_outputs2{4};
+
+    mg::DisplayConfigurationCard const card1{id1, max_outputs1};
+    mg::DisplayConfigurationCard const card2{id1, max_outputs2};
+    mg::DisplayConfigurationCard const card3{id2, max_outputs1};
+
+    EXPECT_NE(card1, card2);
+    EXPECT_NE(card2, card1);
+    EXPECT_NE(card2, card3);
+    EXPECT_NE(card3, card2);
+    EXPECT_NE(card1, card3);
+    EXPECT_NE(card3, card1);
+}
+
 TEST(DisplayConfiguration, mode_equality)
 {
     geom::Size const size{10, 20};

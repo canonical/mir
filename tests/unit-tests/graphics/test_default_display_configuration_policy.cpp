@@ -114,7 +114,7 @@ public:
 
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
     {
-        f({card_id});
+        f({card_id, outputs.size()});
     }
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const

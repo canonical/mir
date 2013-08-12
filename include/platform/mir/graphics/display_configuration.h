@@ -42,6 +42,7 @@ typedef IntWrapper<detail::GraphicsConfOutputIdTag> DisplayConfigurationOutputId
 struct DisplayConfigurationCard
 {
     DisplayConfigurationCardId id;
+    size_t max_simultaneous_outputs;
 };
 
 /**
@@ -105,6 +106,10 @@ struct DisplayConfigurationOutput
     /** The index in the 'pixel_format' vector of the current output pixel format. */
     size_t current_format_index;
 };
+
+std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
+bool operator==(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
+bool operator!=(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationMode const& val);
 bool operator==(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);

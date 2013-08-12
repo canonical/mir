@@ -48,7 +48,8 @@ public:
     {
         mg::DisplayConfigurationCard card
         {
-            mg::DisplayConfigurationCardId{1}
+            mg::DisplayConfigurationCardId{1},
+            outputs.size()
         };
 
         f(card);

@@ -76,6 +76,13 @@ char const* output_type_to_string(mg::DisplayConfigurationOutputType type)
 
 }
 
+std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationCard const& val)
+{
+    return out << "{ id: " << val.id
+               << " max_simultaneous_outputs: " << val.max_simultaneous_outputs << " }"
+               << std::endl;
+}
+
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationMode const& val)
 {
     StreamPropertiesRecovery const stream_properties_recovery{out};
@@ -113,6 +120,19 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
     out << ") }";
 
     return out;
+}
+
+bool mg::operator==(mg::DisplayConfigurationCard const& val1,
+                    mg::DisplayConfigurationCard const& val2)
+{
+    return (val1.id == val2.id) &&
+           (val1.max_simultaneous_outputs == val2.max_simultaneous_outputs);
+}
+
+bool mg::operator!=(mg::DisplayConfigurationCard const& val1,
+                    mg::DisplayConfigurationCard const& val2)
+{
+    return !(val1 == val2);
 }
 
 bool mg::operator==(mg::DisplayConfigurationMode const& val1,
