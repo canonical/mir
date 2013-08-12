@@ -58,7 +58,7 @@ mgn::detail::MirSurfaceHandle::~MirSurfaceHandle() noexcept
 
 mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
 {
-    EGLNativeDisplayType const native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
+    auto const native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
     if (!native_display)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native display."));
 

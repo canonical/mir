@@ -34,6 +34,8 @@ class Display;
 namespace compositor
 {
 
+enum {max_client_buffers = 3};
+
 class DisplayBufferCompositorFactory;
 class CompositingFunctor;
 class Scene;

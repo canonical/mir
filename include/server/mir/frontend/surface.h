@@ -32,6 +32,7 @@ namespace mir
 namespace graphics
 {
 class Buffer;
+class InternalSurface;
 }
 namespace input
 {
@@ -66,6 +67,8 @@ protected:
     Surface& operator=(Surface const&) = delete;
 };
 
+auto as_internal_surface(std::shared_ptr<Surface> const& surface)
+    -> std::shared_ptr<graphics::InternalSurface>;
 }
 }
 

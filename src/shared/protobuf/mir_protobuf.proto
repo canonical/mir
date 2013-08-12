@@ -84,6 +84,7 @@ message Connection {
   optional Platform platform = 1;
   optional DisplayInfo display_info = 2;
   repeated DisplayOutput display_output = 3;
+  optional DisplayConfiguration display_configuration = 4;
 
   optional string error = 127;
 }

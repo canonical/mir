@@ -21,33 +21,54 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir_protobuf.pb.h"
 
-namespace mfd=mir::frontend::detail;
+namespace mfd = mir::frontend::detail;
+namespace mg = mir::graphics;
+namespace mp = mir::protobuf;
 
-void mfd::pack_protobuf_display_output(protobuf::DisplayOutput* output,
-                                       graphics::DisplayConfigurationOutput const& config)
+namespace
 {
-    output->set_output_id(config.id.as_value());
-    output->set_card_id(config.card_id.as_value());
-    output->set_connected(config.connected);
-    output->set_used(config.used);
-    output->set_physical_width_mm(config.physical_size_mm.width.as_uint32_t());
-    output->set_physical_height_mm(config.physical_size_mm.height.as_uint32_t());
-    output->set_position_x(config.top_left.x.as_uint32_t());
-    output->set_position_y(config.top_left.y.as_uint32_t());
-    for (auto const& mode : config.modes)
-    {
-        auto output_mode = output->add_mode();
-        output_mode->set_horizontal_resolution(mode.size.width.as_uint32_t()); 
-        output_mode->set_vertical_resolution(mode.size.height.as_uint32_t());
-        output_mode->set_refresh_rate(mode.vrefresh_hz);
-    }
-    output->set_current_mode(config.current_mode_index);
 
-    for (auto const& pf : config.pixel_formats)
+void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
+                                  mg::DisplayConfigurationOutput const& display_output)
+{
+    protobuf_output.set_output_id(display_output.id.as_value());
+    protobuf_output.set_card_id(display_output.card_id.as_value());
+
+    for (auto const& pf : display_output.pixel_formats)
     {
-        output->add_pixel_format(static_cast<uint32_t>(pf));
+        protobuf_output.add_pixel_format(static_cast<uint32_t>(pf));
     }
-    output->set_current_format(config.current_format_index);
+
+    for (auto const& mode : display_output.modes)
+    {
+        auto protobuf_output_mode = protobuf_output.add_mode();
+        protobuf_output_mode->set_horizontal_resolution(mode.size.width.as_uint32_t());
+        protobuf_output_mode->set_vertical_resolution(mode.size.height.as_uint32_t());
+        protobuf_output_mode->set_refresh_rate(mode.vrefresh_hz);
+    }
+
+    protobuf_output.set_physical_width_mm(display_output.physical_size_mm.width.as_uint32_t());
+    protobuf_output.set_physical_height_mm(display_output.physical_size_mm.height.as_uint32_t());
+
+    protobuf_output.set_connected(display_output.connected);
+    protobuf_output.set_used(display_output.used);
+    protobuf_output.set_position_x(display_output.top_left.x.as_uint32_t());
+    protobuf_output.set_position_y(display_output.top_left.y.as_uint32_t());
+    protobuf_output.set_current_mode(display_output.current_mode_index);
+    protobuf_output.set_current_format(display_output.current_format_index);
+}
+
+}
+
+void mfd::pack_protobuf_display_configuration(mp::DisplayConfiguration& protobuf_config,
+                                              mg::DisplayConfiguration const& display_config)
+{
+    display_config.for_each_output(
+        [&protobuf_config](mg::DisplayConfigurationOutput const& output)
+        {
+            auto protobuf_output = protobuf_config.add_display_output();
+            pack_protobuf_display_output(*protobuf_output, output);
+        });
 }
 
 mfd::ProtobufBufferPacker::ProtobufBufferPacker(protobuf::Buffer* response)

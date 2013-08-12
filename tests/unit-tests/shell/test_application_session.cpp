@@ -27,6 +27,7 @@
 #include "mir_test_doubles/stub_surface_builder.h"
 #include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/stub_surface.h"
+#include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 
@@ -49,7 +50,7 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
     mtd::StubSurfaceBuilder surface_builder;
 
-    return std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
+    return std::make_shared<mtd::MockSurface>(nullptr, std::make_shared<mtd::StubSurfaceBuilder>());
 }
 }
 
@@ -61,9 +62,9 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     mtd::NullEventSink sender;
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_,_,_)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_,_,_,_)).WillByDefault(Return(mock_surface));
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
     EXPECT_CALL(*mock_surface, destroy());
     
     mtd::MockSessionListener listener;
@@ -90,11 +91,11 @@ TEST(ApplicationSession, default_surface_is_first_surface)
 
     {
         InSequence seq;
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1)
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1)
             .WillOnce(Return(make_mock_surface()));
     }
 
@@ -129,13 +130,13 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     auto mock_surface = make_mock_surface();
 
     mtd::MockSurfaceFactory surface_factory;
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(Return(mock_surface));
+    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(Return(mock_surface));
 
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _));
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _));
 
     {
         InSequence seq;
@@ -185,7 +186,6 @@ TEST(Session, destroy_invalid_surface_throw_behavior)
     }, std::runtime_error);
 }
 
-
 TEST(Session, uses_snapshot_strategy)
 {
     using namespace ::testing;
@@ -210,4 +210,31 @@ TEST(Session, uses_snapshot_strategy)
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_));
 
     app_session.take_snapshot(msh::SnapshotCallback());
+}
+
+namespace
+{
+class MockEventSink : public mf::EventSink
+{
+public:
+    MOCK_METHOD1(handle_event, void(MirEvent const&));
+    MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
+};
+}
+TEST(Session, display_config_sender)
+{
+    using namespace ::testing;
+
+    mtd::StubDisplayConfig stub_config;
+    mtd::MockSurfaceFactory surface_factory;
+    MockEventSink sender;
+
+    EXPECT_CALL(sender, handle_display_config_change(testing::Ref(stub_config)))
+        .Times(1);
+
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
+                                        std::make_shared<mtd::NullSnapshotStrategy>(),
+                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+
+    app_session.send_display_config(stub_config);
 }

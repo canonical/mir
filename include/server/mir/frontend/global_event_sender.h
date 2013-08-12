@@ -16,39 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
-#define MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
+#ifndef MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_
+#define MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_
 
-#include "mir/graphics/buffer_ipc_packer.h"
-#include "mir_protobuf.pb.h"
+#include "event_sink.h"
+#include <memory>
 
 namespace mir
 {
-namespace graphics
+namespace shell
 {
-class DisplayConfiguration;
+class SessionContainer;
 }
 namespace frontend
 {
-namespace detail
-{
-
-void pack_protobuf_display_configuration(protobuf::DisplayConfiguration& protobuf_config,
-                                         graphics::DisplayConfiguration const& display_config);
-
-class ProtobufBufferPacker : public graphics::BufferIPCPacker
+class GlobalEventSender : public EventSink
 {
 public:
-    ProtobufBufferPacker(protobuf::Buffer*);
-    void pack_fd(int);
-    void pack_data(int);
-    void pack_stride(geometry::Stride);
+    GlobalEventSender(std::shared_ptr<shell::SessionContainer> const&);
+
+    void handle_event(MirEvent const& e);
+    void handle_display_config_change(graphics::DisplayConfiguration const& config);
+
 private:
-    protobuf::Buffer* buffer_response;
+    std::shared_ptr<shell::SessionContainer> const sessions;
 };
-
-}
 }
 }
 
-#endif /* MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_ */
+#endif /* MIR_FRONTEND_GLOBAL_EVENT_SENDER_H_ */

@@ -8,10 +8,12 @@ set(
   protobuf_message_processor.cpp
   protobuf_buffer_packer.cpp
   null_message_processor.cpp
+  global_event_sender.cpp
 
   resource_cache.cpp
   socket_messenger.cpp
   event_sender.cpp
+  surface.cpp
   ${PROTO_HDRS}
 )
 

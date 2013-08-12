@@ -157,7 +157,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          */
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
-        display_configuration->update_configuration(connect_result);
+        display_configuration->set_configuration(connect_result.display_configuration());
     }
 
     callback(this, context);
@@ -280,18 +280,21 @@ MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
     return display_configuration->copy_to_client();
 }
 
-void MirConnection::possible_pixel_formats(MirPixelFormat* formats,
-                                unsigned int formats_size, unsigned int& valid_formats)
+void MirConnection::possible_pixel_formats(
+    MirPixelFormat* formats,
+    unsigned int formats_size,
+    unsigned int& valid_formats)
 {
     //TODO we're just using the display buffer's pixel formats as the list of supported
     //     formats for the time being. should have a separate message
-    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
+    if (!connect_result.has_error() && connect_result.has_display_configuration() &&
+        connect_result.display_configuration().display_output_size() > 0)
     {
-        auto display_output = connect_result.display_output(0);
+        auto const& display_output = connect_result.display_configuration().display_output(0);
         valid_formats = std::min(
             static_cast<unsigned int>(display_output.pixel_format_size()), formats_size);
 
-        for(auto i=0u; i < valid_formats; i++)
+        for (auto i = 0u; i < valid_formats; i++)
         {
             formats[i] = static_cast<MirPixelFormat>(display_output.pixel_format(i));
         }      
@@ -331,21 +334,23 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
+    auto const& protobuf_config = connect_result.display_configuration();
+
     if ((!config) || (config->num_displays == 0) || (config->displays == NULL) || 
-        (config->num_displays > static_cast<unsigned int>(connect_result.display_output_size())))
+        (config->num_displays > static_cast<unsigned int>(protobuf_config.display_output_size())))
     {
         return false;
     }
 
     for(auto i = 0u; i < config->num_displays; i++)
     {
-        if (config->displays[i].current_mode >= static_cast<unsigned int>(connect_result.display_output(i).mode_size()))
+        if (config->displays[i].current_mode >= static_cast<unsigned int>(protobuf_config.display_output(i).mode_size()))
             return false;
 
         bool found = false;
-        for(auto j = 0; j < connect_result.display_output_size(); j++)
+        for (auto j = 0; j < protobuf_config.display_output_size(); j++)
         {
-            if (config->displays[i].output_id == connect_result.display_output(i).output_id())
+            if (config->displays[i].output_id == protobuf_config.display_output(i).output_id())
             {
                 found = true;
                 break;
