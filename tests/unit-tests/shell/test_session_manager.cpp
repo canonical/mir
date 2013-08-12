@@ -110,10 +110,11 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1);
+    EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
 
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
+    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
        Return(std::make_shared<msh::Surface>(
+           nullptr,
            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
 
@@ -147,8 +148,9 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
 TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
 {
     using namespace ::testing;
-    ON_CALL(surface_factory, create_surface(_, _, _)).WillByDefault(
+    ON_CALL(surface_factory, create_surface(_, _, _, _)).WillByDefault(
         Return(std::make_shared<msh::Surface>(
+           nullptr,
            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
            msh::a_surface(),mf::SurfaceId{}, std::shared_ptr<mf::EventSink>())));
 
@@ -157,7 +159,7 @@ TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses
         InSequence seq;
 
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
-        EXPECT_CALL(surface_factory, create_surface(_, _, _)).Times(1);
+        EXPECT_CALL(surface_factory, create_surface(_, _, _, _)).Times(1);
         EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
     }
 
