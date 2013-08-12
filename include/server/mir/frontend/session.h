@@ -34,6 +34,11 @@ namespace shell
 struct SurfaceCreationParameters;
 }
 
+namespace graphics
+{
+class DisplayConfiguration;
+}
+
 namespace frontend
 {
 class Surface;
@@ -52,6 +57,7 @@ public:
     virtual void hide() = 0;
     virtual void show() = 0;
 
+    virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
     virtual int configure_surface(SurfaceId id, MirSurfaceAttrib attrib, int value) = 0;
 
 protected:

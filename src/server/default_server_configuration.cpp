@@ -31,6 +31,7 @@
 #include "mir/frontend/null_message_processor_report.h"
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/session_authorizer.h"
+#include "mir/frontend/global_event_sender.h"
 #include "mir/frontend/resource_cache.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/unauthorized_display_changer.h"
@@ -459,6 +460,16 @@ std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
 {
     return the_session_manager();
+}
+
+std::shared_ptr<mf::EventSink>
+mir::DefaultServerConfiguration::the_global_event_sink()
+{
+    return global_event_sink(
+        [this]()
+        {
+            return std::make_shared<mf::GlobalEventSender>(the_shell_session_container());
+        }); 
 }
 
 std::shared_ptr<msh::FocusController>

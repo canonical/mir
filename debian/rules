@@ -38,5 +38,5 @@ endif
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
-	dh_makeshlibs -p libmirserver0 -V 'libmirserver0 (= ${EXACT_PACKAGE_VERSION})'
+	dh_makeshlibs -p libmirserver1 -V 'libmirserver1 (= ${EXACT_PACKAGE_VERSION})'
 	dh_makeshlibs --remaining-packages -V

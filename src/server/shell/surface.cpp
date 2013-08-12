@@ -40,6 +40,7 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 
 msh::Surface::Surface(
+    Session* session,
     std::shared_ptr<SurfaceBuilder> const& builder,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     shell::SurfaceCreationParameters const& params,
@@ -47,7 +48,7 @@ msh::Surface::Surface(
     std::shared_ptr<mf::EventSink> const& event_sink)
   : builder(builder),
     configurator(configurator),
-    surface(builder->create_surface(params)),
+    surface(builder->create_surface(session, params)),
     id(id),
     event_sink(event_sink),
     type_value(mir_surface_type_normal),
