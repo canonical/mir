@@ -48,6 +48,7 @@ public:
                     {geom::Size{123, 111}, 59.9},
                     {geom::Size{123, 111}, 59.9}
                 },
+                2,
                 geom::Size{324, 642},
                 true,
                 false,
@@ -63,6 +64,7 @@ public:
                 mg::DisplayConfigurationOutputType::vga,
                 {},
                 {},
+                1,
                 geom::Size{566, 111},
                 true,
                 false,
@@ -82,6 +84,7 @@ public:
                 {
                     {geom::Size{523, 555}, 60.0},
                 },
+                0,
                 geom::Size{324, 642},
                 true,
                 false,
@@ -99,6 +102,7 @@ public:
                     {geom::PixelFormat::abgr_8888}
                 },
                 {},
+                0,
                 geom::Size{324, 642},
                 false,
                 false,

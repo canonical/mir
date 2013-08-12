@@ -22,6 +22,8 @@
 #include "mir_toolkit/client_types.h"
 #include <gtest/gtest.h>
 
+#include <limits>
+
 namespace mg = mir::graphics;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
@@ -45,6 +47,7 @@ public:
                 static_cast<mg::DisplayConfigurationOutputType>(protobuf_output.type()),
                 {},
                 {},
+                std::numeric_limits<size_t>::max(),
                 geom::Size{protobuf_output.physical_width_mm(),
                            protobuf_output.physical_height_mm()},
                 static_cast<bool>(protobuf_output.connected()),
@@ -94,6 +97,7 @@ public:
                 static_cast<mg::DisplayConfigurationOutputType>(client_output.type),
                 {},
                 {},
+                std::numeric_limits<size_t>::max(),
                 geom::Size{client_output.physical_width_mm,
                            client_output.physical_height_mm},
                 static_cast<bool>(client_output.connected),

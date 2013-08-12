@@ -104,11 +104,13 @@ public:
 
     void setup_sample_modes()
     {
+        using fake = mtd::FakeDRMResources;
+
         /* Add DRM modes */
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 138500, 2080, 1111));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 148500, 2200, 1125));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
+        modes0.push_back(fake::create_mode(1920, 1080, 138500, 2080, 1111, fake::NormalMode));
+        modes0.push_back(fake::create_mode(1920, 1080, 148500, 2200, 1125, fake::PreferredMode));
+        modes0.push_back(fake::create_mode(1680, 1050, 119000, 1840, 1080, fake::NormalMode));
+        modes0.push_back(fake::create_mode(832, 624, 57284, 1152, 667, fake::NormalMode));
 
         /* Add the DisplayConfiguration modes corresponding to the DRM modes */
         for (auto const& mode : modes0)
@@ -180,6 +182,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             mg::DisplayConfigurationOutputType::hdmia,
             {},
             conf_modes0,
+            1,
             connector0_physical_size_mm,
             true,
             true,
@@ -193,6 +196,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             mg::DisplayConfigurationOutputType::unknown,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
+            std::numeric_limits<size_t>::max(),
             connector1_physical_size_mm,
             false,
             false,
@@ -206,6 +210,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
             mg::DisplayConfigurationOutputType::edp,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
+            std::numeric_limits<size_t>::max(),
             connector2_physical_size_mm,
             false,
             false,
@@ -340,6 +345,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             mg::DisplayConfigurationOutputType::composite,
             {},
             conf_modes0,
+            1,
             connector_physical_sizes_mm_before[0],
             true,
             true,
@@ -353,6 +359,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             mg::DisplayConfigurationOutputType::vga,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
+            std::numeric_limits<size_t>::max(),
             connector_physical_sizes_mm_before[1],
             false,
             false,
@@ -370,6 +377,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             mg::DisplayConfigurationOutputType::composite,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
+            std::numeric_limits<size_t>::max(),
             connector_physical_sizes_mm_after[0],
             false,
             true,
@@ -383,6 +391,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
             mg::DisplayConfigurationOutputType::vga,
             {},
             conf_modes0,
+            1,
             connector_physical_sizes_mm_after[1],
             true,
             false,

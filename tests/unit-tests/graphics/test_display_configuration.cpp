@@ -39,6 +39,7 @@ mg::DisplayConfigurationOutput const tmpl_output
         {geom::Size{10, 20}, 59.0},
         {geom::Size{15, 20}, 59.0}
     },
+    0,
     geom::Size{10, 20},
     true,
     true,
@@ -167,6 +168,17 @@ TEST(DisplayConfiguration, output_inequality_current_mode)
     mg::DisplayConfigurationOutput output2 = tmpl_output;
 
     output2.current_mode_index = 0;
+
+    EXPECT_NE(output1, output2);
+    EXPECT_NE(output2, output1);
+}
+
+TEST(DisplayConfiguration, output_inequality_preferred_mode)
+{
+    mg::DisplayConfigurationOutput const output1 = tmpl_output;
+    mg::DisplayConfigurationOutput output2 = tmpl_output;
+
+    output2.preferred_mode_index = 1;
 
     EXPECT_NE(output1, output2);
     EXPECT_NE(output2, output1);

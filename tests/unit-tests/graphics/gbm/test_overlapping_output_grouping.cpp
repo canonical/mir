@@ -72,6 +72,7 @@ public:
                 mg::DisplayConfigurationOutputType::svideo,
                 {},
                 modes,
+                i - 1,
                 {100, 100},
                 connected,
                 used,

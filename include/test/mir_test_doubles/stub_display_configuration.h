@@ -63,7 +63,7 @@ public:
                 graphics::DisplayConfigurationOutputId{static_cast<int>(i)},
                 graphics::DisplayConfigurationCardId{static_cast<int>(i)},
                 graphics::DisplayConfigurationOutputType::vga,
-                pfs, modes,
+                pfs, modes, i,
                 physical_size,
                 ((i % 2) == 0),
                 ((i % 2) == 1),

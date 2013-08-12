@@ -60,8 +60,10 @@ public:
     drmModeEncoder* find_encoder(uint32_t id);
     drmModeConnector* find_connector(uint32_t id);
 
+    enum ModePreference {NormalMode, PreferredMode};
     static drmModeModeInfo create_mode(uint16_t hdisplay, uint16_t vdisplay,
-                                       uint32_t clock, uint16_t htotal, uint16_t vtotal);
+                                       uint32_t clock, uint16_t htotal, uint16_t vtotal,
+                                       ModePreference preferred);
 
 private:
     int pipe_fds[2];

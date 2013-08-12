@@ -50,8 +50,8 @@ mgg::FakeDRMResources::FakeDRMResources()
     uint32_t const connector1_id{31};
     uint32_t const all_crtcs_mask{0x3};
 
-    modes.push_back(create_mode(1920, 1080, 138500, 2080, 1111));
-    modes.push_back(create_mode(832, 624, 57284, 1152, 667));
+    modes.push_back(create_mode(1920, 1080, 138500, 2080, 1111, PreferredMode));
+    modes.push_back(create_mode(832, 624, 57284, 1152, 667, NormalMode));
     connector_encoder_ids.push_back(encoder0_id);
     connector_encoder_ids.push_back(encoder1_id);
 
@@ -206,7 +206,8 @@ drmModeConnector* mgg::FakeDRMResources::find_connector(uint32_t id)
 
 drmModeModeInfo mgg::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t vdisplay,
                                                    uint32_t clock, uint16_t htotal,
-                                                   uint16_t vtotal)
+                                                   uint16_t vtotal,
+                                                   ModePreference preferred)
 {
     drmModeModeInfo mode = drmModeModeInfo();
 
@@ -215,6 +216,8 @@ drmModeModeInfo mgg::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t v
     mode.clock = clock;
     mode.htotal = htotal;
     mode.vtotal = vtotal;
+    if (preferred)
+        mode.type |= DRM_MODE_TYPE_PREFERRED;
 
     return mode;
 }

@@ -90,6 +90,8 @@ struct DisplayConfigurationOutput
     std::vector<geometry::PixelFormat> pixel_formats;
     /** The modes supported by the output. */
     std::vector<DisplayConfigurationMode> modes;
+    /** The index in the 'modes' vector of the preferred output mode. */
+    size_t preferred_mode_index;
     /** The physical size of the output. */
     geometry::Size physical_size_mm;
     /** Whether the output is connected. */

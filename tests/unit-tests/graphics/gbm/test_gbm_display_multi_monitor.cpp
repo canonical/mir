@@ -152,13 +152,15 @@ public:
 
     void setup_outputs(int n)
     {
+        using fake = mtd::FakeDRMResources;
+
         mtd::FakeDRMResources& resources(mock_drm.fake_drm);
 
         modes0.clear();
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 138500, 2080, 1111));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 148500, 2200, 1125));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
+        modes0.push_back(fake::create_mode(1920, 1080, 138500, 2080, 1111, fake::NormalMode));
+        modes0.push_back(fake::create_mode(1920, 1080, 148500, 2200, 1125, fake::PreferredMode));
+        modes0.push_back(fake::create_mode(1680, 1050, 119000, 1840, 1080, fake::NormalMode));
+        modes0.push_back(fake::create_mode(832, 624, 57284, 1152, 667, fake::NormalMode));
 
         geom::Size const connector_physical_size_mm{1597, 987};
 

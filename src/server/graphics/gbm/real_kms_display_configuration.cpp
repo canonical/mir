@@ -177,6 +177,7 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
     geom::Size physical_size{connector.mmWidth, connector.mmHeight};
     bool connected{connector.connection == DRM_MODE_CONNECTED};
     size_t current_mode_index{std::numeric_limits<size_t>::max()};
+    size_t preferred_mode_index{std::numeric_limits<size_t>::max()};
     std::vector<DisplayConfigurationMode> modes;
     std::vector<geom::PixelFormat> formats {geom::PixelFormat::argb_8888,
                                             geom::PixelFormat::xrgb_8888};
@@ -192,7 +193,7 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
             current_mode_info = crtc->mode;
     }
 
-    /* Add all the available modes and find the current one */
+    /* Add all the available modes and find the current and preferred one */
     for (int m = 0; m < connector.count_modes; m++)
     {
         drmModeModeInfo& mode_info = connector.modes[m];
@@ -205,6 +206,9 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
 
         if (kms_modes_are_equal(mode_info, current_mode_info))
             current_mode_index = m;
+
+        if ((mode_info.type & DRM_MODE_TYPE_PREFERRED) == DRM_MODE_TYPE_PREFERRED)
+            preferred_mode_index = m;
     }
 
     /* Add or update the output */
@@ -212,14 +216,16 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
 
     if (iter == outputs.end())
     {
-        outputs.push_back({id, card_id, type, formats, modes, physical_size,
-                           connected, false, geom::Point(), current_mode_index, 0u});
+        outputs.push_back({id, card_id, type, formats, modes, preferred_mode_index,
+                           physical_size, connected, false, geom::Point(),
+                           current_mode_index, 0u});
     }
     else
     {
         auto& output = *iter;
 
         output.modes = modes;
+        output.preferred_mode_index = preferred_mode_index;
         output.physical_size_mm = physical_size;
         output.connected = connected;
         output.current_mode_index = current_mode_index;
