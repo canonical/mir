@@ -1,3 +1,18 @@
+mir (0.0.9+13.10.20130812.3-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * eglapp: Add sizing parameters: -f (fullscreen) and -s WxH (specific
+    size).
+
+  [ Alan Griffiths ]
+  * frontend, examples, tests: provide a utility to adapt
+    frontend::Surface to the graphics::InternalSurface interface.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 966
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 14:04:37 +0000
+
 mir (0.0.9+13.10.20130812.2-0ubuntu1) saucy; urgency=low
 
   [ Robert Ancell ]
