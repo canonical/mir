@@ -1,3 +1,18 @@
+mir (0.0.9+13.10.20130812.1-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Fix libmirserver dependent packages requiring the exact version - it
+    hadn't been updated for the soname change in revision 948. (LP:
+    #1210811)
+
+  [ Alan Griffiths ]
+  * platform: workaround link errors on i386/g++ 4.8.1. (LP: #1208774)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 960
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 06:04:36 +0000
+
 mir (0.0.9-0ubuntu1) saucy; urgency=low
 
   * New release
