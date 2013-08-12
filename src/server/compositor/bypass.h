@@ -79,7 +79,7 @@ private:
     glm::mat4 fullscreen;
 };
 
-class BypassSearch : public OperatorForScene
+class BypassMatch : public OperatorForScene
 {
 public:
     void operator()(CompositingCriteria const&,

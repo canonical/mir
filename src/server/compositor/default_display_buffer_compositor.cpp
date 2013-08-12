@@ -68,15 +68,15 @@ void mc::DefaultDisplayBufferCompositor::composite()
     if (display_buffer.can_bypass())
     {
         mc::BypassFilter filter(display_buffer);
-        mc::BypassSearch search;
+        mc::BypassMatch match;
 
         // It would be *really* nice if Scene had an iterator to simplify this
-        scene->for_each_if(filter, search);
+        scene->for_each_if(filter, match);
 
         if (filter.fullscreen_on_top())
         {
             auto bypass_buf =
-                search.topmost_fullscreen()->lock_compositor_buffer();
+                match.topmost_fullscreen()->lock_compositor_buffer();
 
             if (bypass_buf->can_scanout())
             {
