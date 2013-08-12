@@ -69,7 +69,7 @@ char const* output_type_to_string(mg::DisplayConfigurationOutputType type)
 
     auto index = static_cast<ssize_t>(type);
     static auto const size = std::distance(std::begin(type_names), std::end(type_names));
-    if (index >= size)
+    if (index >= size || index < 0)
         return "invalid";
 
     return type_names[index];
