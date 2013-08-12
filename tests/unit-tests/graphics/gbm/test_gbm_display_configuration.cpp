@@ -104,11 +104,13 @@ public:
 
     void setup_sample_modes()
     {
+        using fake = mtd::FakeDRMResources;
+
         /* Add DRM modes */
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 138500, 2080, 1111));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 148500, 2200, 1125));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
+        modes0.push_back(fake::create_mode(1920, 1080, 138500, 2080, 1111, fake::NormalMode));
+        modes0.push_back(fake::create_mode(1920, 1080, 148500, 2200, 1125, fake::PreferredMode));
+        modes0.push_back(fake::create_mode(1680, 1050, 119000, 1840, 1080, fake::NormalMode));
+        modes0.push_back(fake::create_mode(832, 624, 57284, 1152, 667, fake::NormalMode));
 
         /* Add the DisplayConfiguration modes corresponding to the DRM modes */
         for (auto const& mode : modes0)
@@ -146,6 +148,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     geom::Size const connector2_physical_size_mm{};
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
+    size_t const max_simultaneous_outputs{1};
 
     mtd::FakeDRMResources& resources(mock_drm.fake_drm);
 
@@ -156,26 +159,39 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
     resources.add_encoder(encoder1_id, invalid_id, possible_crtcs_mask_empty);
 
-    resources.add_connector(connector0_id, DRM_MODE_CONNECTED, encoder0_id,
+    resources.add_connector(connector0_id, DRM_MODE_CONNECTOR_HDMIA,
+                            DRM_MODE_CONNECTED, encoder0_id,
                             modes0, possible_encoder_ids_empty,
                             connector0_physical_size_mm);
-    resources.add_connector(connector1_id, DRM_MODE_DISCONNECTED, invalid_id,
+    resources.add_connector(connector1_id, DRM_MODE_CONNECTOR_Unknown,
+                            DRM_MODE_DISCONNECTED, invalid_id,
                             modes_empty, possible_encoder_ids_empty,
                             connector1_physical_size_mm);
-    resources.add_connector(connector2_id, DRM_MODE_DISCONNECTED, encoder1_id,
+    resources.add_connector(connector2_id, DRM_MODE_CONNECTOR_eDP,
+                            DRM_MODE_DISCONNECTED, encoder1_id,
                             modes_empty, possible_encoder_ids_empty,
                             connector2_physical_size_mm);
 
     resources.prepare();
 
     /* Expected results */
+    std::vector<mg::DisplayConfigurationCard> const expected_cards =
+    {
+        {
+            mg::DisplayConfigurationCardId{0},
+            max_simultaneous_outputs
+        }
+    };
+
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
     {
         {
             mg::DisplayConfigurationOutputId{connector0_id},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::hdmia,
             {},
             conf_modes0,
+            1,
             connector0_physical_size_mm,
             true,
             true,
@@ -186,8 +202,10 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{connector1_id},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::unknown,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
+            std::numeric_limits<size_t>::max(),
             connector1_physical_size_mm,
             false,
             false,
@@ -198,8 +216,10 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{connector2_id},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::edp,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
+            std::numeric_limits<size_t>::max(),
             connector2_physical_size_mm,
             false,
             false,
@@ -213,6 +233,15 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     auto display = create_display(create_platform());
 
     auto conf = display->configuration();
+
+    size_t card_count{0};
+
+    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
+    {
+        ASSERT_LT(card_count, expected_cards.size());
+        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
+        ++card_count;
+    });
 
     size_t output_count{0};
 
@@ -243,7 +272,8 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
     resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
     for (auto id : connector_ids)
     {
-        resources.add_connector(id, DRM_MODE_CONNECTED, encoder0_id,
+        resources.add_connector(id, DRM_MODE_CONNECTOR_DVID,
+                                DRM_MODE_CONNECTED, encoder0_id,
                                 modes0, encoder_ids,
                                 geom::Size());
     }
@@ -285,7 +315,8 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
     resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
     for (auto id : connector_ids)
     {
-        resources.add_connector(id, DRM_MODE_CONNECTED, encoder0_id,
+        resources.add_connector(id, DRM_MODE_CONNECTOR_VGA,
+                                DRM_MODE_CONNECTED, encoder0_id,
                                 modes0, encoder_ids,
                                 geom::Size());
     }
@@ -322,15 +353,26 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
     };
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
+    size_t const max_simultaneous_outputs{1};
 
     /* Expected results */
+    std::vector<mg::DisplayConfigurationCard> const expected_cards =
+    {
+        {
+            mg::DisplayConfigurationCardId{0},
+            max_simultaneous_outputs
+        }
+    };
+
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
     {
         {
             mg::DisplayConfigurationOutputId(connector_ids[0]),
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::composite,
             {},
             conf_modes0,
+            1,
             connector_physical_sizes_mm_before[0],
             true,
             true,
@@ -341,8 +383,10 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::vga,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
+            std::numeric_limits<size_t>::max(),
             connector_physical_sizes_mm_before[1],
             false,
             false,
@@ -357,8 +401,10 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[0]),
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::composite,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
+            std::numeric_limits<size_t>::max(),
             connector_physical_sizes_mm_after[0],
             false,
             true,
@@ -369,8 +415,10 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::vga,
             {},
             conf_modes0,
+            1,
             connector_physical_sizes_mm_after[1],
             true,
             false,
@@ -390,10 +438,12 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
     resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
     resources.add_encoder(encoder_ids[1], invalid_id, possible_crtcs_mask_empty);
 
-    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTED, encoder_ids[0],
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_CONNECTED, encoder_ids[0],
                             modes0, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_before[0]);
-    resources.add_connector(connector_ids[1], DRM_MODE_DISCONNECTED, invalid_id,
+    resources.add_connector(connector_ids[1], DRM_MODE_CONNECTOR_VGA,
+                            DRM_MODE_DISCONNECTED, invalid_id,
                             modes_empty, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_before[1]);
 
@@ -402,6 +452,15 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
     auto display = create_display(create_platform());
 
     auto conf = display->configuration();
+
+    size_t card_count{0};
+
+    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
+    {
+        ASSERT_LT(card_count, expected_cards.size());
+        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
+        ++card_count;
+    });
 
     size_t output_count{0};
 
@@ -422,16 +481,27 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
     resources.add_encoder(encoder_ids[0], invalid_id, possible_crtcs_mask_empty);
     resources.add_encoder(encoder_ids[1], crtc_ids[1], possible_crtcs_mask_empty);
 
-    resources.add_connector(connector_ids[0], DRM_MODE_DISCONNECTED, invalid_id,
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_DISCONNECTED, invalid_id,
                             modes_empty, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_after[0]);
-    resources.add_connector(connector_ids[1], DRM_MODE_CONNECTED, encoder_ids[1],
+    resources.add_connector(connector_ids[1], DRM_MODE_CONNECTOR_VGA,
+                            DRM_MODE_CONNECTED, encoder_ids[1],
                             modes0, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_after[1]);
 
     resources.prepare();
 
     conf = display->configuration();
+
+    card_count = 0;
+
+    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
+    {
+        ASSERT_LT(card_count, expected_cards.size());
+        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
+        ++card_count;
+    });
 
     output_count = 0;
 
