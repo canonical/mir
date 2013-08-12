@@ -51,15 +51,13 @@ class ClonedDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
 public:
     void apply_to(mg::DisplayConfiguration& conf)
     {
-        size_t const preferred_mode_index{0};
-
         conf.for_each_output(
             [&](mg::DisplayConfigurationOutput const& conf_output)
             {
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
                     conf.configure_output(conf_output.id, true, geom::Point{0, 0},
-                                          preferred_mode_index);
+                                          conf_output.preferred_mode_index);
                 }
                 else
                 {
@@ -75,7 +73,6 @@ class SideBySideDisplayConfigurationPolicy : public mg::DisplayConfigurationPoli
 public:
     void apply_to(mg::DisplayConfiguration& conf)
     {
-        size_t const preferred_mode_index{0};
         int max_x = 0;
 
         conf.for_each_output(
@@ -84,8 +81,8 @@ public:
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
                     conf.configure_output(conf_output.id, true, geom::Point{max_x, 0},
-                                          preferred_mode_index);
-                    max_x += conf_output.modes[0].size.width.as_int();
+                                          conf_output.preferred_mode_index);
+                    max_x += conf_output.modes[conf_output.preferred_mode_index].size.width.as_int();
                 }
                 else
                 {

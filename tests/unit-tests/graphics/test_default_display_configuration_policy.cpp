@@ -64,7 +64,7 @@ public:
                 mg::DisplayConfigurationOutputType::vga,
                 {},
                 {},
-                1,
+                std::numeric_limits<size_t>::max(),
                 geom::Size{566, 111},
                 true,
                 false,
@@ -137,14 +137,13 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 {
     mg::DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration conf;
-    size_t const highest_mode{0};
 
     conf.for_each_output([&conf](mg::DisplayConfigurationOutput const& output)
     {
         if (output.connected && output.modes.size() > 0)
         {
             EXPECT_CALL(conf, configure_output(output.id, true, geom::Point(),
-                                               highest_mode));
+                                               output.preferred_mode_index));
         }
         else
         {
