@@ -29,10 +29,11 @@
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
-namespace mt = mir::test;
-namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
 
 namespace
 {
@@ -104,6 +105,9 @@ struct StubShellSession : public msh::Session
     int configure_surface(mf::SurfaceId, MirSurfaceAttrib, int)
     {
         return 0;
+    }
+    void send_display_config(mg::DisplayConfiguration const&)
+    {
     }
     void take_snapshot(msh::SnapshotCallback const&)
     {

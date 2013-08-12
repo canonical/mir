@@ -26,6 +26,7 @@
 #include "mir/shell/null_session_listener.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
+#include "mir/graphics/display_configuration.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -44,6 +45,7 @@
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace geom = mir::geometry;
@@ -138,6 +140,7 @@ struct MockShellSession : public msh::Session
     MOCK_METHOD0(show, void());
     
     MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
+    MOCK_METHOD1(send_display_config, void(mg::DisplayConfiguration const&));
 };
 }
 

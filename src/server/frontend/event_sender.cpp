@@ -49,16 +49,13 @@ void mfd::EventSender::handle_event(MirEvent const& e)
     }
 }
 
-void mfd::EventSender::handle_display_config_change(graphics::DisplayConfiguration const& display_config)
+void mfd::EventSender::handle_display_config_change(
+    graphics::DisplayConfiguration const& display_config)
 {
     mp::EventSequence seq;
-    auto message = seq.mutable_display_configuration();
 
-    display_config.for_each_output([&message](mg::DisplayConfigurationOutput const& config)
-    {
-        auto disp = message->add_display_output();
-        mfd::pack_protobuf_display_output(disp, config); 
-    });
+    auto protobuf_config = seq.mutable_display_configuration();
+    mfd::pack_protobuf_display_configuration(*protobuf_config, display_config);
 
     send_event_sequence(seq);
 }

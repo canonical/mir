@@ -58,6 +58,9 @@ struct StubSession : public frontend::Session
     {
         return 0;
     }
+    void send_display_config(graphics::DisplayConfiguration const&)
+    {
+    }
 };
 
 }

@@ -38,8 +38,8 @@ namespace doubles
 
 struct MockSurface : public shell::Surface
 {
-    MockSurface(std::shared_ptr<shell::SurfaceBuilder> const& builder) :
-        shell::Surface(builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(), 
+    MockSurface(shell::Session* session, std::shared_ptr<shell::SurfaceBuilder> const& builder) :
+        shell::Surface(session, builder, std::make_shared<NullSurfaceConfigurator>(), shell::a_surface(), 
             frontend::SurfaceId{}, std::make_shared<NullEventSink>())
     {
     }

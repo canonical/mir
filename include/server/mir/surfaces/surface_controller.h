@@ -25,6 +25,11 @@
 
 namespace mir
 {
+namespace shell
+{
+class Session;
+}
+
 namespace surfaces
 {
 class SurfaceStackModel;
@@ -35,7 +40,7 @@ class SurfaceController : public shell::SurfaceBuilder, public shell::SurfaceCon
 public:
     explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    virtual std::weak_ptr<Surface> create_surface(shell::SurfaceCreationParameters const& params);
+    virtual std::weak_ptr<Surface> create_surface(shell::Session* session, shell::SurfaceCreationParameters const& params);
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface);
 
     virtual void raise(std::weak_ptr<Surface> const& surface);

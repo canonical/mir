@@ -22,10 +22,12 @@
 #include "mir/shell/session.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface.h"
+#include "mir/graphics/display_configuration.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_shell_session.h"
 #include "mir_test_doubles/stub_surface.h"
 #include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/stub_surface_builder.h"
@@ -43,6 +45,7 @@ namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace ms = mir::surfaces;
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -62,8 +65,8 @@ struct MockShellSession : public msh::Session
 
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
-    
     MOCK_METHOD3(configure_surface, int(mf::SurfaceId, MirSurfaceAttrib, int));
+    MOCK_METHOD1(send_display_config, void(mg::DisplayConfiguration const&));
 };
 
 struct MockFocusSequence : public msh::FocusSequence
@@ -80,8 +83,8 @@ struct DefaultFocusMechanism : public testing::Test
         controller = std::make_shared<mtd::StubSurfaceController>();
 
         //TODO: extremely kludgy that a mock needs to be constructed this way 
-        mock_surface1 = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
-        mock_surface2 = std::make_shared<mtd::MockSurface>(std::make_shared<mtd::StubSurfaceBuilder>());
+        mock_surface1 = std::make_shared<mtd::MockSurface>(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
+        mock_surface2 = std::make_shared<mtd::MockSurface>(&app2, std::make_shared<mtd::StubSurfaceBuilder>());
         ON_CALL(app1, default_surface())
             .WillByDefault(testing::Return(mock_surface1));
         ON_CALL(app2, default_surface())
@@ -93,12 +96,12 @@ struct DefaultFocusMechanism : public testing::Test
     testing::NiceMock<MockShellSession> app2;
     testing::NiceMock<mtd::MockSessionListener> mock_listener;
     testing::NiceMock<MockFocusSequence> focus_sequence;
+    std::shared_ptr<msh::SurfaceController> controller;
+
     mtd::StubInputTargeter targeter;
-    std::shared_ptr<mtd::StubSurfaceController> controller;
 };
 
 }
-
 
 TEST_F(DefaultFocusMechanism, raises_default_surface)
 {
@@ -106,12 +109,7 @@ TEST_F(DefaultFocusMechanism, raises_default_surface)
     
     EXPECT_CALL(mock_listener, focused(_))
         .Times(1);
- 
-    mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    EXPECT_CALL(app1, default_surface())
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(mock_surface)));
-    EXPECT_CALL(mock_surface,
+    EXPECT_CALL(*mock_surface1,
          raise(Eq(controller))).Times(1);
 
     msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(focus_sequence),
@@ -163,28 +161,10 @@ TEST_F(DefaultFocusMechanism, sets_input_focus)
 {
     using namespace ::testing;
     
-    Sequence seq1;
-    mtd::MockSurface mock_surface(std::make_shared<mtd::StubSurfaceBuilder>());
-    EXPECT_CALL(app1, default_surface())
-        .InSequence(seq1)
-        .WillOnce(Return(mt::fake_shared(mock_surface)));
-    EXPECT_CALL(app1, default_surface())
-        .InSequence(seq1)
-        .WillOnce(Return(std::shared_ptr<msh::Surface>()));
-
-    mtd::MockInputTargeter targeter;
+    EXPECT_CALL(*mock_surface1, take_input_focus(_)).Times(1);
     
-    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(focus_sequence),
-        mt::fake_shared(targeter), controller, mt::fake_shared(mock_listener));
+    msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(focus_sequence), mt::fake_shared(targeter), controller,
+        mt::fake_shared(mock_listener));
     
-    Sequence seq2;
-    EXPECT_CALL(mock_surface, take_input_focus(_))
-        .InSequence(seq2);
-    // When we have no default surface.
-    EXPECT_CALL(targeter, focus_cleared())
-        .InSequence(seq2);
-   
-    auto app = mt::fake_shared(app1); 
-    focus_mechanism.surface_created_for(app);
-    focus_mechanism.surface_created_for(app);
+    focus_mechanism.surface_created_for(mt::fake_shared(app1));
 }
