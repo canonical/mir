@@ -47,7 +47,7 @@ public:
     DisplayConfiguration();
     ~DisplayConfiguration();
 
-    void update_configuration(mir::protobuf::Connection const& msg);
+    void set_configuration(mir::protobuf::DisplayConfiguration const& msg);
     void update_configuration(mir::protobuf::DisplayConfiguration const& msg);
     void set_display_change_handler(std::function<void()> const&);
 

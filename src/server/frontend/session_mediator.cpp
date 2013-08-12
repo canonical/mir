@@ -98,12 +98,8 @@ void mf::SessionMediator::connect(
         platform->add_fd(ipc_fds);
 
     auto display_config = display_changer->active_configuration();
-    display_config->for_each_output([&response](mg::DisplayConfigurationOutput const& config)
-    {
-        auto output = response->add_display_output();
-        mfd::pack_protobuf_display_output(output, config);
-
-    });
+    auto protobuf_config = response->mutable_display_configuration();
+    mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
     resource_cache->save_resource(response, ipc_package);
 

@@ -179,7 +179,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             auto configuration = mir_connection_create_display_config(connection);
 
-            EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(StubChanger::stub_display_config.outputs));
+            EXPECT_THAT(*configuration, mt::DisplayConfigMatches(std::cref(StubChanger::stub_display_config)));
 
             mir_display_config_destroy(configuration);
             mir_connection_release(connection);
@@ -422,7 +422,8 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
         {
             auto configuration = mir_connection_create_display_config(connection);
 
-            EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(changed_stub_display_config.outputs));
+            EXPECT_THAT(*configuration,
+                        mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
             mir_display_config_destroy(configuration);
 
             auto client_config = static_cast<SubscribedClient*>(context); 
@@ -494,7 +495,8 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
             }
 
             EXPECT_LT(fail_count, fail_limit);
-            EXPECT_THAT(configuration, mt::ClientTypeConfigMatches(changed_stub_display_config.outputs));
+            EXPECT_THAT(*configuration,
+                        mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
             mir_display_config_destroy(configuration);
 
             mir_connection_release(connection);
