@@ -56,6 +56,7 @@ public:
     AndroidDisplayConfiguration(geom::Size const& display_size)
         : configuration{mg::DisplayConfigurationOutputId{0},
                         mg::DisplayConfigurationCardId{0},
+                        mg::DisplayConfigurationOutputType::lvds,
                         {geom::PixelFormat::abgr_8888},
                         {mg::DisplayConfigurationMode{display_size,0.0f}},
                         geom::Size{0,0},

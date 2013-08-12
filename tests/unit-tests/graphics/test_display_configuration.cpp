@@ -30,6 +30,7 @@ mg::DisplayConfigurationOutput const tmpl_output
 {
     mg::DisplayConfigurationOutputId{3},
     mg::DisplayConfigurationCardId{2},
+    mg::DisplayConfigurationOutputType::dvid,
     {
         {geom::PixelFormat::abgr_8888}
     },

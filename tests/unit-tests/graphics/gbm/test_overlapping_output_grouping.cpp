@@ -69,6 +69,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId(i),
                 mg::DisplayConfigurationCardId{1},
+                mg::DisplayConfigurationOutputType::svideo,
                 {},
                 modes,
                 {100, 100},

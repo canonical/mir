@@ -186,7 +186,8 @@ public:
             uint32_t const connector_id{connector_base_id + i};
 
             connector_ids.push_back(connector_id);
-            resources.add_connector(connector_id, DRM_MODE_CONNECTED, encoder_ids[i],
+            resources.add_connector(connector_id, DRM_MODE_CONNECTOR_VGA,
+                                    DRM_MODE_CONNECTED, encoder_ids[i],
                                     modes0, encoder_ids, connector_physical_size_mm);
         }
 

@@ -90,6 +90,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             {
                 mg::DisplayConfigurationOutputId{10},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {},
                 {
                     {geom::Size{10, 20}, 59.9},
@@ -106,6 +107,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             {
                 mg::DisplayConfigurationOutputId{11},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {},
                 {
                     {geom::Size{200, 200}, 59.9},

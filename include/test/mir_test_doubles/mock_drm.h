@@ -48,7 +48,7 @@ public:
 
     void add_crtc(uint32_t id, drmModeModeInfo mode);
     void add_encoder(uint32_t encoder_id, uint32_t crtc_id, uint32_t possible_crtcs_mask);
-    void add_connector(uint32_t connector_id, drmModeConnection connection,
+    void add_connector(uint32_t connector_id, uint32_t type, drmModeConnection connection,
                        uint32_t encoder_id, std::vector<drmModeModeInfo>& modes,
                        std::vector<uint32_t>& possible_encoder_ids,
                        geometry::Size const& physical_size);

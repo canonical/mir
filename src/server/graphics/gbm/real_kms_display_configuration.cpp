@@ -59,6 +59,12 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
     return round(vrefresh_hz * 10.0) / 10.0;
 }
 
+mg::DisplayConfigurationOutputType
+kms_connector_type_to_output_type(uint32_t connector_type)
+{
+    return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
+}
+
 }
 
 mgg::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(int drm_fd)
@@ -166,6 +172,8 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
 {
     DisplayConfigurationOutputId id{static_cast<int>(connector.connector_id)};
     DisplayConfigurationCardId card_id{0};
+    DisplayConfigurationOutputType const type{
+        kms_connector_type_to_output_type(connector.connector_type)};
     geom::Size physical_size{connector.mmWidth, connector.mmHeight};
     bool connected{connector.connection == DRM_MODE_CONNECTED};
     size_t current_mode_index{std::numeric_limits<size_t>::max()};
@@ -204,7 +212,7 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
 
     if (iter == outputs.end())
     {
-        outputs.push_back({id, card_id, formats, modes, physical_size,
+        outputs.push_back({id, card_id, type, formats, modes, physical_size,
                            connected, false, geom::Point(), current_mode_index, 0u});
     }
     else

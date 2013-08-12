@@ -156,13 +156,16 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
     resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
     resources.add_encoder(encoder1_id, invalid_id, possible_crtcs_mask_empty);
 
-    resources.add_connector(connector0_id, DRM_MODE_CONNECTED, encoder0_id,
+    resources.add_connector(connector0_id, DRM_MODE_CONNECTOR_HDMIA,
+                            DRM_MODE_CONNECTED, encoder0_id,
                             modes0, possible_encoder_ids_empty,
                             connector0_physical_size_mm);
-    resources.add_connector(connector1_id, DRM_MODE_DISCONNECTED, invalid_id,
+    resources.add_connector(connector1_id, DRM_MODE_CONNECTOR_Unknown,
+                            DRM_MODE_DISCONNECTED, invalid_id,
                             modes_empty, possible_encoder_ids_empty,
                             connector1_physical_size_mm);
-    resources.add_connector(connector2_id, DRM_MODE_DISCONNECTED, encoder1_id,
+    resources.add_connector(connector2_id, DRM_MODE_CONNECTOR_eDP,
+                            DRM_MODE_DISCONNECTED, encoder1_id,
                             modes_empty, possible_encoder_ids_empty,
                             connector2_physical_size_mm);
 
@@ -174,6 +177,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{connector0_id},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::hdmia,
             {},
             conf_modes0,
             connector0_physical_size_mm,
@@ -186,6 +190,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{connector1_id},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::unknown,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
             connector1_physical_size_mm,
@@ -198,6 +203,7 @@ TEST_F(GBMDisplayConfigurationTest, configuration_is_read_correctly)
         {
             mg::DisplayConfigurationOutputId{connector2_id},
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::edp,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
             connector2_physical_size_mm,
@@ -243,7 +249,8 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
     resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
     for (auto id : connector_ids)
     {
-        resources.add_connector(id, DRM_MODE_CONNECTED, encoder0_id,
+        resources.add_connector(id, DRM_MODE_CONNECTOR_DVID,
+                                DRM_MODE_CONNECTED, encoder0_id,
                                 modes0, encoder_ids,
                                 geom::Size());
     }
@@ -285,7 +292,8 @@ TEST_F(GBMDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
     resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
     for (auto id : connector_ids)
     {
-        resources.add_connector(id, DRM_MODE_CONNECTED, encoder0_id,
+        resources.add_connector(id, DRM_MODE_CONNECTOR_VGA,
+                                DRM_MODE_CONNECTED, encoder0_id,
                                 modes0, encoder_ids,
                                 geom::Size());
     }
@@ -329,6 +337,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[0]),
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::composite,
             {},
             conf_modes0,
             connector_physical_sizes_mm_before[0],
@@ -341,6 +350,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::vga,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
             connector_physical_sizes_mm_before[1],
@@ -357,6 +367,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[0]),
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::composite,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
             connector_physical_sizes_mm_after[0],
@@ -369,6 +380,7 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
             mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::vga,
             {},
             conf_modes0,
             connector_physical_sizes_mm_after[1],
@@ -390,10 +402,12 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
     resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
     resources.add_encoder(encoder_ids[1], invalid_id, possible_crtcs_mask_empty);
 
-    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTED, encoder_ids[0],
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_CONNECTED, encoder_ids[0],
                             modes0, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_before[0]);
-    resources.add_connector(connector_ids[1], DRM_MODE_DISCONNECTED, invalid_id,
+    resources.add_connector(connector_ids[1], DRM_MODE_CONNECTOR_VGA,
+                            DRM_MODE_DISCONNECTED, invalid_id,
                             modes_empty, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_before[1]);
 
@@ -422,10 +436,12 @@ TEST_F(GBMDisplayConfigurationTest, returns_updated_configuration)
     resources.add_encoder(encoder_ids[0], invalid_id, possible_crtcs_mask_empty);
     resources.add_encoder(encoder_ids[1], crtc_ids[1], possible_crtcs_mask_empty);
 
-    resources.add_connector(connector_ids[0], DRM_MODE_DISCONNECTED, invalid_id,
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_DISCONNECTED, invalid_id,
                             modes_empty, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_after[0]);
-    resources.add_connector(connector_ids[1], DRM_MODE_CONNECTED, encoder_ids[1],
+    resources.add_connector(connector_ids[1], DRM_MODE_CONNECTOR_VGA,
+                            DRM_MODE_CONNECTED, encoder_ids[1],
                             modes0, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_after[1]);
 

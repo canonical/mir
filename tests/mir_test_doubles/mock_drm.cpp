@@ -61,9 +61,11 @@ mgg::FakeDRMResources::FakeDRMResources()
     add_encoder(encoder0_id, invalid_id, all_crtcs_mask);
     add_encoder(encoder1_id, crtc1_id, all_crtcs_mask);
 
-    add_connector(connector0_id, DRM_MODE_DISCONNECTED, invalid_id,
+    add_connector(connector0_id, DRM_MODE_CONNECTOR_VGA,
+                  DRM_MODE_DISCONNECTED, invalid_id,
                   modes_empty, connector_encoder_ids, geom::Size());
-    add_connector(connector1_id, DRM_MODE_CONNECTED, encoder1_id,
+    add_connector(connector1_id, DRM_MODE_CONNECTOR_DVID,
+                  DRM_MODE_CONNECTED, encoder1_id,
                   modes, connector_encoder_ids,
                   geom::Size{121, 144});
 
@@ -148,6 +150,7 @@ void mgg::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id,
 }
 
 void mgg::FakeDRMResources::add_connector(uint32_t connector_id,
+                                          uint32_t type,
                                           drmModeConnection connection,
                                           uint32_t encoder_id,
                                           std::vector<drmModeModeInfo>& modes,
@@ -157,6 +160,7 @@ void mgg::FakeDRMResources::add_connector(uint32_t connector_id,
     drmModeConnector connector = drmModeConnector();
 
     connector.connector_id = connector_id;
+    connector.connector_type = type;
     connector.connection = connection;
     connector.encoder_id = encoder_id;
     connector.modes = modes.data();

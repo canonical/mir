@@ -39,6 +39,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId{10},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {
                     {geom::PixelFormat::abgr_8888}
                 },
@@ -59,6 +60,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId{11},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {},
                 {},
                 geom::Size{566, 111},
@@ -73,6 +75,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId{12},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {
                     {geom::PixelFormat::abgr_8888}
                 },
@@ -91,6 +94,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId{13},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {
                     {geom::PixelFormat::abgr_8888}
                 },

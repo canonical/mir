@@ -45,6 +45,28 @@ struct DisplayConfigurationCard
 };
 
 /**
+ * The type of a display output.
+ */
+enum class DisplayConfigurationOutputType
+{
+    unknown,
+    vga,
+    dvii,
+    dvid,
+    dvia,
+    composite,
+    svideo,
+    lvds,
+    component,
+    ninepindin,
+    displayport,
+    hdmia,
+    hdmib,
+    tv,
+    edp
+};
+
+/**
  * Configuration information for a display output mode.
  */
 struct DisplayConfigurationMode
@@ -62,6 +84,8 @@ struct DisplayConfigurationOutput
     DisplayConfigurationOutputId id;
     /** The id of the card the output is connected to. */
     DisplayConfigurationCardId card_id;
+    /** The type of the output. */
+    DisplayConfigurationOutputType type;
     /** The pixel formats supported by the output */
     std::vector<geometry::PixelFormat> pixel_formats;
     /** The modes supported by the output. */

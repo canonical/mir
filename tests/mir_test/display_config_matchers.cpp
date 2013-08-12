@@ -42,6 +42,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId(protobuf_output.output_id()),
                 mg::DisplayConfigurationCardId(protobuf_output.card_id()),
+                mg::DisplayConfigurationOutputType::unknown,
                 {},
                 {},
                 geom::Size{protobuf_output.physical_width_mm(),
@@ -90,6 +91,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId(client_output.output_id),
                 mg::DisplayConfigurationCardId(client_output.card_id),
+                mg::DisplayConfigurationOutputType::unknown,
                 {},
                 {},
                 geom::Size{client_output.physical_width_mm,
