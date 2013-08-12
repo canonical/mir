@@ -69,7 +69,7 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
 }
 
-void mgn::detail::EGLDisplayHandle::initialize_egl() const
+void mgn::detail::EGLDisplayHandle::initialize() const
 {
     int res;
     int major;
@@ -81,6 +81,31 @@ void mgn::detail::EGLDisplayHandle::initialize_egl() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
+}
+
+EGLConfig mgn::detail::EGLDisplayHandle::choose_config(const EGLint attrib_list[]) const
+{
+    EGLConfig result;
+    int n;
+
+    int res = eglChooseConfig(egl_display, attrib_list, &result, 1, &n);
+    if ((res != EGL_TRUE) || (n != 1))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to choose EGL configuration."));
+
+    return result;
+}
+
+EGLSurface mgn::detail::EGLDisplayHandle::egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const
+{
+    auto const native_window = (EGLNativeWindowType)mir_surface_get_egl_native_window(mir_surface);
+    if (!native_window)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window."));
+
+    EGLSurface egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
+    if (egl_surface == EGL_NO_SURFACE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
+
+    return egl_surface;
 }
 
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
@@ -110,33 +135,14 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
     display_report{display_report},
     mir_surface{connection},
     egl_display{connection},
-    egl_context{EGL_NO_CONTEXT}
+    egl_config{(egl_display.initialize(), egl_display.choose_config(egl_attribs))},
+    egl_surface{egl_display.egl_surface(egl_config, mir_surface)},
+    egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)}
 {
-    egl_display.initialize_egl();
-
-    int n;
-
-    int res = eglChooseConfig(egl_display, egl_attribs, &egl_config, 1, &n);
-    if ((res != EGL_TRUE) || (n != 1))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to choose EGL configuration."));
-
-
-    EGLNativeWindowType native_window;
-    if (!(native_window = (EGLNativeWindowType) mir_surface_get_egl_native_window(mir_surface)))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL native window."));
-
-    egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
-    if (egl_surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create EGL surface."));
-
-
-    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs);
-    if (egl_context == EGL_NO_CONTEXT)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to create context."));
-
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
 
+    // TODO is there any point to this? (Could egl_surface really be different?)
     egl_surface = eglGetCurrentSurface(EGL_DRAW);
     if (egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get current EGL surface."));
@@ -145,9 +151,7 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
 mgn::NestedDisplay::~NestedDisplay()
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
-    eglDestroyContext(egl_display, egl_context);
 }
 
 geom::Rectangle mgn::NestedDisplay::view_area() const
@@ -155,17 +159,8 @@ geom::Rectangle mgn::NestedDisplay::view_area() const
     int display_width, display_height;
     eglQuerySurface(egl_display, egl_surface, EGL_WIDTH, &display_width);
     eglQuerySurface(egl_display, egl_surface, EGL_HEIGHT, &display_height);
-    geom::Width w(display_width);
-    geom::Height h(display_height);
 
-    geom::Point pt {
-        geom::X{0},
-        geom::Y{0}
-    };
-
-    geom::Size sz{w,h};
-    geom::Rectangle rect{pt, sz};
-    return rect;
+    return {geom::Point{}, geom::Size{display_width, display_height}};
 }
 
 void mgn::NestedDisplay::post_update()

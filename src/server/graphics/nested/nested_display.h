@@ -20,6 +20,8 @@
 #define MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/egl_resources.h"
+
 #include "mir_toolkit/mir_client_library.h"
 
 #include <EGL/egl.h>
@@ -59,7 +61,9 @@ public:
     explicit EGLDisplayHandle(MirConnection* connection);
     ~EGLDisplayHandle() noexcept;
 
-    void initialize_egl() const;
+    void initialize() const;
+    EGLConfig choose_config(const EGLint attrib_list[]) const;
+    EGLSurface egl_surface(EGLConfig egl_config, MirSurface* mir_surface) const;
 
     operator EGLDisplay() const { return egl_display; }
 
@@ -107,9 +111,9 @@ private:
     detail::MirSurfaceHandle const mir_surface;
     detail::EGLDisplayHandle const egl_display;
 
-    EGLContext egl_context;
+    EGLConfig const egl_config;
     EGLSurface egl_surface;
-    EGLConfig egl_config;
+    EGLContextStore const egl_context;
 };
 
 }
