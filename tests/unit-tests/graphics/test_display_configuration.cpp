@@ -50,7 +50,7 @@ mg::DisplayConfigurationOutput const tmpl_output
 
 }
 
-TEST(DisplayConfiguration, card_equality)
+TEST(DisplayConfiguration, same_cards_compare_equal)
 {
     mg::DisplayConfigurationCardId const id{1};
     size_t const max_outputs{3};
@@ -63,7 +63,7 @@ TEST(DisplayConfiguration, card_equality)
     EXPECT_EQ(card2, card1);
 }
 
-TEST(DisplayConfiguration, card_inequality)
+TEST(DisplayConfiguration, different_cards_compare_unequal)
 {
     mg::DisplayConfigurationCardId const id1{1};
     mg::DisplayConfigurationCardId const id2{2};
@@ -82,7 +82,7 @@ TEST(DisplayConfiguration, card_inequality)
     EXPECT_NE(card3, card1);
 }
 
-TEST(DisplayConfiguration, mode_equality)
+TEST(DisplayConfiguration, same_modes_compare_equal)
 {
     geom::Size const size{10, 20};
     double const vrefresh{59.9};
@@ -95,7 +95,7 @@ TEST(DisplayConfiguration, mode_equality)
     EXPECT_EQ(mode2, mode1);
 }
 
-TEST(DisplayConfiguration, mode_inequality)
+TEST(DisplayConfiguration, different_modes_compare_unequal)
 {
     geom::Size const size1{10, 20};
     geom::Size const size2{10, 21};
@@ -114,7 +114,7 @@ TEST(DisplayConfiguration, mode_inequality)
     EXPECT_NE(mode3, mode1);
 }
 
-TEST(DisplayConfiguration, output_equality)
+TEST(DisplayConfiguration, same_outputs_compare_equal)
 {
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
@@ -124,7 +124,7 @@ TEST(DisplayConfiguration, output_equality)
     EXPECT_EQ(output2, output1);
 }
 
-TEST(DisplayConfiguration, output_inequality_id)
+TEST(DisplayConfiguration, outputs_with_different_ids_compare_unequal)
 {
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
@@ -141,7 +141,7 @@ TEST(DisplayConfiguration, output_inequality_id)
     EXPECT_NE(output3, output1);
 }
 
-TEST(DisplayConfiguration, output_inequality_modes)
+TEST(DisplayConfiguration, outupts_with_different_modes_compare_unequal)
 {
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
@@ -170,7 +170,7 @@ TEST(DisplayConfiguration, output_inequality_modes)
     EXPECT_NE(output3, output1);
 }
 
-TEST(DisplayConfiguration, output_inequality_physical_size)
+TEST(DisplayConfiguration, outputs_with_different_physical_size_compare_unequal)
 {
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
@@ -183,7 +183,7 @@ TEST(DisplayConfiguration, output_inequality_physical_size)
     EXPECT_NE(output2, output1);
 }
 
-TEST(DisplayConfiguration, output_inequality_connection)
+TEST(DisplayConfiguration, outputs_with_different_connected_status_compare_unequal)
 {
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
@@ -194,7 +194,7 @@ TEST(DisplayConfiguration, output_inequality_connection)
     EXPECT_NE(output2, output1);
 }
 
-TEST(DisplayConfiguration, output_inequality_current_mode)
+TEST(DisplayConfiguration, outputs_with_different_current_mode_index_compare_unequal)
 {
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
@@ -205,7 +205,7 @@ TEST(DisplayConfiguration, output_inequality_current_mode)
     EXPECT_NE(output2, output1);
 }
 
-TEST(DisplayConfiguration, output_inequality_preferred_mode)
+TEST(DisplayConfiguration, outputs_with_different_preferred_mode_index_compare_unequal)
 {
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
