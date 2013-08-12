@@ -25,6 +25,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/surfaces/buffer_stream.h"
+#include "bypass.h"
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -44,75 +45,6 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
     }
 
     mir::geometry::Rectangle const& enclosing_region;
-};
-
-
-class BypassFilter : public mc::FilterForScene
-{
-public:
-    BypassFilter(const mg::DisplayBuffer &display_buffer)
-    {
-        const mir::geometry::Rectangle &rect = display_buffer.view_area();
-        int width = rect.size.width.as_int();
-        int height = rect.size.height.as_int();
-
-        /*
-         * For a surface to exactly fit the display_buffer, its transformation
-         * will look exactly like this:
-         */
-        fullscreen[0][0] = width;
-        fullscreen[0][1] = 0.0f;
-        fullscreen[0][2] = 0.0f;
-        fullscreen[0][3] = 0.0f;
-
-        fullscreen[1][0] = 0.0f;
-        fullscreen[1][1] = height;
-        fullscreen[1][2] = 0.0f;
-        fullscreen[1][3] = 0.0f;
-
-        fullscreen[2][0] = 0.0f;
-        fullscreen[2][1] = 0.0f;
-        fullscreen[2][2] = 0.0f;
-        fullscreen[2][3] = 0.0f;
-
-        fullscreen[3][0] = rect.top_left.x.as_int() + width / 2;
-        fullscreen[3][1] = rect.top_left.y.as_int() + height / 2;
-        fullscreen[3][2] = 0.0f;
-        fullscreen[3][3] = 1.0f;
-    }
-
-    bool operator()(mc::CompositingCriteria const& criteria)
-    {
-        topmost_fits = criteria.transformation() == fullscreen;
-        return topmost_fits;
-    }
-
-    bool fullscreen_on_top() const
-    {
-        return topmost_fits;
-    }
-
-private:
-    bool topmost_fits = false;
-    glm::mat4 fullscreen;
-};
-
-class BypassSearch : public mc::OperatorForScene
-{
-public:
-    void operator()(mc::CompositingCriteria const&,
-                    mir::surfaces::BufferStream& stream)
-    {
-        latest = &stream;
-    }
-
-    mir::surfaces::BufferStream *topmost_fullscreen() const
-    {
-        return latest;
-    }
-
-private:
-    mir::surfaces::BufferStream *latest = nullptr;
 };
 
 }
@@ -135,8 +67,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
     if (display_buffer.can_bypass())
     {
-        BypassFilter filter(display_buffer);
-        BypassSearch search;
+        mc::BypassFilter filter(display_buffer);
+        mc::BypassSearch search;
 
         // It would be *really* nice if Scene had an iterator to simplify this
         scene->for_each_if(filter, search);
