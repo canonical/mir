@@ -38,7 +38,7 @@ public:
     FullscreenPlacementStrategy(std::shared_ptr<shell::DisplayLayout> const& display_layout);
     ~FullscreenPlacementStrategy() = default;
     
-    shell::SurfaceCreationParameters place(shell::SurfaceCreationParameters const& request_parameters);
+    shell::SurfaceCreationParameters place(shell::Session const&, shell::SurfaceCreationParameters const& request_parameters);
 
 protected:
     FullscreenPlacementStrategy(FullscreenPlacementStrategy const&) = delete;

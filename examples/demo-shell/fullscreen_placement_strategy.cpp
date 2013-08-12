@@ -31,7 +31,7 @@ me::FullscreenPlacementStrategy::FullscreenPlacementStrategy(
 {
 }
 
-msh::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(
+msh::SurfaceCreationParameters me::FullscreenPlacementStrategy::place(msh::Session const& /* session */,
     msh::SurfaceCreationParameters const& request_parameters)
 {
     auto placed_parameters = request_parameters;

@@ -32,7 +32,7 @@ msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(
 {
 }
 
-msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::SurfaceCreationParameters const& request_parameters)
+msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::Session const& /* session */, msh::SurfaceCreationParameters const& request_parameters)
 {
     auto placed_parameters = request_parameters;
 

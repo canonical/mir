@@ -16,12 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include <mir_test_doubles/mock_surface_factory.h>
-#include <mir_test_doubles/null_event_sink.h>
+#include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/null_event_sink.h"
 
-#include <mir/shell/organising_surface_factory.h>
-#include <mir/shell/placement_strategy.h>
-#include <mir/shell/surface_creation_parameters.h>
+#include "mir/shell/organising_surface_factory.h"
+#include "mir/shell/placement_strategy.h"
+#include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/session.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,7 +37,7 @@ namespace
 
 struct MockPlacementStrategy : public msh::PlacementStrategy
 {
-    MOCK_METHOD1(place, msh::SurfaceCreationParameters(msh::SurfaceCreationParameters const&));
+    MOCK_METHOD2(place, msh::SurfaceCreationParameters(msh::Session const&, msh::SurfaceCreationParameters const&));
 };
 
 struct OrganisingSurfaceFactorySetup : public testing::Test
@@ -66,7 +67,7 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     EXPECT_CALL(*underlying_surface_factory, create_surface(_, _, _, _)).Times(1);
 
     auto params = msh::a_surface();
-    EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
+    EXPECT_CALL(*placement_strategy, place(_, Ref(params))).Times(1)
         .WillOnce(Return(msh::a_surface()));
 
     factory.create_surface(nullptr, params, mf::SurfaceId(), std::make_shared<mtd::NullEventSink>());
@@ -83,7 +84,7 @@ TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_pl
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 
-    EXPECT_CALL(*placement_strategy, place(Ref(params))).Times(1)
+    EXPECT_CALL(*placement_strategy, place(_, Ref(params))).Times(1)
         .WillOnce(Return(placed_params));
     EXPECT_CALL(*underlying_surface_factory, create_surface(nullptr, placed_params, mf::SurfaceId(), sink));
 
