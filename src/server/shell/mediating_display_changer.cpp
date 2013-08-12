@@ -18,24 +18,69 @@
 
 #include "mir/shell/mediating_display_changer.h"
 #include "mir/graphics/display.h"
-#include <boost/throw_exception.hpp>
+#include "mir/compositor/compositor.h"
+#include "mir/input/input_manager.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
+namespace mc = mir::compositor;
+namespace mi = mir::input;
 
-msh::MediatingDisplayChanger::MediatingDisplayChanger(std::shared_ptr<mg::Display> const& display)
-    : display(display)
+namespace
 {
+
+class ApplyNowAndRevertOnScopeExit
+{
+public:
+    ApplyNowAndRevertOnScopeExit(std::function<void()> const& apply,
+                                 std::function<void()> const& revert)
+        : revert{revert}
+    {
+        apply();
+    }
+
+    ~ApplyNowAndRevertOnScopeExit()
+    {
+        revert();
+    }
+
+private:
+    ApplyNowAndRevertOnScopeExit(ApplyNowAndRevertOnScopeExit const&) = delete;
+    ApplyNowAndRevertOnScopeExit& operator=(ApplyNowAndRevertOnScopeExit const&) = delete;
+
+    std::function<void()> const revert;
+};
+
 }
 
-std::shared_ptr<mg::DisplayConfiguration> msh::MediatingDisplayChanger::active_configuration()
+msh::MediatingDisplayChanger::MediatingDisplayChanger(
+    std::shared_ptr<mg::Display> const& display,
+    std::shared_ptr<mc::Compositor> const& compositor,
+    std::shared_ptr<mi::InputManager> const& input_manager)
+    : display{display},
+      compositor{compositor},
+      input_manager{input_manager}
 {
-    return display->configuration();
 }
 
 void msh::MediatingDisplayChanger::configure(
-    std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
+    std::weak_ptr<mf::Session> const&,
+    std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("TODO: display changing not implemented!"));
+    ApplyNowAndRevertOnScopeExit comp{
+        [this] { compositor->stop(); },
+        [this] { compositor->start(); }};
+
+    ApplyNowAndRevertOnScopeExit input{
+        [this] { input_manager->stop(); },
+        [this] { input_manager->start(); }};
+
+    display->configure(*conf);
+}
+
+std::shared_ptr<mg::DisplayConfiguration>
+msh::MediatingDisplayChanger::active_configuration()
+{
+    return display->configuration();
 }

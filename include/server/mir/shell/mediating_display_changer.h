@@ -24,23 +24,29 @@
 namespace mir
 {
 
-namespace graphics
-{
-class Display;
-}
+namespace graphics { class Display; }
+namespace compositor { class Compositor; }
+namespace input { class InputManager; }
+
 namespace shell
 {
 
 class MediatingDisplayChanger : public frontend::DisplayChanger
 {
 public:
-    explicit MediatingDisplayChanger(std::shared_ptr<graphics::Display> const& changer);
+    MediatingDisplayChanger(
+        std::shared_ptr<graphics::Display> const& display,
+        std::shared_ptr<compositor::Compositor> const& compositor,
+        std::shared_ptr<input::InputManager> const& input_manager);
 
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
-    void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
+    void configure(std::weak_ptr<frontend::Session> const& session,
+                   std::shared_ptr<graphics::DisplayConfiguration> const& conf);
 
 private:
     std::shared_ptr<graphics::Display> const display;
+    std::shared_ptr<compositor::Compositor> const compositor;
+    std::shared_ptr<input::InputManager> const input_manager;
 };
 
 }

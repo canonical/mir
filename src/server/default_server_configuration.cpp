@@ -365,8 +365,12 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
 std::shared_ptr<mf::DisplayChanger>
 mir::DefaultServerConfiguration::the_display_changer()
 {
-    return display_changer([this]()
-        { return std::make_shared<msh::MediatingDisplayChanger>(the_display()); });
+    return display_changer(
+        [this]()
+        {
+            return std::make_shared<msh::MediatingDisplayChanger>(
+                the_display(), the_compositor(), the_input_manager());
+        });
 }
 
 std::shared_ptr<msh::SessionContainer>

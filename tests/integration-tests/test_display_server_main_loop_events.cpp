@@ -25,6 +25,7 @@
 #include "mir_test/pipe.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
+#include "mir_test_doubles/mock_compositor.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir/run_mir.h"
 
@@ -48,13 +49,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-
-class MockCompositor : public mc::Compositor
-{
-public:
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
-};
 
 class MockCommunicator : public mf::Communicator
 {
@@ -183,7 +177,7 @@ public:
     {
         if (!mock_compositor)
         {
-            mock_compositor = std::make_shared<MockCompositor>();
+            mock_compositor = std::make_shared<mtd::MockCompositor>();
 
             EXPECT_CALL(*mock_compositor, start()).Times(1);
             EXPECT_CALL(*mock_compositor, stop()).Times(1);
@@ -194,7 +188,7 @@ public:
 
 private:
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
-    std::shared_ptr<MockCompositor> mock_compositor;
+    std::shared_ptr<mtd::MockCompositor> mock_compositor;
 };
 
 
@@ -223,7 +217,7 @@ public:
     std::shared_ptr<mc::Compositor> the_compositor() override
     {
         if (!mock_compositor)
-            mock_compositor = std::make_shared<MockCompositor>();
+            mock_compositor = std::make_shared<mtd::MockCompositor>();
 
         return mock_compositor;
     }
@@ -258,7 +252,7 @@ public:
         return mock_display;
     }
 
-    std::shared_ptr<MockCompositor> the_mock_compositor()
+    std::shared_ptr<mtd::MockCompositor> the_mock_compositor()
     {
         the_compositor();
         return mock_compositor;
@@ -303,7 +297,7 @@ public:
     }
 
 private:
-    std::shared_ptr<MockCompositor> mock_compositor;
+    std::shared_ptr<mtd::MockCompositor> mock_compositor;
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<MockCommunicator> mock_communicator;
     std::shared_ptr<MockDisplayConfigurationPolicy> mock_conf_policy;
