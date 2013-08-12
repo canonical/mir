@@ -178,6 +178,31 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                 case 'n':
                     swapinterval = 0;
                     break;
+                case 'f':
+                    *width = 0;
+                    *height = 0;
+                    break;
+                case 's':
+                    {
+                        unsigned int w, h;
+                        arg += 2;
+                        if (!arg[0] && i < argc-1)
+                        {
+                            i++;
+                            arg = argv[i];
+                        }
+                        if (sscanf(arg, "%ux%u", &w, &h) == 2)
+                        {
+                            *width = w;
+                            *height = h;
+                        }
+                        else
+                        {
+                            printf("Invalid size: %s\n", arg);
+                            help = 1;
+                        }
+                    }
+                    break;
                 case 'h':
                 default:
                     help = 1;
@@ -192,8 +217,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             if (help)
             {
                 printf("Usage: %s [<options>]\n"
+                       "  -f  Force full screen\n"
                        "  -h  Show this help text\n"
                        "  -n  Don't sync to vblank\n"
+                       "  -s WIDTHxHEIGHT  Force surface size\n"
                        , argv[0]);
                 return 0;
             }
