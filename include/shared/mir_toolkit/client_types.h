@@ -179,6 +179,25 @@ typedef struct MirDisplayInfo
  * MirDisplayOutput provides details of the graphics environment.
  */
 
+typedef enum MirDisplayOutputType
+{
+    mir_display_output_type_unknown,
+    mir_display_output_type_vga,
+    mir_display_output_type_dvii,
+    mir_display_output_type_dvid,
+    mir_display_output_type_dvia,
+    mir_display_output_type_composite,
+    mir_display_output_type_svideo,
+    mir_display_output_type_lvds,
+    mir_display_output_type_component,
+    mir_display_output_type_ninepindin,
+    mir_display_output_type_displayport,
+    mir_display_output_type_hdmia,
+    mir_display_output_type_hdmib,
+    mir_display_output_type_tv,
+    mir_display_output_type_edp
+} MirDisplayOutputType;
+
 typedef struct MirDisplayMode
 {
     uint32_t vertical_resolution;
@@ -198,6 +217,7 @@ typedef struct MirDisplayOutput
 
     uint32_t card_id;
     uint32_t output_id;
+    MirDisplayOutputType type;
 
     int32_t position_x;
     int32_t position_y;

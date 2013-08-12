@@ -63,6 +63,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 {
     output.card_id = msg.card_id();
     output.output_id = msg.output_id();
+    output.type = static_cast<MirDisplayOutputType>(msg.type());
 
     for (auto i = 0u; i < output.num_modes; i++)
     {

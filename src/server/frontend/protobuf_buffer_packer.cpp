@@ -33,6 +33,7 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
 {
     protobuf_output.set_output_id(display_output.id.as_value());
     protobuf_output.set_card_id(display_output.card_id.as_value());
+    protobuf_output.set_type(static_cast<uint32_t>(display_output.type));
 
     for (auto const& pf : display_output.pixel_formats)
     {
