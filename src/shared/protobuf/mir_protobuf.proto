@@ -64,6 +64,7 @@ message DisplayOutput {
   optional uint32 physical_width_mm = 11;
   optional uint32 physical_height_mm = 12;
   optional uint32 type = 13;
+  optional uint32 preferred_mode = 14;
 }
 
 // DEPRECATED

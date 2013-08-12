@@ -72,6 +72,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
         output.modes[i].vertical_resolution = mode.vertical_resolution(); 
         output.modes[i].refresh_rate = mode.refresh_rate();
     }
+    output.preferred_mode = msg.preferred_mode();
     output.current_mode = msg.current_mode();
 
     for (auto i = 0u; i < output.num_output_formats; i++)
