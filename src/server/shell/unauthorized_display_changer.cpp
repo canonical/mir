@@ -23,7 +23,7 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 
-msh::UnauthorizedDisplayChanger::UnauthorizedDisplayChanger(std::shared_ptr<shell::DisplayChanger> const& changer)
+msh::UnauthorizedDisplayChanger::UnauthorizedDisplayChanger(std::shared_ptr<frontend::DisplayChanger> const& changer)
     : changer(changer)
 {
 }

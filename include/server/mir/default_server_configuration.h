@@ -47,6 +47,7 @@ class SessionMediatorReport;
 class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
+class DisplayChanger;
 }
 
 namespace shell
@@ -66,7 +67,6 @@ class PixelBuffer;
 class SnapshotStrategy;
 class DisplayLayout;
 class SurfaceConfigurator;
-class DisplayChanger;
 }
 namespace time
 {
@@ -156,6 +156,7 @@ public:
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
+    virtual std::shared_ptr<frontend::DisplayChanger>         the_display_changer();
     /** @} */
 
     virtual std::shared_ptr<shell::FocusController> the_focus_controller();
@@ -172,7 +173,6 @@ public:
     virtual std::shared_ptr<shell::PixelBuffer>         the_shell_pixel_buffer();
     virtual std::shared_ptr<shell::SnapshotStrategy>    the_shell_snapshot_strategy();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
-    virtual std::shared_ptr<shell::DisplayChanger>      the_shell_display_changer();
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
 
     /** @} */
@@ -254,6 +254,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
+    CachedPtr<frontend::DisplayChanger> display_changer;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<surfaces::SurfaceStack> surface_stack;
@@ -267,7 +268,6 @@ protected:
     CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
-    CachedPtr<shell::DisplayChanger>     shell_display_changer;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;

@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_
 #define MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_
 
-#include "mir/shell/display_changer.h"
+#include "mir/frontend/display_changer.h"
 
 namespace mir
 {
@@ -31,7 +31,7 @@ class Display;
 namespace shell
 {
 
-class MediatingDisplayChanger : public shell::DisplayChanger 
+class MediatingDisplayChanger : public frontend::DisplayChanger
 {
 public:
     explicit MediatingDisplayChanger(std::shared_ptr<graphics::Display> const& changer);

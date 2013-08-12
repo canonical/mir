@@ -111,7 +111,7 @@ public:
         std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<msh::DisplayChanger> const& display_changer,
+        std::shared_ptr<mf::DisplayChanger> const& display_changer,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
         shell(shell),
         sm_report(sm_report),
@@ -129,13 +129,13 @@ private:
     std::shared_ptr<mf::MessageProcessorReport> const mp_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<msh::DisplayChanger> const display_changer;
+    std::shared_ptr<mf::DisplayChanger> const display_changer;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         std::shared_ptr<mf::EventSink> const& sink, bool authorized_to_resize_display)
     {
-        std::shared_ptr<msh::DisplayChanger> changer;
+        std::shared_ptr<mf::DisplayChanger> changer;
         if(authorized_to_resize_display)
         {
             changer = display_changer; 
@@ -362,10 +362,10 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
         });
 }
 
-std::shared_ptr<msh::DisplayChanger>
-mir::DefaultServerConfiguration::the_shell_display_changer()
+std::shared_ptr<mf::DisplayChanger>
+mir::DefaultServerConfiguration::the_display_changer()
 {
-    return shell_display_changer([this]()
+    return display_changer([this]()
         { return std::make_shared<msh::MediatingDisplayChanger>(the_display()); });
 }
 
@@ -753,7 +753,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_mediator_report(),
                 the_message_processor_report(),
                 the_graphics_platform(),
-                the_shell_display_changer(), allocator);
+                the_display_changer(), allocator);
         });
 }
 
