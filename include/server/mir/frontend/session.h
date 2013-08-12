@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/shell/surface_creation_parameters.h"
 
 #include <mutex>
 #include <atomic>

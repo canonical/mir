@@ -30,25 +30,43 @@ namespace shell
 class Surface;
 class InputTargeter;
 class SurfaceController;
+class SessionListener;
+class FocusSequence;
 
 class DefaultFocusMechanism : public FocusSetter
 {
 public:
-    explicit DefaultFocusMechanism(std::shared_ptr<InputTargeter> const& input_targeter,
-                                   std::shared_ptr<SurfaceController> const& surface_controller);
+    explicit DefaultFocusMechanism(std::shared_ptr<FocusSequence> const& sequence,
+                                   std::shared_ptr<InputTargeter> const& input_targeter,
+                                   std::shared_ptr<SurfaceController> const& surface_controller,
+                                   std::shared_ptr<SessionListener> const& session_listener);
     virtual ~DefaultFocusMechanism() = default;
 
-    void set_focus_to(std::shared_ptr<shell::Session> const& new_focus);
+    void surface_created_for(std::shared_ptr<Session> const& session);
+    void session_opened(std::shared_ptr<Session> const& session);
+    void session_closed(std::shared_ptr<Session> const& session);
+    std::weak_ptr<Session> focused_session() const;
+
+    //TODO: this is only used in example code
+    void focus_next();
 
 protected:
+    void focus_next_locked();
+
     DefaultFocusMechanism(const DefaultFocusMechanism&) = delete;
     DefaultFocusMechanism& operator=(const DefaultFocusMechanism&) = delete;
 
 private:
+    void set_focus(std::shared_ptr<Session> const& session);
+
+    std::shared_ptr<FocusSequence> const sequence;
+    std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceController> const surface_controller;
 
-    // TODO: Protect with mutex
+    std::mutex mutable mutex;
+    std::shared_ptr<Session> focus_session;
+    // TODO: Protected wiht mutex?
     std::weak_ptr<Surface> currently_focused_surface;
 };
 

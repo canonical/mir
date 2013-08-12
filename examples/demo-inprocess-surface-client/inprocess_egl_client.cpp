@@ -65,9 +65,10 @@ me::InprocessEGLClient::InprocessEGLClient(std::shared_ptr<mg::Platform> const& 
 me::InprocessEGLClient::~InprocessEGLClient()
 {
     terminate = true;
-    auto session = session_manager->focussed_application().lock();
-    if (session)
-        session->force_requests_to_complete();
+    //TODO: this is messy, need a better interface for internal clients to interact with shell
+    if ( auto ses = std::dynamic_pointer_cast<msh::Session>(session))
+        ses->force_requests_to_complete();
+
     client_thread.join();
 }
 
@@ -80,7 +81,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_size(surface_size)
         .of_buffer_usage(mg::BufferUsage::hardware)
         .of_pixel_format(geom::PixelFormat::argb_8888);
-    auto session = session_manager->open_session("Inprocess client",
+    session = session_manager->open_session("Inprocess client",
                                                  std::shared_ptr<mf::EventSink>());
     // TODO: Why do we get an ID? ~racarr
     auto surface = session->get_surface(session_manager->create_surface_for(session, params));

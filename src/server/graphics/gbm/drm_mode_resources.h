@@ -46,6 +46,10 @@ public:
     void for_each_encoder(std::function<void(DRMModeEncoderUPtr)> const& f) const;
     void for_each_crtc(std::function<void(DRMModeCrtcUPtr)> const& f) const;
 
+    size_t num_connectors();
+    size_t num_encoders();
+    size_t num_crtcs();
+
     DRMModeConnectorUPtr connector(uint32_t id) const;
     DRMModeEncoderUPtr encoder(uint32_t id) const;
     DRMModeCrtcUPtr crtc(uint32_t id) const;

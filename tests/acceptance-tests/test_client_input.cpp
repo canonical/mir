@@ -149,7 +149,6 @@ struct InputClient : ClientConfig
         {
             std::cout << e.what() << std::endl;
         }
-
     }
 
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
@@ -892,6 +891,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
         }
     } server_config{fence, second_client_done_fence};
+
     launch_server_process(server_config);
     
     struct ButtonClientOne : InputClient
@@ -901,6 +901,10 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
         {
         }
         
+        void exec()
+        {
+            InputClient::exec();
+        }
         void expect_input(mt::WaitCondition& events_received) override
         {
             EXPECT_CALL(*handler, handle_input(HoverEnterEvent())).Times(AnyNumber());

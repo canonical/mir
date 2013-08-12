@@ -90,11 +90,13 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             {
                 mg::DisplayConfigurationOutputId{10},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {},
                 {
                     {geom::Size{10, 20}, 59.9},
                     {geom::Size{200, 100}, 59.9},
                 },
+                1,
                 geom::Size{324, 642},
                 true,
                 true,
@@ -106,11 +108,13 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
             {
                 mg::DisplayConfigurationOutputId{11},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {},
                 {
                     {geom::Size{200, 200}, 59.9},
                     {geom::Size{100, 200}, 59.9},
                 },
+                0,
                 geom::Size{566, 111},
                 true,
                 true,
@@ -122,7 +126,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
 
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
     {
-        f({card_id});
+        f({card_id, outputs.size()});
     }
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const

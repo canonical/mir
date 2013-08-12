@@ -118,14 +118,6 @@ struct SurfaceCreatingClient : ClientConfigCommon
 
 }
 
-namespace
-{
-MATCHER(NonNullSession, "")
-{
-    return arg != std::shared_ptr<msh::Session>();
-}
-}
-
 TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 {
     struct ServerConfig : TestingServerConfiguration
@@ -140,11 +132,14 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 
                 auto focus_setter = std::make_shared<mtd::MockFocusSetter>();
                 {
-                    InSequence seq;
-                    // Once on application registration and once on surface creation
-                    EXPECT_CALL(*focus_setter, set_focus_to(NonNullSession())).Times(2);
-                    // Focus is cleared when the session is closed
-                    EXPECT_CALL(*focus_setter, set_focus_to(_)).Times(1);
+                    Sequence seq;
+
+                    EXPECT_CALL(*focus_setter, session_opened(_))
+                        .InSequence(seq);
+                    EXPECT_CALL(*focus_setter, surface_created_for(_))
+                        .InSequence(seq);
+                    EXPECT_CALL(*focus_setter, session_closed(_))
+                        .InSequence(seq);
                 }
                 // TODO: Counterexample ~racarr
 
@@ -180,14 +175,17 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
             if (!expected)
             {
-                
-                EXPECT_CALL(*targeter, focus_cleared()).Times(AtLeast(0));
-
-                {
-                    InSequence seq;
-                    EXPECT_CALL(*targeter, focus_changed(_)).Times(1);
-                    expected = true;
-                }
+                Sequence seq;
+                //connect session
+                EXPECT_CALL(*targeter, focus_cleared())
+                    .InSequence(seq);
+                //session has a default surface
+                EXPECT_CALL(*targeter, focus_changed(_))
+                    .InSequence(seq);
+                //session is destroyed
+                EXPECT_CALL(*targeter, focus_cleared())
+                    .InSequence(seq);
+                expected = true;
             }
 
             return targeter;

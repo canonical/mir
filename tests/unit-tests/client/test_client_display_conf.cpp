@@ -27,6 +27,12 @@ namespace mt = mir::test;
 
 namespace
 {
+void fill(mp::DisplayCard* out)
+{
+    out->set_card_id(7);
+    out->set_max_simultaneous_outputs(3);
+}
+
 void fill(mp::DisplayOutput* out)
 {
     out->add_pixel_format(4);
@@ -52,6 +58,9 @@ TEST(TestDisplayConfiguration, configuration_storage)
     mp::DisplayConfiguration protobuf_config;
     fill(protobuf_config.add_display_output());
     fill(protobuf_config.add_display_output());
+    fill(protobuf_config.add_display_card());
+    fill(protobuf_config.add_display_card());
+    fill(protobuf_config.add_display_card());
  
     mcl::DisplayConfiguration internal_config;
 

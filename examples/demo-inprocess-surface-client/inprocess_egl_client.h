@@ -39,6 +39,10 @@ namespace graphics
 {
 class Platform;
 }
+namespace frontend
+{
+class Session;
+}
 namespace shell
 {
 class SessionManager;
@@ -63,6 +67,7 @@ protected:
 private:
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<shell::SessionManager> const session_manager;
+    std::shared_ptr<frontend::Session> session;
 
     std::thread client_thread;
     

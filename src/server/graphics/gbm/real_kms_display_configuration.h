@@ -30,8 +30,6 @@ namespace graphics
 namespace gbm
 {
 
-class DRMModeResources;
-
 class RealKMSDisplayConfiguration : public KMSDisplayConfiguration
 {
 public:
@@ -54,6 +52,7 @@ private:
     std::vector<DisplayConfigurationOutput>::const_iterator find_output_with_id(DisplayConfigurationOutputId id) const;
 
     int drm_fd;
+    DisplayConfigurationCard card;
     std::vector<DisplayConfigurationOutput> outputs;
 };
 

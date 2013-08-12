@@ -22,26 +22,28 @@
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/surface_controller.h"
+#include "mir/shell/session_listener.h"
+#include "mir/shell/focus_sequence.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
-msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::InputTargeter> const& input_targeter,
-                                                  std::shared_ptr<msh::SurfaceController> const& surface_controller)
-  : input_targeter(input_targeter),
-    surface_controller(surface_controller)
-{
+msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::FocusSequence> const& sequence,
+                                                  std::shared_ptr<msh::InputTargeter> const& input_targeter,
+                                                  std::shared_ptr<msh::SurfaceController> const& surface_controller,
+                                                  std::shared_ptr<msh::SessionListener> const& session_listener)
+  : sequence(sequence),
+    session_listener(session_listener),
+    input_targeter(input_targeter),
+    surface_controller(surface_controller),
+    focus_session(nullptr)
+{ 
 }
 
-void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& focus_session)
+void msh::DefaultFocusMechanism::set_focus(std::shared_ptr<msh::Session> const& session)
 {
-    // TODO: This path should be encapsulated in a seperate clear_focus message
-    if (!focus_session)
-    {
-        input_targeter->focus_cleared();
-        return;
-    }
-    
+    focus_session = session;
+
     auto surface = focus_session->default_surface();
     if (surface)
     {
@@ -53,9 +55,62 @@ void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& fo
         
         surface->raise(surface_controller);
         surface->take_input_focus(input_targeter);
+        session_listener->focused(focus_session);
     }
     else
     {
         input_targeter->focus_cleared();
+        session_listener->unfocused();
     }
+}
+
+void msh::DefaultFocusMechanism::surface_created_for(std::shared_ptr<Session> const& session)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    //just set focus when a new surface is created
+    set_focus(session);
+}
+void msh::DefaultFocusMechanism::session_opened(std::shared_ptr<Session> const& session)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    //just set focus to new session for now
+    set_focus(session);
+}
+
+void msh::DefaultFocusMechanism::session_closed(std::shared_ptr<Session> const& session)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+
+    //cycle through to next focus only if the currently-focused app is being closed 
+    if (focus_session == session)
+    {
+        focus_next_locked();
+    }
+}
+
+void msh::DefaultFocusMechanism::focus_next_locked()
+{
+    try
+    {
+        auto b = sequence->successor_of(focus_session);
+        set_focus(b);
+    } catch (std::logic_error)
+    {
+        input_targeter->focus_cleared();
+        session_listener->unfocused();
+    } 
+}
+
+void msh::DefaultFocusMechanism::focus_next()
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    focus_next_locked();
+}
+
+std::weak_ptr<msh::Session> msh::DefaultFocusMechanism::focused_session() const
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    return focus_session;
 }

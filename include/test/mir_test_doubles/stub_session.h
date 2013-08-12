@@ -32,7 +32,7 @@ struct StubSession : public frontend::Session
 {
     frontend::SurfaceId create_surface(shell::SurfaceCreationParameters const& /* params */)
     {
-        return frontend::SurfaceId{0};
+        return frontend::SurfaceId{1};
     }
     void destroy_surface(frontend::SurfaceId /* surface */)
     {
@@ -58,10 +58,6 @@ struct StubSession : public frontend::Session
     {
         return 0;
     }
-    void set_event_sink(std::shared_ptr<frontend::EventSink> const&)
-    {
-    }
-
     void send_display_config(graphics::DisplayConfiguration const&)
     {
     }
