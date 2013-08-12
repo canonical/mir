@@ -40,7 +40,8 @@ extern "C" {
  *            locking appropriate to protect your data accessed in the
  *            callback.
  *   \param [in] server       File path of the server socket to connect to, or
- *                            NULL to choose the default server
+ *                            NULL to choose the default server (can be set by
+ *                            the $MIR_SOCKET environment variable)
  *   \param [in] app_name     A name referring to the application
  *   \param [in] callback     Callback function to be invoked when request
  *                            completes
