@@ -40,21 +40,31 @@ msh::DefaultFocusMechanism::DefaultFocusMechanism(std::shared_ptr<msh::FocusSequ
 { 
 }
 
+#include <stdio.h>
+
 void msh::DefaultFocusMechanism::set_focus(std::shared_ptr<msh::Session> const& session)
 {
     focus_session = session;
 
-    auto surface = focus_session->default_surface();
-    if (surface)
+    // The new target for focus
+    auto focus_surface = focus_session->default_surface();
+
+    // Notify the current focus of losing focus
+    auto current_focus = currently_focused_surface.lock();
+    // Unless we we about to refocus it.
+    if (current_focus && (current_focus != focus_surface))
     {
-        auto current_focus = currently_focused_surface.lock();
-        if (current_focus)
-            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
-        surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-        currently_focused_surface = surface;
+        current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+        currently_focused_surface.reset();
+    }
+
+    if (focus_surface && (current_focus != focus_surface))
+    {
+        focus_surface->configure(mir_surface_attrib_focus, mir_surface_focused);
+        currently_focused_surface = focus_surface;
         
-        surface->raise(surface_controller);
-        surface->take_input_focus(input_targeter);
+        focus_surface->raise(surface_controller);
+        focus_surface->take_input_focus(input_targeter);
         session_listener->focused(focus_session);
     }
     else
@@ -92,15 +102,16 @@ void msh::DefaultFocusMechanism::session_closed(std::shared_ptr<Session> const& 
 
 void msh::DefaultFocusMechanism::focus_next_locked()
 {
-    try
+    auto b = sequence->default_focus();
+    if (b)
     {
-        auto b = sequence->successor_of(focus_session);
         set_focus(b);
-    } catch (std::logic_error)
+    }
+    else
     {
         input_targeter->focus_cleared();
         session_listener->unfocused();
-    } 
+    }
 }
 
 void msh::DefaultFocusMechanism::focus_next()

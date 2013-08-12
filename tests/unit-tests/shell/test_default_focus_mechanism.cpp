@@ -145,7 +145,7 @@ TEST_F(DefaultFocusMechanism, open_and_close)
     EXPECT_CALL(mock_listener, focused(_))
         .InSequence(seq);
 
-    EXPECT_CALL(focus_sequence, successor_of(_))
+    EXPECT_CALL(focus_sequence, default_focus())
         .InSequence(seq)
         .WillOnce(Throw(std::logic_error("")));
     EXPECT_CALL(mock_listener, unfocused())
