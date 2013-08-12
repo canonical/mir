@@ -23,6 +23,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositing_criteria.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/buffer.h"
 #include "mir/surfaces/buffer_stream.h"
 
 namespace mc = mir::compositor;
@@ -142,9 +143,15 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         if (filter.fullscreen_on_top())
         {
-            display_buffer.post_update(
-                search.topmost_fullscreen()->lock_compositor_buffer());
-            bypassed = true;
+            auto bypass_buf =
+                search.topmost_fullscreen()->lock_compositor_buffer();
+
+            if (bypass_buf->can_scanout())
+            {
+                display_buffer.post_update(
+                    search.topmost_fullscreen()->lock_compositor_buffer());
+                bypassed = true;
+            }
         }
     }
 

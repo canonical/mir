@@ -118,8 +118,7 @@ mgg::GBMBufferAllocator::GBMBufferAllocator(
 
 std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperties const& buffer_properties)
 {
-    // TODO: Use GBM_BO_USE_SCANOUT more sparingly and intelligently
-    uint32_t bo_flags{GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT};
+    uint32_t bo_flags{GBM_BO_USE_RENDERING};
 
     uint32_t gbm_format = mgg::mir_format_to_gbm_format(buffer_properties.format);
 
@@ -133,6 +132,17 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
     /* Create the GBM buffer object */
     if (buffer_properties.usage == BufferUsage::software)
         bo_flags |= GBM_BO_USE_WRITE;
+
+    /*
+     * TODO: Use GBM_BO_USE_SCANOUT more sparingly and intelligently, which
+     *       may have to come after buffer reallocation support (surface
+     *       resizing).
+     */
+    if (buffer_properties.size.width.as_uint32_t() >= 800 &&
+        buffer_properties.size.height.as_uint32_t() >= 600)
+    {
+        bo_flags |= GBM_BO_USE_SCANOUT;
+    }
 
     gbm_bo *bo_raw = gbm_bo_create(
         platform->gbm.device,
@@ -150,7 +160,7 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
         new EGLImageBufferTextureBinder{bo, egl_extensions}};
 
     /* Create the GBMBuffer */
-    std::shared_ptr<mg::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder)}};
+    std::shared_ptr<mg::Buffer> buffer{new GBMBuffer{bo, bo_flags, std::move(texture_binder)}};
 
     (*buffer_initializer)(*buffer);
 

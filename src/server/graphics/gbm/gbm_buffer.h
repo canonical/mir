@@ -44,6 +44,7 @@ class GBMBuffer: public BufferBasic
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
+              uint32_t bo_flags,
               std::unique_ptr<BufferTextureBinder> texture_binder);
     GBMBuffer(const GBMBuffer&) = delete;
     ~GBMBuffer();
@@ -60,8 +61,11 @@ public:
 
     virtual void bind_to_texture();
 
+    bool can_scanout() const override;
+
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
+    uint32_t bo_flags;
     std::unique_ptr<BufferTextureBinder> const texture_binder;
     int prime_fd;
 };
