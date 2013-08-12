@@ -1,3 +1,14 @@
+mir (0.0.9+13.10.20130812.4-0ubuntu1) saucy; urgency=low
+
+  [ Alexandros Frantzis ]
+  * server,client: Add type, preferred mode and max. simultaneous
+    outputs information to the display configuration.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 968
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 18:05:30 +0000
+
 mir (0.0.9+13.10.20130812.3-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
