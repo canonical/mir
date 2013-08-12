@@ -16,13 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_test_doubles/mock_surface_factory.h"
-#include "mir_test_doubles/null_event_sink.h"
-
 #include "mir/shell/organising_surface_factory.h"
 #include "mir/shell/placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/shell/session.h"
+
+#include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/stub_shell_session.h"
+#include "mir_test_doubles/null_event_sink.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -63,14 +64,15 @@ TEST_F(OrganisingSurfaceFactorySetup, offers_create_surface_parameters_to_placem
     using namespace ::testing;
 
     msh::OrganisingSurfaceFactory factory(underlying_surface_factory, placement_strategy);
-
+    
+    mtd::StubShellSession session;
     EXPECT_CALL(*underlying_surface_factory, create_surface(_, _, _, _)).Times(1);
 
     auto params = msh::a_surface();
-    EXPECT_CALL(*placement_strategy, place(_, Ref(params))).Times(1)
+    EXPECT_CALL(*placement_strategy, place(Ref(session), Ref(params))).Times(1)
         .WillOnce(Return(msh::a_surface()));
 
-    factory.create_surface(nullptr, params, mf::SurfaceId(), std::make_shared<mtd::NullEventSink>());
+    factory.create_surface(&session, params, mf::SurfaceId(), std::make_shared<mtd::NullEventSink>());
 }
 
 TEST_F(OrganisingSurfaceFactorySetup, forwards_create_surface_parameters_from_placement_strategy_to_underlying_factory)

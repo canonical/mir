@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_doubles/mock_display_layout.h"
-#include "mir_test_doubles/mock_shell_session.h"
+#include "mir_test_doubles/stub_shell_session.h"
 
 #include "mir/shell/consuming_placement_strategy.h"
 #include "mir/shell/surface_creation_parameters.h"
@@ -43,7 +43,7 @@ struct ConsumingPlacementStrategySetup : public testing::Test
     }
 
     std::shared_ptr<mtd::MockDisplayLayout> display_layout;
-    mtd::MockShellSession session;
+    mtd::StubShellSession session;
 };
 }
 
