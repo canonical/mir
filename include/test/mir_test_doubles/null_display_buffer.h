@@ -35,6 +35,7 @@ public:
     void make_current() {}
     void release_current() {}
     void post_update() {}
+    bool can_bypass() const override { return false; }
 };
 
 }
