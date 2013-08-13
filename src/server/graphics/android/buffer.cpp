@@ -94,6 +94,11 @@ void mga::Buffer::bind_to_texture()
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
 }
+
+bool mga::Buffer::can_bypass() const
+{
+    return false;
+}
  
 std::shared_ptr<ANativeWindowBuffer> mga::Buffer::native_buffer_handle() const
 {
