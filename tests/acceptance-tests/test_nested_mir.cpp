@@ -216,3 +216,39 @@ TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
 
     EXPECT_FALSE(host_config.my_display.lock()) << "after run_mir() exits the display should be released";
 }
+
+
+TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
+{
+    struct MyNestedServerConfiguration : NestedServerConfiguration
+    {
+        using NestedServerConfiguration::NestedServerConfiguration;
+
+        std::shared_ptr<mir::graphics::Display> the_display() override
+        {
+            return display(
+                [this]()
+                {
+                    auto const& temp = the_graphics_platform()->
+                        create_display(the_display_configuration_policy());
+
+                    my_display = temp;
+                    return temp;
+                });
+        }
+
+        ~MyNestedServerConfiguration()
+        {
+            EXPECT_FALSE(my_display.lock()) << "pid=" << getpid() << " - " << "after run_mir() exits the display should be released";
+        }
+
+        std::weak_ptr<mir::graphics::Display> my_display;
+    };
+
+    HostServerConfiguration host_config;
+    MyNestedServerConfiguration nested_config(host_config.the_socket_file());
+    ClientConfig client_config(nested_config);
+
+    launch_server_process(host_config);
+    launch_client_process(client_config);
+}

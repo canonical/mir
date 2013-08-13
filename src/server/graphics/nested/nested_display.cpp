@@ -189,7 +189,7 @@ void mgn::NestedDisplay::register_configuration_change_handler(
         EventHandlerRegister& /*handlers*/,
         DisplayConfigurationChangeHandler const& /*conf_change_handler*/)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
+    // TODO
 }
 
 void mgn::NestedDisplay::register_pause_resume_handlers(
@@ -197,7 +197,7 @@ void mgn::NestedDisplay::register_pause_resume_handlers(
         DisplayPauseHandler const& /*pause_handler*/,
         DisplayResumeHandler const& /*resume_handler*/)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
+    // TODO
 }
 
 void mgn::NestedDisplay::pause()
