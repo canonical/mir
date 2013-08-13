@@ -39,9 +39,12 @@ class StubShell : public frontend::Shell
     {
     }
     frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& /* session */,
-                                        shell::SurfaceCreationParameters const& /* params */)
+                                        shell::SurfaceCreationParameters const& /* params */) override
     {
         return frontend::SurfaceId{0};
+    }
+    void handle_surface_created(std::shared_ptr<frontend::Session> const& /* session */) override
+    {
     }
 };
 

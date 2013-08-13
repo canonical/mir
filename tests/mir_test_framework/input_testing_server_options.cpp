@@ -88,6 +88,12 @@ public:
     {
         underlying_shell->close_session(session);
     }
+    
+    void handle_surface_created(std::shared_ptr<mf::Session> const& session)
+    {
+        underlying_shell->handle_surface_created(session);
+        listener->channel_ready_for_input(session->name());
+    }
 
 private:
     std::shared_ptr<mf::Shell> const underlying_shell;
