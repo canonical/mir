@@ -95,7 +95,7 @@ void mir_connection_release(MirConnection *connection);
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
 /** 
- * DEPRECATED. use mir_connection_create_display_config
+ * \deprecated Use mir_connection_create_display_config
  */
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
 
@@ -294,7 +294,7 @@ void mir_wait_for(MirWaitHandle *wait_handle);
 void mir_wait_for_one(MirWaitHandle *wait_handle);
 
 /**
- * DEPRECATED: Use mir_debug_surface_id()
+ * \deprecated Use mir_debug_surface_id()
  */
 __attribute__((__deprecated__("Use mir_debug_surface_id()")))
 int mir_surface_get_id(MirSurface *surface);
