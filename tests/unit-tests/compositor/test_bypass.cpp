@@ -16,6 +16,7 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#include "mir/compositor/compositing_criteria.h"
 #include "src/server/compositor/bypass.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/stub_buffer_stream.h"

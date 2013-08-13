@@ -14,104 +14,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
- *
- * TODO: Un-inline this
  */
 
 #ifndef MIR_COMPOSITOR_BYPASS_H_
 #define MIR_COMPOSITOR_BYPASS_H_
 
-#include "mir/graphics/display_buffer.h"
 #include "mir/compositor/scene.h"
-#include "mir/compositor/compositing_criteria.h"
 #include "glm/glm.hpp"
 
 namespace mir
 {
+namespace graphics
+{
+class DisplayBuffer;
+}
 namespace compositor
 {
+class CompositingCriteria;
 
 class BypassFilter : public FilterForScene
 {
 public:
-    BypassFilter(const graphics::DisplayBuffer &display_buffer)
-        : display_buffer(display_buffer)
-    {
-        const mir::geometry::Rectangle &rect = display_buffer.view_area();
-        int width = rect.size.width.as_int();
-        int height = rect.size.height.as_int();
-
-        /*
-         * For a surface to exactly fit the display_buffer, its transformation
-         * will look exactly like this:
-         */
-        fullscreen[0][0] = width;
-        fullscreen[0][1] = 0.0f;
-        fullscreen[0][2] = 0.0f;
-        fullscreen[0][3] = 0.0f;
-
-        fullscreen[1][0] = 0.0f;
-        fullscreen[1][1] = height;
-        fullscreen[1][2] = 0.0f;
-        fullscreen[1][3] = 0.0f;
-
-        fullscreen[2][0] = 0.0f;
-        fullscreen[2][1] = 0.0f;
-        fullscreen[2][2] = 0.0f;
-        fullscreen[2][3] = 0.0f;
-
-        fullscreen[3][0] = rect.top_left.x.as_int() + width / 2;
-        fullscreen[3][1] = rect.top_left.y.as_int() + height / 2;
-        fullscreen[3][2] = 0.0f;
-        fullscreen[3][3] = 1.0f;
-    }
-
-    bool operator()(CompositingCriteria const& criteria)
-    {
-        if (!all_orthogonal)
-            return false;
-
-        const glm::mat4 &trans = criteria.transformation();
-        bool orthogonal =
-            trans[0][1] == 0.0f &&
-            trans[0][2] == 0.0f &&
-            trans[0][3] == 0.0f &&
-            trans[1][0] == 0.0f &&
-            trans[1][2] == 0.0f &&
-            trans[1][3] == 0.0f &&
-            trans[2][0] == 0.0f &&
-            trans[2][1] == 0.0f &&
-            trans[2][2] == 0.0f &&
-            trans[2][3] == 0.0f &&
-            trans[3][2] == 0.0f &&
-            trans[3][3] == 1.0f;
-
-        // Any weird transformations? Then we can't risk any bypass
-        if (!orthogonal)
-        {
-            all_orthogonal = false;
-            return false;
-        }
-
-        int width = trans[0][0];
-        int height = trans[1][1];
-        int x = trans[3][0] - width / 2;
-        int y = trans[3][1] - height / 2;
-        mir::geometry::Rectangle window{{x, y}, {width, height}};
-
-        // Not weirdly transformed but also not on this monitor? Don't care...
-        if (!window.overlaps(display_buffer.view_area()))
-            return false;
-
-        // Transformed perfectly to fit the monitor? Bypass!
-        topmost_fits = criteria.transformation() == fullscreen;
-        return topmost_fits;
-    }
-
-    bool fullscreen_on_top() const
-    {
-        return all_orthogonal && topmost_fits;
-    }
+    BypassFilter(const graphics::DisplayBuffer &display_buffer);
+    bool operator()(const CompositingCriteria &criteria) override;
+    bool fullscreen_on_top() const;
 
 private:
     bool all_orthogonal = true;
@@ -123,19 +49,13 @@ private:
 class BypassMatch : public OperatorForScene
 {
 public:
-    void operator()(CompositingCriteria const&,
-                    mir::surfaces::BufferStream& stream)
-    {
-        latest = &stream;
-    }
-
-    mir::surfaces::BufferStream *topmost_fullscreen() const
-    {
-        return latest;
-    }
+    void operator()(const CompositingCriteria &,
+                    surfaces::BufferStream &stream) override;
+    surfaces::BufferStream *topmost_fullscreen() const;
 
 private:
-    mir::surfaces::BufferStream *latest = nullptr;
+    // This has to be a pointer. We have no control over BufferStream lifetime
+    surfaces::BufferStream *latest = nullptr;
 };
 
 } // namespace compositor
