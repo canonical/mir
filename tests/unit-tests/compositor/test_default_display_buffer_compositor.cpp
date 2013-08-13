@@ -30,6 +30,9 @@
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_compositing_criteria.h"
 #include "mir_test_doubles/null_display_buffer.h"
+#include "mir_test_doubles/mock_buffer.h"
+
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -195,6 +198,92 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(mock_criteria3),_)).Times(1);
 
     FakeScene scene(renderable_vec);
+
+    mc::DefaultDisplayBufferCompositorFactory factory(
+        mt::fake_shared(scene),
+        mt::fake_shared(renderer_factory),
+        mt::fake_shared(overlay_renderer));
+
+    auto comp = factory.create_compositor_for(display_buffer);
+
+    comp->composite();
+}
+
+namespace
+{
+
+class TestWindow : public mc::CompositingCriteria
+{
+public:
+    TestWindow(int x, int y, int width, int height)
+        : rect{{x, y}, {width, height}}
+    {
+        const glm::mat4 ident;
+        glm::vec3 size(width, height, 0.0f);
+        glm::vec3 pos(x + width / 2, y + height / 2, 0.0f);
+        trans = glm::scale( glm::translate(ident, pos), size);
+    }
+
+    float alpha() const override
+    {
+        return 1.0f;
+    }
+
+    glm::mat4 const& transformation() const override
+    {
+        return trans;
+    }
+
+    bool should_be_rendered_in(const geom::Rectangle &r) const override
+    {
+        return rect.overlaps(r);
+    }
+
+private:
+    geom::Rectangle rect;
+    glm::mat4 trans;
+};
+
+}
+
+TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
+{
+    using namespace testing;
+
+    StubRendererFactory renderer_factory;
+    NiceMock<MockOverlayRenderer> overlay_renderer;
+
+    geom::Rectangle screen{{0, 0}, {1366, 768}};
+
+    mtd::MockDisplayBuffer display_buffer;
+    EXPECT_CALL(display_buffer, view_area())
+        .WillRepeatedly(Return(screen));
+    EXPECT_CALL(display_buffer, make_current())
+        .Times(0);
+    EXPECT_CALL(display_buffer, post_update())
+        .Times(0);
+    EXPECT_CALL(display_buffer, can_bypass())
+        .WillRepeatedly(Return(true));
+
+    TestWindow small(10, 20, 30, 40);
+    TestWindow fullscreen(0, 0, 1366, 768);
+
+    std::vector<mc::CompositingCriteria*> renderable_vec;
+    renderable_vec.push_back(&small);
+    renderable_vec.push_back(&fullscreen);
+
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(small),_))
+        .Times(0);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(fullscreen),_))
+        .Times(0);
+
+    FakeScene scene(renderable_vec);
+
+    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
+    EXPECT_CALL(*compositor_buffer, can_scanout())
+        .WillOnce(Return(true));
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+        .WillOnce(Return(compositor_buffer));
 
     mc::DefaultDisplayBufferCompositorFactory factory(
         mt::fake_shared(scene),
