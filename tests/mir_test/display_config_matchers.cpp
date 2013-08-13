@@ -35,6 +35,20 @@ class TestDisplayConfiguration : public mg::DisplayConfiguration
 public:
     TestDisplayConfiguration(mp::DisplayConfiguration const& protobuf_config)
     {
+        /* Cards */
+        for (int i = 0; i < protobuf_config.display_card_size(); i++)
+        {
+            auto const& protobuf_card = protobuf_config.display_card(i);
+            mg::DisplayConfigurationCard display_card
+            {
+                mg::DisplayConfigurationCardId(protobuf_card.card_id()),
+                protobuf_card.max_simultaneous_outputs(),
+            };
+
+            cards.push_back(display_card);
+        }
+
+        /* Outputs */
         for (int i = 0; i < protobuf_config.display_output_size(); i++)
         {
             auto const& protobuf_output = protobuf_config.display_output(i);
@@ -42,8 +56,10 @@ public:
             {
                 mg::DisplayConfigurationOutputId(protobuf_output.output_id()),
                 mg::DisplayConfigurationCardId(protobuf_output.card_id()),
+                static_cast<mg::DisplayConfigurationOutputType>(protobuf_output.type()),
                 {},
                 {},
+                protobuf_output.preferred_mode(),
                 geom::Size{protobuf_output.physical_width_mm(),
                            protobuf_output.physical_height_mm()},
                 static_cast<bool>(protobuf_output.connected()),
@@ -83,6 +99,20 @@ public:
 
     TestDisplayConfiguration(MirDisplayConfiguration const& client_config)
     {
+        /* Cards */
+        for (size_t i = 0; i < client_config.num_cards; i++)
+        {
+            auto const& client_card = client_config.cards[i];
+            mg::DisplayConfigurationCard display_card
+            {
+                mg::DisplayConfigurationCardId(client_card.card_id),
+                client_card.max_simultaneous_outputs,
+            };
+
+            cards.push_back(display_card);
+        }
+
+        /* Outputs */
         for (size_t i = 0; i < client_config.num_displays; i++)
         {
             auto const& client_output = client_config.displays[i];
@@ -90,8 +120,10 @@ public:
             {
                 mg::DisplayConfigurationOutputId(client_output.output_id),
                 mg::DisplayConfigurationCardId(client_output.card_id),
+                static_cast<mg::DisplayConfigurationOutputType>(client_output.type),
                 {},
                 {},
+                client_output.preferred_mode,
                 geom::Size{client_output.physical_width_mm,
                            client_output.physical_height_mm},
                 static_cast<bool>(client_output.connected),
@@ -129,8 +161,10 @@ public:
         }
     }
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
     {
+        for (auto const& card : cards)
+            f(card);
     }
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
@@ -145,12 +179,48 @@ public:
     }
 
 private:
+    std::vector<mg::DisplayConfigurationCard> cards;
     std::vector<mg::DisplayConfigurationOutput> outputs;
 };
 
 bool compare_display_configurations(mg::DisplayConfiguration const& config1,
                                     mg::DisplayConfiguration const& config2)
 {
+    bool result = true;
+
+    /* cards */
+    std::vector<mg::DisplayConfigurationCard> cards1;
+    std::vector<mg::DisplayConfigurationCard> cards2;
+
+    config1.for_each_card(
+        [&cards1](mg::DisplayConfigurationCard const& card)
+        {
+            cards1.push_back(card);
+        });
+    config2.for_each_card(
+        [&cards2](mg::DisplayConfigurationCard const& card)
+        {
+            cards2.push_back(card);
+        });
+
+    if (cards1.size() == cards2.size())
+    {
+        for (size_t i = 0; i < cards1.size(); i++)
+        {
+            if (cards1[i] != cards2[i])
+            {
+                EXPECT_EQ(cards1[i], cards2[i]);
+                result = false;
+            }
+        }
+    }
+    else
+    {
+        EXPECT_EQ(cards1.size(), cards2.size());
+        result = false;
+    }
+
+    /* Outputs */
     std::vector<mg::DisplayConfigurationOutput> outputs1;
     std::vector<mg::DisplayConfigurationOutput> outputs2;
 
@@ -165,21 +235,21 @@ bool compare_display_configurations(mg::DisplayConfiguration const& config1,
             outputs2.push_back(output);
         });
 
-    if (outputs1.size() != outputs2.size())
+    if (outputs1.size() == outputs2.size())
+    {
+        for (size_t i = 0; i < outputs1.size(); i++)
+        {
+            if (outputs1[i] != outputs2[i])
+            {
+                EXPECT_EQ(outputs1[i], outputs2[i]);
+                result = false;
+            }
+        }
+    }
+    else
     {
         EXPECT_EQ(outputs1.size(), outputs2.size());
-        return false;
-    }
-
-    bool result = true;
-
-    for (size_t i = 0; i < outputs1.size(); i++)
-    {
-        if (outputs1[i] != outputs2[i])
-        {
-            EXPECT_EQ(outputs1[i], outputs2[i]);
-            result = false;
-        }
+        result = false;
     }
 
     return result;

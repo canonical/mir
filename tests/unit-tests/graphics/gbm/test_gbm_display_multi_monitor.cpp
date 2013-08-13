@@ -51,15 +51,13 @@ class ClonedDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
 public:
     void apply_to(mg::DisplayConfiguration& conf)
     {
-        size_t const preferred_mode_index{0};
-
         conf.for_each_output(
             [&](mg::DisplayConfigurationOutput const& conf_output)
             {
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
                     conf.configure_output(conf_output.id, true, geom::Point{0, 0},
-                                          preferred_mode_index);
+                                          conf_output.preferred_mode_index);
                 }
                 else
                 {
@@ -75,7 +73,6 @@ class SideBySideDisplayConfigurationPolicy : public mg::DisplayConfigurationPoli
 public:
     void apply_to(mg::DisplayConfiguration& conf)
     {
-        size_t const preferred_mode_index{0};
         int max_x = 0;
 
         conf.for_each_output(
@@ -84,8 +81,8 @@ public:
                 if (conf_output.connected && conf_output.modes.size() > 0)
                 {
                     conf.configure_output(conf_output.id, true, geom::Point{max_x, 0},
-                                          preferred_mode_index);
-                    max_x += conf_output.modes[0].size.width.as_int();
+                                          conf_output.preferred_mode_index);
+                    max_x += conf_output.modes[conf_output.preferred_mode_index].size.width.as_int();
                 }
                 else
                 {
@@ -152,13 +149,15 @@ public:
 
     void setup_outputs(int n)
     {
+        using fake = mtd::FakeDRMResources;
+
         mtd::FakeDRMResources& resources(mock_drm.fake_drm);
 
         modes0.clear();
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 138500, 2080, 1111));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1920, 1080, 148500, 2200, 1125));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(1680, 1050, 119000, 1840, 1080));
-        modes0.push_back(mtd::FakeDRMResources::create_mode(832, 624, 57284, 1152, 667));
+        modes0.push_back(fake::create_mode(1920, 1080, 138500, 2080, 1111, fake::NormalMode));
+        modes0.push_back(fake::create_mode(1920, 1080, 148500, 2200, 1125, fake::PreferredMode));
+        modes0.push_back(fake::create_mode(1680, 1050, 119000, 1840, 1080, fake::NormalMode));
+        modes0.push_back(fake::create_mode(832, 624, 57284, 1152, 667, fake::NormalMode));
 
         geom::Size const connector_physical_size_mm{1597, 987};
 
@@ -186,7 +185,8 @@ public:
             uint32_t const connector_id{connector_base_id + i};
 
             connector_ids.push_back(connector_id);
-            resources.add_connector(connector_id, DRM_MODE_CONNECTED, encoder_ids[i],
+            resources.add_connector(connector_id, DRM_MODE_CONNECTOR_VGA,
+                                    DRM_MODE_CONNECTED, encoder_ids[i],
                                     modes0, encoder_ids, connector_physical_size_mm);
         }
 

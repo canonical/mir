@@ -28,11 +28,19 @@ namespace mp = mir::protobuf;
 namespace
 {
 
+void pack_protobuf_display_card(mp::DisplayCard& protobuf_card,
+                                mg::DisplayConfigurationCard const& display_card)
+{
+    protobuf_card.set_card_id(display_card.id.as_value());
+    protobuf_card.set_max_simultaneous_outputs(display_card.max_simultaneous_outputs);
+}
+
 void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
                                   mg::DisplayConfigurationOutput const& display_output)
 {
     protobuf_output.set_output_id(display_output.id.as_value());
     protobuf_output.set_card_id(display_output.card_id.as_value());
+    protobuf_output.set_type(static_cast<uint32_t>(display_output.type));
 
     for (auto const& pf : display_output.pixel_formats)
     {
@@ -46,6 +54,7 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
         protobuf_output_mode->set_vertical_resolution(mode.size.height.as_uint32_t());
         protobuf_output_mode->set_refresh_rate(mode.vrefresh_hz);
     }
+    protobuf_output.set_preferred_mode(display_output.preferred_mode_index);
 
     protobuf_output.set_physical_width_mm(display_output.physical_size_mm.width.as_uint32_t());
     protobuf_output.set_physical_height_mm(display_output.physical_size_mm.height.as_uint32_t());
@@ -63,6 +72,13 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
 void mfd::pack_protobuf_display_configuration(mp::DisplayConfiguration& protobuf_config,
                                               mg::DisplayConfiguration const& display_config)
 {
+    display_config.for_each_card(
+        [&protobuf_config](mg::DisplayConfigurationCard const& card)
+        {
+            auto protobuf_card = protobuf_config.add_display_card();
+            pack_protobuf_display_card(*protobuf_card, card);
+        });
+
     display_config.for_each_output(
         [&protobuf_config](mg::DisplayConfigurationOutput const& output)
         {
