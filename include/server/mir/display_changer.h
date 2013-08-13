@@ -13,11 +13,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_DISPLAY_CHANGER_H_
-#define MIR_SHELL_DISPLAY_CHANGER_H_
+#ifndef MIR_DISPLAY_CHANGER_H_
+#define MIR_DISPLAY_CHANGER_H_
 
 #include <memory>
 
@@ -27,29 +27,24 @@ namespace graphics
 {
 class DisplayConfiguration;
 }
-namespace frontend
-{
-class Session;
-}
 
-namespace shell
-{
 class DisplayChanger
 {
 public:
     virtual ~DisplayChanger() = default;
 
-    virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration() = 0;
-    virtual void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
+    enum SystemStateHandling : bool { RetainSystemState, PauseResumeSystem };
+
+    virtual void configure_for_hardware_change(
+        std::shared_ptr<graphics::DisplayConfiguration> const& conf,
+        SystemStateHandling pause_resume_system) = 0;
 
 protected:
     DisplayChanger() = default;
-private:
     DisplayChanger(DisplayChanger const&) = delete;
     DisplayChanger& operator=(DisplayChanger const&) = delete;
 };
 
 }
-}
 
-#endif /* MIR_SHELL_DISPLAY_CHANGER_H_ */
+#endif /* MIR_DISPLAY_CHANGER_H_ */

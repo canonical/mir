@@ -186,7 +186,7 @@ struct SessionMediatorTest : public ::testing::Test
 
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
-    std::shared_ptr<msh::DisplayChanger> const graphics_changer;
+    std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::shared_ptr<testing::NiceMock<MockGraphicBufferAllocator>> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;

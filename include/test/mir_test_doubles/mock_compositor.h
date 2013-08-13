@@ -13,13 +13,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_COMPOSITOR_H_
+#define MIR_TEST_DOUBLES_MOCK_COMPOSITOR_H_
 
-#include "mir/frontend/display_changer.h"
+#include "mir/compositor/compositor.h"
+
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,15 +30,16 @@ namespace test
 namespace doubles
 {
 
-class MockDisplayChanger : public frontend::DisplayChanger
+class MockCompositor : public compositor::Compositor
 {
 public:
-    MOCK_METHOD0(active_configuration, std::shared_ptr<graphics::DisplayConfiguration>());
-    MOCK_METHOD2(configure,
-        void(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&));
+    MOCK_METHOD0(start, void());
+    MOCK_METHOD0(stop, void());
 };
 
 }
 }
 }
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_ */
+
+#endif /* MIR_TEST_DOUBLES_MOCK_COMPOSITOR_H_ */
+
