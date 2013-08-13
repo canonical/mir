@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_DISPLAY_CHANGER_H_
-#define MIR_GRAPHICS_DISPLAY_CHANGER_H_
+#ifndef MIR_DISPLAY_CHANGER_H_
+#define MIR_DISPLAY_CHANGER_H_
 
 #include <memory>
 
@@ -25,6 +25,8 @@ namespace mir
 {
 namespace graphics
 {
+class DisplayConfiguration;
+}
 
 class DisplayChanger
 {
@@ -44,6 +46,5 @@ protected:
 };
 
 }
-}
 
-#endif /* MIR_GRAPHICS_DISPLAY_CHANGER_H_ */
+#endif /* MIR_DISPLAY_CHANGER_H_ */

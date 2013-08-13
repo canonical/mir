@@ -20,8 +20,8 @@
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/display_changer.h"
 #include "mir/main_loop.h"
+#include "mir/display_changer.h"
 
 #include "mir_test/pipe.h"
 #include "mir_test_framework/testing_server_configuration.h"
@@ -58,7 +58,7 @@ public:
     MOCK_METHOD0(stop, void());
 };
 
-class MockGraphicsDisplayChanger : public mg::DisplayChanger
+class MockDisplayChanger : public mir::DisplayChanger
 {
 public:
     MOCK_METHOD2(configure_for_hardware_change,
@@ -240,12 +240,12 @@ public:
         return mock_input_manager;
     }
 
-    std::shared_ptr<mg::DisplayChanger> the_graphics_display_changer() override
+    std::shared_ptr<mir::DisplayChanger> the_display_changer() override
     {
-        if (!mock_graphics_display_changer)
-            mock_graphics_display_changer = std::make_shared<MockGraphicsDisplayChanger>();
+        if (!mock_display_changer)
+            mock_display_changer = std::make_shared<MockDisplayChanger>();
 
-        return mock_graphics_display_changer;
+        return mock_display_changer;
     }
 
     std::shared_ptr<MockDisplay> the_mock_display()
@@ -272,10 +272,10 @@ public:
         return mock_input_manager;
     }
 
-    std::shared_ptr<MockGraphicsDisplayChanger> the_mock_graphics_display_changer()
+    std::shared_ptr<MockDisplayChanger> the_mock_display_changer()
     {
-        the_graphics_display_changer();
-        return mock_graphics_display_changer;
+        the_display_changer();
+        return mock_display_changer;
     }
 
     void emit_pause_event_and_wait_for_handler()
@@ -304,7 +304,7 @@ private:
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<MockCommunicator> mock_communicator;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
-    std::shared_ptr<MockGraphicsDisplayChanger> mock_graphics_display_changer;
+    std::shared_ptr<MockDisplayChanger> mock_display_changer;
 
     mt::Pipe p;
     int const pause_signal;
@@ -490,7 +490,7 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
     auto mock_input_manager = server_config.the_mock_input_manager();
-    auto mock_graphics_display_changer = server_config.the_mock_graphics_display_changer();
+    auto mock_display_changer = server_config.the_mock_display_changer();
 
     {
         InSequence s;
@@ -501,8 +501,8 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
 
         /* Configuration change event */
-        EXPECT_CALL(*mock_graphics_display_changer,
-                    configure_for_hardware_change(_, mg::DisplayChanger::PauseResumeSystem))
+        EXPECT_CALL(*mock_display_changer,
+                    configure_for_hardware_change(_, mir::DisplayChanger::PauseResumeSystem))
             .Times(1);
 
         /* Stop */
@@ -534,7 +534,7 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
     auto mock_display = server_config.the_mock_display();
     auto mock_communicator = server_config.the_mock_communicator();
     auto mock_input_manager = server_config.the_mock_input_manager();
-    auto mock_graphics_display_changer = server_config.the_mock_graphics_display_changer();
+    auto mock_display_changer = server_config.the_mock_display_changer();
 
     {
         InSequence s;
@@ -554,8 +554,8 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
         EXPECT_CALL(*mock_display, resume()).Times(1);
         EXPECT_CALL(*mock_communicator, start()).Times(1);
 
-        EXPECT_CALL(*mock_graphics_display_changer,
-                    configure_for_hardware_change(_, mg::DisplayChanger::RetainSystemState))
+        EXPECT_CALL(*mock_display_changer,
+                    configure_for_hardware_change(_, mir::DisplayChanger::RetainSystemState))
             .Times(1);
 
         EXPECT_CALL(*mock_input_manager, start()).Times(1);

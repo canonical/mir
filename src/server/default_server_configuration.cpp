@@ -383,8 +383,8 @@ mir::DefaultServerConfiguration::the_frontend_display_changer()
     return the_mediating_display_changer();
 }
 
-std::shared_ptr<mg::DisplayChanger>
-mir::DefaultServerConfiguration::the_graphics_display_changer()
+std::shared_ptr<mir::DisplayChanger>
+mir::DefaultServerConfiguration::the_display_changer()
 {
     return the_mediating_display_changer();
 }

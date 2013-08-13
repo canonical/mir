@@ -119,8 +119,7 @@ public:
     virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
     virtual std::shared_ptr<MainLoop>               the_main_loop();
-    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
-    virtual std::shared_ptr<graphics::DisplayChanger> the_graphics_display_changer();
+    virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -128,6 +127,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
+    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     /** @} */
 
     /** @name graphics configuration - dependencies

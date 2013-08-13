@@ -21,11 +21,11 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/main_loop.h"
+#include "mir/display_changer.h"
 
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_changer.h"
 #include "mir/input/input_manager.h"
 
 #include <stdexcept>
@@ -72,7 +72,7 @@ struct mir::DisplayServer::Private
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
-          display_changer{config.the_graphics_display_changer()},
+          display_changer{config.the_display_changer()},
           paused{false},
           configure_display_on_resume{false}
     {
@@ -130,7 +130,7 @@ struct mir::DisplayServer::Private
             {
                 auto conf = display->configuration();
                 display_changer->configure_for_hardware_change(
-                    conf, mg::DisplayChanger::RetainSystemState);
+                    conf, DisplayChanger::RetainSystemState);
                 configure_display_on_resume = false;
             }
 
@@ -156,7 +156,7 @@ struct mir::DisplayServer::Private
         {
             auto conf = display->configuration();
             display_changer->configure_for_hardware_change(
-                conf, mg::DisplayChanger::PauseResumeSystem);
+                conf, DisplayChanger::PauseResumeSystem);
         }
         else
         {
@@ -169,7 +169,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mf::Communicator> const communicator;
     std::shared_ptr<mi::InputManager> const input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
-    std::shared_ptr<mg::DisplayChanger> const display_changer;
+    std::shared_ptr<mir::DisplayChanger> const display_changer;
     bool paused;
     bool configure_display_on_resume;
 };

@@ -114,7 +114,7 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_pausin
         mt::fake_shared(mock_conf_policy));
 
     changer.configure_for_hardware_change(mt::fake_shared(conf),
-                                          mg::DisplayChanger::PauseResumeSystem);
+                                          mir::DisplayChanger::PauseResumeSystem);
 }
 
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_retaining_system_state)
@@ -138,5 +138,5 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_retain
         mt::fake_shared(mock_conf_policy));
 
     changer.configure_for_hardware_change(mt::fake_shared(conf),
-                                          mg::DisplayChanger::RetainSystemState);
+                                          mir::DisplayChanger::RetainSystemState);
 }

@@ -20,7 +20,7 @@
 #define MIR_SHELL_MEDIATING_DISPLAY_CHANGER_H_
 
 #include "mir/frontend/display_changer.h"
-#include "mir/graphics/display_changer.h"
+#include "mir/display_changer.h"
 
 #include <mutex>
 
@@ -39,7 +39,7 @@ namespace shell
 {
 
 class MediatingDisplayChanger : public frontend::DisplayChanger,
-                                public graphics::DisplayChanger
+                                public mir::DisplayChanger
 {
 public:
     MediatingDisplayChanger(
@@ -48,12 +48,12 @@ public:
         std::shared_ptr<input::InputManager> const& input_manager,
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const& display_configuration_policy);
 
-    /* From frontend::DisplayChanger */
+    /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
     void configure(std::weak_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf);
 
-    /* From graphics::DisplayChanger */
+    /* From mir::DisplayChanger */
     void configure_for_hardware_change(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
         SystemStateHandling pause_resume_system);
