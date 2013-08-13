@@ -66,7 +66,7 @@ std::shared_ptr<mcl::ClientBuffer> mcl::ClientBufferDepository::current_buffer()
     return buffers.front().second;
 }
 
-uint32_t mcl::ClientBufferDepository::current_buffer_id()
+uint32_t mcl::ClientBufferDepository::current_buffer_id() const
 {
     return buffers.front().first;
 }

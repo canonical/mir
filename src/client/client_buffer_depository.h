@@ -61,7 +61,7 @@ public:
     void deposit_package(std::shared_ptr<MirBufferPackage> const&, int id,
                          geometry::Size, geometry::PixelFormat);
     std::shared_ptr<ClientBuffer> current_buffer();
-    uint32_t current_buffer_id();
+    uint32_t current_buffer_id() const;
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
