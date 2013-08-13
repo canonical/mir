@@ -152,6 +152,7 @@ void mf::SessionMediator::create_surface(
          client_tracker->add(id);
      }
 
+     // TODO: We rely on done->Run() sending messages synchronously.
      done->Run();
      shell->handle_surface_created(session);
 }
