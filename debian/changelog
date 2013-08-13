@@ -1,3 +1,13 @@
+mir (0.0.9+13.10.20130813-0ubuntu1) saucy; urgency=low
+
+  [ Daniel d'Andrada ]
+  * Add mir_surface_type_inputmethod enum value.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 970
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 13 Aug 2013 02:04:54 +0000
+
 mir (0.0.9+13.10.20130812.4-0ubuntu1) saucy; urgency=low
 
   [ Alexandros Frantzis ]
