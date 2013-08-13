@@ -66,7 +66,7 @@ struct MockBuffer : public graphics::Buffer
     MOCK_METHOD0(bind_to_texture, void());
     MOCK_CONST_METHOD0(id, graphics::BufferID());
 
-    MOCK_CONST_METHOD0(can_scanout, bool());
+    MOCK_CONST_METHOD0(can_bypass, bool());
 };
 
 }

@@ -61,7 +61,7 @@ public:
 
     virtual void bind_to_texture();
 
-    bool can_scanout() const override;
+    bool can_bypass() const override;
 
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;

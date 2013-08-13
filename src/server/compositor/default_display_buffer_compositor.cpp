@@ -78,7 +78,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
             auto bypass_buf =
                 match.topmost_fullscreen()->lock_compositor_buffer();
 
-            if (bypass_buf->can_scanout())
+            if (bypass_buf->can_bypass())
             {
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;

@@ -94,7 +94,7 @@ std::shared_ptr<MirNativeBuffer> mc::TemporaryBuffer::native_buffer_handle() con
     return buffer->native_buffer_handle();
 }
 
-bool mc::TemporaryBuffer::can_scanout() const
+bool mc::TemporaryBuffer::can_bypass() const
 {
-    return buffer->can_scanout();
+    return buffer->can_bypass();
 }

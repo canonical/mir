@@ -141,7 +141,7 @@ std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
     return temp;
 }
 
-bool mgg::GBMBuffer::can_scanout() const
+bool mgg::GBMBuffer::can_bypass() const
 {
     return bo_flags & GBM_BO_USE_SCANOUT;
 }

@@ -42,7 +42,7 @@ public:
     virtual geometry::Stride stride() const = 0;
     virtual geometry::PixelFormat pixel_format() const = 0;
     virtual void bind_to_texture() = 0;
-    virtual bool can_scanout() const { return false; }
+    virtual bool can_bypass() const { return false; }
 
 protected:
     Buffer() = default;
