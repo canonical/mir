@@ -294,3 +294,52 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 
     comp->composite();
 }
+
+TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
+{
+    using namespace testing;
+
+    StubRendererFactory renderer_factory;
+    NiceMock<MockOverlayRenderer> overlay_renderer;
+
+    geom::Rectangle screen{{0, 0}, {1366, 768}};
+
+    mtd::MockDisplayBuffer display_buffer;
+    EXPECT_CALL(display_buffer, view_area())
+        .WillRepeatedly(Return(screen));
+    EXPECT_CALL(display_buffer, make_current())
+        .Times(1);
+    EXPECT_CALL(display_buffer, post_update())
+        .Times(1);
+    EXPECT_CALL(display_buffer, can_bypass())
+        .WillRepeatedly(Return(true));
+
+    TestWindow fullscreen(0, 0, 1366, 768);
+    TestWindow small(10, 20, 30, 40);
+
+    std::vector<mc::CompositingCriteria*> renderable_vec;
+    renderable_vec.push_back(&fullscreen);
+    renderable_vec.push_back(&small);
+
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(small),_))
+        .Times(1);
+    EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(fullscreen),_))
+        .Times(1);
+
+    FakeScene scene(renderable_vec);
+
+    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
+    EXPECT_CALL(*compositor_buffer, can_scanout())
+        .Times(0);
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+        .Times(0);
+
+    mc::DefaultDisplayBufferCompositorFactory factory(
+        mt::fake_shared(scene),
+        mt::fake_shared(renderer_factory),
+        mt::fake_shared(overlay_renderer));
+
+    auto comp = factory.create_compositor_for(display_buffer);
+
+    comp->composite();
+}
