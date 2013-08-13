@@ -97,6 +97,7 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 /** 
  * \deprecated Use mir_connection_create_display_config
  */
+__attribute__((__deprecated__("Use mir_connection_create_display_config()")))
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
 
 /**
