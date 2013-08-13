@@ -207,6 +207,20 @@ TEST_F(BypassFilterTest, dual_bypass)
     EXPECT_TRUE(right_filter.fullscreen_on_top());
 }
 
+TEST_F(BypassFilterTest, multimonitor_oversized_no_bypass)
+{
+    BypassFilter left_filter(display_buffer[0]);
+    BypassFilter right_filter(display_buffer[1]);
+
+    StubCompositingCriteria big_win(0, 0, 3840, 1200);
+
+    EXPECT_FALSE(left_filter(big_win));
+    EXPECT_FALSE(left_filter.fullscreen_on_top());
+
+    EXPECT_FALSE(right_filter(big_win));
+    EXPECT_FALSE(right_filter.fullscreen_on_top());
+}
+
 TEST(BypassMatchTest, defaults_to_null)
 {
     BypassMatch match;
