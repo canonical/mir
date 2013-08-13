@@ -20,7 +20,7 @@
 #include "src/server/compositor/bypass.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
-#include <glm/gtc/matrix_transform.hpp>
+#include "mir_test_doubles/stub_compositing_criteria.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -29,38 +29,6 @@ using namespace testing;
 using namespace mir::geometry;
 using namespace mir::compositor;
 using namespace mir::test::doubles;
-
-class TestWindow : public CompositingCriteria
-{
-public:
-    TestWindow(int x, int y, int width, int height)
-        : rect{{x, y}, {width, height}}
-    {
-        const glm::mat4 ident;
-        glm::vec3 size(width, height, 0.0f);
-        glm::vec3 pos(x + width / 2, y + height / 2, 0.0f);
-        trans = glm::scale( glm::translate(ident, pos), size);
-    }
-
-    float alpha() const override
-    {
-        return 1.0f;
-    }
-
-    glm::mat4 const& transformation() const override
-    {
-        return trans;
-    }
-
-    bool should_be_rendered_in(const Rectangle &r) const override
-    {
-        return rect.overlaps(r);
-    }
-
-private:
-    Rectangle rect;
-    glm::mat4 trans;
-};
 
 struct BypassFilterTest : public Test
 {
@@ -94,7 +62,7 @@ TEST_F(BypassFilterTest, small_window_not_bypassed)
 {
     BypassFilter filter(display_buffer[0]);
 
-    TestWindow win(12, 34, 56, 78);
+    StubCompositingCriteria win(12, 34, 56, 78);
 
     EXPECT_FALSE(filter(win));
     EXPECT_FALSE(filter.fullscreen_on_top());
@@ -104,7 +72,7 @@ TEST_F(BypassFilterTest, single_fullscreen_window_bypassed)
 {
     BypassFilter filter(display_buffer[0]);
 
-    TestWindow win(0, 0, 1920, 1200);
+    StubCompositingCriteria win(0, 0, 1920, 1200);
 
     EXPECT_TRUE(filter(win));
     EXPECT_TRUE(filter.fullscreen_on_top());
@@ -114,7 +82,7 @@ TEST_F(BypassFilterTest, offset_fullscreen_window_not_bypassed)
 {
     BypassFilter filter(display_buffer[0]);
 
-    TestWindow win(10, 50, 1920, 1200);
+    StubCompositingCriteria win(10, 50, 1920, 1200);
 
     EXPECT_FALSE(filter(win));
     EXPECT_FALSE(filter.fullscreen_on_top());
@@ -124,8 +92,8 @@ TEST_F(BypassFilterTest, obscured_fullscreen_window_not_bypassed)
 {
     BypassFilter filter(display_buffer[0]);
 
-    TestWindow fs(0, 0, 1920, 1200);
-    TestWindow small(20, 30, 40, 50);
+    StubCompositingCriteria fs(0, 0, 1920, 1200);
+    StubCompositingCriteria small(20, 30, 40, 50);
 
     EXPECT_TRUE(filter(fs));
     EXPECT_FALSE(filter(small));
@@ -136,8 +104,8 @@ TEST_F(BypassFilterTest, unobscured_fullscreen_window_bypassed)
 {
     BypassFilter filter(display_buffer[0]);
 
-    TestWindow fs(0, 0, 1920, 1200);
-    TestWindow small(20, 30, 40, 50);
+    StubCompositingCriteria fs(0, 0, 1920, 1200);
+    StubCompositingCriteria small(20, 30, 40, 50);
 
     EXPECT_FALSE(filter(small));
     EXPECT_TRUE(filter(fs));
@@ -148,31 +116,31 @@ TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top)
 {
     BypassFilter filter(display_buffer[0]);
 
-    TestWindow a(0, 0, 1920, 1200);
+    StubCompositingCriteria a(0, 0, 1920, 1200);
     EXPECT_TRUE(filter(a));
     EXPECT_TRUE(filter.fullscreen_on_top());
 
-    TestWindow b(1, 2, 3, 4);
+    StubCompositingCriteria b(1, 2, 3, 4);
     EXPECT_FALSE(filter(b));
     EXPECT_FALSE(filter.fullscreen_on_top());
 
-    TestWindow c(0, 0, 1920, 1200);
+    StubCompositingCriteria c(0, 0, 1920, 1200);
     EXPECT_TRUE(filter(c));
     EXPECT_TRUE(filter.fullscreen_on_top());
 
-    TestWindow d(5, 6, 7, 8);
+    StubCompositingCriteria d(5, 6, 7, 8);
     EXPECT_FALSE(filter(d));
     EXPECT_FALSE(filter.fullscreen_on_top());
 
-    TestWindow e(0, 0, 1920, 1200);
+    StubCompositingCriteria e(0, 0, 1920, 1200);
     EXPECT_TRUE(filter(e));
     EXPECT_TRUE(filter.fullscreen_on_top());
 
-    TestWindow f(9, 10, 11, 12);
+    StubCompositingCriteria f(9, 10, 11, 12);
     EXPECT_FALSE(filter(f));
     EXPECT_FALSE(filter.fullscreen_on_top());
 
-    TestWindow g(0, 0, 1920, 1200);
+    StubCompositingCriteria g(0, 0, 1920, 1200);
     EXPECT_TRUE(filter(g));
     EXPECT_TRUE(filter.fullscreen_on_top());
 }
@@ -182,8 +150,8 @@ TEST_F(BypassFilterTest, multimonitor_one_bypassed)
     BypassFilter left(display_buffer[0]);
     BypassFilter right(display_buffer[1]);
 
-    TestWindow fs(1920, 0, 1920, 1200);
-    TestWindow small(20, 30, 40, 50);
+    StubCompositingCriteria fs(1920, 0, 1920, 1200);
+    StubCompositingCriteria small(20, 30, 40, 50);
 
     EXPECT_FALSE(left(small));
     EXPECT_FALSE(left.fullscreen_on_top());
@@ -203,8 +171,8 @@ TEST_F(BypassFilterTest, dual_bypass)
     BypassFilter left_filter(display_buffer[0]);
     BypassFilter right_filter(display_buffer[1]);
 
-    TestWindow left_win(0, 0, 1920, 1200);
-    TestWindow right_win(1920, 0, 1920, 1200);
+    StubCompositingCriteria left_win(0, 0, 1920, 1200);
+    StubCompositingCriteria right_win(1920, 0, 1920, 1200);
 
     EXPECT_TRUE(left_filter(left_win));
     EXPECT_TRUE(left_filter.fullscreen_on_top());
@@ -227,7 +195,7 @@ TEST(BypassMatchTest, defaults_to_null)
 TEST(BypassMatchTest, returns_one)
 {
     BypassMatch match;
-    TestWindow win(1, 2, 3, 4);
+    StubCompositingCriteria win(1, 2, 3, 4);
     StubBufferStream bufs;
 
     EXPECT_EQ(nullptr, match.topmost_fullscreen());
@@ -238,7 +206,7 @@ TEST(BypassMatchTest, returns_one)
 TEST(BypassMatchTest, returns_latest)
 {
     BypassMatch match;
-    TestWindow a(1, 2, 3, 4), b(5, 6, 7, 8), c(9, 10, 11, 12);
+    StubCompositingCriteria a(1, 2, 3, 4), b(5, 6, 7, 8), c(9, 10, 11, 12);
     StubBufferStream abuf, bbuf, cbuf;
 
     EXPECT_EQ(nullptr, match.topmost_fullscreen());

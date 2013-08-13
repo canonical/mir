@@ -29,10 +29,9 @@
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_compositing_criteria.h"
+#include "mir_test_doubles/stub_compositing_criteria.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
-
-#include <glm/gtc/matrix_transform.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -209,43 +208,6 @@ TEST(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     comp->composite();
 }
 
-namespace
-{
-
-class TestWindow : public mc::CompositingCriteria
-{
-public:
-    TestWindow(int x, int y, int width, int height)
-        : rect{{x, y}, {width, height}}
-    {
-        const glm::mat4 ident;
-        glm::vec3 size(width, height, 0.0f);
-        glm::vec3 pos(x + width / 2, y + height / 2, 0.0f);
-        trans = glm::scale( glm::translate(ident, pos), size);
-    }
-
-    float alpha() const override
-    {
-        return 1.0f;
-    }
-
-    glm::mat4 const& transformation() const override
-    {
-        return trans;
-    }
-
-    bool should_be_rendered_in(const geom::Rectangle &r) const override
-    {
-        return rect.overlaps(r);
-    }
-
-private:
-    geom::Rectangle rect;
-    glm::mat4 trans;
-};
-
-}
-
 TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
 {
     using namespace testing;
@@ -265,8 +227,8 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(true));
 
-    TestWindow small(10, 20, 30, 40);
-    TestWindow fullscreen(0, 0, 1366, 768);
+    mtd::StubCompositingCriteria small(10, 20, 30, 40);
+    mtd::StubCompositingCriteria fullscreen(0, 0, 1366, 768);
 
     std::vector<mc::CompositingCriteria*> renderable_vec;
     renderable_vec.push_back(&small);
@@ -314,8 +276,8 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(true));
 
-    TestWindow fullscreen(0, 0, 1366, 768);
-    TestWindow small(10, 20, 30, 40);
+    mtd::StubCompositingCriteria fullscreen(0, 0, 1366, 768);
+    mtd::StubCompositingCriteria small(10, 20, 30, 40);
 
     std::vector<mc::CompositingCriteria*> renderable_vec;
     renderable_vec.push_back(&fullscreen);
