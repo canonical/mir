@@ -47,6 +47,7 @@ class SessionMediatorReport;
 class MessageProcessorReport;
 class SessionAuthorizer;
 class EventSink;
+class DisplayChanger;
 }
 
 namespace shell
@@ -66,7 +67,7 @@ class PixelBuffer;
 class SnapshotStrategy;
 class DisplayLayout;
 class SurfaceConfigurator;
-class DisplayChanger;
+class MediatingDisplayChanger;
 }
 namespace time
 {
@@ -118,7 +119,7 @@ public:
     virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
     virtual std::shared_ptr<MainLoop>               the_main_loop();
-    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
+    virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -126,6 +127,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
+    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -156,6 +158,7 @@ public:
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
+    virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
     /** @} */
 
     virtual std::shared_ptr<shell::FocusController> the_focus_controller();
@@ -172,7 +175,6 @@ public:
     virtual std::shared_ptr<shell::PixelBuffer>         the_shell_pixel_buffer();
     virtual std::shared_ptr<shell::SnapshotStrategy>    the_shell_snapshot_strategy();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
-    virtual std::shared_ptr<shell::DisplayChanger>      the_shell_display_changer();
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
 
     /** @} */
@@ -229,6 +231,7 @@ protected:
     virtual std::shared_ptr<options::Option> the_options() const;
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
+    virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
@@ -267,7 +270,6 @@ protected:
     CachedPtr<shell::SnapshotStrategy>  shell_snapshot_strategy;
     CachedPtr<shell::DisplayLayout>     shell_display_layout;
     CachedPtr<shell::SurfaceConfigurator> shell_surface_configurator;
-    CachedPtr<shell::DisplayChanger>     shell_display_changer;
     CachedPtr<compositor::DisplayBufferCompositorFactory> display_buffer_compositor_factory;
     CachedPtr<compositor::OverlayRenderer> overlay_renderer;
     CachedPtr<compositor::Compositor> compositor;
@@ -277,6 +279,7 @@ protected:
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
+    CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
 
 private:
     int const argc;

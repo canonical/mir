@@ -48,6 +48,7 @@ typedef enum MirSurfaceType
     mir_surface_type_overlay,
     mir_surface_type_freestyle,
     mir_surface_type_popover,
+    mir_surface_type_inputmethod,
     mir_surface_type_enum_max_
 } MirSurfaceType;
 
