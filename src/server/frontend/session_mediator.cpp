@@ -206,6 +206,7 @@ void mf::SessionMediator::release_surface(
         session->destroy_surface(id);
     }
 
+    // TODO: We rely on this sending responses synchronously.
     done->Run();
 }
 
