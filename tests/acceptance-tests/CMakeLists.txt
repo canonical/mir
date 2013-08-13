@@ -39,6 +39,7 @@ target_link_libraries(
 
   mir-test-framework
   mir-test-doubles
+  mir-test-doubles-platform
   3rd_party
 
   ${PROTOBUF_LIBRARIES}

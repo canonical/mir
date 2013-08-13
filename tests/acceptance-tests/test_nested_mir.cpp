@@ -21,6 +21,8 @@
 
 #include "mir/run_mir.h"
 
+#include "mir_test_doubles/mock_egl.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -91,6 +93,46 @@ struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerCon
     }
 };
 
+struct NestedMockEGL : mir::test::doubles::MockEGL
+{
+    NestedMockEGL()
+    {
+        {
+            InSequence init_before_terminate;
+            EXPECT_CALL(*this, eglGetDisplay(_)).Times(1);
+
+            EXPECT_CALL(*this, eglInitialize(_, _, _)).Times(1).WillRepeatedly(
+                DoAll(WithArgs<1, 2>(Invoke(this, &NestedMockEGL::egl_initialize)), Return(EGL_TRUE)));
+
+            EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(1).WillRepeatedly(
+                DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
+
+            EXPECT_CALL(*this, eglTerminate(_)).Times(1);
+        }
+
+        {
+            InSequence window_surface_lifecycle;
+            EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(1).WillRepeatedly(Return((EGLSurface)this));
+            EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(1).WillRepeatedly(Return(EGL_TRUE));
+            EXPECT_CALL(*this, eglGetCurrentSurface(_)).Times(1).WillRepeatedly(Return((EGLSurface)this));
+        }
+
+        {
+            InSequence context_lifecycle;
+            EXPECT_CALL(*this, eglCreateContext(_, _, _, _)).Times(1).WillRepeatedly(Return((EGLContext)this));
+            EXPECT_CALL(*this, eglDestroyContext(_, _)).Times(1).WillRepeatedly(Return(EGL_TRUE));
+        }
+}
+
+private:
+    void egl_initialize(EGLint* major, EGLint* minor) { *major = 1; *minor = 4; }
+    void egl_choose_config(EGLConfig* config, EGLint*  num_config)
+    {
+        *config = this;
+        *num_config = 1;
+    }
+};
+
 struct ClientConfig : mtf::TestingClientConfiguration
 {
     ClientConfig(NestedServerConfiguration& nested_config) : nested_config(nested_config) {}
@@ -99,8 +141,14 @@ struct ClientConfig : mtf::TestingClientConfiguration
 
     void exec() override
     {
+        NestedMockEGL mock_egl;
+
         try
         {
+            // TODO remove this workaround for an existing issue:
+            // avoids the graphics platform being created multiple times
+            auto frig = nested_config.the_graphics_platform();
+
             mir::run_mir(nested_config, [](mir::DisplayServer&){});
             // TODO - remove FAIL() as we should exit (NB we need logic to cause exit).
             FAIL();
@@ -108,7 +156,7 @@ struct ClientConfig : mtf::TestingClientConfiguration
         catch (std::exception const& x)
         {
             // TODO - this is only temporary until NestedPlatform is implemented.
-            EXPECT_THAT(x.what(), HasSubstr("Mir NestedPlatform is not fully implemented yet!"));
+            EXPECT_THAT(x.what(), HasSubstr("NestedPlatform::create_buffer_allocator is not implemented yet!"));
         }
     }
 };

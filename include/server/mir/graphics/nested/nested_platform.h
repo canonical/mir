@@ -50,7 +50,7 @@ public:
 private:
     std::shared_ptr<NativePlatform> const native_platform;
     std::shared_ptr<DisplayReport> const display_report;
-    MirConnectionHandle connection;
+    MirConnectionHandle const connection;
 };
 
 }
