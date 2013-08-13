@@ -184,3 +184,35 @@ TEST_F(TestNestedMir, nested_platform_connects_and_disconnects)
     launch_server_process(host_config);
     launch_client_process(client_config);
 }
+
+//////////////////////////////////////////////////////////////////
+
+#include "mir/graphics/platform.h"
+#include "mir/display_server.h"
+
+TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
+{
+    struct MyHostServerConfiguration : mtf::TestingServerConfiguration
+    {
+        std::shared_ptr<mir::graphics::Display> the_display() override
+        {
+            return display(
+                [this]()
+                {
+                    auto const& temp = the_graphics_platform()->
+                        create_display(the_display_configuration_policy());
+
+                    my_display = temp;
+                    return temp;
+                });
+        }
+
+        std::weak_ptr<mir::graphics::Display> my_display;
+    };
+
+    MyHostServerConfiguration host_config;
+
+    mir::run_mir(host_config, [](mir::DisplayServer& server){server.stop();});
+
+    EXPECT_FALSE(host_config.my_display.lock()) << "after run_mir() exits the display should be released";
+}
