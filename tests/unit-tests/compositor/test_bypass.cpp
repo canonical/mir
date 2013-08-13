@@ -78,6 +78,16 @@ TEST_F(BypassFilterTest, single_fullscreen_window_bypassed)
     EXPECT_TRUE(filter.fullscreen_on_top());
 }
 
+TEST_F(BypassFilterTest, translucent_fullscreen_window_not_bypassed)
+{
+    BypassFilter filter(display_buffer[0]);
+
+    StubCompositingCriteria win(0, 0, 1920, 1200, 0.5f);
+
+    EXPECT_FALSE(filter(win));
+    EXPECT_FALSE(filter.fullscreen_on_top());
+}
+
 TEST_F(BypassFilterTest, offset_fullscreen_window_not_bypassed)
 {
     BypassFilter filter(display_buffer[0]);
@@ -110,6 +120,18 @@ TEST_F(BypassFilterTest, unobscured_fullscreen_window_bypassed)
     EXPECT_FALSE(filter(small));
     EXPECT_TRUE(filter(fs));
     EXPECT_TRUE(filter.fullscreen_on_top());
+}
+
+TEST_F(BypassFilterTest, unobscured_fullscreen_alpha_window_not_bypassed)
+{
+    BypassFilter filter(display_buffer[0]);
+
+    StubCompositingCriteria fs(0, 0, 1920, 1200, 0.9f);
+    StubCompositingCriteria small(20, 30, 40, 50);
+
+    EXPECT_FALSE(filter(small));
+    EXPECT_FALSE(filter(fs));
+    EXPECT_FALSE(filter.fullscreen_on_top());
 }
 
 TEST_F(BypassFilterTest, many_fullscreen_windows_only_bypass_top)
