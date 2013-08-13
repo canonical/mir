@@ -62,6 +62,9 @@ bool mgg::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
                                DRM_MODE_PAGE_FLIP_EVENT,
                                &pending_page_flips[crtc_id]);
 
+    // FIXME: nouveau has issues (which are apparently safe to ignore)
+    //fprintf(stderr, "drmModePageFlip(%d,%u,%u) sez %d\n",
+    //    drm_fd, crtc_id, fb_id, ret);
     if (ret)
         pending_page_flips.erase(crtc_id);
 
