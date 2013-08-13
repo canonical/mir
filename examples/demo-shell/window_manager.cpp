@@ -18,7 +18,7 @@
 
 #include "window_manager.h"
 
-#include "mir/shell/focus_setter.h"
+#include "mir/shell/focus_controller.h"
 #include "mir/shell/session_manager.h"
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
@@ -41,7 +41,7 @@ me::WindowManager::WindowManager()
 {
 }
 
-void me::WindowManager::set_focus_controller(std::shared_ptr<msh::FocusSetter> const& controller)
+void me::WindowManager::set_focus_controller(std::shared_ptr<msh::FocusController> const& controller)
 {
     focus_controller = controller;
 }
@@ -92,7 +92,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
 
         std::shared_ptr<msh::Session> app =
-            focus_controller->focused_session().lock();
+            session_manager->focussed_application().lock();
 
         int fingers = static_cast<int>(event.motion.pointer_count);
 

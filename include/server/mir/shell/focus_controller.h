@@ -13,32 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_
-#define MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_
-
-#include "mir/shell/display_changer.h"
+#ifndef MIR_SHELL_FOCUS_CONTROLLER_H_
+#define MIR_SHELL_FOCUS_CONTROLLER_H_
 
 namespace mir
 {
+
 namespace shell
 {
 
-class UnauthorizedDisplayChanger : public DisplayChanger 
+class FocusController
 {
 public:
-    explicit UnauthorizedDisplayChanger(std::shared_ptr<shell::DisplayChanger> const& changer);
+    virtual ~FocusController() {}
 
-    std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
-    void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
+    virtual void focus_next() = 0;
 
-private:
-    std::shared_ptr<shell::DisplayChanger> const changer;
+protected:
+    FocusController() = default;
+    FocusController(FocusController const&) = delete;
+    FocusController& operator=(FocusController const&) = delete;
 };
 
 }
-}
+} // namespace mir
 
-#endif /* MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_ */
+#endif // MIR_SHELL_FOCUS_CONTROLLER_H_

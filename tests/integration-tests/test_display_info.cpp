@@ -25,7 +25,6 @@
 #include "mir/frontend/session_mediator.h"
 #include "mir/frontend/global_event_sender.h"
 
-#include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -298,12 +297,13 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
     launch_client_process(client_config);
 }
 
+
 namespace
 {
 class EventSinkSkimmingIpcFactory : public mf::ProtobufIpcFactory
 {
 public:
-    explicit EventSinkSkimmingIpcFactory(
+    EventSinkSkimmingIpcFactory(
         std::shared_ptr<mf::Shell> const& shell,
         std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
@@ -321,10 +321,11 @@ public:
     {
     }
 
-    void last_clients_event_sink()
+    std::shared_ptr<mf::EventSink> last_clients_event_sink()
     {
-        last_event_sink.lock()->handle_display_config_change(StubChanger::stub_display_config);
+        return std::move(last_event_sink);
     }
+
 private:
     std::shared_ptr<mf::Shell> shell;
     std::shared_ptr<mf::SessionMediatorReport> const sm_report;
@@ -333,7 +334,7 @@ private:
     std::shared_ptr<mg::Platform> const graphics_platform;
     std::shared_ptr<msh::DisplayChanger> const graphics_changer;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
-    std::weak_ptr<mf::EventSink> last_event_sink;
+    std::shared_ptr<mf::EventSink> last_event_sink;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         std::shared_ptr<mf::EventSink> const& sink, bool)
@@ -358,85 +359,11 @@ private:
     {
         return mp_report;
     }
-};
 
-class ConfigureNotifyingDisplay : public mtd::NullDisplay
-{
-public:
-    ConfigureNotifyingDisplay(mtf::CrossProcessSync const& configure_fence)
-        : configure_fence(configure_fence)
-    {
-    }
-
-    std::shared_ptr<mg::DisplayConfiguration> configuration() override
-    {
-        return std::make_shared<mtd::StubDisplayConfig>();
-    }
-
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
-    {
-        f(display_buffer);
-    }
-
-    void configure(mg::DisplayConfiguration const&) override
-    {
-        configure_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
-    }
-private:
-    mtd::NullDisplayBuffer display_buffer;
-    mtf::CrossProcessSync configure_fence;
 };
 
 mtd::StubDisplayConfig changed_stub_display_config{1};
 }
-
-TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_authorized_client)
-{
-    mtf::CrossProcessSync server_configure_fence;
-
-    struct ServerConfig : TestingServerConfiguration
-    {
-        ServerConfig(mtf::CrossProcessSync const& fence)
-            : configure_fence(fence)
-        {
-        }
-
-        std::shared_ptr<mg::Display> the_display()
-        {
-            if (!display)
-                display = std::make_shared<ConfigureNotifyingDisplay>(configure_fence);
-            return display; 
-        }
-
-        std::shared_ptr<ConfigureNotifyingDisplay> display;
-        mtf::CrossProcessSync configure_fence;
-
-    } server_config(server_configure_fence);
-
-    launch_server_process(server_config);
-    
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-            auto configuration = mir_connection_create_display_config(connection);
-
-            mir_wait_for(mir_connection_apply_display_config(connection, configuration));
-            EXPECT_STREQ(mir_connection_get_error_message(connection),  "");
-            mir_display_config_destroy(configuration);
-
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-
-    run_in_test_process([&]
-    {
-        server_configure_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
-    });
-} 
 
 TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_clients)
 {
@@ -462,31 +389,12 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
             return platform;
         }
 
-        std::shared_ptr<mir::frontend::ProtobufIpcFactory> the_ipc_factory(
-            std::shared_ptr<mf::Shell> const& shell,
-            std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) override
-        {
-            return ipc_factory([&]() {
-                return std::make_shared<EventSinkSkimmingIpcFactory>(
-                                shell,
-                                the_session_mediator_report(),
-                                the_message_processor_report(),
-                                the_graphics_platform(),
-                                the_shell_display_changer(), allocator); });
-        }
-
         void exec() override
         {
             change_thread = std::move(std::thread([this](){
                 auto global_sender = the_global_event_sink();
 
                 send_event_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
-                auto factory = ipc_factory([&]() { return nullptr; });
-                if (factory)
-                {
-                    factory->last_clients_event_sink();
-                } 
-
                 global_sender->handle_display_config_change(changed_stub_display_config);
                 events_sent.try_signal_ready_for(std::chrono::milliseconds(1000));
             })); 
@@ -498,7 +406,6 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
         }
 
         mtf::CrossProcessSync send_event_fence;
-        mir::CachedPtr<EventSinkSkimmingIpcFactory> ipc_factory;
         mtf::CrossProcessSync events_sent;
         std::shared_ptr<StubPlatform> platform;
         std::thread change_thread;
@@ -539,13 +446,12 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
 
             client_ready_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
 
-     //       while(!callback_called)
-     //       {
-      //          callback_wait.wait(lk);
-       //     } 
+            while(!callback_called)
+            {
+                callback_wait.wait(lk);
+            } 
 
             mir_connection_release(connection);
-            client_ready_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
         }
 
         mtf::CrossProcessSync client_ready_fence;
@@ -610,7 +516,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_notification_reaches_all_
         unsubscribed_client_ready_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
 
         send_event_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
-        client_ready_fence.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
+        events_all_sent.wait_for_signal_ready_for(std::chrono::milliseconds(1000));
 
         unsubscribed_check_fence.try_signal_ready_for(std::chrono::milliseconds(1000));
     });

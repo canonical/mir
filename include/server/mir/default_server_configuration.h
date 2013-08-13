@@ -158,6 +158,8 @@ public:
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     /** @} */
 
+    virtual std::shared_ptr<shell::FocusController> the_focus_controller();
+
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */

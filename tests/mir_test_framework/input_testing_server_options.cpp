@@ -23,7 +23,6 @@
 #include "mir/input/surface.h"
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
-#include "mir/frontend/session.h"
 #include "mir/input/composite_event_filter.h"
 
 #include "mir_test/fake_event_hub.h"
@@ -71,11 +70,13 @@ public:
     }
 
     ~ProxyShell() noexcept(true) = default;
-   
+    
     mf::SurfaceId create_surface_for(std::shared_ptr<mf::Session> const& session,
         msh::SurfaceCreationParameters const& params)
     {
-        return underlying_shell->create_surface_for(session, params);
+        auto id = underlying_shell->create_surface_for(session, params);
+        listener->channel_ready_for_input(params.name);
+        return id;
     }
 
     std::shared_ptr<mf::Session> open_session(std::string const& name, 
@@ -88,18 +89,6 @@ public:
     {
         underlying_shell->close_session(session);
     }
-
-    void handle_display_configuration(std::shared_ptr<mf::Session> const& session)
-    {
-        underlying_shell->handle_display_configuration(session);
-    }
-
-    void handle_surface_created(std::shared_ptr<mf::Session> const& session)
-    {
-        underlying_shell->handle_surface_created(session);
-        listener->channel_ready_for_input(session->name());
-    }
-
 
 private:
     std::shared_ptr<mf::Shell> const underlying_shell;

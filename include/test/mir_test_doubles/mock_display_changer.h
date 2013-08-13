@@ -33,10 +33,8 @@ class MockDisplayChanger : public shell::DisplayChanger
 {
 public:
     MOCK_METHOD0(active_configuration, std::shared_ptr<graphics::DisplayConfiguration>());
-    MOCK_METHOD2(store_configuration_for,
+    MOCK_METHOD2(configure,
         void(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&));
-    MOCK_METHOD1(remove_configuration_for, void(std::weak_ptr<frontend::Session> const&));
-    MOCK_METHOD1(apply_configuration_of, void(std::weak_ptr<frontend::Session> const&));
 };
 
 }

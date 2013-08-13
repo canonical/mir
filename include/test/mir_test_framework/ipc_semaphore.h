@@ -16,27 +16,34 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
-#define MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#ifndef MIR_TEST_IPC_SEMAPHORE_H_
+#define MIR_TEST_IPC_SEMAPHORE_H_
 
-#include "mir/shell/focus_setter.h"
+#include <semaphore.h>
 
-#include <gmock/gmock.h>
+#include <initializer_list>
+#include <string>
 
-namespace mir
-{
-namespace test
-{
-namespace doubles
+namespace mir_test_framework
 {
 
-struct MockFocusSetter : public shell::FocusSetter
+class IPCSemaphore
 {
-    MOCK_METHOD1(set_focus_to, void(std::shared_ptr<shell::Session> const&));
+public:
+    IPCSemaphore();
+    ~IPCSemaphore() noexcept(true);
+    
+    void wake_up_everyone();
+    void wait_for_at_most_seconds(int seconds);
+
+protected:
+    IPCSemaphore(const IPCSemaphore&) = delete;
+    IPCSemaphore& operator=(const IPCSemaphore&) = delete;
+
+private:
+    sem_t* sem;
 };
 
 }
-}
-} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_FOCUS_SETTER_H_
+#endif

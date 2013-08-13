@@ -96,7 +96,7 @@ try
         {
             // We use this strange two stage initialization to avoid a circular dependency between the EventFilters
             // and the SessionStore
-            wm->set_focus_controller(config.the_shell_focus_setter());
+            wm->set_focus_controller(config.the_focus_controller());
             wm->set_session_manager(config.the_session_manager());
         });
     return 0;

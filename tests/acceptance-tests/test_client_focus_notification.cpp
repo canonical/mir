@@ -21,8 +21,8 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_matchers.h"
 
+#include "mir_test_framework/ipc_semaphore.h"
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_framework/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -108,7 +108,6 @@ struct EventObservingClient : ClientConfigCommon
         surface = surface_;
         mir_surface_set_event_handler(surface, &event_delegate);
     }
-
     void exec()
     {
         mt::WaitCondition all_events_received;
@@ -157,16 +156,6 @@ TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus
     launch_client_process(client_config);
 }
 
-namespace
-{
-
-ACTION_P(SignalFence, fence)
-{
-    fence->try_signal_ready_for();
-}
-
-}
-
 TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and_losing_focus)
 {
     using namespace ::testing;
@@ -176,23 +165,17 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
 
     // We use this for synchronization to ensure the two clients
     // are launched in a defined order.
-    mtf::CrossProcessSync ready_for_second_client;
+    static mtf::IPCSemaphore ready_for_second_client;
 
     struct FocusObservingClientOne : public EventObservingClient
     {
-        mtf::CrossProcessSync ready_for_second_client;
-        FocusObservingClientOne(mtf::CrossProcessSync const& ready_for_second_client)
-            : ready_for_second_client(ready_for_second_client)
-        {
-        }
-
         void expect_events(mt::WaitCondition* all_events_received) override
         {
             InSequence seq;
             // We should receive focus as we are created
             EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
-                mir_surface_focused)))).Times(1)
-                    .WillOnce(SignalFence(&ready_for_second_client));
+                                                                        mir_surface_focused)))).Times(1)
+                .WillOnce(mt::WakeUp(&ready_for_second_client));
 
             // And lose it as the second surface is created
             EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
@@ -202,30 +185,24 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
                                                                         mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
 
-    } client_one_config(ready_for_second_client);
+    } client_one_config;
     launch_client_process(client_one_config);
 
     struct FocusObservingClientTwo : public EventObservingClient
     {
-        mtf::CrossProcessSync ready_for_second_client;
-        FocusObservingClientTwo(mtf::CrossProcessSync const& ready_for_second_client)
-            : ready_for_second_client(ready_for_second_client)
-        {
-        }
         void exec() override
         {
             // We need some synchronization to ensure client two does not connect before client one.
-            ready_for_second_client.wait_for_signal_ready_for();
+            ready_for_second_client.wait_for_at_most_seconds(60);
             EventObservingClient::exec();
         }
-
         void expect_events(mt::WaitCondition* all_events_received) override
         {
             EXPECT_CALL(*observer, see(Pointee(
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused))))
                     .Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
-    } client_two_config(ready_for_second_client);
+    } client_two_config;
 
     launch_client_process(client_two_config);
 }

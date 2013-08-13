@@ -17,71 +17,25 @@
  */
 
 #include "mir/shell/mediating_display_changer.h"
-#include "mir/shell/focus_setter.h"
-#include "mir/shell/session.h"
-#include "mir/compositor/compositor.h"
 #include "mir/graphics/display.h"
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
-namespace mc = mir::compositor;
 
-msh::MediatingDisplayChanger::MediatingDisplayChanger(
-    std::shared_ptr<mg::Display> const& display,
-    std::shared_ptr<mc::Compositor> const& compositor)
-    : display(display),
-      compositor(compositor),
-      base_config(display->configuration()),
-      active_config(base_config)
+msh::MediatingDisplayChanger::MediatingDisplayChanger(std::shared_ptr<mg::Display> const& display)
+    : display(display)
 {
 }
 
 std::shared_ptr<mg::DisplayConfiguration> msh::MediatingDisplayChanger::active_configuration()
 {
-    return active_config;
+    return display->configuration();
 }
 
-void msh::MediatingDisplayChanger::apply_config(
-    std::shared_ptr<mg::DisplayConfiguration> const& requested_configuration)
+void msh::MediatingDisplayChanger::configure(
+    std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
 {
-    compositor->stop();
-    display->configure(*requested_configuration);
-    active_config = requested_configuration;
-    compositor->start();
-}
-
-void msh::MediatingDisplayChanger::store_configuration_for(
-    std::weak_ptr<mf::Session> const& app,
-    std::shared_ptr<mg::DisplayConfiguration> const& requested_configuration)
-{
-    auto requesting_application = app.lock();
-    config_map[requesting_application.get()] = requested_configuration;
-}
-
-void msh::MediatingDisplayChanger::apply_configuration_of(std::weak_ptr<mf::Session> const& app)
-{
-    auto it = config_map.find(app.lock().get());
-    if (it == config_map.end())
-    {
-        apply_config(base_config);
-    }
-    else
-    {
-        apply_config(it->second);
-    }
-}
-
-void msh::MediatingDisplayChanger::remove_configuration_for(std::weak_ptr<mf::Session> const& app)
-{
-    auto it = config_map.find(app.lock().get());
-    if (it != config_map.end())
-    {
-        if (it->second == active_config)
-        {
-            apply_config(base_config);
-        }
-        config_map.erase(it);
-    }
+    BOOST_THROW_EXCEPTION(std::runtime_error("TODO: display changing not implemented!"));
 }

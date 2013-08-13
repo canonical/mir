@@ -56,22 +56,17 @@ public:
     AndroidDisplayConfiguration(geom::Size const& display_size)
         : configuration{mg::DisplayConfigurationOutputId{0},
                         mg::DisplayConfigurationCardId{0},
-                        mg::DisplayConfigurationOutputType::lvds,
                         {geom::PixelFormat::abgr_8888},
                         {mg::DisplayConfigurationMode{display_size,0.0f}},
-                        0,
                         geom::Size{0,0},
                         true,
                         true,
                         geom::Point{0,0},
-                        0, 0},
-          card{mg::DisplayConfigurationCardId{0}, 1}
+                        0, 0}
     {
     }
-
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
+    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
     {
-        f(card);
     }
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
@@ -85,8 +80,7 @@ public:
     }
 
 private:
-    mg::DisplayConfigurationOutput const configuration;
-    mg::DisplayConfigurationCard const card;
+    mg::DisplayConfigurationOutput configuration;
 };
 
 EGLDisplay create_and_initialize_display()

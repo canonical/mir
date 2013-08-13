@@ -42,29 +42,6 @@ typedef IntWrapper<detail::GraphicsConfOutputIdTag> DisplayConfigurationOutputId
 struct DisplayConfigurationCard
 {
     DisplayConfigurationCardId id;
-    size_t max_simultaneous_outputs;
-};
-
-/**
- * The type of a display output.
- */
-enum class DisplayConfigurationOutputType
-{
-    unknown,
-    vga,
-    dvii,
-    dvid,
-    dvia,
-    composite,
-    svideo,
-    lvds,
-    component,
-    ninepindin,
-    displayport,
-    hdmia,
-    hdmib,
-    tv,
-    edp
 };
 
 /**
@@ -85,14 +62,10 @@ struct DisplayConfigurationOutput
     DisplayConfigurationOutputId id;
     /** The id of the card the output is connected to. */
     DisplayConfigurationCardId card_id;
-    /** The type of the output. */
-    DisplayConfigurationOutputType type;
     /** The pixel formats supported by the output */
     std::vector<geometry::PixelFormat> pixel_formats;
     /** The modes supported by the output. */
     std::vector<DisplayConfigurationMode> modes;
-    /** The index in the 'modes' vector of the preferred output mode. */
-    size_t preferred_mode_index;
     /** The physical size of the output. */
     geometry::Size physical_size_mm;
     /** Whether the output is connected. */
@@ -106,10 +79,6 @@ struct DisplayConfigurationOutput
     /** The index in the 'pixel_format' vector of the current output pixel format. */
     size_t current_format_index;
 };
-
-std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
-bool operator==(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
-bool operator!=(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationMode const& val);
 bool operator==(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);

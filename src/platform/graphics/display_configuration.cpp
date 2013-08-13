@@ -47,41 +47,6 @@ private:
     std::streamsize const precision;
 };
 
-char const* output_type_to_string(mg::DisplayConfigurationOutputType type)
-{
-    static char const* type_names[] =
-    {
-        "unknown",
-        "vga",
-        "dvii",
-        "dvid",
-        "dvia",
-        "composite",
-        "lvds",
-        "component",
-        "9pindin",
-        "displayport",
-        "hdmia",
-        "hdmib",
-        "tv",
-        "edp"
-    };
-
-    auto index = static_cast<ssize_t>(type);
-    static auto const size = std::distance(std::begin(type_names), std::end(type_names));
-    if (index >= size || index < 0)
-        return "invalid";
-
-    return type_names[index];
-}
-
-}
-
-std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationCard const& val)
-{
-    return out << "{ id: " << val.id
-               << " max_simultaneous_outputs: " << val.max_simultaneous_outputs << " }"
-               << std::endl;
 }
 
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationMode const& val)
@@ -96,9 +61,7 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationMode con
 
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput const& val)
 {
-    out << "{ id: " << val.id << ", card_id: " << val.card_id
-        << " type: " << output_type_to_string(val.type)
-        << " modes: [";
+    out << "{ id: " << val.id << ", card_id: " << val.card_id << " modes: [";
 
     for (size_t i = 0; i < val.modes.size(); ++i)
     {
@@ -107,8 +70,7 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
             out << ", ";
     }
 
-    out << "], preferred_mode: " << val.preferred_mode_index;
-    out << " physical_size_mm: " << val.physical_size_mm.width << "x" << val.physical_size_mm.height;
+    out << "], physical_size_mm: " << val.physical_size_mm.width << "x" << val.physical_size_mm.height;
     out << ", connected: " << (val.connected ? "true" : "false");
     out << ", used: " << (val.used ? "true" : "false");
     out << ", top_left: " << val.top_left;
@@ -121,19 +83,6 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
     out << ") }";
 
     return out;
-}
-
-bool mg::operator==(mg::DisplayConfigurationCard const& val1,
-                    mg::DisplayConfigurationCard const& val2)
-{
-    return (val1.id == val2.id) &&
-           (val1.max_simultaneous_outputs == val2.max_simultaneous_outputs);
-}
-
-bool mg::operator!=(mg::DisplayConfigurationCard const& val1,
-                    mg::DisplayConfigurationCard const& val2)
-{
-    return !(val1 == val2);
 }
 
 bool mg::operator==(mg::DisplayConfigurationMode const& val1,
@@ -154,9 +103,7 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
 {
     bool equal{(val1.id == val2.id) &&
                (val1.card_id == val2.card_id) &&
-               (val1.type == val2.type) &&
                (val1.physical_size_mm == val2.physical_size_mm) &&
-               (val1.preferred_mode_index == val2.preferred_mode_index) &&
                (val1.connected == val2.connected) &&
                (val1.used == val2.used) &&
                (val1.top_left == val2.top_left) &&

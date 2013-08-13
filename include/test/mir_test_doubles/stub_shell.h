@@ -35,24 +35,13 @@ class StubShell : public frontend::Shell
     {
         return std::make_shared<StubSession>();
     }
-
     void close_session(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
-
-    virtual void handle_display_configuration(std::shared_ptr<frontend::Session> const&)
-    {
-    }
-
-    virtual void handle_surface_created(std::shared_ptr<frontend::Session> const&)
-    {
-    }
- 
-    virtual frontend::SurfaceId create_surface_for(
-                                        std::shared_ptr<frontend::Session> const& /* session */,
+    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& /* session */,
                                         shell::SurfaceCreationParameters const& /* params */)
     {
-        return frontend::SurfaceId{4};
+        return frontend::SurfaceId{0};
     }
 };
 

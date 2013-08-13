@@ -176,33 +176,8 @@ typedef struct MirDisplayInfo
 } MirDisplayInfo;
 
 /**
- * MirDisplayConfiguration provides details of the graphics environment.
+ * MirDisplayOutput provides details of the graphics environment.
  */
-
-typedef struct MirDisplayCard
-{
-    uint32_t card_id;
-    uint32_t max_simultaneous_outputs;
-} MirDisplayCard;
-
-typedef enum MirDisplayOutputType
-{
-    mir_display_output_type_unknown,
-    mir_display_output_type_vga,
-    mir_display_output_type_dvii,
-    mir_display_output_type_dvid,
-    mir_display_output_type_dvia,
-    mir_display_output_type_composite,
-    mir_display_output_type_svideo,
-    mir_display_output_type_lvds,
-    mir_display_output_type_component,
-    mir_display_output_type_ninepindin,
-    mir_display_output_type_displayport,
-    mir_display_output_type_hdmia,
-    mir_display_output_type_hdmib,
-    mir_display_output_type_tv,
-    mir_display_output_type_edp
-} MirDisplayOutputType;
 
 typedef struct MirDisplayMode
 {
@@ -215,7 +190,6 @@ typedef struct MirDisplayOutput
 {
     uint32_t num_modes;
     MirDisplayMode* modes;
-    uint32_t preferred_mode;
     uint32_t current_mode; 
 
     uint32_t num_output_formats;
@@ -224,7 +198,6 @@ typedef struct MirDisplayOutput
 
     uint32_t card_id;
     uint32_t output_id;
-    MirDisplayOutputType type;
 
     int32_t position_x;
     int32_t position_y;
@@ -239,8 +212,6 @@ typedef struct MirDisplayConfiguration
 {
     uint32_t num_displays;
     MirDisplayOutput* displays;
-    uint32_t num_cards;
-    MirDisplayCard *cards;
 } MirDisplayConfiguration;
 
 /**

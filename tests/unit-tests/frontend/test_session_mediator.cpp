@@ -181,6 +181,7 @@ struct SessionMediatorTest : public ::testing::Test
         using namespace ::testing;
 
         ON_CALL(*shell, open_session(_, _)).WillByDefault(Return(stubbed_session));
+        ON_CALL(*shell, create_surface_for(_, _)).WillByDefault(Return(mf::SurfaceId{1}));
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
@@ -486,7 +487,7 @@ TEST_F(SessionMediatorTest, display_config_request)
         .InSequence(seq);
     EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1))
         .InSequence(seq);
-    EXPECT_CALL(*mock_display_selector, store_configuration_for(_,_))
+    EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);
  
     mf::SessionMediator session_mediator{
@@ -514,59 +515,4 @@ TEST_F(SessionMediatorTest, display_config_request)
     session_mediator.configure_display(nullptr, &configuration, &ignored, null_callback.get());
 
     session_mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
-}
-
-TEST_F(SessionMediatorTest, apply_session_display_config)
-{
-    using namespace testing;
-    mp::ConnectParameters connect_parameters;
-    mp::Connection connection;
-    mp::SurfaceParameters request;
-    mp::Surface response;
-    mp::SurfaceId release_request;
-    mp::Void ignored;
-    mp::DisplayConfiguration configuration; 
-
-    NiceMock<MockConfig> mock_display_config;
-    auto mock_display_selector = std::make_shared<mtd::MockDisplayChanger>();
-
-    EXPECT_CALL(*mock_display_selector, active_configuration())
-        .WillRepeatedly(Return(mt::fake_shared(mock_display_config)));
-
-    EXPECT_CALL(*mock_display_selector, store_configuration_for(_,_))
-        .Times(1);
-    EXPECT_CALL(*mock_display_selector, remove_configuration_for(_))
-        .Times(1);
-
-    mf::SessionMediator session_mediator{
-            shell, graphics_platform, mock_display_selector,
-            buffer_allocator, report, std::make_shared<mtd::NullEventSink>(), resource_cache};
-
-    session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-    session_mediator.configure_display(nullptr, &configuration, &ignored, null_callback.get());
-    session_mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
-}
-
-TEST_F(SessionMediatorTest, display_config_removed_if_no_disconnect)
-{
-    using namespace testing;
-    mp::ConnectParameters connect_parameters;
-    mp::Connection connection;
-    mp::SurfaceParameters request;
-    mp::Surface response;
-    mp::SurfaceId release_request;
-
-    NiceMock<MockConfig> mock_display_config;
-    auto mock_display_selector = std::make_shared<mtd::MockDisplayChanger>();
-
-    EXPECT_CALL(*mock_display_selector, active_configuration())
-        .WillOnce(Return(mt::fake_shared(mock_display_config))); 
-    EXPECT_CALL(*mock_display_selector, remove_configuration_for(_))
-        .Times(1);
-
-    mf::SessionMediator session_mediator{
-            shell, graphics_platform, mock_display_selector,
-            buffer_allocator, report, std::make_shared<mtd::NullEventSink>(), resource_cache};
-
-    session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 }
