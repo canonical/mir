@@ -62,7 +62,8 @@ public:
             graphics::DisplayConfigurationOutput output{
                 graphics::DisplayConfigurationOutputId{static_cast<int>(i)},
                 graphics::DisplayConfigurationCardId{static_cast<int>(i)},
-                pfs, modes,
+                graphics::DisplayConfigurationOutputType::vga,
+                pfs, modes, i,
                 physical_size,
                 ((i % 2) == 0),
                 ((i % 2) == 1),
@@ -71,11 +72,21 @@ public:
             };
 
             outputs.push_back(output);
+
+            graphics::DisplayConfigurationCard card{
+                graphics::DisplayConfigurationCardId{static_cast<int>(i)},
+                i + 1
+            };
+
+            cards.push_back(card);
         }
+
     };
 
-    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
+    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const
     {
+        for (auto const& card : cards)
+            f(card);
     }
 
     void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const
@@ -90,6 +101,7 @@ public:
     {
     }
 
+    std::vector<graphics::DisplayConfigurationCard> cards;
     std::vector<graphics::DisplayConfigurationOutput> outputs;
 };
 

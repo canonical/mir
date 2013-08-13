@@ -71,7 +71,8 @@ public:
 
         resources.add_crtc(crtc_ids[0], drmModeModeInfo());
         resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask);
-        resources.add_connector(connector_ids[0], DRM_MODE_CONNECTED, encoder_ids[0],
+        resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_VGA,
+                                DRM_MODE_CONNECTED, encoder_ids[0],
                                 modes_empty, possible_encoder_ids1, geom::Size());
 
         resources.prepare();
@@ -89,9 +90,11 @@ public:
         resources.add_crtc(crtc_ids[1], drmModeModeInfo());
         resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask1);
         resources.add_encoder(encoder_ids[1], invalid_id, possible_crtcs_mask_all);
-        resources.add_connector(connector_ids[0], DRM_MODE_CONNECTED, invalid_id,
+        resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                                DRM_MODE_CONNECTED, invalid_id,
                                 modes_empty, possible_encoder_ids2, geom::Size());
-        resources.add_connector(connector_ids[1], DRM_MODE_CONNECTED, encoder_ids[0],
+        resources.add_connector(connector_ids[1], DRM_MODE_CONNECTOR_DVIA,
+                                DRM_MODE_CONNECTED, encoder_ids[0],
                                 modes_empty, possible_encoder_ids2, geom::Size());
 
         resources.prepare();

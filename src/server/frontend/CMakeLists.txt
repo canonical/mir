@@ -13,6 +13,7 @@ set(
   resource_cache.cpp
   socket_messenger.cpp
   event_sender.cpp
+  surface.cpp
   ${PROTO_HDRS}
 )
 

@@ -47,7 +47,7 @@ public:
     DisplayConfiguration();
     ~DisplayConfiguration();
 
-    void update_configuration(mir::protobuf::Connection const& msg);
+    void set_configuration(mir::protobuf::DisplayConfiguration const& msg);
     void update_configuration(mir::protobuf::DisplayConfiguration const& msg);
     void set_display_change_handler(std::function<void()> const&);
 
@@ -56,6 +56,7 @@ public:
 
 private:
     std::mutex mutable guard;
+    std::vector<MirDisplayCard> cards;
     std::vector<std::shared_ptr<DisplayOutput>> outputs;
     std::function<void()> notify_change;
 };
