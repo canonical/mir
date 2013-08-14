@@ -16,15 +16,17 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir/frontend/session_mediator_report.h"
-
+#include "mir/display_server.h"
 #include "mir/run_mir.h"
 
+#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_egl.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <thread>
 
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
@@ -85,12 +87,14 @@ struct FakeCommandLine
 
 struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerConfiguration
 {
-
     NestedServerConfiguration(std::string const& host_socket) :
         FakeCommandLine(host_socket),
         DefaultServerConfiguration(FakeCommandLine::argc, FakeCommandLine::argv)
     {
     }
+
+    using  mir::DefaultServerConfiguration::input_configuration;
+    using  mir::DefaultServerConfiguration::vt_filter;
 };
 
 struct NestedMockEGL : mir::test::doubles::MockEGL
@@ -115,6 +119,9 @@ struct NestedMockEGL : mir::test::doubles::MockEGL
             EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(1).WillRepeatedly(Return((EGLSurface)this));
             EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(1).WillRepeatedly(Return(EGL_TRUE));
             EXPECT_CALL(*this, eglGetCurrentSurface(_)).Times(1).WillRepeatedly(Return((EGLSurface)this));
+            EXPECT_CALL(*this, eglMakeCurrent(_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)).Times(1).WillRepeatedly(Return(EGL_TRUE));
+            EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(1).WillRepeatedly(Return(EGL_TRUE));
+
         }
 
         {
@@ -142,19 +149,35 @@ struct ClientConfig : mtf::TestingClientConfiguration
 
     void exec() override
     {
-        NestedMockEGL mock_egl;
-        NestedServerConfiguration nested_config(host_socket);
-
         try
         {
+            NestedMockEGL mock_egl;
+            NestedServerConfiguration nested_config(host_socket);
+
             // TODO remove this workaround for an existing issue:
             // avoids the graphics platform being created multiple times
             auto frig = nested_config.the_graphics_platform();
 
+            try
+            {
+                std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
+                mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
+
+                // TODO remove this workaround for an existing issue:
+                // DefaultServerConfiguration extends object lifetimes
+                nested_config.input_configuration.reset();
+                nested_config.vt_filter.reset();
+            } catch (...)
+            {
+                // TODO remove this workaround for an existing issue:
+                // DefaultServerConfiguration extends object lifetimes
+                nested_config.input_configuration.reset();
+                nested_config.vt_filter.reset();
+                throw;
+            }
+
             std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
-            mir::run_mir(nested_config, [](mir::DisplayServer&){});
             // TODO - remove FAIL() as we should exit (NB we need logic to cause exit).
-            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             FAIL();
         }
         catch (std::exception const& x)
@@ -188,11 +211,15 @@ TEST_F(TestNestedMir, nested_platform_connects_and_disconnects)
 
     launch_server_process(host_config);
     launch_client_process(client_config);
+
+//    run_in_test_process([this]
+//    {
+//        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+//        terminate_client_processes();
+//    });
 }
 
 //////////////////////////////////////////////////////////////////
-
-#include "mir/display_server.h"
 
 TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
 {
@@ -214,7 +241,6 @@ TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
 
     EXPECT_FALSE(host_config.my_display.lock()) << "after run_mir() exits the display should be released";
 }
-
 
 TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 {
@@ -238,6 +264,9 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 
         ~MyNestedServerConfiguration()
         {
+            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
+            << "DEBUG pid=" << getpid() << "... my_display.lock() is " << my_display.lock().get() << std::endl;
+            std::this_thread::yield();
             std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
             << "DEBUG pid=" << getpid() << "... my_display.lock() is " << my_display.lock().get() << std::endl;
             EXPECT_FALSE(my_display.lock()) << "pid=" << getpid() << " - " << "after run_mir() exits the display should be released";

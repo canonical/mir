@@ -29,6 +29,7 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mo = mir::options;
 
+#include <iostream> // DEBUG
 mgn::NestedPlatform::NestedPlatform(
     std::string const& host,
     std::shared_ptr<mg::DisplayReport> const& display_report,
@@ -41,10 +42,14 @@ connection{mir_connect_sync(host.c_str(), "nested_mir")}
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(mir_connection_get_error_message(connection))));
     }
+    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
+        << "DEBUG pid=" << getpid() << " ... NestedPlatform::NestedPlatform(): this is " << this << std::endl;
 }
 
 mgn::NestedPlatform::~NestedPlatform() noexcept
 {
+    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
+        << "DEBUG pid=" << getpid() << " ... NestedPlatform::~NestedPlatform(): this is " << this << std::endl;
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
