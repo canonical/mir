@@ -26,8 +26,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <thread>
-
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 
@@ -248,7 +246,6 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 
         ~MyNestedServerConfiguration()
         {
-            std::this_thread::yield();
             EXPECT_FALSE(my_display.lock()) << "pid=" << getpid() << " - " << "after run_mir() exits the display should be released";
         }
 
