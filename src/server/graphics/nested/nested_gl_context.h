@@ -21,7 +21,6 @@
 
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
-#include "nested_surface_store.h"
 
 #include <EGL/egl.h>
 

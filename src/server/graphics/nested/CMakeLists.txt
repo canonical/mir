@@ -10,7 +10,6 @@ add_library(
   nested_gl_context.cpp
   nested_mir_connection_handle.cpp
   nested_platform.cpp
-  nested_surface_store.cpp
 )
 
 target_link_libraries(
