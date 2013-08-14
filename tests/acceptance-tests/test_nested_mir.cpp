@@ -246,7 +246,7 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 
         ~MyNestedServerConfiguration()
         {
-            EXPECT_FALSE(my_display.lock()) << "pid=" << getpid() << " - " << "after run_mir() exits the display should be released";
+            EXPECT_FALSE(my_display.lock()) << "after run_mir() exits the display should be released";
         }
 
         std::weak_ptr<mir::graphics::Display> my_display;
