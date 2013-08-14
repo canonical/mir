@@ -430,6 +430,7 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
     output.used = 0;
     output.position_x = 4;
     output.position_y = 6;
+    output.connected = 0;
     MirDisplayConfiguration user_config{1, &output, 0, nullptr};
 
     auto verify_display_change = [&](mp::DisplayConfiguration const* config)
