@@ -187,30 +187,23 @@ TEST_F(TestNestedMir, nested_platform_connects_and_disconnects)
 
 //////////////////////////////////////////////////////////////////
 
-#include "mir/graphics/platform.h"
 #include "mir/display_server.h"
 
 TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
 {
-    struct MyHostServerConfiguration : mtf::TestingServerConfiguration
+    struct MyServerConfiguration : mtf::TestingServerConfiguration
     {
         std::shared_ptr<mir::graphics::Display> the_display() override
         {
-            return display(
-                [this]()
-                {
-                    auto const& temp = the_graphics_platform()->
-                        create_display(the_display_configuration_policy());
-
-                    my_display = temp;
-                    return temp;
-                });
+            auto const& temp = mtf::TestingServerConfiguration::the_display();
+            my_display = temp;
+            return temp;
         }
 
         std::weak_ptr<mir::graphics::Display> my_display;
     };
 
-    MyHostServerConfiguration host_config;
+    MyServerConfiguration host_config;
 
     mir::run_mir(host_config, [](mir::DisplayServer& server){server.stop();});
 
@@ -226,15 +219,9 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 
         std::shared_ptr<mir::graphics::Display> the_display() override
         {
-            return display(
-                [this]()
-                {
-                    auto const& temp = the_graphics_platform()->
-                        create_display(the_display_configuration_policy());
-
-                    my_display = temp;
-                    return temp;
-                });
+            auto const& temp = NestedServerConfiguration::the_display();
+            my_display = temp;
+            return temp;
         }
 
         ~MyNestedServerConfiguration()
