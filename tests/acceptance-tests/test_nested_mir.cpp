@@ -217,6 +217,9 @@ TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
 
 TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 {
+    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
+        << "DEBUG pid=" << getpid() << " ... starting test" << std::endl;
+
     struct MyNestedServerConfiguration : NestedServerConfiguration
     {
         using NestedServerConfiguration::NestedServerConfiguration;
@@ -226,12 +229,16 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
             std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             auto const& temp = NestedServerConfiguration::the_display();
             my_display = temp;
+            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
+            << "DEBUG pid=" << getpid() << "... my_display.lock() is " << my_display.lock().get() << std::endl;
+            EXPECT_TRUE(!!my_display.lock()) << "pid=" << getpid() << " - the display should be acquired";
             return temp;
         }
 
         ~MyNestedServerConfiguration()
         {
-            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
+            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
+            << "DEBUG pid=" << getpid() << "... my_display.lock() is " << my_display.lock().get() << std::endl;
             EXPECT_FALSE(my_display.lock()) << "pid=" << getpid() << " - " << "after run_mir() exits the display should be released";
         }
 
@@ -244,4 +251,7 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 
     launch_server_process(host_config);
     launch_client_process(client_config);
+
+    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
+        << "DEBUG pid=" << getpid() << " ... end of test" << std::endl;
 }
