@@ -160,7 +160,6 @@ struct ClientConfig : mtf::TestingClientConfiguration
 
             try
             {
-                std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
                 mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
 
                 // TODO remove this workaround for an existing issue:
@@ -176,17 +175,14 @@ struct ClientConfig : mtf::TestingClientConfiguration
                 throw;
             }
 
-            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             // TODO - remove FAIL() as we should exit (NB we need logic to cause exit).
             FAIL();
         }
         catch (std::exception const& x)
         {
-            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             // TODO - this is only temporary until NestedPlatform is implemented.
             EXPECT_THAT(x.what(), HasSubstr("NestedPlatform::create_buffer_allocator is not implemented yet!"));
         }
-        std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
     }
 };
 }
@@ -244,31 +240,20 @@ TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
 
 TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 {
-    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
-        << "DEBUG pid=" << getpid() << " ... starting test" << std::endl;
-
     struct MyNestedServerConfiguration : NestedServerConfiguration
     {
         using NestedServerConfiguration::NestedServerConfiguration;
 
         std::shared_ptr<mir::graphics::Display> the_display() override
         {
-            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             auto const& temp = NestedServerConfiguration::the_display();
             my_display = temp;
-            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
-            << "DEBUG pid=" << getpid() << "... my_display.lock() is " << my_display.lock().get() << std::endl;
-            EXPECT_TRUE(!!my_display.lock()) << "pid=" << getpid() << " - the display should be acquired";
             return temp;
         }
 
         ~MyNestedServerConfiguration()
         {
-            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
-            << "DEBUG pid=" << getpid() << "... my_display.lock() is " << my_display.lock().get() << std::endl;
             std::this_thread::yield();
-            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
-            << "DEBUG pid=" << getpid() << "... my_display.lock() is " << my_display.lock().get() << std::endl;
             EXPECT_FALSE(my_display.lock()) << "pid=" << getpid() << " - " << "after run_mir() exits the display should be released";
         }
 
@@ -280,7 +265,4 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 
     launch_server_process(host_config);
     launch_client_process(client_config);
-
-    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
-        << "DEBUG pid=" << getpid() << " ... end of test" << std::endl;
 }

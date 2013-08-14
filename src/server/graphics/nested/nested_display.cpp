@@ -130,7 +130,7 @@ EGLint const egl_context_attribs[] = {
     EGL_NONE
 };
 }
-#include <iostream> // DEBUG
+
 mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
     display_report{display_report},
     mir_surface{connection},
@@ -146,20 +146,12 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
     egl_surface = eglGetCurrentSurface(EGL_DRAW);
     if (egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get current EGL surface."));
-
-    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
-        << "DEBUG pid=" << getpid() << "...NestedDisplay::NestedDisplay(): this is " << this << std::endl;
 }
 
 mgn::NestedDisplay::~NestedDisplay()
 {
-    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n"
-        << "DEBUG pid=" << getpid() << "...NestedDisplay::~NestedDisplay(): this is " << this << std::endl;
-
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglDestroySurface(egl_display, egl_surface);
-
-    std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
 }
 
 geom::Rectangle mgn::NestedDisplay::view_area() const
