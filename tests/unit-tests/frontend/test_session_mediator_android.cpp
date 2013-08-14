@@ -80,7 +80,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
 
     std::shared_ptr<mtd::StubShell> const shell;
     std::shared_ptr<mtd::NullPlatform> const graphics_platform;
-    std::shared_ptr<msh::DisplayChanger> const display_changer;
+    std::shared_ptr<mf::DisplayChanger> const display_changer;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
