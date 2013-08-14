@@ -142,8 +142,8 @@ struct ClientConfig : mtf::TestingClientConfiguration
 
     void exec() override
     {
-        NestedServerConfiguration nested_config(host_socket);
         NestedMockEGL mock_egl;
+        NestedServerConfiguration nested_config(host_socket);
 
         try
         {
