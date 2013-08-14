@@ -133,14 +133,16 @@ private:
     }
 };
 
+template<class NestedServerConfiguration>
 struct ClientConfig : mtf::TestingClientConfiguration
 {
-    ClientConfig(NestedServerConfiguration& nested_config) : nested_config(nested_config) {}
+    ClientConfig(std::string const& host_socket) : host_socket(host_socket) {}
 
-    NestedServerConfiguration& nested_config;
+    std::string const host_socket;
 
     void exec() override
     {
+        NestedServerConfiguration nested_config(host_socket);
         NestedMockEGL mock_egl;
 
         try
@@ -181,8 +183,7 @@ TEST_F(TestNestedMir, nested_platform_connects_and_disconnects)
     };
 
     MyHostServerConfiguration host_config;
-    NestedServerConfiguration nested_config(host_config.the_socket_file());
-    ClientConfig client_config(nested_config);
+    ClientConfig<NestedServerConfiguration> client_config(host_config.the_socket_file());
 
 
     launch_server_process(host_config);
@@ -246,8 +247,7 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
     };
 
     HostServerConfiguration host_config;
-    MyNestedServerConfiguration nested_config(host_config.the_socket_file());
-    ClientConfig client_config(nested_config);
+    ClientConfig<MyNestedServerConfiguration> client_config(host_config.the_socket_file());
 
     launch_server_process(host_config);
     launch_client_process(client_config);
