@@ -30,20 +30,50 @@ namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
+namespace
+{
+class MirDisplayConfigHandle
+{
+public:
+    explicit MirDisplayConfigHandle(MirConnection* connection) :
+    display_config{mir_connection_create_display_config(connection)}
+    {
+    }
+
+    ~MirDisplayConfigHandle() noexcept
+    {
+        mir_display_config_destroy(display_config);
+    }
+
+    MirDisplayConfiguration* operator->() const { return display_config; }
+
+private:
+    MirDisplayConfiguration* const display_config;
+
+    MirDisplayConfigHandle(MirDisplayConfigHandle const&) = delete;
+    MirDisplayConfigHandle operator=(MirDisplayConfigHandle const&) = delete;
+};
+}
+
 mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection)
 {
-    MirDisplayInfo egl_display_info;
+    MirDisplayConfigHandle display_config{connection};
 
-    mir_connection_get_display_info(connection, &egl_display_info);
-    if (!egl_display_info.supported_pixel_format_items)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get the supported pixel format items."));
+    // TODO we may have multiple displays which implies multiple surfaces
+    // TODO as a POC just use the first display
+    if (display_config->num_displays < 1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one display"));
+
+    auto const egl_display_info = display_config->displays;
+    auto const egl_display_mode = egl_display_info->modes + egl_display_info->current_mode;
+    auto const egl_display_format = egl_display_info->output_formats[egl_display_info->current_output_format];
 
     MirSurfaceParameters const request_params =
         {
             "Mir nested display",
-            int(egl_display_info.width),
-            int(egl_display_info.height),
-            egl_display_info.supported_pixel_format[0],
+            int(egl_display_mode->horizontal_resolution),
+            int(egl_display_mode->vertical_resolution),
+            egl_display_format,
             mir_buffer_usage_hardware
         };
 

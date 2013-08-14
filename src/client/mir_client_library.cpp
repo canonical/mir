@@ -19,6 +19,7 @@
 #include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
+#include "mir_toolkit/mir_client_library_debug.h"
 
 #include "mir_connection.h"
 #include "display_configuration.h"
@@ -203,7 +204,12 @@ void mir_surface_release_sync(MirSurface *surface)
 
 int mir_surface_get_id(MirSurface * surface)
 {
-    return surface->id();
+    return mir_debug_surface_id(surface);
+}
+
+int mir_debug_surface_id(MirSurface * surface)
+{
+    return surface->id();    
 }
 
 int mir_surface_is_valid(MirSurface* surface)
@@ -230,6 +236,11 @@ void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buf
 {
     auto package = surface->get_current_buffer_package();
     *buffer_package_out = package.get();
+}
+
+uint32_t mir_debug_surface_current_buffer_id(MirSurface * surface)
+{
+    return surface->get_current_buffer_id();
 }
 
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)

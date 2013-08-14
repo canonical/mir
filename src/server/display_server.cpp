@@ -21,11 +21,11 @@
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/main_loop.h"
+#include "mir/display_changer.h"
 
 #include "mir/compositor/compositor.h"
 #include "mir/frontend/communicator.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/display_configuration_policy.h"
 #include "mir/input/input_manager.h"
 
 #include <stdexcept>
@@ -62,28 +62,6 @@ private:
     std::function<void()> const revert;
 };
 
-class ApplyNowAndRevertOnScopeExit
-{
-public:
-    ApplyNowAndRevertOnScopeExit(std::function<void()> const& apply,
-                                 std::function<void()> const& revert)
-        : revert{revert}
-    {
-        apply();
-    }
-
-    ~ApplyNowAndRevertOnScopeExit()
-    {
-        revert();
-    }
-
-private:
-    ApplyNowAndRevertOnScopeExit(ApplyNowAndRevertOnScopeExit const&) = delete;
-    ApplyNowAndRevertOnScopeExit& operator=(ApplyNowAndRevertOnScopeExit const&) = delete;
-
-    std::function<void()> const revert;
-};
-
 }
 
 struct mir::DisplayServer::Private
@@ -94,13 +72,13 @@ struct mir::DisplayServer::Private
           communicator{config.the_communicator()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
-          display_configuration_policy{config.the_display_configuration_policy()},
+          display_changer{config.the_display_changer()},
           paused{false},
           configure_display_on_resume{false}
     {
         display->register_configuration_change_handler(
             *main_loop,
-            [this] { return configure_display_handler(); });
+            [this] { return configure_display(); });
 
         display->register_pause_resume_handlers(
             *main_loop,
@@ -150,7 +128,9 @@ struct mir::DisplayServer::Private
 
             if (configure_display_on_resume)
             {
-                configure_display();
+                auto conf = display->configuration();
+                display_changer->configure_for_hardware_change(
+                    conf, DisplayChanger::RetainSystemState);
                 configure_display_on_resume = false;
             }
 
@@ -172,24 +152,11 @@ struct mir::DisplayServer::Private
 
     void configure_display()
     {
-        auto conf = display->configuration();
-        display_configuration_policy->apply_to(*conf);
-        display->configure(*conf);
-    }
-
-    void configure_display_handler()
-    {
         if (!paused)
         {
-            ApplyNowAndRevertOnScopeExit comp{
-                [this] { compositor->stop(); },
-                [this] { compositor->start(); }};
-
-            ApplyNowAndRevertOnScopeExit input{
-                [this] { input_manager->stop(); },
-                [this] { input_manager->start(); }};
-
-            configure_display();
+            auto conf = display->configuration();
+            display_changer->configure_for_hardware_change(
+                conf, DisplayChanger::PauseResumeSystem);
         }
         else
         {
@@ -197,12 +164,12 @@ struct mir::DisplayServer::Private
         }
     }
 
-    std::shared_ptr<mg::Display> display;
-    std::shared_ptr<mc::Compositor> compositor;
-    std::shared_ptr<mf::Communicator> communicator;
-    std::shared_ptr<mi::InputManager> input_manager;
-    std::shared_ptr<mir::MainLoop> main_loop;
-    std::shared_ptr<mg::DisplayConfigurationPolicy> const display_configuration_policy;
+    std::shared_ptr<mg::Display> const display;
+    std::shared_ptr<mc::Compositor> const compositor;
+    std::shared_ptr<mf::Communicator> const communicator;
+    std::shared_ptr<mi::InputManager> const input_manager;
+    std::shared_ptr<mir::MainLoop> const main_loop;
+    std::shared_ptr<mir::DisplayChanger> const display_changer;
     bool paused;
     bool configure_display_on_resume;
 };

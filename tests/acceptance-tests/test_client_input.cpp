@@ -506,7 +506,7 @@ struct StaticPlacementStrategy : public msh::PlacementStrategy
     {
     }
 
-    msh::SurfaceCreationParameters place(msh::SurfaceCreationParameters const& request_parameters)
+    msh::SurfaceCreationParameters place(msh::Session const&, msh::SurfaceCreationParameters const& request_parameters)
     {
         auto placed = request_parameters;
         auto const& name = request_parameters.name;
