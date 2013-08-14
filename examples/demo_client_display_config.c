@@ -169,7 +169,15 @@ int main(int argc, char *argv[])
     unsigned int width = 256, height = 256;
 
     if (!mir_eglapp_init(argc, argv, &width, &height))
+    {
+        printf("A demo client that allows changing the display configuration. While the client\n"
+               "has the focus, use the following keys to change the display configuration:\n"
+               " c: clone outputs\n"
+               " h: arrange outputs horizontally in the virtual space\n"
+               " v: arrange outputs vertically in the virtual space\n");
+
         return 1;
+    }
 
     MirConnection *connection = mir_eglapp_native_connection();
     MirSurface *surface = mir_eglapp_native_surface();
