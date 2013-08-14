@@ -290,7 +290,7 @@ bool mgg::GBMDisplayBuffer::schedule_and_wait_for_page_flip(BufferObject* bufobj
     }
 
     if (page_flips_pending == 0)
-        return true;  // FIXME: nouveau needs this
+        return false;
 
     for (auto& output : outputs)
     {
