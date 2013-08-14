@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_NESTED_NESTED_GL_CONTEXT_H_
 
 #include "mir/graphics/gl_context.h"
-#include "nested_gl_context_store.h"
+#include "mir/graphics/egl_resources.h"
 #include "nested_surface_store.h"
 
 #include <EGL/egl.h>
