@@ -13,6 +13,5 @@ pushd /tmp > /dev/null
                              libgoogle-glog0 \
                              libboost-program-options1.53.0 \
                              libboost-system1.53.0
-          exit
           exit" | adb shell
 popd > /dev/null
