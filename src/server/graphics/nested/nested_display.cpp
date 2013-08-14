@@ -178,7 +178,7 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get current EGL surface."));
 }
 
-mgn::NestedDisplay::~NestedDisplay()
+mgn::NestedDisplay::~NestedDisplay() noexcept
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglDestroySurface(egl_display, egl_surface);

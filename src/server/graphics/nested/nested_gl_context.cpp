@@ -45,7 +45,7 @@ mgn::NestedGLContext::NestedGLContext(EGLDisplay egl_display, EGLConfig egl_conf
 {
 }
 
-mgn::NestedGLContext::~NestedGLContext()
+mgn::NestedGLContext::~NestedGLContext() noexcept
 {
     if (eglGetCurrentContext() != EGL_NO_CONTEXT)
         release_current();

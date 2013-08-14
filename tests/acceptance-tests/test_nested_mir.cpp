@@ -235,7 +235,9 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 {
     struct MyNestedServerConfiguration : NestedServerConfiguration
     {
-        using NestedServerConfiguration::NestedServerConfiguration;
+        // TODO clang says "error: inheriting constructors are not supported"
+        // using NestedServerConfiguration::NestedServerConfiguration;
+        MyNestedServerConfiguration(std::string const& host_socket) : NestedServerConfiguration(host_socket) {}
 
         std::shared_ptr<mir::graphics::Display> the_display() override
         {
