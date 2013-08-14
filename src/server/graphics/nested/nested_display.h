@@ -112,7 +112,7 @@ private:
     detail::EGLDisplayHandle const egl_display;
 
     EGLConfig const egl_config;
-    EGLSurface egl_surface;
+    EGLSurfaceStore const egl_surface;
     EGLContextStore const egl_context;
 };
 

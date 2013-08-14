@@ -101,13 +101,10 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
 
 void mgn::detail::EGLDisplayHandle::initialize() const
 {
-    int res;
     int major;
     int minor;
 
-    // TODO Find out if we really care about the revision info
-    res = eglInitialize(egl_display, &major, &minor);
-    if ((res != EGL_TRUE) || (major != 1) || (minor != 4))
+    if (eglInitialize(egl_display, &major, &minor) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
@@ -166,22 +163,15 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
     mir_surface{connection},
     egl_display{connection},
     egl_config{(egl_display.initialize(), egl_display.choose_config(egl_attribs))},
-    egl_surface{egl_display.egl_surface(egl_config, mir_surface)},
+    egl_surface{egl_display, egl_display.egl_surface(egl_config, mir_surface)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)}
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
-
-    // TODO is there any point to this? (Could egl_surface really be different?)
-    egl_surface = eglGetCurrentSurface(EGL_DRAW);
-    if (egl_surface == EGL_NO_SURFACE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to get current EGL surface."));
 }
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
 {
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroySurface(egl_display, egl_surface);
 }
 
 geom::Rectangle mgn::NestedDisplay::view_area() const

@@ -116,8 +116,6 @@ struct NestedMockEGL : mir::test::doubles::MockEGL
             InSequence window_surface_lifecycle;
             EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(1).WillRepeatedly(Return((EGLSurface)this));
             EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(1).WillRepeatedly(Return(EGL_TRUE));
-            EXPECT_CALL(*this, eglGetCurrentSurface(_)).Times(1).WillRepeatedly(Return((EGLSurface)this));
-            EXPECT_CALL(*this, eglMakeCurrent(_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)).Times(1).WillRepeatedly(Return(EGL_TRUE));
             EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(1).WillRepeatedly(Return(EGL_TRUE));
         }
 
