@@ -21,18 +21,24 @@
 
 #include "mir/graphics/display_configuration.h"
 
-namespace mg = mir::graphics;
-namespace geom = mir::geometry;
-
-class NullDisplayConfiguration : public mg::DisplayConfiguration
+namespace mir
+{
+namespace graphics
+{
+namespace nested
+{
+class NestedDisplayConfiguration : public DisplayConfiguration
 {
 public:
-    virtual ~NullDisplayConfiguration() noexcept;
+    virtual ~NestedDisplayConfiguration() noexcept;
 
-    void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const;
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)>) const;
+    void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const;
+    void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const;
 
-    void configure_output(mg::DisplayConfigurationOutputId id, bool used, geom::Point top_left, size_t mode_index);
+    void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left, size_t mode_index);
 };
+}
+}
+}
 
 #endif // NESTED_DISPLAY_CONFIGURATION_H_

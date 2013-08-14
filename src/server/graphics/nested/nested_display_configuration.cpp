@@ -18,18 +18,23 @@
 
 #include "nested_display_configuration.h"
 
-NullDisplayConfiguration::~NullDisplayConfiguration()
+namespace mgn = mir::graphics::nested;
+
+mgn::NestedDisplayConfiguration::~NestedDisplayConfiguration()
 {
 }
 
-void NullDisplayConfiguration::for_each_card(std::function<void(mg::DisplayConfigurationCard const&)>) const
+void mgn::NestedDisplayConfiguration::for_each_card(std::function<void(DisplayConfigurationCard const&)>) const
 {
+    // TODO
 }
 
-void NullDisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)>) const
+void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const
 {
+    // TODO
 }
 
-void NullDisplayConfiguration::configure_output(mg::DisplayConfigurationOutputId /*id*/, bool /*used*/, geom::Point /*top_left*/, size_t /*mode_index*/)
+void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId /*id*/, bool /*used*/, geometry::Point /*top_left*/, size_t /*mode_index*/)
 {
+    // TODO
 }
