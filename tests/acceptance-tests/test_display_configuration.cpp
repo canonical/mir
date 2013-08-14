@@ -19,6 +19,7 @@
 
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/event_handler_register.h"
 #include "mir/frontend/global_event_sender.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
@@ -31,6 +32,7 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/pipe.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -68,7 +70,87 @@ private:
 
 mtd::StubDisplayConfig StubChanger::stub_display_config;
 
-mtd::StubDisplayConfig const changed_stub_display_config{1};
+mtd::StubDisplayConfig changed_stub_display_config{1};
+
+class MockDisplay : public mtd::NullDisplay
+{
+public:
+    MockDisplay()
+        : config{std::make_shared<mtd::StubDisplayConfig>()}
+    {
+    }
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        f(display_buffer);
+    }
+
+    std::shared_ptr<mg::DisplayConfiguration> configuration()
+    {
+        return config;
+    }
+
+    void register_configuration_change_handler(
+        mg::EventHandlerRegister& handlers,
+        mg::DisplayConfigurationChangeHandler const& handler) override
+    {
+        handlers.register_fd_handler(
+            {p.read_fd()},
+            [this, handler](int fd)
+            {
+                char c;
+                if (read(fd, &c, 1) == 1)
+                    handler();
+            });
+    }
+
+    MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
+
+    void emit_configuration_change_event(
+        std::shared_ptr<mg::DisplayConfiguration> const& new_config)
+    {
+        config = new_config;
+        if (write(p.write_fd(), "a", 1)) {}
+    }
+
+private:
+    std::shared_ptr<mg::DisplayConfiguration> config;
+    mtd::NullDisplayBuffer display_buffer;
+    mt::Pipe p;
+};
+
+class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
+{
+public:
+    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
+    {
+        return {};
+    }
+
+    std::vector<geom::PixelFormat> supported_pixel_formats()
+    {
+        return {};
+    }
+};
+
+class StubPlatform : public mtd::NullPlatform
+{
+public:
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
+            std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+    {
+        return std::make_shared<StubGraphicBufferAllocator>();
+    }
+
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
+    {
+        return mt::fake_shared(mock_display);
+    }
+
+    testing::NiceMock<MockDisplay> mock_display;
+};
+
 }
 
 using DisplayConfigurationTest = BespokeDisplayServerTestFixture;
@@ -107,7 +189,7 @@ TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
     launch_client_process(client_config);
 }
 
-TEST_F(DisplayConfigurationTest, display_change_notification_reaches_all_clients)
+TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
     mtf::CrossProcessSync client_ready_fence;
     mtf::CrossProcessSync unsubscribed_client_ready_fence;
@@ -124,13 +206,22 @@ TEST_F(DisplayConfigurationTest, display_change_notification_reaches_all_clients
         {
         }
 
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
+        {
+            using namespace testing;
+
+            if (!platform)
+                platform = std::make_shared<StubPlatform>();
+
+            return platform;
+        }
+
         void exec() override
         {
             change_thread = std::thread([this](){
-                auto global_sender = the_global_event_sink();
-
                 send_event_fence.wait_for_signal_ready();
-                global_sender->handle_display_config_change(changed_stub_display_config);
+                platform->mock_display.emit_configuration_change_event(
+                    mt::fake_shared(changed_stub_display_config));
                 events_sent.signal_ready();
             });
         }
@@ -143,6 +234,7 @@ TEST_F(DisplayConfigurationTest, display_change_notification_reaches_all_clients
         mtf::CrossProcessSync send_event_fence;
         mtf::CrossProcessSync events_sent;
         std::thread change_thread;
+        std::shared_ptr<StubPlatform> platform;
     } server_config(send_event_fence, events_all_sent);
 
     struct SubscribedClient : TestingClientConfiguration
@@ -278,62 +370,6 @@ TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_
     } client_config;
 
     launch_client_process(client_config);
-}
-
-namespace
-{
-
-class MockDisplay : public mtd::NullDisplay
-{
-public:
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
-    {
-        f(display_buffer);
-    }
-
-    std::shared_ptr<mg::DisplayConfiguration> configuration()
-    {
-        return std::make_shared<mtd::StubDisplayConfig>();
-    }
-
-    MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
-
-private:
-    mtd::NullDisplayBuffer display_buffer;
-};
-
-class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
-{
-public:
-    std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const&)
-    {
-        return {};
-    }
-
-    std::vector<geom::PixelFormat> supported_pixel_formats()
-    {
-        return {};
-    }
-};
-
-class StubPlatform : public mtd::NullPlatform
-{
-public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-            std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
-    {
-        return std::make_shared<StubGraphicBufferAllocator>();
-    }
-
-    std::shared_ptr<mg::Display> create_display(
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const&) override
-    {
-        return mt::fake_shared(mock_display);
-    }
-
-    MockDisplay mock_display;
-};
-
 }
 
 TEST_F(DisplayConfigurationTest, display_change_request_for_authorized_client_configures_display)
