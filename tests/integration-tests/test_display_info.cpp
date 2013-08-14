@@ -151,7 +151,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Platform> the_graphics_platform()
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
         {
             if (!platform)
                 platform = std::make_shared<StubPlatform>();
@@ -159,7 +159,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_info_reaches_client)
             return platform;
         }
 
-        std::shared_ptr<msh::DisplayChanger> the_shell_display_changer()
+        std::shared_ptr<mf::DisplayChanger> the_frontend_display_changer() override
         {
             if (!changer)
                 changer = std::make_shared<StubChanger>();
@@ -193,14 +193,14 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Platform> the_graphics_platform()
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
         {
             if (!platform)
                 platform = std::make_shared<StubPlatform>();
             return platform;
         }
 
-        std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer()
+        std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
         {
             if (!authorizer)
             {
@@ -209,7 +209,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_change_request_for_unauthorized_
             return authorizer;
         }
 
-        std::shared_ptr<msh::DisplayChanger> the_shell_display_changer()
+        std::shared_ptr<mf::DisplayChanger> the_frontend_display_changer() override
         {
             if (!changer)
                 changer = std::make_shared<StubChanger>();
@@ -248,7 +248,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
 {
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mg::Platform> the_graphics_platform()
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
         {
             using namespace testing;
 
@@ -258,7 +258,7 @@ TEST_F(BespokeDisplayServerTestFixture, display_surface_pfs_reaches_client)
             return platform;
         }
 
-        std::shared_ptr<msh::DisplayChanger> the_shell_display_changer()
+        std::shared_ptr<mf::DisplayChanger> the_frontend_display_changer() override
         {
             if (!changer)
                 changer = std::make_shared<StubChanger>();
@@ -308,7 +308,7 @@ public:
         std::shared_ptr<mf::SessionMediatorReport> const& sm_report,
         std::shared_ptr<mf::MessageProcessorReport> const& mr_report,
         std::shared_ptr<mg::Platform> const& graphics_platform,
-        std::shared_ptr<msh::DisplayChanger> const& graphics_changer,
+        std::shared_ptr<mf::DisplayChanger> const& graphics_changer,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator)
         : shell(shell),
           sm_report(sm_report),
@@ -332,7 +332,7 @@ private:
     std::shared_ptr<mf::MessageProcessorReport> const mp_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
-    std::shared_ptr<msh::DisplayChanger> const graphics_changer;
+    std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::EventSink> last_event_sink;
 

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_CHANGER_H_
 
-#include "mir/shell/display_changer.h"
+#include "mir/frontend/display_changer.h"
 #include "null_display_config.h"
 
 namespace mir
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class NullDisplayChanger : public shell::DisplayChanger
+class NullDisplayChanger : public frontend::DisplayChanger
 {
 public:
     virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration()

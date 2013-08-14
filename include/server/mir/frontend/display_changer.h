@@ -16,28 +16,36 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_
+#ifndef MIR_FRONTEND_DISPLAY_CHANGER_H_
+#define MIR_FRONTEND_DISPLAY_CHANGER_H_
 
-#include "mir/frontend/display_changer.h"
-#include <gmock/gmock.h>
+#include <memory>
 
 namespace mir
 {
-namespace test
+namespace graphics
 {
-namespace doubles
+class DisplayConfiguration;
+}
+namespace frontend
 {
+class Session;
 
-class MockDisplayChanger : public frontend::DisplayChanger
+class DisplayChanger
 {
 public:
-    MOCK_METHOD0(active_configuration, std::shared_ptr<graphics::DisplayConfiguration>());
-    MOCK_METHOD2(configure,
-        void(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&));
+    virtual ~DisplayChanger() = default;
+
+    virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration() = 0;
+    virtual void configure(std::weak_ptr<Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
+
+protected:
+    DisplayChanger() = default;
+    DisplayChanger(DisplayChanger const&) = delete;
+    DisplayChanger& operator=(DisplayChanger const&) = delete;
 };
 
 }
 }
-}
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_ */
+
+#endif /* MIR_FRONTEND_DISPLAY_CHANGER_H_ */
