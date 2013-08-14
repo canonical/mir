@@ -149,15 +149,19 @@ struct ClientConfig : mtf::TestingClientConfiguration
             // avoids the graphics platform being created multiple times
             auto frig = nested_config.the_graphics_platform();
 
+            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             mir::run_mir(nested_config, [](mir::DisplayServer&){});
             // TODO - remove FAIL() as we should exit (NB we need logic to cause exit).
+            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             FAIL();
         }
         catch (std::exception const& x)
         {
+            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             // TODO - this is only temporary until NestedPlatform is implemented.
             EXPECT_THAT(x.what(), HasSubstr("NestedPlatform::create_buffer_allocator is not implemented yet!"));
         }
+        std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
     }
 };
 }
@@ -219,6 +223,7 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 
         std::shared_ptr<mir::graphics::Display> the_display() override
         {
+            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             auto const& temp = NestedServerConfiguration::the_display();
             my_display = temp;
             return temp;
@@ -226,6 +231,7 @@ TEST_F(TestNestedMir, on_exit_display_objects_should_be_destroyed)
 
         ~MyNestedServerConfiguration()
         {
+            std::cerr << "DEBUG pid=" << getpid() << " - " __FILE__ "(" << __LINE__ << ")\n";
             EXPECT_FALSE(my_display.lock()) << "pid=" << getpid() << " - " << "after run_mir() exits the display should be released";
         }
 
