@@ -35,26 +35,29 @@ static const EGLint default_egl_context_attr [] =
     EGL_NONE
 };
 
-NestedGLContext::NestedGLContext(EGLDisplay egl_display, EGLConfig egl_config, EGLContext egl_context) :
+namespace mgn = mir::graphics::nested;
+
+
+mgn::NestedGLContext::NestedGLContext(EGLDisplay egl_display, EGLConfig egl_config, EGLContext egl_context) :
     egl_display{egl_display},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_context, default_egl_context_attr)},
     egl_surface{egl_display, eglCreatePbufferSurface(egl_display, egl_config, dummy_pbuffer_attribs)}
 {
 }
 
-NestedGLContext::~NestedGLContext()
+mgn::NestedGLContext::~NestedGLContext()
 {
     if (eglGetCurrentContext() != EGL_NO_CONTEXT)
         release_current();
 }
 
-void NestedGLContext::make_current()
+void mgn::NestedGLContext::make_current()
 {
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) == EGL_FALSE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Mir Nested Display Error: Could not activate surface with eglMakeCurrent\n"));
 }
 
-void NestedGLContext::release_current()
+void mgn::NestedGLContext::release_current()
 {
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
