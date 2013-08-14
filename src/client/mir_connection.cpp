@@ -51,10 +51,13 @@ public:
         mcl::delete_config_storage(config);
     }
 
-    MirDisplayConfiguration* operator->() { return config; }
+    MirDisplayConfiguration* operator->() const { return config; }
 
 private:
-    MirDisplayConfiguration* config;
+    MirDisplayConfigurationStore(MirDisplayConfigurationStore const&) = delete;
+    MirDisplayConfigurationStore& operator=(MirDisplayConfigurationStore const&) = delete;
+
+    MirDisplayConfiguration* const config;
 };
 
 }
