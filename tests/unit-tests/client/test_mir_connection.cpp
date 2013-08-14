@@ -330,9 +330,31 @@ TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
     configuration->displays[0].output_id = proper_output_id; 
 
-    //user tries to set nonsense mode
+    //user tries to set nonsense mode on a connected output
     configuration->displays[0].current_mode++;
+    configuration->displays[0].connected = 1;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
+
+    mcl::delete_config_storage(configuration);
+}
+
+TEST_F(MirConnectionTest, display_configuration_validation_succeeds_for_invalid_mode_in_disconnected_output)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_configuration));
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_all();
+
+    auto configuration = connection->create_copy_of_display_config();
+    EXPECT_GT(configuration->num_displays, 0u);
+
+    configuration->displays[0].current_mode++;
+    configuration->displays[0].connected = 0;
+    EXPECT_NE(nullptr, connection->configure_display(configuration));
 
     mcl::delete_config_storage(configuration);
 }

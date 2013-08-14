@@ -335,22 +335,26 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     auto const& protobuf_config = connect_result.display_configuration();
+    uint32_t num_outputs = protobuf_config.display_output_size();
 
     if ((!config) || (config->num_displays == 0) || (config->displays == NULL) || 
-        (config->num_displays > static_cast<unsigned int>(protobuf_config.display_output_size())))
+        (config->num_displays > num_outputs))
     {
         return false;
     }
 
     for(auto i = 0u; i < config->num_displays; i++)
     {
-        if (config->displays[i].current_mode >= static_cast<unsigned int>(protobuf_config.display_output(i).mode_size()))
+        auto const& output = config->displays[i];
+        uint32_t num_modes = protobuf_config.display_output(i).mode_size();
+
+        if (output.connected && output.current_mode >= num_modes)
             return false;
 
         bool found = false;
         for (auto j = 0; j < protobuf_config.display_output_size(); j++)
         {
-            if (config->displays[i].output_id == protobuf_config.display_output(i).output_id())
+            if (output.output_id == protobuf_config.display_output(j).output_id())
             {
                 found = true;
                 break;
