@@ -265,7 +265,7 @@ void mf::SessionMediator::configure_surface(
 void mf::SessionMediator::configure_display(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::DisplayConfiguration* request,
-    ::mir::protobuf::Void*,
+    ::mir::protobuf::DisplayConfiguration* response,
     ::google::protobuf::Closure* done)
 {
     {
@@ -281,6 +281,8 @@ void mf::SessionMediator::configure_display(
         }
 
         display_changer->configure(session, config);
+        auto display_config = display_changer->active_configuration();
+        mfd::pack_protobuf_display_configuration(*response, *display_config);
     }
     done->Run();
 }
