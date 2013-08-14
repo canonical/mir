@@ -239,6 +239,13 @@ std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
     return buffer_depository->current_buffer();
 }
 
+uint32_t MirSurface::get_current_buffer_id() const
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
+    return buffer_depository->current_buffer_id();    
+}
+
 void MirSurface::populate(MirBufferPackage& buffer_package)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
