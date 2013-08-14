@@ -207,15 +207,11 @@ TEST_F(TestNestedMir, nested_platform_connects_and_disconnects)
 
     launch_server_process(host_config);
     launch_client_process(client_config);
-
-//    run_in_test_process([this]
-//    {
-//        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-//        terminate_client_processes();
-//    });
 }
 
 //////////////////////////////////////////////////////////////////
+// TODO the following tests were used in investigating lifetime issues.
+// TODO they may not have much long term value, but decide that later
 
 TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
 {
