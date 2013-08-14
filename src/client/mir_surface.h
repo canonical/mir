@@ -82,6 +82,7 @@ public:
     std::shared_ptr<MirNativeBuffer> get_current_buffer_package();
     MirPlatformType platform_type();
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer();
+    uint32_t get_current_buffer_id() const;
     void get_cpu_region(MirGraphicsRegion& region);
     void release_cpu_region();
     EGLNativeWindowType generate_native_window();
