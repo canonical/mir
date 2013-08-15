@@ -14,6 +14,7 @@ set(
   test_client_authorization.cpp
   test_shell_control_of_surface_configuration.cpp
   test_nested_mir.cpp
+  test_display_configuration.cpp
 )
 
 list(APPEND SOURCES
@@ -38,8 +39,10 @@ target_link_libraries(
   mirclient
   mirplatform
 
+  mir-test
   mir-test-framework
   mir-test-doubles
+  mir-test-doubles-platform
   3rd_party
 
   ${PROTOBUF_LIBRARIES}

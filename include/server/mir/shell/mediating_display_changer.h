@@ -38,6 +38,8 @@ namespace input { class InputManager; }
 namespace shell
 {
 
+class SessionContainer;
+
 class MediatingDisplayChanger : public frontend::DisplayChanger,
                                 public mir::DisplayChanger
 {
@@ -46,7 +48,8 @@ public:
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::Compositor> const& compositor,
         std::shared_ptr<input::InputManager> const& input_manager,
-        std::shared_ptr<graphics::DisplayConfigurationPolicy> const& display_configuration_policy);
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const& display_configuration_policy,
+        std::shared_ptr<SessionContainer> const& session_container);
 
     /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
@@ -61,11 +64,15 @@ public:
 private:
     void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf,
                       SystemStateHandling pause_resume_system);
+    void send_config_to_all_sessions_except(
+        std::shared_ptr<graphics::DisplayConfiguration> const& conf,
+        std::weak_ptr<frontend::Session> const& excluded_session);
 
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<compositor::Compositor> const compositor;
     std::shared_ptr<input::InputManager> const input_manager;
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const display_configuration_policy;
+    std::shared_ptr<shell::SessionContainer> const session_container;
     std::mutex configuration_mutex;
 };
 

@@ -130,6 +130,7 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
+    mir::protobuf::DisplayConfiguration display_configuration_response;
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;

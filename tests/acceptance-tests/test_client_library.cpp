@@ -19,6 +19,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_debug.h"
 #include "src/client/client_buffer.h"
 
 #include "mir/frontend/communicator.h"
@@ -389,7 +390,7 @@ TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_state_events)
 
             mir_surface_set_event_handler(surface, &delegate);
 
-            int surface_id = mir_surface_get_id(surface);
+            int surface_id = mir_debug_surface_id(surface);
 
             mir_wait_for(mir_surface_set_state(surface,
                                                mir_surface_state_fullscreen));

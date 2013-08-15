@@ -17,6 +17,8 @@
  */
 
 #include "mir/shell/mediating_display_changer.h"
+#include "mir/shell/session_container.h"
+#include "mir/shell/session.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
 #include "mir/input/input_manager.h"
@@ -59,19 +61,22 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
     std::shared_ptr<mi::InputManager> const& input_manager,
-    std::shared_ptr<mg::DisplayConfigurationPolicy> const& display_configuration_policy)
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& display_configuration_policy,
+    std::shared_ptr<msh::SessionContainer> const& session_container)
     : display{display},
       compositor{compositor},
       input_manager{input_manager},
-      display_configuration_policy{display_configuration_policy}
+      display_configuration_policy{display_configuration_policy},
+      session_container{session_container}
 {
 }
 
 void msh::MediatingDisplayChanger::configure(
-    std::weak_ptr<mf::Session> const&,
+    std::weak_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
     apply_config(conf, PauseResumeSystem);
+    send_config_to_all_sessions_except(conf, session);
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
@@ -87,6 +92,7 @@ void msh::MediatingDisplayChanger::configure_for_hardware_change(
 {
     display_configuration_policy->apply_to(*conf);
     apply_config(conf, pause_resume_system);
+    send_config_to_all_sessions_except(conf, {});
 }
 
 void msh::MediatingDisplayChanger::apply_config(
@@ -111,4 +117,18 @@ void msh::MediatingDisplayChanger::apply_config(
     {
         display->configure(*conf);
     }
+}
+
+void msh::MediatingDisplayChanger::send_config_to_all_sessions_except(
+    std::shared_ptr<mg::DisplayConfiguration> const& conf,
+    std::weak_ptr<mf::Session> const& excluded_session)
+{
+    auto excluded = excluded_session.lock();
+
+    session_container->for_each(
+        [&conf, &excluded](std::shared_ptr<msh::Session> const& session)
+        {
+            if (session != excluded)
+                session->send_display_config(*conf);
+        });
 }
