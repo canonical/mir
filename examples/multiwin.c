@@ -193,6 +193,9 @@ int main(int argc, char *argv[])
             draw_window(win + w);
     }
 
+    mir_surface_release_sync(win[0].surface);
+    mir_surface_release_sync(win[1].surface);
+    mir_surface_release_sync(win[2].surface);
     mir_connection_release(conn);
 
     return 0;
