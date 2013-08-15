@@ -16,10 +16,13 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
-#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#ifndef MIR_GRAPHICS_NESTED_NESTED_GL_CONTEXT_H_
+#define MIR_GRAPHICS_NESTED_NESTED_GL_CONTEXT_H_
 
-struct MirConnection;
+#include "mir/graphics/gl_context.h"
+#include "mir/graphics/egl_resources.h"
+
+#include <EGL/egl.h>
 
 namespace mir
 {
@@ -27,23 +30,23 @@ namespace graphics
 {
 namespace nested
 {
-
-class MirConnectionHandle
+class NestedGLContext : public GLContext
 {
 public:
-    MirConnectionHandle(MirConnection* const mir_connection);
-    ~MirConnectionHandle();
+    NestedGLContext(EGLDisplay egl_display, EGLConfig egl_config, EGLContext egl_context);
+    virtual ~NestedGLContext() noexcept;
 
-    MirConnectionHandle(MirConnectionHandle const&) = delete;
-    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
-
-    operator MirConnection*() const {return (MirConnection*)connection;}
+    void make_current();
+    void release_current();
 
 private:
-    MirConnection* const connection;
+    EGLDisplay const egl_display;
+    EGLContextStore const egl_context;
+    EGLSurfaceStore const egl_surface;
 };
+}
+}
+}
 
-}
-}
-}
-#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#endif // MIR_GRAPHICS_NESTED_NESTED_GL_CONTEXT_H_
+

@@ -21,7 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
-#include "nested_mir_connection_handle.h"
+#include "mir/graphics/nested/nested_mir_connection_handle.h"
 
 namespace mir
 {
@@ -50,8 +50,7 @@ public:
 private:
     std::shared_ptr<NativePlatform> const native_platform;
     std::shared_ptr<DisplayReport> const display_report;
-
-    MirConnectionHandle connection;
+    MirConnectionHandle const connection;
 };
 
 }
