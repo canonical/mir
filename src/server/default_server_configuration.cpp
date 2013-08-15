@@ -372,7 +372,8 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
                 the_display(),
                 the_compositor(),
                 the_input_manager(),
-                the_display_configuration_policy());
+                the_display_configuration_policy(),
+                the_shell_session_container());
         });
 
 }

@@ -178,6 +178,6 @@ service DisplayServer {
   rpc test_file_descriptors(Void) returns (Buffer);
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
-  rpc configure_display(DisplayConfiguration) returns (Void);
+  rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
 }
 

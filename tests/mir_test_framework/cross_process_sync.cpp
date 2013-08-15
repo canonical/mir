@@ -130,3 +130,13 @@ unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono:
 
     return counter;
 }
+
+void mtf::CrossProcessSync::signal_ready()
+{
+    try_signal_ready_for(std::chrono::milliseconds{-1});
+}
+
+unsigned int mtf::CrossProcessSync::wait_for_signal_ready()
+{
+    return wait_for_signal_ready_for(std::chrono::milliseconds{-1});
+}

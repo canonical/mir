@@ -48,6 +48,7 @@ struct TestProtobufClient
     mir::protobuf::Void ignored;
     mir::protobuf::Connection connection;
     mir::protobuf::DisplayConfiguration disp_config;
+    mir::protobuf::DisplayConfiguration disp_config_response;
 
     MOCK_METHOD0(connect_done, void());
     MOCK_METHOD0(create_surface_done, void());
