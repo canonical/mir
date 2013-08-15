@@ -25,6 +25,7 @@
 #include "mir/shell/session.h"
 #include "mir/shell/surface.h"
 #include "mir/shell/session_listener.h"
+#include "mir/shell/session_event_sink.h"
 
 #include <memory>
 #include <cassert>
@@ -38,12 +39,14 @@ msh::SessionManager::SessionManager(std::shared_ptr<msh::SurfaceFactory> const& 
     std::shared_ptr<msh::FocusSequence> const& sequence,
     std::shared_ptr<msh::FocusSetter> const& focus_setter,
     std::shared_ptr<msh::SnapshotStrategy> const& snapshot_strategy,
+    std::shared_ptr<msh::SessionEventSink> const& session_event_sink,
     std::shared_ptr<msh::SessionListener> const& session_listener) :
     surface_factory(surface_factory),
     app_container(container),
     focus_sequence(sequence),
     focus_setter(focus_setter),
     snapshot_strategy(snapshot_strategy),
+    session_event_sink(session_event_sink),
     session_listener(session_listener)
 {
     assert(surface_factory);
@@ -98,10 +101,12 @@ inline void msh::SessionManager::set_focus_to_locked(std::unique_lock<std::mutex
     focus_setter->set_focus_to(shell_session);
     if (shell_session)
     {
+        session_event_sink->handle_focus_change(shell_session);
         session_listener->focused(shell_session);
     }
     else
     {
+        session_event_sink->handle_no_focus();
         session_listener->unfocused();
     }
 }
@@ -116,6 +121,7 @@ void msh::SessionManager::close_session(std::shared_ptr<mf::Session> const& sess
 {
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
+    session_event_sink->handle_session_stopping(shell_session);
     session_listener->stopping(shell_session);
 
     app_container->remove_session(shell_session);
