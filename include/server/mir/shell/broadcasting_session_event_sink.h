@@ -22,7 +22,8 @@
 #include "mir/shell/session_event_sink.h"
 #include "mir/shell/session_event_handler_register.h"
 
-#include <boost/signals2.hpp>
+#include <vector>
+#include <mutex>
 
 namespace mir
 {
@@ -47,9 +48,10 @@ public:
         std::function<void(std::shared_ptr<Session> const& session)> const& handler);
 
 private:
-    boost::signals2::signal<void(std::shared_ptr<Session> const& session)> focus_change_signal;
-    boost::signals2::signal<void()> no_focus_signal;
-    boost::signals2::signal<void(std::shared_ptr<Session> const& session)> session_stopping_signal;
+    std::mutex handler_mutex;
+    std::vector<std::function<void(std::shared_ptr<Session> const&)>> focus_change_handlers;
+    std::vector<std::function<void()>> no_focus_handlers;
+    std::vector<std::function<void(std::shared_ptr<Session> const&)>> session_stopping_handlers;
 };
 
 }
