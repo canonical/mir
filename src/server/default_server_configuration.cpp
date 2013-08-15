@@ -564,11 +564,12 @@ mir::DefaultServerConfiguration::the_cursor_listener()
 std::shared_ptr<mi::InputConfiguration>
 mir::DefaultServerConfiguration::the_input_configuration()
 {
-    if (!input_configuration)
+    return input_configuration(
+    [this]() -> std::shared_ptr<mi::InputConfiguration>
     {
         if (the_options()->get("enable-input", enable_input_default))
         {
-            input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
+            return std::make_shared<mia::DefaultInputConfiguration>(
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -576,10 +577,9 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else
         {
-            input_configuration = std::make_shared<mi::NullInputConfiguration>();
+            return std::make_shared<mi::NullInputConfiguration>();
         }
-    }
-    return input_configuration;
+    });
 }
 
 std::shared_ptr<mi::InputManager>
