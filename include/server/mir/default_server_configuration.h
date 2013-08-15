@@ -98,7 +98,6 @@ class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
 class InputRegion;
-class VTFilter;
 }
 
 namespace logging
@@ -238,7 +237,6 @@ protected:
 
 
     std::shared_ptr<input::InputConfiguration> input_configuration;
-    std::shared_ptr<input::VTFilter> vt_filter;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
@@ -285,6 +283,7 @@ private:
     int const argc;
     char const** const argv;
     std::shared_ptr<boost::program_options::options_description> const program_options;
+    std::shared_ptr<input::EventFilter> const default_filter;
     std::shared_ptr<options::Option> mutable options;
 
     // the communications interface to use
