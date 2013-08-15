@@ -23,53 +23,50 @@ namespace msh = mir::shell;
 /*
  * TODO: Use Boost.Signals2 for this when we default to Boost 1.54, see
  * https://svn.boost.org/trac/boost/ticket/8102 . For now, just use a custom
- * mechanism with coarse locking. When emitting events, we save pointers to the
- * handlers temporarily to avoid calling handlers while locked, while still
- * being thread-safe (since we don't support removing handlers).
+ * mechanism with coarse locking. When emitting events, we copy the handlers
+ * to a temporary vector to avoid calling handlers while locked, while still
+ * being thread-safe.
  */
 
 void msh::BroadcastingSessionEventSink::handle_focus_change(
     std::shared_ptr<Session> const& session)
 {
-    std::vector<std::function<void(std::shared_ptr<Session> const&)>*> handlers;
+    std::vector<std::function<void(std::shared_ptr<Session> const&)>> handlers;
 
     {
         std::lock_guard<std::mutex> lg{handler_mutex};
-        for (auto& handler : focus_change_handlers)
-            handlers.push_back(&handler);
+        handlers = focus_change_handlers;
     }
 
     for (auto& handler : handlers)
-        (*handler)(session);
+        handler(session);
 }
 
 void msh::BroadcastingSessionEventSink::handle_no_focus()
 {
-    std::vector<std::function<void()>*> handlers;
+    std::vector<std::function<void()>> handlers;
 
     {
         std::lock_guard<std::mutex> lg{handler_mutex};
-        for (auto& handler : no_focus_handlers)
-            handlers.push_back(&handler);
+        handlers = no_focus_handlers;
     }
 
     for (auto& handler : handlers)
-        (*handler)();
+        handler();
 }
 
 void msh::BroadcastingSessionEventSink::handle_session_stopping(
     std::shared_ptr<Session> const& session)
 {
-    std::vector<std::function<void(std::shared_ptr<Session> const&)>*> handlers;
+    std::vector<std::function<void(std::shared_ptr<Session> const&)>> handlers;
 
     {
         std::lock_guard<std::mutex> lg{handler_mutex};
-        for (auto& handler : session_stopping_handlers)
-            handlers.push_back(&handler);
+        handlers = session_stopping_handlers;
     }
 
     for (auto& handler : handlers)
-        (*handler)(session);
+        handler(session);
 }
 
 void msh::BroadcastingSessionEventSink::register_focus_change_handler(
