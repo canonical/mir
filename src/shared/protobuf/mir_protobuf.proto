@@ -158,9 +158,15 @@ message DisplayConfiguration {
   optional string error = 127;
 }
 
+message LifecycleEvent {
+  required uint32 delegate_call = 1; // Transition callback to run
+  optional string error = 127;
+};
+
 message EventSequence {
   repeated Event event = 1;
   optional DisplayConfiguration display_configuration = 2;
+  optional LifecycleEvent lifecycle_event = 3;
   optional string error = 127;
 }
 

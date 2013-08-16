@@ -18,6 +18,7 @@
 
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/lifecycle/lifecycle_event.h"
 #include "event_sender.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
@@ -56,6 +57,17 @@ void mfd::EventSender::handle_display_config_change(
 
     auto protobuf_config = seq.mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, display_config);
+
+    send_event_sequence(seq);
+}
+
+void mfd::EventSender::handle_lifecycle_event(
+    shell::LifecycleEvent const& lifecycle_event)
+{
+    mp::EventSequence seq;
+
+    auto protobuf_config = seq.mutable_lifecycle_event();
+    protobuf_config->set_delegate_call(lifecycle_event.callback.as_value());
 
     send_event_sequence(seq);
 }
