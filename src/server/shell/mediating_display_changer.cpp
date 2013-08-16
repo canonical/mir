@@ -72,7 +72,7 @@ msh::MediatingDisplayChanger::MediatingDisplayChanger(
 }
 
 void msh::MediatingDisplayChanger::configure(
-    std::weak_ptr<mf::Session> const& session,
+    std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
     apply_config(conf, PauseResumeSystem);
@@ -121,14 +121,12 @@ void msh::MediatingDisplayChanger::apply_config(
 
 void msh::MediatingDisplayChanger::send_config_to_all_sessions_except(
     std::shared_ptr<mg::DisplayConfiguration> const& conf,
-    std::weak_ptr<mf::Session> const& excluded_session)
+    std::shared_ptr<mf::Session> const& excluded_session)
 {
-    auto excluded = excluded_session.lock();
-
     session_container->for_each(
-        [&conf, &excluded](std::shared_ptr<msh::Session> const& session)
+        [&conf, &excluded_session](std::shared_ptr<msh::Session> const& session)
         {
-            if (session != excluded)
+            if (session != excluded_session)
                 session->send_display_config(*conf);
         });
 }

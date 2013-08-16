@@ -42,7 +42,7 @@ TEST_F(UnauthorizedDisplayChangerTest, change_attempt)
     msh::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
 
     EXPECT_THROW({
-        changer.configure(std::weak_ptr<mf::Session>(), mt::fake_shared(conf));
+        changer.configure(std::shared_ptr<mf::Session>(), mt::fake_shared(conf));
     }, std::runtime_error);
 }
 

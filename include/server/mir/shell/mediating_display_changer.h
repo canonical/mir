@@ -53,7 +53,7 @@ public:
 
     /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
-    void configure(std::weak_ptr<frontend::Session> const& session,
+    void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf);
 
     /* From mir::DisplayChanger */
@@ -66,7 +66,7 @@ private:
                       SystemStateHandling pause_resume_system);
     void send_config_to_all_sessions_except(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-        std::weak_ptr<frontend::Session> const& excluded_session);
+        std::shared_ptr<frontend::Session> const& excluded_session);
 
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<compositor::Compositor> const compositor;
