@@ -372,10 +372,290 @@ TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_
     launch_client_process(client_config);
 }
 
-TEST_F(DisplayConfigurationTest, display_change_request_for_authorized_client_configures_display)
+namespace
 {
+
+class CrossProcessAction
+{
+public:
+    void exec(std::function<void()> const& f)
+    {
+        start_fence.wait_for_signal_ready();
+        f();
+        finish_fence.signal_ready();
+    }
+
+    void operator()()
+    {
+        start_fence.signal_ready();
+        finish_fence.wait_for_signal_ready();
+    }
+
+private:
+    mtf::CrossProcessSync start_fence;
+    mtf::CrossProcessSync finish_fence;
+};
+
+struct DisplayClient : TestingClientConfiguration
+{
+    DisplayClient(CrossProcessAction const& connect,
+                  CrossProcessAction const& apply_config,
+                  CrossProcessAction const& disconnect)
+        : connect{connect},
+          apply_config{apply_config},
+          disconnect{disconnect}
+    {
+    }
+
+    void exec()
+    {
+        MirConnection* connection;
+
+        connect.exec([&]
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+        });
+
+        apply_config.exec([&]
+        {
+            auto configuration = mir_connection_create_display_config(connection);
+            mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+            mir_display_config_destroy(configuration);
+        });
+
+        disconnect.exec([&]
+        {
+            mir_connection_release(connection);
+        });
+    }
+
+    CrossProcessAction connect;
+    CrossProcessAction apply_config;
+    CrossProcessAction disconnect;
+};
+
+struct SimpleClient : TestingClientConfiguration
+{
+    SimpleClient(CrossProcessAction const& connect,
+                 CrossProcessAction const& disconnect)
+        : connect{connect},
+          disconnect{disconnect}
+    {
+    }
+
+    void exec()
+    {
+        MirConnection* connection;
+
+        connect.exec([&]
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+        });
+
+        disconnect.exec([&]
+        {
+            mir_connection_release(connection);
+        });
+    }
+
+    CrossProcessAction connect;
+    CrossProcessAction disconnect;
+};
+
+}
+
+TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_display)
+{
+    CrossProcessAction display_client_connect;
+    CrossProcessAction display_client_apply_config;
+    CrossProcessAction display_client_disconnect;
+    CrossProcessAction verify_connection_expectations;
+    CrossProcessAction verify_apply_config_expectations;
+
     struct ServerConfig : TestingServerConfiguration
     {
+        ServerConfig(CrossProcessAction const& verify_connection_expectations,
+                     CrossProcessAction const& verify_apply_config_expectations)
+            : verify_connection_expectations{verify_connection_expectations},
+              verify_apply_config_expectations{verify_apply_config_expectations}
+        {
+        }
+
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
+        {
+            using namespace testing;
+
+            if (!platform)
+            {
+                platform = std::make_shared<StubPlatform>();
+                EXPECT_CALL(platform->mock_display, configure(_)).Times(0);
+            }
+
+            return platform;
+        }
+
+        void exec() override
+        {
+            t = std::thread([this](){
+                verify_connection_expectations.exec([&]
+                {
+                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
+                    EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
+                });
+
+                verify_apply_config_expectations.exec([&]
+                {
+                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
+                });
+            });
+        }
+
+        void on_exit() override
+        {
+            t.join();
+        }
+
+        std::shared_ptr<StubPlatform> platform;
+        std::thread t;
+        CrossProcessAction verify_connection_expectations;
+        CrossProcessAction verify_apply_config_expectations;
+    } server_config{verify_connection_expectations,
+                    verify_apply_config_expectations};
+
+    launch_server_process(server_config);
+
+    DisplayClient display_client_config{display_client_connect,
+                                        display_client_apply_config,
+                                        display_client_disconnect};
+
+    launch_client_process(display_client_config);
+
+    run_in_test_process([&]
+    {
+        display_client_connect();
+        verify_connection_expectations();
+
+        display_client_apply_config();
+        verify_apply_config_expectations();
+
+        display_client_disconnect();
+    });
+}
+
+TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_display)
+{
+    CrossProcessAction display_client_connect;
+    CrossProcessAction display_client_apply_config;
+    CrossProcessAction display_client_disconnect;
+    CrossProcessAction simple_client_connect;
+    CrossProcessAction simple_client_disconnect;
+    CrossProcessAction verify_apply_config_expectations;
+    CrossProcessAction verify_focus_change_expectations;
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        ServerConfig(CrossProcessAction const& verify_apply_config_expectations,
+                     CrossProcessAction const& verify_focus_change_expectations)
+            : verify_apply_config_expectations{verify_apply_config_expectations},
+              verify_focus_change_expectations{verify_focus_change_expectations}
+        {
+        }
+
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
+        {
+            using namespace testing;
+
+            if (!platform)
+            {
+                platform = std::make_shared<StubPlatform>();
+                EXPECT_CALL(platform->mock_display, configure(_)).Times(0);
+            }
+
+            return platform;
+        }
+
+        void exec() override
+        {
+            t = std::thread([this](){
+                verify_apply_config_expectations.exec([&]
+                {
+                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
+                    EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
+                });
+
+                verify_focus_change_expectations.exec([&]
+                {
+                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
+                });
+            });
+        }
+
+        void on_exit() override
+        {
+            t.join();
+        }
+
+        std::shared_ptr<StubPlatform> platform;
+        std::thread t;
+        CrossProcessAction verify_apply_config_expectations;
+        CrossProcessAction verify_focus_change_expectations;
+    } server_config{verify_apply_config_expectations,
+                    verify_focus_change_expectations};
+
+    launch_server_process(server_config);
+
+    DisplayClient display_client_config{display_client_connect,
+                                        display_client_apply_config,
+                                        display_client_disconnect};
+
+    SimpleClient simple_client_config{simple_client_connect,
+                                      simple_client_disconnect};
+
+    launch_client_process(display_client_config);
+    launch_client_process(simple_client_config);
+
+    run_in_test_process([&]
+    {
+        display_client_connect();
+
+        /* Connect the simple client. After this the simple client should have the focus. */
+        simple_client_connect();
+
+        /* Apply the display config while not focused */
+        display_client_apply_config();
+        verify_apply_config_expectations();
+
+        /*
+         * Shut down the simple client. After this the focus should have changed to the
+         * display client and its configuration should have been applied.
+         */
+        simple_client_disconnect();
+        verify_focus_change_expectations();
+
+        display_client_disconnect();
+    });
+}
+
+TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_client_without_config_configures_display)
+{
+    CrossProcessAction display_client_connect;
+    CrossProcessAction display_client_apply_config;
+    CrossProcessAction display_client_disconnect;
+    CrossProcessAction simple_client_connect;
+    CrossProcessAction simple_client_disconnect;
+    CrossProcessAction verify_apply_config_expectations;
+    CrossProcessAction verify_focus_change_expectations;
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        ServerConfig(CrossProcessAction const& verify_apply_config_expectations,
+                     CrossProcessAction const& verify_focus_change_expectations)
+            : verify_apply_config_expectations{verify_apply_config_expectations},
+              verify_focus_change_expectations{verify_focus_change_expectations}
+        {
+        }
+
         std::shared_ptr<mg::Platform> the_graphics_platform() override
         {
             using namespace testing;
@@ -389,25 +669,63 @@ TEST_F(DisplayConfigurationTest, display_change_request_for_authorized_client_co
             return platform;
         }
 
+        void exec() override
+        {
+            t = std::thread([this](){
+                verify_apply_config_expectations.exec([&]
+                {
+                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
+                    EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
+                });
+
+                verify_focus_change_expectations.exec([&]
+                {
+                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
+                });
+            });
+        }
+
+        void on_exit() override
+        {
+            t.join();
+        }
+
         std::shared_ptr<StubPlatform> platform;
-    } server_config;
+        std::thread t;
+        CrossProcessAction verify_apply_config_expectations;
+        CrossProcessAction verify_focus_change_expectations;
+    } server_config{verify_apply_config_expectations,
+                    verify_focus_change_expectations};
 
     launch_server_process(server_config);
 
-    struct Client : TestingClientConfiguration
+    DisplayClient display_client_config{display_client_connect,
+                                        display_client_apply_config,
+                                        display_client_disconnect};
+
+    SimpleClient simple_client_config{simple_client_connect,
+                                      simple_client_disconnect};
+
+    launch_client_process(display_client_config);
+    launch_client_process(simple_client_config);
+
+    run_in_test_process([&]
     {
-        void exec()
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-            auto configuration = mir_connection_create_display_config(connection);
+        /* Connect the simple client. */
+        simple_client_connect();
 
-            mir_wait_for(mir_connection_apply_display_config(connection, configuration));
-            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+        /* Connect the display config client and apply a display config. */
+        display_client_connect();
+        display_client_apply_config();
+        verify_apply_config_expectations();
 
-            mir_display_config_destroy(configuration);
-            mir_connection_release(connection);
-        }
-    } client_config;
+        /*
+         * Shut down the display client. After this the focus should have changed to the
+         * simple client and the base configuration should have been applied.
+         */
+        display_client_disconnect();
+        verify_focus_change_expectations();
 
-    launch_client_process(client_config);
+        simple_client_disconnect();
+    });
 }

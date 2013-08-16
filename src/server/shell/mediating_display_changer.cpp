@@ -19,16 +19,15 @@
 #include "mir/shell/mediating_display_changer.h"
 #include "mir/shell/session_container.h"
 #include "mir/shell/session.h"
+#include "mir/shell/session_event_handler_register.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
-#include "mir/input/input_manager.h"
 #include "mir/graphics/display_configuration_policy.h"
 
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace mi = mir::input;
 
 namespace
 {
@@ -60,29 +59,82 @@ private:
 msh::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
-    std::shared_ptr<mi::InputManager> const& input_manager,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& display_configuration_policy,
-    std::shared_ptr<msh::SessionContainer> const& session_container)
+    std::shared_ptr<msh::SessionContainer> const& session_container,
+    std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register)
     : display{display},
       compositor{compositor},
-      input_manager{input_manager},
       display_configuration_policy{display_configuration_policy},
-      session_container{session_container}
+      session_container{session_container},
+      session_event_handler_register{session_event_handler_register},
+      base_configuration{display->configuration()},
+      base_configuration_applied{true}
 {
+    session_event_handler_register->register_focus_change_handler(
+        [this](std::shared_ptr<Session> const& session)
+        {
+            std::lock_guard<std::mutex> lg{configuration_mutex};
+
+            focused_session = session;
+
+            /*
+             * If the newly focused session has a display configuration, apply it.
+             * Otherwise if we aren't currently using the base configuration,
+             * apply that.
+             */
+            auto it = config_map.find(session);
+            if (it != config_map.end())
+            {
+                apply_config(it->second, PauseResumeSystem);
+            }
+            else if (!base_configuration_applied)
+            {
+                apply_base_config(PauseResumeSystem);
+            }
+        });
+
+    session_event_handler_register->register_no_focus_handler(
+        [this]
+        {
+            std::lock_guard<std::mutex> lg{configuration_mutex};
+
+            focused_session.reset();
+            if (!base_configuration_applied)
+            {
+                apply_base_config(PauseResumeSystem);
+            }
+        });
+
+    session_event_handler_register->register_session_stopping_handler(
+        [this](std::shared_ptr<Session> const& session)
+        {
+            std::lock_guard<std::mutex> lg{configuration_mutex};
+
+            config_map.erase(session);
+        });
+
 }
 
 void msh::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
-    apply_config(conf, PauseResumeSystem);
-    send_config_to_all_sessions_except(conf, session);
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
+    config_map[session] = conf;
+
+    /* If the session is focused, apply the configuration */
+    if (focused_session.lock() == session)
+    {
+        apply_config(conf, PauseResumeSystem);
+    }
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
 msh::MediatingDisplayChanger::active_configuration()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
+
     return display->configuration();
 }
 
@@ -90,26 +142,31 @@ void msh::MediatingDisplayChanger::configure_for_hardware_change(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
+    std::lock_guard<std::mutex> lg{configuration_mutex};
+
     display_configuration_policy->apply_to(*conf);
-    apply_config(conf, pause_resume_system);
-    send_config_to_all_sessions_except(conf, {});
+    base_configuration = conf;
+    apply_base_config(pause_resume_system);
+
+    /*
+     * Clear all the per-session configurations, since they may have become
+     * invalid due to the hardware change.
+     */
+    config_map.clear();
+
+    /* Send the new configuration to all the sessions */
+    send_config_to_all_sessions(conf);
 }
 
 void msh::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
-
     if (pause_resume_system)
     {
         ApplyNowAndRevertOnScopeExit comp{
             [this] { compositor->stop(); },
             [this] { compositor->start(); }};
-
-        ApplyNowAndRevertOnScopeExit input{
-            [this] { input_manager->stop(); },
-            [this] { input_manager->start(); }};
 
         display->configure(*conf);
     }
@@ -117,16 +174,23 @@ void msh::MediatingDisplayChanger::apply_config(
     {
         display->configure(*conf);
     }
+
+    base_configuration_applied = false;
 }
 
-void msh::MediatingDisplayChanger::send_config_to_all_sessions_except(
-    std::shared_ptr<mg::DisplayConfiguration> const& conf,
-    std::shared_ptr<mf::Session> const& excluded_session)
+void msh::MediatingDisplayChanger::apply_base_config(
+    SystemStateHandling pause_resume_system)
+{
+    apply_config(base_configuration, pause_resume_system);
+    base_configuration_applied = true;
+}
+
+void msh::MediatingDisplayChanger::send_config_to_all_sessions(
+    std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
     session_container->for_each(
-        [&conf, &excluded_session](std::shared_ptr<msh::Session> const& session)
+        [&conf](std::shared_ptr<msh::Session> const& session)
         {
-            if (session != excluded_session)
-                session->send_display_config(*conf);
+            session->send_display_config(*conf);
         });
 }
