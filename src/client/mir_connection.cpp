@@ -397,6 +397,7 @@ void MirConnection::done_display_configure()
 
 MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (!validate_user_display_config(config))
     {
         return NULL;
