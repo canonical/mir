@@ -35,8 +35,11 @@ void mcl::delete_config_storage(MirDisplayConfiguration* config)
         if (config->displays[i].output_formats)
             delete[] config->displays[i].output_formats;
     }
+
     if (config->displays)
         delete[] config->displays;
+    if (config->cards)
+        delete[] config->cards;
 
     delete config;
 }
