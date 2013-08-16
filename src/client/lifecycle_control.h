@@ -22,6 +22,8 @@
 #include "mir/int_wrapper.h"
 #include "mir_toolkit/common.h"
 
+#include <functional>
+
 namespace mir
 {
 namespace client
@@ -33,10 +35,12 @@ public:
     ~LifecycleControl();
 
     void set_lifecycle_event_handler(std::function<void(MirLifecycleCallback)> const&);
-    void request_lifecycle_callback(MirLifecycleCallback const& callback)
+    void request_lifecycle_callback(uint32_t callback);
 
 private:
     std::function<void(MirLifecycleCallback)> handle_lifecycle_event;
+};
+}
 }
 
 #endif /* MIR_LIFECYCLE_CONTROL_H_ */

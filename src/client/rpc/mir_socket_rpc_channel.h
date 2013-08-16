@@ -43,6 +43,7 @@ namespace client
 {
 class DisplayConfiguration;
 class SurfaceMap;
+class LifecycleControl;
 namespace rpc
 {
 
@@ -54,7 +55,8 @@ public:
     MirSocketRpcChannel(std::string const& endpoint,
                         std::shared_ptr<SurfaceMap> const& surface_map,
                         std::shared_ptr<DisplayConfiguration> const& disp_config,
-                        std::shared_ptr<RpcReport> const& rpc_report);
+                        std::shared_ptr<RpcReport> const& rpc_report,
+                        std::shared_ptr<LifecycleControl> const& lifecycle_control);
     ~MirSocketRpcChannel();
 
 private:
@@ -87,6 +89,7 @@ private:
 
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
+    std::shared_ptr<LifecycleControl> lifecycle_control;
 };
 
 }

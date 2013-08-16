@@ -27,6 +27,7 @@
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
 #include "default_connection_configuration.h"
+#include "lifecycle_control.h"
 
 #include <set>
 #include <unordered_set>

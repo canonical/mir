@@ -34,7 +34,7 @@ void mcl::LifecycleControl::set_lifecycle_event_handler(std::function<void(MirLi
     handle_lifecycle_event = fn;
 }
 
-void mcl::LifecycleControl::request_lifecycle_callback(MirLifecycleCallback const& callback)
+void mcl::LifecycleControl::request_lifecycle_callback(uint32_t callback)
 {
-    handle_lifecycle_event(callback);
+    handle_lifecycle_event(static_cast<MirLifecycleCallback>(callback));
 }

@@ -18,7 +18,6 @@
 
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/lifecycle/lifecycle_event.h"
 #include "event_sender.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
