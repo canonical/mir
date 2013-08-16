@@ -24,6 +24,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+namespace
+{
+void set_active_vt(int vt)
+{
+    auto console_fd = open("/dev/console", O_RDONLY | O_NDELAY);
+    ioctl(console_fd, VT_ACTIVATE, vt);
+    close(console_fd);
+}
+}
+
 bool mir::input::VTFilter::handle(MirEvent const& event)
 {
     if (event.type == mir_event_type_key &&
@@ -73,11 +83,4 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
     }
 
     return false;
-}
-
-void mir::input::VTFilter::set_active_vt(int vt)
-{
-    auto console_fd = open("/dev/console", O_RDONLY | O_NDELAY);
-    ioctl(console_fd, VT_ACTIVATE, vt);
-    close(console_fd);
 }

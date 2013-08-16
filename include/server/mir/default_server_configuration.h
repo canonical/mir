@@ -98,7 +98,6 @@ class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
 class InputRegion;
-class VTFilter;
 }
 
 namespace logging
@@ -120,6 +119,8 @@ public:
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
     virtual std::shared_ptr<MainLoop>               the_main_loop();
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
+    virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
+    virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -204,7 +205,6 @@ public:
     /** @name input configuration
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
-    virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
@@ -218,7 +218,6 @@ public:
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
 
-    virtual std::shared_ptr<graphics::Platform>  the_graphics_platform();
     virtual std::shared_ptr<time::TimeSource>    the_time_source();
 
     virtual std::shared_ptr<shell::SessionManager> the_session_manager();
@@ -237,8 +236,7 @@ protected:
     CachedPtr<shell::SessionManager> session_manager;
 
 
-    std::shared_ptr<input::InputConfiguration> input_configuration;
-    std::shared_ptr<input::VTFilter> vt_filter;
+    CachedPtr<input::InputConfiguration> input_configuration;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
@@ -285,6 +283,7 @@ private:
     int const argc;
     char const** const argv;
     std::shared_ptr<boost::program_options::options_description> const program_options;
+    std::shared_ptr<input::EventFilter> const default_filter;
     std::shared_ptr<options::Option> mutable options;
 
     // the communications interface to use
