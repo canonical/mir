@@ -48,10 +48,9 @@ mgn::NestedPlatform::~NestedPlatform() noexcept
 }
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/)
+        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::create_buffer_allocator is not implemented yet!"));
-    return 0;
+    return native_platform->create_buffer_allocator(buffer_initializer);
 }
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(std::shared_ptr<mg::DisplayConfigurationPolicy> const& /*initial_conf_policy*/)

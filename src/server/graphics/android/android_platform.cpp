@@ -109,7 +109,20 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
     return std::make_shared<mga::AndroidPlatform>(display_report);
 }
 
+namespace
+{
+// It may well turn out that NativePlatform == Platform - but this keeps them separate for now
+struct NativeAndroidPlatform : mg::NativePlatform
+{
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
+        std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NativeAndroidPlatform::create_buffer_allocator is not implemented yet!"));
+    }
+};
+}
+
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
 {
-    return std::make_shared<mg::NativePlatform>();
+    return std::make_shared<::NativeAndroidPlatform>();
 }

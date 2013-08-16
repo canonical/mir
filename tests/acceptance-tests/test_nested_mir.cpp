@@ -154,7 +154,7 @@ struct ClientConfig : mtf::TestingClientConfiguration
         catch (std::exception const& x)
         {
             // TODO - this is only temporary until NestedPlatform is implemented.
-            EXPECT_THAT(x.what(), HasSubstr("NestedPlatform::create_buffer_allocator is not implemented yet!"));
+            EXPECT_THAT(x.what(), HasSubstr("Platform::create_buffer_allocator is not implemented yet!"));
         }
     }
 };

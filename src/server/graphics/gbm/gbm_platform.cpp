@@ -174,7 +174,20 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
             (display == mgg::GBMPlatform::internal_native_display.get()));
 }
 
+namespace
+{
+// It may well turn out that NativePlatform == Platform - but this keeps them separate for now
+struct NativeGbmPlatform : mg::NativePlatform
+{
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
+        std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NativeGbmPlatform::create_buffer_allocator is not implemented yet!"));
+    }
+};
+}
+
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
 {
-    return std::make_shared<mg::NativePlatform>();
+    return std::make_shared<::NativeGbmPlatform>();
 }
