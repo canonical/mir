@@ -23,6 +23,7 @@
 #include "../surface_map.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"
+#include "../lifecycle_control.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"

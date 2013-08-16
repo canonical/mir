@@ -161,7 +161,7 @@ message DisplayConfiguration {
 message LifecycleEvent {
   required uint32 delegate_call = 1; // Transition callback to run
   optional string error = 127;
-};
+}
 
 message EventSequence {
   repeated Event event = 1;
