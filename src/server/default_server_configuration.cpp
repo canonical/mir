@@ -43,6 +43,7 @@
 #include "mir/shell/threaded_snapshot_strategy.h"
 #include "mir/shell/graphics_display_layout.h"
 #include "mir/shell/surface_configurator.h"
+#include "mir/shell/broadcasting_session_event_sink.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
@@ -452,6 +453,7 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
                 the_shell_snapshot_strategy(),
+                the_shell_session_event_sink(),
                 the_shell_session_listener());
         });
 }
@@ -476,6 +478,18 @@ mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
             return std::make_shared<msh::ThreadedSnapshotStrategy>(
                 the_shell_pixel_buffer());
         });
+}
+
+std::shared_ptr<msh::SessionEventSink>
+mir::DefaultServerConfiguration::the_shell_session_event_sink()
+{
+    return the_broadcasting_session_event_sink();
+}
+
+std::shared_ptr<msh::SessionEventHandlerRegister>
+mir::DefaultServerConfiguration::the_shell_session_event_handler_register()
+{
+    return the_broadcasting_session_event_sink();
 }
 
 std::shared_ptr<mf::Shell>
@@ -907,6 +921,16 @@ mir::DefaultServerConfiguration::the_display_configuration_policy()
         []
         {
             return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+        });
+}
+
+std::shared_ptr<msh::BroadcastingSessionEventSink>
+mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
+{
+    return broadcasting_session_event_sink(
+        []
+        {
+            return std::make_shared<msh::BroadcastingSessionEventSink>();
         });
 }
 

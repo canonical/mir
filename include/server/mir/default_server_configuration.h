@@ -68,6 +68,9 @@ class SnapshotStrategy;
 class DisplayLayout;
 class SurfaceConfigurator;
 class MediatingDisplayChanger;
+class SessionEventSink;
+class SessionEventHandlerRegister;
+class BroadcastingSessionEventSink;
 }
 namespace time
 {
@@ -177,7 +180,8 @@ public:
     virtual std::shared_ptr<shell::SnapshotStrategy>    the_shell_snapshot_strategy();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
-
+    virtual std::shared_ptr<shell::SessionEventSink>    the_shell_session_event_sink();
+    virtual std::shared_ptr<shell::SessionEventHandlerRegister> the_shell_session_event_handler_register();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -231,6 +235,7 @@ protected:
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
+    virtual std::shared_ptr<shell::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
@@ -278,6 +283,7 @@ protected:
     CachedPtr<MainLoop> main_loop;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
+    CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 
 private:
     int const argc;

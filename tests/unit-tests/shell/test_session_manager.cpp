@@ -25,6 +25,7 @@
 #include "mir/shell/session_listener.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/shell/surface_creation_parameters.h"
+#include "mir/shell/session_event_sink.h"
 #include "mir/surfaces/surface.h"
 
 #include "mir_test/fake_shared.h"
@@ -36,6 +37,7 @@
 #include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_surface_configurator.h"
+#include "mir_test_doubles/null_session_event_sink.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -66,6 +68,13 @@ struct MockFocusSequence : public msh::FocusSequence
     MOCK_CONST_METHOD0(default_focus, std::shared_ptr<msh::Session>());
 };
 
+struct MockSessionEventSink : public msh::SessionEventSink
+{
+    MOCK_METHOD1(handle_focus_change, void(std::shared_ptr<msh::Session> const& session));
+    MOCK_METHOD0(handle_no_focus, void());
+    MOCK_METHOD1(handle_session_stopping, void(std::shared_ptr<msh::Session> const& session));
+};
+
 struct SessionManagerSetup : public testing::Test
 {
     SessionManagerSetup()
@@ -74,6 +83,7 @@ struct SessionManagerSetup : public testing::Test
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
+                        std::make_shared<mtd::NullSessionEventSink>(),
                         mt::fake_shared(session_listener))
     {
     }
@@ -178,6 +188,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
                         mt::fake_shared(focus_sequence),
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
+                        std::make_shared<mtd::NullSessionEventSink>(),
                         mt::fake_shared(session_listener))
     {
     }
@@ -204,5 +215,57 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifec
     EXPECT_CALL(focus_sequence, default_focus()).WillOnce(Return((std::shared_ptr<msh::Session>())));
     
     auto session = session_manager.open_session("XPlane", std::shared_ptr<mf::EventSink>());
+    session_manager.close_session(session);
+}
+
+namespace
+{
+
+struct SessionManagerSessionEventsSetup : public testing::Test
+{
+    SessionManagerSessionEventsSetup()
+      : session_manager(mt::fake_shared(surface_factory),
+                        mt::fake_shared(container),
+                        mt::fake_shared(focus_sequence),
+                        mt::fake_shared(focus_setter),
+                        std::make_shared<mtd::NullSnapshotStrategy>(),
+                        mt::fake_shared(session_event_sink),
+                        std::make_shared<msh::NullSessionListener>())
+    {
+    }
+
+    mtd::MockSurfaceFactory surface_factory;
+    testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
+    testing::NiceMock<MockFocusSequence> focus_sequence;
+    testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
+    MockSessionEventSink session_event_sink;
+
+    msh::SessionManager session_manager;
+};
+
+}
+
+TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifecycle_and_focus)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(session_event_sink, handle_focus_change(_)).Times(2);
+
+    auto session = session_manager.open_session("XPlane", std::shared_ptr<mf::EventSink>());
+    auto session1 = session_manager.open_session("Bla", std::shared_ptr<mf::EventSink>());
+
+    Mock::VerifyAndClearExpectations(&session_event_sink);
+
+    InSequence s;
+    EXPECT_CALL(session_event_sink, handle_session_stopping(_)).Times(1);
+    EXPECT_CALL(focus_sequence, default_focus()).
+        WillOnce(Return(std::dynamic_pointer_cast<msh::Session>(session)));
+    EXPECT_CALL(session_event_sink, handle_focus_change(_)).Times(1);
+    EXPECT_CALL(session_event_sink, handle_session_stopping(_)).Times(1);
+    EXPECT_CALL(focus_sequence, default_focus()).
+        WillOnce(Return(std::shared_ptr<msh::Session>()));
+    EXPECT_CALL(session_event_sink, handle_no_focus()).Times(1);
+
+    session_manager.close_session(session1);
     session_manager.close_session(session);
 }
