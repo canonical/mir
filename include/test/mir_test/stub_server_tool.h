@@ -39,7 +39,7 @@ struct StubServerTool : mir::protobuf::DisplayServer
     virtual void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
+                 google::protobuf::Closure* done) override
     {
         response->mutable_id()->set_value(13); // TODO distinct numbers & tracking
         response->set_width(request->width());
@@ -58,7 +58,7 @@ struct StubServerTool : mir::protobuf::DisplayServer
         ::google::protobuf::RpcController* /*controller*/,
         ::mir::protobuf::SurfaceId const* /*request*/,
         ::mir::protobuf::Buffer* response,
-        ::google::protobuf::Closure* done)
+        ::google::protobuf::Closure* done) override
     {
         response->set_buffer_id(22);
 
@@ -71,7 +71,7 @@ struct StubServerTool : mir::protobuf::DisplayServer
     virtual void release_surface(::google::protobuf::RpcController* /*controller*/,
                          const ::mir::protobuf::SurfaceId* /*request*/,
                          ::mir::protobuf::Void* /*response*/,
-                         ::google::protobuf::Closure* done)
+                         ::google::protobuf::Closure* done) override
     {
         done->Run();
     }
@@ -81,7 +81,7 @@ struct StubServerTool : mir::protobuf::DisplayServer
         ::google::protobuf::RpcController*,
                          const ::mir::protobuf::ConnectParameters* request,
                          ::mir::protobuf::Connection*,
-                         ::google::protobuf::Closure* done)
+                         ::google::protobuf::Closure* done) override
     {
         app_name = request->application_name();
         done->Run();
@@ -90,7 +90,7 @@ struct StubServerTool : mir::protobuf::DisplayServer
     virtual void disconnect(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::Void* /*request*/,
                  mir::protobuf::Void* /*response*/,
-                 google::protobuf::Closure* done)
+                 google::protobuf::Closure* done) override
     {
         std::unique_lock<std::mutex> lock(guard);
         wait_condition.notify_one();
@@ -100,7 +100,7 @@ struct StubServerTool : mir::protobuf::DisplayServer
     virtual void drm_auth_magic(google::protobuf::RpcController* /*controller*/,
                                 const mir::protobuf::DRMMagic* request,
                                 mir::protobuf::DRMAuthMagicStatus* response,
-                                google::protobuf::Closure* done)
+                                google::protobuf::Closure* done) override
     {
         std::unique_lock<std::mutex> lock(guard);
         drm_magic = request->magic();
@@ -111,8 +111,8 @@ struct StubServerTool : mir::protobuf::DisplayServer
 
     virtual void configure_display(::google::protobuf::RpcController*,
                        const ::mir::protobuf::DisplayConfiguration*,
-                       ::mir::protobuf::Void*,
-                       ::google::protobuf::Closure* done)
+                       ::mir::protobuf::DisplayConfiguration*,
+                       ::google::protobuf::Closure* done) override
     {
         done->Run();
     }

@@ -474,6 +474,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     mg::DisplayConfigurationOutputId id0{6}, id1{3};
 
     NiceMock<MockConfig> mock_display_config;
+    mtd::StubDisplayConfig stub_display_config;
     auto mock_display_selector = std::make_shared<mtd::MockDisplayChanger>();
 
     Sequence seq;
@@ -489,6 +490,9 @@ TEST_F(SessionMediatorTest, display_config_request)
         .InSequence(seq);
     EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);
+    EXPECT_CALL(*mock_display_selector, active_configuration())
+        .InSequence(seq)
+        .WillOnce(Return(mt::fake_shared(stub_display_config)));
  
     mf::SessionMediator session_mediator{
             shell, graphics_platform, mock_display_selector,
@@ -496,7 +500,7 @@ TEST_F(SessionMediatorTest, display_config_request)
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    mp::Void ignored;
+    mp::DisplayConfiguration configuration_response;
     mp::DisplayConfiguration configuration; 
     auto disp0 = configuration.add_display_output();
     disp0->set_output_id(id0.as_value());
@@ -512,7 +516,10 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp1->set_position_y(pt1.y.as_uint32_t());
     disp1->set_current_mode(mode_index1);
 
-    session_mediator.configure_display(nullptr, &configuration, &ignored, null_callback.get());
+    session_mediator.configure_display(nullptr, &configuration,
+                                       &configuration_response, null_callback.get());
+
+    EXPECT_THAT(configuration_response, mt::DisplayConfigMatches(std::cref(stub_display_config)));
 
     session_mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }

@@ -16,10 +16,10 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
-#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#ifndef MIR_GRAPHICS_NESTED_NESTED_DISPLAY_CONFIGURATION_H_
+#define MIR_GRAPHICS_NESTED_NESTED_DISPLAY_CONFIGURATION_H_
 
-struct MirConnection;
+#include "mir/graphics/display_configuration.h"
 
 namespace mir
 {
@@ -27,23 +27,18 @@ namespace graphics
 {
 namespace nested
 {
-
-class MirConnectionHandle
+class NestedDisplayConfiguration : public DisplayConfiguration
 {
 public:
-    MirConnectionHandle(MirConnection* const mir_connection);
-    ~MirConnectionHandle();
+    virtual ~NestedDisplayConfiguration() noexcept;
 
-    MirConnectionHandle(MirConnectionHandle const&) = delete;
-    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
+    void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const;
+    void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const;
 
-    operator MirConnection*() const {return (MirConnection*)connection;}
-
-private:
-    MirConnection* const connection;
+    void configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left, size_t mode_index);
 };
+}
+}
+}
 
-}
-}
-}
-#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#endif // MIR_GRAPHICS_NESTED_NESTED_DISPLAY_CONFIGURATION_H_

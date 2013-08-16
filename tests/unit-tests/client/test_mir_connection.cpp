@@ -154,21 +154,18 @@ private:
 
 struct MirConnectionTest : public testing::Test
 {
-    void SetUp()
+    MirConnectionTest()
+        : mock_platform{std::make_shared<testing::NiceMock<MockClientPlatform>>()},
+          mock_channel{std::make_shared<testing::NiceMock<MockRpcChannel>>()},
+          conf{mock_platform, mock_channel},
+          connection{std::make_shared<MirConnection>(conf)}
     {
-        using namespace testing;
-
-        mock_platform = std::make_shared<NiceMock<MockClientPlatform>>();
-        mock_channel = std::make_shared<NiceMock<MockRpcChannel>>();
-
-        TestConnectionConfiguration conf{mock_platform, mock_channel};
-
-        connection = std::make_shared<MirConnection>(conf);
     }
 
-    std::shared_ptr<testing::NiceMock<MockClientPlatform>> mock_platform;
-    std::shared_ptr<testing::NiceMock<MockRpcChannel>> mock_channel;
-    std::shared_ptr<MirConnection> connection;
+    std::shared_ptr<testing::NiceMock<MockClientPlatform>> const mock_platform;
+    std::shared_ptr<testing::NiceMock<MockRpcChannel>> const mock_channel;
+    TestConnectionConfiguration conf;
+    std::shared_ptr<MirConnection> const connection;
 };
 
 TEST_F(MirConnectionTest, returns_correct_egl_native_display)
@@ -241,6 +238,7 @@ void fill_display_configuration(mp::ConnectParameters const*, mp::Connection* re
     for (auto i = 0u; i < number_of_displays; i++)
     {
         auto output = protobuf_config->add_display_output();
+        output->set_output_id(i);
         auto const& rect = rects[i];
         output->set_position_x(rect.top_left.x.as_uint32_t());
         output->set_position_y(rect.top_left.y.as_uint32_t());
@@ -330,10 +328,69 @@ TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
     configuration->displays[0].output_id = proper_output_id; 
 
-    //user tries to set nonsense mode
+    //user tries to set nonsense mode on a connected output
     configuration->displays[0].current_mode++;
+    configuration->displays[0].connected = 1;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
 
+    mcl::delete_config_storage(configuration);
+}
+
+TEST_F(MirConnectionTest, display_configuration_validation_succeeds_for_invalid_mode_in_disconnected_output)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_configuration));
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_all();
+
+    auto configuration = connection->create_copy_of_display_config();
+    EXPECT_GT(configuration->num_displays, 0u);
+
+    configuration->displays[0].current_mode++;
+    configuration->displays[0].connected = 0;
+    EXPECT_NE(nullptr, connection->configure_display(configuration));
+
+    mcl::delete_config_storage(configuration);
+}
+
+TEST_F(MirConnectionTest, display_configuration_validation_uses_updated_configuration)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*mock_channel, connect(_,_))
+        .WillOnce(Invoke(fill_display_configuration));
+
+    MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
+                                                     connected_callback, 0);
+    wait_handle->wait_for_all();
+
+    auto old_configuration = connection->create_copy_of_display_config();
+
+    /* Update the configuration */
+    uint32_t const output1_id{11};
+    uint32_t const output2_id{12};
+
+    mp::DisplayConfiguration protobuf_config;
+    auto output1 = protobuf_config.add_display_output();
+    output1->set_output_id(output1_id);
+    auto output2 = protobuf_config.add_display_output();
+    output2->set_output_id(output2_id);
+
+    auto display_config = conf.the_display_configuration();
+    display_config->set_configuration(protobuf_config);
+
+    /* Check that the old config cannot be validated */
+    EXPECT_EQ(nullptr, connection->configure_display(old_configuration));
+
+    /* Check that the new config can be validated */
+    auto configuration = connection->create_copy_of_display_config();
+    EXPECT_NE(nullptr, connection->configure_display(configuration));
+
+    mcl::delete_config_storage(old_configuration);
     mcl::delete_config_storage(configuration);
 }
 
@@ -373,6 +430,7 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
     output.used = 0;
     output.position_x = 4;
     output.position_y = 6;
+    output.connected = 0;
     MirDisplayConfiguration user_config{1, &output, 0, nullptr};
 
     auto verify_display_change = [&](mp::DisplayConfiguration const* config)
