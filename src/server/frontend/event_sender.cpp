@@ -62,12 +62,12 @@ void mfd::EventSender::handle_display_config_change(
 }
 
 void mfd::EventSender::handle_lifecycle_event(
-    shell::LifecycleEvent const& lifecycle_event)
+    MirLifecycleCallback callback)
 {
     mp::EventSequence seq;
 
     auto protobuf_config = seq.mutable_lifecycle_event();
-    protobuf_config->set_delegate_call(lifecycle_event.callback.as_value());
+    protobuf_config->set_delegate_call(callback);
 
     send_event_sequence(seq);
 }

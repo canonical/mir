@@ -166,3 +166,9 @@ void msh::ApplicationSession::send_display_config(mg::DisplayConfiguration const
 {
     event_sink->handle_display_config_change(info);
 }
+
+void msh::ApplicationSession::set_lifecycle_state(MirLifecycleCallback callback)
+{
+    event_sink->handle_lifecycle_event(callback);
+}
+}
