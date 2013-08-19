@@ -125,19 +125,12 @@ void mgg::GBMBuffer::bind_to_texture()
 
 std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
 {
-    auto temp = std::make_shared<MirNativeBuffer>();
+    auto temp = std::make_shared<GBMNativeBuffer>();
 
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
     temp->stride = stride().as_uint32_t();
-
-    /*
-     * In-server users of MirNativeBuffer can get the gbm_bo from the
-     * unused data[] buffer. This is a kludge to avoid breaking ABIs.
-     */
-    struct gbm_bo *bo = gbm_handle.get();
-    *(struct gbm_bo**)temp->data = bo;
-    temp->data_items = 0;  // Pretend. Mesa will assert otherwise.
+    temp->bo = gbm_handle.get();
 
     return temp;
 }

@@ -20,7 +20,7 @@
 #include "gbm_platform.h"
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
-#include "mir/graphics/buffer.h"
+#include "gbm_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <GLES2/gl2.h>
@@ -185,10 +185,9 @@ void mgg::GBMDisplayBuffer::post_update(
     mgg::BufferObject *bufobj;
     if (bypass_buf)
     {
-        // Is there a nicer way to find gbm_bo*, like looking up the prime fd?
         auto native = bypass_buf->native_buffer_handle();
-        struct gbm_bo *bo = *(struct gbm_bo**)native->data;
-        bufobj = get_buffer_object(bo);
+        auto gbm_native = static_cast<mgg::GBMNativeBuffer*>(native.get());
+        bufobj = get_buffer_object(gbm_native->bo);
     }
     else
     {

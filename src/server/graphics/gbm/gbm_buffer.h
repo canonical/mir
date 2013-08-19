@@ -34,6 +34,11 @@ namespace graphics
 namespace gbm
 {
 
+struct GBMNativeBuffer : MirNativeBuffer
+{
+    struct gbm_bo *bo;
+};
+
 geometry::PixelFormat gbm_format_to_mir_format(uint32_t format);
 uint32_t mir_format_to_gbm_format(geometry::PixelFormat format);
 enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
