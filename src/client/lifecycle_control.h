@@ -19,7 +19,6 @@
 #ifndef MIR_LIFECYCLE_CONTROL_H_
 #define MIR_LIFECYCLE_CONTROL_H_
 
-#include "mir/int_wrapper.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
