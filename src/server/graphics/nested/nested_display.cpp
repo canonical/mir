@@ -59,13 +59,16 @@ std::shared_ptr<mgn::detail::NestedOutput> make_one_output(MirConnection* connec
     MirDisplayConfigHandle display_config{connection};
 
     // TODO we may have multiple displays which implies multiple surfaces
-    // TODO as a POC just use the first display
-    if (display_config->num_displays < 1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one display"));
+    // TODO as a POC just use the first active display
+    for (decltype(display_config->num_displays) i = 0; i != display_config->num_displays; ++i)
+    {
+        auto const egl_display_info = display_config->displays+i;
 
-    auto const egl_display_info = display_config->displays;
+        if (egl_display_info->used)
+            return std::make_shared<mgn::detail::NestedOutput>(connection, egl_display_info);
+    }
 
-    return std::make_shared<mgn::detail::NestedOutput>(connection, egl_display_info);
+    BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one display"));
 }
 
 EGLint const egl_attribs[] = {
