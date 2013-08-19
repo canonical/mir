@@ -53,4 +53,5 @@ void mir::lttng::MessageProcessorReport::exception_handled(
 void mir::lttng::MessageProcessorReport::sent_event(
     void const* /*mediator*/, MirSurfaceEvent const&)
 {
+    // TODO
 }
