@@ -19,8 +19,10 @@
 #ifndef MIR_SHELL_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 #define MIR_SHELL_SINGLE_VISIBILITY_FOCUS_MECHANISM_H_
 
-#include <memory>
 #include "mir/shell/focus_setter.h"
+
+#include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -48,7 +50,7 @@ private:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceController> const surface_controller;
 
-    // TODO: Protect with mutex
+    std::mutex surface_focus_lock;
     std::weak_ptr<Surface> currently_focused_surface;
 };
 

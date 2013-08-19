@@ -45,6 +45,7 @@ void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<Session> const& fo
     auto surface = focus_session->default_surface();
     if (surface)
     {
+        std::lock_guard<std::mutex> lg(surface_focus_lock);
         auto current_focus = currently_focused_surface.lock();
         if (current_focus)
             current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
