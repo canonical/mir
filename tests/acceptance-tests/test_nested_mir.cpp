@@ -90,9 +90,6 @@ struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerCon
         DefaultServerConfiguration(FakeCommandLine::argc, FakeCommandLine::argv)
     {
     }
-
-    using  mir::DefaultServerConfiguration::input_configuration;
-    using  mir::DefaultServerConfiguration::vt_filter;
 };
 
 struct NestedMockEGL : mir::test::doubles::MockEGL
@@ -149,26 +146,7 @@ struct ClientConfig : mtf::TestingClientConfiguration
             NestedMockEGL mock_egl;
             NestedServerConfiguration nested_config(host_socket);
 
-            // TODO remove this workaround for an existing issue:
-            // avoids the graphics platform being created multiple times
-            auto frig = nested_config.the_graphics_platform();
-
-            try
-            {
-                mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
-
-                // TODO remove this workaround for an existing issue:
-                // DefaultServerConfiguration extends object lifetimes
-                nested_config.input_configuration.reset();
-                nested_config.vt_filter.reset();
-            } catch (...)
-            {
-                // TODO remove this workaround for an existing issue:
-                // DefaultServerConfiguration extends object lifetimes
-                nested_config.input_configuration.reset();
-                nested_config.vt_filter.reset();
-                throw;
-            }
+            mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
 
             // TODO - remove FAIL() as we should exit (NB we need logic to cause exit).
             FAIL();
