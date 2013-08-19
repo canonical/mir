@@ -229,7 +229,14 @@ void mgg::GBMDisplayBuffer::post_update(
         last_flipped_bufobj->release();
 
     last_flipped_bufobj = bypass_buf ? nullptr : bufobj;
-    last_flipped_bypass_buf = bypass_buf;  // Can be nullptr
+
+    /*
+     * Keep a reference to the buffer being bypassed for the entire duration
+     * of the frame. This ensures the buffer doesn't get reused by the client
+     * prematurely, which would be seen as tearing.
+     * If not bypassing, then bypass_buf will be nullptr.
+     */
+    last_flipped_bypass_buf = bypass_buf;
 }
 
 mgg::BufferObject* mgg::GBMDisplayBuffer::get_front_buffer_object()
