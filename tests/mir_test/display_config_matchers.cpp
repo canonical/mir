@@ -183,8 +183,10 @@ private:
     std::vector<mg::DisplayConfigurationOutput> outputs;
 };
 
-bool compare_display_configurations(mg::DisplayConfiguration const& config1,
-                                    mg::DisplayConfiguration const& config2)
+}
+
+bool mt::compare_display_configurations(mg::DisplayConfiguration const& config1,
+                                        mg::DisplayConfiguration const& config2)
 {
     bool result = true;
 
@@ -255,8 +257,6 @@ bool compare_display_configurations(mg::DisplayConfiguration const& config1,
     return result;
 }
 
-}
-
 bool mt::compare_display_configurations(MirDisplayConfiguration const& client_config,
                                         mg::DisplayConfiguration const& display_config)
 {
@@ -270,7 +270,6 @@ bool mt::compare_display_configurations(mp::DisplayConfiguration const& protobuf
     TestDisplayConfiguration config1{protobuf_config};
     return compare_display_configurations(config1, display_config);
 }
-
 
 bool mt::compare_display_configurations(MirDisplayConfiguration const& client_config,
                                         mp::DisplayConfiguration const& protobuf_config)

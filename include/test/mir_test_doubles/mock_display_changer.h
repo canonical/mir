@@ -34,7 +34,7 @@ class MockDisplayChanger : public frontend::DisplayChanger
 public:
     MOCK_METHOD0(active_configuration, std::shared_ptr<graphics::DisplayConfiguration>());
     MOCK_METHOD2(configure,
-        void(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&));
+        void(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&));
 };
 
 }
