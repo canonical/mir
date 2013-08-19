@@ -24,13 +24,15 @@ namespace geom = mir::geometry;
 
 void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 {
-    size_t const preferred_mode_index{0};
-
     conf.for_each_output(
         [&conf](DisplayConfigurationOutput const& conf_output)
         {
             if (conf_output.connected && conf_output.modes.size() > 0)
             {
+                size_t preferred_mode_index{conf_output.preferred_mode_index};
+                if (preferred_mode_index > conf_output.modes.size())
+                    preferred_mode_index = 0;
+
                 conf.configure_output(conf_output.id, true, geom::Point(),
                                       preferred_mode_index);
             }

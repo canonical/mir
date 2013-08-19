@@ -117,44 +117,46 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
-    std::unique_lock<std::mutex> lock(session_mutex);
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
     
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
     
-    report->session_create_surface_called(session->name());
+        report->session_create_surface_called(session->name());
     
-    auto const id = session->create_surface(
-        msh::SurfaceCreationParameters()
-        .of_name(request->surface_name())
-        .of_size(request->width(), request->height())
-        .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-        .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
-        );
-     {
-         auto surface = session->get_surface(id);
-         response->mutable_id()->set_value(id.as_value());
-         response->set_width(surface->size().width.as_uint32_t());
-         response->set_height(surface->size().height.as_uint32_t());
-         response->set_pixel_format((int)surface->pixel_format());
-         response->set_buffer_usage(request->buffer_usage());
-         if (surface->supports_input())
-             response->add_fd(surface->client_input_fd());
-         client_buffer_resource = surface->advance_client_buffer();
-         auto const& id = client_buffer_resource->id();
-         auto buffer = response->mutable_buffer();
-         buffer->set_buffer_id(id.as_uint32_t());
-         if (!client_tracker->client_has(id))
+        auto const id = session->create_surface(
+            msh::SurfaceCreationParameters()
+            .of_name(request->surface_name())
+            .of_size(request->width(), request->height())
+            .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
+            .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+            );
          {
-             auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
-             graphics_platform->fill_ipc_package(packer, client_buffer_resource);
+             auto surface = session->get_surface(id);
+             response->mutable_id()->set_value(id.as_value());
+             response->set_width(surface->size().width.as_uint32_t());
+             response->set_height(surface->size().height.as_uint32_t());
+             response->set_pixel_format((int)surface->pixel_format());
+             response->set_buffer_usage(request->buffer_usage());
+             if (surface->supports_input())
+                 response->add_fd(surface->client_input_fd());
+             client_buffer_resource = surface->advance_client_buffer();
+             auto const& id = client_buffer_resource->id();
+             auto buffer = response->mutable_buffer();
+             buffer->set_buffer_id(id.as_uint32_t());
+             if (!client_tracker->client_has(id))
+             {
+                 auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
+                 graphics_platform->fill_ipc_package(packer, client_buffer_resource);
+              }
+             client_tracker->add(id);
          }
-         client_tracker->add(id);
-     }
-
-     // TODO: We rely on done->Run() sending messages synchronously.
-     done->Run();
-     shell->handle_surface_created(session);
+    }
+    
+    // TODO: We rely on done->Run() sending messages synchronously.
+    done->Run();
+    shell->handle_surface_created(session);
 }
 
 void mf::SessionMediator::next_buffer(
