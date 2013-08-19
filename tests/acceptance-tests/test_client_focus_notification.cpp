@@ -196,10 +196,10 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
 
             // And lose it as the second surface is created
             EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
-                                                                        mir_surface_unfocused)))).Times(1);
+                mir_surface_unfocused)))).Times(1);
             // And regain it when the second surface is closed
             EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
-                                                                        mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
+                mir_surface_focused)))).Times(1).WillOnce(mt::WakeUp(all_events_received));
         }
 
     } client_one_config(ready_for_second_client);
