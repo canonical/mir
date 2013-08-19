@@ -43,6 +43,7 @@
 #include "mir/shell/threaded_snapshot_strategy.h"
 #include "mir/shell/graphics_display_layout.h"
 #include "mir/shell/surface_configurator.h"
+#include "mir/shell/broadcasting_session_event_sink.h"
 #include "mir/graphics/cursor.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
@@ -229,7 +230,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     argv(argv),
     program_options(std::make_shared<boost::program_options::options_description>(
     "Command-line options.\n"
-    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
+    "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\"")),
+    default_filter(std::make_shared<mi::VTFilter>())
 {
     namespace po = boost::program_options;
 
@@ -371,9 +373,9 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
             return std::make_shared<msh::MediatingDisplayChanger>(
                 the_display(),
                 the_compositor(),
-                the_input_manager(),
                 the_display_configuration_policy(),
-                the_shell_session_container());
+                the_shell_session_container(),
+                the_shell_session_event_handler_register());
         });
 
 }
@@ -451,6 +453,7 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_shell_focus_sequence(),
                 the_shell_focus_setter(),
                 the_shell_snapshot_strategy(),
+                the_shell_session_event_sink(),
                 the_shell_session_listener());
         });
 }
@@ -475,6 +478,18 @@ mir::DefaultServerConfiguration::the_shell_snapshot_strategy()
             return std::make_shared<msh::ThreadedSnapshotStrategy>(
                 the_shell_pixel_buffer());
         });
+}
+
+std::shared_ptr<msh::SessionEventSink>
+mir::DefaultServerConfiguration::the_shell_session_event_sink()
+{
+    return the_broadcasting_session_event_sink();
+}
+
+std::shared_ptr<msh::SessionEventHandlerRegister>
+mir::DefaultServerConfiguration::the_shell_session_event_handler_register()
+{
+    return the_broadcasting_session_event_sink();
 }
 
 std::shared_ptr<mf::Shell>
@@ -505,9 +520,7 @@ mir::DefaultServerConfiguration::the_composite_event_filter()
     return composite_event_filter(
         [this]() -> std::shared_ptr<mi::CompositeEventFilter>
         {
-            if (!vt_filter)
-                vt_filter = std::make_shared<mi::VTFilter>();
-            std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {vt_filter};
+            std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
             return std::make_shared<mi::EventFilterChain>(filter_list);
         });
 }
@@ -565,11 +578,12 @@ mir::DefaultServerConfiguration::the_cursor_listener()
 std::shared_ptr<mi::InputConfiguration>
 mir::DefaultServerConfiguration::the_input_configuration()
 {
-    if (!input_configuration)
+    return input_configuration(
+    [this]() -> std::shared_ptr<mi::InputConfiguration>
     {
         if (the_options()->get("enable-input", enable_input_default))
         {
-            input_configuration = std::make_shared<mia::DefaultInputConfiguration>(
+            return std::make_shared<mia::DefaultInputConfiguration>(
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -577,10 +591,9 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else
         {
-            input_configuration = std::make_shared<mi::NullInputConfiguration>();
+            return std::make_shared<mi::NullInputConfiguration>();
         }
-    }
-    return input_configuration;
+    });
 }
 
 std::shared_ptr<mi::InputManager>
@@ -908,6 +921,16 @@ mir::DefaultServerConfiguration::the_display_configuration_policy()
         []
         {
             return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+        });
+}
+
+std::shared_ptr<msh::BroadcastingSessionEventSink>
+mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
+{
+    return broadcasting_session_event_sink(
+        []
+        {
+            return std::make_shared<msh::BroadcastingSessionEventSink>();
         });
 }
 

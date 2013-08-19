@@ -28,31 +28,50 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <time.h>
 
-static volatile sig_atomic_t running = 1;
+typedef enum
+{
+    configuration_mode_unknown,
+    configuration_mode_clone,
+    configuration_mode_horizontal,
+    configuration_mode_vertical
+} ConfigurationMode;
 
-void apply_configuration(MirConnection *connection, MirDisplayConfiguration *conf)
+struct ClientContext
+{
+    MirConnection *connection;
+    ConfigurationMode mode;
+    volatile sig_atomic_t running;
+    volatile sig_atomic_t reconfigure;
+};
+
+static int apply_configuration(MirConnection *connection, MirDisplayConfiguration *conf)
 {
     MirWaitHandle* handle = mir_connection_apply_display_config(connection, conf);
     if (!handle)
     {
         printf("Failed to apply configuration, check that the configuration is valid.\n");
-        return;
+        return 0;
     }
 
     mir_wait_for(handle);
     const char* error = mir_connection_get_error_message(connection);
 
     if (!strcmp(error, ""))
+    {
         printf("Succeeded.\n");
+        return 1;
+    }
     else
+    {
         printf("Failed to apply configuration with error '%s'.\n", error);
+        return 0;
+    }
 }
 
-void configure_display_clone(MirConnection *connection)
+static void configure_display_clone(struct MirDisplayConfiguration *conf)
 {
-    MirDisplayConfiguration *conf = mir_connection_create_display_config(connection);
-
     for (uint32_t i = 0; i < conf->num_displays; i++)
     {
         MirDisplayOutput *output = &conf->displays[i];
@@ -64,16 +83,10 @@ void configure_display_clone(MirConnection *connection)
             output->position_y = 0;
         }
     }
-
-    printf("Applying clone configuration: ");
-    apply_configuration(connection, conf);
-    mir_display_config_destroy(conf);
 }
 
-void configure_display_horizontal(MirConnection *connection)
+static void configure_display_horizontal(struct MirDisplayConfiguration *conf)
 {
-    MirDisplayConfiguration *conf = mir_connection_create_display_config(connection);
-
     uint32_t max_x = 0;
     for (uint32_t i = 0; i < conf->num_displays; i++)
     {
@@ -88,15 +101,10 @@ void configure_display_horizontal(MirConnection *connection)
         }
     }
 
-    printf("Applying horizontal configuration: ");
-    apply_configuration(connection, conf);
-    mir_display_config_destroy(conf);
 }
 
-void configure_display_vertical(MirConnection *connection)
+static void configure_display_vertical(struct MirDisplayConfiguration *conf)
 {
-    MirDisplayConfiguration *conf = mir_connection_create_display_config(connection);
-
     uint32_t max_y = 0;
     for (uint32_t i = 0; i < conf->num_displays; i++)
     {
@@ -110,13 +118,35 @@ void configure_display_vertical(MirConnection *connection)
             max_y += output->modes[0].vertical_resolution;
         }
     }
+}
 
-    printf("Applying vertical configuration: ");
-    apply_configuration(connection, conf);
+static void configure_display(struct ClientContext *context, ConfigurationMode mode)
+{
+    MirDisplayConfiguration *conf =
+        mir_connection_create_display_config(context->connection);
+
+    if (mode == configuration_mode_clone)
+    {
+        configure_display_clone(conf);
+        printf("Applying clone configuration: ");
+    }
+    else if (mode == configuration_mode_vertical)
+    {
+        configure_display_vertical(conf);
+        printf("Applying vertical configuration: ");
+    }
+    else if (mode == configuration_mode_horizontal)
+    {
+        configure_display_horizontal(conf);
+        printf("Applying horizontal configuration: ");
+    }
+
+    if (apply_configuration(context->connection, conf))
+        context->mode = mode;
     mir_display_config_destroy(conf);
 }
 
-void display_change_callback(MirConnection *connection, void *context)
+static void display_change_callback(MirConnection *connection, void *context)
 {
     (void)context;
 
@@ -133,36 +163,38 @@ void display_change_callback(MirConnection *connection, void *context)
     }
 
     mir_display_config_destroy(conf);
+
+    struct ClientContext *ctx = (struct ClientContext*) context;
+    ctx->reconfigure = 1;
 }
 
-void event_callback(
+static void event_callback(
     MirSurface* surface, MirEvent const* event, void* context)
 {
     (void)surface;
-    MirConnection *connection = (MirConnection*) context;
+    struct ClientContext *ctx = (struct ClientContext*) context;
 
     if (event->type == mir_event_type_key &&
         event->key.action == mir_key_action_up)
     {
         if (event->key.key_code == XKB_KEY_q)
         {
-            running = 0;
+            ctx->running = 0;
         }
         else if (event->key.key_code == XKB_KEY_c)
         {
-            configure_display_clone(connection);
+            configure_display(ctx, configuration_mode_clone);
         }
         else if (event->key.key_code == XKB_KEY_h)
         {
-            configure_display_horizontal(connection);
+            configure_display(ctx, configuration_mode_horizontal);
         }
         else if (event->key.key_code == XKB_KEY_v)
         {
-            configure_display_vertical(connection);
+            configure_display(ctx, configuration_mode_vertical);
         }
     }
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -182,28 +214,31 @@ int main(int argc, char *argv[])
     MirConnection *connection = mir_eglapp_native_connection();
     MirSurface *surface = mir_eglapp_native_surface();
 
+    struct ClientContext ctx = {connection, configuration_mode_unknown, 1, 0};
     mir_connection_set_display_config_change_callback(
-        connection, display_change_callback, NULL);
+        connection, display_change_callback, &ctx);
 
-    struct MirEventDelegate ed = { event_callback, connection };
+    struct MirEventDelegate ed = {event_callback, &ctx};
     mir_surface_set_event_handler(surface, &ed);
 
-    while (running && mir_eglapp_running())
+    time_t start = time(NULL);
+
+    while (ctx.running && mir_eglapp_running())
     {
-        glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        time_t elapsed = time(NULL) - start;
+        int mod = elapsed % 3;
+        glClearColor(mod == 0 ? 1.0f : 0.0f,
+                     mod == 1 ? 1.0f : 0.0f,
+                     mod == 2 ? 1.0f : 0.0f,
+                     1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         mir_eglapp_swap_buffers();
-        sleep(1);
 
-        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        mir_eglapp_swap_buffers();
-        sleep(1);
-
-        glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        mir_eglapp_swap_buffers();
-        sleep(1);
+        if (ctx.reconfigure)
+        {
+            configure_display(&ctx, ctx.mode);
+            ctx.reconfigure = 0;
+        }
     }
 
     mir_eglapp_shutdown();

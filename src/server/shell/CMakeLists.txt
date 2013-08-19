@@ -16,6 +16,7 @@ set(
   graphics_display_layout.cpp
   mediating_display_changer.cpp
   unauthorized_display_changer.cpp
+  broadcasting_session_event_sink.cpp
 )
 
 add_library(

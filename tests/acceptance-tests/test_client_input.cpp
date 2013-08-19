@@ -921,7 +921,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
         void exec()
         {
             // Ensure we stack on top of the first client
-            input_cb_setup_fence.wait_for_signal_ready_for();
+            input_cb_setup_fence.wait_for_signal_ready_for(std::chrono::milliseconds(4000));
             InputClient::exec();
         }
 

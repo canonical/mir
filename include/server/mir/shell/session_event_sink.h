@@ -13,32 +13,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_
-#define MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_
+#ifndef MIR_SHELL_SESSION_EVENT_SINK_H_
+#define MIR_SHELL_SESSION_EVENT_SINK_H_
 
-#include "mir/frontend/display_changer.h"
+#include <memory>
 
 namespace mir
 {
 namespace shell
 {
 
-class UnauthorizedDisplayChanger : public frontend::DisplayChanger
+class Session;
+
+class SessionEventSink
 {
 public:
-    explicit UnauthorizedDisplayChanger(std::shared_ptr<frontend::DisplayChanger> const& changer);
+    virtual ~SessionEventSink() = default;
 
-    std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
-    void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
+    virtual void handle_focus_change(std::shared_ptr<Session> const& session) = 0;
+    virtual void handle_no_focus() = 0;
+    virtual void handle_session_stopping(std::shared_ptr<Session> const& session) = 0;
 
-private:
-    std::shared_ptr<frontend::DisplayChanger> const changer;
+protected:
+    SessionEventSink() = default;
+    SessionEventSink(SessionEventSink const&) = delete;
+    SessionEventSink& operator=(SessionEventSink const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_SHELL_UNAUTHORIZED_DISPLAY_CHANGER_H_ */
+#endif /* MIR_SHELL_SESSION_EVENT_SINK_H_ */

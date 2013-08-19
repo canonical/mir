@@ -54,6 +54,9 @@ class DisplayConfiguration;
 namespace test
 {
 
+bool compare_display_configurations(graphics::DisplayConfiguration const& display_config1,
+                                    graphics::DisplayConfiguration const& display_config2);
+
 bool compare_display_configurations(MirDisplayConfiguration const& client_config,
                                     graphics::DisplayConfiguration const& display_config);
 
