@@ -335,9 +335,7 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
 
     if (seq.has_lifecycle_event())
     {
-        printf("%s():%d\n", __PRETTY_FUNCTION__, __LINE__);
         lifecycle_control->request_lifecycle_callback(seq.lifecycle_event().new_state());
-        //lifecycle_control->request_lifecycle_callback(seq.lifecycle_event());
     }
 
     int const nevents = seq.event_size();
