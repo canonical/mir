@@ -84,7 +84,7 @@ typedef void (*mir_event_delegate_callback)(
  */
 
 typedef void (*mir_lifecycle_event_callback)(
-    MirConnection* connection, MirLifecycleCallback cb, void* context);
+    MirConnection* connection, MirLifecycleState state, void* context);
 
 /**
  * Callback called when a display config change has occurred

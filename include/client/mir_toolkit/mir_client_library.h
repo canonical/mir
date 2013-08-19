@@ -94,6 +94,15 @@ void mir_connection_release(MirConnection *connection);
  */
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
+/**
+ * Register a callback to be called when a Lifecycle state change occurs.
+ *   \param [in] connection     The connection
+ *   \param [in] callback       The function to be called when the state change occurs
+ *   \param [in,out] context    User data passed to the callback function
+ */
+void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
+    mir_lifecycle_event_callback callback, void* context);
+
 /** 
  * \deprecated Use mir_connection_create_display_config
  */

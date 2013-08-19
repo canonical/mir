@@ -18,10 +18,12 @@
 
 #include "lifecycle_control.h"
 
+#include <stdio.h>
+
 namespace mcl = mir::client;
 
 mcl::LifecycleControl::LifecycleControl()
-    : handle_lifecycle_event([](MirLifecycleCallback){})
+    : handle_lifecycle_event([](MirLifecycleState){})
 {
 }
 
@@ -29,12 +31,14 @@ mcl::LifecycleControl::~LifecycleControl()
 {
 }
 
-void mcl::LifecycleControl::set_lifecycle_event_handler(std::function<void(MirLifecycleCallback)> const& fn)
+void mcl::LifecycleControl::set_lifecycle_event_handler(std::function<void(MirLifecycleState)> const& fn)
 {
+    printf("%s():%d\n", __PRETTY_FUNCTION__, __LINE__);
     handle_lifecycle_event = fn;
 }
 
-void mcl::LifecycleControl::request_lifecycle_callback(uint32_t callback)
+void mcl::LifecycleControl::request_lifecycle_callback(uint32_t state)
 {
-    handle_lifecycle_event(static_cast<MirLifecycleCallback>(callback));
+    printf("%s():%d -- state=%d\n", __PRETTY_FUNCTION__, __LINE__, state);
+    handle_lifecycle_event(static_cast<MirLifecycleState>(state));
 }

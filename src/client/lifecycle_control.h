@@ -34,11 +34,11 @@ public:
     LifecycleControl();
     ~LifecycleControl();
 
-    void set_lifecycle_event_handler(std::function<void(MirLifecycleCallback)> const&);
-    void request_lifecycle_callback(uint32_t callback);
+    void set_lifecycle_event_handler(std::function<void(MirLifecycleState)> const&);
+    void request_lifecycle_callback(uint32_t state);
 
 private:
-    std::function<void(MirLifecycleCallback)> handle_lifecycle_event;
+    std::function<void(MirLifecycleState)> handle_lifecycle_event;
 };
 }
 }

@@ -32,6 +32,8 @@
 #include <cstddef>
 #include <unistd.h>
 
+#include <stdio.h>
+
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace gp = google::protobuf;
@@ -329,6 +331,7 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
 
 void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)
 {
+    printf("%s():%d -- context=%p\n", __PRETTY_FUNCTION__, __LINE__, context);
     lifecycle_control->set_lifecycle_event_handler(std::bind(callback, this, std::placeholders::_1, context));
 }
 

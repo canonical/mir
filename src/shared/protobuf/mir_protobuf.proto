@@ -159,7 +159,7 @@ message DisplayConfiguration {
 }
 
 message LifecycleEvent {
-  required uint32 delegate_call = 1; // Transition callback to run
+  required uint32 new_state = 1; // State transition
   optional string error = 127;
 }
 

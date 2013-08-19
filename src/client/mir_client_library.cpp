@@ -409,6 +409,16 @@ int mir_surface_get_swapinterval(MirSurface* surf)
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
 }
 
+void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
+    mir_lifecycle_event_callback callback, void* context)
+{
+    printf("%s():%d\n", __PRETTY_FUNCTION__, __LINE__);
+    if (connection) {
+        printf("%s():%d\n", __PRETTY_FUNCTION__, __LINE__);
+        connection->register_lifecycle_event_callback(callback, context);
+    }
+}
+
 void mir_connection_set_display_config_change_callback(MirConnection* connection,
     mir_display_config_callback callback, void* context)
 {

@@ -65,11 +65,11 @@ typedef enum MirSurfaceState
     mir_surface_state_arraysize_
 } MirSurfaceState;
 
-typedef enum MirLifecycleCallback
+typedef enum MirLifecycleState
 {
-    mir_lifecycle_callback_will_suspend,
-    mir_lifecycle_callback_resumed
-} MirLifecycleCallback;
+    mir_lifecycle_state_will_suspend,
+    mir_lifecycle_state_resumed
+} MirLifecycleState;
 /**@}*/
 
 #endif
