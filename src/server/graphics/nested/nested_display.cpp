@@ -53,18 +53,43 @@ private:
     MirDisplayConfigHandle(MirDisplayConfigHandle const&) = delete;
     MirDisplayConfigHandle operator=(MirDisplayConfigHandle const&) = delete;
 };
-}
 
-mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection)
+std::shared_ptr<mgn::detail::NestedOutput> make_one_output(MirConnection* connection)
 {
     MirDisplayConfigHandle display_config{connection};
 
     // TODO we may have multiple displays which implies multiple surfaces
-    // TODO as a POC just use the first display
-    if (display_config->num_displays < 1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one display"));
+    // TODO as a POC just use the first active display
+    for (decltype(display_config->num_displays) i = 0; i != display_config->num_displays; ++i)
+    {
+        auto const egl_display_info = display_config->displays+i;
 
-    auto const egl_display_info = display_config->displays;
+        if (egl_display_info->used)
+            return std::make_shared<mgn::detail::NestedOutput>(connection, egl_display_info);
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one display"));
+}
+
+EGLint const egl_attribs[] = {
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 8,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_NONE
+};
+
+EGLint const egl_context_attribs[] = {
+    EGL_CONTEXT_CLIENT_VERSION, 2,
+    EGL_NONE
+};
+}
+
+
+mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection, MirDisplayOutput* const egl_display_info)
+{
     auto const egl_display_mode = egl_display_info->modes + egl_display_info->current_mode;
     auto const egl_display_format = egl_display_info->output_formats[egl_display_info->current_output_format];
 
@@ -140,27 +165,8 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
     eglTerminate(egl_display);
 }
 
-namespace
-{
-EGLint const egl_attribs[] = {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-};
-
-EGLint const egl_context_attribs[] = {
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-};
-}
-
-mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
-    display_report{display_report},
-    mir_surface{connection},
+mgn::detail::NestedOutput::NestedOutput(MirConnection* connection, MirDisplayOutput* const egl_display_info) :
+    mir_surface(connection, egl_display_info),
     egl_display{connection},
     egl_config{(egl_display.initialize(), egl_display.choose_config(egl_attribs))},
     egl_surface{egl_display, egl_display.egl_surface(egl_config, mir_surface)},
@@ -170,17 +176,19 @@ mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg:
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
 }
 
-mgn::NestedDisplay::~NestedDisplay() noexcept
+mgn::detail::NestedOutput::~NestedOutput() noexcept
 {
 }
 
-geom::Rectangle mgn::NestedDisplay::view_area() const
-{
-    int display_width, display_height;
-    eglQuerySurface(egl_display, egl_surface, EGL_WIDTH, &display_width);
-    eglQuerySurface(egl_display, egl_surface, EGL_HEIGHT, &display_height);
 
-    return {geom::Point{}, geom::Size{display_width, display_height}};
+mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
+    display_report{display_report},
+    one_output{make_one_output(connection)}
+{
+}
+
+mgn::NestedDisplay::~NestedDisplay() noexcept
+{
 }
 
 void mgn::NestedDisplay::post_update()
@@ -230,18 +238,6 @@ void mgn::NestedDisplay::resume()
     BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
 }
 
-void mgn::NestedDisplay::make_current()
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
-    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to MakeCurrent."));
-}
-
-void mgn::NestedDisplay::release_current()
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
-}
-
 auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
 {
     return std::weak_ptr<Cursor>();
@@ -249,6 +245,5 @@ auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
 
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 {
-    return std::unique_ptr<NestedGLContext>{
-        new NestedGLContext{egl_display, egl_config, egl_context}};
+    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
 }
