@@ -214,9 +214,9 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
                 auto config = mir_connection_create_display_config(connection);
                 ASSERT_TRUE(config != NULL);
 
-                for (uint32_t n = 0; n < config->num_displays; ++n)
+                for (uint32_t n = 0; n < config->num_outputs; ++n)
                 {
-                    auto const& output = config->displays[n];
+                    auto const& output = config->outputs[n];
                     auto const& mode = output.modes[output.current_mode];
 
                     MirSurfaceParameters const request_params =
@@ -288,9 +288,9 @@ TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
             auto config = mir_connection_create_display_config(connection);
             ASSERT_TRUE(config != NULL);
 
-            for (uint32_t n = 0; n < config->num_displays; ++n)
+            for (uint32_t n = 0; n < config->num_outputs; ++n)
             {
-                auto const& output = config->displays[n];
+                auto const& output = config->outputs[n];
                 auto const& mode = output.modes[output.current_mode];
 
                 MirSurfaceParameters const request_params =

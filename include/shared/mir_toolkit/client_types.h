@@ -248,8 +248,8 @@ typedef struct MirDisplayOutput
 
 typedef struct MirDisplayConfiguration
 {
-    uint32_t num_displays;
-    MirDisplayOutput* displays;
+    uint32_t num_outputs;
+    MirDisplayOutput* outputs;
     uint32_t num_cards;
     MirDisplayCard *cards;
 } MirDisplayConfiguration;

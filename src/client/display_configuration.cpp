@@ -28,16 +28,16 @@ void mcl::delete_config_storage(MirDisplayConfiguration* config)
     if (!config)
         return;
 
-    for(auto i=0u; i< config->num_displays; i++)
+    for(auto i=0u; i< config->num_outputs; i++)
     {
-        if (config->displays[i].modes)
-            delete[] config->displays[i].modes;
-        if (config->displays[i].output_formats)
-            delete[] config->displays[i].output_formats;
+        if (config->outputs[i].modes)
+            delete[] config->outputs[i].modes;
+        if (config->outputs[i].output_formats)
+            delete[] config->outputs[i].output_formats;
     }
 
-    if (config->displays)
-        delete[] config->displays;
+    if (config->outputs)
+        delete[] config->outputs;
     if (config->cards)
         delete[] config->cards;
 
@@ -153,12 +153,12 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
         new_config->cards[i] = cards[i];
 
     /* Outputs */
-    new_config->num_displays = outputs.size();
-    new_config->displays = new MirDisplayOutput[new_config->num_displays];
+    new_config->num_outputs = outputs.size();
+    new_config->outputs = new MirDisplayOutput[new_config->num_outputs];
 
     for (auto i = 0u; i < outputs.size(); i++)
     {
-        auto new_info = &new_config->displays[i];
+        auto new_info = &new_config->outputs[i];
         MirDisplayOutput* output = outputs[i].get();
         std::memcpy(new_info, output, sizeof(MirDisplayOutput)); 
 

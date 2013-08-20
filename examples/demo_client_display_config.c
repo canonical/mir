@@ -72,9 +72,9 @@ static int apply_configuration(MirConnection *connection, MirDisplayConfiguratio
 
 static void configure_display_clone(struct MirDisplayConfiguration *conf)
 {
-    for (uint32_t i = 0; i < conf->num_displays; i++)
+    for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->displays[i];
+        MirDisplayOutput *output = &conf->outputs[i];
         if (output->connected && output->num_modes > 0)
         {
             output->used = 1;
@@ -88,9 +88,9 @@ static void configure_display_clone(struct MirDisplayConfiguration *conf)
 static void configure_display_horizontal(struct MirDisplayConfiguration *conf)
 {
     uint32_t max_x = 0;
-    for (uint32_t i = 0; i < conf->num_displays; i++)
+    for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->displays[i];
+        MirDisplayOutput *output = &conf->outputs[i];
         if (output->connected && output->num_modes > 0)
         {
             output->used = 1;
@@ -106,9 +106,9 @@ static void configure_display_horizontal(struct MirDisplayConfiguration *conf)
 static void configure_display_vertical(struct MirDisplayConfiguration *conf)
 {
     uint32_t max_y = 0;
-    for (uint32_t i = 0; i < conf->num_displays; i++)
+    for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->displays[i];
+        MirDisplayOutput *output = &conf->outputs[i];
         if (output->connected && output->num_modes > 0)
         {
             output->used = 1;
@@ -154,9 +154,9 @@ static void display_change_callback(MirConnection *connection, void *context)
 
     MirDisplayConfiguration *conf = mir_connection_create_display_config(connection);
 
-    for (uint32_t i = 0; i < conf->num_displays; i++)
+    for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->displays[i];
+        MirDisplayOutput *output = &conf->outputs[i];
         printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d\n",
                output->output_id, output->connected,
                output->used, output->position_x, output->position_y);

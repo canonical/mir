@@ -297,7 +297,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
             //that is passively subscribed, we will just wait for the display configuration to change
             //and then will check the new config.
             auto configuration = mir_connection_create_display_config(connection);
-            while(configuration->num_displays != changed_stub_display_config.outputs.size())
+            while(configuration->num_outputs != changed_stub_display_config.outputs.size())
             {
                 mir_display_config_destroy(configuration);
                 std::this_thread::sleep_for(std::chrono::microseconds(500));

@@ -60,9 +60,9 @@ std::shared_ptr<mgn::detail::NestedOutput> make_one_output(MirConnection* connec
 
     // TODO we may have multiple displays which implies multiple surfaces
     // TODO as a POC just use the first active display
-    for (decltype(display_config->num_displays) i = 0; i != display_config->num_displays; ++i)
+    for (decltype(display_config->num_outputs) i = 0; i != display_config->num_outputs; ++i)
     {
-        auto const egl_display_info = display_config->displays+i;
+        auto const egl_display_info = display_config->outputs+i;
 
         if (egl_display_info->used)
             return std::make_shared<mgn::detail::NestedOutput>(connection, egl_display_info);
