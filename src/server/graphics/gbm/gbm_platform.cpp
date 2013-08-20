@@ -177,7 +177,7 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 namespace
 {
 // It may well turn out that NativePlatform == Platform - but this keeps them separate for now
-struct NativeGbmPlatform : mg::NativePlatform
+struct NativeGBMPlatform : mg::NativePlatform
 {
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
@@ -194,5 +194,5 @@ struct NativeGbmPlatform : mg::NativePlatform
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform()
 {
-    return std::make_shared<::NativeGbmPlatform>();
+    return std::make_shared<::NativeGBMPlatform>();
 }

@@ -38,6 +38,8 @@ public:
 
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 
+//    virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
+
     virtual ~NativePlatform() = default;
     NativePlatform(NativePlatform const&) = delete;
     NativePlatform& operator=(NativePlatform const&) = delete;
