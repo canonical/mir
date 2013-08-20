@@ -79,13 +79,16 @@ public:
     
     virtual void raise(std::weak_ptr<Surface> const& surface);
 
+    virtual void lock();
+    virtual void unlock();
+
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
 
     void emit_change_notification();
 
-    std::mutex guard;
+    std::recursive_mutex guard;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<InputRegistrar> const input_registrar;
 
