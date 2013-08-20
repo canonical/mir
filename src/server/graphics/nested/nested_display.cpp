@@ -22,7 +22,6 @@
 
 #include "mir/geometry/rectangle.h"
 
-#include <cstring>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
