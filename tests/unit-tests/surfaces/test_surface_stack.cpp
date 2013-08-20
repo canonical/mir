@@ -569,8 +569,6 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
 
 TEST_F(SurfaceStack, is_recursively_lockable)
 {
-    using namespace ::testing;
-
     ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator),
                            mt::fake_shared(input_registrar));
 
