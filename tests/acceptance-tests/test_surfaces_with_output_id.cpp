@@ -28,7 +28,7 @@
 #include "mir_test_doubles/null_platform.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/cross_process_action.h"
 
 #include <gtest/gtest.h>
 
@@ -36,6 +36,7 @@
 #include <vector>
 #include <tuple>
 
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -97,27 +98,6 @@ public:
     }
 };
 
-class CrossProcessAction
-{
-public:
-    void exec(std::function<void()> const& f)
-    {
-        start_fence.wait_for_signal_ready();
-        f();
-        finish_fence.signal_ready();
-    }
-
-    void operator()()
-    {
-        start_fence.signal_ready();
-        finish_fence.wait_for_signal_ready();
-    }
-
-private:
-    mtf::CrossProcessSync start_fence;
-    mtf::CrossProcessSync finish_fence;
-};
-
 struct RectangleCompare
 {
     bool operator()(geom::Rectangle const& rect1,
@@ -143,13 +123,13 @@ using SurfacesWithOutputId = BespokeDisplayServerTestFixture;
 
 TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_correct_output)
 {
-    CrossProcessAction client_connect_and_create_surface;
-    CrossProcessAction client_release_surface_and_disconnect;
-    CrossProcessAction verify_scene;
+    mt::CrossProcessAction client_connect_and_create_surface;
+    mt::CrossProcessAction client_release_surface_and_disconnect;
+    mt::CrossProcessAction verify_scene;
 
     struct ServerConfig : TestingServerConfiguration
     {
-        ServerConfig(CrossProcessAction verify_scene)
+        ServerConfig(mt::CrossProcessAction verify_scene)
             : verify_scene{verify_scene}
         {
         }
@@ -207,15 +187,15 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
 
         std::shared_ptr<StubPlatform> graphics_platform;
         std::thread verification_thread;
-        CrossProcessAction verify_scene;
+        mt::CrossProcessAction verify_scene;
     } server_config{verify_scene};
 
     launch_server_process(server_config);
 
     struct ClientConfig : TestingClientConfiguration
     {
-        ClientConfig(CrossProcessAction const& connect_and_create_surface,
-                     CrossProcessAction const& release_surface_and_disconnect)
+        ClientConfig(mt::CrossProcessAction const& connect_and_create_surface,
+                     mt::CrossProcessAction const& release_surface_and_disconnect)
             : connect_and_create_surface{connect_and_create_surface},
               release_surface_and_disconnect{release_surface_and_disconnect}
         {
@@ -264,8 +244,8 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
             });
         }
 
-        CrossProcessAction connect_and_create_surface;
-        CrossProcessAction release_surface_and_disconnect;
+        mt::CrossProcessAction connect_and_create_surface;
+        mt::CrossProcessAction release_surface_and_disconnect;
     } client_config{client_connect_and_create_surface,
                     client_release_surface_and_disconnect};
 
@@ -281,8 +261,8 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
 
 TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
 {
-    CrossProcessAction client_connect_and_create_surfaces;
-    CrossProcessAction client_disconnect;
+    mt::CrossProcessAction client_connect_and_create_surfaces;
+    mt::CrossProcessAction client_disconnect;
 
     struct ServerConfig : TestingServerConfiguration
     {
