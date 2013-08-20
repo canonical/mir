@@ -146,6 +146,23 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
     mir_display_config_destroy(conf);
 }
 
+static void toggle_dpms(struct ClientContext *context)
+{
+    MirDisplayConfiguration *conf = 
+        mir_connection_create_display_config(context->connection);
+    for (uint32_t i = 0; i < conf->num_displays; i++)
+    {
+        MirDisplayOutput *output = &conf->displays[i];
+        if (output->dpms_mode == mir_dpms_mode_on)
+            output->dpms_mode = mir_dpms_mode_off;
+        else
+            output->dpms_mode = mir_dpms_mode_on;
+    }
+
+    apply_configuration(context->connection, conf);
+    mir_display_config_destroy(conf);
+}
+
 static void display_change_callback(MirConnection *connection, void *context)
 {
     (void)context;
@@ -193,6 +210,10 @@ static void event_callback(
         {
             configure_display(ctx, configuration_mode_vertical);
         }
+        else if (event->key.key_code == XKB_KEY_p)
+        {
+            toggle_dpms(ctx);
+        }
     }
 }
 
@@ -206,7 +227,8 @@ int main(int argc, char *argv[])
                "has the focus, use the following keys to change the display configuration:\n"
                " c: clone outputs\n"
                " h: arrange outputs horizontally in the virtual space\n"
-               " v: arrange outputs vertically in the virtual space\n");
+               " v: arrange outputs vertically in the virtual space\n"
+               " p: Toggle DPMS on/off\n");
 
         return 1;
     }
