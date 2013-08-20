@@ -465,7 +465,7 @@ TEST_F(ShellSurface, states)
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
 }
 
-TEST_F(ShellSurface, focus)
+TEST_F(ShellSurface, sends_focus_notifications_when_focus_gained_and_lost)
 {
     using namespace testing;
 

@@ -119,12 +119,12 @@ void mf::SessionMediator::create_surface(
 {
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-    
+
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
     
         report->session_create_surface_called(session->name());
-    
+
         auto const id = session->create_surface(
             msh::SurfaceCreationParameters()
             .of_name(request->surface_name())
@@ -153,8 +153,11 @@ void mf::SessionMediator::create_surface(
              client_tracker->add(id);
          }
     }
-    
-    // TODO: We rely on done->Run() sending messages synchronously.
+
+    // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
+    // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client. 
+    // To achieve this order we rely on done->Run() sending messages synchronously. As documented in mfd::SocketMessenger::send.
+    // this will require additional synchronization if mfd::SocketMessenger::send changes.
     done->Run();
     shell->handle_surface_created(session);
 }
