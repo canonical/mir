@@ -68,7 +68,8 @@ public:
                 ((i % 2) == 0),
                 ((i % 2) == 1),
                 top_left,
-                mode_index, 1u
+                mode_index, 1u,
+                graphics::DPMSMode::Off
             };
 
             outputs.push_back(output);

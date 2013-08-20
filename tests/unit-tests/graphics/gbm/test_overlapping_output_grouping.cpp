@@ -79,7 +79,8 @@ public:
                 used,
                 rect.top_left,
                 i - 1,
-                0
+                0,
+                mg::DPMSMode::On
             };
 
             f(output);

@@ -67,6 +67,15 @@ enum class DisplayConfigurationOutputType
     edp
 };
 
+// Display Power Management modes.
+enum class DPMSMode
+{
+    On, // Display in use
+    Standby, // Blanked, low power.
+    Suspend, // Blanked, lowest power.
+    Off // Powered don.
+};
+
 /**
  * Configuration information for a display output mode.
  */
@@ -105,6 +114,8 @@ struct DisplayConfigurationOutput
     size_t current_mode_index;
     /** The index in the 'pixel_format' vector of the current output pixel format. */
     size_t current_format_index;
+    /** Current DPMS mode **/
+    DPMSMode dpms_mode;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);

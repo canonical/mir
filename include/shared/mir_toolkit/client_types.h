@@ -209,7 +209,15 @@ typedef struct MirDisplayMode
     uint32_t vertical_resolution;
     uint32_t horizontal_resolution;
     double refresh_rate;
-}MirDisplayMode;
+} MirDisplayMode;
+
+typedef enum MirDPMSMode
+{
+    mir_dpms_mode_on, /* Display in use. */
+    mir_dpms_mode_standby, /* Blanked, low power. */
+    mir_dpms_mode_suspend, /* Blanked, lowest power. */
+    mir_dpms_mode_off /* Powered down. */
+} MirDPMSMode;
 
 typedef struct MirDisplayOutput
 {
@@ -233,6 +241,8 @@ typedef struct MirDisplayOutput
 
     uint32_t physical_width_mm;
     uint32_t physical_height_mm;
+    
+    MirDPMSMode dpms_mode;
 } MirDisplayOutput;
 
 typedef struct MirDisplayConfiguration

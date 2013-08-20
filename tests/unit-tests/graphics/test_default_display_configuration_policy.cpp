@@ -54,7 +54,8 @@ public:
                 false,
                 geom::Point{geom::X{123}, geom::Y{343}},
                 1,
-                0
+                0,
+                mg::DPMSMode::On
             });
         /* Connected without modes */
         outputs.push_back(
@@ -70,7 +71,8 @@ public:
                 false,
                 geom::Point(),
                 std::numeric_limits<size_t>::max(),
-                std::numeric_limits<size_t>::max()
+                std::numeric_limits<size_t>::max(),
+                mg::DPMSMode::On
             });
         /* Connected with a single mode */
         outputs.push_back(
@@ -90,7 +92,8 @@ public:
                 false,
                 geom::Point(),
                 0,
-                0
+                0,
+                mg::DPMSMode::On
             });
         /* Not connected */
         outputs.push_back(
@@ -108,7 +111,8 @@ public:
                 false,
                 geom::Point(),
                 1,
-                0
+                0,
+                mg::DPMSMode::On
             });
     }
 

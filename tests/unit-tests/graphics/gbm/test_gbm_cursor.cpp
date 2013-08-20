@@ -102,7 +102,8 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 true,
                 geom::Point{0, 0},
                 1,
-                0
+                0,
+                mg::DPMSMode::On    
             });
         outputs.push_back(
             {
@@ -120,7 +121,8 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
                 true,
                 geom::Point{100, 50},
                 0,
-                0
+                0,
+                mg::DPMSMode::On    
             });
     }
 
