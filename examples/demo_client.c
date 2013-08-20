@@ -125,7 +125,8 @@ void demo_client(const char* server, int buffer_swap_count)
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
     MirSurfaceParameters const request_params =
-        {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_hardware};
+        {__PRETTY_FUNCTION__, 640, 480, pixel_format,
+         mir_buffer_usage_hardware, mir_display_output_id_invalid};
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.

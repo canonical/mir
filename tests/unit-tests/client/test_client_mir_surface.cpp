@@ -302,7 +302,8 @@ struct MirClientSurfaceTest : public testing::Test
         input_platform = std::make_shared<mt::StubClientInputPlatform>();
 
         params = MirSurfaceParameters{"test", 33, 45, mir_pixel_format_abgr_8888,
-                                      mir_buffer_usage_hardware};
+                                      mir_buffer_usage_hardware,
+                                      mir_display_output_id_invalid};
 
         /* connect dummy server */
         connect_parameters.set_application_name("test");

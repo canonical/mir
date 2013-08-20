@@ -60,9 +60,9 @@ auto configure_outputs(MirConnection* connection)
 
     std::unordered_map<uint32_t, std::shared_ptr<mgn::detail::NestedOutput>> result;
 
-    for (decltype(display_config->num_displays) i = 0; i != display_config->num_displays; ++i)
+    for (decltype(display_config->num_outputs) i = 0; i != display_config->num_outputs; ++i)
     {
-        auto const egl_display_info = display_config->displays+i;
+        auto const egl_display_info = display_config->outputs+i;
 
         if (egl_display_info->used)
         {
@@ -102,7 +102,8 @@ mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection, MirDi
             int(egl_display_mode->horizontal_resolution),
             int(egl_display_mode->vertical_resolution),
             egl_display_format,
-            mir_buffer_usage_hardware
+            mir_buffer_usage_hardware,
+            mir_display_output_id_invalid
         };
 
     mir_surface = mir_connection_create_surface_sync(connection, &request_params);

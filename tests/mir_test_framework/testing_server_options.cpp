@@ -78,7 +78,8 @@ public:
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
         mg::DisplayConfigurationOutput dummy_output_config{
-            mg::DisplayConfigurationOutputId{0}, mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputId{1},
+            mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             std::vector<geom::PixelFormat>{geom::PixelFormat::abgr_8888},
             modes, 0, geom::Size{}, true, true, geom::Point{0,0}, 0, 0};

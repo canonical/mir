@@ -14,6 +14,7 @@ set(
   test_shell_control_of_surface_configuration.cpp
   test_nested_mir.cpp
   test_display_configuration.cpp
+  test_surfaces_with_output_id.cpp
 )
 
 list(APPEND SOURCES
