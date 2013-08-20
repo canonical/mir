@@ -197,13 +197,6 @@ mgn::NestedDisplay::~NestedDisplay() noexcept
 {
 }
 
-void mgn::NestedDisplay::post_update()
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
-    //mir_surface_swap_buffers_sync(mir_surface);
-    //eglSwapBuffers(egl_display, egl_surface);
-}
-
 void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& /*f*/)
 {
     // TODO
