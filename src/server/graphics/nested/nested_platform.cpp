@@ -65,12 +65,11 @@ std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()
 
 std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir mgn::NestedPlatform::create_internal_client is not implemented yet!"));
-    return 0;
+    return native_platform->create_internal_client();
 }
 
-void mgn::NestedPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& /*packer*/,
-                                        std::shared_ptr<Buffer> const& /*buffer*/) const
+void mgn::NestedPlatform::fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer,
+                                        std::shared_ptr<Buffer> const& buffer) const
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Mir method mgn::NestedPlatform::fill_ipc_package is not implemented yet!"));
+    native_platform->fill_ipc_package(packer, buffer);
 }
