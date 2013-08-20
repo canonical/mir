@@ -566,3 +566,25 @@ TEST_F(SurfaceStack, is_locked_during_iteration)
     done = true;
     tinkerer.join();
 }
+
+TEST_F(SurfaceStack, is_recursively_lockable)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator),
+                           mt::fake_shared(input_registrar));
+
+    StubFilterForScene filter;
+    StubOperatorForScene op;
+
+    stack.lock();
+    stack.for_each_if(filter, op);
+    stack.unlock();
+
+    stack.lock();
+    stack.lock();
+    stack.lock();
+    stack.unlock();
+    stack.unlock();
+    stack.unlock();
+}
