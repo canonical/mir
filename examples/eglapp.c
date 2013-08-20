@@ -151,7 +151,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         "eglappsurface",
         256, 256,
         mir_pixel_format_xbgr_8888,
-        mir_buffer_usage_hardware
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
     };
     MirEventDelegate delegate = 
     {

@@ -99,7 +99,8 @@ mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection, MirDi
             int(egl_display_mode->horizontal_resolution),
             int(egl_display_mode->vertical_resolution),
             egl_display_format,
-            mir_buffer_usage_hardware
+            mir_buffer_usage_hardware,
+            mir_display_output_id_invalid
         };
 
     mir_surface = mir_connection_create_surface_sync(connection, &request_params);

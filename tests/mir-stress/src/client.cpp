@@ -77,7 +77,8 @@ bool UnacceleratedClient::create_surface()
             640,
             480,
             pixel_format,
-            mir_buffer_usage_software
+            mir_buffer_usage_software,
+            mir_display_output_id_invalid
         };
 
     surface_ = mir_connection_create_surface_sync(connection_, &request_params);

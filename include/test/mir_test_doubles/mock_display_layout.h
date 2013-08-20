@@ -35,6 +35,8 @@ class MockDisplayLayout : public shell::DisplayLayout
 public:
     MOCK_METHOD1(clip_to_output, void(geometry::Rectangle& rect));
     MOCK_METHOD1(size_to_output, void(geometry::Rectangle& rect));
+    MOCK_METHOD2(place_in_output, void(graphics::DisplayConfigurationOutputId id,
+                                       geometry::Rectangle& rect));
 };
 
 }
