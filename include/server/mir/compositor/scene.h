@@ -78,6 +78,10 @@ public:
      */
     virtual void set_change_callback(std::function<void()> const& f) = 0;
 
+    // Implement BasicLockable, to temporarily lock scene state:
+    virtual void lock() = 0;
+    virtual void unlock() = 0;
+
 protected:
     Scene() = default;
 

@@ -26,6 +26,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/surfaces/buffer_stream.h"
 #include "bypass.h"
+#include <mutex>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -67,6 +68,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
     if (display_buffer.can_bypass())
     {
+        std::unique_lock<Scene> lock(*scene);
+
         mc::BypassFilter filter(display_buffer);
         mc::BypassMatch match;
 
@@ -80,6 +83,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
             if (bypass_buf->can_bypass())
             {
+                lock.unlock();
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
             }
