@@ -129,6 +129,13 @@ struct NativeAndroidPlatform : mg::NativePlatform
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::create_internal_client is not implemented yet!"));
     }
+
+    void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& /*packer*/,
+            std::shared_ptr<mg::Buffer> const& /*buffer*/) const
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeAndroidPlatform::fill_ipc_package is not implemented yet!"));
+    }
+
 };
 }
 
