@@ -145,7 +145,7 @@ public:
 
     /** Configures an output. */
     virtual void configure_output(DisplayConfigurationOutputId id, bool used,
-                                  geometry::Point top_left, size_t mode_index) = 0;
+                                  geometry::Point top_left, size_t mode_index, DPMSMode dpms_mode) = 0;
 
 protected:
     DisplayConfiguration() = default;

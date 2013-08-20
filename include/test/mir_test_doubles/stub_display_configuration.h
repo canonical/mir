@@ -98,7 +98,7 @@ public:
         }
     }
 
-    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t)
+    void configure_output(graphics::DisplayConfigurationOutputId, bool, geometry::Point, size_t, graphics::DPMSMode)
     {
     }
 

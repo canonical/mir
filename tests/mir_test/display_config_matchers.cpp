@@ -176,7 +176,7 @@ public:
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t)
+                          geom::Point, size_t, mg::DPMSMode)
     {
     }
 

@@ -174,9 +174,10 @@ static void display_change_callback(MirConnection *connection, void *context)
     for (uint32_t i = 0; i < conf->num_displays; i++)
     {
         MirDisplayOutput *output = &conf->displays[i];
-        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d\n",
+        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d dpms_mode: %d\n",
                output->output_id, output->connected,
-               output->used, output->position_x, output->position_y);
+               output->used, output->position_x, output->position_y,
+               output->dpms_mode);
     }
 
     mir_display_config_destroy(conf);

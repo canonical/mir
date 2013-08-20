@@ -18,7 +18,8 @@
 
 #include "nested_display_configuration.h"
 
-namespace mgn = mir::graphics::nested;
+namespace mg = mir::graphics;
+namespace mgn = mg::nested;
 
 mgn::NestedDisplayConfiguration::~NestedDisplayConfiguration() noexcept
 {
@@ -34,7 +35,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
     // TODO
 }
 
-void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId /*id*/, bool /*used*/, geometry::Point /*top_left*/, size_t /*mode_index*/)
+void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId /*id*/, bool /*used*/, geometry::Point /*top_left*/, size_t /*mode_index*/, mg::DPMSMode /* dpms_mode */)
 {
     // TODO
 }

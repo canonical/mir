@@ -127,8 +127,8 @@ public:
             f(output);
     }
 
-    MOCK_METHOD4(configure_output, void(mg::DisplayConfigurationOutputId, bool,
-                                        geom::Point, size_t));
+    MOCK_METHOD5(configure_output, void(mg::DisplayConfigurationOutputId, bool,
+                                        geom::Point, size_t, mg::DPMSMode));
 
 private:
     mg::DisplayConfigurationCardId const card_id;
@@ -139,6 +139,8 @@ private:
 
 TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 {
+    using namespace ::testing;
+
     mg::DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration conf;
 
@@ -147,14 +149,30 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
         if (output.connected && output.modes.size() > 0)
         {
             EXPECT_CALL(conf, configure_output(output.id, true, geom::Point(),
-                                               output.preferred_mode_index));
+                                               output.preferred_mode_index, _));
         }
         else
         {
             EXPECT_CALL(conf, configure_output(output.id, false, output.top_left,
-                                               output.current_mode_index));
+                                               output.current_mode_index, _));
         }
     });
 
     policy.apply_to(conf);
 }
+
+TEST(DefaultDisplayConfigurationPolicyTest, default_policy_is_dpms_mode_on)
+{
+    using namespace ::testing;
+
+    mg::DefaultDisplayConfigurationPolicy policy;
+    MockDisplayConfiguration conf;
+
+    conf.for_each_output([&conf](mg::DisplayConfigurationOutput const& output)
+    {
+        EXPECT_CALL(conf, configure_output(output.id, _, _, _, mg::DPMSMode::On));
+    });
+
+    policy.apply_to(conf);
+}
+

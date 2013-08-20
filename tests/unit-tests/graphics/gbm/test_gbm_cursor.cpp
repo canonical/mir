@@ -138,7 +138,7 @@ struct StubKMSDisplayConfiguration : public mgg::KMSDisplayConfiguration
     }
 
     void configure_output(mg::DisplayConfigurationOutputId, bool,
-                          geom::Point, size_t)
+                          geom::Point, size_t, mg::DPMSMode)
     {
     }
 

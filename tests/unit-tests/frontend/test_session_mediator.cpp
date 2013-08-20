@@ -82,7 +82,7 @@ struct MockConfig : public mg::DisplayConfiguration
 {
     MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
     MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput const&)>));
-    MOCK_METHOD4(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t));
+    MOCK_METHOD5(configure_output, void(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, mg::DPMSMode));
 };
 
 }
@@ -484,9 +484,9 @@ TEST_F(SessionMediatorTest, display_config_request)
     EXPECT_CALL(*mock_display_selector, active_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(mock_display_config))); 
-    EXPECT_CALL(mock_display_config, configure_output(id0, used0, pt0, mode_index0))
+    EXPECT_CALL(mock_display_config, configure_output(id0, used0, pt0, mode_index0,  mg::DPMSMode::On))
         .InSequence(seq);
-    EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1))
+    EXPECT_CALL(mock_display_config, configure_output(id1, used1, pt1, mode_index1, mg::DPMSMode::Off))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);
@@ -508,6 +508,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp0->set_position_x(pt0.x.as_uint32_t());
     disp0->set_position_y(pt0.y.as_uint32_t());
     disp0->set_current_mode(mode_index0);
+    disp0->set_dpms_mode(static_cast<uint32_t>(mg::DPMSMode::On));
 
     auto disp1 = configuration.add_display_output();
     disp1->set_output_id(id1.as_value());
@@ -515,6 +516,7 @@ TEST_F(SessionMediatorTest, display_config_request)
     disp1->set_position_x(pt1.x.as_uint32_t());
     disp1->set_position_y(pt1.y.as_uint32_t());
     disp1->set_current_mode(mode_index1);
+    disp1->set_dpms_mode(static_cast<uint32_t>(mg::DPMSMode::Off));
 
     session_mediator.configure_display(nullptr, &configuration,
                                        &configuration_response, null_callback.get());

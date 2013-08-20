@@ -108,7 +108,8 @@ void mgg::RealKMSDisplayConfiguration::for_each_output(
 
 void mgg::RealKMSDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used,
-    geometry::Point top_left, size_t mode_index)
+    geometry::Point top_left, size_t mode_index,
+    mg::DPMSMode dpms_mode)
 {
     auto iter = find_output_with_id(id);
 
@@ -122,6 +123,7 @@ void mgg::RealKMSDisplayConfiguration::configure_output(
         output.used = used;
         output.top_left = top_left;
         output.current_mode_index = mode_index;
+        output.dpms_mode = dpms_mode;
     }
     else
     {
