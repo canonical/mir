@@ -373,9 +373,9 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
             return std::make_shared<msh::MediatingDisplayChanger>(
                 the_display(),
                 the_compositor(),
-                the_input_manager(),
                 the_display_configuration_policy(),
-                the_shell_session_container());
+                the_shell_session_container(),
+                the_shell_session_event_handler_register());
         });
 
 }
