@@ -34,9 +34,37 @@ void mgn::NestedDisplayConfiguration::for_each_card(std::function<void(DisplayCo
     // TODO
 }
 
-void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const
+void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const
 {
-    // TODO
+    for (auto egl_display_info = display_config->outputs; egl_display_info != display_config->outputs+display_config->num_outputs; ++egl_display_info)
+    {
+        std::vector<geometry::PixelFormat> formats;
+        formats.reserve(egl_display_info->num_output_formats);
+        for (auto p = egl_display_info->output_formats; p != egl_display_info->output_formats+egl_display_info->num_output_formats; ++p)
+            formats.push_back(geometry::PixelFormat(*p));
+
+        std::vector<DisplayConfigurationMode> modes;
+        modes.reserve(egl_display_info->num_modes);
+        for (auto p = egl_display_info->modes; p != egl_display_info->modes+egl_display_info->num_modes; ++p)
+            modes.push_back(DisplayConfigurationMode{{p->horizontal_resolution, p->vertical_resolution}, p->refresh_rate});
+
+        DisplayConfigurationOutput const output{
+            DisplayConfigurationOutputId(egl_display_info->output_id),
+            DisplayConfigurationCardId(egl_display_info->card_id),
+            DisplayConfigurationOutputType(egl_display_info->type),
+            std::move(formats),
+            std::move(modes),
+            egl_display_info->preferred_mode,
+            geometry::Size{egl_display_info->physical_width_mm, egl_display_info->physical_height_mm},
+            !!egl_display_info->connected,
+            !!egl_display_info->used,
+            geometry::Point{egl_display_info->position_x, egl_display_info->position_y},
+            egl_display_info->current_mode,
+            egl_display_info->current_output_format
+        };
+
+        f(output);
+    }
 }
 
 void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId /*id*/, bool /*used*/, geometry::Point /*top_left*/, size_t /*mode_index*/)
