@@ -25,7 +25,8 @@
 #include <stdexcept>
 #include <vector>
 
-namespace mgg = mir::graphics::gbm;
+namespace mg = mir::graphics;
+namespace mgg = mg::gbm;
 namespace geom = mir::geometry;
 
 namespace
@@ -135,10 +136,11 @@ geom::Size mgg::RealKMSOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
-void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
+void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index, mg::DPMSMode dpms_mode)
 {
     fb_offset = offset;
     mode_index = kms_mode_index;
+    dpms_mode = dpms_mode;
 }
 
 bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)

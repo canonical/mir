@@ -100,7 +100,7 @@ public:
                 graphics::DisplayConfigurationOutputType::vga,
                 std::vector<geometry::PixelFormat>{geometry::PixelFormat::abgr_8888},
                 {{rect.size, 60.0}},
-                0, geometry::Size{}, true, true, rect.top_left, 0, 0
+                0, geometry::Size{}, true, true, rect.top_left, 0, 0, graphics::DPMSMode::On
             };
 
             outputs.push_back(output);

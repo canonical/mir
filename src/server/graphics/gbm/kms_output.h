@@ -22,6 +22,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <gbm.h>
 
@@ -38,7 +39,7 @@ public:
     virtual ~KMSOutput() = default;
 
     virtual void reset() = 0;
-    virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
+    virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index, DPMSMode dpms_mode) = 0;
     virtual geometry::Size size() const = 0;
 
     virtual bool set_crtc(uint32_t fb_id) = 0;

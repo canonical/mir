@@ -39,7 +39,7 @@ namespace
 struct MockKMSOutput : public mgg::KMSOutput
 {
     MOCK_METHOD0(reset, void());
-    MOCK_METHOD2(configure, void(geom::Displacement, size_t));
+    MOCK_METHOD3(configure, void(geom::Displacement, size_t, mg::DPMSMode));
     MOCK_CONST_METHOD0(size, geom::Size());
 
     MOCK_METHOD1(set_crtc, bool(uint32_t));
