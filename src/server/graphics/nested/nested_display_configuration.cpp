@@ -31,9 +31,17 @@ mgn::NestedDisplayConfiguration::~NestedDisplayConfiguration() noexcept
 {
 }
 
-void mgn::NestedDisplayConfiguration::for_each_card(std::function<void(DisplayConfigurationCard const&)>) const
+void mgn::NestedDisplayConfiguration::for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const
 {
-    // TODO
+    std::for_each(
+        display_config->cards,
+        display_config->cards+display_config->num_cards,
+        [&f](MirDisplayCard const& mir_card)
+        {
+            f({
+                static_cast<DisplayConfigurationCardId>(mir_card.card_id),
+                mir_card.max_simultaneous_outputs});
+        });
 }
 
 void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const
