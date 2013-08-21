@@ -1,3 +1,31 @@
+mir (0.0.9+13.10.20130821.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Make compositor::Scene lockable. This allows us to do multiple
+    operations on a scene atomically using a nice simple:
+    std::lock_guard<Scene> lock(scene); In the short term, this is
+    required by the bypass branch. In the longer term it will also be
+    useful if/when Scene gets an iterator.
+  * Check a connection is valid (not NULL) before trying to dereference
+    it. Such a NULL dereference led to worrying valgrind errors seen in
+    LP: #1212516. (LP: #1212516)
+
+  [ Alan Griffiths ]
+  * graphics: hard-wire nested Mir to create an output for every host
+    output.
+
+  [ Alexandros Frantzis ]
+  * Allow clients to specify the output they want to place a surface in.
+    Only fullscreen placements are supported for now, but the policy is
+    easy to change. This MP breaks the client API/ABI, so I bumped the
+    client ABI version. I took this opportunity to rename some fields in
+    MirDisplayConfiguration to improve consistency. .
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 993
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 21 Aug 2013 14:05:07 +0000
+
 mir (0.0.9+13.10.20130821-0ubuntu1) saucy; urgency=low
 
   [ Brandon Schaefer ]
