@@ -19,6 +19,7 @@
 #include "nested_display.h"
 #include "nested_display_configuration.h"
 #include "nested_gl_context.h"
+#include "mir_api_wrappers.h"
 
 #include "mir/geometry/rectangle.h"
 
@@ -27,36 +28,19 @@
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
+namespace mgnw = mir::graphics::nested::mir_api_wrappers;
 namespace geom = mir::geometry;
 
 namespace
 {
-class MirDisplayConfigHandle
-{
-public:
-    explicit MirDisplayConfigHandle(MirConnection* connection) :
-    display_config{mir_connection_create_display_config(connection)}
-    {
-    }
-
-    ~MirDisplayConfigHandle() noexcept
-    {
-        mir_display_config_destroy(display_config);
-    }
-
-    MirDisplayConfiguration* operator->() const { return display_config; }
-
-private:
-    MirDisplayConfiguration* const display_config;
-
-    MirDisplayConfigHandle(MirDisplayConfigHandle const&) = delete;
-    MirDisplayConfigHandle operator=(MirDisplayConfigHandle const&) = delete;
-};
-
 auto configure_outputs(MirConnection* connection)
 -> std::unordered_map<uint32_t, std::shared_ptr<mgn::detail::NestedOutput>>
 {
-    MirDisplayConfigHandle display_config{connection};
+    // TODO for proper mirrored mode support we will need to detect overlapping outputs and
+    // TODO only use a single surface for them. The OverlappingOutputGrouping utility class
+    // TODO used by the GBM backend for a similar purpose could help with this.
+
+    mgnw::MirDisplayConfigHandle display_config{connection};
 
     std::unordered_map<uint32_t, std::shared_ptr<mgn::detail::NestedOutput>> result;
 
@@ -186,6 +170,7 @@ mgn::detail::NestedOutput::~NestedOutput() noexcept
 
 
 mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
+    connection{connection},
     display_report{display_report},
     outputs{configure_outputs(connection)}
 {
@@ -204,19 +189,22 @@ void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayB
 
 std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
 {
-    return std::make_shared<NestedDisplayConfiguration>();
+    return std::make_shared<NestedDisplayConfiguration>(connection);
 }
 
-void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& /*configuration*/)
+void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
+    auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
+
+    mir_connection_apply_display_config(connection, conf);
 }
 
 void mgn::NestedDisplay::register_configuration_change_handler(
         EventHandlerRegister& /*handlers*/,
         DisplayConfigurationChangeHandler const& /*conf_change_handler*/)
 {
-    // TODO
+    // TODO need to watch for changes via mir_connection_set_display_config_change_callback()
+    // TODO and invoke conf_change_handler() (I don't think we need handlers)
 }
 
 void mgn::NestedDisplay::register_pause_resume_handlers(
@@ -224,7 +212,7 @@ void mgn::NestedDisplay::register_pause_resume_handlers(
         DisplayPauseHandler const& /*pause_handler*/,
         DisplayResumeHandler const& /*resume_handler*/)
 {
-    // TODO
+    // No need to do anything
 }
 
 void mgn::NestedDisplay::pause()

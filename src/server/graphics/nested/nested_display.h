@@ -125,6 +125,7 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
+    MirConnection* const connection;
     std::shared_ptr<DisplayReport> const display_report;
     std::unordered_map<uint32_t, std::shared_ptr<detail::NestedOutput>> outputs;
 };
