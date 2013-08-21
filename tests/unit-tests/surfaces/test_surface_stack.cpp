@@ -48,6 +48,8 @@
 
 #include <memory>
 #include <stdexcept>
+#include <thread>
+#include <atomic>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -465,4 +467,122 @@ TEST_F(SurfaceStack, raise_throw_behavior)
     EXPECT_THROW({
             stack.raise(null_surface);
     }, std::runtime_error);
+}
+
+namespace
+{
+
+struct UniqueOperatorForScene : public mc::OperatorForScene
+{
+    UniqueOperatorForScene(const char *&owner)
+        : owner(owner)
+    {
+    }
+
+    void operator()(const mc::CompositingCriteria &, ms::BufferStream&)
+    {
+        ASSERT_STREQ("", owner);
+        owner = "UniqueOperatorForScene";
+        std::this_thread::yield();
+        owner = "";
+    }
+
+    const char *&owner;
+};
+
+void tinker_scene(mc::Scene &scene,
+                  const char *&owner,
+                  const std::atomic_bool &done)
+{
+    while (!done.load())
+    {
+        std::this_thread::yield();
+
+        std::lock_guard<mc::Scene> lock(scene);
+        ASSERT_STREQ("", owner);
+        owner = "tinkerer";
+        std::this_thread::yield();
+        owner = "";
+    }
+}
+
+}
+
+TEST_F(SurfaceStack, is_locked_during_iteration)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator),
+                           mt::fake_shared(input_registrar));
+
+    auto s1 = stack.create_surface(default_params);
+    auto criteria1 = s1.lock()->compositing_criteria();
+    auto stream1 = s1.lock()->buffer_stream();
+    auto s2 = stack.create_surface(default_params);
+    auto criteria2 = s2.lock()->compositing_criteria();
+    auto stream2 = s2.lock()->buffer_stream();
+    auto s3 = stack.create_surface(default_params);
+    auto criteria3 = s3.lock()->compositing_criteria();
+    auto stream3 = s3.lock()->buffer_stream();
+
+    MockFilterForScene filter;
+    Sequence seq1;
+    EXPECT_CALL(filter, filter(Ref(*criteria1)))
+        .InSequence(seq1)
+        .WillRepeatedly(Return(true));
+    EXPECT_CALL(filter, filter(Ref(*criteria2)))
+        .InSequence(seq1)
+        .WillRepeatedly(Return(false));
+    EXPECT_CALL(filter, filter(Ref(*criteria3)))
+        .InSequence(seq1)
+        .WillRepeatedly(Return(true));
+
+    const char *owner = "";
+    UniqueOperatorForScene op(owner);
+
+    std::atomic_bool done(false);
+    std::thread tinkerer(tinker_scene,
+        std::ref(stack), std::ref(owner), std::ref(done));
+
+    for (int i = 0; i < 1000; i++)
+    {
+        stack.lock();
+        ASSERT_STREQ("", owner);
+        owner = "main_before";
+        std::this_thread::yield();
+        owner = "";
+        stack.unlock();
+
+        stack.for_each_if(filter, op);
+
+        stack.lock();
+        ASSERT_STREQ("", owner);
+        owner = "main_after";
+        std::this_thread::yield();
+        owner = "";
+        stack.unlock();
+    }
+
+    done = true;
+    tinkerer.join();
+}
+
+TEST_F(SurfaceStack, is_recursively_lockable)
+{
+    ms::SurfaceStack stack(mt::fake_shared(mock_surface_allocator),
+                           mt::fake_shared(input_registrar));
+
+    StubFilterForScene filter;
+    StubOperatorForScene op;
+
+    stack.lock();
+    stack.for_each_if(filter, op);
+    stack.unlock();
+
+    stack.lock();
+    stack.lock();
+    stack.lock();
+    stack.unlock();
+    stack.unlock();
+    stack.unlock();
 }

@@ -17,12 +17,13 @@
  */
 
 #include "mir/shell/unauthorized_display_changer.h"
-#include "mir/shell/mediating_display_changer.h"
 
 #include "mir_test_doubles/mock_display_changer.h"
-#include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/null_display_configuration.h"
+
 #include "mir_test/fake_shared.h"
+
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mt = mir::test;
@@ -41,7 +42,7 @@ TEST_F(UnauthorizedDisplayChangerTest, change_attempt)
     msh::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
 
     EXPECT_THROW({
-        changer.configure(std::weak_ptr<mf::Session>(), mt::fake_shared(conf));
+        changer.configure(std::shared_ptr<mf::Session>(), mt::fake_shared(conf));
     }, std::runtime_error);
 }
 
@@ -57,24 +58,6 @@ TEST_F(UnauthorizedDisplayChangerTest, access_config)
     msh::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
 
     auto returned_conf = changer.active_configuration();
-    EXPECT_EQ(&conf, returned_conf.get());
-}
 
-struct MediatingDisplayChangerTest : public ::testing::Test
-{
-    mtd::MockDisplay mock_display;
-};
-
-TEST_F(MediatingDisplayChangerTest, display_info)
-{
-    using namespace testing;
-    mtd::NullDisplayConfiguration conf;
-
-    EXPECT_CALL(mock_display, configuration())
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(conf)));
-
-    msh::MediatingDisplayChanger changer(mt::fake_shared(mock_display));
-    auto returned_conf = changer.active_configuration();
     EXPECT_EQ(&conf, returned_conf.get());
 }

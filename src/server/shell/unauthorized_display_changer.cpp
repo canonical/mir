@@ -23,7 +23,7 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 
-msh::UnauthorizedDisplayChanger::UnauthorizedDisplayChanger(std::shared_ptr<shell::DisplayChanger> const& changer)
+msh::UnauthorizedDisplayChanger::UnauthorizedDisplayChanger(std::shared_ptr<frontend::DisplayChanger> const& changer)
     : changer(changer)
 {
 }
@@ -34,7 +34,7 @@ std::shared_ptr<mg::DisplayConfiguration> msh::UnauthorizedDisplayChanger::activ
 }
 
 void msh::UnauthorizedDisplayChanger::configure(
-    std::weak_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
+    std::shared_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }

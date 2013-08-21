@@ -51,6 +51,7 @@ MirSurface::MirSurface(
     message.set_height(params.height);
     message.set_pixel_format(params.pixel_format);
     message.set_buffer_usage(params.buffer_usage);
+    message.set_output_id(params.output_id);
     
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
@@ -86,7 +87,8 @@ MirSurfaceParameters MirSurface::get_parameters() const
         surface.width(),
         surface.height(),
         static_cast<MirPixelFormat>(surface.pixel_format()),
-        static_cast<MirBufferUsage>(surface.buffer_usage())};
+        static_cast<MirBufferUsage>(surface.buffer_usage()),
+        mir_display_output_id_invalid};
 }
 
 char const * MirSurface::get_error_message()
@@ -237,6 +239,13 @@ std::shared_ptr<mcl::ClientBuffer> MirSurface::get_current_buffer()
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
     return buffer_depository->current_buffer();
+}
+
+uint32_t MirSurface::get_current_buffer_id() const
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex);
+
+    return buffer_depository->current_buffer_id();    
 }
 
 void MirSurface::populate(MirBufferPackage& buffer_package)

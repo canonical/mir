@@ -19,6 +19,7 @@
 #include "mir/default_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
+#include "mir_toolkit/mir_client_library_debug.h"
 
 #include "mir_connection.h"
 #include "display_configuration.h"
@@ -212,7 +213,12 @@ void mir_surface_release_sync(MirSurface *surface)
 
 int mir_surface_get_id(MirSurface * surface)
 {
-    return surface->id();
+    return mir_debug_surface_id(surface);
+}
+
+int mir_debug_surface_id(MirSurface * surface)
+{
+    return surface->id();    
 }
 
 int mir_surface_is_valid(MirSurface* surface)
@@ -241,6 +247,11 @@ void mir_surface_get_current_buffer(MirSurface * surface, MirNativeBuffer ** buf
     *buffer_package_out = package.get();
 }
 
+uint32_t mir_debug_surface_current_buffer_id(MirSurface * surface)
+{
+    return surface->get_current_buffer_id();
+}
+
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
 {
     connection->populate(*platform_package);
@@ -262,18 +273,18 @@ void mir_display_config_destroy(MirDisplayConfiguration* configuration)
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
     auto config = mir_connection_create_display_config(connection);
-    if (config->num_displays < 1)
+    if (config->num_outputs < 1)
         return;
 
     MirDisplayOutput* state = nullptr;
     // We can't handle more than one display, so just populate based on the first
     // active display we find.
-    for (unsigned int i = 0; i < config->num_displays; ++i) 
+    for (unsigned int i = 0; i < config->num_outputs; ++i)
     {
-        if (config->displays[i].used && config->displays[i].connected &&
-            config->displays[i].current_mode < config->displays[i].num_modes)
+        if (config->outputs[i].used && config->outputs[i].connected &&
+            config->outputs[i].current_mode < config->outputs[i].num_modes)
         {
-            state = &config->displays[i];
+            state = &config->outputs[i];
             break;
         }
     }

@@ -35,6 +35,34 @@ namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace gp = google::protobuf;
 
+namespace
+{
+
+class MirDisplayConfigurationStore
+{
+public:
+    MirDisplayConfigurationStore(MirDisplayConfiguration* config)
+        : config{config}
+    {
+    }
+
+    ~MirDisplayConfigurationStore()
+    {
+        mcl::delete_config_storage(config);
+    }
+
+    MirDisplayConfiguration* operator->() const { return config; }
+
+private:
+    MirDisplayConfigurationStore(MirDisplayConfigurationStore const&) = delete;
+    MirDisplayConfigurationStore& operator=(MirDisplayConfigurationStore const&) = delete;
+
+    MirDisplayConfiguration* const config;
+};
+
+}
+
+
 MirConnection::MirConnection() :
     channel(),
     server(0),
@@ -157,7 +185,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          */
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
-        display_configuration->update_configuration(connect_result);
+        display_configuration->set_configuration(connect_result.display_configuration());
     }
 
     callback(this, context);
@@ -280,18 +308,21 @@ MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
     return display_configuration->copy_to_client();
 }
 
-void MirConnection::possible_pixel_formats(MirPixelFormat* formats,
-                                unsigned int formats_size, unsigned int& valid_formats)
+void MirConnection::possible_pixel_formats(
+    MirPixelFormat* formats,
+    unsigned int formats_size,
+    unsigned int& valid_formats)
 {
     //TODO we're just using the display buffer's pixel formats as the list of supported
     //     formats for the time being. should have a separate message
-    if (!connect_result.has_error() && (connect_result.display_output_size() > 0))
+    if (!connect_result.has_error() && connect_result.has_display_configuration() &&
+        connect_result.display_configuration().display_output_size() > 0)
     {
-        auto display_output = connect_result.display_output(0);
+        auto const& display_output = connect_result.display_configuration().display_output(0);
         valid_formats = std::min(
             static_cast<unsigned int>(display_output.pixel_format_size()), formats_size);
 
-        for(auto i=0u; i < valid_formats; i++)
+        for (auto i = 0u; i < valid_formats; i++)
         {
             formats[i] = static_cast<MirPixelFormat>(display_output.pixel_format(i));
         }      
@@ -331,29 +362,24 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
 {
     std::lock_guard<std::recursive_mutex> lock(mutex);
 
-    if ((!config) || (config->num_displays == 0) || (config->displays == NULL) || 
-        (config->num_displays > static_cast<unsigned int>(connect_result.display_output_size())))
+    MirDisplayConfigurationStore orig_config{display_configuration->copy_to_client()};
+
+    if ((!config) || (config->num_outputs == 0) || (config->outputs == NULL) ||
+        (config->num_outputs > orig_config->num_outputs))
     {
         return false;
     }
 
-    for(auto i = 0u; i < config->num_displays; i++)
+    for(auto i = 0u; i < config->num_outputs; i++)
     {
-        if (config->displays[i].current_mode >= static_cast<unsigned int>(connect_result.display_output(i).mode_size()))
+        auto const& output = config->outputs[i];
+        auto const& orig_output = orig_config->outputs[i];
+
+        if (output.output_id != orig_output.output_id)
             return false;
 
-        bool found = false;
-        for(auto j = 0; j < connect_result.display_output_size(); j++)
-        {
-            if (config->displays[i].output_id == connect_result.display_output(i).output_id())
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found)
-            return false; 
+        if (output.connected && output.current_mode >= orig_output.num_modes)
+            return false;
     }
 
     return true;
@@ -361,21 +387,26 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
 
 void MirConnection::done_display_configure()
 {
-    set_error_message(void_response.error());
+    set_error_message(display_configuration_response.error());
+
+    if (!display_configuration_response.has_error())
+        display_configuration->set_configuration(display_configuration_response);
+
     return configure_display_wait_handle.result_received();
 }
 
 MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     if (!validate_user_display_config(config))
     {
         return NULL;
     }
 
     mir::protobuf::DisplayConfiguration request;
-    for (auto i=0u; i < config->num_displays; i++)
+    for (auto i=0u; i < config->num_outputs; i++)
     {
-        auto output = config->displays[i];
+        auto output = config->outputs[i];
         auto display_request = request.add_display_output();
         display_request->set_output_id(output.output_id); 
         display_request->set_used(output.used); 
@@ -384,7 +415,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         display_request->set_position_y(output.position_y); 
     }
 
-    server.configure_display(0, &request, &void_response,
+    server.configure_display(0, &request, &display_configuration_response,
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;

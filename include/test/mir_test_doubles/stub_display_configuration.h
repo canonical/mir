@@ -18,7 +18,11 @@
 
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_CONFIGURATION_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_CONFIGURATION_H_
+
 #include "mir/graphics/display_configuration.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/geometry/pixel_format.h"
+
 #include <vector>
 
 namespace mir
@@ -60,9 +64,10 @@ public:
             geometry::Size physical_size{};
             geometry::Point top_left{};
             graphics::DisplayConfigurationOutput output{
-                graphics::DisplayConfigurationOutputId{static_cast<int>(i)},
+                graphics::DisplayConfigurationOutputId{static_cast<int>(i + 1)},
                 graphics::DisplayConfigurationCardId{static_cast<int>(i)},
-                pfs, modes,
+                graphics::DisplayConfigurationOutputType::vga,
+                pfs, modes, i,
                 physical_size,
                 ((i % 2) == 0),
                 ((i % 2) == 1),
@@ -71,11 +76,48 @@ public:
             };
 
             outputs.push_back(output);
+
+            graphics::DisplayConfigurationCard card{
+                graphics::DisplayConfigurationCardId{static_cast<int>(i)},
+                i + 1
+            };
+
+            cards.push_back(card);
         }
+
     };
 
-    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)>) const
+    StubDisplayConfig(std::vector<geometry::Rectangle> const& rects)
     {
+        int id = 1;
+        for (auto const& rect : rects)
+        {
+            graphics::DisplayConfigurationOutput output
+            {
+                graphics::DisplayConfigurationOutputId{id},
+                graphics::DisplayConfigurationCardId{0},
+                graphics::DisplayConfigurationOutputType::vga,
+                std::vector<geometry::PixelFormat>{geometry::PixelFormat::abgr_8888},
+                {{rect.size, 60.0}},
+                0, geometry::Size{}, true, true, rect.top_left, 0, 0
+            };
+
+            outputs.push_back(output);
+            ++id;
+        }
+
+        graphics::DisplayConfigurationCard card{
+            graphics::DisplayConfigurationCardId{static_cast<int>(1)},
+            rects.size()
+        };
+
+        cards.push_back(card);
+    }
+
+    void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const
+    {
+        for (auto const& card : cards)
+            f(card);
     }
 
     void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const
@@ -90,6 +132,7 @@ public:
     {
     }
 
+    std::vector<graphics::DisplayConfigurationCard> cards;
     std::vector<graphics::DisplayConfigurationOutput> outputs;
 };
 

@@ -96,8 +96,9 @@ void mir_connection_release(MirConnection *connection);
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
 
 /** 
- * DEPRECATED. use mir_connection_create_display_config
+ * \deprecated Use mir_connection_create_display_config
  */
+__attribute__((__deprecated__("Use mir_connection_create_display_config()")))
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info);
 
 /**
@@ -110,8 +111,11 @@ void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *
 MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
 
 /**
- * Register a callback to be called when the DisplayConfiguration changes. Once a change has occurred,
- * you can use mir_connection_create_display_config to see the new configuration
+ * Register a callback to be called when the hardware display configuration changes
+ *
+ * Once a change has occurred, you can use mir_connection_create_display_config to see
+ * the new configuration.
+ *
  *   \param [in] connection  The connection
  *   \param [in] callback     The function to be called when a display change occurs
  *   \param [in,out] context  User data passed to the callback function
@@ -128,6 +132,12 @@ void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
 
 /**
  * Apply the display configuration
+ *
+ * The display configuration is applied to this connection only (per-connection
+ * configuration) and is invalidated when a hardware change occurs. Clients should
+ * register a callback with mir_connection_set_display_config_change_callback()
+ * to get notified about hardware changes, so that the can apply a new configuration.
+ *
  *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
  *   \param [in] connection             The connection
  *   \param [in] display_configuration  The display_configuration to apply 
@@ -326,10 +336,9 @@ void mir_wait_for(MirWaitHandle *wait_handle);
 void mir_wait_for_one(MirWaitHandle *wait_handle);
 
 /**
- * Return the ID of a surface (only useful for debug output).
- *   \param [in] surface  The surface
- *   \return              An internal ID that identifies the surface
+ * \deprecated Use mir_debug_surface_id()
  */
+__attribute__((__deprecated__("Use mir_debug_surface_id()")))
 int mir_surface_get_id(MirSurface *surface);
 
 /**

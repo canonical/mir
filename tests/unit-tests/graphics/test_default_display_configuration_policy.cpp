@@ -39,6 +39,7 @@ public:
             {
                 mg::DisplayConfigurationOutputId{10},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {
                     {geom::PixelFormat::abgr_8888}
                 },
@@ -47,6 +48,7 @@ public:
                     {geom::Size{123, 111}, 59.9},
                     {geom::Size{123, 111}, 59.9}
                 },
+                2,
                 geom::Size{324, 642},
                 true,
                 false,
@@ -59,8 +61,10 @@ public:
             {
                 mg::DisplayConfigurationOutputId{11},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {},
                 {},
+                std::numeric_limits<size_t>::max(),
                 geom::Size{566, 111},
                 true,
                 false,
@@ -73,12 +77,14 @@ public:
             {
                 mg::DisplayConfigurationOutputId{12},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {
                     {geom::PixelFormat::abgr_8888}
                 },
                 {
                     {geom::Size{523, 555}, 60.0},
                 },
+                0,
                 geom::Size{324, 642},
                 true,
                 false,
@@ -91,10 +97,12 @@ public:
             {
                 mg::DisplayConfigurationOutputId{13},
                 card_id,
+                mg::DisplayConfigurationOutputType::vga,
                 {
                     {geom::PixelFormat::abgr_8888}
                 },
                 {},
+                0,
                 geom::Size{324, 642},
                 false,
                 false,
@@ -106,7 +114,7 @@ public:
 
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
     {
-        f({card_id});
+        f({card_id, outputs.size()});
     }
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
@@ -129,14 +137,13 @@ TEST(DefaultDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
 {
     mg::DefaultDisplayConfigurationPolicy policy;
     MockDisplayConfiguration conf;
-    size_t const highest_mode{0};
 
     conf.for_each_output([&conf](mg::DisplayConfigurationOutput const& output)
     {
         if (output.connected && output.modes.size() > 0)
         {
             EXPECT_CALL(conf, configure_output(output.id, true, geom::Point(),
-                                               highest_mode));
+                                               output.preferred_mode_index));
         }
         else
         {

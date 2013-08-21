@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_SHELL_DISPLAY_CHANGER_H_
-#define MIR_SHELL_DISPLAY_CHANGER_H_
+#ifndef MIR_FRONTEND_DISPLAY_CHANGER_H_
+#define MIR_FRONTEND_DISPLAY_CHANGER_H_
 
 #include <memory>
 
@@ -30,21 +30,17 @@ class DisplayConfiguration;
 namespace frontend
 {
 class Session;
-}
 
-namespace shell
-{
 class DisplayChanger
 {
 public:
     virtual ~DisplayChanger() = default;
 
     virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration() = 0;
-    virtual void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
+    virtual void configure(std::shared_ptr<Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
 
 protected:
     DisplayChanger() = default;
-private:
     DisplayChanger(DisplayChanger const&) = delete;
     DisplayChanger& operator=(DisplayChanger const&) = delete;
 };
@@ -52,4 +48,4 @@ private:
 }
 }
 
-#endif /* MIR_SHELL_DISPLAY_CHANGER_H_ */
+#endif /* MIR_FRONTEND_DISPLAY_CHANGER_H_ */

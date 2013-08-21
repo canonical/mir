@@ -39,6 +39,8 @@ public:
 
     void clip_to_output(geometry::Rectangle& rect);
     void size_to_output(geometry::Rectangle& rect);
+    void place_in_output(graphics::DisplayConfigurationOutputId output_id,
+                         geometry::Rectangle& rect);
 
 private:
     geometry::Rectangle get_output_for(geometry::Rectangle& rect);

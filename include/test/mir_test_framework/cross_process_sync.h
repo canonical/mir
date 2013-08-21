@@ -45,6 +45,9 @@ class CrossProcessSync
     unsigned int wait_for_signal_ready_for(
         const std::chrono::milliseconds& duration = std::chrono::milliseconds(2000));
   
+    void signal_ready();
+    unsigned int wait_for_signal_ready();
+
   private:
     int fds[2];
     unsigned int counter;

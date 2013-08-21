@@ -27,6 +27,12 @@ namespace mt = mir::test;
 
 namespace
 {
+void fill(mp::DisplayCard* out)
+{
+    out->set_card_id(7);
+    out->set_max_simultaneous_outputs(3);
+}
+
 void fill(mp::DisplayOutput* out)
 {
     out->add_pixel_format(4);
@@ -49,17 +55,20 @@ void fill(mp::DisplayOutput* out)
 
 TEST(TestDisplayConfiguration, configuration_storage)
 {
-    mp::Connection connect_result;
-    fill(connect_result.add_display_output());
-    fill(connect_result.add_display_output());
+    mp::DisplayConfiguration protobuf_config;
+    fill(protobuf_config.add_display_output());
+    fill(protobuf_config.add_display_output());
+    fill(protobuf_config.add_display_card());
+    fill(protobuf_config.add_display_card());
+    fill(protobuf_config.add_display_card());
  
     mcl::DisplayConfiguration internal_config;
 
-    internal_config.update_configuration(connect_result);
+    internal_config.update_configuration(protobuf_config);
     MirDisplayConfiguration *info;
     info = internal_config.copy_to_client();
    
-    EXPECT_THAT(*info, mt::ClientTypeMatchesProtobuf(connect_result)); 
+    EXPECT_THAT(*info, mt::DisplayConfigMatches(protobuf_config));
     mcl::delete_config_storage(info);
 
     int called_count = 0u;
@@ -71,7 +80,7 @@ TEST(TestDisplayConfiguration, configuration_storage)
     internal_config.update_configuration(new_result);
 
     info = internal_config.copy_to_client();
-    EXPECT_THAT(*info, mt::ClientTypeMatchesProtobuf(new_result)); 
+    EXPECT_THAT(*info, mt::DisplayConfigMatches(new_result));
     EXPECT_EQ(1u, called_count);
 
     mcl::delete_config_storage(info);

@@ -123,46 +123,50 @@ std::shared_ptr<mg::DisplayConfiguration> mgg::GBMDisplay::configuration()
 
 void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
-
-    auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
-    std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers_new;
-
-    OverlappingOutputGrouping grouping{conf};
-
-    grouping.for_each_group([&](OverlappingOutputGroup const& group)
     {
-        auto bounding_rect = group.bounding_rectangle();
-        std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
+        std::lock_guard<std::mutex> lg{configuration_mutex};
 
-        group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+        auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
+        std::vector<std::unique_ptr<GBMDisplayBuffer>> display_buffers_new;
+
+        OverlappingOutputGrouping grouping{conf};
+
+        grouping.for_each_group([&](OverlappingOutputGroup const& group)
         {
-            uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
-            auto kms_output = output_container.get_kms_output_for(connector_id);
+            auto bounding_rect = group.bounding_rectangle();
+            std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
 
-            auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
-                                                                conf_output.current_mode_index);
-            kms_output->reset();
-            kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
-            kms_outputs.push_back(kms_output);
+            group.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+            {
+                uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
+                auto kms_output = output_container.get_kms_output_for(connector_id);
+
+                auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
+                                                                    conf_output.current_mode_index);
+                kms_output->reset();
+                kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
+                kms_outputs.push_back(kms_output);
+            });
+
+            auto surface =
+                platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
+                                                     bounding_rect.size.height.as_uint32_t());
+
+            std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener,
+                                                                      kms_outputs,
+                                                                      std::move(surface),
+                                                                      bounding_rect,
+                                                                      shared_egl.context()}};
+            display_buffers_new.push_back(std::move(db));
         });
 
-        auto surface =
-            platform->gbm.create_scanout_surface(bounding_rect.size.width.as_uint32_t(),
-                                                 bounding_rect.size.height.as_uint32_t());
+        display_buffers = std::move(display_buffers_new);
 
-        std::unique_ptr<GBMDisplayBuffer> db{new GBMDisplayBuffer{platform, listener,
-                                                                  kms_outputs,
-                                                                  std::move(surface),
-                                                                  bounding_rect,
-                                                                  shared_egl.context()}};
-        display_buffers_new.push_back(std::move(db));
-    });
+        /* Store applied configuration */
+        current_display_configuration = kms_conf;
+    }
 
-    display_buffers = std::move(display_buffers_new);
-
-    /* Store applied configuration */
-    current_display_configuration = kms_conf;
+    if (cursor) cursor->show_at_last_known_position();
 }
 
 void mgg::GBMDisplay::register_configuration_change_handler(

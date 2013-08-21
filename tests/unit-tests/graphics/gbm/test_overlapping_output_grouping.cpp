@@ -48,7 +48,8 @@ public:
     {
         mg::DisplayConfigurationCard card
         {
-            mg::DisplayConfigurationCardId{1}
+            mg::DisplayConfigurationCardId{1},
+            outputs.size()
         };
 
         f(card);
@@ -69,8 +70,10 @@ public:
             {
                 mg::DisplayConfigurationOutputId(i),
                 mg::DisplayConfigurationCardId{1},
+                mg::DisplayConfigurationOutputType::svideo,
                 {},
                 modes,
+                i - 1,
                 {100, 100},
                 connected,
                 used,

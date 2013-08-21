@@ -103,6 +103,9 @@ public:
         std::this_thread::yield();
     }
 
+    void lock() {}
+    void unlock() {}
+
 private:
     std::function<void()> callback;
     std::mutex callback_mutex;

@@ -64,6 +64,7 @@ public:
 
     bool shutdown_server_process();
     void kill_client_processes();
+    void terminate_client_processes();
 
     void run_in_test_process(std::function<void()> const& run_code);
 

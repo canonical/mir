@@ -46,6 +46,7 @@ void mir_eglapp_shutdown(void)
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
     mir_surface_release_sync(surface);
+    surface = NULL;
     mir_connection_release(connection);
     connection = NULL;
 }
@@ -120,9 +121,9 @@ static const MirDisplayOutput *find_active_output(
     const MirDisplayOutput *output = NULL;
     int d;
 
-    for (d = 0; d < (int)conf->num_displays; d++)
+    for (d = 0; d < (int)conf->num_outputs; d++)
     {
-        const MirDisplayOutput *out = conf->displays + d;
+        const MirDisplayOutput *out = conf->outputs + d;
 
         if (out->used &&
             out->connected &&
@@ -150,7 +151,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         "eglappsurface",
         256, 256,
         mir_pixel_format_xbgr_8888,
-        mir_buffer_usage_hardware
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
     };
     MirEventDelegate delegate = 
     {
@@ -178,6 +180,31 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                 case 'n':
                     swapinterval = 0;
                     break;
+                case 'f':
+                    *width = 0;
+                    *height = 0;
+                    break;
+                case 's':
+                    {
+                        unsigned int w, h;
+                        arg += 2;
+                        if (!arg[0] && i < argc-1)
+                        {
+                            i++;
+                            arg = argv[i];
+                        }
+                        if (sscanf(arg, "%ux%u", &w, &h) == 2)
+                        {
+                            *width = w;
+                            *height = h;
+                        }
+                        else
+                        {
+                            printf("Invalid size: %s\n", arg);
+                            help = 1;
+                        }
+                    }
+                    break;
                 case 'h':
                 default:
                     help = 1;
@@ -192,8 +219,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             if (help)
             {
                 printf("Usage: %s [<options>]\n"
+                       "  -f  Force full screen\n"
                        "  -h  Show this help text\n"
                        "  -n  Don't sync to vblank\n"
+                       "  -s WIDTHxHEIGHT  Force surface size\n"
                        , argv[0]);
                 return 0;
             }
@@ -285,3 +314,12 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     return 1;
 }
 
+struct MirConnection* mir_eglapp_native_connection()
+{
+    return connection;
+}
+
+struct MirSurface* mir_eglapp_native_surface()
+{
+    return surface;
+}

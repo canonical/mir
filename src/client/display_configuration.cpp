@@ -28,15 +28,18 @@ void mcl::delete_config_storage(MirDisplayConfiguration* config)
     if (!config)
         return;
 
-    for(auto i=0u; i< config->num_displays; i++)
+    for(auto i=0u; i< config->num_outputs; i++)
     {
-        if (config->displays[i].modes)
-            delete[] config->displays[i].modes;
-        if (config->displays[i].output_formats)
-            delete[] config->displays[i].output_formats;
+        if (config->outputs[i].modes)
+            delete[] config->outputs[i].modes;
+        if (config->outputs[i].output_formats)
+            delete[] config->outputs[i].output_formats;
     }
-    if (config->displays)
-        delete[] config->displays;
+
+    if (config->outputs)
+        delete[] config->outputs;
+    if (config->cards)
+        delete[] config->cards;
 
     delete config;
 }
@@ -58,10 +61,18 @@ mcl::DisplayOutput::~DisplayOutput()
 
 namespace
 {
+
+void fill_display_card(MirDisplayCard& card, mp::DisplayCard const& msg)
+{
+    card.card_id = msg.card_id();
+    card.max_simultaneous_outputs = msg.max_simultaneous_outputs();
+}
+
 void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 {
     output.card_id = msg.card_id();
     output.output_id = msg.output_id();
+    output.type = static_cast<MirDisplayOutputType>(msg.type());
 
     for (auto i = 0u; i < output.num_modes; i++)
     {
@@ -70,6 +81,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
         output.modes[i].vertical_resolution = mode.vertical_resolution(); 
         output.modes[i].refresh_rate = mode.refresh_rate();
     }
+    output.preferred_mode = msg.preferred_mode();
     output.current_mode = msg.current_mode();
 
     for (auto i = 0u; i < output.num_output_formats; i++)
@@ -88,7 +100,6 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 
 }
 
-
 mcl::DisplayConfiguration::DisplayConfiguration()
     : notify_change([]{})
 {
@@ -98,13 +109,23 @@ mcl::DisplayConfiguration::~DisplayConfiguration()
 {
 }
 
-void mcl::DisplayConfiguration::update_configuration(mp::Connection const& connection_msg)
+void mcl::DisplayConfiguration::set_configuration(mp::DisplayConfiguration const& msg)
 {
     std::unique_lock<std::mutex> lk(guard);
-    outputs.clear();
-    for (auto i = 0; i < connection_msg.display_output_size(); i++)
+
+    cards.clear();
+    for (auto i = 0; i < msg.display_card_size(); i++)
     {
-        auto const& msg_output = connection_msg.display_output(i);
+        auto const& msg_card = msg.display_card(i);
+        MirDisplayCard card;
+        fill_display_card(card, msg_card);
+        cards.push_back(card);
+    }
+
+    outputs.clear();
+    for (auto i = 0; i < msg.display_output_size(); i++)
+    {
+        auto const& msg_output = msg.display_output(i);
         auto output = std::make_shared<mcl::DisplayOutput>(msg_output.mode_size(), msg_output.pixel_format_size());
         fill_display_output(*output, msg_output);
         outputs.push_back(output);
@@ -113,17 +134,7 @@ void mcl::DisplayConfiguration::update_configuration(mp::Connection const& conne
 
 void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration const& msg)
 {
-    {
-        std::unique_lock<std::mutex> lk(guard);
-        outputs.clear();
-        for (auto i = 0; i < msg.display_output_size(); i++)
-        {
-            auto const& msg_output = msg.display_output(i);
-            auto output = std::make_shared<mcl::DisplayOutput>(msg_output.mode_size(), msg_output.pixel_format_size());
-            fill_display_output(*output, msg_output);
-            outputs.push_back(output);
-        }
-    }
+    set_configuration(msg);
 
     notify_change();
 }
@@ -133,14 +144,22 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
 {
     std::unique_lock<std::mutex> lk(guard);
     auto new_config = new MirDisplayConfiguration;
-    new_config->num_displays = outputs.size();
-    new_config->displays = new MirDisplayOutput[new_config->num_displays];
 
-    auto i=0u;
-    for (auto const& out : outputs)
+    /* Cards */
+    new_config->num_cards = cards.size();
+    new_config->cards = new MirDisplayCard[new_config->num_cards];
+
+    for (auto i = 0u; i < cards.size(); i++)
+        new_config->cards[i] = cards[i];
+
+    /* Outputs */
+    new_config->num_outputs = outputs.size();
+    new_config->outputs = new MirDisplayOutput[new_config->num_outputs];
+
+    for (auto i = 0u; i < outputs.size(); i++)
     {
-        auto new_info = &new_config->displays[i++];
-        MirDisplayOutput* output = out.get();
+        auto new_info = &new_config->outputs[i];
+        MirDisplayOutput* output = outputs[i].get();
         std::memcpy(new_info, output, sizeof(MirDisplayOutput)); 
 
         new_info->output_formats = new MirPixelFormat[new_info->num_output_formats];
@@ -151,6 +170,7 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
         auto mode_size = sizeof(MirDisplayMode)* new_info->num_modes;
         std::memcpy(new_info->modes, output->modes, mode_size);
     }
+
     return new_config;
 }
 
