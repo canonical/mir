@@ -150,9 +150,9 @@ static void toggle_dpms(struct ClientContext *context)
 {
     MirDisplayConfiguration *conf = 
         mir_connection_create_display_config(context->connection);
-    for (uint32_t i = 0; i < conf->num_displays; i++)
+    for (uint32_t i = 0; i < conf->num_outputs; i++)
     {
-        MirDisplayOutput *output = &conf->displays[i];
+        MirDisplayOutput *output = &conf->outputs[i];
         if (output->dpms_mode == mir_dpms_mode_on)
             output->dpms_mode = mir_dpms_mode_off;
         else
