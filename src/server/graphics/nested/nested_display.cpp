@@ -25,6 +25,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <atomic>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -101,6 +102,11 @@ mgn::detail::MirSurfaceHandle::~MirSurfaceHandle() noexcept
     mir_surface_release_sync(mir_surface);
 }
 
+namespace
+{
+std::atomic<int> display_handles{-1};
+}
+
 mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
 {
     auto const native_display = (EGLNativeDisplayType) mir_connection_get_egl_native_display(connection);
@@ -110,6 +116,8 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
     egl_display = eglGetDisplay(native_display);
     if (egl_display == EGL_NO_DISPLAY)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
+
+    display_handles.fetch_add(1);
 }
 
 void mgn::detail::EGLDisplayHandle::initialize() const
@@ -150,7 +158,7 @@ EGLSurface mgn::detail::EGLDisplayHandle::egl_surface(EGLConfig egl_config, MirS
 
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 {
-    eglTerminate(egl_display);
+    if (!display_handles.fetch_add(-1)) eglTerminate(egl_display);
 }
 
 mgn::detail::NestedOutput::NestedOutput(MirConnection* connection, MirDisplayOutput* const egl_display_info) :
@@ -235,5 +243,31 @@ auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
 
 std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
+    class NestedGLContext : public mg::GLContext
+    {
+    public:
+        NestedGLContext(MirConnection* connection) :
+            egl_display{connection},
+            egl_config{(egl_display.initialize(), egl_display.choose_config(egl_attribs))},
+            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)}
+        {
+        }
+
+        void make_current() override
+        {
+            eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
+        }
+
+        void release_current() override
+        {
+            eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        }
+
+    private:
+        detail::EGLDisplayHandle const egl_display;
+        EGLConfig const egl_config;
+        EGLContextStore const egl_context;
+    };
+
+    return std::unique_ptr<mg::GLContext>{new NestedGLContext(connection)};
 }
