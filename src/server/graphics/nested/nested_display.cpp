@@ -217,16 +217,19 @@ void mgn::NestedDisplay::register_pause_resume_handlers(
 
 void mgn::NestedDisplay::pause()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
+    // TODO Do we "own" the cursor or does the host mir?
+    // If we "own" the cursor then we need to hide it
 }
 
 void mgn::NestedDisplay::resume()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented yet!"));
+    // TODO Do we "own" the cursor or does the host mir?
+    // TODO If we "own" the cursor then we need to restore it
 }
 
 auto mgn::NestedDisplay::the_cursor()->std::weak_ptr<Cursor>
 {
+    // TODO Do we "own" the cursor or does the host mir?
     return std::weak_ptr<Cursor>();
 }
 
