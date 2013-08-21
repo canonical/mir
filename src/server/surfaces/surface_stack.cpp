@@ -53,7 +53,7 @@ ms::SurfaceStack::SurfaceStack(std::shared_ptr<SurfaceFactory> const& surface_fa
 
 void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& op)
 {
-    std::lock_guard<std::mutex> lock(guard);
+    std::lock_guard<std::recursive_mutex> lg(guard);
     for (auto &layer : layers_by_depth)
     {
         auto surfaces = layer.second;
@@ -68,7 +68,7 @@ void ms::SurfaceStack::for_each_if(mc::FilterForScene& filter, mc::OperatorForSc
 
 void ms::SurfaceStack::set_change_callback(std::function<void()> const& f)
 {
-    std::lock_guard<std::mutex> lock{notify_change_mutex};
+    std::lock_guard<std::mutex> lg{notify_change_mutex};
     assert(f);
     notify_change = f;
 }
@@ -78,7 +78,7 @@ std::weak_ptr<ms::Surface> ms::SurfaceStack::create_surface(shell::SurfaceCreati
     auto change_cb = [this]() { emit_change_notification(); };
     auto surface = surface_factory->create_surface(params, change_cb); 
     {
-        std::lock_guard<std::mutex> lg(guard);
+        std::lock_guard<std::recursive_mutex> lg(guard);
         layers_by_depth[params.depth].push_back(surface);
     }
 
@@ -94,7 +94,7 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
     auto keep_alive = surface.lock();
     bool found_surface = false;
     {
-        std::lock_guard<std::mutex> lg(guard);
+        std::lock_guard<std::recursive_mutex> lg(guard);
 
         for (auto &layer : layers_by_depth)
         {
@@ -117,13 +117,13 @@ void ms::SurfaceStack::destroy_surface(std::weak_ptr<ms::Surface> const& surface
 
 void ms::SurfaceStack::emit_change_notification()
 {
-    std::lock_guard<std::mutex> lock{notify_change_mutex};
+    std::lock_guard<std::mutex> lg{notify_change_mutex};
     notify_change();
 }
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard<std::recursive_mutex> lg(guard);
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
@@ -136,7 +136,7 @@ void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
     auto surface = s.lock();
 
     {
-        std::unique_lock<std::mutex> ul(guard);
+        std::unique_lock<std::recursive_mutex> ul(guard);
         for (auto &layer : layers_by_depth)
         {
             auto &surfaces = layer.second;
@@ -156,4 +156,14 @@ void ms::SurfaceStack::raise(std::weak_ptr<ms::Surface> const& s)
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+}
+
+void ms::SurfaceStack::lock()
+{
+    guard.lock();
+}
+
+void ms::SurfaceStack::unlock()
+{
+    guard.unlock();
 }
