@@ -46,6 +46,8 @@ struct MockScene : mc::Scene
 {
     MOCK_METHOD2(for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
     MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
+    MOCK_METHOD0(lock, void());
+    MOCK_METHOD0(unlock, void());
 };
 
 struct MockOverlayRenderer : public mc::OverlayRenderer
@@ -73,6 +75,9 @@ struct FakeScene : mc::Scene
     }
 
     void set_change_callback(std::function<void()> const&) {}
+
+    void lock() {}
+    void unlock() {}
 
     mtd::MockBufferStream stub_stream;
     std::vector<mc::CompositingCriteria*> surfaces;

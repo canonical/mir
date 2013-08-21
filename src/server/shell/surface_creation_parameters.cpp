@@ -90,6 +90,14 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_input_mode(
     return *this;
 }
 
+msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_output_id(
+    graphics::DisplayConfigurationOutputId const& new_output_id)
+{
+    output_id = new_output_id;
+
+    return *this;
+}
+
 bool msh::operator==(
     const SurfaceCreationParameters& lhs,
     const msh::SurfaceCreationParameters& rhs)
@@ -99,7 +107,9 @@ bool msh::operator==(
         lhs.top_left == rhs.top_left &&
         lhs.buffer_usage == rhs.buffer_usage &&
         lhs.pixel_format == rhs.pixel_format &&
-        lhs.depth == rhs.depth;
+        lhs.depth == rhs.depth &&
+        lhs.input_mode == rhs.input_mode &&
+        lhs.output_id == lhs.output_id;
 }
 
 bool msh::operator!=(

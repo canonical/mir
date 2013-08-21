@@ -135,7 +135,8 @@ int main(int argc, char* argv[])
     MirPixelFormat pixel_format = find_8888_format(pixel_formats, valid_formats);
 
     MirSurfaceParameters const request_params =
-        {__PRETTY_FUNCTION__, 640, 480, pixel_format, mir_buffer_usage_software};
+        {__PRETTY_FUNCTION__, 640, 480, pixel_format,
+         mir_buffer_usage_software, mir_display_output_id_invalid};
 
     surface = mir_connection_create_surface_sync(connection, &request_params);
     assert(surface != NULL);

@@ -364,16 +364,16 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
 
     MirDisplayConfigurationStore orig_config{display_configuration->copy_to_client()};
 
-    if ((!config) || (config->num_displays == 0) || (config->displays == NULL) || 
-        (config->num_displays > orig_config->num_displays))
+    if ((!config) || (config->num_outputs == 0) || (config->outputs == NULL) ||
+        (config->num_outputs > orig_config->num_outputs))
     {
         return false;
     }
 
-    for(auto i = 0u; i < config->num_displays; i++)
+    for(auto i = 0u; i < config->num_outputs; i++)
     {
-        auto const& output = config->displays[i];
-        auto const& orig_output = orig_config->displays[i];
+        auto const& output = config->outputs[i];
+        auto const& orig_output = orig_config->outputs[i];
 
         if (output.output_id != orig_output.output_id)
             return false;
@@ -404,9 +404,9 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
     }
 
     mir::protobuf::DisplayConfiguration request;
-    for (auto i=0u; i < config->num_displays; i++)
+    for (auto i=0u; i < config->num_outputs; i++)
     {
-        auto output = config->displays[i];
+        auto output = config->outputs[i];
         auto display_request = request.add_display_output();
         display_request->set_output_id(output.output_id); 
         display_request->set_used(output.used); 

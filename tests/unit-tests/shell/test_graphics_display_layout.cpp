@@ -19,6 +19,7 @@
 #include "mir/shell/graphics_display_layout.h"
 
 #include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 
 #include <vector>
@@ -38,22 +39,33 @@ class StubDisplay : public mtd::NullDisplay
 {
 public:
     StubDisplay()
-        : display_buffers{
-              mtd::StubDisplayBuffer{geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}}},
-              mtd::StubDisplayBuffer{geom::Rectangle{geom::Point{0,600}, geom::Size{100,100}}},
-              mtd::StubDisplayBuffer{geom::Rectangle{geom::Point{800,0}, geom::Size{100,100}}}}
+        : rects{{{0,0}, {800,600}},
+                {{0,600}, {100,100}},
+                {{800,0}, {100,100}}},
+          config{std::make_shared<mtd::StubDisplayConfig>(rects)}
     {
-
+        for (auto const& rect : rects)
+        {
+            display_buffers.push_back(
+                std::make_shared<mtd::StubDisplayBuffer>(rect));
+        }
     }
 
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
         for (auto& db : display_buffers)
-            f(db);
+            f(*db);
+    }
+
+    std::shared_ptr<mg::DisplayConfiguration> configuration() override
+    {
+        return config;
     }
 
 private:
-    std::vector<mtd::StubDisplayBuffer> display_buffers;
+    std::vector<geom::Rectangle> const rects;
+    std::vector<std::shared_ptr<mtd::StubDisplayBuffer>> display_buffers;
+    std::shared_ptr<mtd::StubDisplayConfig> config;
 };
 
 }
@@ -115,5 +127,73 @@ TEST(GraphicsDisplayLayoutTest, makes_fullscreen_in_correct_screen)
         auto const expected_rect = std::get<1>(t);
         display_layout.size_to_output(fullscreen_rect);
         EXPECT_EQ(expected_rect, fullscreen_rect);
+    }
+}
+
+TEST(GraphicsDisplayLayoutTest, place_in_output_places_in_correct_output)
+{
+    auto stub_display = std::make_shared<StubDisplay>();
+
+    msh::GraphicsDisplayLayout display_layout{stub_display};
+
+    std::vector<std::tuple<mg::DisplayConfigurationOutputId,geom::Rectangle,geom::Rectangle>> rect_tuples
+    {
+        std::make_tuple(
+            mg::DisplayConfigurationOutputId{1},
+            geom::Rectangle{{0,0}, {800,600}},
+            geom::Rectangle{{0,0}, {800,600}}),
+        std::make_tuple(
+            mg::DisplayConfigurationOutputId{1},
+            geom::Rectangle{{750,50}, {800,600}},
+            geom::Rectangle{{0,0}, {800,600}}),
+        std::make_tuple(
+            mg::DisplayConfigurationOutputId{2},
+            geom::Rectangle{{899,99}, {100,100}},
+            geom::Rectangle{{0,600}, {100,100}}),
+        std::make_tuple(
+            mg::DisplayConfigurationOutputId{3},
+            geom::Rectangle{{-1,-1}, {100,100}},
+            geom::Rectangle{{800,0}, {100,100}})
+    };
+
+    for (auto const& t : rect_tuples)
+    {
+        auto const output_id = std::get<0>(t);
+        auto submitted_rect = std::get<1>(t);
+        auto const expected_rect = std::get<2>(t);
+        display_layout.place_in_output(output_id, submitted_rect);
+        EXPECT_EQ(expected_rect, submitted_rect);
+    }
+}
+
+TEST(GraphicsDisplayLayoutTest, place_in_output_throws_on_non_fullscreen_request)
+{
+    auto stub_display = std::make_shared<StubDisplay>();
+
+    msh::GraphicsDisplayLayout display_layout{stub_display};
+
+    std::vector<std::tuple<mg::DisplayConfigurationOutputId,geom::Rectangle>> rect_tuples
+    {
+        std::make_tuple(
+            mg::DisplayConfigurationOutputId{1},
+            geom::Rectangle{{0,0}, {801,600}}),
+        std::make_tuple(
+            mg::DisplayConfigurationOutputId{1},
+            geom::Rectangle{{750,50}, {800,599}}),
+        std::make_tuple(
+            mg::DisplayConfigurationOutputId{2},
+            geom::Rectangle{{899,99}, {1,1}}),
+        std::make_tuple(
+            mg::DisplayConfigurationOutputId{3},
+            geom::Rectangle{{-1,-1}, {0,0}}),
+    };
+
+    for (auto const& t : rect_tuples)
+    {
+        auto const output_id = std::get<0>(t);
+        auto submitted_rect = std::get<1>(t);
+        EXPECT_THROW({
+            display_layout.place_in_output(output_id, submitted_rect);
+        }, std::runtime_error);
     }
 }

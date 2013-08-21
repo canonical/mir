@@ -33,6 +33,7 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/pipe.h"
+#include "mir_test/cross_process_action.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -296,7 +297,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
             //that is passively subscribed, we will just wait for the display configuration to change
             //and then will check the new config.
             auto configuration = mir_connection_create_display_config(connection);
-            while(configuration->num_displays != changed_stub_display_config.outputs.size())
+            while(configuration->num_outputs != changed_stub_display_config.outputs.size())
             {
                 mir_display_config_destroy(configuration);
                 std::this_thread::sleep_for(std::chrono::microseconds(500));
@@ -375,32 +376,11 @@ TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_
 namespace
 {
 
-class CrossProcessAction
-{
-public:
-    void exec(std::function<void()> const& f)
-    {
-        start_fence.wait_for_signal_ready();
-        f();
-        finish_fence.signal_ready();
-    }
-
-    void operator()()
-    {
-        start_fence.signal_ready();
-        finish_fence.wait_for_signal_ready();
-    }
-
-private:
-    mtf::CrossProcessSync start_fence;
-    mtf::CrossProcessSync finish_fence;
-};
-
 struct DisplayClient : TestingClientConfiguration
 {
-    DisplayClient(CrossProcessAction const& connect,
-                  CrossProcessAction const& apply_config,
-                  CrossProcessAction const& disconnect)
+    DisplayClient(mt::CrossProcessAction const& connect,
+                  mt::CrossProcessAction const& apply_config,
+                  mt::CrossProcessAction const& disconnect)
         : connect{connect},
           apply_config{apply_config},
           disconnect{disconnect}
@@ -430,15 +410,15 @@ struct DisplayClient : TestingClientConfiguration
         });
     }
 
-    CrossProcessAction connect;
-    CrossProcessAction apply_config;
-    CrossProcessAction disconnect;
+    mt::CrossProcessAction connect;
+    mt::CrossProcessAction apply_config;
+    mt::CrossProcessAction disconnect;
 };
 
 struct SimpleClient : TestingClientConfiguration
 {
-    SimpleClient(CrossProcessAction const& connect,
-                 CrossProcessAction const& disconnect)
+    SimpleClient(mt::CrossProcessAction const& connect,
+                 mt::CrossProcessAction const& disconnect)
         : connect{connect},
           disconnect{disconnect}
     {
@@ -459,24 +439,24 @@ struct SimpleClient : TestingClientConfiguration
         });
     }
 
-    CrossProcessAction connect;
-    CrossProcessAction disconnect;
+    mt::CrossProcessAction connect;
+    mt::CrossProcessAction disconnect;
 };
 
 }
 
 TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_display)
 {
-    CrossProcessAction display_client_connect;
-    CrossProcessAction display_client_apply_config;
-    CrossProcessAction display_client_disconnect;
-    CrossProcessAction verify_connection_expectations;
-    CrossProcessAction verify_apply_config_expectations;
+    mt::CrossProcessAction display_client_connect;
+    mt::CrossProcessAction display_client_apply_config;
+    mt::CrossProcessAction display_client_disconnect;
+    mt::CrossProcessAction verify_connection_expectations;
+    mt::CrossProcessAction verify_apply_config_expectations;
 
     struct ServerConfig : TestingServerConfiguration
     {
-        ServerConfig(CrossProcessAction const& verify_connection_expectations,
-                     CrossProcessAction const& verify_apply_config_expectations)
+        ServerConfig(mt::CrossProcessAction const& verify_connection_expectations,
+                     mt::CrossProcessAction const& verify_apply_config_expectations)
             : verify_connection_expectations{verify_connection_expectations},
               verify_apply_config_expectations{verify_apply_config_expectations}
         {
@@ -518,8 +498,8 @@ TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_d
 
         std::shared_ptr<StubPlatform> platform;
         std::thread t;
-        CrossProcessAction verify_connection_expectations;
-        CrossProcessAction verify_apply_config_expectations;
+        mt::CrossProcessAction verify_connection_expectations;
+        mt::CrossProcessAction verify_apply_config_expectations;
     } server_config{verify_connection_expectations,
                     verify_apply_config_expectations};
 
@@ -545,18 +525,18 @@ TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_d
 
 TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_display)
 {
-    CrossProcessAction display_client_connect;
-    CrossProcessAction display_client_apply_config;
-    CrossProcessAction display_client_disconnect;
-    CrossProcessAction simple_client_connect;
-    CrossProcessAction simple_client_disconnect;
-    CrossProcessAction verify_apply_config_expectations;
-    CrossProcessAction verify_focus_change_expectations;
+    mt::CrossProcessAction display_client_connect;
+    mt::CrossProcessAction display_client_apply_config;
+    mt::CrossProcessAction display_client_disconnect;
+    mt::CrossProcessAction simple_client_connect;
+    mt::CrossProcessAction simple_client_disconnect;
+    mt::CrossProcessAction verify_apply_config_expectations;
+    mt::CrossProcessAction verify_focus_change_expectations;
 
     struct ServerConfig : TestingServerConfiguration
     {
-        ServerConfig(CrossProcessAction const& verify_apply_config_expectations,
-                     CrossProcessAction const& verify_focus_change_expectations)
+        ServerConfig(mt::CrossProcessAction const& verify_apply_config_expectations,
+                     mt::CrossProcessAction const& verify_focus_change_expectations)
             : verify_apply_config_expectations{verify_apply_config_expectations},
               verify_focus_change_expectations{verify_focus_change_expectations}
         {
@@ -598,8 +578,8 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
 
         std::shared_ptr<StubPlatform> platform;
         std::thread t;
-        CrossProcessAction verify_apply_config_expectations;
-        CrossProcessAction verify_focus_change_expectations;
+        mt::CrossProcessAction verify_apply_config_expectations;
+        mt::CrossProcessAction verify_focus_change_expectations;
     } server_config{verify_apply_config_expectations,
                     verify_focus_change_expectations};
 
@@ -639,18 +619,18 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
 
 TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_client_without_config_configures_display)
 {
-    CrossProcessAction display_client_connect;
-    CrossProcessAction display_client_apply_config;
-    CrossProcessAction display_client_disconnect;
-    CrossProcessAction simple_client_connect;
-    CrossProcessAction simple_client_disconnect;
-    CrossProcessAction verify_apply_config_expectations;
-    CrossProcessAction verify_focus_change_expectations;
+    mt::CrossProcessAction display_client_connect;
+    mt::CrossProcessAction display_client_apply_config;
+    mt::CrossProcessAction display_client_disconnect;
+    mt::CrossProcessAction simple_client_connect;
+    mt::CrossProcessAction simple_client_disconnect;
+    mt::CrossProcessAction verify_apply_config_expectations;
+    mt::CrossProcessAction verify_focus_change_expectations;
 
     struct ServerConfig : TestingServerConfiguration
     {
-        ServerConfig(CrossProcessAction const& verify_apply_config_expectations,
-                     CrossProcessAction const& verify_focus_change_expectations)
+        ServerConfig(mt::CrossProcessAction const& verify_apply_config_expectations,
+                     mt::CrossProcessAction const& verify_focus_change_expectations)
             : verify_apply_config_expectations{verify_apply_config_expectations},
               verify_focus_change_expectations{verify_focus_change_expectations}
         {
@@ -692,8 +672,8 @@ TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_clien
 
         std::shared_ptr<StubPlatform> platform;
         std::thread t;
-        CrossProcessAction verify_apply_config_expectations;
-        CrossProcessAction verify_focus_change_expectations;
+        mt::CrossProcessAction verify_apply_config_expectations;
+        mt::CrossProcessAction verify_focus_change_expectations;
     } server_config{verify_apply_config_expectations,
                     verify_focus_change_expectations};
 

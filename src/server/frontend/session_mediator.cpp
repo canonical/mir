@@ -126,6 +126,7 @@ void mf::SessionMediator::create_surface(
             .of_size(request->width(), request->height())
             .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
             .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+            .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()))
             );
 
         {
