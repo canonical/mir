@@ -23,6 +23,7 @@
 #include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/surfaces/depth_id.h"
 #include "mir/input/input_reception_mode.h"
 
@@ -54,6 +55,8 @@ struct SurfaceCreationParameters
     
     SurfaceCreationParameters& with_input_mode(input::InputReceptionMode const& new_mode);
 
+    SurfaceCreationParameters& with_output_id(graphics::DisplayConfigurationOutputId const& output_id);
+
     std::string name;
     geometry::Size size;
     geometry::Point top_left;
@@ -61,6 +64,7 @@ struct SurfaceCreationParameters
     geometry::PixelFormat pixel_format;
     surfaces::DepthId depth;
     input::InputReceptionMode input_mode;
+    graphics::DisplayConfigurationOutputId output_id;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

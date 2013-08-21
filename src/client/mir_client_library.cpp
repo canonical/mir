@@ -264,18 +264,18 @@ void mir_display_config_destroy(MirDisplayConfiguration* configuration)
 void mir_connection_get_display_info(MirConnection *connection, MirDisplayInfo *display_info)
 {
     auto config = mir_connection_create_display_config(connection);
-    if (config->num_displays < 1)
+    if (config->num_outputs < 1)
         return;
 
     MirDisplayOutput* state = nullptr;
     // We can't handle more than one display, so just populate based on the first
     // active display we find.
-    for (unsigned int i = 0; i < config->num_displays; ++i) 
+    for (unsigned int i = 0; i < config->num_outputs; ++i)
     {
-        if (config->displays[i].used && config->displays[i].connected &&
-            config->displays[i].current_mode < config->displays[i].num_modes)
+        if (config->outputs[i].used && config->outputs[i].connected &&
+            config->outputs[i].current_mode < config->outputs[i].num_modes)
         {
-            state = &config->displays[i];
+            state = &config->outputs[i];
             break;
         }
     }

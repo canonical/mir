@@ -11,7 +11,9 @@ message SurfaceParameters {
   required int32 height = 2;
   required int32 pixel_format = 3;
   required int32 buffer_usage = 4;
+  // TODO: Make required when we bump protobuf and server ABI
   optional string surface_name = 5;
+  optional uint32 output_id = 6;
 }
 
 message SurfaceId {

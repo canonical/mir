@@ -168,7 +168,8 @@ struct InputClient : ClientConfig
              client_name.c_str(),
              surface_width, surface_height,
              mir_pixel_format_abgr_8888,
-             mir_buffer_usage_hardware
+             mir_buffer_usage_hardware,
+             mir_display_output_id_invalid
          };
         return request_params;
     }

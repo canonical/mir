@@ -16,32 +16,31 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_
+#ifndef MIR_TEST_CROSS_PROCESS_ACTION_H_
+#define MIR_TEST_CROSS_PROCESS_ACTION_H_
 
-#include "mir/shell/display_layout.h"
+/* TODO: CrossProcessSync should be in mir_test */
+#include "mir_test_framework/cross_process_sync.h"
 
-#include <gmock/gmock.h>
+#include <functional>
 
 namespace mir
 {
 namespace test
 {
-namespace doubles
-{
 
-class MockDisplayLayout : public shell::DisplayLayout
+class CrossProcessAction
 {
 public:
-    MOCK_METHOD1(clip_to_output, void(geometry::Rectangle& rect));
-    MOCK_METHOD1(size_to_output, void(geometry::Rectangle& rect));
-    MOCK_METHOD2(place_in_output, void(graphics::DisplayConfigurationOutputId id,
-                                       geometry::Rectangle& rect));
+    void exec(std::function<void()> const& f);
+    void operator()();
+
+private:
+    mir_test_framework::CrossProcessSync start_sync;
+    mir_test_framework::CrossProcessSync finish_sync;
 };
 
 }
 }
-}
 
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_ */
-
+#endif /* MIR_TEST_CROSS_PROCESS_ACTION_H_ */

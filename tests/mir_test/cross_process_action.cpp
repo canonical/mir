@@ -16,32 +16,19 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_
+#include "mir_test/cross_process_action.h"
 
-#include "mir/shell/display_layout.h"
+namespace mt = mir::test;
 
-#include <gmock/gmock.h>
-
-namespace mir
+void mt::CrossProcessAction::exec(std::function<void()> const& f)
 {
-namespace test
-{
-namespace doubles
-{
-
-class MockDisplayLayout : public shell::DisplayLayout
-{
-public:
-    MOCK_METHOD1(clip_to_output, void(geometry::Rectangle& rect));
-    MOCK_METHOD1(size_to_output, void(geometry::Rectangle& rect));
-    MOCK_METHOD2(place_in_output, void(graphics::DisplayConfigurationOutputId id,
-                                       geometry::Rectangle& rect));
-};
-
-}
-}
+    start_sync.wait_for_signal_ready();
+    f();
+    finish_sync.signal_ready();
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_DISPLAY_LAYOUT_H_ */
-
+void mt::CrossProcessAction::operator()()
+{
+    start_sync.signal_ready();
+    finish_sync.wait_for_signal_ready();
+}

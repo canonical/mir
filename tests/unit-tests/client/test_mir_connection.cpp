@@ -86,7 +86,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
             .WillByDefault(Return(native_display));
     }
 
-    MOCK_CONST_METHOD0(platform_type, MirPlatformType()); 
+    MOCK_CONST_METHOD0(platform_type, MirPlatformType());
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::ClientSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
@@ -223,8 +223,8 @@ std::vector<MirPixelFormat> const supported_output_formats{
     mir_pixel_format_xbgr_8888
 };
 
-unsigned int const number_of_displays = 4;
-geom::Rectangle rects[number_of_displays] = {
+unsigned int const number_of_outputs = 4;
+geom::Rectangle rects[number_of_outputs] = {
     geom::Rectangle{geom::Point(1,2), geom::Size(14,15)},
     geom::Rectangle{geom::Point(3,4), geom::Size(12,13)},
     geom::Rectangle{geom::Point(5,6), geom::Size(10,11)},
@@ -235,7 +235,7 @@ void fill_display_configuration(mp::ConnectParameters const*, mp::Connection* re
 {
     auto protobuf_config = response->mutable_display_configuration();
 
-    for (auto i = 0u; i < number_of_displays; i++)
+    for (auto i = 0u; i < number_of_outputs; i++)
     {
         auto output = protobuf_config->add_display_output();
         output->set_output_id(i);
@@ -265,10 +265,10 @@ TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
 
     auto configuration = connection->create_copy_of_display_config();
 
-    ASSERT_EQ(number_of_displays, configuration->num_displays);
-    for(auto i=0u; i < number_of_displays; i++)
+    ASSERT_EQ(number_of_outputs, configuration->num_outputs);
+    for(auto i=0u; i < number_of_outputs; i++)
     {
-        auto output = configuration->displays[i];
+        auto output = configuration->outputs[i];
         auto rect = rects[i];
 
         ASSERT_EQ(1u, output.num_modes);
@@ -278,7 +278,7 @@ TEST_F(MirConnectionTest, populates_display_output_correctly_on_startup)
 
         EXPECT_EQ(output.position_x, static_cast<int>(rect.top_left.x.as_uint32_t()));
         EXPECT_EQ(output.position_y, static_cast<int>(rect.top_left.y.as_uint32_t()));
- 
+
         ASSERT_EQ(supported_output_formats.size(),
                   static_cast<uint32_t>(output.num_output_formats));
 
@@ -303,34 +303,34 @@ TEST_F(MirConnectionTest, user_tries_to_configure_incorrectly)
     wait_handle->wait_for_all();
 
     auto configuration = connection->create_copy_of_display_config();
-    EXPECT_GT(configuration->num_displays, 0u);
-    auto proper_num_displays = configuration->num_displays;
-    auto proper_displays = configuration->displays;
-    auto proper_output_id = configuration->displays[0].output_id;
+    EXPECT_GT(configuration->num_outputs, 0u);
+    auto proper_num_outputs = configuration->num_outputs;
+    auto proper_outputs = configuration->outputs;
+    auto proper_output_id = configuration->outputs[0].output_id;
 
-    //user lies about num_displays
-    configuration->num_displays = 0;
+    //user lies about num_outputs
+    configuration->num_outputs = 0;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
 
-    configuration->num_displays = proper_num_displays + 1;
+    configuration->num_outputs = proper_num_outputs + 1;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
 
-    configuration->num_displays = proper_num_displays;
-   
-    //user sends nullptr for displays 
-    configuration->displays = nullptr;
+    configuration->num_outputs = proper_num_outputs;
+
+    //user sends nullptr for outputs
+    configuration->outputs = nullptr;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
 
-    configuration->displays = proper_displays;
+    configuration->outputs = proper_outputs;
 
     //user makes up own id
-    configuration->displays[0].output_id = 4944949;
+    configuration->outputs[0].output_id = 4944949;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
-    configuration->displays[0].output_id = proper_output_id; 
+    configuration->outputs[0].output_id = proper_output_id;
 
     //user tries to set nonsense mode on a connected output
-    configuration->displays[0].current_mode++;
-    configuration->displays[0].connected = 1;
+    configuration->outputs[0].current_mode++;
+    configuration->outputs[0].connected = 1;
     EXPECT_EQ(nullptr, connection->configure_display(configuration));
 
     mcl::delete_config_storage(configuration);
@@ -348,10 +348,10 @@ TEST_F(MirConnectionTest, display_configuration_validation_succeeds_for_invalid_
     wait_handle->wait_for_all();
 
     auto configuration = connection->create_copy_of_display_config();
-    EXPECT_GT(configuration->num_displays, 0u);
+    EXPECT_GT(configuration->num_outputs, 0u);
 
-    configuration->displays[0].current_mode++;
-    configuration->displays[0].connected = 0;
+    configuration->outputs[0].current_mode++;
+    configuration->outputs[0].connected = 0;
     EXPECT_NE(nullptr, connection->configure_display(configuration));
 
     mcl::delete_config_storage(configuration);
@@ -406,7 +406,7 @@ TEST_F(MirConnectionTest, populates_pfs_correctly)
 
     unsigned int const formats_size = 5;
     unsigned int valid_formats = 0;
-    MirPixelFormat formats[formats_size]; 
+    MirPixelFormat formats[formats_size];
 
     connection->possible_pixel_formats(&formats[0], formats_size, valid_formats);
 

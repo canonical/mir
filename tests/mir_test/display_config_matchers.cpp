@@ -113,9 +113,9 @@ public:
         }
 
         /* Outputs */
-        for (size_t i = 0; i < client_config.num_displays; i++)
+        for (size_t i = 0; i < client_config.num_outputs; i++)
         {
-            auto const& client_output = client_config.displays[i];
+            auto const& client_output = client_config.outputs[i];
             mg::DisplayConfigurationOutput display_output
             {
                 mg::DisplayConfigurationOutputId(client_output.output_id),

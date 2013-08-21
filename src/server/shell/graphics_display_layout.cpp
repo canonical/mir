@@ -24,6 +24,9 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/geometry/displacement.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -63,6 +66,29 @@ void msh::GraphicsDisplayLayout::size_to_output(geometry::Rectangle& rect)
 {
     auto output = get_output_for(rect);
     rect = output;
+}
+
+void msh::GraphicsDisplayLayout::place_in_output(
+    graphics::DisplayConfigurationOutputId id,
+    geometry::Rectangle& rect)
+{
+    auto config = display->configuration();
+    bool placed = false;
+
+    /* Accept only fullscreen placements for now */
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        if (output.id == id &&
+            output.current_mode_index < output.modes.size() &&
+            rect.size == output.modes[output.current_mode_index].size)
+        {
+            rect.top_left = output.top_left;
+            placed = true;
+        }
+    });
+
+    if (!placed)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to place surface in requested output"));
 }
 
 geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& rect)
