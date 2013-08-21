@@ -1,3 +1,61 @@
+mir (0.0.9+13.10.20130821-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Release the mir surfaces when done in multiwin demo.
+  * Clean up config->cards when were are deleting the display config.
+
+  [ Alexandros Frantzis ]
+  * server: Handle both user initiated and hardware display changes with
+    MediatingDisplayChanger Enhance MediatingDisplayChanger to handle
+    both user initiated display changes and hardware changes, by making
+    it implement two interfaces for the two responsibilities
+    (mg::DisplayChanger, mf::DisplayChanger).
+  * shell: Notify sessions when the display configuration changes This
+    patchset implements client notifications for display configuration
+    changes. It also adds a mir_demo_client_display_config example which
+    can be used to test and demo client initiated display configuration
+    changes. Use of the example uncovered some issues that are also
+    fixed by this patchset (see individual commits for more info).
+  * shell: Add infrastructure for emitting and handling session related
+    events.
+  * shell: Support per-session display configurations This MP adds
+    support for per-session display configurations, i.e., configurations
+    that are active only when the client that submitted them has the
+    focus. mir_connection_apply_display_config() now changes the session
+    display configuration instead of the base/global one.
+
+  [ Alan Griffiths ]
+  * graphics::nested: sketch out some more of the nested mir
+    implementation.
+  * tests: Workaround for test timeout under valgrind. (LP: #1212518)
+  * config: use the DisplayServer to hold ownership of system
+    components, not the DefaultServerConfiguration.
+  * graphics: Start on the NativePlatform interface.
+  * graphics: Split the output state out of the NestedDisplay class.
+
+  [ Daniel van Vugt ]
+  * setup-android-dependencies.sh: Update for saucy flipped phablet
+    images.
+  * Give Mir a grey background by default, so you can see which monitors
+    it is using.
+
+  [ Eleni Maria Stea ]
+  * graphics::nested: sketch out some more of the nested mir
+    implementation.
+  * nested_platform.cpp functions.
+
+  [ Robert Carr ]
+  * Pass session through placement strategy.
+
+  [ Christopher James Halse Rogers ]
+  * Add a little extra debugging API.
+  * Add missing mutex around display config call.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 988
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 21 Aug 2013 06:04:49 +0000
+
 mir (0.0.9+13.10.20130813-0ubuntu1) saucy; urgency=low
 
   [ Daniel d'Andrada ]
