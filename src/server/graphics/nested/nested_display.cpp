@@ -197,7 +197,7 @@ void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayB
 
 std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
 {
-    return std::make_shared<NestedDisplayConfiguration>(connection);
+    return std::make_shared<NestedDisplayConfiguration>(mir_connection_create_display_config(connection));
 }
 
 void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration)

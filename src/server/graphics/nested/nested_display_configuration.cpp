@@ -25,7 +25,7 @@
 
 namespace mgn = mir::graphics::nested;
 
-mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(MirConnection* connection) :
+mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(MirDisplayConfiguration* connection) :
 display_config{connection}
 {
 }
