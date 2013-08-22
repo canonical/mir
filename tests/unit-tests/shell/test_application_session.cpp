@@ -239,3 +239,21 @@ TEST(Session, display_config_sender)
 
     app_session.send_display_config(stub_config);
 }
+
+TEST(Session, lifecycle_event_sender)
+{
+    using namespace ::testing;
+
+    MirLifecycleState exp_state = mir_lifecycle_state_will_suspend;
+    mtd::MockSurfaceFactory surface_factory;
+    MockEventSink sender;
+
+    EXPECT_CALL(sender, handle_lifecycle_event(exp_state))
+        .Times(1);
+
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
+                                        std::make_shared<mtd::NullSnapshotStrategy>(),
+                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+
+    app_session.set_lifecycle_state(mir_lifecycle_state_will_suspend);
+}
