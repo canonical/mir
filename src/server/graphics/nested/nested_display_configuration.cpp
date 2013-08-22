@@ -20,6 +20,11 @@
 
 namespace mgn = mir::graphics::nested;
 
+mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(MirDisplayConfiguration* connection) :
+display_config{connection}
+{
+}
+
 mgn::NestedDisplayConfiguration::~NestedDisplayConfiguration() noexcept
 {
 }
