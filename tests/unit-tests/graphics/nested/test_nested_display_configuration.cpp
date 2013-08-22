@@ -37,7 +37,7 @@ struct NestedDisplayConfigurationTest : public ::testing::Test
 
 TEST_F(NestedDisplayConfigurationTest, empty_configuration_is_read_correctly)
 {
-    MirDisplayConfiguration mir_display_configuration{ 0, nullptr, 0, nullptr };
+    auto mir_display_configuration = new MirDisplayConfiguration{ 0, nullptr, 0, nullptr };
 
     mgn::NestedDisplayConfiguration config(mir_display_configuration);
 
