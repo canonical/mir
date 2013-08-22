@@ -41,9 +41,7 @@ void mgn::NestedDisplayConfiguration::for_each_card(std::function<void(DisplayCo
         display_config->cards+display_config->num_cards,
         [&f](MirDisplayCard const& mir_card)
         {
-            f({
-                static_cast<DisplayConfigurationCardId>(mir_card.card_id),
-                mir_card.max_simultaneous_outputs});
+            f({DisplayConfigurationCardId(mir_card.card_id), mir_card.max_simultaneous_outputs});
         });
 }
 
