@@ -149,7 +149,8 @@ TEST_F(BespokeDisplayServerTestFixture, server_can_shut_down_when_clients_are_bl
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             MirSurface* surf = mir_connection_create_surface_sync(connection, &request_params);
@@ -265,7 +266,8 @@ TEST_F(BespokeDisplayServerTestFixture, server_releases_resources_on_shutdown_wi
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_connection_create_surface_sync(connection, &request_params);

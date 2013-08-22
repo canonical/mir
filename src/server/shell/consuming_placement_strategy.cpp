@@ -21,6 +21,8 @@
 #include "mir/shell/display_layout.h"
 #include "mir/geometry/rectangle.h"
 
+#include "mir_toolkit/client_types.h"
+
 #include <algorithm>
 
 namespace msh = mir::shell;
@@ -32,14 +34,22 @@ msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(
 {
 }
 
-msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(msh::Session const& /* session */, msh::SurfaceCreationParameters const& request_parameters)
+msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(
+    msh::Session const& /* session */,
+    msh::SurfaceCreationParameters const& request_parameters)
 {
+    mir::graphics::DisplayConfigurationOutputId const output_id_invalid{
+        mir_display_output_id_invalid};
     auto placed_parameters = request_parameters;
 
     geom::Rectangle rect{request_parameters.top_left, request_parameters.size};
 
-    if (request_parameters.size.width > geom::Width{0} &&
-        request_parameters.size.height > geom::Height{0})
+    if (request_parameters.output_id != output_id_invalid)
+    {
+        display_layout->place_in_output(request_parameters.output_id, rect);
+    }
+    else if (request_parameters.size.width > geom::Width{0} &&
+             request_parameters.size.height > geom::Height{0})
     {
         display_layout->clip_to_output(rect);
     }

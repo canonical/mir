@@ -121,7 +121,8 @@ struct EventObservingClient : ClientConfigCommon
                 __PRETTY_FUNCTION__,
                 surface_width, surface_height,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
         mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
         all_events_received.wait_for_at_most_seconds(60);
