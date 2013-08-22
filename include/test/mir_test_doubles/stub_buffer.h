@@ -54,7 +54,7 @@ public:
 
     virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const
     {
-        return std::shared_ptr<MirNativeBuffer>();
+        return std::make_shared<MirNativeBuffer>();
     }
     virtual void bind_to_texture() {}
 
