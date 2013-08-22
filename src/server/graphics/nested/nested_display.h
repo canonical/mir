@@ -26,6 +26,8 @@
 
 #include <EGL/egl.h>
 
+#include <unordered_map>
+
 namespace mir
 {
 namespace geometry
@@ -43,7 +45,7 @@ namespace detail
 class MirSurfaceHandle
 {
 public:
-    explicit MirSurfaceHandle(MirConnection* connection);
+    explicit MirSurfaceHandle(MirConnection* connection, MirDisplayOutput* const egl_display_info);
     ~MirSurfaceHandle() noexcept;
 
     operator MirSurface*() const { return mir_surface; }
@@ -73,6 +75,27 @@ private:
     EGLDisplayHandle(EGLDisplayHandle const&) = delete;
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
 };
+
+class NestedOutput
+{
+public:
+    NestedOutput(MirConnection* connection, MirDisplayOutput* const);
+    ~NestedOutput() noexcept;
+
+    operator MirSurface*() const { return mir_surface; }
+    operator EGLContext()  const { return egl_surface; }
+
+    NestedOutput(NestedOutput const&) = delete;
+    NestedOutput operator=(NestedOutput const&) = delete;
+private:
+    detail::MirSurfaceHandle const mir_surface;
+    detail::EGLDisplayHandle const egl_display;
+
+    EGLConfig const egl_config;
+    EGLSurfaceStore const egl_surface;
+    EGLContextStore const egl_context;
+};
+
 }
 
 class NestedDisplay : public Display
@@ -81,7 +104,6 @@ public:
     NestedDisplay(MirConnection* connection, std::shared_ptr<DisplayReport>const& display_report);
     virtual ~NestedDisplay() noexcept;
 
-    geometry::Rectangle view_area() const;
     void post_update();
     void for_each_display_buffer(std::function<void(DisplayBuffer&)>const& f);
 
@@ -100,20 +122,12 @@ public:
     void pause();
     void resume();
 
-    void make_current();
-    void release_current();
-
     std::weak_ptr<Cursor> the_cursor();
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
 private:
     std::shared_ptr<DisplayReport> const display_report;
-    detail::MirSurfaceHandle const mir_surface;
-    detail::EGLDisplayHandle const egl_display;
-
-    EGLConfig const egl_config;
-    EGLSurfaceStore const egl_surface;
-    EGLContextStore const egl_context;
+    std::unordered_map<uint32_t, std::shared_ptr<detail::NestedOutput>> outputs;
 };
 
 }

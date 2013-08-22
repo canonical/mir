@@ -125,6 +125,15 @@ typedef struct MirSurfaceParameters
     int height;
     MirPixelFormat pixel_format;
     MirBufferUsage buffer_usage;
+    /**
+     * The id of the output to place the surface in.
+     *
+     * Use one of the output ids from MirDisplayConfiguration/MirDisplayOutput
+     * to place a surface on that output. Only fullscreen placements are
+     * currently supported. If you don't have special placement requirements,
+     * use the value mir_display_output_invalid.
+     */
+    uint32_t output_id;
 } MirSurfaceParameters;
 
 enum { mir_platform_package_max = 32 };
@@ -211,6 +220,8 @@ typedef struct MirDisplayMode
     double refresh_rate;
 }MirDisplayMode;
 
+enum { mir_display_output_id_invalid = 0 };
+
 typedef struct MirDisplayOutput
 {
     uint32_t num_modes;
@@ -237,8 +248,8 @@ typedef struct MirDisplayOutput
 
 typedef struct MirDisplayConfiguration
 {
-    uint32_t num_displays;
-    MirDisplayOutput* displays;
+    uint32_t num_outputs;
+    MirDisplayOutput* outputs;
     uint32_t num_cards;
     MirDisplayCard *cards;
 } MirDisplayConfiguration;

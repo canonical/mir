@@ -168,7 +168,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_surface)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
@@ -230,7 +231,8 @@ TEST_F(DefaultDisplayServerTestFixture, surface_types)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
@@ -302,7 +304,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_can_set_surface_state)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             surface = mir_connection_create_surface_sync(connection,
@@ -376,7 +379,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_state_events)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             memset(&last_event, 0, sizeof last_event);
@@ -499,7 +503,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_creates_multiple_surfaces
                     __PRETTY_FUNCTION__,
                     640, 480,
                     mir_pixel_format_abgr_8888,
-                    mir_buffer_usage_hardware
+                    mir_buffer_usage_hardware,
+                    mir_display_output_id_invalid
                 };
 
                 mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
@@ -547,7 +552,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_and_advances_buf
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
@@ -586,7 +592,8 @@ TEST_F(DefaultDisplayServerTestFixture, fully_synchronous_client)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_software
+                mir_buffer_usage_software,
+                mir_display_output_id_invalid
             };
 
             surface = mir_connection_create_surface_sync(connection, &request_params);
@@ -648,7 +655,8 @@ TEST_F(DefaultDisplayServerTestFixture, highly_threaded_client)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_software
+                mir_buffer_usage_software,
+                mir_display_output_id_invalid
             };
 
             surface = mir_connection_create_surface_sync(connection,
@@ -716,11 +724,11 @@ TEST_F(DefaultDisplayServerTestFixture, client_library_accesses_display_info)
 
             auto configuration = mir_connection_create_display_config(connection);
             ASSERT_NE(nullptr, configuration);
-            ASSERT_GT(configuration->num_displays, 0u);
-            ASSERT_NE(nullptr, configuration->displays);
-            for (auto i=0u; i < configuration->num_displays; i++)
+            ASSERT_GT(configuration->num_outputs, 0u);
+            ASSERT_NE(nullptr, configuration->outputs);
+            for (auto i=0u; i < configuration->num_outputs; i++)
             {
-                MirDisplayOutput* disp = &configuration->displays[i];
+                MirDisplayOutput* disp = &configuration->outputs[i];
                 ASSERT_NE(nullptr, disp); 
                 EXPECT_GE(disp->num_modes, disp->current_mode);
                 EXPECT_GE(disp->num_output_formats, disp->current_output_format);
@@ -770,7 +778,8 @@ TEST_F(DefaultDisplayServerTestFixture, connect_errors_dont_blow_up)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
@@ -825,7 +834,8 @@ TEST_F(DefaultDisplayServerTestFixture, ClientLibraryThreadsHandleNoSignals)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_software
+                mir_buffer_usage_software,
+                mir_display_output_id_invalid
             };
 
             surface = mir_connection_create_surface_sync(conn, &request_params);
@@ -891,7 +901,8 @@ TEST_F(DefaultDisplayServerTestFixture, MultiSurfaceClientTracksBufferFdsCorrect
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             surf_one = mir_connection_create_surface_sync(connection, &request_params);
