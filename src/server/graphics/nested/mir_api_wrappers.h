@@ -34,8 +34,13 @@ namespace mir_api_wrappers
 class MirDisplayConfigHandle
 {
 public:
+    explicit MirDisplayConfigHandle(MirDisplayConfiguration* display_config) :
+    display_config{display_config}
+    {
+    }
+
     explicit MirDisplayConfigHandle(MirConnection* connection) :
-    display_config{mir_connection_create_display_config(connection)}
+    MirDisplayConfigHandle{mir_connection_create_display_config(connection)}
     {
     }
 

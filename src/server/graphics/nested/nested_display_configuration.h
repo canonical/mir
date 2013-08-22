@@ -31,7 +31,7 @@ namespace nested
 class NestedDisplayConfiguration : public DisplayConfiguration
 {
 public:
-    explicit NestedDisplayConfiguration(MirConnection* connection);
+    explicit NestedDisplayConfiguration(MirDisplayConfiguration* display_config);
     virtual ~NestedDisplayConfiguration() noexcept;
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const;
