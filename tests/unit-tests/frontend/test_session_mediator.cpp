@@ -280,20 +280,16 @@ TEST_F(SessionMediatorTest, calling_methods_after_connect_works)
 
     {
         mp::SurfaceParameters request;
-        mp::Surface response;
+        mp::Surface surface_response;
 
-        mediator.create_surface(nullptr, &request, &response, null_callback.get());
-    }
-    {
-        mp::SurfaceId request;
-        mp::Buffer response;
+        mediator.create_surface(nullptr, &request, &surface_response, null_callback.get());
 
-        mediator.next_buffer(nullptr, &request, &response, null_callback.get());
-    }
-    {
-        mp::SurfaceId request;
+        mp::SurfaceId surface = surface_response.id();
+        mp::Buffer buffer_response;
 
-        mediator.release_surface(nullptr, &request, nullptr, null_callback.get());
+        mediator.next_buffer(nullptr, &surface, &buffer_response, null_callback.get());
+
+        mediator.release_surface(nullptr, &surface, nullptr, null_callback.get());
     }
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
@@ -538,6 +534,8 @@ TEST_F(SessionMediatorTest, buffer_resource_held_over_call)
     auto refcount = stub_buffer1.use_count();
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     EXPECT_EQ(refcount+1, stub_buffer1.use_count());
+
+    buffer_request = surface_response.id();
 
     auto refcount2 = stub_buffer2.use_count();
     mediator.next_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
