@@ -1,3 +1,19 @@
+mir (0.0.9+13.10.20130822.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Revert the grey background. It's too visually intrusive while we
+    don't yet have the ability to give a shell any control over
+    compositing (and override GLRenderer::clear) like it should
+    eventually have. (LP: #1215322). (LP: #1215322)
+
+  [ Alan Griffiths ]
+  * graphics: Fills in some more bits of NestedDisplay.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 998
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 22 Aug 2013 14:04:56 +0000
+
 mir (0.0.9+13.10.20130822-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
