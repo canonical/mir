@@ -38,6 +38,8 @@ namespace graphics
 {
 class DisplayReport;
 class DisplayBuffer;
+class DisplayConfigurationOutput;
+
 namespace nested
 {
 namespace detail
@@ -45,7 +47,7 @@ namespace detail
 class MirSurfaceHandle
 {
 public:
-    explicit MirSurfaceHandle(MirConnection* connection, MirDisplayOutput* const egl_display_info);
+    explicit MirSurfaceHandle(MirConnection* connection, DisplayConfigurationOutput const& output);
     ~MirSurfaceHandle() noexcept;
 
     operator MirSurface*() const { return mir_surface; }
@@ -79,7 +81,7 @@ private:
 class NestedOutput
 {
 public:
-    NestedOutput(MirConnection* connection, MirDisplayOutput* const);
+    NestedOutput(MirConnection* connection, DisplayConfigurationOutput const& output);
     ~NestedOutput() noexcept;
 
     operator MirSurface*() const { return mir_surface; }

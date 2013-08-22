@@ -41,20 +41,18 @@ auto configure_outputs(MirConnection* connection)
     // TODO only use a single surface for them. The OverlappingOutputGrouping utility class
     // TODO used by the GBM backend for a similar purpose could help with this.
 
-    mgnw::MirDisplayConfigHandle display_config{connection};
+    mgn::NestedDisplayConfiguration display_config(mir_connection_create_display_config(connection));
 
     std::unordered_map<uint32_t, std::shared_ptr<mgn::detail::NestedOutput>> result;
 
-    for (decltype(display_config->num_outputs) i = 0; i != display_config->num_outputs; ++i)
-    {
-        auto const egl_display_info = display_config->outputs+i;
-
-        if (egl_display_info->used)
+    display_config.for_each_output(
+        [&](mg::DisplayConfigurationOutput const& output)
         {
-            result[egl_display_info->output_id] =
-                std::make_shared<mgn::detail::NestedOutput>(connection, egl_display_info);
-        }
-    }
+            if (output.used)
+            {
+                result[output.id.as_value()] = std::make_shared<mgn::detail::NestedOutput>(connection, output);
+            }
+        });
 
     return result;
 }
@@ -76,19 +74,19 @@ EGLint const egl_context_attribs[] = {
 }
 
 
-mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection, MirDisplayOutput* const egl_display_info)
+mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection, DisplayConfigurationOutput const& output)
 {
-    auto const egl_display_mode = egl_display_info->modes + egl_display_info->current_mode;
-    auto const egl_display_format = egl_display_info->output_formats[egl_display_info->current_output_format];
+    auto const& egl_display_mode = output.modes[output.current_mode_index];
+    auto const egl_display_format = output.pixel_formats[output.current_format_index];
 
     MirSurfaceParameters const request_params =
         {
             "Mir nested display",
-            int(egl_display_mode->horizontal_resolution),
-            int(egl_display_mode->vertical_resolution),
-            egl_display_format,
+            egl_display_mode.size.width.as_int(),
+            egl_display_mode.size.height.as_int(),
+            MirPixelFormat(egl_display_format),
             mir_buffer_usage_hardware,
-            egl_display_info->output_id
+            static_cast<uint32_t>(output.id.as_value())
         };
 
     mir_surface = mir_connection_create_surface_sync(connection, &request_params);
@@ -161,8 +159,8 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
     if (!display_handles.fetch_add(-1)) eglTerminate(egl_display);
 }
 
-mgn::detail::NestedOutput::NestedOutput(MirConnection* connection, MirDisplayOutput* const egl_display_info) :
-    mir_surface(connection, egl_display_info),
+mgn::detail::NestedOutput::NestedOutput(MirConnection* connection, DisplayConfigurationOutput const& output) :
+    mir_surface(connection, output),
     egl_display{connection},
     egl_config{(egl_display.initialize(), egl_display.choose_config(egl_attribs))},
     egl_surface{egl_display, egl_display.egl_surface(egl_config, mir_surface)},
