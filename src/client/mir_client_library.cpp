@@ -412,7 +412,7 @@ int mir_surface_get_swapinterval(MirSurface* surf)
 void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
     mir_lifecycle_event_callback callback, void* context)
 {
-    if (connection)
+    if (!error_connections.contains(connection))
         connection->register_lifecycle_event_callback(callback, context);
 }
 

@@ -31,10 +31,14 @@ mcl::LifecycleControl::~LifecycleControl()
 
 void mcl::LifecycleControl::set_lifecycle_event_handler(std::function<void(MirLifecycleState)> const& fn)
 {
+    std::unique_lock<std::mutex> lk(guard);
+
     handle_lifecycle_event = fn;
 }
 
 void mcl::LifecycleControl::request_lifecycle_callback(uint32_t state)
 {
+    std::unique_lock<std::mutex> lk(guard);
+
     handle_lifecycle_event(static_cast<MirLifecycleState>(state));
 }

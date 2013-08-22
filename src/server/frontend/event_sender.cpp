@@ -65,8 +65,8 @@ void mfd::EventSender::handle_lifecycle_event(
 {
     mp::EventSequence seq;
 
-    auto protobuf_config = seq.mutable_lifecycle_event();
-    protobuf_config->set_new_state(state);
+    auto protobuf_life_event = seq.mutable_lifecycle_event();
+    protobuf_life_event->set_new_state(state);
 
     send_event_sequence(seq);
 }

@@ -37,6 +37,7 @@ public:
     void request_lifecycle_callback(uint32_t state);
 
 private:
+    std::mutex mutable guard;
     std::function<void(MirLifecycleState)> handle_lifecycle_event;
 };
 }
