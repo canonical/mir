@@ -46,6 +46,27 @@ struct NestedDisplayConfigurationTest : public ::testing::Test
         return new MirDisplayConfiguration{ NoOfOutputs, out_tmp, NoOfCards, card_tmp };
     }
 
+    template<int NoOfModes, int NoOfFormats>
+    void init_output(
+        MirDisplayOutput* output,
+        MirDisplayMode const (&modes)[NoOfModes],
+        MirPixelFormat const (&formats)[NoOfFormats])
+    {
+        auto mode_tmp = new MirDisplayMode[NoOfModes];
+        std::copy(modes, modes+NoOfModes, mode_tmp);
+
+        auto format_tmp = new MirPixelFormat[NoOfFormats];
+        std::copy(formats, formats+NoOfFormats, format_tmp);
+
+        output->num_modes = NoOfModes;
+        output->modes = mode_tmp;
+        output->preferred_mode = 0;
+        output->current_mode = 0;
+        output->num_output_formats = NoOfFormats;
+        output->output_formats = format_tmp;
+        output->current_output_format = 0;
+    }
+
     MirDisplayConfiguration* build_trivial_configuration()
     {
         MirDisplayCard cards[] {{1,1}};
@@ -59,7 +80,7 @@ struct NestedDisplayConfigurationTest : public ::testing::Test
             0,
             0,
 
-            0,
+            1,
             0,
             MirDisplayOutputType(0),
 
@@ -71,6 +92,11 @@ struct NestedDisplayConfigurationTest : public ::testing::Test
             0,
             0
         }};
+
+        MirDisplayMode const modes[] = {{ 1080, 1920, 4.33f }};
+        MirPixelFormat const formats[] = { mir_pixel_format_abgr_8888 };
+
+        init_output(outputs, modes, formats);
 
         return build_test_config(outputs, cards);
     }
