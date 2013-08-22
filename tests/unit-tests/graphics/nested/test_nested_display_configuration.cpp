@@ -90,9 +90,9 @@ struct MockOutputVisitor
 
 TEST_F(NestedDisplayConfigurationTest, empty_configuration_is_read_correctly)
 {
-    auto mir_display_configuration = new MirDisplayConfiguration{ 0, nullptr, 0, nullptr };
+    auto empty_configuration = new MirDisplayConfiguration{ 0, nullptr, 0, nullptr };
 
-    mgn::NestedDisplayConfiguration config(mir_display_configuration);
+    mgn::NestedDisplayConfiguration config(empty_configuration);
 
     config.for_each_card([](mg::DisplayConfigurationCard const&) { FAIL(); });
     config.for_each_output([](mg::DisplayConfigurationOutput const&) { FAIL(); });
@@ -100,9 +100,9 @@ TEST_F(NestedDisplayConfigurationTest, empty_configuration_is_read_correctly)
 
 TEST_F(NestedDisplayConfigurationTest, trivial_configuration_has_one_card)
 {
-    auto mir_display_configuration = build_trivial_configuration();
+    auto trivial_configuration = build_trivial_configuration();
 
-    mgn::NestedDisplayConfiguration config(mir_display_configuration);
+    mgn::NestedDisplayConfiguration config(trivial_configuration);
 
     MockCardVisitor cv;
 
@@ -112,9 +112,9 @@ TEST_F(NestedDisplayConfigurationTest, trivial_configuration_has_one_card)
 
 TEST_F(NestedDisplayConfigurationTest, trivial_configuration_has_one_output)
 {
-    auto mir_display_configuration = build_trivial_configuration();
+    auto trivial_configuration = build_trivial_configuration();
 
-    mgn::NestedDisplayConfiguration config(mir_display_configuration);
+    mgn::NestedDisplayConfiguration config(trivial_configuration);
 
     MockOutputVisitor ov;
 
