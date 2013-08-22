@@ -21,16 +21,69 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <stdexcept>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
+using namespace testing;
 
 namespace
 {
 struct NestedDisplayConfigurationTest : public ::testing::Test
 {
+    template<int NoOfOutputs, int NoOfCards>
+    MirDisplayConfiguration* build_test_config(
+        MirDisplayOutput const (&outputs)[NoOfOutputs],
+        MirDisplayCard const (&cards)[NoOfCards])
+    {
+        auto out_tmp = new MirDisplayOutput[NoOfOutputs];
+        std::copy(outputs, outputs+NoOfOutputs, out_tmp);
+
+        auto card_tmp = new MirDisplayCard[NoOfCards];
+        std::copy(cards, cards+NoOfCards, card_tmp);
+
+        return new MirDisplayConfiguration{ NoOfOutputs, out_tmp, NoOfCards, card_tmp };
+    }
+
+    MirDisplayConfiguration* build_trivial_configuration()
+    {
+        MirDisplayCard cards[] {{1,1}};
+        MirDisplayOutput outputs[] {{
+            0,
+            0,
+            0,
+            0,
+
+            0,
+            0,
+            0,
+
+            0,
+            0,
+            MirDisplayOutputType(0),
+
+            0,
+            0,
+            0,
+            0,
+
+            0,
+            0
+        }};
+
+        return build_test_config(outputs, cards);
+    }
+};
+
+struct MockCardVisitor
+{
+    MOCK_CONST_METHOD1(f, void(mg::DisplayConfigurationCard const&));
+};
+
+struct MockOutputVisitor
+{
+    MOCK_CONST_METHOD1(f, void(mg::DisplayConfigurationOutput const&));
 };
 
 }
@@ -43,4 +96,28 @@ TEST_F(NestedDisplayConfigurationTest, empty_configuration_is_read_correctly)
 
     config.for_each_card([](mg::DisplayConfigurationCard const&) { FAIL(); });
     config.for_each_output([](mg::DisplayConfigurationOutput const&) { FAIL(); });
+}
+
+TEST_F(NestedDisplayConfigurationTest, trivial_configuration_has_one_card)
+{
+    auto mir_display_configuration = build_trivial_configuration();
+
+    mgn::NestedDisplayConfiguration config(mir_display_configuration);
+
+    MockCardVisitor cv;
+
+    EXPECT_CALL(cv, f(_)).Times(Exactly(1));
+    config.for_each_card([&cv](mg::DisplayConfigurationCard const& card) { cv.f(card); });
+}
+
+TEST_F(NestedDisplayConfigurationTest, trivial_configuration_has_one_output)
+{
+    auto mir_display_configuration = build_trivial_configuration();
+
+    mgn::NestedDisplayConfiguration config(mir_display_configuration);
+
+    MockOutputVisitor ov;
+
+    EXPECT_CALL(ov, f(_)).Times(Exactly(1));
+    config.for_each_output([&ov](mg::DisplayConfigurationOutput const& output) { ov.f(output); });
 }
