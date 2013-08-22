@@ -255,9 +255,9 @@ static const MirDisplayOutput *find_active_output(
     const MirDisplayOutput *output = NULL;
     int d;
 
-    for (d = 0; d < (int)conf->num_displays; d++)
+    for (d = 0; d < (int)conf->num_outputs; d++)
     {
-        const MirDisplayOutput *out = conf->displays + d;
+        const MirDisplayOutput *out = conf->outputs + d;
 
         if (out->used &&
             out->connected &&

@@ -237,7 +237,8 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffer_swapper_on_server
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);
@@ -336,7 +337,8 @@ TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffers_on_server)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
             mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);
 
@@ -464,7 +466,8 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             for (int i = 0; i != max_surface_count; ++i)
@@ -513,7 +516,8 @@ TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_witho
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             for (int i = 0; i != max_surface_count; ++i)

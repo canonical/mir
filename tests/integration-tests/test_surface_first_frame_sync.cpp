@@ -257,7 +257,8 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             auto surface = mir_connection_create_surface_sync(connection, &request_params);

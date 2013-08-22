@@ -26,6 +26,8 @@
 
 #include <EGL/egl.h>
 
+#include <unordered_map>
+
 namespace mir
 {
 namespace geometry
@@ -125,9 +127,7 @@ public:
 
 private:
     std::shared_ptr<DisplayReport> const display_report;
-
-    // TODO support multiple outputs
-    std::shared_ptr<detail::NestedOutput> const one_output;
+    std::unordered_map<uint32_t, std::shared_ptr<detail::NestedOutput>> outputs;
 };
 
 }

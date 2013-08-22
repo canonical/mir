@@ -121,9 +121,9 @@ static const MirDisplayOutput *find_active_output(
     const MirDisplayOutput *output = NULL;
     int d;
 
-    for (d = 0; d < (int)conf->num_displays; d++)
+    for (d = 0; d < (int)conf->num_outputs; d++)
     {
-        const MirDisplayOutput *out = conf->displays + d;
+        const MirDisplayOutput *out = conf->outputs + d;
 
         if (out->used &&
             out->connected &&
@@ -151,7 +151,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         "eglappsurface",
         256, 256,
         mir_pixel_format_xbgr_8888,
-        mir_buffer_usage_hardware
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
     };
     MirEventDelegate delegate = 
     {

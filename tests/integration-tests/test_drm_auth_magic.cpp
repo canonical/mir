@@ -120,6 +120,8 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             int const no_error{0};
             int status{67};
 
+            ASSERT_TRUE(mir_connection_is_valid(connection));
+
             mir_wait_for(mir_connection_drm_auth_magic(connection, magic,
                                                        drm_auth_magic_callback,
                                                        &status));

@@ -76,3 +76,21 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_clipped)
 
     placement_strategy.place(session, input_params);
 }
+
+TEST_F(ConsumingPlacementStrategySetup, parameters_with_output_id_are_placed_in_output)
+{
+    using namespace ::testing;
+
+    msh::SurfaceCreationParameters input_params;
+    input_params.size = geom::Size{100, 200};
+    input_params.output_id = mir::graphics::DisplayConfigurationOutputId{1};
+    geom::Rectangle rect{input_params.top_left, input_params.size};
+
+    EXPECT_CALL(*display_layout,
+                place_in_output(input_params.output_id, rect))
+        .Times(1);
+
+    msh::ConsumingPlacementStrategy placement_strategy(display_layout);
+
+    placement_strategy.place(session, input_params);
+}

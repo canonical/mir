@@ -22,7 +22,6 @@
 
 #include "mir/geometry/rectangle.h"
 
-#include <cstring>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -54,21 +53,25 @@ private:
     MirDisplayConfigHandle operator=(MirDisplayConfigHandle const&) = delete;
 };
 
-std::shared_ptr<mgn::detail::NestedOutput> make_one_output(MirConnection* connection)
+auto configure_outputs(MirConnection* connection)
+-> std::unordered_map<uint32_t, std::shared_ptr<mgn::detail::NestedOutput>>
 {
     MirDisplayConfigHandle display_config{connection};
 
-    // TODO we may have multiple displays which implies multiple surfaces
-    // TODO as a POC just use the first active display
-    for (decltype(display_config->num_displays) i = 0; i != display_config->num_displays; ++i)
+    std::unordered_map<uint32_t, std::shared_ptr<mgn::detail::NestedOutput>> result;
+
+    for (decltype(display_config->num_outputs) i = 0; i != display_config->num_outputs; ++i)
     {
-        auto const egl_display_info = display_config->displays+i;
+        auto const egl_display_info = display_config->outputs+i;
 
         if (egl_display_info->used)
-            return std::make_shared<mgn::detail::NestedOutput>(connection, egl_display_info);
+        {
+            result[egl_display_info->output_id] =
+                std::make_shared<mgn::detail::NestedOutput>(connection, egl_display_info);
+        }
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one display"));
+    return result;
 }
 
 EGLint const egl_attribs[] = {
@@ -99,7 +102,8 @@ mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection, MirDi
             int(egl_display_mode->horizontal_resolution),
             int(egl_display_mode->vertical_resolution),
             egl_display_format,
-            mir_buffer_usage_hardware
+            mir_buffer_usage_hardware,
+            egl_display_info->output_id
         };
 
     mir_surface = mir_connection_create_surface_sync(connection, &request_params);
@@ -183,8 +187,10 @@ mgn::detail::NestedOutput::~NestedOutput() noexcept
 
 mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
     display_report{display_report},
-    one_output{make_one_output(connection)}
+    outputs{configure_outputs(connection)}
 {
+    if (outputs.empty())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one output for display"));
 }
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
