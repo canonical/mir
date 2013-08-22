@@ -18,6 +18,9 @@
 
 #include "nested_display_configuration.h"
 
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 #include <algorithm>
 
 namespace mgn = mir::graphics::nested;
@@ -80,7 +83,23 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
         });
 }
 
-void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId /*id*/, bool /*used*/, geometry::Point /*top_left*/, size_t /*mode_index*/)
+void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left, size_t mode_index)
 {
-    // TODO
+    for (auto mir_output = display_config->outputs;
+        mir_output != display_config->outputs+display_config->num_outputs;
+        ++mir_output)
+    {
+        if (DisplayConfigurationOutputId(mir_output->output_id) == id)
+        {
+            if (used && mode_index >= mir_output->num_modes)
+                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mode_index for used output"));
+
+            mir_output->used = used;
+            mir_output->position_x = top_left.x.as_uint32_t();
+            mir_output->position_y = top_left.y.as_uint32_t();
+            mir_output->current_mode = mode_index;
+            return;
+        }
+    }
+    BOOST_THROW_EXCEPTION(std::runtime_error("Trying to configure invalid output"));
 }
