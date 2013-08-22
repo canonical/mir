@@ -1,3 +1,15 @@
+mir (0.0.9+13.10.20130822-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * eglplasma: Don't include the alpha component in gradient
+    calculations. We want the whole surface to be opaque. (LP:
+    #1215285). (LP: #1215285)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 995
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 22 Aug 2013 10:05:21 +0000
+
 mir (0.0.9+13.10.20130821.1-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
