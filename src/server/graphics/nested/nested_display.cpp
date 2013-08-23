@@ -18,10 +18,10 @@
 
 #include "nested_display.h"
 #include "nested_display_configuration.h"
-#include "nested_gl_context.h"
 #include "mir_api_wrappers.h"
 
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/gl_context.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
