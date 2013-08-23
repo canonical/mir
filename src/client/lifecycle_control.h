@@ -35,7 +35,7 @@ public:
     ~LifecycleControl();
 
     void set_lifecycle_event_handler(std::function<void(MirLifecycleState)> const&);
-    void request_lifecycle_callback(uint32_t state);
+    void call_lifecycle_event_handler(uint32_t state);
 
 private:
     std::mutex mutable guard;

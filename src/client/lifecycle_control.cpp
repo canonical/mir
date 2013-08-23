@@ -38,7 +38,7 @@ void mcl::LifecycleControl::set_lifecycle_event_handler(std::function<void(MirLi
     handle_lifecycle_event = fn;
 }
 
-void mcl::LifecycleControl::request_lifecycle_callback(uint32_t state)
+void mcl::LifecycleControl::call_lifecycle_event_handler(uint32_t state)
 {
     std::unique_lock<std::mutex> lk(guard);
 

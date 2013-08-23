@@ -248,12 +248,11 @@ TEST(Session, lifecycle_event_sender)
     mtd::MockSurfaceFactory surface_factory;
     MockEventSink sender;
 
-    EXPECT_CALL(sender, handle_lifecycle_event(exp_state))
-        .Times(1);
-
     msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
                                         std::make_shared<mtd::NullSnapshotStrategy>(),
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+
+    EXPECT_CALL(sender, handle_lifecycle_event(exp_state)).Times(1);
 
     app_session.set_lifecycle_state(mir_lifecycle_state_will_suspend);
 }
