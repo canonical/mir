@@ -35,17 +35,22 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
+#include "mir/frontend/event_sink.h"
+
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
 #include <boost/throw_exception.hpp>
 
+#include <mutex>
+#include <functional>
+
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
-namespace mfd = mir::frontend::detail;
-namespace geom = mir::geometry;
+namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
@@ -117,10 +122,10 @@ void mf::SessionMediator::create_surface(
 
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
+    
         report->session_create_surface_called(session->name());
 
-        auto const id = shell->create_surface_for(session,
+        auto const id = session->create_surface(
             msh::SurfaceCreationParameters()
             .of_name(request->surface_name())
             .of_size(request->width(), request->height())
@@ -128,34 +133,34 @@ void mf::SessionMediator::create_surface(
             .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
             .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()))
             );
-
-        {
-            auto surface = session->get_surface(id);
-            response->mutable_id()->set_value(id.as_value());
-            response->set_width(surface->size().width.as_uint32_t());
-            response->set_height(surface->size().height.as_uint32_t());
-            response->set_pixel_format((int)surface->pixel_format());
-            response->set_buffer_usage(request->buffer_usage());
-
-            if (surface->supports_input())
-                response->add_fd(surface->client_input_fd());
-
-            client_buffer_resource = surface->advance_client_buffer();
-            auto const& id = client_buffer_resource->id();
-
-            auto buffer = response->mutable_buffer();
-            buffer->set_buffer_id(id.as_uint32_t());
-
-            if (!client_tracker->client_has(id))
-            {
-                auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
-                graphics_platform->fill_ipc_package(packer, client_buffer_resource);
-            }
-            client_tracker->add(id);
-        }
+         {
+             auto surface = session->get_surface(id);
+             response->mutable_id()->set_value(id.as_value());
+             response->set_width(surface->size().width.as_uint32_t());
+             response->set_height(surface->size().height.as_uint32_t());
+             response->set_pixel_format((int)surface->pixel_format());
+             response->set_buffer_usage(request->buffer_usage());
+             if (surface->supports_input())
+                 response->add_fd(surface->client_input_fd());
+             client_buffer_resource = surface->advance_client_buffer();
+             auto const& id = client_buffer_resource->id();
+             auto buffer = response->mutable_buffer();
+             buffer->set_buffer_id(id.as_uint32_t());
+             if (!client_tracker->client_has(id))
+             {
+                 auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
+                 graphics_platform->fill_ipc_package(packer, client_buffer_resource);
+              }
+             client_tracker->add(id);
+         }
     }
 
+    // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
+    // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client. 
+    // To achieve this order we rely on done->Run() sending messages synchronously. As documented in mfd::SocketMessenger::send.
+    // this will require additional synchronization if mfd::SocketMessenger::send changes.
     done->Run();
+    shell->handle_surface_created(session);
 }
 
 void mf::SessionMediator::next_buffer(
@@ -209,6 +214,7 @@ void mf::SessionMediator::release_surface(
         session->destroy_surface(id);
     }
 
+    // TODO: We rely on this sending responses synchronously.
     done->Run();
 }
 

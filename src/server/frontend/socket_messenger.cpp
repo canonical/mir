@@ -57,6 +57,8 @@ void mfd::SocketMessenger::send(std::string const& body)
     // TODO: This should be asynchronous, but we are not making sure
     // that a potential call to send_fds is executed _after_ this
     // function has completed (if it would be executed asynchronously.
+    // NOTE: we rely on this synchronous behavior as per the comment in
+    // mf::SessionMediator::create_surface
     ba::write(*socket, ba::buffer(whole_message));
 }
 

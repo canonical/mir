@@ -36,7 +36,8 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_type,
     mir_surface_attrib_state,
     mir_surface_attrib_swapinterval,
-    mir_surface_attrib_arraysize_
+    mir_surface_attrib_focus,
+    mir_surface_attrib_enum_max_
 } MirSurfaceAttrib;
 
 typedef enum MirSurfaceType
@@ -48,7 +49,7 @@ typedef enum MirSurfaceType
     mir_surface_type_freestyle,
     mir_surface_type_popover,
     mir_surface_type_inputmethod,
-    mir_surface_type_arraysize_
+    mir_surface_type_enum_max_
 } MirSurfaceType;
 
 typedef enum MirSurfaceState
@@ -62,8 +63,16 @@ typedef enum MirSurfaceState
        Omitted for now, since it's functionally a subset of vertmaximized and
        differs only in the X coordinate. */
     mir_surface_state_fullscreen,
-    mir_surface_state_arraysize_
+    mir_surface_state_enum_max_
 } MirSurfaceState;
+
+typedef enum MirSurfaceFocusState
+{
+    mir_surface_unfocused = 0,
+    mir_surface_focused,
+    mir_surface_focus_enum_max_
+} MirSurfaceFocusState;
+
 /**@}*/
 
 #endif

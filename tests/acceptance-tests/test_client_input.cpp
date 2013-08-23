@@ -154,8 +154,10 @@ struct InputClient : ClientConfig
 
     static void handle_input(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
-        auto client = static_cast<InputClient *>(context);
+        if (ev->type == mir_event_type_surface)
+            return;
 
+        auto client = static_cast<InputClient *>(context);
         client->handler->handle_input(ev);
     }
 
