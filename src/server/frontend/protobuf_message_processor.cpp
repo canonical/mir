@@ -208,6 +208,9 @@ bool mfd::ProtobufMessageProcessor::process_message(std::istream& msg)
         mir::protobuf::wire::Invocation invocation;
         invocation.ParseFromIstream(&msg);
 
+        if (invocation.has_protocol_version() && invocation.protocol_version() != 1)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
+
         return dispatch(invocation);
     }
     catch (std::exception const& error)
