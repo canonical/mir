@@ -190,9 +190,10 @@ mgn::NestedDisplay::~NestedDisplay() noexcept
 {
 }
 
-void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& /*f*/)
+void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
-    // TODO
+    for (auto& i : outputs)
+        f(*i.second);
 }
 
 std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
