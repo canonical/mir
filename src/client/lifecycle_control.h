@@ -22,7 +22,7 @@
 #include "mir_toolkit/common.h"
 
 #include <functional>
-#include <memory>
+#include <mutex>
 
 namespace mir
 {
