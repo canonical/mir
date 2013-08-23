@@ -68,44 +68,44 @@ public:
     void connect(::google::protobuf::RpcController* controller,
                  const ::mir::protobuf::ConnectParameters* request,
                  ::mir::protobuf::Connection* response,
-                 ::google::protobuf::Closure* done);
+                 ::google::protobuf::Closure* done) override;
 
     void create_surface(google::protobuf::RpcController* controller,
                         const mir::protobuf::SurfaceParameters* request,
                         mir::protobuf::Surface* response,
-                        google::protobuf::Closure* done);
+                        google::protobuf::Closure* done) override;
 
     void next_buffer(
         google::protobuf::RpcController* controller,
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::Buffer* response,
-        google::protobuf::Closure* done);
+        google::protobuf::Closure* done) override;
 
     void release_surface(google::protobuf::RpcController* controller,
                          const mir::protobuf::SurfaceId*,
                          mir::protobuf::Void*,
-                         google::protobuf::Closure* done);
+                         google::protobuf::Closure* done) override;
 
     void disconnect(google::protobuf::RpcController* controller,
                     const mir::protobuf::Void* request,
                     mir::protobuf::Void* response,
-                    google::protobuf::Closure* done);
+                    google::protobuf::Closure* done) override;
 
     void configure_surface(google::protobuf::RpcController* controller,
                            const mir::protobuf::SurfaceSetting*,
                            mir::protobuf::SurfaceSetting*,
-                           google::protobuf::Closure* done);
+                           google::protobuf::Closure* done) override;
 
     void configure_display(::google::protobuf::RpcController* controller,
                        const ::mir::protobuf::DisplayConfiguration* request,
-                       ::mir::protobuf::Void* response,
-                       ::google::protobuf::Closure* done);
+                       ::mir::protobuf::DisplayConfiguration* response,
+                       ::google::protobuf::Closure* done) override;
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
                         const mir::protobuf::DRMMagic* request,
                         mir::protobuf::DRMAuthMagicStatus* response,
-                        google::protobuf::Closure* done);
+                        google::protobuf::Closure* done) override;
 
 private:
     std::shared_ptr<Shell> const shell;

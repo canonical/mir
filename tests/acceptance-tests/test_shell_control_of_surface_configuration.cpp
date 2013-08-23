@@ -56,7 +56,8 @@ struct SurfaceCreatingClient : public mtf::TestingClientConfiguration
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
         surface = mir_connection_create_surface_sync(connection,

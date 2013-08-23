@@ -104,12 +104,13 @@ struct SurfaceCreatingClient : ClientConfigCommon
             this));
          ASSERT_TRUE(connection != NULL);
          MirSurfaceParameters const request_params =
-        {
+         {
             __PRETTY_FUNCTION__,
             640, 480,
             mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware
-        };
+            mir_buffer_usage_hardware,
+            mir_display_output_id_invalid
+         };
          mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
          mir_connection_release(connection);
     }

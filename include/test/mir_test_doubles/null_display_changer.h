@@ -36,7 +36,7 @@ public:
     {
         return std::make_shared<NullDisplayConfig>();
     }
-    virtual void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
+    virtual void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
     {
     }
 };

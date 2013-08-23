@@ -32,7 +32,7 @@ public:
     explicit UnauthorizedDisplayChanger(std::shared_ptr<frontend::DisplayChanger> const& changer);
 
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
-    void configure(std::weak_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
+    void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
 
 private:
     std::shared_ptr<frontend::DisplayChanger> const changer;

@@ -68,6 +68,9 @@ class SnapshotStrategy;
 class DisplayLayout;
 class SurfaceConfigurator;
 class MediatingDisplayChanger;
+class SessionEventSink;
+class SessionEventHandlerRegister;
+class BroadcastingSessionEventSink;
 }
 namespace time
 {
@@ -98,7 +101,6 @@ class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
 class InputRegion;
-class VTFilter;
 }
 
 namespace logging
@@ -120,6 +122,8 @@ public:
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
     virtual std::shared_ptr<MainLoop>               the_main_loop();
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
+    virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
+    virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -176,7 +180,8 @@ public:
     virtual std::shared_ptr<shell::SnapshotStrategy>    the_shell_snapshot_strategy();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<shell::SurfaceConfigurator> the_shell_surface_configurator();
-
+    virtual std::shared_ptr<shell::SessionEventSink>    the_shell_session_event_sink();
+    virtual std::shared_ptr<shell::SessionEventHandlerRegister> the_shell_session_event_handler_register();
     /** @} */
 
     /** @name shell configuration - dependencies
@@ -204,7 +209,6 @@ public:
     /** @name input configuration
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
-    virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
     virtual std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
@@ -218,7 +222,6 @@ public:
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
 
-    virtual std::shared_ptr<graphics::Platform>  the_graphics_platform();
     virtual std::shared_ptr<time::TimeSource>    the_time_source();
 
     virtual std::shared_ptr<shell::SessionManager> the_session_manager();
@@ -232,13 +235,13 @@ protected:
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<shell::MediatingDisplayChanger> the_mediating_display_changer();
+    virtual std::shared_ptr<shell::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     CachedPtr<frontend::Communicator> communicator;
     CachedPtr<shell::SessionManager> session_manager;
 
 
-    std::shared_ptr<input::InputConfiguration> input_configuration;
-    std::shared_ptr<input::VTFilter> vt_filter;
+    CachedPtr<input::InputConfiguration> input_configuration;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
@@ -280,11 +283,13 @@ protected:
     CachedPtr<MainLoop> main_loop;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
+    CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 
 private:
     int const argc;
     char const** const argv;
     std::shared_ptr<boost::program_options::options_description> const program_options;
+    std::shared_ptr<input::EventFilter> const default_filter;
     std::shared_ptr<options::Option> mutable options;
 
     // the communications interface to use

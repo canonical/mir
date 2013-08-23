@@ -23,6 +23,7 @@
 #include "mir/display_changer.h"
 
 #include <mutex>
+#include <map>
 
 namespace mir
 {
@@ -33,10 +34,12 @@ namespace graphics
     class DisplayConfigurationPolicy;
 }
 namespace compositor { class Compositor; }
-namespace input { class InputManager; }
 
 namespace shell
 {
+
+class SessionContainer;
+class SessionEventHandlerRegister;
 
 class MediatingDisplayChanger : public frontend::DisplayChanger,
                                 public mir::DisplayChanger
@@ -45,12 +48,13 @@ public:
     MediatingDisplayChanger(
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<compositor::Compositor> const& compositor,
-        std::shared_ptr<input::InputManager> const& input_manager,
-        std::shared_ptr<graphics::DisplayConfigurationPolicy> const& display_configuration_policy);
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const& display_configuration_policy,
+        std::shared_ptr<SessionContainer> const& session_container,
+        std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register);
 
     /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
-    void configure(std::weak_ptr<frontend::Session> const& session,
+    void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf);
 
     /* From mir::DisplayChanger */
@@ -61,12 +65,22 @@ public:
 private:
     void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf,
                       SystemStateHandling pause_resume_system);
+    void apply_base_config(SystemStateHandling pause_resume_system);
+    void send_config_to_all_sessions(
+        std::shared_ptr<graphics::DisplayConfiguration> const& conf);
 
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<compositor::Compositor> const compositor;
-    std::shared_ptr<input::InputManager> const input_manager;
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const display_configuration_policy;
+    std::shared_ptr<shell::SessionContainer> const session_container;
+    std::shared_ptr<SessionEventHandlerRegister> const session_event_handler_register;
     std::mutex configuration_mutex;
+    std::map<std::weak_ptr<frontend::Session>,
+             std::shared_ptr<graphics::DisplayConfiguration>,
+             std::owner_less<std::weak_ptr<frontend::Session>>> config_map;
+    std::weak_ptr<frontend::Session> focused_session;
+    std::shared_ptr<graphics::DisplayConfiguration> base_configuration;
+    bool base_configuration_applied;
 };
 
 }

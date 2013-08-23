@@ -28,11 +28,8 @@ namespace input
 
 class VTFilter : public EventFilter
 {
-public:  
+public:
     bool handle(MirEvent const& event) override;
-
-private:
-    void set_active_vt(int vt);
 };
 
 }

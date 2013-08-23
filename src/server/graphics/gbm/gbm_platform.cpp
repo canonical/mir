@@ -174,7 +174,36 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
             (display == mgg::GBMPlatform::internal_native_display.get()));
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform ()
+namespace
 {
-    return std::make_shared<mg::NativePlatform>();
+// It may well turn out that NativePlatform == Platform - but this keeps them separate for now
+struct NativeGBMPlatform : mg::NativePlatform
+{
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
+        std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::create_buffer_allocator is not implemented yet!"));
+    }
+
+    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::get_ipc_package is not implemented yet!"));
+    }
+
+    std::shared_ptr<mg::InternalClient> create_internal_client()
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::create_internal_client is not implemented yet!"));
+    }
+
+    void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& /*packer*/,
+            std::shared_ptr<mg::Buffer> const& /*buffer*/) const
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::fill_ipc_package is not implemented yet!"));
+    }
+};
+}
+
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform()
+{
+    return std::make_shared<::NativeGBMPlatform>();
 }

@@ -168,7 +168,8 @@ struct InputClient : ClientConfig
              client_name.c_str(),
              surface_width, surface_height,
              mir_pixel_format_abgr_8888,
-             mir_buffer_usage_hardware
+             mir_buffer_usage_hardware,
+             mir_display_output_id_invalid
          };
         return request_params;
     }
@@ -919,7 +920,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
         void exec()
         {
             // Ensure we stack on top of the first client
-            input_cb_setup_fence.wait_for_signal_ready_for();
+            input_cb_setup_fence.wait_for_signal_ready_for(std::chrono::milliseconds(4000));
             InputClient::exec();
         }
 

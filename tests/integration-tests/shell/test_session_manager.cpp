@@ -33,6 +33,7 @@
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/null_session_event_sink.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -44,24 +45,39 @@ namespace ms = mir::surfaces;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
-TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
+namespace
 {
-    using namespace ::testing;
+
+struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
+{
+    TestSessionManagerAndFocusSelectionStrategy()
+        : sequence{mt::fake_shared(container)},
+          session_manager(
+              mt::fake_shared(surface_factory),
+              mt::fake_shared(container),
+              mt::fake_shared(sequence),
+              mt::fake_shared(focus_setter),
+              std::make_shared<mtd::NullSnapshotStrategy>(),
+              std::make_shared<mtd::NullSessionEventSink>(),
+              mt::fake_shared(session_listener))
+    {
+
+    }
 
     mtd::MockSurfaceFactory surface_factory;
-    std::shared_ptr<msh::DefaultSessionContainer> container(new msh::DefaultSessionContainer());
-    msh::RegistrationOrderFocusSequence sequence(container);
+    msh::DefaultSessionContainer container;
+    msh::RegistrationOrderFocusSequence sequence;
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
     msh::NullSessionListener session_listener;
+    msh::SessionManager session_manager;
+};
 
-    msh::SessionManager session_manager(
-            mt::fake_shared(surface_factory),
-            container,
-            mt::fake_shared(sequence),
-            mt::fake_shared(focus_setter),
-            std::make_shared<mtd::NullSnapshotStrategy>(),
-            mt::fake_shared(session_listener));
+}
+
+TEST_F(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
+{
+    using namespace ::testing;
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 
@@ -88,24 +104,9 @@ TEST(TestSessionManagerAndFocusSelectionStrategy, cycle_focus)
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(AtLeast(0));
 }
 
-TEST(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
+TEST_F(TestSessionManagerAndFocusSelectionStrategy, closing_applications_transfers_focus)
 {
     using namespace ::testing;
-
-    mtd::MockSurfaceFactory surface_factory;
-    std::shared_ptr<msh::DefaultSessionContainer> container(new msh::DefaultSessionContainer());
-    msh::RegistrationOrderFocusSequence sequence(container);
-    mtd::MockFocusSetter focus_setter;
-    std::shared_ptr<mf::Session> new_session;
-    msh::NullSessionListener session_listener;
-
-    msh::SessionManager session_manager(
-            mt::fake_shared(surface_factory),
-            container,
-            mt::fake_shared(sequence),
-            mt::fake_shared(focus_setter),
-            std::make_shared<mtd::NullSnapshotStrategy>(),
-            mt::fake_shared(session_listener));
 
     EXPECT_CALL(focus_setter, set_focus_to(_)).Times(3);
 

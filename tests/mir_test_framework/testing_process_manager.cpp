@@ -159,6 +159,17 @@ mtf::Result mtf::TestingProcessManager::shutdown_server_process()
     return result;
 }
 
+void mtf::TestingProcessManager::terminate_client_processes()
+{
+    if (is_test_process)
+    {
+        for(auto client : clients)
+        {
+            client->terminate();
+        }
+    }
+}
+
 void mtf::TestingProcessManager::kill_client_processes()
 {
     if (is_test_process)

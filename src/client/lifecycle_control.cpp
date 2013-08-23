@@ -18,6 +18,8 @@
 
 #include "lifecycle_control.h"
 
+#include <memory>
+
 namespace mcl = mir::client;
 
 mcl::LifecycleControl::LifecycleControl()

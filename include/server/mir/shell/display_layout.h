@@ -19,6 +19,8 @@
 #ifndef MIR_SHELL_DISPLAY_LAYOUT_H_
 #define MIR_SHELL_DISPLAY_LAYOUT_H_
 
+#include "mir/graphics/display_configuration.h"
+
 namespace mir
 {
 namespace geometry
@@ -49,6 +51,15 @@ public:
      * @param [in,out] rect the rectangle to make fullscreen
      */
     virtual void size_to_output(geometry::Rectangle& rect) = 0;
+
+    /**
+     * Places a rectangle in an particular output.
+     *
+     * @param [in]     id   the id of the output to place the rectangle in
+     * @param [in,out] rect the rectangle to place
+     */
+    virtual void place_in_output(graphics::DisplayConfigurationOutputId id,
+                                 geometry::Rectangle& rect) = 0;
 
 protected:
     DisplayLayout() = default;

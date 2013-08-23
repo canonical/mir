@@ -126,6 +126,7 @@ void mf::SessionMediator::create_surface(
             .of_size(request->width(), request->height())
             .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
             .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+            .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()))
             );
 
         {
@@ -265,7 +266,7 @@ void mf::SessionMediator::configure_surface(
 void mf::SessionMediator::configure_display(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::DisplayConfiguration* request,
-    ::mir::protobuf::Void*,
+    ::mir::protobuf::DisplayConfiguration* response,
     ::google::protobuf::Closure* done)
 {
     {
@@ -281,6 +282,8 @@ void mf::SessionMediator::configure_display(
         }
 
         display_changer->configure(session, config);
+        auto display_config = display_changer->active_configuration();
+        mfd::pack_protobuf_display_configuration(*response, *display_config);
     }
     done->Run();
 }
