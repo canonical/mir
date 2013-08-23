@@ -39,6 +39,7 @@ class EventSender : public  mir::frontend::EventSink
 public:
     explicit EventSender(std::shared_ptr<MessageSender> const& socket_sender);
     void handle_event(MirEvent const& e);
+    void handle_lifecycle_event(MirLifecycleState state);
     void handle_display_config_change(graphics::DisplayConfiguration const& config);
 
 private:

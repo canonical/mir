@@ -23,6 +23,7 @@
 #include "../surface_map.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"
+#include "../lifecycle_control.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -40,6 +41,8 @@
 #include <pthread.h>
 #include <signal.h>
 
+#include <stdio.h>
+
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 
@@ -47,14 +50,16 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::string const& endpoint,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
-    std::shared_ptr<RpcReport> const& rpc_report) :
+    std::shared_ptr<RpcReport> const& rpc_report,
+    std::shared_ptr<LifecycleControl> const& lifecycle_control) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
     endpoint(endpoint),
     socket(io_service),
     surface_map(surface_map),
-    display_configuration(disp_config)
+    display_configuration(disp_config),
+    lifecycle_control(lifecycle_control)
 {
     socket.connect(endpoint);
 
@@ -326,6 +331,11 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
     if (seq.has_display_configuration())
     {
         display_configuration->update_configuration(seq.display_configuration());
+    }
+
+    if (seq.has_lifecycle_event())
+    {
+        lifecycle_control->call_lifecycle_event_handler(seq.lifecycle_event().new_state());
     }
 
     int const nevents = seq.event_size();

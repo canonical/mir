@@ -218,6 +218,7 @@ class MockEventSink : public mf::EventSink
 {
 public:
     MOCK_METHOD1(handle_event, void(MirEvent const&));
+    MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(mir::graphics::DisplayConfiguration const&));
 };
 }
@@ -237,4 +238,21 @@ TEST(Session, display_config_sender)
                                         std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
 
     app_session.send_display_config(stub_config);
+}
+
+TEST(Session, lifecycle_event_sender)
+{
+    using namespace ::testing;
+
+    MirLifecycleState exp_state = mir_lifecycle_state_will_suspend;
+    mtd::MockSurfaceFactory surface_factory;
+    MockEventSink sender;
+
+    msh::ApplicationSession app_session(mt::fake_shared(surface_factory), "Foo",
+                                        std::make_shared<mtd::NullSnapshotStrategy>(),
+                                        std::make_shared<msh::NullSessionListener>(), mt::fake_shared(sender));
+
+    EXPECT_CALL(sender, handle_lifecycle_event(exp_state)).Times(1);
+
+    app_session.set_lifecycle_state(mir_lifecycle_state_will_suspend);
 }

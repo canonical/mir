@@ -73,6 +73,11 @@ typedef enum MirSurfaceFocusState
     mir_surface_focus_enum_max_
 } MirSurfaceFocusState;
 
+typedef enum MirLifecycleState
+{
+    mir_lifecycle_state_will_suspend,
+    mir_lifecycle_state_resumed
+} MirLifecycleState;
 /**@}*/
 
 #endif
