@@ -82,7 +82,7 @@ typedef void (*mir_event_delegate_callback)(
  */
 
 typedef void (*mir_display_config_callback)(
-    MirConnection* connection, void* callback);
+    MirConnection* connection, void* context);
 
 /**
  * The order of components in a format enum matches the
