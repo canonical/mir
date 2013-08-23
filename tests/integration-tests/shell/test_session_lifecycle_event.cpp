@@ -44,12 +44,13 @@ struct MockStateHandler
 
 class StubSessionListener : public msh::NullSessionListener
 {
-    void surface_created(msh::Session& session, std::shared_ptr<msh::Surface> const& surface)
+    void stopping(std::shared_ptr<msh::Session> const& session)
     {
-        (void) surface;
+        std::shared_ptr<msh::ApplicationSession> app_session(
+            std::static_pointer_cast<msh::ApplicationSession>(session)
+            );
 
-        msh::ApplicationSession &app_session = dynamic_cast<msh::ApplicationSession &>(session);
-        app_session.set_lifecycle_state(mir_lifecycle_state_resumed);
+        app_session->set_lifecycle_state(mir_lifecycle_state_will_suspend);
     }
 };
 
@@ -80,24 +81,12 @@ TEST_F(LifecycleEventTest, lifecycle_event_test)
         {
             handler = std::make_shared<MockStateHandler>();
 
-            MirSurfaceParameters request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
             MirConnection* connection = mir_connect_sync(mir_test_socket, "testapp");
             mir_connection_set_lifecycle_event_callback(connection, lifecycle_callback, this);
 
-            EXPECT_CALL(*handler, state_changed(Eq(mir_lifecycle_state_resumed))).Times(1);
-            MirSurface* surface = mir_connection_create_surface_sync(connection, &request_params);
-
-            mir_surface_release_sync(surface);
+            EXPECT_CALL(*handler, state_changed(Eq(mir_lifecycle_state_will_suspend))).Times(1);
             mir_connection_release(connection);
-
+            
             handler.reset();
         }
     
