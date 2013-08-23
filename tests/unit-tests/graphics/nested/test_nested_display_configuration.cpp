@@ -30,6 +30,26 @@ using namespace testing;
 
 namespace
 {
+uint32_t const default_num_modes = 0;
+MirDisplayMode* const default_modes = nullptr;
+uint32_t const default_preferred_mode = 0;
+uint32_t const default_current_mode = 0;
+uint32_t const default_num_output_formats = 0;
+MirPixelFormat* const default_output_formats = nullptr;
+uint32_t const default_current_output_format = 0;
+uint32_t const default_card_id = 1;
+uint32_t const second_card_id = 2;
+uint32_t const default_output_id = 0;
+uint32_t const second_output_id = 1;
+uint32_t const third_output_id = 2;
+auto const default_type = MirDisplayOutputType(0);
+int32_t const default_position_x = 0;
+int32_t const default_position_y = 0;
+uint32_t const default_connected = 0;
+uint32_t const default_used = 0;
+uint32_t const default_physical_width_mm = 0;
+uint32_t const default_physical_height_mm = 0;
+
 struct NestedDisplayConfiguration : public ::testing::Test
 {
     template<int NoOfOutputs, int NoOfCards>
@@ -79,31 +99,27 @@ struct NestedDisplayConfiguration : public ::testing::Test
 
     MirDisplayConfiguration* build_trivial_configuration()
     {
-        static MirDisplayCard const cards[] {{1,1}};
+        static MirDisplayCard const cards[] {{default_card_id,1}};
         static MirDisplayMode const modes[] = {{ 1080, 1920, 4.33f }};
         static MirPixelFormat const formats[] = { mir_pixel_format_abgr_8888 };
 
         MirDisplayOutput outputs[] {{
-            0,
-            0,
-            0,
-            0,
-
-            0,
-            0,
-            0,
-
-            1,
-            0,
-            MirDisplayOutputType(0),
-
-            0,
-            0,
-            0,
-            0,
-
-            0,
-            0
+            default_num_modes,
+            default_modes,
+            default_preferred_mode,
+            default_current_mode,
+            default_num_output_formats,
+            default_output_formats,
+            default_current_output_format,
+            default_card_id,
+            default_output_id,
+            default_type,
+            default_position_x,
+            default_position_y,
+            default_connected,
+            default_used,
+            default_physical_width_mm,
+            default_physical_height_mm
         }};
 
         init_output(outputs, modes, formats);
@@ -114,8 +130,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
     MirDisplayConfiguration* build_non_trivial_configuration()
     {
         static MirDisplayCard const cards[] {
-            {1,1},
-            {2,2}};
+            {default_card_id,1},
+            {second_card_id,2}};
 
         static MirDisplayMode const modes[] = {
             { 1080, 1920, 4.33f },
@@ -128,9 +144,60 @@ struct NestedDisplayConfiguration : public ::testing::Test
             mir_pixel_format_bgr_888};
 
         MirDisplayOutput outputs[] {
-            { 0, 0, 0, 0, 0, 0, 0, 1, 0, MirDisplayOutputType(0), 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 2, 1, MirDisplayOutputType(0), 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0, 0, 2, 2, MirDisplayOutputType(0), 0, 0, 0, 0, 0, 0 },
+            {
+                default_num_modes,
+                default_modes,
+                default_preferred_mode,
+                default_current_mode,
+                default_num_output_formats,
+                default_output_formats,
+                default_current_output_format,
+                default_card_id,
+                default_output_id,
+                default_type,
+                default_position_x,
+                default_position_y,
+                default_connected,
+                default_used,
+                default_physical_width_mm,
+                default_physical_height_mm
+            },
+            {
+                default_num_modes,
+                default_modes,
+                default_preferred_mode,
+                default_current_mode,
+                default_num_output_formats,
+                default_output_formats,
+                default_current_output_format,
+                second_card_id,
+                second_output_id,
+                default_type,
+                default_position_x,
+                default_position_y,
+                default_connected,
+                default_used,
+                default_physical_width_mm,
+                default_physical_height_mm
+            },
+            {
+                default_num_modes,
+                default_modes,
+                default_preferred_mode,
+                default_current_mode,
+                default_num_output_formats,
+                default_output_formats,
+                default_current_output_format,
+                second_card_id,
+                third_output_id,
+                default_type,
+                default_position_x,
+                default_position_y,
+                default_connected,
+                default_used,
+                default_physical_width_mm,
+                default_physical_height_mm
+            },
         };
 
         init_outputs(outputs, modes, formats);
@@ -185,7 +252,7 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
     geom::Point const top_left{10,20};
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
-    config.configure_output(mg::DisplayConfigurationOutputId(0), true, top_left, 0);
+    config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, default_current_mode);
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(1));
@@ -202,28 +269,29 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
 TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_mode)
 {
     geom::Point const top_left{10,20};
+    size_t const too_big_mode_index = 1;
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(0), true, top_left, -1);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, -1);},
         std::runtime_error);
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(0), true, top_left, 1);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, too_big_mode_index);},
         std::runtime_error);
 }
 
-TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_card)
+TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_output)
 {
     geom::Point const top_left{10,20};
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(1), true, top_left, 0);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id+1), true, top_left, default_current_mode);},
         std::runtime_error);
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(-1), true, top_left, 0);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id-1), true, top_left, default_current_mode);},
         std::runtime_error);
 }
 
@@ -249,7 +317,7 @@ TEST_F(NestedDisplayConfiguration, non_trivial_configuration_has_three_outputs)
 
 TEST_F(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
 {
-    mg::DisplayConfigurationOutputId const id(1);
+    mg::DisplayConfigurationOutputId const id(second_output_id);
     geom::Point const top_left{100,200};
     mgn::NestedDisplayConfiguration config(build_non_trivial_configuration());
 
