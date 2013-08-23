@@ -1,3 +1,13 @@
+mir (0.0.9+13.10.20130823.2-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * * Implement lifecycle events interface.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1005
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 18:04:51 +0000
+
 mir (0.0.9+13.10.20130823.1-0ubuntu1) saucy; urgency=low
 
   [ Kevin DuBois ]
