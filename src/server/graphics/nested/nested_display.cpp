@@ -35,7 +35,7 @@ namespace geom = mir::geometry;
 namespace
 {
 auto configure_outputs(MirConnection* connection)
--> std::unordered_map<uint32_t, std::shared_ptr<mgn::detail::NestedOutput>>
+-> std::unordered_map<mg::DisplayConfigurationOutputId, std::shared_ptr<mgn::detail::NestedOutput>>
 {
     // TODO for proper mirrored mode support we will need to detect overlapping outputs and
     // TODO only use a single surface for them. The OverlappingOutputGrouping utility class
@@ -43,14 +43,14 @@ auto configure_outputs(MirConnection* connection)
 
     mgn::NestedDisplayConfiguration display_config(mir_connection_create_display_config(connection));
 
-    std::unordered_map<uint32_t, std::shared_ptr<mgn::detail::NestedOutput>> result;
+    std::unordered_map<mg::DisplayConfigurationOutputId, std::shared_ptr<mgn::detail::NestedOutput>> result;
 
     display_config.for_each_output(
         [&](mg::DisplayConfigurationOutput const& output)
         {
             if (output.used)
             {
-                result[output.id.as_value()] = std::make_shared<mgn::detail::NestedOutput>(connection, output);
+                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(connection, output);
             }
         });
 

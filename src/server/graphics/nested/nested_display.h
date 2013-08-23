@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/egl_resources.h"
+#include "mir/graphics/display_configuration.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -38,7 +39,6 @@ namespace graphics
 {
 class DisplayReport;
 class DisplayBuffer;
-class DisplayConfigurationOutput;
 
 namespace nested
 {
@@ -129,7 +129,7 @@ public:
 private:
     MirConnection* const connection;
     std::shared_ptr<DisplayReport> const display_report;
-    std::unordered_map<uint32_t, std::shared_ptr<detail::NestedOutput>> outputs;
+    std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
 };
 
 }
