@@ -85,7 +85,8 @@ TEST_F(LifecycleEventTest, lifecycle_event_test)
                 __PRETTY_FUNCTION__,
                 640, 480,
                 mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
             };
 
             MirConnection* connection = mir_connect_sync(mir_test_socket, "testapp");
