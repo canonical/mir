@@ -1,3 +1,21 @@
+mir (0.0.9+13.10.20130823.1-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * Send focus notifications to client. (LP: #1196744, #1192843,
+    #1102757, #1201435)
+
+  [ Robert Carr ]
+  * Send focus notifications to client. (LP: #1196744, #1192843,
+    #1102757, #1201435)
+
+  [ Alan Griffiths ]
+  * graphics: spike of NestedDisplayConfiguration.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1003
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 14:05:22 +0000
+
 mir (0.0.9+13.10.20130823-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
