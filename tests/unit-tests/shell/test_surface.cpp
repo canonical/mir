@@ -60,6 +60,7 @@ struct MockEventSink : public mf::EventSink
 {
     ~MockEventSink() noexcept(true) {}
     MOCK_METHOD1(handle_event, void(MirEvent const&));
+    MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(mg::DisplayConfiguration const&));
 };
 
