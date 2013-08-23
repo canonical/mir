@@ -99,7 +99,7 @@ struct NestedDisplayConfiguration : public ::testing::Test
 
     MirDisplayConfiguration* build_trivial_configuration()
     {
-        static MirDisplayCard const cards[] {{1,1}};
+        static MirDisplayCard const cards[] {{default_card_id,1}};
         static MirDisplayMode const modes[] = {{ 1080, 1920, 4.33f }};
         static MirPixelFormat const formats[] = { mir_pixel_format_abgr_8888 };
 
@@ -130,8 +130,8 @@ struct NestedDisplayConfiguration : public ::testing::Test
     MirDisplayConfiguration* build_non_trivial_configuration()
     {
         static MirDisplayCard const cards[] {
-            {1,1},
-            {2,2}};
+            {default_card_id,1},
+            {second_card_id,2}};
 
         static MirDisplayMode const modes[] = {
             { 1080, 1920, 4.33f },
