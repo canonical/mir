@@ -34,29 +34,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-auto configure_outputs(MirConnection* connection)
--> std::unordered_map<mg::DisplayConfigurationOutputId, std::shared_ptr<mgn::detail::NestedOutput>>
-{
-    // TODO for proper mirrored mode support we will need to detect overlapping outputs and
-    // TODO only use a single surface for them. The OverlappingOutputGrouping utility class
-    // TODO used by the GBM backend for a similar purpose could help with this.
-
-    mgn::NestedDisplayConfiguration display_config(mir_connection_create_display_config(connection));
-
-    std::unordered_map<mg::DisplayConfigurationOutputId, std::shared_ptr<mgn::detail::NestedOutput>> result;
-
-    display_config.for_each_output(
-        [&](mg::DisplayConfigurationOutput const& output)
-        {
-            if (output.used)
-            {
-                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(connection, output);
-            }
-        });
-
-    return result;
-}
-
 EGLint const egl_attribs[] = {
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
     EGL_RED_SIZE, 8,
@@ -178,10 +155,9 @@ mgn::detail::NestedOutput::~NestedOutput() noexcept
 mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
     connection{connection},
     display_report{display_report},
-    outputs{configure_outputs(connection)}
+    outputs{}
 {
-    if (outputs.empty())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one output for display"));
+    configure(*configuration());
 }
 
 mgn::NestedDisplay::~NestedDisplay() noexcept
@@ -200,8 +176,26 @@ std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
 
 void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
+    std::unordered_map<mg::DisplayConfigurationOutputId, std::shared_ptr<mgn::detail::NestedOutput>> result;
+
+    // TODO for proper mirrored mode support we will need to detect overlapping outputs and
+    // TODO only use a single surface for them. The OverlappingOutputGrouping utility class
+    // TODO used by the GBM backend for a similar purpose could help with this.
+    configuration.for_each_output(
+        [&](mg::DisplayConfigurationOutput const& output)
+        {
+            if (output.used)
+            {
+                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(connection, output);
+            }
+        });
+
+    if (result.empty())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one output for display"));
+
     auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
 
+    outputs.swap(result);
     mir_connection_apply_display_config(connection, conf);
 }
 
