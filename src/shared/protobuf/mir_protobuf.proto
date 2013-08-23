@@ -160,9 +160,15 @@ message DisplayConfiguration {
   optional string error = 127;
 }
 
+message LifecycleEvent {
+  required uint32 new_state = 1; // State transition
+  optional string error = 127;
+}
+
 message EventSequence {
   repeated Event event = 1;
   optional DisplayConfiguration display_configuration = 2;
+  optional LifecycleEvent lifecycle_event = 3;
   optional string error = 127;
 }
 

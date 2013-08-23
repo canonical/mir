@@ -34,6 +34,11 @@ void mf::GlobalEventSender::handle_event(MirEvent const&)
     //TODO, no driving test cases, although messages like 'server shutdown' could go here
 }
 
+void mf::GlobalEventSender::handle_lifecycle_event(MirLifecycleState)
+{
+    // Lifecycle events are per application session, never global
+}
+
 void mf::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguration const& config)
 {
     sessions->for_each([&config](std::shared_ptr<msh::Session> const& session)

@@ -31,6 +31,7 @@ set(
   logging/rpc_report.cpp
   default_connection_configuration.cpp
   surface_map.cpp
+  lifecycle_control.cpp
 )
 
 if( MIR_PLATFORM STREQUAL "android")

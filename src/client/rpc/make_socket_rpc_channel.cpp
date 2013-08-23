@@ -26,7 +26,8 @@ std::shared_ptr<mclr::MirBasicRpcChannel>
 mclr::make_rpc_channel(std::string const& name,
                        std::shared_ptr<mcl::SurfaceMap> const& map,
                        std::shared_ptr<mcl::DisplayConfiguration> const& disp_conf,
-                       std::shared_ptr<RpcReport> const& rpc_report)
+                       std::shared_ptr<RpcReport> const& rpc_report,
+                       std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control)
 { 
-    return std::make_shared<MirSocketRpcChannel>(name, map, disp_conf, rpc_report);
+    return std::make_shared<MirSocketRpcChannel>(name, map, disp_conf, rpc_report, lifecycle_control);
 }

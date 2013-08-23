@@ -27,6 +27,7 @@
 #include "logging/rpc_report.h"
 #include "lttng/rpc_report.h"
 #include "connection_surface_map.h"
+#include "lifecycle_control.h"
 
 namespace mcl = mir::client;
 
@@ -59,7 +60,7 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         [this]
         {
             return mcl::rpc::make_rpc_channel(
-                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report());
+                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control());
         });
 }
 
@@ -123,5 +124,14 @@ std::shared_ptr<mcl::DisplayConfiguration> mcl::DefaultConnectionConfiguration::
         []
         {
             return std::make_shared<mcl::DisplayConfiguration>();
+        });
+}
+
+std::shared_ptr<mcl::LifecycleControl> mcl::DefaultConnectionConfiguration::the_lifecycle_control()
+{
+    return lifecycle_control(
+        []
+        {
+            return std::make_shared<mcl::LifecycleControl>();
         });
 }
