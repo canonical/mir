@@ -21,6 +21,8 @@
 #include "mir/shell/surface_creation_parameters.h"
 #include "mir/surfaces/surface_stack_model.h"
 #include "mir/shell/surface_builder.h"
+#include "mir/frontend/event_sink.h"
+#include "mir/graphics/display_configuration.h"
 
 #include "mir_test_doubles/stub_surface_controller.h"
 #include "mir_test_doubles/mock_surface_controller.h"
@@ -35,6 +37,7 @@
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/mock_surface_configurator.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/event_matchers.h"
 
 #include <stdexcept>
 #include <gmock/gmock.h>
@@ -52,6 +55,14 @@ namespace mtd = mt::doubles;
 
 namespace
 {
+
+struct MockEventSink : public mf::EventSink
+{
+    ~MockEventSink() noexcept(true) {}
+    MOCK_METHOD1(handle_event, void(MirEvent const&));
+    MOCK_METHOD1(handle_display_config_change, void(mg::DisplayConfiguration const&));
+};
+
 class StubSurfaceBuilder : public msh::SurfaceBuilder
 {
 public:
@@ -452,6 +463,29 @@ TEST_F(ShellSurface, states)
               surf.configure(mir_surface_attrib_state,
                              mir_surface_state_fullscreen));
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
+}
+
+TEST_F(ShellSurface, sends_focus_notifications_when_focus_gained_and_lost)
+{
+    using namespace testing;
+
+    MockEventSink sink;
+    
+    {
+        InSequence seq;
+        EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))
+            .Times(1);
+        EXPECT_CALL(sink, handle_event(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused)))
+            .Times(1);
+    }
+
+    msh::Surface surf(
+            nullptr,
+            mt::fake_shared(surface_builder), std::make_shared<mtd::NullSurfaceConfigurator>(),
+            msh::a_surface(), stub_id, mt::fake_shared(sink));
+
+    surf.configure(mir_surface_attrib_focus, mir_surface_focused);
+    surf.configure(mir_surface_attrib_focus, mir_surface_unfocused);
 }
 
 TEST_F(ShellSurface, configurator_selects_attribute_values)

@@ -144,9 +144,9 @@ void mgg::GBMDisplay::configure(mg::DisplayConfiguration const& conf)
                 auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
                                                                     conf_output.current_mode_index);
                 kms_output->reset();
+                // TODO: Set DPMS Mode
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index, conf_output.dpms_mode);
                 kms_outputs.push_back(kms_output);
-                printf("Got output with DPMS mode: %u \n", static_cast<uint32_t>(conf_output.dpms_mode));
             });
 
             auto surface =

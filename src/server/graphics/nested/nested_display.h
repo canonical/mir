@@ -104,28 +104,28 @@ public:
     NestedDisplay(MirConnection* connection, std::shared_ptr<DisplayReport>const& display_report);
     virtual ~NestedDisplay() noexcept;
 
-    void post_update();
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)>const& f);
+    void for_each_display_buffer(std::function<void(DisplayBuffer&)>const& f) override;
 
-    std::shared_ptr<DisplayConfiguration> configuration();
-    void configure(DisplayConfiguration const&);
+    std::shared_ptr<DisplayConfiguration> configuration() override;
+    void configure(DisplayConfiguration const&) override;
 
     void register_configuration_change_handler(
             EventHandlerRegister& handlers,
-            DisplayConfigurationChangeHandler const& conf_change_handler);
+            DisplayConfigurationChangeHandler const& conf_change_handler) override;
 
     void register_pause_resume_handlers(
             EventHandlerRegister& handlers,
             DisplayPauseHandler const& pause_handler,
-            DisplayResumeHandler const& resume_handler);
+            DisplayResumeHandler const& resume_handler) override;
 
-    void pause();
-    void resume();
+    void pause() override;
+    void resume() override;
 
-    std::weak_ptr<Cursor> the_cursor();
-    std::unique_ptr<graphics::GLContext> create_gl_context();
+    std::weak_ptr<Cursor> the_cursor() override;
+    std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
+    MirConnection* const connection;
     std::shared_ptr<DisplayReport> const display_report;
     std::unordered_map<uint32_t, std::shared_ptr<detail::NestedOutput>> outputs;
 };
