@@ -238,7 +238,7 @@ void mf::SessionMediator::disconnect(
         report->session_disconnect_called(session->name());
 
         shell->close_session(session);
-        session.reset();
+        weak_session.reset();
     }
 
     done->Run();
