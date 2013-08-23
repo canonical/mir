@@ -1,3 +1,14 @@
+mir (0.0.9+13.10.20130823-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * event_sender.cpp: I've never seen this before. So it should not have
+    my name on it.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1000
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 06:05:00 +0000
+
 mir (0.0.9+13.10.20130822.1-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
