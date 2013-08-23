@@ -22,6 +22,7 @@
 #include "mir_toolkit/common.h"
 
 #include <functional>
+#include <memory>
 
 namespace mir
 {
