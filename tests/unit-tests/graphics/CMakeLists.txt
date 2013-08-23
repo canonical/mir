@@ -8,6 +8,8 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_properties.cpp
 )
 
+add_subdirectory(nested/)
+
 add_subdirectory(egl_mock/)
 if (MIR_PLATFORM STREQUAL "android")
 add_subdirectory(android/)

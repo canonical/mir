@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir/frontend/client_constants.h"
@@ -56,6 +56,17 @@ void mfd::EventSender::handle_display_config_change(
 
     auto protobuf_config = seq.mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, display_config);
+
+    send_event_sequence(seq);
+}
+
+void mfd::EventSender::handle_lifecycle_event(
+    MirLifecycleState state)
+{
+    mp::EventSequence seq;
+
+    auto protobuf_life_event = seq.mutable_lifecycle_event();
+    protobuf_life_event->set_new_state(state);
 
     send_event_sequence(seq);
 }

@@ -76,4 +76,18 @@ inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 }
 }
 
+#include <functional>
+namespace std
+{
+template<typename Tag>
+struct hash<::mir::IntWrapper<Tag>>
+{
+    std::hash<int> self;
+    std::size_t operator()(::mir::IntWrapper<Tag> const& id) const
+    {
+        return self(id.as_value());
+    }
+};
+}
+
 #endif // MIR_INT_WRAPPER_H_
