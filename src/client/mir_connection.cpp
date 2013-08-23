@@ -148,6 +148,10 @@ struct MirConnection::SurfaceRelease
 
 void MirConnection::released(SurfaceRelease data)
 {
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+        surface_map->erase(data.surface->id());
+    }
     data.callback(data.surface, data.context);
     data.handle->result_received();
     delete data.surface;
@@ -163,7 +167,6 @@ MirWaitHandle* MirConnection::release_surface(
     auto new_wait_handle = new MirWaitHandle;
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
-    surface_map->erase(surface->id());
 
     mir::protobuf::SurfaceId message;
     message.set_value(surface->id());

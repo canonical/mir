@@ -67,6 +67,32 @@ TEST(DefaultFocusMechanism, raises_default_surface)
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
 }
 
+TEST(DefaultFocusMechanism, mechanism_notifies_default_surface_of_focus_changes)
+{
+    using namespace ::testing;
+
+    NiceMock<mtd::MockShellSession> app1, app2;
+    mtd::MockSurface mock_surface1(&app1, std::make_shared<mtd::StubSurfaceBuilder>());
+    mtd::MockSurface mock_surface2(&app2, std::make_shared<mtd::StubSurfaceBuilder>());
+    
+    ON_CALL(app1, default_surface()).WillByDefault(Return(mt::fake_shared(mock_surface1)));
+    ON_CALL(app2, default_surface()).WillByDefault(Return(mt::fake_shared(mock_surface2)));
+
+    
+    {
+        InSequence seq;
+        EXPECT_CALL(mock_surface1, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
+        EXPECT_CALL(mock_surface1, configure(mir_surface_attrib_focus, mir_surface_unfocused)).Times(1);
+        EXPECT_CALL(mock_surface2, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
+    }
+
+    msh::DefaultFocusMechanism focus_mechanism(std::make_shared<mtd::StubInputTargeter>(),
+                                                        std::make_shared<mtd::StubSurfaceController>());
+
+    focus_mechanism.set_focus_to(mt::fake_shared(app1));
+    focus_mechanism.set_focus_to(mt::fake_shared(app2));
+}
+
 TEST(DefaultFocusMechanism, sets_input_focus)
 {
     using namespace ::testing;

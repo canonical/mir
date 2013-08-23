@@ -70,6 +70,8 @@ public:
     void focus_next();
     std::weak_ptr<Session> focussed_application() const;
     void set_focus_to(std::shared_ptr<Session> const& focus);
+    
+    void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
 
 protected:
     SessionManager(const SessionManager&) = delete;

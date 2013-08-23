@@ -39,3 +39,7 @@ void mf::NullMessageProcessorReport::exception_handled(void const*, int, std::ex
 void mf::NullMessageProcessorReport::exception_handled(void const*, std::exception const&)
 {
 }
+
+void mf::NullMessageProcessorReport::sent_event(void const*, MirSurfaceEvent const&)
+{
+}
