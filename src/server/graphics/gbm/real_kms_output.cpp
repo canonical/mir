@@ -89,6 +89,42 @@ bool encoder_supports_crtc_index(drmModeEncoder const* encoder, uint32_t crtc_in
     return (encoder->possible_crtcs & (1 << crtc_index));
 }
 
+const char *connector_type_name(uint32_t type)
+{
+    static const int nnames = 15;
+    static const char * const names[nnames] =
+    {   // Ordered according to xf86drmMode.h
+        "Unknown",
+        "VGA",
+        "DVII",
+        "DVID",
+        "DVIA",
+        "Composite",
+        "SVIDEO",
+        "LVDS",
+        "Component",
+        "9PinDIN",
+        "DisplayPort",
+        "HDMIA",
+        "HDMIB",
+        "TV",
+        "eDP"
+    };
+
+    if (type >= nnames)
+        type = 0;
+
+    return names[type];
+}
+
+std::string connector_name(const drmModeConnector *conn)
+{
+    std::string name = connector_type_name(conn->connector_type);
+    name += '-';
+    name += std::to_string(conn->connector_type_id);
+    return name;
+}
+
 }
 
 mgg::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
@@ -144,7 +180,9 @@ void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_in
 bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
 {
     if (!ensure_crtc())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
+            connector_name(connector.get()) +
+            " has no associated CRTC to set a framebuffer on"));
 
     auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
                               fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
@@ -163,7 +201,9 @@ bool mgg::RealKMSOutput::set_crtc(uint32_t fb_id)
 bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
 {
     if (!current_crtc)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
+            connector_name(connector.get()) +
+            " has no associated CRTC to schedule page flips on"));
 
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
 }
@@ -171,7 +211,9 @@ bool mgg::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
 void mgg::RealKMSOutput::wait_for_page_flip()
 {
     if (!current_crtc)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output has no associated crtc"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
+            connector_name(connector.get()) +
+            " has no associated CRTC to wait on"));
 
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
