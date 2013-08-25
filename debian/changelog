@@ -1,3 +1,13 @@
+mir (0.0.9+13.10.20130825-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Add whitespace to prevent errors in non -fpermissive compilations.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1009
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 25 Aug 2013 10:05:08 +0000
+
 mir (0.0.9+13.10.20130823.3-0ubuntu1) saucy; urgency=low
 
   [ Alan Griffiths ]
