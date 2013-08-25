@@ -303,6 +303,7 @@ int main(int argc, char *argv[])
     }
 
     parm.buffer_usage = mir_buffer_usage_software;
+    parm.output_id = mir_display_output_id_invalid;
 
     unsigned int const pf_size = 32;
     MirPixelFormat formats[pf_size];
