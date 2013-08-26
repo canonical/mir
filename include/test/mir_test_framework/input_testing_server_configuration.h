@@ -63,14 +63,13 @@ public:
     void on_exit();
     
     std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
-    std::shared_ptr<mir::surfaces::InputRegistrar> the_input_registrar() override;
+    std::shared_ptr<mir::frontend::Shell> the_frontend_shell() override;
 
 protected:
     virtual void inject_input() = 0;
     mir::input::android::FakeEventHub* fake_event_hub;
 
     void wait_until_client_appears(std::string const& surface_name);
-    void wait_until_client_vanishes(std::string const& surface_name);
 
 private:
     std::mutex lifecycle_lock;
@@ -81,7 +80,7 @@ private:
     std::thread input_injection_thread;
     
     std::shared_ptr<mir::test::doubles::FakeEventHubInputConfiguration> input_configuration;
-    std::shared_ptr<mir::surfaces::InputRegistrar> input_registrar;
+    std::shared_ptr<mir::frontend::Shell> frontend_shell;
 };
 
 }

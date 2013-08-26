@@ -35,17 +35,22 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/frontend/client_constants.h"
+#include "mir/frontend/event_sink.h"
+
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
 #include <boost/throw_exception.hpp>
 
+#include <mutex>
+#include <functional>
+
 namespace msh = mir::shell;
 namespace mf = mir::frontend;
-namespace mfd = mir::frontend::detail;
-namespace geom = mir::geometry;
+namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
     std::shared_ptr<frontend::Shell> const& shell,
@@ -68,6 +73,7 @@ mf::SessionMediator::SessionMediator(
 
 mf::SessionMediator::~SessionMediator() noexcept
 {
+    auto session = weak_session.lock();
     if (session)
     {
         report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
@@ -85,9 +91,9 @@ void mf::SessionMediator::connect(
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        session = shell->open_session(request->application_name(), event_sink);
+        weak_session = shell->open_session(request->application_name(), event_sink);
     }
-
+    
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
 
@@ -112,50 +118,48 @@ void mf::SessionMediator::create_surface(
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
 {
+    std::unique_lock<std::mutex> lock(session_mutex);
+
+    auto session = weak_session.lock();
+    
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    
+    report->session_create_surface_called(session->name());
+
+    auto const id = session->create_surface(msh::SurfaceCreationParameters()
+        .of_name(request->surface_name())
+        .of_size(request->width(), request->height())
+        .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
+        .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
+        .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-
-        if (session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-        report->session_create_surface_called(session->name());
-
-        auto const id = shell->create_surface_for(session,
-            msh::SurfaceCreationParameters()
-            .of_name(request->surface_name())
-            .of_size(request->width(), request->height())
-            .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-            .of_pixel_format(static_cast<geometry::PixelFormat>(request->pixel_format()))
-            .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()))
-            );
-
-        {
-            auto surface = session->get_surface(id);
-            response->mutable_id()->set_value(id.as_value());
-            response->set_width(surface->size().width.as_uint32_t());
-            response->set_height(surface->size().height.as_uint32_t());
-            response->set_pixel_format((int)surface->pixel_format());
-            response->set_buffer_usage(request->buffer_usage());
-
-            if (surface->supports_input())
-                response->add_fd(surface->client_input_fd());
-
-            client_buffer_resource = surface->advance_client_buffer();
-            auto const& id = client_buffer_resource->id();
-
-            auto buffer = response->mutable_buffer();
-            buffer->set_buffer_id(id.as_uint32_t());
-
-            if (!client_tracker->client_has(id))
+        auto surface = session->get_surface(id);
+        response->mutable_id()->set_value(id.as_value());
+        response->set_width(surface->size().width.as_uint32_t());
+        response->set_height(surface->size().height.as_uint32_t());
+        response->set_pixel_format((int)surface->pixel_format());
+        response->set_buffer_usage(request->buffer_usage());
+        if (surface->supports_input())
+            response->add_fd(surface->client_input_fd());
+        client_buffer_resource = surface->advance_client_buffer();
+        auto const& id = client_buffer_resource->id();
+        auto buffer = response->mutable_buffer();
+        buffer->set_buffer_id(id.as_uint32_t());
+        if (!client_tracker->client_has(id))
             {
                 auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
                 graphics_platform->fill_ipc_package(packer, client_buffer_resource);
             }
-            client_tracker->add(id);
-        }
+        client_tracker->add(id);
     }
 
+    // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
+    // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client. 
+    // To achieve this order we rely on done->Run() sending messages synchronously. As documented in mfd::SocketMessenger::send.
+    // this will require additional synchronization if mfd::SocketMessenger::send changes.
     done->Run();
+    shell->handle_surface_created(session);
 }
 
 void mf::SessionMediator::next_buffer(
@@ -166,6 +170,8 @@ void mf::SessionMediator::next_buffer(
 {
     {
         std::unique_lock<std::mutex> lock(session_mutex);
+        
+        auto session = weak_session.lock();
 
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -199,6 +205,8 @@ void mf::SessionMediator::release_surface(
     {
         std::unique_lock<std::mutex> lock(session_mutex);
 
+        auto session = weak_session.lock();
+
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
@@ -209,6 +217,7 @@ void mf::SessionMediator::release_surface(
         session->destroy_surface(id);
     }
 
+    // TODO: We rely on this sending responses synchronously.
     done->Run();
 }
 
@@ -221,13 +230,15 @@ void mf::SessionMediator::disconnect(
     {
         std::unique_lock<std::mutex> lock(session_mutex);
 
+        auto session = weak_session.lock();
+
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         report->session_disconnect_called(session->name());
 
         shell->close_session(session);
-        session.reset();
+        weak_session.reset();
     }
 
     done->Run();
@@ -247,6 +258,8 @@ void mf::SessionMediator::configure_surface(
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
 
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -271,6 +284,11 @@ void mf::SessionMediator::configure_display(
 {
     {
         std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
         auto config = display_changer->active_configuration();
         for (auto i=0; i < request->display_output_size(); i++)
         {   

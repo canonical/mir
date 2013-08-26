@@ -44,6 +44,7 @@ class ConnectionConfiguration;
 class ClientPlatformFactory;
 class SurfaceMap;
 class DisplayConfiguration;
+class LifecycleControl;
 
 namespace rpc
 {
@@ -99,6 +100,8 @@ public:
                                   mir_drm_auth_magic_callback callback,
                                   void* context);
 
+    void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);
+
     void register_display_change_callback(mir_display_config_callback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
@@ -149,6 +152,8 @@ private:
     std::vector<MirWaitHandle*> release_wait_handles;
 
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
+
+    std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
     std::shared_ptr<mir::client::SurfaceMap> surface_map;
     static std::mutex connection_guard;

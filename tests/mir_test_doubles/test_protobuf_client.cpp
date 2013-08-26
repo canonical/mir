@@ -21,6 +21,7 @@
 
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
+#include "src/client/lifecycle_control.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
@@ -36,7 +37,8 @@ mir::test::TestProtobufClient::TestProtobufClient(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
-        rpc_report)),
+        rpc_report,
+        std::make_shared<mir::client::LifecycleControl>())),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),

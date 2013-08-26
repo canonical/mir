@@ -36,6 +36,7 @@ public:
     GlobalEventSender(std::shared_ptr<shell::SessionContainer> const&);
 
     void handle_event(MirEvent const& e);
+    void handle_lifecycle_event(MirLifecycleState state);
     void handle_display_config_change(graphics::DisplayConfiguration const& config);
 
 private:

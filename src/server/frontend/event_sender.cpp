@@ -60,6 +60,17 @@ void mfd::EventSender::handle_display_config_change(
     send_event_sequence(seq);
 }
 
+void mfd::EventSender::handle_lifecycle_event(
+    MirLifecycleState state)
+{
+    mp::EventSequence seq;
+
+    auto protobuf_life_event = seq.mutable_lifecycle_event();
+    protobuf_life_event->set_new_state(state);
+
+    send_event_sequence(seq);
+}
+
 void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
 {
     std::string send_buffer;

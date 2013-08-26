@@ -123,7 +123,7 @@ private:
     std::shared_ptr<graphics::Buffer> client_buffer_resource;
 
     std::mutex session_mutex;
-    std::shared_ptr<Session> session;
+    std::weak_ptr<Session> weak_session;
 };
 
 }
