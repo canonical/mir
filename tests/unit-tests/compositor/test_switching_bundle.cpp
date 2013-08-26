@@ -655,17 +655,19 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_vt_switch_not_permanent)
 namespace
 {
     void realtime_compositor_thread(mc::SwitchingBundle &bundle,
-                                    unsigned long &frameno,
+                                    unsigned long frames,
                                     std::atomic<bool> &done)
     {
-        while (!done)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        for (unsigned long frame = 0; frame < frames; frame++)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            frameno++;
-            auto buf = bundle.compositor_acquire(frameno);
+            auto buf = bundle.compositor_acquire(frame);
             bundle.compositor_release(buf);
         }
+        done.store(true);
     }
 }
 
@@ -675,33 +677,31 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long client_frames = 0;
-        unsigned long frameno = 0;
+        const unsigned long compose_frames = 20;
 
         bundle.allow_framedropping(false);
 
-        std::atomic<bool> done;
-        done = false;
+        std::atomic<bool> done(false);
 
         std::thread monitor1(realtime_compositor_thread,
                              std::ref(bundle),
-                             std::ref(frameno),
+                             compose_frames,
                              std::ref(done));
 
         bundle.client_release(bundle.client_acquire());
 
-        for (int attempt = 0; attempt < 100; attempt++)
+        while (!done.load())
         {
             bundle.client_release(bundle.client_acquire());
             client_frames++;
             std::this_thread::yield();
         }
 
-        done = true;
-
         monitor1.join();
 
-        ASSERT_GT(client_frames, frameno / 2);
-        ASSERT_LT(client_frames, frameno * 2);
+        // Roughly compose_frames == client_frames within 50%
+        ASSERT_GT(client_frames, compose_frames / 2);
+        ASSERT_LT(client_frames, compose_frames * 3 / 2);
     }
 }
 
