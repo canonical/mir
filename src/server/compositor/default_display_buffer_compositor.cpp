@@ -72,11 +72,20 @@ void mc::DefaultDisplayBufferCompositor::composite()
     static bool bypass_env = true;
     bool bypassed = false;
 
+    /*
+     * Increment frame counts for each tick of the fastest instance of
+     * DefaultDisplayBufferCompositor. This means for the fastest refresh
+     * rate of all attached outputs.
+     */
     local_frame_count++;
     if (global_frame_count.load() < local_frame_count ||
         local_frame_count <= 0)  // Wrap around, unlikely, but handle it...
     {
         global_frame_count.store(local_frame_count);
+    }
+    else
+    {
+        local_frame_count = global_frame_count.load();
     }
 
     if (!got_bypass_env)
@@ -102,7 +111,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
         {
             auto bypass_buf =
                 match.topmost_fullscreen()->lock_compositor_buffer(
-                    global_frame_count.load());
+                    local_frame_count);
 
             if (bypass_buf->can_bypass())
             {
