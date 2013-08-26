@@ -66,8 +66,7 @@ mf::SessionMediator::SessionMediator(
     display_changer(display_changer),
     report(report),
     event_sink(sender),
-    resource_cache(resource_cache),
-    client_tracker(std::make_shared<ClientBufferTracker>(frontend::client_buffer_cache_size))
+    resource_cache(resource_cache)
 {
 }
 
@@ -140,18 +139,22 @@ void mf::SessionMediator::create_surface(
         response->set_height(surface->size().height.as_uint32_t());
         response->set_pixel_format((int)surface->pixel_format());
         response->set_buffer_usage(request->buffer_usage());
+
         if (surface->supports_input())
             response->add_fd(surface->client_input_fd());
-        client_buffer_resource = surface->advance_client_buffer();
+
+        bool need_full_ipc;
+        client_buffer_resource = surface->advance_client_buffer(need_full_ipc);
         auto const& id = client_buffer_resource->id();
+
         auto buffer = response->mutable_buffer();
         buffer->set_buffer_id(id.as_uint32_t());
-        if (!client_tracker->client_has(id))
-            {
-                auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
-                graphics_platform->fill_ipc_package(packer, client_buffer_resource);
-            }
-        client_tracker->add(id);
+
+        if (need_full_ipc)
+        {
+            auto packer = std::make_shared<mfd::ProtobufBufferPacker>(buffer);
+            graphics_platform->fill_ipc_package(packer, client_buffer_resource);
+        }
     }
 
     // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
@@ -168,6 +171,7 @@ void mf::SessionMediator::next_buffer(
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
 {
+    bool needs_full_ipc;
     {
         std::unique_lock<std::mutex> lock(session_mutex);
         
@@ -181,18 +185,17 @@ void mf::SessionMediator::next_buffer(
         auto surface = session->get_surface(SurfaceId(request->value()));
 
         client_buffer_resource.reset();
-        client_buffer_resource = surface->advance_client_buffer();
+        client_buffer_resource = surface->advance_client_buffer(needs_full_ipc);
     }
 
     auto const& id = client_buffer_resource->id();
     response->set_buffer_id(id.as_uint32_t());
 
-    if (!client_tracker->client_has(id))
+    if (needs_full_ipc)
     {
         auto packer = std::make_shared<mfd::ProtobufBufferPacker>(response);
         graphics_platform->fill_ipc_package(packer, client_buffer_resource);
     }
-    client_tracker->add(id);
     done->Run();
 }
 

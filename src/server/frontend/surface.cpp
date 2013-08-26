@@ -19,10 +19,16 @@
 #include "mir/frontend/surface.h"
 
 #include "mir/graphics/internal_surface.h"
+#include "mir/graphics/buffer.h"
+#include "mir/graphics/buffer_id.h"
+#include "mir/frontend/client_constants.h"
+
+#include "client_buffer_tracker.h"
 
 namespace mg = mir::graphics;
+namespace mf = mir::frontend;
 
-auto mir::frontend::as_internal_surface(std::shared_ptr<Surface> const& surface)
+auto mf::as_internal_surface(std::shared_ptr<Surface> const& surface)
     -> std::shared_ptr<graphics::InternalSurface>
 {
     class ForwardingInternalSurface : public mg::InternalSurface
@@ -31,7 +37,11 @@ auto mir::frontend::as_internal_surface(std::shared_ptr<Surface> const& surface)
         ForwardingInternalSurface(std::shared_ptr<Surface> const& surface) : surface(surface) {}
 
     private:
-        virtual std::shared_ptr<mg::Buffer> advance_client_buffer() { return surface->advance_client_buffer(); }
+        virtual std::shared_ptr<mg::Buffer> advance_client_buffer()
+        {
+            bool unused;
+            return surface->advance_client_buffer(unused);
+        }
         virtual mir::geometry::Size size() const { return surface->size(); }
         virtual MirPixelFormat pixel_format() const { return static_cast<MirPixelFormat>(surface->pixel_format()); }
 
@@ -39,4 +49,18 @@ auto mir::frontend::as_internal_surface(std::shared_ptr<Surface> const& surface)
     };
 
     return std::make_shared<ForwardingInternalSurface>(surface);
+}
+
+mf::ClientTrackingSurface::ClientTrackingSurface()
+    : client_tracker(std::make_shared<mf::ClientBufferTracker>(mf::client_buffer_cache_size))
+{
+}
+
+std::shared_ptr<mg::Buffer> mf::ClientTrackingSurface::advance_client_buffer(bool& need_full_ipc)
+{
+    auto buffer = advance_client_buffer();
+    auto id = buffer->id();
+    need_full_ipc = !client_tracker->client_has(id);
+    client_tracker->add(id);
+    return buffer;
 }

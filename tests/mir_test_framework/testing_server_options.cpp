@@ -23,6 +23,7 @@
 #include "mir/compositor/renderer_factory.h"
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
@@ -36,6 +37,13 @@
 
 #include <gtest/gtest.h>
 #include <thread>
+
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
@@ -53,12 +61,47 @@ char const* dummy[] = {0};
 int argc = 0;
 char const** argv = dummy;
 
+class StubFDBuffer : public mtd::StubBuffer
+{
+public:
+    StubFDBuffer(mg::BufferProperties const& properties)
+        : StubBuffer(properties)
+    {
+        fd = open("/dev/zero", O_RDONLY);
+        if (fd < 0)
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to open dummy fd")) << boost::errinfo_errno(errno));
+    }
+
+    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override
+    {
+#ifndef ANDROID
+        auto native_buffer = std::make_shared<MirNativeBuffer>();
+        native_buffer->data_items = 1;
+        native_buffer->data[0] = 0xDEADBEEF;
+        native_buffer->fd_items = 1;
+        native_buffer->fd[0] = fd;
+        return native_buffer;
+#else
+        return std::shared_ptr<MirNativeBuffer>();
+#endif
+    }
+
+    ~StubFDBuffer() noexcept
+    {
+        close(fd);
+    }
+private:
+    int fd;
+};
+
 class StubGraphicBufferAllocator : public mg::GraphicBufferAllocator
 {
  public:
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties)
     {
-        return std::unique_ptr<mg::Buffer>(new mtd::StubBuffer(properties));
+        return std::unique_ptr<mg::Buffer>(new StubFDBuffer(properties));
     }
 
     std::vector<geom::PixelFormat> supported_pixel_formats()
@@ -120,6 +163,27 @@ class StubGraphicPlatform : public mtd::NullPlatform
         const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
+    }
+
+    void fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& packer,
+                          std::shared_ptr<mg::Buffer> const& buffer) const override
+    {
+#ifndef ANDROID
+        auto native_handle = buffer->native_buffer_handle();
+        for(auto i=0; i<native_handle->data_items; i++)
+        {
+            packer->pack_data(native_handle->data[i]);
+        }
+        for(auto i=0; i<native_handle->fd_items; i++)
+        {
+            packer->pack_fd(native_handle->fd[i]);
+        }
+
+        packer->pack_stride(buffer->stride());
+#else
+        (void)packer;
+        (void)buffer;
+#endif
     }
 
     std::shared_ptr<mg::Display> create_display(
