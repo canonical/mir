@@ -19,10 +19,6 @@
  */
 
 #include "native_gbm_platform.h"
-#include "gbm_buffer_allocator.h"
-#include "internal_client.h"
-
-#include "mir/graphics/buffer_ipc_packer.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
