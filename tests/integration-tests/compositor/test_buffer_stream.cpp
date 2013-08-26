@@ -64,11 +64,6 @@ struct BufferStreamTest : public ::testing::Test
     mc::BufferStreamSurfaces buffer_stream;
 };
 
-void sleep_one_frame()
-{
-    std::this_thread::sleep_for(std::chrono::milliseconds(16));
-}
-
 }
 
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
@@ -77,7 +72,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
     auto client1_id = client1->id();
     client1.reset();
 
-    auto comp1 = buffer_stream.lock_compositor_buffer(0);
+    auto comp1 = buffer_stream.lock_compositor_buffer(1);
     auto comp2 = buffer_stream.lock_compositor_buffer(1);
 
     EXPECT_EQ(comp1->id(), comp2->id());
@@ -86,7 +81,6 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
     comp1.reset();
 
     buffer_stream.secure_client_buffer().reset();
-    sleep_one_frame();
     auto comp3 = buffer_stream.lock_compositor_buffer(2);
 
     EXPECT_NE(client1_id, comp3->id());
@@ -95,7 +89,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
     auto comp3_id = comp3->id();
     comp3.reset();
 
-    auto comp4 = buffer_stream.lock_compositor_buffer(3);
+    auto comp4 = buffer_stream.lock_compositor_buffer(2);
     EXPECT_EQ(comp3_id, comp4->id());
 }
 
@@ -104,13 +98,13 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
     for (int i = 0; i < nbuffers - 1; i++)
         buffer_stream.secure_client_buffer().reset();
 
-    auto first_monitor = buffer_stream.lock_compositor_buffer(4);
+    auto first_monitor = buffer_stream.lock_compositor_buffer(1);
     auto first_compositor_id = first_monitor->id();
     first_monitor.reset();
 
     for (int m = 0; m < 10; m++)
     {
-        auto monitor = buffer_stream.lock_compositor_buffer(5);
+        auto monitor = buffer_stream.lock_compositor_buffer(1);
         ASSERT_EQ(first_compositor_id, monitor->id());
     }
 }
@@ -120,12 +114,10 @@ TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
     if (nbuffers > 1)
     {
         buffer_stream.secure_client_buffer().reset();
-        auto comp1 = buffer_stream.lock_compositor_buffer(6);
-
-        sleep_one_frame();
+        auto comp1 = buffer_stream.lock_compositor_buffer(1);
 
         buffer_stream.secure_client_buffer().reset();
-        auto comp2 = buffer_stream.lock_compositor_buffer(7);
+        auto comp2 = buffer_stream.lock_compositor_buffer(2);
     
         EXPECT_NE(comp1->id(), comp2->id());
     
@@ -139,14 +131,14 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
     buffer_stream.secure_client_buffer().reset();
     auto client1 = buffer_stream.secure_client_buffer();
 
-    auto comp1 = buffer_stream.lock_compositor_buffer(8);
-    auto comp2 = buffer_stream.lock_compositor_buffer(9);
+    auto comp1 = buffer_stream.lock_compositor_buffer(123);
+    auto comp2 = buffer_stream.lock_compositor_buffer(123);
 
     EXPECT_EQ(comp1->id(), comp2->id());
 
     comp1.reset();
 
-    auto comp3 = buffer_stream.lock_compositor_buffer(10);
+    auto comp3 = buffer_stream.lock_compositor_buffer(123);
 
     EXPECT_EQ(comp2->id(), comp3->id());
 }
