@@ -1,3 +1,39 @@
+mir (0.0.9+13.10.20130825.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Disambiguate an exception message which could come from three
+    places: Output has no associated crtc with more rich and meaningful
+    information: Output <NAME> has no associated CRTC to <ACTION> on.
+
+  [ Robert Carr ]
+  * SessionMediator must hold only a weak reference to the session. (LP:
+    #1195089)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1012
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 25 Aug 2013 14:04:38 +0000
+
+mir (0.0.9+13.10.20130825-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Add whitespace to prevent errors in non -fpermissive compilations.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1009
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 25 Aug 2013 10:05:08 +0000
+
+mir (0.0.9+13.10.20130823.3-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * mir: std::hash support for mir::IntWrapper<> .
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1007
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 22:04:51 +0000
+
 mir (0.0.9+13.10.20130823.2-0ubuntu1) saucy; urgency=low
 
   [ Ricardo Mendoza ]
