@@ -1,3 +1,9 @@
+mir (0.0.10-0ubuntu1) saucy; urgency=low
+
+  * New release
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Mon, 26 Aug 2013 11:36:02 +1200
+
 mir (0.0.9+13.10.20130825.1-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
