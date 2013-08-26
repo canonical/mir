@@ -1,3 +1,18 @@
+mir (0.0.10+13.10.20130826-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Fix uninitialized fields causing strange exceptions in some clients
+    such as fingerpaint and multiwin since r991. (LP: #1215754) The
+    uninitialized field output_id was only introduced in r991. Of
+    course, giving it an invalid value should not cause such wacky
+    exceptions. I'll log a bug to improve the error checking separately.
+    (LP: #1215754)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1015
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 26 Aug 2013 04:52:13 +0000
+
 mir (0.0.10-0ubuntu1) saucy; urgency=low
 
   * New release
