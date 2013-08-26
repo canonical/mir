@@ -1,3 +1,23 @@
+mir (0.0.10+13.10.20130826.1-0ubuntu1) saucy; urgency=low
+
+  [ Christopher James Halse Rogers ]
+  * Fix server-side tracking of client buffers When the server knows the
+    client has a given buffer cached it only needs to send the BufferID
+    rather than the full IPC package. While this is an optimisation,
+    it's also required for correctness - the client will not clean up
+    fds for buffers it has cached, so if the server sends a full IPC
+    package for a buffer the client knows about any buffer fds leak. The
+    buffer cache is per-surface on the client side, but was per-session
+    on the server side. This meant that the server did not accurately
+    track the client's buffers, resulting in it sending unexpected fds
+    that the client then leaked. Fix this by making the buffer tracker
+    per-surface server-side.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1017
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 26 Aug 2013 14:04:34 +0000
+
 mir (0.0.10+13.10.20130826-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
