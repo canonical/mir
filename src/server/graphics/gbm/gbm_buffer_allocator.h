@@ -22,6 +22,11 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wall"
+#include <gbm.h>
+#pragma GCC diagnostic pop
+
 #include <memory>
 
 namespace mir
@@ -38,7 +43,7 @@ class GBMPlatform;
 class GBMBufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    GBMBufferAllocator(const std::shared_ptr<GBMPlatform>& platform,
+    GBMBufferAllocator(gbm_device* device,
                        const std::shared_ptr<BufferInitializer>& buffer_initializer);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
@@ -49,7 +54,7 @@ public:
 private:
     bool is_pixel_format_supported(geometry::PixelFormat format);
 
-    std::shared_ptr<GBMPlatform> platform;
+    gbm_device* device;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 };
