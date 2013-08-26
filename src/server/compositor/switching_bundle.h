@@ -24,7 +24,6 @@
 #include <condition_variable>
 #include <mutex>
 #include <memory>
-#include <chrono>
 
 namespace mir
 {
@@ -90,10 +89,7 @@ private:
     std::mutex guard;
     std::condition_variable cond;
 
-    typedef std::chrono::high_resolution_clock::time_point time_point;
-    static time_point now()
-        { return std::chrono::high_resolution_clock::now(); }
-    time_point last_consumed;
+    unsigned long last_consumed;
 
     bool overlapping_compositors;
 
