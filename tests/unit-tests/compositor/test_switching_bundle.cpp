@@ -655,21 +655,14 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_vt_switch_not_permanent)
 namespace
 {
     void realtime_compositor_thread(mc::SwitchingBundle &bundle,
-                                    std::atomic<unsigned long> &global_frameno,
+                                    unsigned long &frameno,
                                     std::atomic<bool> &done)
     {
-        unsigned long frameno = 0;
         while (!done)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
             frameno++;
-            auto glob = global_frameno.load();
-            if (frameno > glob)
-                global_frameno.store(frameno);
-            else
-                frameno = glob;
-
             auto buf = bundle.compositor_acquire(frameno);
             bundle.compositor_release(buf);
         }
@@ -682,7 +675,7 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         unsigned long client_frames = 0;
-        std::atomic<unsigned long> frameno(0);
+        unsigned long frameno = 0;
 
         bundle.allow_framedropping(false);
 
@@ -690,14 +683,6 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
         done = false;
 
         std::thread monitor1(realtime_compositor_thread,
-                             std::ref(bundle),
-                             std::ref(frameno),
-                             std::ref(done));
-        std::thread monitor2(realtime_compositor_thread,
-                             std::ref(bundle),
-                             std::ref(frameno),
-                             std::ref(done));
-        std::thread monitor3(realtime_compositor_thread,
                              std::ref(bundle),
                              std::ref(frameno),
                              std::ref(done));
@@ -714,12 +699,9 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
         done = true;
 
         monitor1.join();
-        monitor2.join();
-        monitor3.join();
 
-        auto composited = frameno.load();
-        ASSERT_GE(client_frames, composited / 2);
-        ASSERT_LE(client_frames, composited * 2);
+        ASSERT_GT(client_frames, frameno / 2);
+        ASSERT_LT(client_frames, frameno * 2);
     }
 }
 
