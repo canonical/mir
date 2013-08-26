@@ -28,6 +28,13 @@ class Option;
 }
 namespace graphics
 {
+class BufferIPCPacker;
+class Buffer;
+struct PlatformIPCPackage;
+class InternalClient;
+class BufferInitializer;
+class GraphicBufferAllocator;
+
 class NativePlatform
 {
 public:
