@@ -76,12 +76,16 @@ public:
 
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override
     {
+#ifndef ANDROID
         auto native_buffer = std::make_shared<MirNativeBuffer>();
         native_buffer->data_items = 1;
         native_buffer->data[0] = 0xDEADBEEF;
         native_buffer->fd_items = 1;
         native_buffer->fd[0] = fd;
         return native_buffer;
+#else
+        return std::shared_ptr<MirNativeBuffer>();
+#endif
     }
 
     ~StubFDBuffer() noexcept
