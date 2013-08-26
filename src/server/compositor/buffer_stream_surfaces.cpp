@@ -37,9 +37,11 @@ mc::BufferStreamSurfaces::~BufferStreamSurfaces()
     force_requests_to_complete();
 }
 
-std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer()
+std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer(
+    unsigned long frameno)
 {
-    return std::make_shared<mc::TemporaryCompositorBuffer>(buffer_bundle);
+    return std::make_shared<mc::TemporaryCompositorBuffer>(
+        buffer_bundle, frameno);
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()

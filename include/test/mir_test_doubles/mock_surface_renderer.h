@@ -33,7 +33,7 @@ struct MockSurfaceRenderer : public compositor::Renderer
 {
     MOCK_METHOD3(render, void(
         std::function<void(std::shared_ptr<void> const&)>, compositor::CompositingCriteria const&, surfaces::BufferStream&));
-    MOCK_METHOD0(clear, void());
+    MOCK_METHOD1(clear, void(unsigned long));
 
     ~MockSurfaceRenderer() noexcept {}
 };

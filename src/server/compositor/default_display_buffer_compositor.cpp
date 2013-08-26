@@ -51,6 +51,8 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
 
 }
 
+std::atomic_ulong mc::DefaultDisplayBufferCompositor::global_frame_count(0);
+
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,
@@ -59,7 +61,8 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     : mc::BasicDisplayBufferCompositor{display_buffer},
       scene{scene},
       renderer{renderer},
-      overlay_renderer{overlay_renderer}
+      overlay_renderer{overlay_renderer},
+      local_frame_count{0}
 {
 }
 
@@ -68,6 +71,13 @@ void mc::DefaultDisplayBufferCompositor::composite()
     static bool got_bypass_env = false;
     static bool bypass_env = true;
     bool bypassed = false;
+
+    local_frame_count++;
+    if (global_frame_count.load() < local_frame_count ||
+        local_frame_count <= 0)  // Wrap around, unlikely, but handle it...
+    {
+        global_frame_count.store(local_frame_count);
+    }
 
     if (!got_bypass_env)
     {
@@ -91,7 +101,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
         if (filter.fullscreen_on_top())
         {
             auto bypass_buf =
-                match.topmost_fullscreen()->lock_compositor_buffer();
+                match.topmost_fullscreen()->lock_compositor_buffer(
+                    global_frame_count.load());
 
             if (bypass_buf->can_bypass())
             {
@@ -110,7 +121,7 @@ void mc::DefaultDisplayBufferCompositor::compose(
     mir::geometry::Rectangle const& view_area,
     std::function<void(std::shared_ptr<void> const&)> save_resource)
 {
-    renderer->clear();
+    renderer->clear(global_frame_count.load());
 
     mc::RenderingOperator applicator(*renderer, save_resource);
     FilterForVisibleSceneInRegion selector(view_area);

@@ -97,7 +97,7 @@ struct WrappingRenderer : mc::Renderer
     {
     }
 
-    void clear() { renderer->clear(); }
+    void clear(unsigned long f) override { renderer->clear(f); }
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
                 mc::CompositingCriteria const& info, mir::surfaces::BufferStream& stream)
     {
@@ -254,7 +254,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_skips_composition)
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .WillOnce(Return(true));
-    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .WillOnce(Return(compositor_buffer));
 
     mc::DefaultDisplayBufferCompositorFactory factory(
@@ -303,7 +303,7 @@ TEST(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
-    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .Times(0);
 
     mc::DefaultDisplayBufferCompositorFactory factory(
@@ -352,7 +352,7 @@ TEST(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
-    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .Times(0);
 
     mc::DefaultDisplayBufferCompositorFactory factory(
@@ -399,7 +399,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     FakeScene scene(renderable_vec);
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
-    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .WillOnce(Return(compositor_buffer));
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .WillRepeatedly(Return(false));
@@ -450,7 +450,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);
-    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .Times(0);
 
     mc::DefaultDisplayBufferCompositorFactory factory(
@@ -476,7 +476,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .Times(0);
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(fullscreen),_))
         .Times(0);
-    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .WillOnce(Return(compositor_buffer));
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .WillOnce(Return(true));
@@ -494,7 +494,7 @@ TEST(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .Times(1);
     EXPECT_CALL(renderer_factory.mock_renderer, render(_,Ref(fullscreen),_))
         .Times(0);
-    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer())
+    EXPECT_CALL(scene.stub_stream, lock_compositor_buffer(_))
         .Times(0);
     EXPECT_CALL(*compositor_buffer, can_bypass())
         .Times(0);

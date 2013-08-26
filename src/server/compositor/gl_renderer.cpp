@@ -235,6 +235,7 @@ void mc::GLRenderer::Resources::setup(geometry::Rectangle const& display_area)
 }
 
 mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
+    : frameno{0}
 {
     resources.setup(display_area);
 }
@@ -265,7 +266,7 @@ void mc::GLRenderer::render(
     /* Use the renderable's texture */
     glBindTexture(GL_TEXTURE_2D, resources.texture);
 
-    auto region_resource = stream.lock_compositor_buffer();
+    auto region_resource = stream.lock_compositor_buffer(frameno);
     region_resource->bind_to_texture();
     save_resource(region_resource);
 
@@ -277,8 +278,9 @@ void mc::GLRenderer::render(
     glDisableVertexAttribArray(resources.position_attr_loc);
 }
 
-void mc::GLRenderer::clear()
+void mc::GLRenderer::clear(unsigned long frame)
 {
+    frameno = frame;
     glClear(GL_COLOR_BUFFER_BIT);
 }
 

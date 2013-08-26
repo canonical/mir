@@ -62,7 +62,7 @@ class TemporaryCompositorBuffer : public TemporaryBuffer
 {
 public:
     explicit TemporaryCompositorBuffer(
-        std::shared_ptr<BufferBundle> const& bun);
+        std::shared_ptr<BufferBundle> const& bun, unsigned long frameno);
     ~TemporaryCompositorBuffer();
 
 private:

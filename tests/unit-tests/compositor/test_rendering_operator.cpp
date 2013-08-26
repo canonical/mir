@@ -46,7 +46,7 @@ public:
     {
     }
 
-    void clear() {}
+    void clear(unsigned long) override {}
 
     void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
                 mc::CompositingCriteria const&, ms::BufferStream&)

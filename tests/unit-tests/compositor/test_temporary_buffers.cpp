@@ -97,7 +97,7 @@ TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
     EXPECT_CALL(*mock_bundle, compositor_release(_))
         .Times(1);
 
-    mc::TemporaryCompositorBuffer proxy_buffer(mock_bundle);
+    mc::TemporaryCompositorBuffer proxy_buffer(mock_bundle, 0);
 }
 
 TEST_F(TemporaryBuffersTest, snapshot_buffer_acquires_and_releases)

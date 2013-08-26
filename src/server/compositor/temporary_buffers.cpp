@@ -41,7 +41,7 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 }
 
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
-    std::shared_ptr<BufferBundle> const& bun)
+    std::shared_ptr<BufferBundle> const& bun, unsigned long ) // TODO
     : TemporaryBuffer(bun->compositor_acquire()),
       bundle(bun)
 {
