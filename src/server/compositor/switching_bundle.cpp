@@ -259,7 +259,8 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
     cond.notify_all();
 }
 
-std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
+std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
+    unsigned long)
 {
     std::unique_lock<std::mutex> lock(guard);
     int compositor;

@@ -47,7 +47,8 @@ public:
 
     std::shared_ptr<graphics::Buffer> client_acquire();
     void client_release(std::shared_ptr<graphics::Buffer> const&);
-    std::shared_ptr<graphics::Buffer> compositor_acquire();
+    std::shared_ptr<graphics::Buffer>
+        compositor_acquire(unsigned long frameno) override;
     void compositor_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
     std::shared_ptr<graphics::Buffer> snapshot_acquire();
     void snapshot_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
