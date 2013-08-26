@@ -41,7 +41,7 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 }
 
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
-    std::shared_ptr<BufferBundle> const& bun, unsigned long frameno) // TODO
+    std::shared_ptr<BufferBundle> const& bun, unsigned long frameno)
     : TemporaryBuffer(bun->compositor_acquire(frameno)),
       bundle(bun)
 {
