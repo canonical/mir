@@ -27,6 +27,7 @@
 #include "mir/surfaces/buffer_stream.h"
 #include "bypass.h"
 #include <mutex>
+#include <cstdlib>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -64,9 +65,20 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite()
 {
+    static bool got_bypass_env = false;
+    static bool bypass_env = true;
     bool bypassed = false;
 
-    if (display_buffer.can_bypass())
+    if (!got_bypass_env)
+    {
+        const char *env = getenv("MIR_BYPASS");
+        if (env != NULL)
+            bypass_env = env[0] != '0';
+
+        got_bypass_env = true;
+    }
+
+    if (bypass_env && display_buffer.can_bypass())
     {
         std::unique_lock<Scene> lock(*scene);
 
