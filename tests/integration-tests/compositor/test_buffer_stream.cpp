@@ -167,7 +167,7 @@ void compositor_loop(ms::BufferStream &stream,
         ASSERT_NE(nullptr, comp1);
 
         // Also stress test getting a second compositor buffer before yielding
-        auto comp2 = stream.lock_compositor_buffer(++count);
+        auto comp2 = stream.lock_compositor_buffer(count);
         ASSERT_NE(nullptr, comp2);
 
         std::this_thread::yield();
