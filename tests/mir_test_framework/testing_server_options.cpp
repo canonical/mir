@@ -180,6 +180,9 @@ class StubGraphicPlatform : public mtd::NullPlatform
         }
 
         packer->pack_stride(buffer->stride());
+#else
+        (void)packer;
+        (void)buffer;
 #endif
     }
 
