@@ -82,9 +82,18 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
-        std::string const sock = socket_file ? socket_file :
-                                               mir::default_server_socket;
-
+        std::string sock;
+        if (socket_file)
+            sock = socket_file;
+        else
+        {
+            auto socket_env = getenv("MIR_SOCKET");
+            if (socket_env)
+                sock = socket_env;
+            else
+                sock = mir::default_server_socket;
+        }
+ 
         mcl::DefaultConnectionConfiguration conf{sock};
 
         MirConnection* connection = new MirConnection(conf);
