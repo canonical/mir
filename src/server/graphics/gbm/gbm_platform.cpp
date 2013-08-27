@@ -29,7 +29,6 @@
 
 #include "drm_close_threadsafe.h"
 
-#include "native_gbm_platform.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -39,7 +38,6 @@
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 namespace mo = mir::options;
-namespace mgng = mg::native_gbm;
 
 namespace
 {
@@ -174,9 +172,4 @@ extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDispl
 {
     return ((mgg::GBMPlatform::internal_display_clients_present) &&
             (display == mgg::GBMPlatform::internal_native_display.get()));
-}
-
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform()
-{
-    return std::make_shared<mgng::NativeGBMPlatform>();
 }

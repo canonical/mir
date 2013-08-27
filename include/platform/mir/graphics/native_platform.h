@@ -28,12 +28,12 @@ class Option;
 }
 namespace graphics
 {
+class GraphicBufferAllocator;
+class BufferInitializer;
+class PlatformIPCPackage;
+class InternalClient;
 class BufferIPCPacker;
 class Buffer;
-struct PlatformIPCPackage;
-class InternalClient;
-class BufferInitializer;
-class GraphicBufferAllocator;
 
 class NativePlatform
 {

@@ -24,27 +24,31 @@
 #include <stdexcept>
 
 namespace mg = mir::graphics;
-namespace mgng = mg::native_gbm;
+namespace mgg = mg::gbm;
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgng::NativeGBMPlatform::create_buffer_allocator(
+std::shared_ptr<mg::GraphicBufferAllocator> mgg::NativeGBMPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::create_buffer_allocator is not implemented yet!"));
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgng::NativeGBMPlatform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgg::NativeGBMPlatform::get_ipc_package()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::get_ipc_package is not implemented yet!"));
 }
 
-std::shared_ptr<mg::InternalClient> mgng::NativeGBMPlatform::create_internal_client()
+std::shared_ptr<mg::InternalClient> mgg::NativeGBMPlatform::create_internal_client()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::create_internal_client is not implemented yet!"));
 }
 
-void mgng::NativeGBMPlatform::fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& /*packer*/,
+void mgg::NativeGBMPlatform::fill_ipc_package(std::shared_ptr<mg::BufferIPCPacker> const& /*packer*/,
         std::shared_ptr<mg::Buffer> const& /*buffer*/) const
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Mir NativeGBMPlatform::fill_ipc_package is not implemented yet!"));
 }
 
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform()
+{
+    return std::make_shared<mgg::NativeGBMPlatform>();
+}

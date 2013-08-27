@@ -29,7 +29,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace native_gbm
+namespace gbm
 {
 
 class NativeGBMPlatform : public mg::NativePlatform
