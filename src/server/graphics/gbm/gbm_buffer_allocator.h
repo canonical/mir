@@ -38,8 +38,6 @@ struct EGLExtensions;
 
 namespace gbm
 {
-class GBMPlatform;
-
 class GBMBufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
