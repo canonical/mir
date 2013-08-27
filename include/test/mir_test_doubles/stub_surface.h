@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class StubSurface : public frontend::Surface
+class StubSurface : public frontend::ClientTrackingSurface
 {
 public:
     virtual ~StubSurface() = default;

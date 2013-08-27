@@ -76,6 +76,17 @@ typedef void (*mir_event_delegate_callback)(
     MirSurface* surface, MirEvent const* event, void* context);
 
 /**
+ * Callback called when a lifecycle event/callback is requested
+ * from the running server.
+ *   \param [in] connection     The connection associated with the lifecycle event
+ *   \param [in] cb             The callback requested
+ *   \param [in,out] context    The context provided by the client
+ */
+
+typedef void (*mir_lifecycle_event_callback)(
+    MirConnection* connection, MirLifecycleState state, void* context);
+
+/**
  * Callback called when a display config change has occurred
  *   \param [in] connection     The connection associated with the display change
  *   \param [in,out] context    The context provided by client
@@ -131,7 +142,7 @@ typedef struct MirSurfaceParameters
      * Use one of the output ids from MirDisplayConfiguration/MirDisplayOutput
      * to place a surface on that output. Only fullscreen placements are
      * currently supported. If you don't have special placement requirements,
-     * use the value mir_display_output_invalid.
+     * use the value mir_display_output_id_invalid.
      */
     uint32_t output_id;
 } MirSurfaceParameters;

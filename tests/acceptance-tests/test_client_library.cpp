@@ -31,6 +31,12 @@
 #include <thread>
 #include <cstring>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include <errno.h>
+
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace mcl = mir::client;
@@ -872,6 +878,78 @@ TEST_F(DefaultDisplayServerTestFixture, ClientLibraryDoesNotInterfereWithClientS
 
             EXPECT_TRUE(signalled);
         }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(DefaultDisplayServerTestFixture, MultiSurfaceClientTracksBufferFdsCorrectly)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+
+            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
+
+            ASSERT_TRUE(connection != NULL);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            EXPECT_STREQ("", mir_connection_get_error_message(connection));
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+
+            surf_one = mir_connection_create_surface_sync(connection, &request_params);
+            surf_two = mir_connection_create_surface_sync(connection, &request_params);
+
+            ASSERT_TRUE(surf_one != NULL);
+            ASSERT_TRUE(surf_two != NULL);
+
+            buffers = 0;
+
+            while (buffers < 1024)
+            {
+                mir_surface_swap_buffers_sync(surf_one);
+                mir_surface_swap_buffers_sync(surf_two);
+
+                buffers++;
+            }
+
+            /* We should not have any stray fds hanging around.
+               Test this by trying to open a new one */
+            int canary_fd;
+            canary_fd = open("/dev/null", O_RDONLY);
+
+            ASSERT_TRUE(canary_fd > 0) << "Failed to open canary file descriptor: "<< strerror(errno);
+            EXPECT_TRUE(canary_fd < 1024);
+
+            close(canary_fd);
+
+            mir_wait_for(mir_surface_release(surf_one, release_surface_callback, this));
+            mir_wait_for(mir_surface_release(surf_two, release_surface_callback, this));
+
+            ASSERT_TRUE(surf_one == NULL);
+            ASSERT_TRUE(surf_two == NULL);
+
+            mir_connection_release(connection);
+        }
+
+        virtual void surface_released (MirSurface* surf)
+        {
+            if (surf == surf_one)
+                surf_one = NULL;
+            if (surf == surf_two)
+                surf_two = NULL;
+        }
+
+        MirSurface* surf_one;
+        MirSurface* surf_two;
     } client_config;
 
     launch_client_process(client_config);

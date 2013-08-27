@@ -80,7 +80,7 @@ inline bool operator < (IntWrapper<Tag> const& lhs, IntWrapper<Tag> const& rhs)
 namespace std
 {
 template<typename Tag>
-struct hash<::mir::IntWrapper<Tag>>
+struct hash< ::mir::IntWrapper<Tag> >
 {
     std::hash<int> self;
     std::size_t operator()(::mir::IntWrapper<Tag> const& id) const

@@ -1,3 +1,119 @@
+mir (0.0.10+13.10.20130827-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Allow the Mir server socket to be set with the MIR_SOCKET enviroment
+    variable.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1019
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 27 Aug 2013 06:04:57 +0000
+
+mir (0.0.10+13.10.20130826.1-0ubuntu1) saucy; urgency=low
+
+  [ Christopher James Halse Rogers ]
+  * Fix server-side tracking of client buffers When the server knows the
+    client has a given buffer cached it only needs to send the BufferID
+    rather than the full IPC package. While this is an optimisation,
+    it's also required for correctness - the client will not clean up
+    fds for buffers it has cached, so if the server sends a full IPC
+    package for a buffer the client knows about any buffer fds leak. The
+    buffer cache is per-surface on the client side, but was per-session
+    on the server side. This meant that the server did not accurately
+    track the client's buffers, resulting in it sending unexpected fds
+    that the client then leaked. Fix this by making the buffer tracker
+    per-surface server-side.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1017
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 26 Aug 2013 14:04:34 +0000
+
+mir (0.0.10+13.10.20130826-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Fix uninitialized fields causing strange exceptions in some clients
+    such as fingerpaint and multiwin since r991. (LP: #1215754) The
+    uninitialized field output_id was only introduced in r991. Of
+    course, giving it an invalid value should not cause such wacky
+    exceptions. I'll log a bug to improve the error checking separately.
+    (LP: #1215754)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1015
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 26 Aug 2013 04:52:13 +0000
+
+mir (0.0.10-0ubuntu1) saucy; urgency=low
+
+  * New release
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Mon, 26 Aug 2013 11:36:02 +1200
+
+mir (0.0.9+13.10.20130825.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Disambiguate an exception message which could come from three
+    places: Output has no associated crtc with more rich and meaningful
+    information: Output <NAME> has no associated CRTC to <ACTION> on.
+
+  [ Robert Carr ]
+  * SessionMediator must hold only a weak reference to the session. (LP:
+    #1195089)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1012
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 25 Aug 2013 14:04:38 +0000
+
+mir (0.0.9+13.10.20130825-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * Add whitespace to prevent errors in non -fpermissive compilations.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1009
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Sun, 25 Aug 2013 10:05:08 +0000
+
+mir (0.0.9+13.10.20130823.3-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * mir: std::hash support for mir::IntWrapper<> .
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1007
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 22:04:51 +0000
+
+mir (0.0.9+13.10.20130823.2-0ubuntu1) saucy; urgency=low
+
+  [ Ricardo Mendoza ]
+  * * Implement lifecycle events interface.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1005
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 18:04:51 +0000
+
+mir (0.0.9+13.10.20130823.1-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * Send focus notifications to client. (LP: #1196744, #1192843,
+    #1102757, #1201435)
+
+  [ Robert Carr ]
+  * Send focus notifications to client. (LP: #1196744, #1192843,
+    #1102757, #1201435)
+
+  [ Alan Griffiths ]
+  * graphics: spike of NestedDisplayConfiguration.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1003
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 23 Aug 2013 14:05:22 +0000
+
 mir (0.0.9+13.10.20130823-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]

@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
+#define __USE_BSD 1  /* for usleep() */
 #include <unistd.h>  /* sleep() */
 #include <string.h>
 
@@ -112,7 +113,7 @@ static void put_pixels(void *where, int count, MirPixelFormat format,
         break;
     }
 
-    if (alpha_shift >= 0)
+    if (alpha_shift >= 0 && color->a < 255)
     {
         for (n = 0; n < count; n++)
             blend((uint32_t*)where + n, pixel, alpha_shift);
@@ -181,108 +182,35 @@ static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
     mir_surface_swap_buffers_sync(surface);
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
-{
-    MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;
-
-    static const Color color[] =
-    {
-        {0x80, 0xff, 0x00, 0xff},
-        {0x00, 0xff, 0x80, 0xff},
-        {0xff, 0x00, 0x80, 0xff},
-        {0xff, 0x80, 0x00, 0xff},
-        {0x00, 0x80, 0xff, 0xff},
-        {0x80, 0x00, 0xff, 0xff},
-        {0xff, 0xff, 0x00, 0xff},
-        {0x00, 0xff, 0xff, 0xff},
-        {0xff, 0x00, 0xff, 0xff},
-        {0xff, 0x00, 0x00, 0xff},
-        {0x00, 0xff, 0x00, 0xff},
-        {0x00, 0x00, 0xff, 0xff},
-    };
-
-    if (event->type == mir_event_type_motion)
-    {
-        static size_t base_color = 0;
-        static size_t max_fingers = 0;
-        static float max_pressure = 1.0f;
-        
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
-        MirMotionAction masked_action = event->motion.action & ~0xff00;
-
-        if (masked_action == mir_motion_action_up)
-        {
-            base_color = (base_color + max_fingers) %
-                         (sizeof(color)/sizeof(color[0]));
-            max_fingers = 0;
-        }
-
-        if (masked_action == mir_motion_action_move ||
-            masked_action == mir_motion_action_down)
-        {
-            size_t p;
-
-            if (event->motion.pointer_count > max_fingers)
-                max_fingers = event->motion.pointer_count;
-
-            for (p = 0; p < event->motion.pointer_count; p++)
-            {
-                int x = event->motion.pointer_coordinates[p].x;
-                int y = event->motion.pointer_coordinates[p].y;
-                int radius = event->motion.pointer_coordinates[p].size * 50.0f
-                             + 1.0f;
-                size_t c = (base_color + p) %
-                           (sizeof(color)/sizeof(color[0]));
-                Color tone = color[c];
-                float pressure = event->motion.pointer_coordinates[p].pressure;
-
-                if (pressure > max_pressure)
-                    max_pressure = pressure;
-                pressure /= max_pressure;
-                tone.a *= pressure;
-
-                draw_box(canvas, x - radius, y - radius, 2*radius, &tone);
-            }
-    
-            redraw(surface, canvas);
-        }
-    }
-}
-
-static const MirDisplayOutput *find_active_output(
-    const MirDisplayConfiguration *conf)
-{
-    const MirDisplayOutput *output = NULL;
-    int d;
-
-    for (d = 0; d < (int)conf->num_outputs; d++)
-    {
-        const MirDisplayOutput *out = conf->outputs + d;
-
-        if (out->used &&
-            out->connected &&
-            out->num_modes &&
-            out->current_mode < out->num_modes)
-        {
-            output = out;
-            break;
-        }
-    }
-
-    return output;
-}
-
 int main(int argc, char *argv[])
 {
-    static const Color background = {0x40, 0x40, 0x40, 0xff};
     MirConnection *conn;
     MirSurfaceParameters parm;
     MirSurface *surf;
     MirGraphicsRegion canvas;
-    MirEventDelegate delegate = {&on_event, &canvas};
     unsigned int f;
+    unsigned int const pf_size = 32;
+    MirPixelFormat formats[pf_size];
+    unsigned int valid_formats;
+    int sleep_usec = 50000;
 
-    (void)argc;
+    if (argc > 1)
+    {
+        int rate;
+
+        if (sscanf(argv[1], "%d", &rate) == 1 && rate > 0)
+        {
+            sleep_usec = 1000000 / rate;
+        }
+        else
+        {
+            fprintf(stderr, "Usage: %s [repeat rate in Hz]\n"
+                            "Default repeat rate is %d\n",
+                    argv[0], 1000000 / sleep_usec);
+
+            return 1;
+        }
+    }
 
     conn = mir_connect_sync(NULL, argv[0]);
     if (!mir_connection_is_valid(conn))
@@ -291,24 +219,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MirDisplayConfiguration *display_config =
-        mir_connection_create_display_config(conn);
-
-    const MirDisplayOutput *dinfo = find_active_output(display_config);
-    if (dinfo == NULL)
-    {
-        fprintf(stderr, "No active outputs found.\n");
-        mir_connection_release(conn);
-        return 1;
-    }
-
     parm.buffer_usage = mir_buffer_usage_software;
     parm.output_id = mir_display_output_id_invalid;
 
-    unsigned int const pf_size = 32;
-    MirPixelFormat formats[pf_size];
-    unsigned int valid_formats;
-    mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
+    mir_connection_get_available_surface_formats(conn, formats, pf_size,
+        &valid_formats);
 
     parm.pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < valid_formats; f++)
@@ -327,17 +242,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    parm.name = "Paint Canvas";
-    parm.width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
-    parm.height = dinfo->modes[dinfo->current_mode].vertical_resolution;
-
-    mir_display_config_destroy(display_config);
+    parm.name = "Progress Bars";
+    parm.width = 500;
+    parm.height = 500;
 
     surf = mir_connection_create_surface_sync(conn, &parm);
     if (surf != NULL)
     {
-        mir_surface_set_event_handler(surf, &delegate);
-    
         canvas.width = parm.width;
         canvas.height = parm.height;
         canvas.stride = canvas.width * BYTES_PER_PIXEL(parm.pixel_format);
@@ -346,19 +257,34 @@ int main(int argc, char *argv[])
 
         if (canvas.vaddr != NULL)
         {
+            int t = 0;
+
             signal(SIGINT, shutdown);
             signal(SIGTERM, shutdown);
         
-            clear_region(&canvas, &background);
-            redraw(surf, &canvas);
-        
             while (running)
             {
-                sleep(1);  /* Is there a better way yet? */
+                static const Color background = {0, 0, 255, 255};
+                static const Color foreground = {255, 255, 255, 255};
+                static const int width = 8;
+                static const int space = 1;
+                const int grid = width + 2 * space;
+                const int row = parm.width / grid;
+                const int square = row * row;
+                const int x = (t % row) * grid + space;
+                const int y = (t / row) * grid + space;
+
+                if (t % square == 0)
+                    clear_region(&canvas, &background);
+
+                t = (t + 1) % square;
+
+                draw_box(&canvas, x, y, width, &foreground);
+
+                redraw(surf, &canvas);
+                usleep(sleep_usec);
             }
 
-            /* Ensure canvas won't be used after it's freed */
-            mir_surface_set_event_handler(surf, NULL);
             free(canvas.vaddr);
         }
         else

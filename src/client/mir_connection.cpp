@@ -26,6 +26,7 @@
 #include "connection_configuration.h"
 #include "display_configuration.h"
 #include "surface_map.h"
+#include "lifecycle_control.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -78,6 +79,7 @@ MirConnection::MirConnection(
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
+        lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map())
 {
     {
@@ -354,6 +356,11 @@ EGLNativeDisplayType MirConnection::egl_native_display()
 void MirConnection::on_surface_created(int id, MirSurface* surface)
 {
     surface_map->insert(id, surface);
+}
+
+void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)
+{
+    lifecycle_control->set_lifecycle_event_handler(std::bind(callback, this, std::placeholders::_1, context));
 }
 
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)

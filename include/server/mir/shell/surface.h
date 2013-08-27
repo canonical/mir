@@ -44,7 +44,7 @@ class SurfaceConfigurator;
 class SurfaceController;
 struct SurfaceCreationParameters;
 
-class Surface : public frontend::Surface, public shell::SurfaceBufferAccess
+class Surface : public frontend::ClientTrackingSurface, public shell::SurfaceBufferAccess
 {
 public:
     Surface(

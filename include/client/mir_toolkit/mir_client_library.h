@@ -40,7 +40,8 @@ extern "C" {
  *            locking appropriate to protect your data accessed in the
  *            callback.
  *   \param [in] server       File path of the server socket to connect to, or
- *                            NULL to choose the default server
+ *                            NULL to choose the default server (can be set by
+ *                            the $MIR_SOCKET environment variable)
  *   \param [in] app_name     A name referring to the application
  *   \param [in] callback     Callback function to be invoked when request
  *                            completes
@@ -93,6 +94,15 @@ void mir_connection_release(MirConnection *connection);
  *   \param [out] platform_package  Structure to be populated
  */
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package);
+
+/**
+ * Register a callback to be called when a Lifecycle state change occurs.
+ *   \param [in] connection     The connection
+ *   \param [in] callback       The function to be called when the state change occurs
+ *   \param [in,out] context    User data passed to the callback function
+ */
+void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
+    mir_lifecycle_event_callback callback, void* context);
 
 /** 
  * \deprecated Use mir_connection_create_display_config

@@ -27,6 +27,7 @@
 #include "native_client_platform_factory.h"
 #include "egl_native_display_container.h"
 #include "default_connection_configuration.h"
+#include "lifecycle_control.h"
 
 #include <set>
 #include <unordered_set>
@@ -81,9 +82,18 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
 
     try
     {
-        std::string const sock = socket_file ? socket_file :
-                                               mir::default_server_socket;
-
+        std::string sock;
+        if (socket_file)
+            sock = socket_file;
+        else
+        {
+            auto socket_env = getenv("MIR_SOCKET");
+            if (socket_env)
+                sock = socket_env;
+            else
+                sock = mir::default_server_socket;
+        }
+ 
         mcl::DefaultConnectionConfiguration conf{sock};
 
         MirConnection* connection = new MirConnection(conf);
@@ -406,6 +416,13 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 int mir_surface_get_swapinterval(MirSurface* surf)
 {
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
+}
+
+void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
+    mir_lifecycle_event_callback callback, void* context)
+{
+    if (!error_connections.contains(connection))
+        connection->register_lifecycle_event_callback(callback, context);
 }
 
 void mir_connection_set_display_config_change_callback(MirConnection* connection,

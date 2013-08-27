@@ -139,6 +139,7 @@ int main(int argc, char *argv[])
     mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
 
     parm.buffer_usage = mir_buffer_usage_software;
+    parm.output_id = mir_display_output_id_invalid;
     parm.pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < valid_formats; f++)
     {
