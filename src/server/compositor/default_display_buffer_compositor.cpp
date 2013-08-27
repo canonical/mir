@@ -49,9 +49,10 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
     mir::geometry::Rectangle const& enclosing_region;
 };
 
-}
+std::mutex global_frame_count_lock;
+unsigned long global_frame_count = 0;
 
-std::atomic_ulong mc::DefaultDisplayBufferCompositor::global_frame_count(0);
+}
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
@@ -78,14 +79,12 @@ void mc::DefaultDisplayBufferCompositor::composite()
      * rate of all attached outputs.
      */
     local_frame_count++;
-    if (global_frame_count.load() < local_frame_count ||
-        local_frame_count <= 0)  // Wrap around, unlikely, but handle it...
     {
-        global_frame_count.store(local_frame_count);
-    }
-    else
-    {
-        local_frame_count = global_frame_count.load();
+        std::lock_guard<std::mutex> lock(global_frame_count_lock);
+        if (global_frame_count < local_frame_count || local_frame_count <= 0)
+            global_frame_count = local_frame_count;
+        else
+            local_frame_count = global_frame_count;
     }
 
     if (!got_bypass_env)
@@ -130,7 +129,7 @@ void mc::DefaultDisplayBufferCompositor::compose(
     mir::geometry::Rectangle const& view_area,
     std::function<void(std::shared_ptr<void> const&)> save_resource)
 {
-    renderer->clear(global_frame_count.load());
+    renderer->clear(local_frame_count);
 
     mc::RenderingOperator applicator(*renderer, save_resource);
     FilterForVisibleSceneInRegion selector(view_area);

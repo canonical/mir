@@ -20,7 +20,6 @@
 #define MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_H_
 
 #include "mir/compositor/basic_display_buffer_compositor.h"
-#include <atomic>
 
 namespace mir
 {
@@ -56,7 +55,6 @@ private:
     std::shared_ptr<OverlayRenderer> const overlay_renderer;
 
     unsigned long local_frame_count;
-    static std::atomic_ulong global_frame_count;
 };
 
 }
