@@ -1,3 +1,14 @@
+mir (0.0.10+13.10.20130827-0ubuntu1) saucy; urgency=low
+
+  [ Robert Ancell ]
+  * Allow the Mir server socket to be set with the MIR_SOCKET enviroment
+    variable.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1019
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 27 Aug 2013 06:04:57 +0000
+
 mir (0.0.10+13.10.20130826.1-0ubuntu1) saucy; urgency=low
 
   [ Christopher James Halse Rogers ]
