@@ -76,7 +76,7 @@ protected:
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
                                                       std::make_shared<mtd::NullVirtualTerminal>());
         null_init = std::make_shared<mg::NullBufferInitializer>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform, null_init));
+        allocator.reset(new mgg::GBMBufferAllocator(platform->gbm.device, null_init));
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
