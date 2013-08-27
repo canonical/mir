@@ -107,9 +107,9 @@ struct GBMBODeleter
 }
 
 mgg::GBMBufferAllocator::GBMBufferAllocator(
-        const std::shared_ptr<GBMPlatform>& platform,
+        gbm_device* device,
         const std::shared_ptr<BufferInitializer>& buffer_initializer)
-        : platform(platform),
+        : device(device),
           buffer_initializer(buffer_initializer),
           egl_extensions(std::make_shared<mg::EGLExtensions>())
 {
@@ -134,7 +134,7 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
         bo_flags |= GBM_BO_USE_WRITE;
 
     gbm_bo *bo_raw = gbm_bo_create(
-        platform->gbm.device,
+        device,
         buffer_properties.size.width.as_uint32_t(),
         buffer_properties.size.height.as_uint32_t(),
         gbm_format,

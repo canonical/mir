@@ -64,7 +64,7 @@ protected:
         platform = std::make_shared<mgg::GBMPlatform>(std::make_shared<mg::NullDisplayReport>(),
                                                       std::make_shared<mtd::NullVirtualTerminal>());
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
-        allocator.reset(new mgg::GBMBufferAllocator(platform, mock_buffer_initializer));
+        allocator.reset(new mgg::GBMBufferAllocator(platform->gbm.device, mock_buffer_initializer));
     }
 
     // Defaults
@@ -190,7 +190,7 @@ TEST_F(GBMBufferAllocatorTest, null_buffer_initializer_does_not_crash)
     using namespace testing;
 
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    allocator.reset(new mgg::GBMBufferAllocator(platform, null_buffer_initializer));
+    allocator.reset(new mgg::GBMBufferAllocator(platform->gbm.device, null_buffer_initializer));
 
     EXPECT_NO_THROW({
         allocator->alloc_buffer(buffer_properties);
