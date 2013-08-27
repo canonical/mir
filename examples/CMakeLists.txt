@@ -46,6 +46,9 @@ target_link_libraries(mir_demo_client_multiwin mirclient)
 add_executable(mir_demo_client_fingerpaint fingerpaint.c)
 target_link_libraries(mir_demo_client_fingerpaint mirclient)
 
+add_executable(mir_demo_client_progressbar progressbar.c)
+target_link_libraries(mir_demo_client_progressbar mirclient)
+
 add_executable(mir_demo_client_display_config demo_client_display_config.c)
 target_link_libraries(mir_demo_client_display_config eglapp)
 

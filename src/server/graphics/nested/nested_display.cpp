@@ -144,7 +144,6 @@ mgn::detail::NestedOutput::NestedOutput(MirConnection* connection, DisplayConfig
     area{output.top_left, output.modes[output.current_mode_index].size},
     egl_surface{EGL_NO_SURFACE}
 {
-    make_current(); // This duplicates what Eleni's original code did - but is it needed?
 }
 
 geom::Rectangle mgn::detail::NestedOutput::view_area() const
