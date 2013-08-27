@@ -176,7 +176,7 @@ std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
 
 void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration)
 {
-    std::unordered_map<mg::DisplayConfigurationOutputId, std::shared_ptr<mgn::detail::NestedOutput>> result;
+    decltype(outputs) result;
 
     // TODO for proper mirrored mode support we will need to detect overlapping outputs and
     // TODO only use a single surface for them. The OverlappingOutputGrouping utility class
@@ -199,12 +199,22 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
     mir_connection_apply_display_config(connection, conf);
 }
 
+namespace
+{
+void display_config_callback_thunk(MirConnection* /*connection*/, void* callback)
+{
+    (*static_cast<mg::DisplayConfigurationChangeHandler*>(callback))();
+}
+}
+
 void mgn::NestedDisplay::register_configuration_change_handler(
         EventHandlerRegister& /*handlers*/,
-        DisplayConfigurationChangeHandler const& /*conf_change_handler*/)
+        DisplayConfigurationChangeHandler const& conf_change_handler)
 {
-    // TODO need to watch for changes via mir_connection_set_display_config_change_callback()
-    // TODO and invoke conf_change_handler() (I don't think we need handlers)
+    mir_connection_set_display_config_change_callback(
+        connection,
+        &display_config_callback_thunk,
+        &(my_conf_change_handler = conf_change_handler));
 }
 
 void mgn::NestedDisplay::register_pause_resume_handlers(
