@@ -54,7 +54,7 @@ public:
 private:
     bool is_pixel_format_supported(geometry::PixelFormat format);
 
-    gbm_device* device;
+    gbm_device* const device;
     std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 };
