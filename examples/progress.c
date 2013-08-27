@@ -192,8 +192,25 @@ int main(int argc, char *argv[])
     unsigned int const pf_size = 32;
     MirPixelFormat formats[pf_size];
     unsigned int valid_formats;
+    int sleep_usec = 50000;
 
-    (void)argc;
+    if (argc > 1)
+    {
+        int rate;
+
+        if (sscanf(argv[1], "%d", &rate) == 1 && rate > 0)
+        {
+            sleep_usec = 1000000 / rate;
+        }
+        else
+        {
+            fprintf(stderr, "Usage: %s [repeat rate in Hz]\n"
+                            "Default repeat rate is %d\n",
+                    argv[0], 1000000 / sleep_usec);
+
+            return 1;
+        }
+    }
 
     conn = mir_connect_sync(NULL, argv[0]);
     if (!mir_connection_is_valid(conn))
@@ -265,7 +282,7 @@ int main(int argc, char *argv[])
                 draw_box(&canvas, x, y, width, &foreground);
 
                 redraw(surf, &canvas);
-                usleep(50000);  /* simulate keyboard repeat rate */
+                usleep(sleep_usec);
             }
 
             free(canvas.vaddr);
