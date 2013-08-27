@@ -130,6 +130,7 @@ private:
     MirConnection* const connection;
     std::shared_ptr<DisplayReport> const display_report;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
+    DisplayConfigurationChangeHandler my_conf_change_handler;
 };
 
 }
