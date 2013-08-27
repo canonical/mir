@@ -114,7 +114,7 @@ struct NestedMockEGL : mir::test::doubles::MockEGL
             EXPECT_CALL(*this, eglCreateContext(_, _, _, _)).Times(1).WillRepeatedly(Return((EGLContext)this));
             EXPECT_CALL(*this, eglDestroyContext(_, _)).Times(1).WillRepeatedly(Return(EGL_TRUE));
         }
-}
+    }
 
 private:
     void egl_initialize(EGLint* major, EGLint* minor) { *major = 1; *minor = 4; }
