@@ -1,3 +1,28 @@
+mir (0.0.10+13.10.20130827.1-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * ipc: add a protocol version to the wire protocol so that we can bump
+    it in future.
+  * graphics::nested: Handling of output configuration changes.
+  * graphics.nested: Hookup NestedDisplay to display change
+    notifications.
+
+  [ Daniel van Vugt ]
+  * Introducing mir_demo_client_progressbar. It's pretty boring;
+    designed to simulate key repeat scrolling in a terminal, as an aid
+    for tracking down bug 1216472. . (LP: #1216472)
+
+  [ Eleni Maria Stea ]
+  * changed the GBMBufferAllocator constructor and class to use the
+    gbm_device instead of the GBMPlatform to remove the dependency from
+    the mg::Platform interface - this way we can use the
+    GBMBufferAllocator with the NativeGBMPlatform (nested mir).
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1025
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 27 Aug 2013 18:04:47 +0000
+
 mir (0.0.10+13.10.20130827-0ubuntu1) saucy; urgency=low
 
   [ Robert Ancell ]
