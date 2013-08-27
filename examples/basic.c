@@ -24,32 +24,32 @@
 #include <stdlib.h>
 #include <getopt.h>
 
-///\page demo_client.c demo_client.c: A simple mir client
+///\page basic.c basic.c: A simple mir client
 /// demo_client shows the use of mir API.
 /// This program opens a mir connection and creates a surface.
 ///\section demo_client demo_client()
 /// Opens a mir connection and creates a surface and advances the
 /// current buffer before closing the surface and connection.
 ///\subsection connect request and wait for connection handle
-/// \snippet demo_client.c connect_tag
+/// \snippet basic.c connect_tag
 ///\subsection surface_create request and wait for surface handle
-/// \snippet demo_client.c surface_create_tag
+/// \snippet basic.c surface_create_tag
 ///\subsection swap_buffers exchange the current buffer for a new one
-/// \snippet demo_client.c swap_buffers_tag
+/// \snippet basic.c swap_buffers_tag
 ///\subsection surface_release We release our surface
-/// \snippet demo_client.c surface_release_tag
+/// \snippet basic.c surface_release_tag
 ///\subsection connection_release We release our connection
-/// \snippet demo_client.c connection_release_tag
+/// \snippet basic.c connection_release_tag
 ///\subsection get the raw, platform-specific buffer handle for the current buffer
-/// \snippet demo_client.c get_current_buffer_tag
-/// \example demo_client.c A simple mir client
+/// \snippet basic.c get_current_buffer_tag
+/// \example basic.c A simple mir client
 ///\section MirDemoState MirDemoState
 /// The handles needs to be accessible both to callbacks and to the control function.
-/// \snippet demo_client.c MirDemoState_tag
+/// \snippet basic.c MirDemoState_tag
 ///\section Callbacks Callbacks
 /// This program opens a mir connection and creates a surface. The handles
 /// needs to be accessible both to callbacks and to the control function.
-/// \snippet demo_client.c Callback_tag
+/// \snippet basic.c Callback_tag
 
 ///\internal [MirDemoState_tag]
 // Utility structure for the state of a single surface session.
