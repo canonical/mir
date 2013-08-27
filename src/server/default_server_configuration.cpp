@@ -57,6 +57,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/input/cursor_listener.h"
+#include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
 #include "mir/input/null_input_report.h"
 #include "mir/input/display_input_region.h"
@@ -589,7 +590,11 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else if (options->is_set(nested_mode_opt))
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error("Nested mode input not implemented"));
+            return std::make_shared<mi::NestedInputConfiguration>(
+                the_composite_event_filter(),
+                the_input_region(),
+                the_cursor_listener(),
+                the_input_report());
         }
         else
         {
