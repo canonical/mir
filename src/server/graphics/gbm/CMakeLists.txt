@@ -33,6 +33,7 @@ add_library(
   drm_close_threadsafe.cpp
   udev_video_devices.cpp
   overlapping_output_grouping.cpp
+  native_gbm_platform.cpp
 )
 
 target_link_libraries(
