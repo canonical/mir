@@ -85,10 +85,11 @@ public:
     NestedOutput(MirConnection* connection, DisplayConfigurationOutput const& output);
     ~NestedOutput() noexcept;
 
-    geometry::Rectangle view_area() const;
-    void make_current();
-    void release_current();
-    void post_update();
+    geometry::Rectangle view_area() const override;
+    void make_current() override;
+    void release_current() override;
+    void post_update() override;
+    virtual bool can_bypass() const;
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;
