@@ -188,6 +188,7 @@ void mgg::GBMDisplayBuffer::post_update(
         auto native = bypass_buf->native_buffer_handle();
         auto gbm_native = static_cast<mgg::GBMNativeBuffer*>(native.get());
         bufobj = get_buffer_object(gbm_native->bo);
+        drmModeDirtyFB(drm.fd, bufobj->get_drm_fb_id(), NULL, 0);
     }
     else
     {
