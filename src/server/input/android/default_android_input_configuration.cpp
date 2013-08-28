@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "default_android_input_configuration.h"
+#include "mir/input/android/default_android_input_configuration.h"
 #include "event_filter_dispatcher_policy.h"
 #include "android_input_reader_policy.h"
 #include "android_input_thread.h"

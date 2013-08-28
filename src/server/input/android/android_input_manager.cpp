@@ -21,7 +21,7 @@
 #include "android_input_constants.h"
 #include "android_input_thread.h"
 #include "android_input_channel.h"
-#include "default_android_input_configuration.h"
+#include "mir/input/android/default_android_input_configuration.h"
 
 #include <EventHub.h>
 #include <InputDispatcher.h>
