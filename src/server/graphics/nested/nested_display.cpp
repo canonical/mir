@@ -171,6 +171,13 @@ void mgn::detail::NestedOutput::post_update()
     mir_surface_swap_buffers_sync(mir_surface);
 }
 
+bool mgn::detail::NestedOutput::can_bypass() const
+{
+    // TODO we really should return "true" - but we need to support bypass properly then
+    return false;
+}
+
+
 mgn::detail::NestedOutput::~NestedOutput() noexcept
 {
     if (egl_surface != EGL_NO_SURFACE)
