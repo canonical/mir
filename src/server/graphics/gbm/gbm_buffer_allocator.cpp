@@ -146,6 +146,8 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
      *       mir_surface_state_fullscreen later when it's fully wired up.
      */
     if (buffer_properties.usage == BufferUsage::hardware &&
+        (buffer_properties.format == geom::PixelFormat::xbgr_8888 ||
+         buffer_properties.format == geom::PixelFormat::xrgb_8888) &&
         buffer_properties.size.width.as_uint32_t() >= 800 &&
         buffer_properties.size.height.as_uint32_t() >= 600)
     {

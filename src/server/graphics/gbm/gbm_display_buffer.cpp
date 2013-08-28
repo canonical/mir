@@ -264,12 +264,17 @@ mgg::BufferObject* mgg::GBMDisplayBuffer::get_buffer_object(
         return bufobj;
 
     uint32_t fb_id{0};
-    auto handle = gbm_bo_get_handle(bo).u32;
-    auto stride = gbm_bo_get_stride(bo);
+    uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
+    uint32_t pitches[4] = {gbm_bo_get_stride(bo), 0, 0, 0};
+    uint32_t offsets[4] = {0, 0, 0, 0};
+    uint32_t pixel_format = gbm_bo_get_format(bo);
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB(drm.fd, area.size.width.as_uint32_t(), area.size.height.as_uint32_t(),
-                            24, 32, stride, handle, &fb_id);
+    auto ret = drmModeAddFB2(drm.fd,
+                             area.size.width.as_uint32_t(),
+                             area.size.height.as_uint32_t(),
+                             pixel_format, handles, pitches, offsets,
+                             &fb_id, 0);
     if (ret)
         return nullptr;
 

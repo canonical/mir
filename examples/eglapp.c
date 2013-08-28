@@ -164,6 +164,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLContext eglctx;
     EGLBoolean ok;
     EGLint swapinterval = 1;
+    unsigned int f;
 
     if (argc > 1)
     {
@@ -247,9 +248,21 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     const MirDisplayMode *mode = &output->modes[output->current_mode];
 
-    unsigned int valid_formats;
+    MirPixelFormat format[10];
+    unsigned int formats;
     mir_connection_get_available_surface_formats(connection,
-        &surfaceparm.pixel_format, 1, &valid_formats);
+        format, 10, &formats);
+
+    /* Search for non-alpha formats that have a chance of being bypassed */
+    for (f = 0; f < formats; f++)
+    {
+        if (format[f] == mir_pixel_format_xbgr_8888 ||
+            format[f] == mir_pixel_format_xrgb_8888)
+        {
+            surfaceparm.pixel_format = format[f];
+            break;
+        }
+    }
 
     printf("Connected to display: resolution (%dx%d), position(%dx%d), "
            "supports %d pixel formats\n",
