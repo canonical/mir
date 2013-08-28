@@ -1,6 +1,6 @@
-examples/demo_client.c
-examples/demo_client_accelerated.cpp
-examples/demo_client_unaccelerated.c
+examples/basic.c
+examples/scroll.cpp
+examples/flicker.c
 examples/README
 examples/graphics.h
 examples/mir_image.h
