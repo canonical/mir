@@ -1,3 +1,17 @@
+mir (0.0.10+13.10.20130828-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * graphics.nested: sketch out NestedOutput implementation.
+
+  [ Eleni Maria Stea ]
+  * removed the struct NativeGBMPlatform from gbm_platform.cpp and added
+    a NativeGBMPlatform class instead.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1028
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 28 Aug 2013 10:04:57 +0000
+
 mir (0.0.10+13.10.20130827.1-0ubuntu1) saucy; urgency=low
 
   [ Alan Griffiths ]
