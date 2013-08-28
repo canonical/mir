@@ -4,6 +4,7 @@ message Invocation {
   required uint32 id = 1;
   required string method_name = 2;
   required bytes  parameters = 3;
+  optional uint32 protocol_version = 4;
 }
 
 message Result {

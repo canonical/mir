@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/egl_resources.h"
+#include "mir/graphics/display_configuration.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -38,6 +39,7 @@ namespace graphics
 {
 class DisplayReport;
 class DisplayBuffer;
+
 namespace nested
 {
 namespace detail
@@ -45,7 +47,7 @@ namespace detail
 class MirSurfaceHandle
 {
 public:
-    explicit MirSurfaceHandle(MirConnection* connection, MirDisplayOutput* const egl_display_info);
+    explicit MirSurfaceHandle(MirConnection* connection, DisplayConfigurationOutput const& output);
     ~MirSurfaceHandle() noexcept;
 
     operator MirSurface*() const { return mir_surface; }
@@ -79,7 +81,7 @@ private:
 class NestedOutput
 {
 public:
-    NestedOutput(MirConnection* connection, MirDisplayOutput* const);
+    NestedOutput(MirConnection* connection, DisplayConfigurationOutput const& output);
     ~NestedOutput() noexcept;
 
     operator MirSurface*() const { return mir_surface; }
@@ -127,7 +129,8 @@ public:
 private:
     MirConnection* const connection;
     std::shared_ptr<DisplayReport> const display_report;
-    std::unordered_map<uint32_t, std::shared_ptr<detail::NestedOutput>> outputs;
+    std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
+    DisplayConfigurationChangeHandler my_conf_change_handler;
 };
 
 }

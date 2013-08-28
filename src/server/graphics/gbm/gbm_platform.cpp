@@ -113,7 +113,7 @@ mgg::GBMPlatform::~GBMPlatform()
 std::shared_ptr<mg::GraphicBufferAllocator> mgg::GBMPlatform::create_buffer_allocator(
         const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
 {
-    return std::make_shared<mgg::GBMBufferAllocator>(this->shared_from_this(),
+    return std::make_shared<mgg::GBMBufferAllocator>(gbm.device,
                                                      buffer_initializer);
 }
 
