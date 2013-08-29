@@ -49,8 +49,8 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
     mir::geometry::Rectangle const& enclosing_region;
 };
 
-std::mutex global_frame_count_lock;
-unsigned long global_frame_count = 0;
+std::mutex global_frameno_lock;
+unsigned long global_frameno = 0;
 
 bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
 {
@@ -68,7 +68,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       overlay_renderer{overlay_renderer},
-      local_frame_count{global_frame_count}
+      local_frameno{global_frameno}
 {
 }
 
@@ -84,13 +84,13 @@ void mc::DefaultDisplayBufferCompositor::composite()
      * DefaultDisplayBufferCompositor. This means for the fastest refresh
      * rate of all attached outputs.
      */
-    local_frame_count++;
+    local_frameno++;
     {
-        std::lock_guard<std::mutex> lock(global_frame_count_lock);
-        if (wrapped_greater_or_equal(local_frame_count, global_frame_count))
-            global_frame_count = local_frame_count;
+        std::lock_guard<std::mutex> lock(global_frameno_lock);
+        if (wrapped_greater_or_equal(local_frameno, global_frameno))
+            global_frameno = local_frameno;
         else
-            local_frame_count = global_frame_count;
+            local_frameno = global_frameno;
     }
 
     if (!got_bypass_env)
@@ -116,7 +116,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
         {
             auto bypass_buf =
                 match.topmost_fullscreen()->lock_compositor_buffer(
-                    local_frame_count);
+                    local_frameno);
 
             if (bypass_buf->can_bypass())
             {
@@ -135,7 +135,7 @@ void mc::DefaultDisplayBufferCompositor::compose(
     mir::geometry::Rectangle const& view_area,
     std::function<void(std::shared_ptr<void> const&)> save_resource)
 {
-    renderer->clear(local_frame_count);
+    renderer->clear(local_frameno);
 
     mc::RenderingOperator applicator(*renderer, save_resource);
     FilterForVisibleSceneInRegion selector(view_area);

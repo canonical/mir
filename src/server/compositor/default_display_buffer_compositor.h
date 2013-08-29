@@ -54,7 +54,7 @@ private:
     std::shared_ptr<Renderer> const renderer;
     std::shared_ptr<OverlayRenderer> const overlay_renderer;
 
-    unsigned long local_frame_count;
+    unsigned long local_frameno;
 };
 
 }
