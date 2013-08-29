@@ -52,6 +52,11 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
 std::mutex global_frame_count_lock;
 unsigned long global_frame_count = 0;
 
+bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
+{
+    return (a - b) < (~0UL / 2UL);
+}
+
 }
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -63,9 +68,10 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       overlay_renderer{overlay_renderer},
-      local_frame_count{0}
+      local_frame_count{global_frame_count}
 {
 }
+
 
 void mc::DefaultDisplayBufferCompositor::composite()
 {
@@ -81,7 +87,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
     local_frame_count++;
     {
         std::lock_guard<std::mutex> lock(global_frame_count_lock);
-        if (global_frame_count < local_frame_count || local_frame_count <= 0)
+        if (wrapped_greater_or_equal(local_frame_count, global_frame_count))
             global_frame_count = local_frame_count;
         else
             local_frame_count = global_frame_count;
