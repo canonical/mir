@@ -942,7 +942,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
         {
             auto const options = the_options();
 
-            if (options->is_set("nested-mode"))
+            if (options->is_set(nested_mode_opt))
             {
                 // TODO create a HostConnection
                 BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented"));
