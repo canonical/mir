@@ -924,6 +924,27 @@ mir::DefaultServerConfiguration::the_display_configuration_policy()
         });
 }
 
+auto mir::DefaultServerConfiguration::the_host_connection()
+-> std::shared_ptr<graphics::nested::HostConnection>
+{
+    return host_connection(
+        [this]() -> std::shared_ptr<graphics::nested::HostConnection>
+        {
+            auto const options = the_options();
+
+            if (options->is_set("nested-mode"))
+            {
+                // TODO create a HostConnection
+                BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented"));
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION(std::logic_error("can only use host connection in nested mode"));
+            }
+        });
+}
+
+
 std::shared_ptr<msh::BroadcastingSessionEventSink>
 mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()
 {
