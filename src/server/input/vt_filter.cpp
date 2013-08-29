@@ -16,7 +16,7 @@
  * Authored by: Robert Ancell <robert.ancell@canonical.com>
  */
 
-#include "vt_filter.h"
+#include "mir/input/vt_filter.h"
 
 #include <linux/input.h>
 #include <linux/vt.h>

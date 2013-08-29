@@ -57,14 +57,14 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/default_display_configuration_policy.h"
 #include "mir/input/cursor_listener.h"
+#include "mir/input/nested_input_configuration.h"
 #include "mir/input/null_input_configuration.h"
 #include "mir/input/null_input_report.h"
 #include "mir/input/display_input_region.h"
 #include "mir/input/event_filter_chain.h"
-#include "input/vt_filter.h"
-#include "input/android/default_android_input_configuration.h"
-#include "input/android/android_input_manager.h"
-#include "input/android/android_input_targeter.h"
+#include "mir/input/vt_filter.h"
+#include "mir/input/android/default_android_input_configuration.h"
+#include "mir/input/input_manager.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_report.h"
 #include "mir/logging/dumb_console_logger.h"
@@ -172,6 +172,7 @@ char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
 char const* const legacy_input_report_opt     = "legacy-input-report";
 char const* const input_report_opt            = "input-report";
+char const* const nested_mode_opt             = "nested-mode";
 
 char const* const glog                 = "glog";
 char const* const glog_stderrthreshold = "glog-stderrthreshold";
@@ -236,7 +237,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
     namespace po = boost::program_options;
 
     add_options()
-        ("nested-mode", po::value<std::string>(),
+        (nested_mode_opt, po::value<std::string>(),
             "Run mir in nested mode. Host socket filename.")
         ("file,f", po::value<std::string>(),
             "Socket filename")
@@ -328,13 +329,13 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
         {
             auto graphics_lib = load_library(the_options()->get(platform_graphics_lib, default_platform_graphics_lib));
 
-            if (!the_options()->is_set("nested-mode"))
+            if (!the_options()->is_set(nested_mode_opt))
             {
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_display_report());
             }
 
-            const std::string host_socket = the_options()->get("nested-mode", default_server_socket);
+            const std::string host_socket = the_options()->get(nested_mode_opt, default_server_socket);
             const std::string server_socket = the_options()->get("file", default_server_socket);
 
             if (server_socket == host_socket)
@@ -581,9 +582,14 @@ mir::DefaultServerConfiguration::the_input_configuration()
     return input_configuration(
     [this]() -> std::shared_ptr<mi::InputConfiguration>
     {
-        if (the_options()->get("enable-input", enable_input_default))
+        auto const options = the_options();
+        if (!options->get("enable-input", enable_input_default))
         {
-            return std::make_shared<mia::DefaultInputConfiguration>(
+            return std::make_shared<mi::NullInputConfiguration>();
+        }
+        else if (options->is_set(nested_mode_opt))
+        {
+            return std::make_shared<mi::NestedInputConfiguration>(
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -591,7 +597,11 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else
         {
-            return std::make_shared<mi::NullInputConfiguration>();
+            return std::make_shared<mia::DefaultInputConfiguration>(
+                the_composite_event_filter(),
+                the_input_region(),
+                the_cursor_listener(),
+                the_input_report());
         }
     });
 }

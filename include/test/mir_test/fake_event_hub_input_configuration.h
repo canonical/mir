@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_FAKE_EVENT_HUB_INPUT_CONFIGURATION_H_
 #define MIR_TEST_DOUBLES_FAKE_EVENT_HUB_INPUT_CONFIGURATION_H_
 
-#include "src/server/input/android/default_android_input_configuration.h"
+#include "mir/input/android/default_android_input_configuration.h"
 
 #include <utils/StrongPointer.h>
 
