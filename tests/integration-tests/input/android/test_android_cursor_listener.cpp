@@ -18,7 +18,7 @@
  */
 
 #include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/default_android_input_configuration.h"
+#include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_targets.h"
