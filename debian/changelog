@@ -1,3 +1,15 @@
+mir (0.0.10+13.10.20130829.2-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * eglapp: Add a new option -oN to force the surface placement onto
+    output N. Unfortunately we haven't yet written any tool to tell you
+    what your output IDs are.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1038
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 29 Aug 2013 18:05:29 +0000
+
 mir (0.0.10+13.10.20130829.1-0ubuntu1) saucy; urgency=low
 
   [ Alan Griffiths ]
