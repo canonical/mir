@@ -1,3 +1,18 @@
+mir (0.0.10+13.10.20130829-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Add "composition bypass" support, whereby fullscreen surfaces are
+    allowed to go straight to the display hardware without being
+    composited at all, hence avoiding the overhead of any OpenGL or
+    texturing where possible. Hardware support: intel: Excellent radeon:
+    Good, but REQUIRES kernel 3.11.0 nouveau: Good, but REQUIRES kernel
+    3.11.0 android: No bypass implemented yet. (LP: #1109963)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1033
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 29 Aug 2013 10:04:53 +0000
+
 mir (0.0.10+13.10.20130828.1-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
