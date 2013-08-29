@@ -22,7 +22,7 @@
 namespace mgn = mir::graphics::nested;
 
 mgn::HostConnection::HostConnection(std::string const& host_socket)
-    : connection{mir_connect_sync(host_socket.c_str(), "nested-mir")}
+    : connection{mir_connect_sync(host_socket.c_str(), ("nested-mir@:"+host_socket).c_str())}
 {
 }
 
