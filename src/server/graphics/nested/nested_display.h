@@ -20,8 +20,9 @@
 #define MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/egl_resources.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/egl_resources.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -78,14 +79,17 @@ private:
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
 };
 
-class NestedOutput
+class NestedOutput : public DisplayBuffer
 {
 public:
     NestedOutput(MirConnection* connection, DisplayConfigurationOutput const& output);
     ~NestedOutput() noexcept;
 
-    operator MirSurface*() const { return mir_surface; }
-    operator EGLContext()  const { return egl_surface; }
+    geometry::Rectangle view_area() const override;
+    void make_current() override;
+    void release_current() override;
+    void post_update() override;
+    virtual bool can_bypass() const;
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;
@@ -94,8 +98,10 @@ private:
     detail::EGLDisplayHandle const egl_display;
 
     EGLConfig const egl_config;
-    EGLSurfaceStore const egl_surface;
     EGLContextStore const egl_context;
+
+    geometry::Rectangle const area;
+    EGLSurface egl_surface;
 };
 
 }

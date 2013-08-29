@@ -27,11 +27,11 @@ target_link_libraries(mir_demo_client_eglplasma
   eglapp
 )
 
-add_executable(mir_demo_client
-  demo_client.c
+add_executable(mir_demo_client_basic
+  basic.c
 )
 
-target_link_libraries(mir_demo_client
+target_link_libraries(mir_demo_client_basic
   mirclient
   mirprotobuf
 
@@ -52,11 +52,11 @@ target_link_libraries(mir_demo_client_progressbar mirclient)
 add_executable(mir_demo_client_display_config demo_client_display_config.c)
 target_link_libraries(mir_demo_client_display_config eglapp)
 
-add_executable(mir_demo_client_unaccelerated
-  demo_client_unaccelerated.c
+add_executable(mir_demo_client_flicker
+  flicker.c
 )
 
-target_link_libraries(mir_demo_client_unaccelerated
+target_link_libraries(mir_demo_client_flicker
   mirclient
   mirprotobuf
 
@@ -65,11 +65,11 @@ target_link_libraries(mir_demo_client_unaccelerated
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_executable(mir_demo_client_accelerated
-  demo_client_accelerated.cpp
+add_executable(mir_demo_client_scroll
+  scroll.cpp
 )
 
-target_link_libraries(mir_demo_client_accelerated
+target_link_libraries(mir_demo_client_scroll
   mirdraw
   mirclient
   mirprotobuf
@@ -126,33 +126,34 @@ target_link_libraries(mir_demo_standalone_input_filter
   mirserver
 )
 
-set (DEMO_CLIENTS
-  mir_demo_client
-  mir_demo_client_unaccelerated
-  mir_demo_client_accelerated
-  mir_demo_standalone_input_filter
+set (INSTALL_DEMOS
+  mir_demo_client_basic
+  mir_demo_client_flicker
+  mir_demo_client_scroll
   mir_demo_client_eglflash
   mir_demo_client_egltriangle
   mir_demo_client_eglplasma
   mir_demo_client_fingerpaint
+  mir_demo_client_multiwin
+  mir_demo_standalone_input_filter
 )
 
 add_subdirectory(demo-inprocess-surface-client)
 add_subdirectory(demo-shell)
 
-install(TARGETS ${DEMO_CLIENTS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-add_executable(mir_demo_server
-  demo_server.cpp
+add_executable(mir_demo_server_basic
+  basic_server.cpp
   server_configuration.cpp
 )
 
-target_link_libraries(mir_demo_server
+target_link_libraries(mir_demo_server_basic
   mirserver
   ${Boost_LIBRARIES}
 )
 
-install(TARGETS mir_demo_server
+install(TARGETS mir_demo_server_basic
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 

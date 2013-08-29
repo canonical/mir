@@ -52,7 +52,7 @@ option or environment variable for that component's report:
     $ lttng create mirsession -o /tmp/mirsession
     $ lttng enable-event -u -a
     $ lttng start
-    $ mir_demo_server --msg-processor-report=lttng
+    $ mir_demo_server_basic --msg-processor-report=lttng
     $ lttng stop
     $ babeltrace /tmp/mirsession/<trace-subdir>
 
@@ -62,7 +62,7 @@ provider is dlopen()-ed at runtime, like in the case of Mir. If you have a
 version of LTTng affected by this bug, you need to pre-load the server
 tracepoint provider library:
 
-    $ LD_PRELOAD=libmirserverlttng.so mir_demo_server --msg-processor-report=lttng
+    $ LD_PRELOAD=libmirserverlttng.so mir_demo_server_basic --msg-processor-report=lttng
 
 The bug also affects client-side LTTng tracing, in which case you need to
 pre-load the client tracepoint provider library:
