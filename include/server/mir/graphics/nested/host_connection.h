@@ -16,8 +16,8 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MIR_CONNECTION_HANDLE_H_
-#define MIR_GRAPHICS_MIR_CONNECTION_HANDLE_H_
+#ifndef MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
+#define MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
 
 #include <string>
 
@@ -48,4 +48,4 @@ private:
 }
 }
 }
-#endif // MIR_GRAPHICS_MIR_CONNECTION_HANDLE_H_
+#endif // MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
