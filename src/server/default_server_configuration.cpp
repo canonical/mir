@@ -45,6 +45,7 @@
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/broadcasting_session_event_sink.h"
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/nested/nested_mir_connection_handle.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"
@@ -342,7 +343,8 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                 throw mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!");
 
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-            return std::make_shared<mir::graphics::nested::NestedPlatform>(host_socket, the_display_report(), create_native_platform());
+
+            return std::make_shared<mir::graphics::nested::NestedPlatform>(the_host_connection(), the_display_report(), create_native_platform());
         });
 }
 
@@ -944,8 +946,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
 
             if (options->is_set(nested_mode_opt))
             {
-                // TODO create a HostConnection
-                BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented"));
+                return std::make_shared<graphics::nested::HostConnection>(options->get(nested_mode_opt, default_server_socket));
             }
             else
             {
