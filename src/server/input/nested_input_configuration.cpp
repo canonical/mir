@@ -24,10 +24,12 @@
 namespace mi = mir::input;
 
 mi::NestedInputConfiguration::NestedInputConfiguration(
+    std::shared_ptr<graphics::nested::HostConnection> const& connection,
     std::shared_ptr<EventFilter> const& event_filter,
     std::shared_ptr<InputRegion> const& input_region,
     std::shared_ptr<CursorListener> const& cursor_listener,
     std::shared_ptr<InputReport> const& input_report) :
+connection(connection),
 event_filter(event_filter),
 input_region(input_region),
 cursor_listener(cursor_listener),
