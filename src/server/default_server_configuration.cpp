@@ -947,7 +947,9 @@ auto mir::DefaultServerConfiguration::the_host_connection()
 
             if (options->is_set(nested_mode_opt))
             {
-                return std::make_shared<graphics::nested::HostConnection>(options->get(nested_mode_opt, default_server_socket));
+                return std::make_shared<graphics::nested::HostConnection>(
+                    options->get(nested_mode_opt, default_server_socket),
+                    options->get("file", mir::default_server_socket));
             }
             else
             {
