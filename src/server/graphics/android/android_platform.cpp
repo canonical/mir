@@ -114,6 +114,10 @@ namespace
 // It may well turn out that NativePlatform == Platform - but this keeps them separate for now
 struct NativeAndroidPlatform : mg::NativePlatform
 {
+    void initialize(int /*fd*/)
+    {
+    }
+
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
     {

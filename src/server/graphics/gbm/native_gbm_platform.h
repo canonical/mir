@@ -22,6 +22,7 @@
 #define MIR_GRAPHICS_NATIVE_GBM_PLATFORM_H_
 
 #include "mir/graphics/native_platform.h"
+#include "gbm_display_helpers.h"
 
 namespace mg = mir::graphics;
 
@@ -31,17 +32,19 @@ namespace graphics
 {
 namespace gbm
 {
-
 class NativeGBMPlatform : public mg::NativePlatform
 {
 public:
+    void initialize(int drm_fd);
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
     void fill_ipc_package(std::shared_ptr<BufferIPCPacker> const& packer, std::shared_ptr<Buffer> const& buffer) const;
-};
 
+    int drm_fd;
+    helpers::GBMHelper gbm;
+};
 }
 }
 }
