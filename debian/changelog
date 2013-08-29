@@ -1,3 +1,15 @@
+mir (0.0.10+13.10.20130829.1-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * config, input: default_android_input_configuration.cpp should only
+    use public headers.
+  * config, input: Stubbed version of input for nested mir.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1036
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 29 Aug 2013 14:05:26 +0000
+
 mir (0.0.10+13.10.20130829-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
