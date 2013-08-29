@@ -199,6 +199,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                             help = 1;
                         }
                     }
+                    break;
                 case 'f':
                     *width = 0;
                     *height = 0;
