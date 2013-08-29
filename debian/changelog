@@ -1,3 +1,23 @@
+mir (0.0.10+13.10.20130828.1-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * I've noticed some confusion in the community around the purposes of
+    the mir_demo_* binaries. For example: - Users expected
+    mir_demo_client to do something. - Users expected mir_demo_server to
+    be useful, when they would get more use from mir_demo_server_shell.
+    - Users thought mir_demo_client_{un}accelerated were the only
+    examples of {un}accelerated clients. This proposal renames
+    mir_demo_client_* to more accurately describe what they are and what
+    they do. .
+
+  [ Alan Griffiths ]
+  * graphics: make nested code compatable with "bypass" branch.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1031
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 28 Aug 2013 22:05:08 +0000
+
 mir (0.0.10+13.10.20130828-0ubuntu1) saucy; urgency=low
 
   [ Alan Griffiths ]
