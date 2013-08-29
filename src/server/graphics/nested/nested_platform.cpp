@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/nested/nested_platform.h"
-#include "mir/graphics/nested/nested_mir_connection_handle.h"
+#include "mir/graphics/nested/host_connection.h"
 #include "mir_toolkit/mir_client_library.h"
 
 #include "nested_display.h"
@@ -30,16 +30,16 @@ namespace mgn = mir::graphics::nested;
 namespace mo = mir::options;
 
 mgn::NestedPlatform::NestedPlatform(
-    std::string const& host,
+    std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NativePlatform> const& native_platform) :
 native_platform{native_platform},
 display_report{display_report},
-connection{mir_connect_sync(host.c_str(), "nested_mir")}
+connection{connection}
 {
-    if (!mir_connection_is_valid(connection))
+    if (!mir_connection_is_valid(*connection))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(mir_connection_get_error_message(connection))));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(mir_connection_get_error_message(*connection))));
     }
 }
 
@@ -55,7 +55,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_a
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(std::shared_ptr<mg::DisplayConfigurationPolicy> const& /*initial_conf_policy*/)
 {
-    return std::make_shared<mgn::NestedDisplay>(connection, display_report);
+    return std::make_shared<mgn::NestedDisplay>(*connection, display_report);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()
