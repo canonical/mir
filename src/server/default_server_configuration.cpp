@@ -45,7 +45,7 @@
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/broadcasting_session_event_sink.h"
 #include "mir/graphics/cursor.h"
-#include "mir/graphics/nested/nested_mir_connection_handle.h"
+#include "mir/graphics/nested/host_connection.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"

@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/nested/nested_platform.h"
-#include "mir/graphics/nested/nested_mir_connection_handle.h"
+#include "mir/graphics/nested/host_connection.h"
 #include "mir_toolkit/mir_client_library.h"
 
 #include "nested_display.h"
