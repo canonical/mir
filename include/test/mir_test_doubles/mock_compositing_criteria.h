@@ -38,7 +38,6 @@ public:
     MOCK_CONST_METHOD1(should_be_rendered_in, bool(geometry::Rectangle const&));
 };
 
-typedef ::testing::NiceMock<MockCompositingCriteria> StubCompositingCriteria;
 }
 }
 }

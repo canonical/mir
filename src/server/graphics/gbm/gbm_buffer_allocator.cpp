@@ -133,6 +133,25 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
     if (buffer_properties.usage == BufferUsage::software)
         bo_flags |= GBM_BO_USE_WRITE;
 
+    /*
+     * Bypass is generally only beneficial to hardware buffers where the
+     * blitting happens on the GPU. For software buffers it is slower to blit
+     * individual pixels from CPU to GPU memory, so don't do it.
+     * Also try to avoid allocating scanout buffers for small surfaces that
+     * are unlikely to ever be fullscreen.
+     *
+     * TODO: Be more intelligent about when to apply GBM_BO_USE_SCANOUT. That
+     *       may have to come after buffer reallocation support (surface
+     *       resizing). We may also want to check for
+     *       mir_surface_state_fullscreen later when it's fully wired up.
+     */
+    if (buffer_properties.usage == BufferUsage::hardware &&
+        buffer_properties.size.width.as_uint32_t() >= 800 &&
+        buffer_properties.size.height.as_uint32_t() >= 600)
+    {
+        bo_flags |= GBM_BO_USE_SCANOUT;
+    }
+
     gbm_bo *bo_raw = gbm_bo_create(
         device,
         buffer_properties.size.width.as_uint32_t(),
@@ -149,7 +168,7 @@ std::shared_ptr<mg::Buffer> mgg::GBMBufferAllocator::alloc_buffer(BufferProperti
         new EGLImageBufferTextureBinder{bo, egl_extensions}};
 
     /* Create the GBMBuffer */
-    std::shared_ptr<mg::Buffer> buffer{new GBMBuffer{bo, std::move(texture_binder)}};
+    std::shared_ptr<mg::Buffer> buffer{new GBMBuffer{bo, bo_flags, std::move(texture_binder)}};
 
     (*buffer_initializer)(*buffer);
 

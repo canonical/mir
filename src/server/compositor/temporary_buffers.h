@@ -41,6 +41,7 @@ public:
     mg::BufferID id() const;
     void bind_to_texture();
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
+    bool can_bypass() const override;
 
 protected:
     explicit TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buffer);

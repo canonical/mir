@@ -12,6 +12,7 @@ set(
   gl_renderer_factory.cpp
   multi_threaded_compositor.cpp
   switching_bundle.cpp
+  bypass.cpp
 )
 
 ADD_LIBRARY(

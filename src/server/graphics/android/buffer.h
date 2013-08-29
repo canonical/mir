@@ -49,6 +49,7 @@ public:
     geometry::Stride stride() const;
     geometry::PixelFormat pixel_format() const;
     void bind_to_texture();
+    bool can_bypass() const override;
     std::shared_ptr<ANativeWindowBuffer> native_buffer_handle() const;
 
 private:

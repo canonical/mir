@@ -22,6 +22,12 @@
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositing_criteria.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/buffer.h"
+#include "mir/surfaces/buffer_stream.h"
+#include "bypass.h"
+#include <mutex>
+#include <cstdlib>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -55,6 +61,49 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       renderer{renderer},
       overlay_renderer{overlay_renderer}
 {
+}
+
+void mc::DefaultDisplayBufferCompositor::composite()
+{
+    static bool got_bypass_env = false;
+    static bool bypass_env = true;
+    bool bypassed = false;
+
+    if (!got_bypass_env)
+    {
+        const char *env = getenv("MIR_BYPASS");
+        if (env != NULL)
+            bypass_env = env[0] != '0';
+
+        got_bypass_env = true;
+    }
+
+    if (bypass_env && display_buffer.can_bypass())
+    {
+        std::unique_lock<Scene> lock(*scene);
+
+        mc::BypassFilter filter(display_buffer);
+        mc::BypassMatch match;
+
+        // It would be *really* nice if Scene had an iterator to simplify this
+        scene->for_each_if(filter, match);
+
+        if (filter.fullscreen_on_top())
+        {
+            auto bypass_buf =
+                match.topmost_fullscreen()->lock_compositor_buffer();
+
+            if (bypass_buf->can_bypass())
+            {
+                lock.unlock();
+                display_buffer.post_update(bypass_buf);
+                bypassed = true;
+            }
+        }
+    }
+
+    if (!bypassed)
+        mc::BasicDisplayBufferCompositor::composite();
 }
 
 void mc::DefaultDisplayBufferCompositor::compose(

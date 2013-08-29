@@ -62,6 +62,8 @@ public:
     }
     virtual void bind_to_texture() {}
 
+    virtual bool can_bypass() const override { return false; }
+
     geometry::Size const buf_size;
     geometry::PixelFormat const buf_pixel_format;
 };

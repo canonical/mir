@@ -49,7 +49,7 @@ public:
         mir::geometry::Rectangle const& view_area,
         std::function<void(std::shared_ptr<void> const&)> save_resource) = 0;
 
-private:
+protected:
     graphics::DisplayBuffer& display_buffer;
 };
 }
