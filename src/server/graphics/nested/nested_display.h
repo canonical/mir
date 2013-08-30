@@ -24,7 +24,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/egl_resources.h"
 
-#include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/client_types.h"
 
 #include <EGL/egl.h>
 
@@ -45,21 +45,6 @@ namespace nested
 {
 namespace detail
 {
-class MirSurfaceHandle
-{
-public:
-    explicit MirSurfaceHandle(MirSurface* mir_surface);
-    ~MirSurfaceHandle() noexcept;
-
-    operator MirSurface*() const { return mir_surface; }
-
-private:
-    MirSurface* mir_surface;
-
-    MirSurfaceHandle(MirSurfaceHandle const&) = delete;
-    MirSurfaceHandle operator=(MirSurfaceHandle const&) = delete;
-};
-
 class EGLDisplayHandle
 {
 public:
@@ -79,38 +64,19 @@ private:
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
 };
 
-class NestedOutput : public DisplayBuffer
-{
-public:
-    NestedOutput(EGLDisplayHandle const& egl_display, MirSurface* mir_surface, geometry::Rectangle const& area);
-    ~NestedOutput() noexcept;
-
-    geometry::Rectangle view_area() const override;
-    void make_current() override;
-    void release_current() override;
-    void post_update() override;
-    virtual bool can_bypass() const;
-
-    NestedOutput(NestedOutput const&) = delete;
-    NestedOutput operator=(NestedOutput const&) = delete;
-private:
-    EGLDisplayHandle const& egl_display;
-    detail::MirSurfaceHandle const mir_surface;
-
-    EGLConfig const egl_config;
-    EGLContextStore const egl_context;
-
-    geometry::Rectangle const area;
-    EGLSurface egl_surface;
-};
+class NestedOutput;
 }
+
 class HostConnection;
 
 class NestedDisplay : public Display
 {
 public:
-    NestedDisplay(std::shared_ptr<HostConnection> const& connection, std::shared_ptr<DisplayReport> const& display_report);
-    virtual ~NestedDisplay() noexcept;
+    NestedDisplay(
+        std::shared_ptr<HostConnection> const& connection,
+        std::shared_ptr<DisplayReport> const& display_report);
+
+    ~NestedDisplay() noexcept;
 
     void for_each_display_buffer(std::function<void(DisplayBuffer&)>const& f) override;
 

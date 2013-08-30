@@ -49,18 +49,57 @@ EGLint const egl_context_attribs[] = {
     EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_NONE
 };
-}
 
-
-mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirSurface* mir_surface) :
-    mir_surface(mir_surface)
+class MirSurfaceHandle
 {
+public:
+    explicit MirSurfaceHandle(MirSurface* mir_surface) :
+        mir_surface(mir_surface)
+    {
+    }
+
+    ~MirSurfaceHandle() noexcept
+    {
+        mir_surface_release_sync(mir_surface);
+    }
+
+    operator MirSurface*() const { return mir_surface; }
+
+private:
+    MirSurface* mir_surface;
+
+    MirSurfaceHandle(MirSurfaceHandle const&) = delete;
+    MirSurfaceHandle operator=(MirSurfaceHandle const&) = delete;
+};
 }
 
-mgn::detail::MirSurfaceHandle::~MirSurfaceHandle() noexcept
+class mgn::detail::NestedOutput : public DisplayBuffer
 {
-    mir_surface_release_sync(mir_surface);
-}
+public:
+    NestedOutput(
+        EGLDisplayHandle const& egl_display,
+        MirSurface* mir_surface,
+        geometry::Rectangle const& area);
+
+    ~NestedOutput() noexcept;
+
+    geometry::Rectangle view_area() const override;
+    void make_current() override;
+    void release_current() override;
+    void post_update() override;
+    virtual bool can_bypass() const override;
+
+    NestedOutput(NestedOutput const&) = delete;
+    NestedOutput operator=(NestedOutput const&) = delete;
+private:
+    EGLDisplayHandle const& egl_display;
+    MirSurfaceHandle const mir_surface;
+    EGLConfig const egl_config;
+    EGLContextStore const egl_context;
+    geometry::Rectangle const area;
+
+    EGLSurface egl_surface;
+};
 
 mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
 {
