@@ -72,7 +72,6 @@ public:
 
     geometry::PixelFormat pixel_format() const;
 
-    std::shared_ptr<graphics::Buffer> compositor_buffer() const;
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
     std::shared_ptr<graphics::Buffer> advance_client_buffer();
     void force_requests_to_complete();
