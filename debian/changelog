@@ -1,3 +1,14 @@
+mir (0.0.10+13.10.20130830.1-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * config, input: make nested::HostConnection available in
+    input::NestedInput.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1044
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 30 Aug 2013 18:04:58 +0000
+
 mir (0.0.10+13.10.20130830-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
