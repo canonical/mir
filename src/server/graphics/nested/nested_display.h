@@ -103,13 +103,13 @@ private:
     geometry::Rectangle const area;
     EGLSurface egl_surface;
 };
-
 }
+class HostConnection;
 
 class NestedDisplay : public Display
 {
 public:
-    NestedDisplay(MirConnection* connection, std::shared_ptr<DisplayReport>const& display_report);
+    NestedDisplay(std::shared_ptr<HostConnection> const& connection, std::shared_ptr<DisplayReport> const& display_report);
     virtual ~NestedDisplay() noexcept;
 
     void for_each_display_buffer(std::function<void(DisplayBuffer&)>const& f) override;
@@ -133,7 +133,7 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
-    MirConnection* const connection;
+    std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<DisplayReport> const display_report;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;

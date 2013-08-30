@@ -22,6 +22,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/graphics/nested/host_connection.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -184,7 +185,7 @@ mgn::detail::NestedOutput::~NestedOutput() noexcept
         eglDestroySurface(egl_display, egl_surface);
 }
 
-mgn::NestedDisplay::NestedDisplay(MirConnection* connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
+mgn::NestedDisplay::NestedDisplay(std::shared_ptr<HostConnection> const& connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
     connection{connection},
     display_report{display_report},
     outputs{}
@@ -204,7 +205,7 @@ void mgn::NestedDisplay::for_each_display_buffer(std::function<void(mg::DisplayB
 
 std::shared_ptr<mg::DisplayConfiguration> mgn::NestedDisplay::configuration()
 {
-    return std::make_shared<NestedDisplayConfiguration>(mir_connection_create_display_config(connection));
+    return std::make_shared<NestedDisplayConfiguration>(mir_connection_create_display_config(*connection));
 }
 
 void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration)
@@ -219,7 +220,7 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
         {
             if (output.used)
             {
-                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(connection, output);
+                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(*connection, output);
             }
         });
 
@@ -229,7 +230,7 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
     auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
 
     outputs.swap(result);
-    mir_connection_apply_display_config(connection, conf);
+    mir_connection_apply_display_config(*connection, conf);
 }
 
 namespace
@@ -245,7 +246,7 @@ void mgn::NestedDisplay::register_configuration_change_handler(
         DisplayConfigurationChangeHandler const& conf_change_handler)
 {
     mir_connection_set_display_config_change_callback(
-        connection,
+        *connection,
         &display_config_callback_thunk,
         &(my_conf_change_handler = conf_change_handler));
 }
@@ -304,5 +305,5 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
         EGLContextStore const egl_context;
     };
 
-    return std::unique_ptr<mg::GLContext>{new NestedGLContext(connection)};
+    return std::unique_ptr<mg::GLContext>{new NestedGLContext(*connection)};
 }

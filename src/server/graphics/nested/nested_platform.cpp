@@ -55,7 +55,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_a
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(std::shared_ptr<mg::DisplayConfigurationPolicy> const& /*initial_conf_policy*/)
 {
-    return std::make_shared<mgn::NestedDisplay>(*connection, display_report);
+    return std::make_shared<mgn::NestedDisplay>(connection, display_report);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()
