@@ -1,3 +1,23 @@
+mir (0.0.10+13.10.20130830-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * Dramatically improved multi-monitor frame synchronization, using a
+    global frame count equivalent to the highest refresh rate of all
+    monitors. This is much more reliable than the old logic which was
+    based on timers. This fixes LP: #1210478. (LP: #1210478)
+  * Remove dead code: surfaces::Surface::compositor_buffer() It's
+    unused. Though I suspect in future we might or should go back to
+    using it instead of accessing the buffer stream directly (r856). .
+
+  [ Alan Griffiths ]
+  * graphcs, config: make the nested HostConnection available in
+    configuration.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1042
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 30 Aug 2013 10:04:58 +0000
+
 mir (0.0.10+13.10.20130829.2-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
