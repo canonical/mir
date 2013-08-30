@@ -168,6 +168,7 @@ private:
     }
 };
 
+char const* const server_socket_opt           = "file";
 char const* const session_mediator_report_opt = "session-mediator-report";
 char const* const msg_processor_report_opt    = "msg-processor-report";
 char const* const display_report_opt          = "display-report";
@@ -289,7 +290,7 @@ boost::program_options::options_description_easy_init mir::DefaultServerConfigur
 
 std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
-    return the_options()->get("file", mir::default_server_socket);
+    return the_options()->get(server_socket_opt, default_server_socket);
 }
 
 std::shared_ptr<mir::options::Option> mir::DefaultServerConfiguration::the_options() const
@@ -337,7 +338,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             }
 
             const std::string host_socket = the_options()->get(nested_mode_opt, default_server_socket);
-            const std::string server_socket = the_options()->get("file", default_server_socket);
+            const std::string server_socket = the_options()->get(server_socket_opt, default_server_socket);
 
             if (server_socket == host_socket)
                 throw mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!");
@@ -592,6 +593,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         else if (options->is_set(nested_mode_opt))
         {
             return std::make_shared<mi::NestedInputConfiguration>(
+                the_host_connection(),
                 the_composite_event_filter(),
                 the_input_region(),
                 the_cursor_listener(),
@@ -948,7 +950,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
             {
                 return std::make_shared<graphics::nested::HostConnection>(
                     options->get(nested_mode_opt, default_server_socket),
-                    options->get("file", mir::default_server_socket));
+                    options->get(server_socket_opt, default_server_socket));
             }
             else
             {

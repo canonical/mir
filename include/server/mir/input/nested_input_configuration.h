@@ -23,6 +23,7 @@
 
 namespace mir
 {
+namespace graphics { namespace nested { class HostConnection; }}
 namespace input
 {
 class EventFilter;
@@ -33,10 +34,12 @@ class InputRegion;
 class NestedInputConfiguration : public InputConfiguration
 {
 public:
-    NestedInputConfiguration(std::shared_ptr<EventFilter> const& event_filter,
-                              std::shared_ptr<InputRegion> const& input_region,
-                              std::shared_ptr<CursorListener> const& cursor_listener,
-                              std::shared_ptr<InputReport> const& input_report);
+    NestedInputConfiguration(
+        std::shared_ptr<graphics::nested::HostConnection> const& connection,
+        std::shared_ptr<EventFilter> const& event_filter,
+        std::shared_ptr<InputRegion> const& input_region,
+        std::shared_ptr<CursorListener> const& cursor_listener,
+        std::shared_ptr<InputReport> const& input_report);
     virtual ~NestedInputConfiguration();
 
     std::shared_ptr<surfaces::InputRegistrar> the_input_registrar();
@@ -45,6 +48,7 @@ public:
     void set_input_targets(std::shared_ptr<InputTargets> const& targets);
 
 private:
+    std::shared_ptr<graphics::nested::HostConnection> const connection;
     std::shared_ptr<EventFilter> const event_filter;
     std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<CursorListener> const cursor_listener;
