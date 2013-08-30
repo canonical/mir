@@ -48,7 +48,7 @@ namespace detail
 class MirSurfaceHandle
 {
 public:
-    explicit MirSurfaceHandle(MirConnection* connection, DisplayConfigurationOutput const& output);
+    explicit MirSurfaceHandle(MirSurface* mir_surface);
     ~MirSurfaceHandle() noexcept;
 
     operator MirSurface*() const { return mir_surface; }
@@ -82,7 +82,7 @@ private:
 class NestedOutput : public DisplayBuffer
 {
 public:
-    NestedOutput(MirConnection* connection, DisplayConfigurationOutput const& output);
+    NestedOutput(EGLDisplayHandle const& egl_display, MirSurface* mir_surface, geometry::Rectangle const& area);
     ~NestedOutput() noexcept;
 
     geometry::Rectangle view_area() const override;
@@ -94,8 +94,8 @@ public:
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;
 private:
+    EGLDisplayHandle const& egl_display;
     detail::MirSurfaceHandle const mir_surface;
-    detail::EGLDisplayHandle const egl_display;
 
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
@@ -135,6 +135,8 @@ public:
 private:
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<DisplayReport> const display_report;
+    detail::EGLDisplayHandle const egl_display;
+
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;
 };

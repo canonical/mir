@@ -52,35 +52,14 @@ EGLint const egl_context_attribs[] = {
 }
 
 
-mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirConnection* connection, DisplayConfigurationOutput const& output)
+mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirSurface* mir_surface) :
+    mir_surface(mir_surface)
 {
-    auto const& egl_display_mode = output.modes[output.current_mode_index];
-    auto const egl_display_format = output.pixel_formats[output.current_format_index];
-
-    MirSurfaceParameters const request_params =
-        {
-            "Mir nested display",
-            egl_display_mode.size.width.as_int(),
-            egl_display_mode.size.height.as_int(),
-            MirPixelFormat(egl_display_format),
-            mir_buffer_usage_hardware,
-            static_cast<uint32_t>(output.id.as_value())
-        };
-
-    mir_surface = mir_connection_create_surface_sync(connection, &request_params);
-
-    if (!mir_surface_is_valid(mir_surface))
-        BOOST_THROW_EXCEPTION(std::runtime_error(mir_surface_get_error_message(mir_surface)));
 }
 
 mgn::detail::MirSurfaceHandle::~MirSurfaceHandle() noexcept
 {
     mir_surface_release_sync(mir_surface);
-}
-
-namespace
-{
-std::atomic<int> display_handles{-1};
 }
 
 mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
@@ -92,8 +71,6 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
     egl_display = eglGetDisplay(native_display);
     if (egl_display == EGL_NO_DISPLAY)
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
-
-    display_handles.fetch_add(1);
 }
 
 void mgn::detail::EGLDisplayHandle::initialize() const
@@ -134,15 +111,18 @@ EGLSurface mgn::detail::EGLDisplayHandle::egl_surface(EGLConfig egl_config, MirS
 
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 {
-    if (!display_handles.fetch_add(-1)) eglTerminate(egl_display);
+    eglTerminate(egl_display);
 }
 
-mgn::detail::NestedOutput::NestedOutput(MirConnection* connection, DisplayConfigurationOutput const& output) :
-    mir_surface(connection, output),
-    egl_display{connection},
-    egl_config{(egl_display.initialize(), egl_display.choose_config(egl_attribs))},
+mgn::detail::NestedOutput::NestedOutput(
+    EGLDisplayHandle const& egl_display,
+    MirSurface* mir_surface,
+    geometry::Rectangle const& area) :
+    egl_display(egl_display),
+    mir_surface{mir_surface},
+    egl_config{egl_display.choose_config(egl_attribs)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
-    area{output.top_left, output.modes[output.current_mode_index].size},
+    area{area.top_left, area.size},
     egl_surface{EGL_NO_SURFACE}
 {
 }
@@ -188,8 +168,10 @@ mgn::detail::NestedOutput::~NestedOutput() noexcept
 mgn::NestedDisplay::NestedDisplay(std::shared_ptr<HostConnection> const& connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
     connection{connection},
     display_report{display_report},
+    egl_display{*connection},
     outputs{}
 {
+    egl_display.initialize();
     configure(*configuration());
 }
 
@@ -220,7 +202,27 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
         {
             if (output.used)
             {
-                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(*connection, output);
+                geometry::Rectangle const area{output.top_left, output.modes[output.current_mode_index].size};
+
+                auto const& egl_display_mode = output.modes[output.current_mode_index];
+                auto const egl_display_format = output.pixel_formats[output.current_format_index];
+
+                MirSurfaceParameters const request_params =
+                    {
+                        "Mir nested display",
+                        egl_display_mode.size.width.as_int(),
+                        egl_display_mode.size.height.as_int(),
+                        MirPixelFormat(egl_display_format),
+                        mir_buffer_usage_hardware,
+                        static_cast<uint32_t>(output.id.as_value())
+                    };
+
+                auto const mir_surface = mir_connection_create_surface_sync(*connection, &request_params);
+
+                if (!mir_surface_is_valid(mir_surface))
+                    BOOST_THROW_EXCEPTION(std::runtime_error(mir_surface_get_error_message(mir_surface)));
+
+                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(egl_display, mir_surface, area);
             }
         });
 
