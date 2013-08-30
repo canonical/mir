@@ -319,7 +319,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRenderingRenderable)
 
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    EXPECT_CALL(stream, lock_compositor_buffer())
+    EXPECT_CALL(stream, lock_compositor_buffer(_))
         .Times(1)
         .WillOnce(Return(mt::fake_shared(gr)));
     EXPECT_CALL(gr, bind_to_texture());

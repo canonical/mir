@@ -95,11 +95,11 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubRenderer : public mc::Renderer
         {
-            void clear() {}
+            void clear(unsigned long) override {}
             void render(std::function<void(std::shared_ptr<void> const&)>,
                         mc::CompositingCriteria const&, mir::surfaces::BufferStream& stream)
             {
-                stream.lock_compositor_buffer();
+                stream.lock_compositor_buffer(0);
             }
 
             void ensure_no_live_buffers_bound() {}

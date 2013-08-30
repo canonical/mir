@@ -76,6 +76,7 @@ mc::SwitchingBundle::SwitchingBundle(
       first_ready{0}, nready{0},
       first_client{0}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
+      last_consumed{0},
       overlapping_compositors{false},
       framedropping{false}, force_drop{0}
 {
@@ -85,8 +86,6 @@ mc::SwitchingBundle::SwitchingBundle(
                                                "nbuffers betwee 1 and " +
                                                std::to_string(MAX_NBUFFERS)));
     }
-
-    last_consumed = now() - std::chrono::seconds(1);
 }
 
 int mc::SwitchingBundle::nfree() const
@@ -259,15 +258,14 @@ void mc::SwitchingBundle::client_release(std::shared_ptr<mg::Buffer> const& rele
     cond.notify_all();
 }
 
-std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
+std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
+    unsigned long frameno)
 {
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
-    auto t = now();
-
     // Multi-monitor acquires close to each other get the same frame:
-    bool same_frame = (t - last_consumed) < std::chrono::milliseconds(10);
+    bool same_frame = (frameno == last_consumed);
 
     int avail = nfree();
     bool can_recycle = ncompositors || avail;
@@ -296,7 +294,7 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire()
         first_ready = next(first_ready);
         nready--;
         ncompositors++;
-        last_consumed = t;
+        last_consumed = frameno;
     }
 
     overlapping_compositors = (ncompositors > 1);

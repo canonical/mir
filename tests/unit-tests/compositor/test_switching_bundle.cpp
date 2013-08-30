@@ -102,19 +102,12 @@ TEST_F(SwitchingBundleTest, client_acquire_basic)
 
 namespace
 {
-    const int frame_rate = 60;
-    const std::chrono::microseconds frame_time(1000000 / frame_rate);
-
-    void sleep_one_frame()
-    {
-        std::this_thread::sleep_for(frame_time);
-    }
-
     void composite_thread(mc::SwitchingBundle &bundle,
+                          unsigned long &frameno,
                           mg::BufferID &composited)
     {
-        sleep_one_frame();
-        auto buffer = bundle.compositor_acquire();
+        frameno++;
+        auto buffer = bundle.compositor_acquire(frameno);
         composited = buffer->id();
         bundle.compositor_release(buffer);
     }
@@ -126,6 +119,7 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
         mg::BufferID prev_id, prev_prev_id;
+        unsigned long frameno = 0;
 
         ASSERT_FALSE(bundle.framedropping_allowed());
 
@@ -137,6 +131,7 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
 
             std::thread compositor(composite_thread,
                                    std::ref(bundle),
+                                   std::ref(frameno),
                                    std::ref(composited_id));
 
             compositor.join();
@@ -148,7 +143,7 @@ TEST_F(SwitchingBundleTest, is_really_synchronous)
             prev_prev_id = prev_id;
             prev_id = composited_id;
 
-            auto second_monitor = bundle.compositor_acquire();
+            auto second_monitor = bundle.compositor_acquire(frameno);
             ASSERT_EQ(composited_id, second_monitor->id());
             bundle.compositor_release(second_monitor);
         }
@@ -160,6 +155,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
     for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned int frameno = 0;
 
         bundle.allow_framedropping(true);
         mg::BufferID last_client_id;
@@ -176,11 +172,12 @@ TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
             // Flush the pipeline of previously ready buffers
             for (int k = 0; k < nbuffers-1; k++)
             {
-                bundle.compositor_release(bundle.compositor_acquire());
-                sleep_one_frame();
+                frameno++;
+                bundle.compositor_release(bundle.compositor_acquire(frameno));
             }
 
-            auto compositor = bundle.compositor_acquire();
+            frameno++;
+            auto compositor = bundle.compositor_acquire(frameno);
             ASSERT_EQ(last_client_id, compositor->id());
             bundle.compositor_release(compositor);
         }
@@ -200,7 +197,7 @@ TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
     bundle.client_release(client2);
     client2.reset();
 
-    auto compositor = bundle.compositor_acquire();
+    auto compositor = bundle.compositor_acquire(1);
     EXPECT_EQ(client1_id, compositor->id());
     bundle.compositor_release(compositor);
 }
@@ -231,6 +228,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_basic)
     for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 0;
 
         auto client = bundle.client_acquire();
         auto client_id = client->id();
@@ -238,7 +236,8 @@ TEST_F(SwitchingBundleTest, compositor_acquire_basic)
 
         for (int monitor = 0; monitor < 10; monitor++)
         {
-            auto compositor = bundle.compositor_acquire();
+            frameno++;
+            auto compositor = bundle.compositor_acquire(frameno);
             ASSERT_EQ(client_id, compositor->id());
             bundle.compositor_release(compositor);
         }
@@ -250,13 +249,14 @@ TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
     for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 0;
         const int N = 100;
 
         bundle.force_requests_to_complete();
 
         std::shared_ptr<mg::Buffer> buf[N];
         for (int i = 0; i < N; i++)
-            buf[i] = bundle.compositor_acquire();
+            buf[i] = bundle.compositor_acquire(++frameno);
 
         for (int i = 0; i < N; i++)
             bundle.compositor_release(buf[i]);
@@ -268,6 +268,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
     for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 1;
 
         mg::BufferID client_id;
 
@@ -282,12 +283,12 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
 
             for (int monitor_id = 0; monitor_id < 10; monitor_id++)
             {
-                auto compositor = bundle.compositor_acquire();
+                auto compositor = bundle.compositor_acquire(frameno);
                 ASSERT_EQ(client_id, compositor->id());
                 bundle.compositor_release(compositor);
             }
 
-            sleep_one_frame();
+            frameno++;
         }
     }
 }
@@ -297,6 +298,7 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
     for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 0;
 
         auto client = bundle.client_acquire();
 
@@ -306,7 +308,7 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
         );
         bundle.client_release(client);
 
-        auto compositor1 = bundle.compositor_acquire();
+        auto compositor1 = bundle.compositor_acquire(++frameno);
         bundle.compositor_release(compositor1);
         EXPECT_THROW(
             bundle.compositor_release(compositor1),
@@ -321,15 +323,16 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
     for (int nbuffers = 2; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 1;
 
         std::shared_ptr<mg::Buffer> compositor[2];
 
         bundle.client_release(bundle.client_acquire());
-        compositor[0] = bundle.compositor_acquire();
+        compositor[0] = bundle.compositor_acquire(frameno);
 
-        sleep_one_frame();
+        frameno++;
         bundle.client_release(bundle.client_acquire());
-        compositor[1] = bundle.compositor_acquire();
+        compositor[1] = bundle.compositor_acquire(frameno);
 
         for (int i = 0; i < 20; i++)
         {
@@ -340,8 +343,8 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
             int oldest = i & 1;
             bundle.compositor_release(compositor[oldest]);
             bundle.client_release(bundle.client_acquire());
-            sleep_one_frame();
-            compositor[oldest] = bundle.compositor_acquire();
+            frameno++;
+            compositor[oldest] = bundle.compositor_acquire(frameno);
         }
 
         bundle.compositor_release(compositor[0]);
@@ -355,7 +358,7 @@ TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
-        auto compositor = bundle.compositor_acquire();
+        auto compositor = bundle.compositor_acquire(1);
         auto snapshot = bundle.snapshot_acquire();
         EXPECT_EQ(snapshot->id(), compositor->id());
         bundle.compositor_release(compositor);
@@ -385,7 +388,7 @@ TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
 
-        auto compositor = bundle.compositor_acquire();
+        auto compositor = bundle.compositor_acquire(1);
 
         EXPECT_THROW(
             bundle.snapshot_release(compositor),
@@ -418,9 +421,10 @@ namespace
     void compositor_thread(mc::SwitchingBundle &bundle,
                            std::atomic<bool> &done)
     {
+        unsigned long frameno = 0;
         while (!done)
         {
-            bundle.compositor_release(bundle.compositor_acquire());
+            bundle.compositor_release(bundle.compositor_acquire(++frameno));
             std::this_thread::yield();
         }
     }
@@ -510,6 +514,7 @@ TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffe
     for (int nbuffers = 1; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 0;
 
         bundle.allow_framedropping(false);
 
@@ -520,9 +525,9 @@ TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffe
 
         for (int frame = 0; frame < nframes; frame++)
         {
-            sleep_one_frame();
+            frameno++;
 
-            auto compositor = bundle.compositor_acquire();
+            auto compositor = bundle.compositor_acquire(frameno);
             auto compositor_id = compositor->id();
             bundle.compositor_release(compositor);
 
@@ -542,15 +547,16 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
     for (int nbuffers = 3; nbuffers <= 5; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long frameno = 1;
 
         std::shared_ptr<mg::Buffer> compositor[2];
 
         bundle.client_release(bundle.client_acquire());
-        compositor[0] = bundle.compositor_acquire();
+        compositor[0] = bundle.compositor_acquire(frameno);
 
-        sleep_one_frame();
+        frameno++;
         bundle.client_release(bundle.client_acquire());
-        compositor[1] = bundle.compositor_acquire();
+        compositor[1] = bundle.compositor_acquire(frameno);
 
         for (int i = 0; i < 20; i++)
         {
@@ -566,8 +572,8 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
             int oldest = i & 1;
             bundle.compositor_release(compositor[oldest]);
 
-            sleep_one_frame();
-            compositor[oldest] = bundle.compositor_acquire();
+            frameno++;
+            compositor[oldest] = bundle.compositor_acquire(frameno);
         }
 
         bundle.compositor_release(compositor[0]);
@@ -649,85 +655,53 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_vt_switch_not_permanent)
 namespace
 {
     void realtime_compositor_thread(mc::SwitchingBundle &bundle,
+                                    unsigned long frames,
                                     std::atomic<bool> &done)
     {
-        while (!done)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        for (unsigned long frame = 0; frame < frames; frame++)
         {
-            auto buf = bundle.compositor_acquire();
-            sleep_one_frame();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+            auto buf = bundle.compositor_acquire(frame);
             bundle.compositor_release(buf);
         }
+        done.store(true);
     }
 }
 
 TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
 {
-    const int expected =
-        std::chrono::duration_cast<std::chrono::microseconds>(frame_time)
-        .count();
-
-    int nframes = 0;
-    int nhiccups = 0;
-
     for (int nbuffers = 2; nbuffers <= 3; nbuffers++)
     {
         mc::SwitchingBundle bundle(nbuffers, allocator, basic_properties);
+        unsigned long client_frames = 0;
+        const unsigned long compose_frames = 20;
 
         bundle.allow_framedropping(false);
 
-        std::atomic<bool> done;
-        done = false;
+        std::atomic<bool> done(false);
 
         std::thread monitor1(realtime_compositor_thread,
-                             std::ref(bundle), std::ref(done));
-        std::thread monitor2(realtime_compositor_thread,
-                             std::ref(bundle), std::ref(done));
-        std::thread monitor3(realtime_compositor_thread,
-                             std::ref(bundle), std::ref(done));
+                             std::ref(bundle),
+                             compose_frames,
+                             std::ref(done));
 
-        for (int attempt = 0; attempt < 2; attempt++)
+        bundle.client_release(bundle.client_acquire());
+
+        while (!done.load())
         {
-            // Initial queue filling is not throttled...
-            for (int f = 0; f < nbuffers + 1; f++)
-                bundle.client_release(bundle.client_acquire());
-
-            auto prev = std::chrono::high_resolution_clock::now();
-
-            for (int second = 0; second < 2; second++)
-            {
-                for (int frame = 0; frame < frame_rate; frame++)
-                {
-                    bundle.client_release(bundle.client_acquire());
-
-                    auto t = std::chrono::high_resolution_clock::now();
-                    auto d = t - prev;
-                    prev = t;
-
-                    int measured_frame_time_usec =
-                        std::chrono::duration_cast<std::chrono::microseconds>(d)
-                        .count();
-
-                    nframes++;
-                    if (expected * 0.7f > measured_frame_time_usec ||
-                        expected * 1.3f < measured_frame_time_usec)
-                    {
-                        nhiccups++;
-                    }
-                }
-            }
-
-            // Simulate a pause/resume like VT switching
-            bundle.force_requests_to_complete();
+            bundle.client_release(bundle.client_acquire());
+            client_frames++;
+            std::this_thread::yield();
         }
 
-        done = true;
-
         monitor1.join();
-        monitor2.join();
-        monitor3.join();
 
-        int hiccups_percent = nhiccups * 100 / nframes;
-        ASSERT_LT(hiccups_percent, 10);
+        // Roughly compose_frames == client_frames within 50%
+        ASSERT_GT(client_frames, compose_frames / 2);
+        ASSERT_LT(client_frames, compose_frames * 3 / 2);
     }
 }
 

@@ -200,10 +200,10 @@ public:
                         mc::CompositingCriteria const&, ms::BufferStream& stream)
     {
         // Need to acquire the texture to cycle buffers
-        stream.lock_compositor_buffer();
+        stream.lock_compositor_buffer(0);
     }
 
-    void clear() {}
+    void clear(unsigned long) override {}
 };
 
 class StubRendererFactory : public mc::RendererFactory

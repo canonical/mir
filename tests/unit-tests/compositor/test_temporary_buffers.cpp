@@ -54,7 +54,7 @@ public:
 
         ON_CALL(*mock_bundle, client_acquire())
             .WillByDefault(Return(mock_buffer));
-        ON_CALL(*mock_bundle, compositor_acquire())
+        ON_CALL(*mock_bundle, compositor_acquire(_))
             .WillByDefault(Return(mock_buffer));
     }
 
@@ -92,12 +92,12 @@ TEST_F(TemporaryBuffersTest, client_buffer_handles_bundle_destruction)
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_bundle, compositor_acquire())
+    EXPECT_CALL(*mock_bundle, compositor_acquire(_))
         .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_bundle, compositor_release(_))
         .Times(1);
 
-    mc::TemporaryCompositorBuffer proxy_buffer(mock_bundle);
+    mc::TemporaryCompositorBuffer proxy_buffer(mock_bundle, 0);
 }
 
 TEST_F(TemporaryBuffersTest, snapshot_buffer_acquires_and_releases)

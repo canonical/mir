@@ -37,7 +37,7 @@ class Renderer
 public:
     virtual ~Renderer() = default;
 
-    virtual void clear() = 0;
+    virtual void clear(unsigned long frameno) = 0;
     virtual void render(std::function<void(std::shared_ptr<void> const&)> save_resource,
                                            CompositingCriteria const& info, surfaces::BufferStream& stream) = 0;
 

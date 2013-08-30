@@ -95,7 +95,7 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_bundle, compositor_acquire())
+    EXPECT_CALL(*mock_bundle, compositor_acquire(_))
         .Times(1)
         .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_bundle, compositor_release(_))
@@ -103,14 +103,14 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_handles_resources)
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 
-    buffer_stream.lock_compositor_buffer();
+    buffer_stream.lock_compositor_buffer(0);
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
 {
     using namespace testing;
 
-    EXPECT_CALL(*mock_bundle, compositor_acquire())
+    EXPECT_CALL(*mock_bundle, compositor_acquire(_))
         .Times(1)
         .WillOnce(Return(mock_buffer));
     EXPECT_CALL(*mock_bundle, compositor_release(_))
@@ -118,7 +118,7 @@ TEST_F(BufferStreamTest, get_buffer_for_compositor_can_lock)
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
 
-    buffer_stream.lock_compositor_buffer();
+    buffer_stream.lock_compositor_buffer(0);
 }
 
 TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)

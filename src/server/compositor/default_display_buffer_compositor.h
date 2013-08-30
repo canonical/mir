@@ -53,6 +53,8 @@ private:
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<Renderer> const renderer;
     std::shared_ptr<OverlayRenderer> const overlay_renderer;
+
+    unsigned long local_frameno;
 };
 
 }

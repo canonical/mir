@@ -39,7 +39,7 @@ public:
 
     MOCK_METHOD0(client_acquire,     std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD1(client_release,     void(std::shared_ptr<graphics::Buffer> const&));
-    MOCK_METHOD0(compositor_acquire, std::shared_ptr<graphics::Buffer>());
+    MOCK_METHOD1(compositor_acquire, std::shared_ptr<graphics::Buffer>(unsigned long));
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<graphics::Buffer> const&));
     MOCK_METHOD0(snapshot_acquire, std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD1(snapshot_release, void(std::shared_ptr<graphics::Buffer> const&));
