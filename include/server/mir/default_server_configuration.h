@@ -91,6 +91,7 @@ class Display;
 class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
+namespace nested { class HostConnection; }
 }
 namespace input
 {
@@ -132,6 +133,7 @@ public:
     virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
+    virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -282,6 +284,7 @@ protected:
     CachedPtr<time::TimeSource> time_source;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
+    CachedPtr<graphics::nested::HostConnection> host_connection;
     CachedPtr<shell::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<shell::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 

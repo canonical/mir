@@ -45,6 +45,7 @@
 #include "mir/shell/surface_configurator.h"
 #include "mir/shell/broadcasting_session_event_sink.h"
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/nested/host_connection.h"
 #include "mir/shell/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/gl_pixel_buffer.h"
@@ -342,7 +343,8 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                 throw mir::AbnormalExit("Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!");
 
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-            return std::make_shared<mir::graphics::nested::NestedPlatform>(host_socket, the_display_report(), create_native_platform());
+
+            return std::make_shared<mir::graphics::nested::NestedPlatform>(the_host_connection(), the_display_report(), create_native_platform());
         });
 }
 
@@ -933,6 +935,28 @@ mir::DefaultServerConfiguration::the_display_configuration_policy()
             return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
         });
 }
+
+auto mir::DefaultServerConfiguration::the_host_connection()
+-> std::shared_ptr<graphics::nested::HostConnection>
+{
+    return host_connection(
+        [this]() -> std::shared_ptr<graphics::nested::HostConnection>
+        {
+            auto const options = the_options();
+
+            if (options->is_set(nested_mode_opt))
+            {
+                return std::make_shared<graphics::nested::HostConnection>(
+                    options->get(nested_mode_opt, default_server_socket),
+                    options->get("file", mir::default_server_socket));
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION(std::logic_error("can only use host connection in nested mode"));
+            }
+        });
+}
+
 
 std::shared_ptr<msh::BroadcastingSessionEventSink>
 mir::DefaultServerConfiguration::the_broadcasting_session_event_sink()

@@ -16,17 +16,17 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "mir/graphics/nested/nested_mir_connection_handle.h"
+#include "mir/graphics/nested/host_connection.h"
 #include "mir_toolkit/mir_client_library.h"
 
 namespace mgn = mir::graphics::nested;
 
-mgn::MirConnectionHandle::MirConnectionHandle(MirConnection* const mir_connection)
-    : connection(mir_connection)
+mgn::HostConnection::HostConnection(std::string const& host_socket, std::string const& nested_socket)
+    : connection{mir_connect_sync(host_socket.c_str(), ("nested-mir@:"+nested_socket).c_str())}
 {
 }
 
-mgn::MirConnectionHandle::~MirConnectionHandle()
+mgn::HostConnection::~HostConnection()
 {
     mir_connection_release(connection);
 }
