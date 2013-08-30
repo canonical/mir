@@ -18,6 +18,7 @@
 
 #include "nested_display.h"
 #include "nested_display_configuration.h"
+#include "nested_output.h"
 #include "mir_api_wrappers.h"
 
 #include "mir/geometry/rectangle.h"
@@ -26,80 +27,11 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <atomic>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mgnw = mir::graphics::nested::mir_api_wrappers;
 namespace geom = mir::geometry;
-
-namespace
-{
-EGLint const egl_attribs[] = {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-    EGL_NONE
-};
-
-EGLint const egl_context_attribs[] = {
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-    EGL_NONE
-};
-
-class MirSurfaceHandle
-{
-public:
-    explicit MirSurfaceHandle(MirSurface* mir_surface) :
-        mir_surface(mir_surface)
-    {
-    }
-
-    ~MirSurfaceHandle() noexcept
-    {
-        mir_surface_release_sync(mir_surface);
-    }
-
-    operator MirSurface*() const { return mir_surface; }
-
-private:
-    MirSurface* mir_surface;
-
-    MirSurfaceHandle(MirSurfaceHandle const&) = delete;
-    MirSurfaceHandle operator=(MirSurfaceHandle const&) = delete;
-};
-}
-
-class mgn::detail::NestedOutput : public DisplayBuffer
-{
-public:
-    NestedOutput(
-        EGLDisplayHandle const& egl_display,
-        MirSurface* mir_surface,
-        geometry::Rectangle const& area);
-
-    ~NestedOutput() noexcept;
-
-    geometry::Rectangle view_area() const override;
-    void make_current() override;
-    void release_current() override;
-    void post_update() override;
-    virtual bool can_bypass() const override;
-
-    NestedOutput(NestedOutput const&) = delete;
-    NestedOutput operator=(NestedOutput const&) = delete;
-private:
-    EGLDisplayHandle const& egl_display;
-    MirSurfaceHandle const mir_surface;
-    EGLConfig const egl_config;
-    EGLContextStore const egl_context;
-    geometry::Rectangle const area;
-
-    EGLSurface egl_surface;
-};
 
 mgn::detail::EGLDisplayHandle::EGLDisplayHandle(MirConnection* connection)
 {
@@ -151,57 +83,6 @@ EGLSurface mgn::detail::EGLDisplayHandle::egl_surface(EGLConfig egl_config, MirS
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 {
     eglTerminate(egl_display);
-}
-
-mgn::detail::NestedOutput::NestedOutput(
-    EGLDisplayHandle const& egl_display,
-    MirSurface* mir_surface,
-    geometry::Rectangle const& area) :
-    egl_display(egl_display),
-    mir_surface{mir_surface},
-    egl_config{egl_display.choose_config(egl_attribs)},
-    egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
-    area{area.top_left, area.size},
-    egl_surface{EGL_NO_SURFACE}
-{
-}
-
-geom::Rectangle mgn::detail::NestedOutput::view_area() const
-{
-    return area;
-}
-
-void mgn::detail::NestedOutput::make_current()
-{
-    egl_surface = egl_display.egl_surface(egl_config, mir_surface);
-
-    if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to update EGL surface.\n"));
-}
-
-void mgn::detail::NestedOutput::release_current()
-{
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroySurface(egl_display, egl_surface);
-    egl_surface = EGL_NO_SURFACE;
-}
-
-void mgn::detail::NestedOutput::post_update()
-{
-    mir_surface_swap_buffers_sync(mir_surface);
-}
-
-bool mgn::detail::NestedOutput::can_bypass() const
-{
-    // TODO we really should return "true" - but we need to support bypass properly then
-    return false;
-}
-
-
-mgn::detail::NestedOutput::~NestedOutput() noexcept
-{
-    if (egl_surface != EGL_NO_SURFACE)
-        eglDestroySurface(egl_display, egl_surface);
 }
 
 mgn::NestedDisplay::NestedDisplay(std::shared_ptr<HostConnection> const& connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
@@ -323,10 +204,10 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
     class NestedGLContext : public mg::GLContext
     {
     public:
-        NestedGLContext(MirConnection* connection) :
-            egl_display{connection},
-            egl_config{(egl_display.initialize(), egl_display.choose_config(egl_attribs))},
-            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)}
+        NestedGLContext(detail::EGLDisplayHandle const& egl_display) :
+            egl_display{egl_display},
+            egl_config{egl_display.choose_config(detail::egl_attribs)},
+            egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, detail::egl_context_attribs)}
         {
         }
 
@@ -341,10 +222,10 @@ std::unique_ptr<mg::GLContext> mgn::NestedDisplay::create_gl_context()
         }
 
     private:
-        detail::EGLDisplayHandle const egl_display;
+        EGLDisplay const egl_display;
         EGLConfig const egl_config;
         EGLContextStore const egl_context;
     };
 
-    return std::unique_ptr<mg::GLContext>{new NestedGLContext(*connection)};
+    return std::unique_ptr<mg::GLContext>{new NestedGLContext(egl_display)};
 }
