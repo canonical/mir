@@ -72,7 +72,7 @@ private:
 
     EGLSurface egl_surface;
 
-    static void event_thunk(MirSurface* /*surface*/, MirEvent const* event, void* context);
+    static void event_thunk(MirSurface* surface, MirEvent const* event, void* context);
     void mir_event(MirEvent const *event);
 };
 
