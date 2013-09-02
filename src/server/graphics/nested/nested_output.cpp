@@ -62,6 +62,8 @@ mgn::detail::NestedOutput::NestedOutput(
     area{area.top_left, area.size},
     egl_surface{EGL_NO_SURFACE}
 {
+    MirEventDelegate ed = {event_thunk, this};
+    mir_surface_set_event_handler(mir_surface, &ed);
 }
 
 geom::Rectangle mgn::detail::NestedOutput::view_area() const
@@ -102,4 +104,20 @@ mgn::detail::NestedOutput::~NestedOutput() noexcept
         eglDestroySurface(egl_display, egl_surface);
 }
 
+void mgn::detail::NestedOutput::event_thunk(
+    MirSurface* /*surface*/,
+    MirEvent const* event,
+    void* context)
+try
+{
+    static_cast<mgn::detail::NestedOutput*>(context)->mir_event(event);
+}
+catch (std::exception const&)
+{
+    // Just in case: do not allow exceptions to propagate.
+}
 
+void mgn::detail::NestedOutput::mir_event(MirEvent const* /*event*/)
+{
+    // TODO pass input events to input subsystem
+}

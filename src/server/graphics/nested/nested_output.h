@@ -71,6 +71,9 @@ private:
     geometry::Rectangle const area;
 
     EGLSurface egl_surface;
+
+    static void event_thunk(MirSurface* /*surface*/, MirEvent const* event, void* context);
+    void mir_event(MirEvent const *event);
 };
 
 extern EGLint const egl_attribs[];
