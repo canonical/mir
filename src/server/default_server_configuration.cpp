@@ -345,7 +345,11 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
 
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
 
-            return std::make_shared<mir::graphics::nested::NestedPlatform>(the_host_connection(), the_display_report(), create_native_platform());
+            return std::make_shared<mir::graphics::nested::NestedPlatform>(
+                the_host_connection(),
+                the_composite_event_filter(), // TODO is this the right sink?
+                the_display_report(),
+                create_native_platform());
         });
 }
 

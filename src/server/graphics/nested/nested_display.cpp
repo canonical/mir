@@ -85,11 +85,15 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
     eglTerminate(egl_display);
 }
 
-mgn::NestedDisplay::NestedDisplay(std::shared_ptr<HostConnection> const& connection, std::shared_ptr<mg::DisplayReport> const& display_report) :
-    connection{connection},
-    display_report{display_report},
-    egl_display{*connection},
-    outputs{}
+mgn::NestedDisplay::NestedDisplay(
+    std::shared_ptr<HostConnection> const& connection,
+    std::shared_ptr<input::EventFilter> const& event_handler,
+    std::shared_ptr<mg::DisplayReport> const& display_report) :
+connection{connection},
+event_handler{event_handler},
+display_report{display_report},
+egl_display{*connection},
+outputs{}
 {
     egl_display.initialize();
     configure(*configuration());
@@ -142,7 +146,11 @@ void mgn::NestedDisplay::configure(mg::DisplayConfiguration const& configuration
                 if (!mir_surface_is_valid(mir_surface))
                     BOOST_THROW_EXCEPTION(std::runtime_error(mir_surface_get_error_message(mir_surface)));
 
-                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(egl_display, mir_surface, area);
+                result[output.id] = std::make_shared<mgn::detail::NestedOutput>(
+                    egl_display,
+                    mir_surface,
+                    area,
+                    event_handler);
             }
         });
 

@@ -17,6 +17,7 @@
  */
 
 #include "nested_output.h"
+#include "mir/input/event_filter.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -54,13 +55,15 @@ EGLint const mgn::detail::egl_context_attribs[] = {
 mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
     MirSurface* mir_surface,
-    geometry::Rectangle const& area) :
-    egl_display(egl_display),
-    mir_surface{mir_surface},
-    egl_config{egl_display.choose_config(egl_attribs)},
-    egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
-    area{area.top_left, area.size},
-    egl_surface{EGL_NO_SURFACE}
+    geometry::Rectangle const& area,
+    std::shared_ptr<input::EventFilter> const& event_handler) :
+egl_display(egl_display),
+mir_surface{mir_surface},
+egl_config{egl_display.choose_config(egl_attribs)},
+egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
+area{area.top_left, area.size},
+event_handler{event_handler},
+egl_surface{EGL_NO_SURFACE}
 {
     MirEventDelegate ed = {event_thunk, this};
     mir_surface_set_event_handler(mir_surface, &ed);
@@ -110,14 +113,26 @@ void mgn::detail::NestedOutput::event_thunk(
     void* context)
 try
 {
-    static_cast<mgn::detail::NestedOutput*>(context)->mir_event(event);
+    static_cast<mgn::detail::NestedOutput*>(context)->mir_event(*event);
 }
 catch (std::exception const&)
 {
     // Just in case: do not allow exceptions to propagate.
 }
 
-void mgn::detail::NestedOutput::mir_event(MirEvent const* /*event*/)
+void mgn::detail::NestedOutput::mir_event(MirEvent const& event)
 {
-    // TODO pass input events to input subsystem
+    switch (event.type)
+    {
+    case mir_event_type_key:
+        event_handler->handle(event);
+        break;
+    case mir_event_type_motion:
+        // TODO we need to transform co-ordinates. Don't we?
+        event_handler->handle(event);
+        break;
+    case mir_event_type_surface:
+        // TODO Surface attributes shouldn't be changing. So what do we do if they do?
+        break;
+    }
 }

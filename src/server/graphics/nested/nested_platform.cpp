@@ -31,9 +31,11 @@ namespace mo = mir::options;
 
 mgn::NestedPlatform::NestedPlatform(
     std::shared_ptr<HostConnection> const& connection,
+    std::shared_ptr<input::EventFilter> const& event_handler,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NativePlatform> const& native_platform) :
 native_platform{native_platform},
+event_handler{event_handler},
 display_report{display_report},
 connection{connection}
 {
@@ -55,7 +57,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_a
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(std::shared_ptr<mg::DisplayConfigurationPolicy> const& /*initial_conf_policy*/)
 {
-    return std::make_shared<mgn::NestedDisplay>(connection, display_report);
+    return std::make_shared<mgn::NestedDisplay>(connection, event_handler, display_report);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()
