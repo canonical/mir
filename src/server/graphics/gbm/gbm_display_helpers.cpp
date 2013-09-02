@@ -305,6 +305,14 @@ void mggh::GBMHelper::setup(const DRMHelper& drm)
             std::runtime_error("Failed to create GBM device"));
 }
 
+void mggh::GBMHelper::setup(int drm_fd)
+{
+    device = gbm_create_device(drm_fd);
+    if(!device)
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Failed to create GBM device"));
+}
+
 mgg::GBMSurfaceUPtr mggh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
 {
     auto surface_raw = gbm_surface_create(device, width, height,

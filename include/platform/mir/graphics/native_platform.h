@@ -40,6 +40,8 @@ class NativePlatform
 public:
     NativePlatform() {}
 
+    virtual void initialize(int fd) = 0;
+
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
 

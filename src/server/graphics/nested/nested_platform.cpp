@@ -41,6 +41,10 @@ connection{connection}
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(mir_connection_get_error_message(*connection))));
     }
+
+    MirPlatformPackage pkg;
+    mir_connection_get_platform(*connection, &pkg);
+    native_platform->initialize(pkg.fd[0]);
 }
 
 mgn::NestedPlatform::~NestedPlatform() noexcept
