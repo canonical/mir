@@ -23,6 +23,10 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/mock_egl.h"
 
+#ifndef ANDROID
+#include "mir_test_doubles/mock_gbm.h"
+#endif
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -125,6 +129,20 @@ private:
     }
 };
 
+struct NestedMockPlatform
+#ifndef ANDROID
+    : mir::test::doubles::MockGBM
+#endif
+{
+    NestedMockPlatform()
+    {
+#ifndef ANDROID
+        EXPECT_CALL(*this, gbm_create_device(_)).Times(1);
+        EXPECT_CALL(*this, gbm_device_destroy(_)).Times(1);
+#endif
+    }
+};
+
 template<class NestedServerConfiguration>
 struct ClientConfig : mtf::TestingClientConfiguration
 {
@@ -136,6 +154,7 @@ struct ClientConfig : mtf::TestingClientConfiguration
     {
         try
         {
+            NestedMockPlatform mock_gbm;
             NestedMockEGL mock_egl;
             NestedServerConfiguration nested_config(host_socket);
 
