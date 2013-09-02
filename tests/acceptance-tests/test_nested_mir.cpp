@@ -137,6 +137,7 @@ struct NestedMockPlatform
     NestedMockPlatform()
     {
 #ifndef ANDROID
+        InSequence gbm_device_lifecycle;
         EXPECT_CALL(*this, gbm_create_device(_)).Times(1);
         EXPECT_CALL(*this, gbm_device_destroy(_)).Times(1);
 #endif
