@@ -28,7 +28,7 @@
  *
  * The successive stages are contiguous elements in the ring (starting at
  * element "first_compositor"):
- *    first_compositor * ncompositors(zero or more)
+ *    first_compositor * ncompositors(one or more)
  *    first_ready      * nready(zero or more)
  *    first_client     * nclients(zero or more)
  *
