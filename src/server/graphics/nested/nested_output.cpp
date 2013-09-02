@@ -128,9 +128,13 @@ void mgn::detail::NestedOutput::mir_event(MirEvent const& event)
         event_handler->handle(event);
         break;
     case mir_event_type_motion:
-        // TODO we need to transform co-ordinates. Don't we?
-        event_handler->handle(event);
+    {
+        auto my_event = event;
+        my_event.motion.x_offset += area.top_left.x.as_float();
+        my_event.motion.y_offset += area.top_left.y.as_float();
+        event_handler->handle(my_event);
         break;
+    }
     case mir_event_type_surface:
         // TODO Surface attributes shouldn't be changing. So what do we do if they do?
         break;
