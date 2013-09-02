@@ -883,8 +883,7 @@ TEST_F(DefaultDisplayServerTestFixture, ClientLibraryDoesNotInterfereWithClientS
     launch_client_process(client_config);
 }
 
-// FIXME: alan_g: Need a way to avoid hanging on the second swap buffers
-TEST_F(DefaultDisplayServerTestFixture, DISABLED_MultiSurfaceClientTracksBufferFdsCorrectly)
+TEST_F(DefaultDisplayServerTestFixture, MultiSurfaceClientTracksBufferFdsCorrectly)
 {
     struct ClientConfig : ClientConfigCommon
     {
