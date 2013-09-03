@@ -1,3 +1,13 @@
+mir (0.0.10+13.10.20130902-0ubuntu1) saucy; urgency=low
+
+  [ Alan Griffiths ]
+  * graphics: tidy up the roles and responsibilities of nested classes.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1046
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 02 Sep 2013 18:05:02 +0000
+
 mir (0.0.10+13.10.20130830.1-0ubuntu1) saucy; urgency=low
 
   [ Alan Griffiths ]
