@@ -44,7 +44,7 @@ connection{connection}
 
     MirPlatformPackage pkg;
     mir_connection_get_platform(*connection, &pkg);
-    native_platform->initialize(pkg.fd[0]);
+    native_platform->initialize(pkg.data_items, pkg.data, pkg.fd_items, pkg.fd);
 }
 
 mgn::NestedPlatform::~NestedPlatform() noexcept

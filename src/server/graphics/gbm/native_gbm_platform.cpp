@@ -26,9 +26,9 @@
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 
-void mgg::NativeGBMPlatform::initialize(int drm_fd)
+void mgg::NativeGBMPlatform::initialize(int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* fd)
 {
-    this->drm_fd = drm_fd;
+    this->drm_fd = fd[0];
     gbm.setup(drm_fd);
 }
 
