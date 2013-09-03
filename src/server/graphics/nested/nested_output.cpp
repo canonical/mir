@@ -57,13 +57,13 @@ mgn::detail::NestedOutput::NestedOutput(
     MirSurface* mir_surface,
     geometry::Rectangle const& area,
     std::shared_ptr<input::EventFilter> const& event_handler) :
-egl_display(egl_display),
-mir_surface{mir_surface},
-egl_config{egl_display.choose_config(egl_attribs)},
-egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
-area{area.top_left, area.size},
-event_handler{event_handler},
-egl_surface{EGL_NO_SURFACE}
+    egl_display(egl_display),
+    mir_surface{mir_surface},
+    egl_config{egl_display.choose_config(egl_attribs)},
+    egl_context{egl_display, eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, egl_context_attribs)},
+    area{area.top_left, area.size},
+    event_handler{event_handler},
+    egl_surface{EGL_NO_SURFACE}
 {
     MirEventDelegate ed = {event_thunk, this};
     mir_surface_set_event_handler(mir_surface, &ed);

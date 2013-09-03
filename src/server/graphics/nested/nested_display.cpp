@@ -89,11 +89,11 @@ mgn::NestedDisplay::NestedDisplay(
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<input::EventFilter> const& event_handler,
     std::shared_ptr<mg::DisplayReport> const& display_report) :
-connection{connection},
-event_handler{event_handler},
-display_report{display_report},
-egl_display{*connection},
-outputs{}
+    connection{connection},
+    event_handler{event_handler},
+    display_report{display_report},
+    egl_display{*connection},
+    outputs{}
 {
     egl_display.initialize();
     configure(*configuration());
