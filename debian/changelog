@@ -1,3 +1,29 @@
+mir (0.0.10+13.10.20130903-0ubuntu1) saucy; urgency=low
+
+  [ Daniel van Vugt ]
+  * SwitchingBundle: Simplify and clarify guarantees that
+    compositor_acquire always has a buffer to return without blocking or
+    throwing an exception. The trade-off is that to enforce the
+    guarantee we need to permanently reserve one buffer for compositing.
+    This reduces the flexibility of SwitchingBundle a little, such that
+    minimum nbuffers is now 2. This was originally requested by
+    Alexandros, as the potential throw concerned him. Although, it was
+    logically guaranteed to never happen for other reasons. The second
+    reason for doing this is to eliminate recycling logic, which while
+    safe and correct, was quite confusing. So this change further proves
+    that that logic (now removed) is not to blame for frame ordering
+    bugs. .
+
+  [ Christopher James Halse Rogers ]
+  * Synthesise an unfocused event on destruction of a focused window We
+    probably need to rethink focus entirely, but this is an incremental
+    improvement that I need.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1049
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 03 Sep 2013 14:04:56 +0000
+
 mir (0.0.10+13.10.20130902-0ubuntu1) saucy; urgency=low
 
   [ Alan Griffiths ]
