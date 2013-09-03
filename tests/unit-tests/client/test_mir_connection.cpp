@@ -23,6 +23,8 @@
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
+#include "src/client/mir_surface.h"
+#include "src/client/client_buffer_factory.h"
 
 #include "mir/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
@@ -73,6 +75,16 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
 };
 
+struct StubClientBufferFactory : public mcl::ClientBufferFactory
+{
+    std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& /* package */,
+                                                     geom::Size /*size*/, geom::PixelFormat /*pf*/) override
+    {
+        return std::shared_ptr<mcl::ClientBuffer>();
+    }
+};
+
+
 struct MockClientPlatform : public mcl::ClientPlatform
 {
     MockClientPlatform()
@@ -84,6 +96,10 @@ struct MockClientPlatform : public mcl::ClientPlatform
 
         ON_CALL(*this, create_egl_native_display())
             .WillByDefault(Return(native_display));
+        ON_CALL(*this, create_buffer_factory())
+            .WillByDefault(Return(std::make_shared<StubClientBufferFactory>()));
+        ON_CALL(*this, create_egl_native_window(_))
+            .WillByDefault(Return(std::shared_ptr<EGLNativeWindowType>()));
     }
 
     MOCK_CONST_METHOD0(platform_type, MirPlatformType());
@@ -454,4 +470,90 @@ TEST_F(MirConnectionTest, valid_display_configure_sent)
 
     auto config_wait_handle = connection->configure_display(&user_config);
     config_wait_handle->wait_for_all();
+}
+
+static MirSurface *surface;
+static void surface_callback(MirSurface* surf, void*)
+{
+    surface = surf;
+}
+
+static bool unfocused_received;
+static void surface_event_callback(MirSurface *, MirEvent const *ev, void *)
+{
+    if (ev->type == mir_event_type_surface &&
+        ev->surface.attrib == mir_surface_attrib_focus &&
+        ev->surface.value == mir_surface_unfocused)
+        unfocused_received = true;
+
+}
+
+TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
+{
+    using namespace testing;
+
+    MirSurfaceParameters params;
+    params.name = __PRETTY_FUNCTION__;
+
+    MirEventDelegate const event_delegate = {
+        &surface_event_callback,
+        nullptr
+    };  
+
+    unfocused_received = false;
+
+    MirWaitHandle *wait_handle = connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
+    wait_handle->wait_for_all();
+
+    wait_handle = connection->create_surface(params, &surface_callback, nullptr);
+    wait_handle->wait_for_all();
+
+    MirEvent focus_event;
+    focus_event.type = mir_event_type_surface;
+    focus_event.surface.id = surface->id();
+    focus_event.surface.attrib = mir_surface_attrib_focus;
+    focus_event.surface.value = mir_surface_focused;
+    surface->handle_event(focus_event);
+
+    surface->set_event_handler(&event_delegate);
+
+    wait_handle = connection->release_surface(surface, &surface_callback, nullptr);
+    wait_handle->wait_for_all();
+
+    EXPECT_TRUE(unfocused_received);
+}
+
+TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_release)
+{
+    using namespace testing;
+
+    MirSurfaceParameters params;
+    params.name = __PRETTY_FUNCTION__;
+
+    MirEventDelegate const event_delegate = {
+        &surface_event_callback,
+        nullptr
+    };  
+
+    unfocused_received = false;
+
+    MirWaitHandle *wait_handle = connection->connect("MirClientSurfaceTest", &connected_callback, nullptr);
+    wait_handle->wait_for_all();
+
+    wait_handle = connection->create_surface(params, &surface_callback, nullptr);
+    wait_handle->wait_for_all();
+
+    MirEvent focus_event;
+    focus_event.type = mir_event_type_surface;
+    focus_event.surface.id = surface->id();
+    focus_event.surface.attrib = mir_surface_attrib_focus;
+    focus_event.surface.value = mir_surface_unfocused;
+    surface->handle_event(focus_event);
+
+    surface->set_event_handler(&event_delegate);
+
+    wait_handle = connection->release_surface(surface, &surface_callback, nullptr);
+    wait_handle->wait_for_all();
+
+    EXPECT_FALSE(unfocused_received);
 }
