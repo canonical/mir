@@ -36,6 +36,7 @@ uses_android_input(acceptance-tests)
 target_link_libraries(
   acceptance-tests
 
+  mir-test-doubles-platform
   mirserver
   mirclient
   mirplatform
@@ -43,7 +44,6 @@ target_link_libraries(
   mir-test
   mir-test-framework
   mir-test-doubles
-  mir-test-doubles-platform
   3rd_party
 
   ${PROTOBUF_LIBRARIES}
