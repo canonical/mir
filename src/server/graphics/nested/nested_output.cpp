@@ -52,6 +52,27 @@ EGLint const mgn::detail::egl_context_attribs[] = {
     EGL_NONE
 };
 
+
+#include <iostream> // DEBUG
+namespace
+{
+struct Logger
+{
+    Logger(void const* self, char const* scope) : self(self), scope(scope)
+    {
+        std::cerr << "DEBUG[" << self << "] entering: " << scope << std::endl;
+    }
+    ~Logger()
+    {
+        std::cerr << "DEBUG[" << self << "] exiting : " << scope << std::endl;
+    }
+    void const* const self;
+    char const* const scope;
+};
+
+#define DEBUG_TRACE     Logger log_scope(this, __PRETTY_FUNCTION__)
+}
+
 mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
     MirSurface* mir_surface,
@@ -65,17 +86,20 @@ mgn::detail::NestedOutput::NestedOutput(
     event_handler{event_handler},
     egl_surface{EGL_NO_SURFACE}
 {
+    DEBUG_TRACE;
     MirEventDelegate ed = {event_thunk, this};
     mir_surface_set_event_handler(mir_surface, &ed);
 }
 
 geom::Rectangle mgn::detail::NestedOutput::view_area() const
 {
+    DEBUG_TRACE;
     return area;
 }
 
 void mgn::detail::NestedOutput::make_current()
 {
+    DEBUG_TRACE;
     egl_surface = egl_display.egl_surface(egl_config, mir_surface);
 
     if (eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context) != EGL_TRUE)
@@ -84,13 +108,16 @@ void mgn::detail::NestedOutput::make_current()
 
 void mgn::detail::NestedOutput::release_current()
 {
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroySurface(egl_display, egl_surface);
-    egl_surface = EGL_NO_SURFACE;
+    DEBUG_TRACE;
+//    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+//    eglDestroySurface(egl_display, egl_surface);
+//    egl_surface = EGL_NO_SURFACE;
 }
 
 void mgn::detail::NestedOutput::post_update()
 {
+    DEBUG_TRACE;
+    eglSwapBuffers(egl_display, egl_surface);
     mir_surface_swap_buffers_sync(mir_surface);
 }
 
@@ -103,8 +130,9 @@ bool mgn::detail::NestedOutput::can_bypass() const
 
 mgn::detail::NestedOutput::~NestedOutput() noexcept
 {
-    if (egl_surface != EGL_NO_SURFACE)
-        eglDestroySurface(egl_display, egl_surface);
+    DEBUG_TRACE;
+//    if (egl_surface != EGL_NO_SURFACE)
+//        eglDestroySurface(egl_display, egl_surface);
 }
 
 void mgn::detail::NestedOutput::event_thunk(

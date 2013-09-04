@@ -48,11 +48,10 @@ std::shared_ptr<mg::PlatformIPCPackage> mgg::NativeGBMPlatform::get_ipc_package(
     {
         NativeGBMPlatformIPCPackage(int fd)
         {
-            ipc_fds.push_back(fd);
+            ipc_fds.push_back(dup(fd));
         }
     };
 
-    // Can we just pass the FD out again? Do we need another one?
     return std::make_shared<NativeGBMPlatformIPCPackage>(drm_fd);
 }
 
