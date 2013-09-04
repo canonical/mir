@@ -72,9 +72,10 @@ TEST_F(SwapperSwappingStress, swapper)
     auto g = std::async(std::launch::async,
                 [this]
                 {
+                    unsigned long count = 0;
                     while(!client_thread_done)
                     {
-                        auto b = switching_bundle->compositor_acquire();
+                        auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
                         switching_bundle->compositor_release(b);
                     }
@@ -116,9 +117,10 @@ TEST_F(SwapperSwappingStress, different_swapper_types)
     auto g = std::async(std::launch::async,
                 [this]
                 {
+                    unsigned long count = 0;
                     while(!client_thread_done)
                     {
-                        auto b = switching_bundle->compositor_acquire();
+                        auto b = switching_bundle->compositor_acquire(++count);
                         std::this_thread::yield();
                         switching_bundle->compositor_release(b);
                     }

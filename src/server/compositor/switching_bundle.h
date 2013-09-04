@@ -24,7 +24,6 @@
 #include <condition_variable>
 #include <mutex>
 #include <memory>
-#include <chrono>
 
 namespace mir
 {
@@ -47,7 +46,8 @@ public:
 
     std::shared_ptr<graphics::Buffer> client_acquire();
     void client_release(std::shared_ptr<graphics::Buffer> const&);
-    std::shared_ptr<graphics::Buffer> compositor_acquire();
+    std::shared_ptr<graphics::Buffer>
+        compositor_acquire(unsigned long frameno) override;
     void compositor_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
     std::shared_ptr<graphics::Buffer> snapshot_acquire();
     void snapshot_release(std::shared_ptr<graphics::Buffer> const& released_buffer);
@@ -89,10 +89,7 @@ private:
     std::mutex guard;
     std::condition_variable cond;
 
-    typedef std::chrono::high_resolution_clock::time_point time_point;
-    static time_point now()
-        { return std::chrono::high_resolution_clock::now(); }
-    time_point last_consumed;
+    unsigned long last_consumed;
 
     bool overlapping_compositors;
 

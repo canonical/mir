@@ -180,6 +180,26 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                 case 'n':
                     swapinterval = 0;
                     break;
+                case 'o':
+                    {
+                        unsigned int output_id = 0;
+                        arg += 2;
+                        if (!arg[0] && i < argc-1)
+                        {
+                            i++;
+                            arg = argv[i];
+                        }
+                        if (sscanf(arg, "%u", &output_id) == 1)
+                        {
+                            surfaceparm.output_id = output_id;
+                        }
+                        else
+                        {
+                            printf("Invalid output ID: %s\n", arg);
+                            help = 1;
+                        }
+                    }
+                    break;
                 case 'f':
                     *width = 0;
                     *height = 0;
@@ -219,9 +239,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             if (help)
             {
                 printf("Usage: %s [<options>]\n"
-                       "  -f  Force full screen\n"
-                       "  -h  Show this help text\n"
-                       "  -n  Don't sync to vblank\n"
+                       "  -f     Force full screen\n"
+                       "  -h     Show this help text\n"
+                       "  -o ID  Force placement on output monitor ID\n"
+                       "  -n     Don't sync to vblank\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
                        , argv[0]);
                 return 0;

@@ -22,6 +22,12 @@
 #include "mir/compositor/overlay_renderer.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositing_criteria.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/buffer.h"
+#include "mir/surfaces/buffer_stream.h"
+#include "bypass.h"
+#include <mutex>
+#include <cstdlib>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -43,6 +49,14 @@ struct FilterForVisibleSceneInRegion : public mc::FilterForScene
     mir::geometry::Rectangle const& enclosing_region;
 };
 
+std::mutex global_frameno_lock;
+unsigned long global_frameno = 0;
+
+bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
+{
+    return (a - b) < (~0UL / 2UL);
+}
+
 }
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -53,15 +67,75 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     : mc::BasicDisplayBufferCompositor{display_buffer},
       scene{scene},
       renderer{renderer},
-      overlay_renderer{overlay_renderer}
+      overlay_renderer{overlay_renderer},
+      local_frameno{global_frameno}
 {
+}
+
+
+void mc::DefaultDisplayBufferCompositor::composite()
+{
+    static bool got_bypass_env = false;
+    static bool bypass_env = true;
+    bool bypassed = false;
+
+    /*
+     * Increment frame counts for each tick of the fastest instance of
+     * DefaultDisplayBufferCompositor. This means for the fastest refresh
+     * rate of all attached outputs.
+     */
+    local_frameno++;
+    {
+        std::lock_guard<std::mutex> lock(global_frameno_lock);
+        if (wrapped_greater_or_equal(local_frameno, global_frameno))
+            global_frameno = local_frameno;
+        else
+            local_frameno = global_frameno;
+    }
+
+    if (!got_bypass_env)
+    {
+        const char *env = getenv("MIR_BYPASS");
+        if (env != NULL)
+            bypass_env = env[0] != '0';
+
+        got_bypass_env = true;
+    }
+
+    if (bypass_env && display_buffer.can_bypass())
+    {
+        std::unique_lock<Scene> lock(*scene);
+
+        mc::BypassFilter filter(display_buffer);
+        mc::BypassMatch match;
+
+        // It would be *really* nice if Scene had an iterator to simplify this
+        scene->for_each_if(filter, match);
+
+        if (filter.fullscreen_on_top())
+        {
+            auto bypass_buf =
+                match.topmost_fullscreen()->lock_compositor_buffer(
+                    local_frameno);
+
+            if (bypass_buf->can_bypass())
+            {
+                lock.unlock();
+                display_buffer.post_update(bypass_buf);
+                bypassed = true;
+            }
+        }
+    }
+
+    if (!bypassed)
+        mc::BasicDisplayBufferCompositor::composite();
 }
 
 void mc::DefaultDisplayBufferCompositor::compose(
     mir::geometry::Rectangle const& view_area,
     std::function<void(std::shared_ptr<void> const&)> save_resource)
 {
-    renderer->clear();
+    renderer->clear(local_frameno);
 
     mc::RenderingOperator applicator(*renderer, save_resource);
     FilterForVisibleSceneInRegion selector(view_area);

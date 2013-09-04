@@ -75,8 +75,12 @@ uint32_t mgg::mir_format_to_gbm_format(geom::PixelFormat format)
 }
 
 mgg::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
+                          uint32_t bo_flags,
                           std::unique_ptr<BufferTextureBinder> texture_binder)
-    : gbm_handle{handle}, texture_binder{std::move(texture_binder)}, prime_fd{-1}
+    : gbm_handle{handle},
+      bo_flags{bo_flags},
+      texture_binder{std::move(texture_binder)},
+      prime_fd{-1}
 {
     auto device = gbm_bo_get_device(gbm_handle.get());
     auto gem_handle = gbm_bo_get_handle(gbm_handle.get()).u32;
@@ -121,10 +125,17 @@ void mgg::GBMBuffer::bind_to_texture()
 
 std::shared_ptr<MirNativeBuffer> mgg::GBMBuffer::native_buffer_handle() const
 {
-    auto temp = std::make_shared<MirNativeBuffer>();
+    auto temp = std::make_shared<GBMNativeBuffer>();
 
     temp->fd_items = 1;
     temp->fd[0] = prime_fd;
     temp->stride = stride().as_uint32_t();
+    temp->bo = gbm_handle.get();
+
     return temp;
+}
+
+bool mgg::GBMBuffer::can_bypass() const
+{
+    return bo_flags & GBM_BO_USE_SCANOUT;
 }

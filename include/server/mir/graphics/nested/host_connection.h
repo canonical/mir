@@ -16,8 +16,10 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
-#define MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#ifndef MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
+#define MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_
+
+#include <string>
 
 struct MirConnection;
 
@@ -28,14 +30,14 @@ namespace graphics
 namespace nested
 {
 
-class MirConnectionHandle
+class HostConnection
 {
 public:
-    MirConnectionHandle(MirConnection* const mir_connection);
-    ~MirConnectionHandle();
+    HostConnection(std::string const& host_socket, std::string const& nested_socket);
+    ~HostConnection();
 
-    MirConnectionHandle(MirConnectionHandle const&) = delete;
-    MirConnectionHandle& operator=(MirConnectionHandle const& connection_handle) = delete;
+    HostConnection(HostConnection const&) = delete;
+    HostConnection& operator=(HostConnection const& connection_handle) = delete;
 
     operator MirConnection*() const {return (MirConnection*)connection;}
 
@@ -46,4 +48,4 @@ private:
 }
 }
 }
-#endif // MIR_GRAPHICS_NESTED_MIR_CONNECTION_HANDLE_H_
+#endif // MIR_GRAPHICS_NESTED_HOST_CONNECTION_H_

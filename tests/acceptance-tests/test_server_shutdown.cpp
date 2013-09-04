@@ -58,7 +58,7 @@ public:
         std::this_thread::yield();
     }
 
-    void clear() {}
+    void clear(unsigned long) override {}
 };
 
 

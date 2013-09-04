@@ -29,11 +29,14 @@ namespace test
 namespace doubles
 {
 
-class StubShell : public frontend::Shell
+struct StubShell : public frontend::Shell
 {
+    StubShell() : stub_session(std::make_shared<StubSession>())
+    {
+    }
     std::shared_ptr<frontend::Session> open_session(std::string const& /* name */, std::shared_ptr<frontend::EventSink> const& /* sink */) override
     {
-        return std::make_shared<StubSession>();
+        return stub_session;
     }
     void close_session(std::shared_ptr<frontend::Session> const& /* session */) override
     {
@@ -46,6 +49,7 @@ class StubShell : public frontend::Shell
     void handle_surface_created(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
+    std::shared_ptr<StubSession> const stub_session;
 };
 
 }

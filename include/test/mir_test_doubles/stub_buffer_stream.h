@@ -42,7 +42,7 @@ public:
         return stub_client_buffer;
     }
 
-    std::shared_ptr<graphics::Buffer> lock_compositor_buffer()
+    std::shared_ptr<graphics::Buffer> lock_compositor_buffer(unsigned long)
     {
         return stub_compositor_buffer;
     }

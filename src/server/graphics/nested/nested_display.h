@@ -20,9 +20,11 @@
 #define MIR_GRAPHICS_NESTED_NESTED_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/egl_resources.h"
 
-#include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/client_types.h"
 
 #include <EGL/egl.h>
 
@@ -38,25 +40,11 @@ namespace graphics
 {
 class DisplayReport;
 class DisplayBuffer;
+
 namespace nested
 {
 namespace detail
 {
-class MirSurfaceHandle
-{
-public:
-    explicit MirSurfaceHandle(MirConnection* connection, MirDisplayOutput* const egl_display_info);
-    ~MirSurfaceHandle() noexcept;
-
-    operator MirSurface*() const { return mir_surface; }
-
-private:
-    MirSurface* mir_surface;
-
-    MirSurfaceHandle(MirSurfaceHandle const&) = delete;
-    MirSurfaceHandle operator=(MirSurfaceHandle const&) = delete;
-};
-
 class EGLDisplayHandle
 {
 public:
@@ -76,33 +64,19 @@ private:
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
 };
 
-class NestedOutput
-{
-public:
-    NestedOutput(MirConnection* connection, MirDisplayOutput* const);
-    ~NestedOutput() noexcept;
-
-    operator MirSurface*() const { return mir_surface; }
-    operator EGLContext()  const { return egl_surface; }
-
-    NestedOutput(NestedOutput const&) = delete;
-    NestedOutput operator=(NestedOutput const&) = delete;
-private:
-    detail::MirSurfaceHandle const mir_surface;
-    detail::EGLDisplayHandle const egl_display;
-
-    EGLConfig const egl_config;
-    EGLSurfaceStore const egl_surface;
-    EGLContextStore const egl_context;
-};
-
+class NestedOutput;
 }
+
+class HostConnection;
 
 class NestedDisplay : public Display
 {
 public:
-    NestedDisplay(MirConnection* connection, std::shared_ptr<DisplayReport>const& display_report);
-    virtual ~NestedDisplay() noexcept;
+    NestedDisplay(
+        std::shared_ptr<HostConnection> const& connection,
+        std::shared_ptr<DisplayReport> const& display_report);
+
+    ~NestedDisplay() noexcept;
 
     void for_each_display_buffer(std::function<void(DisplayBuffer&)>const& f) override;
 
@@ -125,9 +99,12 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
-    MirConnection* const connection;
+    std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<DisplayReport> const display_report;
-    std::unordered_map<uint32_t, std::shared_ptr<detail::NestedOutput>> outputs;
+    detail::EGLDisplayHandle const egl_display;
+
+    std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
+    DisplayConfigurationChangeHandler my_conf_change_handler;
 };
 
 }

@@ -57,7 +57,7 @@ public:
     }
 
     std::shared_ptr<mg::Buffer> secure_client_buffer() { return std::make_shared<mtd::StubBuffer>(); }
-    std::shared_ptr<mg::Buffer> lock_compositor_buffer() { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mg::Buffer> lock_compositor_buffer(unsigned long) { return std::make_shared<mtd::StubBuffer>(); }
     std::shared_ptr<mg::Buffer> lock_snapshot_buffer() { return std::make_shared<mtd::StubBuffer>(); }
     geom::PixelFormat get_stream_pixel_format() { return geom::PixelFormat::abgr_8888; }
     geom::Size stream_size() { return geom::Size{}; }

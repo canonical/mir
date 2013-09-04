@@ -41,8 +41,8 @@ mc::TemporaryClientBuffer::~TemporaryClientBuffer()
 }
 
 mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
-    std::shared_ptr<BufferBundle> const& bun)
-    : TemporaryBuffer(bun->compositor_acquire()),
+    std::shared_ptr<BufferBundle> const& bun, unsigned long frameno)
+    : TemporaryBuffer(bun->compositor_acquire(frameno)),
       bundle(bun)
 {
 }
@@ -92,4 +92,9 @@ void mc::TemporaryBuffer::bind_to_texture()
 std::shared_ptr<MirNativeBuffer> mc::TemporaryBuffer::native_buffer_handle() const
 {
     return buffer->native_buffer_handle();
+}
+
+bool mc::TemporaryBuffer::can_bypass() const
+{
+    return buffer->can_bypass();
 }

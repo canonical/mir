@@ -105,6 +105,7 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     invoke.set_id(next_id());
     invoke.set_method_name(method->name());
     invoke.set_parameters(buffer, size);
+    invoke.set_protocol_version(1);
 
     return invoke;
 }

@@ -106,6 +106,11 @@ public:
         }
     }
 
+    bool can_bypass() const override
+    {
+        return false;
+    }
+
 protected:
     std::shared_ptr<mga::AndroidFramebufferWindowQuery> const native_window;
     EGLDisplay const egl_display;

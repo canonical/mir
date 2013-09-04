@@ -21,7 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
-#include "mir/graphics/nested/nested_mir_connection_handle.h"
+#include "mir/graphics/nested/host_connection.h"
 
 namespace mir
 {
@@ -33,7 +33,7 @@ namespace nested
 class NestedPlatform : public Platform
 {
 public:
-    NestedPlatform(std::string const& host,
+    NestedPlatform(std::shared_ptr<HostConnection> const& connection,
                    std::shared_ptr<DisplayReport> const& display_report,
                    std::shared_ptr<NativePlatform> const& native_platform);
 
@@ -50,7 +50,7 @@ public:
 private:
     std::shared_ptr<NativePlatform> const native_platform;
     std::shared_ptr<DisplayReport> const display_report;
-    MirConnectionHandle const connection;
+    std::shared_ptr<HostConnection> const connection;
 };
 
 }

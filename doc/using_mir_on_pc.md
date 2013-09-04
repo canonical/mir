@@ -90,7 +90,7 @@ VT switching away from Mir will only work if Mir is run as root. In this case
 we need to change the permissions to the Mir socket so that clients can
 connect:
 
-    $ sudo mir_demo_server
+    $ sudo mir_demo_server_basic
     <Ctrl+Alt+F2> - log in to VT 2
     $ sudo chmod 777 /tmp/mir_socket
     $ some-mir-client
