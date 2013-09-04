@@ -146,7 +146,7 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
     mir_display_config_destroy(conf);
 }
 
-static void toggle_dpms(struct ClientContext *context)
+static void toggle_dpms_between_on_and_off(struct ClientContext *context)
 {
     MirDisplayConfiguration *conf = 
         mir_connection_create_display_config(context->connection);
@@ -213,7 +213,7 @@ static void event_callback(
         }
         else if (event->key.key_code == XKB_KEY_p)
         {
-            toggle_dpms(ctx);
+            toggle_dpms_between_on_and_off(ctx);
         }
     }
 }
