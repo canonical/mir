@@ -27,6 +27,8 @@
 #include <memory>
 #include <functional>
 
+#include "mir_toolkit/mir_client_library_debug.h"
+
 namespace mir_test_framework
 {
 using namespace ::mir;
@@ -46,6 +48,7 @@ public:
 
 private:
     static TestingProcessManager process_manager;
+    static TestingServerConfiguration default_parameters;
 
     virtual void TearDown();
 };

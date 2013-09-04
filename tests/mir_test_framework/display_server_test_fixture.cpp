@@ -17,20 +17,22 @@
  */
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/testing_client_configuration.h"
 
 namespace mc = mir::compositor;
+namespace mtf = mir_test_framework;
 
-mir_test_framework::TestingProcessManager mir_test_framework::DefaultDisplayServerTestFixture::process_manager;
-
+mtf::TestingProcessManager mir_test_framework::DefaultDisplayServerTestFixture::process_manager;
+mtf::TestingServerConfiguration mir_test_framework::DefaultDisplayServerTestFixture::default_parameters;
 
 void DefaultDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
 {
+    mtf::setup_client_configuration(default_parameters.the_options());
     process_manager.launch_client_process(config);
 }
 
 void DefaultDisplayServerTestFixture::SetUpTestCase()
 {
-    TestingServerConfiguration default_parameters;
     process_manager.launch_server_process(default_parameters);
 }
 

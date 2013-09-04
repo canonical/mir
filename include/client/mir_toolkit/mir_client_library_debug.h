@@ -18,10 +18,16 @@
 #ifndef MIR_CLIENT_LIBRARY_DEBUG_H
 #define MIR_CLIENT_LIBRARY_DEBUG_H
 
+#include <mir_toolkit/client_debug_types.h>
 #include <mir_toolkit/mir_client_library.h>
 
 /* This header defines debug interfaces that aren't expected to be generally useful
  * and do not have the same API-stability guarantees that the main API has */
+
+/* if set before any calls to the api functions, assigning to this pointer will override
+ * default api behavior. This is mostly useful in test scenarios
+ */
+extern MirClientApiImpl* mir_global_api_function_impl;
 
 /**
  * Return the ID of a surface (only useful for debug output).
