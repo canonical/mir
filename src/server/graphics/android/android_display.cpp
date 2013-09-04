@@ -79,7 +79,7 @@ public:
         f(configuration);
     }
 
-    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, mg::DPMSMode /* dpms_mode */)
+    void configure_output(mg::DisplayConfigurationOutputId, bool, geom::Point, size_t, MirDPMSMode /* dpms_mode */)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot configure output\n"));
     }
