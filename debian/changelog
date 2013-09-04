@@ -1,3 +1,14 @@
+mir (0.0.10+13.10.20130904-0ubuntu1) saucy; urgency=low
+
+  [ Kevin DuBois ]
+  * fix lp:1220441 (a test for android display ID was not updated). (LP:
+    #1220441)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 1051
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 04 Sep 2013 06:04:46 +0000
+
 mir (0.0.10+13.10.20130903-0ubuntu1) saucy; urgency=low
 
   [ Daniel van Vugt ]
