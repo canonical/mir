@@ -622,7 +622,7 @@ TYPED_TEST(AndroidTestFramebufferInit, android_display_configuration_info)
     EXPECT_EQ(display_size, disp_mode.size);
     //TODO fill refresh rate accordingly
 
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{0}, disp_conf.id); 
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id); 
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id); 
     EXPECT_TRUE(disp_conf.connected);
     EXPECT_TRUE(disp_conf.used);
