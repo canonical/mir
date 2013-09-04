@@ -24,7 +24,7 @@ namespace geom = mir::geometry;
 
 void mg::DefaultDisplayConfigurationPolicy::apply_to(DisplayConfiguration& conf)
 {
-    static mg::DPMSMode const default_dpms_state = mg::DPMSMode::On;
+    static MirDPMSMode const default_dpms_state = mir_dpms_mode_on;
 
     conf.for_each_output(
         [&conf](DisplayConfigurationOutput const& conf_output)

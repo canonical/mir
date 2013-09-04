@@ -64,7 +64,7 @@ public:
                         true,
                         true,
                         geom::Point{0,0},
-                        0, 0, mg::DPMSMode::On},
+                        0, 0, mir_dpms_mode_on},
           card{mg::DisplayConfigurationCardId{0}, 1}
     {
     }

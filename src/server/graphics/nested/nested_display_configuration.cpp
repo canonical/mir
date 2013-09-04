@@ -78,14 +78,15 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 geometry::Point{mir_output.position_x, mir_output.position_y},
                 mir_output.current_mode,
                 mir_output.current_output_format,
-                static_cast<mg::DPMSMode>(mir_output.dpms_mode)
+                mir_output.dpms_mode
             };
 
             f(output);
         });
 }
 
-void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used, geometry::Point top_left, size_t mode_index, mg::DPMSMode dpms_mode)
+void mgn::NestedDisplayConfiguration::configure_output(DisplayConfigurationOutputId id, bool used, 
+    geometry::Point top_left, size_t mode_index, MirDPMSMode dpms_mode)
 {
     for (auto mir_output = display_config->outputs;
         mir_output != display_config->outputs+display_config->num_outputs;

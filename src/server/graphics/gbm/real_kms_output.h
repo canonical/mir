@@ -41,7 +41,7 @@ public:
     ~RealKMSOutput();
 
     void reset();
-    void configure(geometry::Displacement fb_offset, size_t kms_mode_index, DPMSMode dpms_mode);
+    void configure(geometry::Displacement fb_offset, size_t kms_mode_index, MirDPMSMode dpms_mode);
     geometry::Size size() const;
 
     bool set_crtc(uint32_t fb_id);
@@ -69,7 +69,7 @@ private:
     bool using_saved_crtc;
     bool has_cursor_;
 
-    DPMSMode dpms_mode;
+    MirDPMSMode dpms_mode;
 };
 
 }

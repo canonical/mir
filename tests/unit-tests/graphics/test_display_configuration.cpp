@@ -46,7 +46,7 @@ mg::DisplayConfigurationOutput const tmpl_output
     geom::Point(),
     2,
     0,
-    mg::DPMSMode::On
+    mir_dpms_mode_on
 };
 
 }

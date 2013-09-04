@@ -109,7 +109,7 @@ void mgg::RealKMSDisplayConfiguration::for_each_output(
 void mgg::RealKMSDisplayConfiguration::configure_output(
     DisplayConfigurationOutputId id, bool used,
     geometry::Point top_left, size_t mode_index,
-    mg::DPMSMode dpms_mode)
+    MirDPMSMode dpms_mode)
 {
     auto iter = find_output_with_id(id);
 
@@ -224,7 +224,7 @@ void mgg::RealKMSDisplayConfiguration::add_or_update_output(
     {
         outputs.push_back({id, card_id, type, formats, modes, preferred_mode_index,
                            physical_size, connected, false, geom::Point(),
-                           current_mode_index, 0u, mg::DPMSMode::On});
+                           current_mode_index, 0u, mir_dpms_mode_on});
     }
     else
     {

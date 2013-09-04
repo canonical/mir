@@ -172,7 +172,7 @@ geom::Size mgg::RealKMSOutput::size() const
     return {mode.hdisplay, mode.vdisplay};
 }
 
-void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index, mg::DPMSMode new_dpms_mode)
+void mgg::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index, MirDPMSMode new_dpms_mode)
 {
     fb_offset = offset;
     mode_index = kms_mode_index;

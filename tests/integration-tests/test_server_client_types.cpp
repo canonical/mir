@@ -44,11 +44,3 @@ TEST(ServerClientTypes, display_output_types_match)
     EXPECT_DISPLAY_OUTPUT_TYPES_MATCH(tv);
     EXPECT_DISPLAY_OUTPUT_TYPES_MATCH(edp);
 }
-
-TEST(ServerClientTypes, dpms_types_match)
-{
-    EXPECT_EQ(mg::DPMSMode::On, static_cast<mg::DPMSMode>(mir_dpms_mode_on));
-    EXPECT_EQ(mg::DPMSMode::Standby, static_cast<mg::DPMSMode>(mir_dpms_mode_standby));
-    EXPECT_EQ(mg::DPMSMode::Suspend, static_cast<mg::DPMSMode>(mir_dpms_mode_suspend));
-    EXPECT_EQ(mg::DPMSMode::Off, static_cast<mg::DPMSMode>(mir_dpms_mode_off));
-}

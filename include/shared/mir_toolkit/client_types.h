@@ -22,6 +22,7 @@
 #define MIR_TOOLKIT_CLIENT_TYPES_H_
 
 #include <mir_toolkit/event.h>
+#include <mir_toolkit/common.h>
 
 #include <stddef.h>
 
@@ -230,14 +231,6 @@ typedef struct MirDisplayMode
     uint32_t horizontal_resolution;
     double refresh_rate;
 } MirDisplayMode;
-
-typedef enum MirDPMSMode
-{
-    mir_dpms_mode_on, /* Display in use. */
-    mir_dpms_mode_standby, /* Blanked, low power. */
-    mir_dpms_mode_suspend, /* Blanked, lowest power. */
-    mir_dpms_mode_off /* Powered down. */
-} MirDPMSMode;
 
 enum { mir_display_output_id_invalid = 0 };
 

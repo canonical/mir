@@ -257,7 +257,7 @@ TEST_F(NestedDisplayConfiguration, trivial_configuration_can_be_configured)
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
     config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true,
-        top_left, default_current_mode, mg::DPMSMode::On);
+        top_left, default_current_mode, mir_dpms_mode_on);
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(1));
@@ -278,11 +278,11 @@ TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_mode)
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, -1, mg::DPMSMode::On);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, -1, mir_dpms_mode_on);},
         std::runtime_error);
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, too_big_mode_index, mg::DPMSMode::On);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id), true, top_left, too_big_mode_index, mir_dpms_mode_on);},
         std::runtime_error);
 }
 
@@ -292,11 +292,11 @@ TEST_F(NestedDisplayConfiguration, configure_output_rejects_invalid_output)
     mgn::NestedDisplayConfiguration config(build_trivial_configuration());
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id+1), true, top_left, default_current_mode, mg::DPMSMode::On);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id+1), true, top_left, default_current_mode, mir_dpms_mode_on);},
         std::runtime_error);
 
     EXPECT_THROW(
-        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id-1), true, top_left, default_current_mode, mg::DPMSMode::On);},
+        {config.configure_output(mg::DisplayConfigurationOutputId(default_output_id-1), true, top_left, default_current_mode, mir_dpms_mode_on);},
         std::runtime_error);
 }
 
@@ -326,7 +326,7 @@ TEST_F(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
     geom::Point const top_left{100,200};
     mgn::NestedDisplayConfiguration config(build_non_trivial_configuration());
 
-    config.configure_output(id, true, top_left, 1, mg::DPMSMode::On);
+    config.configure_output(id, true, top_left, 1, mir_dpms_mode_on);
 
     MockOutputVisitor ov;
     EXPECT_CALL(ov, f(_)).Times(Exactly(3));

@@ -23,6 +23,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/pixel_format.h"
+#include "mir_toolkit/common.h"
 
 #include <functional>
 #include <vector>
@@ -67,15 +68,6 @@ enum class DisplayConfigurationOutputType
     edp
 };
 
-// Display Power Management modes.
-enum class DPMSMode
-{
-    On, // Display in use
-    Standby, // Blanked, low power.
-    Suspend, // Blanked, lowest power.
-    Off // Powered don.
-};
-
 /**
  * Configuration information for a display output mode.
  */
@@ -115,7 +107,7 @@ struct DisplayConfigurationOutput
     /** The index in the 'pixel_format' vector of the current output pixel format. */
     size_t current_format_index;
     /** Current DPMS mode **/
-    DPMSMode dpms_mode;
+    MirDPMSMode dpms_mode;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
@@ -145,7 +137,7 @@ public:
 
     /** Configures an output. */
     virtual void configure_output(DisplayConfigurationOutputId id, bool used,
-                                  geometry::Point top_left, size_t mode_index, DPMSMode dpms_mode) = 0;
+                                  geometry::Point top_left, size_t mode_index, MirDPMSMode dpms_mode) = 0;
 
 protected:
     DisplayConfiguration() = default;
