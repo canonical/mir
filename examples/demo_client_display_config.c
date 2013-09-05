@@ -215,6 +215,7 @@ static void event_callback(
         {
             toggle_dpms_between_on_and_off(ctx);
         }
+        toggle_dpms_between_on_and_off(ctx);
     }
 }
 
