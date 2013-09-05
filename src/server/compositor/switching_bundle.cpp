@@ -28,7 +28,7 @@
  *
  * The successive stages are contiguous elements in the ring (starting at
  * element "first_compositor"):
- *    first_compositor * ncompositors(zero or more)
+ *    first_compositor * ncompositors(one or more)
  *    first_ready      * nready(zero or more)
  *    first_client     * nclients(zero or more)
  *
@@ -72,18 +72,18 @@ mc::SwitchingBundle::SwitchingBundle(
     : bundle_properties{property_request},
       gralloc{gralloc},
       nbuffers{nbuffers},
-      first_compositor{0}, ncompositors{0},
-      first_ready{0}, nready{0},
-      first_client{0}, nclients{0},
+      first_compositor{0}, ncompositors{1},
+      first_ready{first_compositor + ncompositors}, nready{0},
+      first_client{first_ready + nready}, nclients{0},
       snapshot{-1}, nsnapshotters{0},
       last_consumed{0},
       overlapping_compositors{false},
       framedropping{false}, force_drop{0}
 {
-    if (nbuffers < 1 || nbuffers > MAX_NBUFFERS)
+    if (nbuffers < 2 || nbuffers > MAX_NBUFFERS)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("SwitchingBundle only supports "
-                                               "nbuffers betwee 1 and " +
+                                               "nbuffers between 2 and " +
                                                std::to_string(MAX_NBUFFERS)));
     }
 }
@@ -264,29 +264,9 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
     std::unique_lock<std::mutex> lock(guard);
     int compositor;
 
-    // Multi-monitor acquires close to each other get the same frame:
-    bool same_frame = (frameno == last_consumed);
-
-    int avail = nfree();
-    bool can_recycle = ncompositors || avail;
-
-    if (!nready || (same_frame && can_recycle))
+    if (!nready || frameno == last_consumed)
     {
-        if (ncompositors)
-        {
-            compositor = last_compositor();
-        }
-        else if (avail)
-        {
-            first_compositor = prev(first_compositor);
-            compositor = first_compositor;
-            ncompositors++;
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(std::logic_error(
-                "compositor_acquire would block; probably too many clients."));
-        }
+        compositor = last_compositor();
     }
     else
     {
@@ -295,6 +275,12 @@ std::shared_ptr<mg::Buffer> mc::SwitchingBundle::compositor_acquire(
         nready--;
         ncompositors++;
         last_consumed = frameno;
+
+        while (ncompositors > 1 && !ring[first_compositor].users)
+        {
+            first_compositor = next(first_compositor);
+            ncompositors--;
+        }
     }
 
     overlapping_compositors = (ncompositors > 1);
@@ -317,7 +303,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
         }
     }
 
-    if (compositor < 0)
+    if (compositor < 0 || ring[compositor].users <= 0)
     {
         BOOST_THROW_EXCEPTION(std::logic_error(
             "compositor_release given a non-compositor buffer"));
@@ -326,7 +312,7 @@ void mc::SwitchingBundle::compositor_release(std::shared_ptr<mg::Buffer> const& 
     ring[compositor].users--;
     if (compositor == first_compositor)
     {
-        while (!ring[first_compositor].users && ncompositors)
+        while (ncompositors > 1 && !ring[first_compositor].users)
         {
             first_compositor = next(first_compositor);
             ncompositors--;
