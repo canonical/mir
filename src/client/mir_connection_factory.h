@@ -19,6 +19,10 @@
 #ifndef MIR_CLIENT_MIR_CONNECTION_FACTORY
 #define MIR_CLIENT_MIR_CONNECTION_FACTORY
 
+#include <string>
+
+class MirConnection;
+
 class MirConnectionFactory
 {
 public:

@@ -24,7 +24,8 @@
  * and do not have the same API-stability guarantees that the main API has */
 
 /* if set before any calls to the api functions, assigning to this pointer will allow user to
- * override default connection configuration. This is mostly useful in test scenarios
+ * override default connection configuration. If set to null, the default client configuration is used.
+ * This is mostly useful in test scenarios
  */
 struct MirConnectionFactory;
 extern MirConnectionFactory* mir_global_connection_factory;

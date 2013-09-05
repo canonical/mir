@@ -78,13 +78,6 @@ void assign_result(void *result, void **context)
         *context = result;
 }
 
-}
-
-namespace mir
-{
-namespace client
-{
-
 class DefaultConnectionFactory : public MirConnectionFactory
 {
 public:
@@ -95,12 +88,11 @@ public:
     }
 
 };
-
-}
 }
 
 MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connected_callback callback, void * context)
 {
+
     try
     {
         std::string sock;
@@ -118,7 +110,7 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
         MirConnection* connection;
         if(!mir_global_connection_factory)
         {
-            mcl::DefaultConnectionFactory connection_factory;
+            DefaultConnectionFactory connection_factory;
             connection = connection_factory.create_mir_connection(sock);
         }
         else
@@ -139,6 +131,27 @@ MirWaitHandle* mir_connect(char const* socket_file, char const* name, mir_connec
     }
 }
 
+MirConnection *mir_connect_sync(char const *server,
+                                             char const *app_name)
+{
+    MirConnection *conn = nullptr;
+    mir_wait_for(mir_connect(server, app_name,
+                             reinterpret_cast<mir_connected_callback>
+                                             (assign_result),
+                             &conn));
+    return conn;
+}
+
+int mir_connection_is_valid(MirConnection * connection)
+{
+    return MirConnection::is_valid(connection);
+}
+
+char const * mir_connection_get_error_message(MirConnection * connection)
+{
+    return connection->get_error_message();
+}
+
 void mir_connection_release(MirConnection * connection)
 {
     if (!error_connections.contains(connection))
@@ -153,25 +166,6 @@ void mir_connection_release(MirConnection * connection)
 
     delete connection;
 }
-
-MirConnection *mir_connect_sync(char const *server, char const *app_name)
-{
-    MirConnection *conn = nullptr;
-    mir_wait_for(::mir_connect(server, app_name,
-                               reinterpret_cast<mir_connected_callback> (assign_result), &conn));
-    return conn;
-}
-
-int mir_connection_is_valid(MirConnection * connection)
-{
-    return MirConnection::is_valid(connection);
-}
-
-char const * mir_connection_get_error_message(MirConnection * connection)
-{
-    return connection->get_error_message();
-}
-
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection)
 {
