@@ -99,6 +99,7 @@ public:
     GBMHelper& operator=(const GBMHelper&) = delete;
 
     void setup(const DRMHelper& drm);
+    void setup(int drm_fd);
     GBMSurfaceUPtr create_scanout_surface(uint32_t width, uint32_t height);
 
     gbm_device* device;

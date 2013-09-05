@@ -26,6 +26,12 @@
 namespace mg = mir::graphics;
 namespace mgg = mg::gbm;
 
+void mgg::NativeGBMPlatform::initialize(int /*data_items*/, int const* /*data*/, int /*fd_items*/, int const* fd)
+{
+    this->drm_fd = fd[0];
+    gbm.setup(drm_fd);
+}
+
 std::shared_ptr<mg::GraphicBufferAllocator> mgg::NativeGBMPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/)
 {
